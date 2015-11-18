@@ -32,7 +32,12 @@ public final class EntityActionConfig {
     private final boolean noAction;
     public final Optional<InsertionPoints> whereToInsertView;
 	public final boolean shouldRefreshParentCentreAfterSave;
+	public final UI_ROLE role;
 
+	public enum UI_ROLE {
+	    ICON, BUTTON;
+	}
+	
     private EntityActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
             final CentreContextConfig context,
@@ -45,7 +50,8 @@ public final class EntityActionConfig {
             final PrefDim prefDimForView,
             final boolean noAction,
             final boolean shouldRefreshParentCentreAfterSave,
-            final InsertionPoints whereToInsertView) {
+            final InsertionPoints whereToInsertView,
+            final UI_ROLE role) {
 
         if (!noAction && functionalEntity == null) {
             throw new IllegalArgumentException("A functional entity type should be provided.");
@@ -67,6 +73,7 @@ public final class EntityActionConfig {
         this.prefDimForView = Optional.ofNullable(prefDimForView);
         this.noAction = noAction;
         this.whereToInsertView = Optional.ofNullable(whereToInsertView);
+        this.role = role;
     }
 
 
@@ -82,7 +89,7 @@ public final class EntityActionConfig {
             final PrefDim prefDimForView,
             final boolean noAction,
             final boolean shouldRefreshParentCentreAfterSave) {
-        this(functionalEntity, context, icon, shortDesc, longDesc, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null);
+        this(functionalEntity, context, icon, shortDesc, longDesc, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON);
     }
 
 
@@ -102,8 +109,34 @@ public final class EntityActionConfig {
                 ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
                 ac.noAction,
                 ac.shouldRefreshParentCentreAfterSave,
-                ip);
+                ip,
+                UI_ROLE.ICON);
     }
+    
+    /**
+     * Makes a new configuration based on the current one, but with the specified role.
+     * 
+     * @param ac
+     * @param role
+     * @return
+     */
+    public static EntityActionConfig setRole(final EntityActionConfig ac, final UI_ROLE role) {
+        return new EntityActionConfig(
+                ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
+                ac.context.isPresent() ? ac.context.get() : null,
+                ac.icon.isPresent() ? ac.icon.get() : null,
+                ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
+                ac.longDesc.isPresent() ? ac.longDesc.get() : null,
+                ac.preAction.isPresent() ? ac.preAction.get() : null,
+                ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
+                ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
+                ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
+                ac.noAction,
+                ac.shouldRefreshParentCentreAfterSave,
+                ac.whereToInsertView.isPresent() ? ac.whereToInsertView.get() : null,
+                role);
+    }
+
     /**
      * A factory method for creating a configuration that indicates a need to skip creation of any action.
      *

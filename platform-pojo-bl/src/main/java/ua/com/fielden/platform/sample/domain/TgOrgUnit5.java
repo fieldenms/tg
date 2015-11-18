@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import org.junit.Ignore;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -17,7 +15,6 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
-@Ignore
 @CompanionObject(ITgOrgUnit5.class)
 public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;

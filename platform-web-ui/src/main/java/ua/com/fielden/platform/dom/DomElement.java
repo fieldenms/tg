@@ -248,7 +248,11 @@ public class DomElement {
             clazz(value.toString());
             break;
         case "style":
-            style(value.toString());
+            if (value.toString().contains(";")) {
+                style(value.toString().split(";"));
+            } else {
+                style(value.toString());
+            }
             break;
         default:
         	if (value != null && (Boolean.class == value.getClass() || boolean.class == value.getClass())) {

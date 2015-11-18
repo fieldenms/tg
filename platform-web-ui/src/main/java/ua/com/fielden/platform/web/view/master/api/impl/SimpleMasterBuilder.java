@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
+import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -13,6 +15,9 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
@@ -24,8 +29,8 @@ import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig7;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
@@ -37,16 +42,18 @@ import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 
-public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDone<T> {
+public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDone<T>, IEntityActionConfig7<T> {
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
-    private final List<EntityActionConfig<T>> entityActions = new ArrayList<>();
+    private final List<Object> entityActions = new ArrayList<>();
+    
     private final FlexLayout layout = new FlexLayout();
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     private Class<T> entityType;
     private boolean saveOnActivation = false;
+    
 
 
     @Override
@@ -63,12 +70,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public IEntityActionConfig0<T> addAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity) {
-        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new EntityAction(name, functionalEntity), this);
-        entityActions.add(entityAction);
-        return entityAction;
+    public IEntityActionConfig7<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action) {
+        entityActions.add(setRole(action, UI_ROLE.BUTTON));
+        return this;
     }
-
+    
     @Override
     public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
         final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction)), this);
@@ -149,34 +155,69 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("polymer/polymer/polymer");
 
+        int funcActionSeq = 0; // used for both entity and property level functional actions
+        final String prefix = ",\n";
+        final int prefixLength = prefix.length();
+        final StringBuilder primaryActionObjects = new StringBuilder();
+
         final StringBuilder propertyActionsStr = new StringBuilder();
         final DomElement editorContainer = layout.render();
-
         importPaths.add(layout.importPath());
-        widgets.forEach(widget -> {
+        for (final WidgetSelector<T> widget : widgets) {
             importPaths.add(widget.widget().importPath());
-            editorContainer.add(widget.widget().render());
-            if (widget.widget().action() != null) {
-                propertyActionsStr.append(widget.widget().action().code().toString());
-            }
-        });
 
+            if (!widget.widget().action().isPresent()) {
+                editorContainer.add(widget.widget().render());
+            } else {
+                final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = widget.widget().action().get();
+                if (!config.isNoAction()) {
+                    final FunctionalActionElement el = FunctionalActionElement.newPropertyActionForMaster(config, funcActionSeq++, widget.propertyName);
+                    importPaths.add(el.importPath());
+                    editorContainer.add(widget.widget().render()
+                            .add(el.render().clazz("property-action", "property-action-icon")));
+                    primaryActionObjects.append(prefix + el.createActionObject());
+                }
+            }
+        }
+
+        // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions 
         final StringBuilder entityActionsStr = new StringBuilder();
-        entityActions.forEach(action -> {
-            importPaths.add(action.action().importPath());
-            if (action.action() instanceof IRenderable) {
-                editorContainer.add(((IRenderable) action.action()).render());
+        for (final Object action: entityActions) {
+            if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {
+                final ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig<?> config = (ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig<?>) action;
+                importPaths.add(config.action().importPath());
+                if (config.action() instanceof IRenderable) {
+                    editorContainer.add(((IRenderable) config.action()).render());
+                }
+                if (config.action() instanceof IExecutable) {
+                    entityActionsStr.append(((IExecutable) config.action()).code().toString());
+                }
+            } else {
+                final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = (ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig) action;
+                if (!config.isNoAction()) {
+                    final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(config, funcActionSeq++);
+                    importPaths.add(el.importPath());
+                    editorContainer.add(el.render().clazz("primary-action"));
+                    primaryActionObjects.append(prefix + el.createActionObject());
+                }
             }
-            if (action.action() instanceof IExecutable) {
-                entityActionsStr.append(((IExecutable) action.action()).code().toString());
-            }
-        });
 
+        }
+        
+        
+        final String primaryActionObjectsString = primaryActionObjects.toString();
+        
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", createImports(importPaths))
                 .replace("@entity_type", entityType.getSimpleName())
-                .replace("<!--@tg-entity-master-content-->", editorContainer.toString())
-                .replace("//@ready-callback", layout.code().toString() + "\n" + entityActionsStr.toString() + "\n" + propertyActionsStr.toString())
+                .replace("<!--@tg-entity-master-content-->", editorContainer.toString()) // TODO should contain prop actions
+                .replace("//@ready-callback", 
+                        layout.code().toString() + "\n" 
+                      + entityActionsStr.toString() + "\n" 
+                      + propertyActionsStr.toString())
+                .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
+                        : primaryActionObjectsString)
+                
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivation + "");
 
@@ -231,66 +272,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             return Optional.ofNullable(valueMatcherForProps.get(propName));
         }
 
-    }
-
-    public static void main(final String[] args) {
-        final SimpleMasterBuilder<TgPersistentEntityWithProperties> sm = new SimpleMasterBuilder<>();
-        final IMaster<TgPersistentEntityWithProperties> smConfig = sm.forEntity(TgPersistentEntityWithProperties.class)
-                // PROPERTY EDITORS
-                .addProp("stringProp").asSinglelineText()
-                .withAction("#validateDesc", TgPersistentEntityWithProperties.class)
-                .preAction(new IPreAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionSuccess(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionError(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).enabledWhen(EnabledState.ANY).icon("trending-up")
-                .also()
-
-                .addProp("stringProp").asMultilineText()
-                .also()
-                .addProp("dateProp").asDateTimePicker().skipValidation()
-                .also()
-                .addProp("booleanProp").asCheckbox().skipValidation()
-                .also()
-                .addProp("bigDecimalProp").asDecimal().skipValidation()
-                .also()
-                .addProp("integerProp").asSpinner().skipValidation()
-                .also()
-
-                // ENTITY CUSTOM ACTIONS
-                .addAction("#export", TgPersistentEntityWithProperties.class)
-                .preAction(new IPreAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionSuccess(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).postActionError(new IPostAction() {
-                    @Override
-                    public JsCode build() {
-                        return new JsCode("");
-                    }
-                }).enabledWhen(EnabledState.VIEW).shortDesc("Export")
-                .setLayoutFor(Device.DESKTOP, null, "[[]]")
-                .setLayoutFor(Device.TABLET, null, "[[]]")
-                .setLayoutFor(Device.TABLET, null, "[[]]")
-                .done();
-        System.out.println(smConfig.render().toString());
     }
 
 }

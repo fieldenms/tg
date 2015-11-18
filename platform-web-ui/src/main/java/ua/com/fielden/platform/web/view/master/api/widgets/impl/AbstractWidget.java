@@ -2,13 +2,13 @@ package ua.com.fielden.platform.web.view.master.api.widgets.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
-import ua.com.fielden.platform.web.view.master.api.actions.property.impl.PropertyAction;
 
 /**
  * The base implementation box for generic information for all widgets.
@@ -27,7 +27,7 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
     private final String desc;
     private final String widgetName;
     private final String widgetPath;
-    private PropertyAction action;
+    private Optional<EntityActionConfig> action = Optional.empty();
     private boolean skipValidation = false;
     private boolean debug = false;
     private boolean criterionEditor = false;
@@ -45,11 +45,6 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
 
         this.title = titleDesc.getKey();
         this.desc = titleDesc.getValue();
-    }
-
-    public PropertyAction initAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity) {
-        this.action = new PropertyAction(name, functionalEntity);
-        return this.action;
     }
 
     /**
@@ -89,13 +84,13 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         if (isDebug()) {
             attrs.put("debug", "true");
         }
+        attrs.put("id", "editor_4_"+ this.propertyName);
         attrs.put("entity", "[[_currBindingEntity]]");
         attrs.put("property-name", this.propertyName);
         attrs.put("validation-callback", this.skipValidation ? "[[doNotValidate]]" : "[[validate]]");
         attrs.put("prop-title", this.title);
         attrs.put("prop-desc", this.desc);
         attrs.put("current-state", "[[currentState]]");
-        attrs.put("action", this.action != null ? "[[_actions." + this.action.name() + "]]" : "null");
         attrs.put("external-refresh-cycle", "[[_refreshCycleMode]]");
         if (criterionEditor) {
             attrs.put("class", "criterion-editors");
@@ -119,7 +114,11 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
     }
 
-    public PropertyAction action() {
+    public void withAction(final EntityActionConfig action) {
+        this.action = Optional.of(action);
+    }
+    
+    public Optional<EntityActionConfig> action() {
         return action;
     }
 

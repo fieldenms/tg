@@ -59,14 +59,14 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private final EntityFactory entityFactory;
     private final static Logger logger = Logger.getLogger(EntityResourceUtils.class);
     private final Class<T> entityType;
-    private final IEntityDao<T> dao;
+    private final IEntityDao<T> co;
     private final IEntityProducer<T> entityProducer;
     private final ICompanionObjectFinder companionFinder;
 
     public EntityResourceUtils(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final ICompanionObjectFinder companionFinder) {
         this.entityType = entityType;
         this.companionFinder = companionFinder;
-        this.dao = companionFinder.<IEntityDao<T>, T> find(this.entityType);
+        this.co = companionFinder.<IEntityDao<T>, T> find(this.entityType);
 
         this.entityFactory = entityFactory;
         this.entityProducer = entityProducer;
@@ -82,7 +82,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     public T createValidationPrototype(final Long id) {
         final T entity;
         if (id != null) {
-            entity = dao.findById(id, dao.getFetchProvider().fetchModel());
+            entity = co.findById(id, co.getFetchProvider().fetchModel());
         } else {
             entity = entityProducer.newEntity();
         }
@@ -98,16 +98,21 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public T createValidationPrototypeWithContext(
+            final Long id,
             final CentreContext<T, AbstractEntity<?>> centreContext, 
             final String chosenProperty, 
             final Long compoundMasterEntityId, 
-            final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
-        final DefaultEntityProducerWithContext<T, T> defProducer = (DefaultEntityProducerWithContext<T, T>) entityProducer;
-        defProducer.setCentreContext(centreContext);
-        defProducer.setChosenProperty(chosenProperty);
-        defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
-        defProducer.setContextAsFunctionalEntity(masterContext);
-        return defProducer.newEntity();
+            final AbstractEntity<?> masterContext) {
+        if (id != null) {
+            return co.findById(id, co.getFetchProvider().fetchModel());
+        } else {
+            final DefaultEntityProducerWithContext<T, T> defProducer = (DefaultEntityProducerWithContext<T, T>) entityProducer;
+            defProducer.setCentreContext(centreContext);
+            defProducer.setChosenProperty(chosenProperty);
+            defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
+            defProducer.setMasterEntity(masterContext);
+            return defProducer.newEntity();
+        }
     }
     
     public Class<T> getEntityType() {
@@ -451,7 +456,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public T save(final T entity) {
-        return dao.save(entity);
+        return co.save(entity);
     }
 
     /**
@@ -460,7 +465,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param entityId
      */
     public void delete(final Long entityId) {
-        dao.delete(entityFactory.newEntity(entityType, entityId));
+        co.delete(entityFactory.newEntity(entityType, entityId));
     }
 
     /**
@@ -494,8 +499,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final CentreContext<T, AbstractEntity<?>> centreContext, 
             final String chosenProperty, 
             final Long compoundMasterEntityId,
-            final AbstractFunctionalEntityWithCentreContext<?> masterContext) {
-        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithContext(centreContext, chosenProperty, compoundMasterEntityId, masterContext), getCompanionFinder());
+            final AbstractEntity<?> masterContext) {
+        
+        final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
+        final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
+        
+        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithContext(id, centreContext, chosenProperty, compoundMasterEntityId, masterContext), getCompanionFinder());
     }
 
     /**

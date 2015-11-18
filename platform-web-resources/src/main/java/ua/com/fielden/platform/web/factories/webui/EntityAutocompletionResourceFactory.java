@@ -8,10 +8,12 @@ import org.restlet.data.Method;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -37,6 +39,9 @@ public class EntityAutocompletionResourceFactory extends Restlet {
     private final IWebUiConfig webApp;
     private final ICriteriaGenerator critGenerator;
     private final ICompanionObjectFinder coFinder;
+    private final IServerGlobalDomainTreeManager serverGdtm;
+    private final IUserProvider userProvider;
+
 
     /**
      * Instantiates a factory for entity autocompletion resources (for centres and masters).
@@ -51,6 +56,8 @@ public class EntityAutocompletionResourceFactory extends Restlet {
         this.factory = injector.getInstance(EntityFactory.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
         this.coFinder = injector.getInstance(ICompanionObjectFinder.class);
+        this.serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
+        this.userProvider = injector.getInstance(IUserProvider.class);
     }
 
     @Override
@@ -70,12 +77,15 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                 final EntityCentre<? extends AbstractEntity<?>> centre = this.webApp.getCentres().get(miType);
 
                 new CriteriaEntityAutocompletionResource(
+                        webApp, 
+                        coFinder, 
+                        serverGdtm, 
+                        userProvider, 
+                        critGenerator, 
+                        factory, 
                         miType,
                         criterionPropertyName,
                         centre,
-                        coFinder,
-                        ResourceFactoryUtils.getUserSpecificGlobalManager(injector),
-                        critGenerator,
                         restUtil,
                         getContext(),
                         request,

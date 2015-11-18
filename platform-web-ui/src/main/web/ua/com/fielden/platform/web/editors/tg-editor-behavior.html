@@ -333,24 +333,6 @@
             },
 
             /**
-             * Returns the binding value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
-             *
-             * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
-             */
-            getBindingValue: function(bindingEntity, dotNotatedName) {
-            	return this.reflector().isDotNotated(dotNotatedName) ? this.reflector().convert(this.getValueFor(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
-            },
-            
-            /**
-             * Returns the full value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
-             *
-             * This method does no conversion of the value to 'binding' representation.
-             */
-            getValueFor: function(bindingEntity, dotNotatedName) {
-            	return bindingEntity["@@origin"].get(dotNotatedName);
-            },
-
-            /**
              * This method is called during editing.
              *
              * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
@@ -379,15 +361,19 @@
             _entityChanged: function (newValue, oldValue) {
                 // console.log("_entityChanged", newValue, oldValue, "still _refreshCycleStarted ==", this._refreshCycleStarted);
                 if (this.reflector().isEntity(newValue)) {
-                	var propValue = this.getBindingValue(newValue, this.propertyName);
-                    var newEditingValue = this.convertToString(propValue);
-                    if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
-                        this._refreshCycleStarted = false;
-                    }
-                    this._editingValue = newEditingValue;
+                	this.assignValue(newValue, this.propertyName, this.reflector().getBindingValue.bind(this.reflector()));
                 } else {
                     console.log("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
                 }
+            },
+            
+            assignValue: function (entity, propertyName, getPropertyValue) {
+            	var propValue = getPropertyValue(entity, propertyName); // this.reflector().getBindingValue(entity, propertyName);
+                var newEditingValue = this.convertToString(propValue);
+                if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
+                	this._refreshCycleStarted = false;
+                }
+                this._editingValue = newEditingValue;
             },
 
             /**

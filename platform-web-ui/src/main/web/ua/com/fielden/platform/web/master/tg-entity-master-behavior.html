@@ -38,11 +38,20 @@
             	},
 
                 /**
-                 * Custom callback that will be invoked after successfull retrieval.
+                 * Custom callback that will be invoked after successfull saving.
                  *
                  * arguments: entity, bindingEntity, customObject
                  */
                 postSaved: {
+                	type: Function                	
+                }, 
+
+                /**
+                 * Custom callback that will be invoked in case saving resulted in error.
+                 *
+                 * arguments: errorResult
+                 */
+                postSavedError: {
                 	type: Function                	
                 }, 
                 
@@ -168,8 +177,31 @@
                  */
                 _createContextHolderForEmbeddedViews: {
                     type: Function
-                }
+                },
                 
+                /**
+                 * The context holder creator (SavingInfoHolder) which is used for entity and property actions in the context of non-functional entity master.
+                 */
+                _createContextHolder: {
+                    type: Function
+                }, 
+                
+                /**
+                 * A dialog instance that is used for displaying entity (functional and not) masters as part of master actions logic.
+                 * This dialog is of type tg-custom-action-dialog and gets created dynamically on attached event.
+                 * Right away it is appended to document.body.
+                 */
+                _actionDialog: {
+                  type: Object,
+                  value: null
+                }, 
+                
+                /**
+                 * The function that shows dialog for functional action masters.
+                 */
+                _showDialog: {
+                	type: Function
+                }
         	},
 
             /**
@@ -191,6 +223,27 @@
                 };
 
 				self._createActions();
+				
+			    self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
+	                var getThisMasterEntity = function () { 
+		                var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+		                
+	                	// @@funcEntityType is really a master entity type, which in this case is not functional!!!
+	                	var masterTypeCarrier = this._reflector().createContextHolder(
+	            				null, null, null,
+	            				null, null, null
+	                        );
+	                	this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
+	                	
+	                	return this._reflector().createSavingInfoHolder(this._reset(holder), masterTypeCarrier);
+	                }.bind(self);
+	                
+                	var contextHolder = this._reflector().createContextHolder(
+        				null, null, requireMasterEntity,
+        				null, null, getThisMasterEntity
+                    );
+                    return contextHolder;
+                }).bind(self);
 				
 				// calbacks, that will potentially be augmented by tg-action child elements: 
                 self._postSavedDefault = (function (potentiallySavedEntity) {
@@ -221,6 +274,11 @@
                 	// This function will be invoked after server-side error appear.
                 	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
                 	console.warn("SERVER ERROR: ", errorResult);
+                	
+                	// custom external action
+                	if (this.postSavedError) {
+				    	this.postSavedError(errorResult);
+				    }
                 }).bind(self);
                 
                 self.edit = (function () {
@@ -270,11 +328,36 @@
                 self._postSaverLoadingFinished = (function () {
                 	console.log("_postSaverLoadingFinished");
                 }).bind(self);
-                	
+
+                self._showDialog = (function (action) {
+                    var closeEventChannel = self.uuid;
+                    var closeEventTopics = ['save.post.success', 'refresh.post.success'];
+                    this.async(function () {
+                        this._actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
+                    }.bind(self), 1);
+                }).bind(self);
             }, // end of ready callback
             
             attached: function() {
                 var self = this;
+                
+                // we'd like to limit the number of dialogs created per entity master type
+                // this way the same instance is reused by different master instances of the same type
+                // that is why dialogs ID is defined as the master entity type
+                // the dialog is never removed from document.body
+                if (self._actionDialog == null) {
+                	var dialog = document.body.querySelector('tg-custom-action-dialog[id="' + self.uuid + '"]');
+                	if (dialog) {
+                		self._actionDialog = dialog;
+                	} else {
+                		self._actionDialog = document.createElement('tg-custom-action-dialog');
+	                    Polymer.dom(self._actionDialog).setAttribute("id", self.uuid);
+	                    Polymer.dom(document.body).appendChild(self._actionDialog);
+	                    Polymer.dom.flush();
+                	}
+                }
+
+                
                 self.saveListener = postal.subscribe({
                     channel: "master_"  + self.uuid,
                     topic: "save.finish",
@@ -474,10 +557,10 @@
 	            	var modifHolder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
 	            	// the master can be left in case where there is no modifications and the entity is not new
 	            	if (modifHolder.id === null) {
-	            		return "A new entity is being created. Please save your changes.";
+	            		return {isNew: true, msg: "A new entity is being created. Please save your changes."};
 	            	} 
 	            	if (this._hasModified(modifHolder)) {
-	            		return "Please save or cancel your changes.";
+	            		return {isNew: false, msg: "Please save or cancel your changes."};
 	            	}
 	            	
 	            	return undefined;
@@ -503,6 +586,12 @@
        	 		
                 self.entityId = 'find_or_new';
 				self.retrieve(self.getMasterEntity());
+            },
+            
+            setEditorValue4Property: function (propNameToBeAssigned, functionalEntity, propNameFromFuncEntityToAssign) {
+            	var editor = this.$.masterDom.querySelector('[id=editor_4_' + propNameToBeAssigned + ']');
+                editor.assignValue(functionalEntity, propNameFromFuncEntityToAssign, editor.reflector().getPropertyValue.bind(editor.reflector()));
+                editor.commit();
             }
         };
     	

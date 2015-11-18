@@ -74,6 +74,16 @@
                 _cachedElements: {
                 	type: Object,
                 	value: function () { return {}; }
+                },
+                
+                /** Captures the last action that has been executed by this dialog or is currently in progress. */
+                _lastAction: {
+                	type: Object
+                },
+                
+                /** A master element that corresponds to the _lastAction. */
+                _lastElement: {
+                	type: Object
                 }
             },
 
@@ -86,11 +96,37 @@
             },
 
             closeDialog: function () {
-                this.close();
+            	var canClose = true;
+            	if (this._lastElement.classList.contains('canLeave')) {
+            		var reason = this._lastElement.canLeave();
+					if (reason !== undefined) {
+						canClose = false;
+						// the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
+						// for example, when closing a master for a functional entity, the reason states the need to save changes,
+						// while it is also possible and safe to simple cancel them
+						// so, the message below is a good compromise
+	                    this.$.toaster.text = "Please save or cancel changes.";
+	                    this.$.toaster.hasMore = false;
+	                    this.$.toaster.msgText = "";
+	                    this.$.toaster.showProgress = false;
+	                    this.$.toaster.show();
+					}
+            	}
+            	
+            	if (canClose === true) {
+	            	this._closeDialogAndIndicateActionCompletion(this._lastAction);
+            	}
             },
 
+            _closeDialogAndIndicateActionCompletion: function (action) {
+            	if (this._lastAction) {
+            		this._lastAction.isActionInProgress = false;
+            	}
+            	this.close();
+            },
+            
             _handleCloseEvent: function (data, envelope) {
-                this.closeDialog();
+                this._closeDialogAndIndicateActionCompletion(this._lastAction);
             },
             
             /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
@@ -126,6 +162,7 @@
                 } else {
                     var self = this;
                     if (self.isRunning === false) {
+                    	self._lastAction = customAction;
                         self._setIsRunning(true);
                         
                     	self._getElement(customAction)
@@ -138,11 +175,11 @@
                                 var promise = customAction._onExecuted(null, element, null);
                                 if (promise) {
                                 	return promise
-                                	.then(function () {self._showMaster(element, closeEventChannel, closeEventTopics);})
+                                	.then(function () {self._showMaster(customAction, element, closeEventChannel, closeEventTopics);})
                                 	.catch(function () {self._setIsRunning(false);});
                                 } else {
                                     return Promise.resolve()
-                                    .then(function () {self._showMaster(element, closeEventChannel, closeEventTopics);})
+                                    .then(function () {self._showMaster(customAction, element, closeEventChannel, closeEventTopics);})
                                     .catch(function () {self._setIsRunning(false);});
                                 }
                             })
@@ -158,7 +195,8 @@
                 }
             },
 
-            _showMaster: function (element, closeEventChannel, closeEventTopics) {
+            _showMaster: function (action, element, closeEventChannel, closeEventTopics) {
+            	this._lastElement = element;
             	if (element.noUI === true) { // is this is the end of action execution?
                      self._setIsRunning(false);
                  } else { // otherwise show master in dialog

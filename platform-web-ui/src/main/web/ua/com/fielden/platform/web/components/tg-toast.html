@@ -32,27 +32,28 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
-        .paper-spinner {
-            width: 1.5em;
-            height: 1.5em;
-            min-width: 1em;
-            min-height: 1em;
-            max-width: 2em;
-            max-height: 2em;
-            padding: 2px;
-            margin-left: 1em;
-            --paper-spinner-layer-1-color: var(--paper-blue-500);
-            --paper-spinner-layer-2-color: var(--paper-blue-500);
-            --paper-spinner-layer-3-color: var(--paper-blue-500);
-            --paper-spinner-layer-4-color: var(--paper-blue-500);
-        }
     </style>
 
 <dom-module id="tg-toast">
     <template>
+    	<style>
+	    	paper-spinner {
+	            width: 1.5em;
+	            height: 1.5em;
+	            min-width: 1em;
+	            min-height: 1em;
+	            max-width: 2em;
+	            max-height: 2em;
+	            padding: 2px;
+	            margin-left: 1em;
+	            --paper-spinner-layer-1-color: var(--paper-blue-500);
+	            --paper-spinner-layer-2-color: var(--paper-blue-500);
+	            --paper-spinner-layer-3-color: var(--paper-blue-500);
+	            --paper-spinner-layer-4-color: var(--paper-blue-500);
+	        }    	
+    	</style>
         <paper-toast id="toast" class="paper-toast" text="[[text]]"> <!-- TODO responsive-width="250px" -->
-            <paper-spinner id="spinner" class="paper-spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
+            <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
             <div hidden$="[[_skipShowMore(showProgress, hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">MORE</div>
         </paper-toast>
     </template>

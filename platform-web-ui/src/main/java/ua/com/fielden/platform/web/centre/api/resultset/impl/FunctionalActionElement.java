@@ -5,6 +5,8 @@ import static java.lang.String.format;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
@@ -30,6 +32,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final boolean masterInvocationAction;
     private final boolean masterInDialogInvocationAction;
     private final String chosenProperty;
+    /** Should be <code>true</code> in case where functional action element is inside entity master, otherwise it is inside entity centre. */
+    private boolean forMaster = false;
 
     /**
      * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
@@ -47,6 +51,32 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      */
     public FunctionalActionElement(final EntityActionConfig entityActionConfig, final int numberOfAction, final FunctionalActionKind functionalActionKind) {
         this(entityActionConfig, numberOfAction, functionalActionKind, null);
+    }
+
+    /**
+     * Creates an entity (aka primary) action for master.
+     * 
+     * @param entityActionConfig
+     * @param numberOfAction
+     * @return
+     */
+    public static FunctionalActionElement newEntityActionForMaster(final EntityActionConfig entityActionConfig, final int numberOfAction) {
+        final FunctionalActionElement el = new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.PRIMARY_RESULT_SET);
+        el.setForMaster(true);
+        return el;
+    }
+
+    /**
+     * Creates a property action for master.
+     * 
+     * @param entityActionConfig
+     * @param numberOfAction
+     * @return
+     */
+    public static FunctionalActionElement newPropertyActionForMaster(final EntityActionConfig entityActionConfig, final int numberOfAction, final String propName) {
+        final FunctionalActionElement el = new FunctionalActionElement(entityActionConfig, numberOfAction, FunctionalActionKind.PRIMARY_RESULT_SET, propName);
+        el.setForMaster(true);
+        return el;
     }
 
     /**
@@ -86,7 +116,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("data-route", getDataRoute());
         }
 
-
+        attrs.put("ui-role", conf().role.toString());
         attrs.put("short-desc", getShortDesc());
         attrs.put("long-desc", conf().longDesc.isPresent() ? conf().longDesc.get() : "NOT SPECIFIED");
         attrs.put("icon", getIcon());
@@ -115,7 +145,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");
         attrs.put("post-action-success", "[[" + actionsHolderName + "." + numberOfAction + ".postActionSuccess]]");
         attrs.put("post-action-error", "[[" + actionsHolderName + "." + numberOfAction + ".postActionError]]");
-        if (functionalActionKind == FunctionalActionKind.PROP) {
+        if (!StringUtils.isEmpty(chosenProperty)) {
             attrs.put("chosen-property", chosenProperty);
         }
 
@@ -221,8 +251,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
         attrs.append("},\n");
 
-        attrs.append("postActionSuccess: function () {\n");
-        attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.get() + "');\n");
+        attrs.append("postActionSuccess: function (functionalEntity) {\n");
+        attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.get() + "', functionalEntity);\n");
         if (conf().successPostAction.isPresent()) {
             attrs.append(conf().successPostAction.get().build().toString());
         }
@@ -238,12 +268,20 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         attrs.append("},\n");
 
-        attrs.append("postActionError: function () {\n");
-        attrs.append("    console.log('postActionError: " + conf().shortDesc.get() + "');\n");
+        attrs.append("postActionError: function (functionalEntity) {\n");
+        attrs.append("    console.log('postActionError: " + conf().shortDesc.get() + "', functionalEntity);\n");
         if (conf().errorPostAction.isPresent()) {
             attrs.append(conf().errorPostAction.get().build().toString());
         }
         attrs.append("}\n");
         return attrs.append("}\n").toString();
+    }
+
+    public boolean isForMaster() {
+        return forMaster;
+    }
+
+    public void setForMaster(boolean forMaster) {
+        this.forMaster = forMaster;
     }
 }

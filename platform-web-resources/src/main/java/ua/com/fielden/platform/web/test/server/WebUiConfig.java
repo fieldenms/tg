@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
@@ -24,7 +25,6 @@ import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
@@ -41,9 +41,14 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties3
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
+import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
+import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusActionProducer;
+import ua.com.fielden.platform.sample.domain.TgDummyAction;
+import ua.com.fielden.platform.sample.domain.TgDummyActionProducer;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMasterProducer;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
@@ -77,7 +82,6 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssi
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
@@ -85,11 +89,9 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
-import ua.com.fielden.platform.web.resources.webui.EntityResource;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.actions.EnabledState;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
@@ -174,192 +176,227 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .withProps(pair("desc", true),
                         pair("compositeProp", false),
                         pair("booleanProp", false))
-                /*      */.withAction("#exportEntityProp", TgExportFunctionalEntity.class)
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export entity prop")
-                /*      */.longDesc("Export entity property")
+                .withAction(
+                        action(TgExportFunctionalEntity.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "self.setEditorValue4Property('requiredValidatedProp', functionalEntity, 'value');\n"
+                                + "self.setEditorValue4Property('entityProp', functionalEntity, 'parentEntity');\n"
+                                )) // self.retrieve()
+                        .postActionError(new PostActionError(""))
+                        .icon("trending-up")
+                        .shortDesc("Export")
+                        .longDesc("Export action")
+                        .build())
                 .also()
                 .addProp("entityProp.entityProp").asAutocompleter().withProps(pair("desc", true))
-                /*      */.withAction("#exportIntegerProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export integer prop")
-                //      */.longDesc("Export integer property") SHORT-CUT
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("key").asSinglelineText()
-                /*      */.withAction("#exportCritOnlyEntityProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export crit only entity prop")
-                /*      */.longDesc("Export crit only entity property")
+                .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("bigDecimalProp").asDecimal()
-                /*      */.withAction("#exportBigDecimalProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export bigDecimal prop")
-                /*      */.longDesc("Export bigDecimal property")
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("stringProp").asSinglelineText().skipValidation()
-                /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export string prop")
-                /*      */.longDesc("Export string property")
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("stringProp").asMultilineText()
-                /*      */.withAction("#exportMultiStringProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export multi string prop")
-                /*      */.longDesc("Export multi string property")
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("dateProp").asDateTimePicker()
-                /*      */.withAction("#exportDateProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export date prop")
-                /*      */.longDesc("Export date property")
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("booleanProp").asCheckbox()
-                /*      */.withAction("#exportBooleanProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export boolean prop")
-                /*      */.longDesc("Export boolean property")
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("compositeProp").asAutocompleter()
-                /*      */.withAction("#exportCompositeProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export composite prop")
-                /*      */.longDesc("Export composite property")
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("requiredValidatedProp").asSpinner()
-                /*      */.withAction("#exportRequiredValidatedProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export requiredValidated prop")
-                /*      */.longDesc("Export requiredValidated prop")
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
+                .also()
+                .addProp("status").asAutocompleter()
+                    .withAction(
+                        action(TgCreatePersistentStatusAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "self.setEditorValue4Property('status', functionalEntity, 'status');\n"
+                                )) // self.retrieve()
+                        .postActionError(new PostActionError(""))
+                        .icon("add-circle")
+                        .shortDesc("Create Status")
+                        .longDesc("Creates new status and assignes it back to the Status property")
+                        .build())
                 .also()
 
                 .addAction(MasterActions.REFRESH)
-                //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("REFRESH2")
-                /*      */.longDesc("REFRESH2 action")
+                    .icon("highlight-off")
+                    .shortDesc("CANCEL")
+                    .longDesc("Cancels any changes and closes the master (if in dialog)")
 
                 // ENTITY CUSTOM ACTIONS
-                .addAction("#export", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.EDIT)
-                //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("Export")
-                /*      */.longDesc("Export action")
+                .addAction(
+                        action(TgExportFunctionalEntity.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "self.setEditorValue4Property('requiredValidatedProp', functionalEntity, 'value');\n"
+                                + "self.setEditorValue4Property('entityProp', functionalEntity, 'parentEntity');\n"
+                                )) // self.retrieve()
+                        .postActionError(new PostActionError(""))
+                        .icon("trending-up")
+                        .shortDesc("Export")
+                        .longDesc("Export action")
+                        .build())
 
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "
-                        + "[[fmr], [fmr], [fmr], [fmr], ['flex']],"
-                        + "[[fmr], [fmr], [fmr], [fmr], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
+                        "      ['padding:20px', "
+                        + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
+                        + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
+                        + format("[['flex']],")
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + "    ]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
-                        + "[['flex']],"
+                        + "[['flex'], ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
+                        + "]")
+                        .replace("fmr", fmr)
+                        .replace("actionMr", actionMr))
                 .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
+                        + "[['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr))
+                        + "]")
+                        .replace("fmr", fmr)
+                        .replace("actionMr", actionMr))
                 .done();
 
         final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
                 // PROPERTY EDITORS
 
                 .addProp("colourProp").asColour()
-                /*      */.withAction("#exportColourProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.shortDesc("Export colour prop")
-                /*      */.longDesc("Export colour property").also()
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
 
+                .also()
                 .addProp("booleanProp").asCheckbox()
-                /*      */.withAction("#exportBooleanProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export boolean prop")
-                /*      */.longDesc("Export boolean property").also()
-
+                .also()
                 .addProp("stringProp").asSinglelineText().skipValidation()
-                /*      */.withAction("#exportStringProp", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.VIEW)
-                /*      */.icon("trending-up")
-                /*      */.shortDesc("Export string prop")
-                /*      */.longDesc("Export string property").also()
-
+                .also()
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
                 /*      */.shortDesc("REFRESH2")
                 /*      */.longDesc("REFRESH2 action")
 
                 // ENTITY CUSTOM ACTIONS
-                .addAction("#export", TgExportFunctionalEntity.class)
-                /*      */.preAction(new PreAction("functionalEntity.parentEntity = { val: masterEntity.get('key'), origVal: null };"))
-                /*      */.postActionSuccess(new PostActionSuccess(""))
-                /*      */.postActionError(new PostActionError(""))
-                /*      */.enabledWhen(EnabledState.EDIT)
-                //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("Export")
-                /*      */.longDesc("Export action")
-
+                .addAction(
+                        action(TgExportFunctionalEntity.class)
+                        .withContext(context().withMasterEntity().build())
+                        .icon("trending-up")
+                        .shortDesc("Export")
+                        .longDesc("Export action")
+                        .build())
                 .addAction(MasterActions.VALIDATE).addAction(MasterActions.SAVE).addAction(MasterActions.EDIT).addAction(MasterActions.VIEW)
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "
@@ -376,7 +413,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                         + "[['flex']],"
                                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).done();
-        final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>().forEntityWithSaveOnActivate(TgFunctionalEntityWithCentreContext.class)
+        final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>()
+                .forEntity(TgFunctionalEntityWithCentreContext.class) // forEntityWithSaveOnActivate
                 .addProp("valueToInsert").asSinglelineText()
                 .also()
                 .addProp("withBrackets").asCheckbox()
@@ -434,9 +472,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         TgPersistentCompositeEntity.class,
                         null,
                         injector())).
-                addMaster(TgExportFunctionalEntity.class, new EntityMaster<TgExportFunctionalEntity>(
-                        TgExportFunctionalEntity.class,
-                        null,
+                addMaster(TgExportFunctionalEntity.class, EntityMaster.noUiFunctionalMaster(TgExportFunctionalEntity.class, TgExportFunctionalEntityProducer.class, injector())).
+                addMaster(TgDummyAction.class, EntityMaster.noUiFunctionalMaster(TgDummyAction.class, TgDummyActionProducer.class, injector())).
+                addMaster(TgCreatePersistentStatusAction.class, new EntityMaster<TgCreatePersistentStatusAction>(
+                        TgCreatePersistentStatusAction.class,
+                        TgCreatePersistentStatusActionProducer.class,
+                        masterConfigForTgCreatePersistentStatusAction(), // TODO need to provide functional entity master configuration
                         injector())).
                 addMaster(TgStatusActivationFunctionalEntity.class, new EntityMaster<TgStatusActivationFunctionalEntity>(
                         TgStatusActivationFunctionalEntity.class,
@@ -587,6 +628,30 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
     }
 
+    private static IMaster<TgCreatePersistentStatusAction> masterConfigForTgCreatePersistentStatusAction() {
+        String layout = ""
+                + "['vertical', 'padding:20px', "
+                + "  ['vertical', "
+                + "      ['width:300px', 'flex'], "
+                + "      ['width:300px', 'flex']"
+                + "  ],"
+                + "  ['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', ['margin: 10px', 'width: 110px', 'flex'], ['margin: 10px', 'width: 110px', 'flex']]"
+                + "]";
+        final IMaster<TgCreatePersistentStatusAction> config =
+                new SimpleMasterBuilder<TgCreatePersistentStatusAction>().forEntity(TgCreatePersistentStatusAction.class)
+                .addProp("statusCode").asSinglelineText()
+                .also()
+                .addProp("desc").asMultilineText()
+                .also()
+                .addAction(MasterActions.REFRESH).shortDesc("CANCLE").longDesc("Cancles the action")
+                .addAction(MasterActions.SAVE)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+                .setLayoutFor(Device.TABLET, Optional.empty(), layout)
+                .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
+                .done();
+        return config;
+    }
+
     public static class TgPersistentEntityWithProperties_UserParamAssigner implements IValueAssigner<SingleCritOtherValueMnemonic<User>, TgPersistentEntityWithProperties> {
         private final IUserProvider userProvider;
 
@@ -720,9 +785,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
-            if (context.get().getMasterEntity() instanceof SavingInfoHolder) {
+            if (context.get().getMasterEntity() != null) {
                 System.out.println("DetailsCentreQueryEnhancer: master entity holder == " + context.get().getMasterEntity());
-                final TgCentreInvokerWithCentreContext funcEntity = EntityResource.restoreEntityFrom((SavingInfoHolder) context.get().getMasterEntity(), TgCentreInvokerWithCentreContext.class, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
+                final TgCentreInvokerWithCentreContext funcEntity = (TgCentreInvokerWithCentreContext) context.get().getMasterEntity();
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity: " + funcEntity);
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context): " + funcEntity.getContext());
                 System.out.println("DetailsCentreQueryEnhancer: restored masterEntity (centre context's selection criteria): " + funcEntity.getContext().getSelectionCrit().get("tgPersistentEntityWithProperties_critOnlyBigDecimalProp"));
@@ -1062,19 +1127,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
         //                .also()
         //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
-        if (isComposite) {
-            return scl.addInsertionPoint(
-                    action(TgCentreInvokerWithCentreContext.class)
-                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-                            .icon("assignment-ind")
-                            .shortDesc("Insertion Point")
-                            .longDesc("Functional context-dependent Insertion Point")
-                            .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
-                            .withNoParentCentreRefresh()
-                            .build(),
-                    InsertionPoints.RIGHT)
-                    .build();
-        }
+//                if (isComposite) {
+//                    return scl.addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                                .icon("assignment-ind")
+//                                .shortDesc("Insertion Point")
+//                                .longDesc("Functional context-dependent Insertion Point")
+//                                .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
+//                                .withNoParentCentreRefresh()
+//                                .build(),
+//                            InsertionPoints.RIGHT)
+//                            .build();
+//                }
         return scl.build();
     }
 

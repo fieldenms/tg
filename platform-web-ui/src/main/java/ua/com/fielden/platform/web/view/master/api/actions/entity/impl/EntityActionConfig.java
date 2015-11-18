@@ -33,11 +33,6 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public IEntityActionConfig0<T> addAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity) {
-        return simpleMasterBuilder.addAction(name, functionalEntity);
-    }
-
-    @Override
     public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
         return simpleMasterBuilder.addAction(masterAction);
     }
@@ -91,5 +86,10 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
 
     public AbstractAction action() {
         return action;
+    }
+
+    @Override
+    public IEntityActionConfig7<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig) {
+        return simpleMasterBuilder.addAction(actionConfig);
     }
 }

@@ -41,10 +41,14 @@
                 /**
                  * Universal identifier of this element instance (used for pub / sub communication).
                  *
-                 * Should be given from the outside of the element.
+                 * It is either assigned from the outside or could be defined internally. 
+                 * For example, entity masters have this property assigned in their ready callback, which can be replaced later with a different value if required.
+                 *
+                 * Property observer is used to report value changes in case one needs to chase undesired assignment side-effect.
                  */
                 uuid: {
-                	type: String
+                	type: String,
+                	observer: "_uuidChanged"
                 },
                 
                 /**
@@ -69,6 +73,15 @@
                  * arguments: entity, bindingEntity, customObject
                  */
                 postRetrieved: {
+                	type: Function
+                },
+                
+                /**
+                 * Custom callback that will be invoked in case retrieval fails.
+                 *
+                 * arguments: errorResult
+                 */
+                postRetrievedError: {
                 	type: Function
                 },
                 
@@ -311,8 +324,12 @@
                     		}
                     	}
                     } else { // other codes
-                        console.warn('Request could not be dispatched.');
-                        this._openToastForError('Request could not be dispatched.', 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.');
+                    	var error = 'Request could not be dispatched.';
+                        console.warn(error);
+                        this._openToastForError(error, 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.');
+                        // this is equivalent to server side error
+                        // threfore, this._postRetrievedDefaultError should be invoked
+                        this._postRetrievedDefaultError(error);
                     }
                 }).bind(self);
                 
@@ -412,6 +429,12 @@
                 	// This function will be invoked after server-side error appear.
                 	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).                	
                 	console.warn("SERVER ERROR: ", errorResult);
+                	
+                	// custom external action
+                	if (this.postRetrievedError) {
+	                    this.postRetrievedError(errorResult);
+                    }
+                	
                 }).bind(self);
              	// 				validation:
                 self._postValidatedDefault = (function (entityAndCustomObject) {
@@ -735,6 +758,17 @@
 
                 // console.log("       entity + originalBindingView", entity, bindingView);
                 return originalBindingView;
+            },
+            
+            /** 
+             * This uuid property observer has only an assistive role at this stage -- to track uuid changes if needed.
+             * However, it has a potential to be used for subscribing to various message topics associated with a channel that has the same value as uuid.
+             * In this case changes to uuid should handle unsubscribing to previously subscribed channels (i.e. oldValue). 
+             */
+            _uuidChanged: function (newValue, oldValue) {
+            	if (oldValue !== undefined) {
+            		console.warn('Property uuid for element <', this.is, '> has changed from "', oldValue, '" to "', newValue, '".');
+            	}
             }
         };
     })();

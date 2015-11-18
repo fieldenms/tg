@@ -38,7 +38,6 @@ import com.google.inject.Inject;
 @EntityType(TgPersistentEntityWithProperties.class)
 public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersistentEntityWithProperties> implements ITgPersistentEntityWithProperties {
 
-    private final TgPersistentEntityWithPropertiesMixin mixin;
     private final TgPersistentEntityWithPropertiesChangeSubject changeSubject;
 
     @Inject
@@ -46,7 +45,6 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
         super(filter);
 
         this.changeSubject = changeSubject;
-        mixin = new TgPersistentEntityWithPropertiesMixin(this);
     }
 
     /**
@@ -55,6 +53,11 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
     @Override
     @SessionRequired
     public TgPersistentEntityWithProperties save(final TgPersistentEntityWithProperties entity) {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);
         return saved;
@@ -86,6 +89,6 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .with("critOnlyEntityProp")
                 .with("compositeProp", "compositeProp.desc")
                 // .with("producerInitProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key")
-                .with("producerInitProp"); //
+                .with("producerInitProp", "status.key", "status.desc"); //
     }
 }

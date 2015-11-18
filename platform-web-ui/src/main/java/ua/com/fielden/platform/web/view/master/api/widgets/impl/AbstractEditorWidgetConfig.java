@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.actions.IPropertyActionConfig;
-import ua.com.fielden.platform.web.view.master.api.actions.property.IPropertyActionConfig0;
-import ua.com.fielden.platform.web.view.master.api.actions.property.impl.PropertyActionConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.IAlso;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
 import ua.com.fielden.platform.web.view.master.api.helpers.ISkipValidation;
@@ -22,8 +21,9 @@ public abstract class AbstractEditorWidgetConfig<T extends AbstractEntity<?>, WI
     }
 
     @Override
-    public IPropertyActionConfig0<T> withAction(final String name, final Class<? extends AbstractEntity<?>> functionalEntity) {
-        return new PropertyActionConfig<>(widget.initAction(name, functionalEntity), propSelector);
+    public IAlso<T> withAction(final EntityActionConfig action) {
+        widget.withAction(action);
+        return this;
     }
 
     @Override
