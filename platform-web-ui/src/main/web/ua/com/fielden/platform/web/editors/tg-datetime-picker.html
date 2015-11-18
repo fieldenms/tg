@@ -67,8 +67,21 @@
     </style>
 
     <template>
-        <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-change="[[_onChange]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" current-state="[[currentState]]">
-            <paper-icon-button class="custom-icon-buttons picker-button" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
+        <tg-editor 
+        	id="editorDom" 
+        	prop-title="[[propTitle]]"
+        	_disabled="[[_disabled]]" 
+        	_editing-value="{{_editingValue}}" 
+        	action="[[action]]" _error="[[_error]]" 
+        	_comm-value="[[_commValue]]" 
+        	_accepted-value="[[_acceptedValue]]" 
+        	debug="[[debug]]" 
+        	_on-change="[[_onChange]]" 
+        	_on-input="[[_onInput]]" 
+        	_on-keydown="[[_onKeydown]]" 
+        	current-state="[[currentState]]">
+            <content class=".property-action"></content>
+            <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
         </tg-editor>
     </template>
 </dom-module>

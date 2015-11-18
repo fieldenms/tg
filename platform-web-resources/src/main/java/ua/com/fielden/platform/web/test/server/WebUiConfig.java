@@ -43,6 +43,8 @@ import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusActionProducer;
+import ua.com.fielden.platform.sample.domain.TgDummyAction;
+import ua.com.fielden.platform.sample.domain.TgDummyActionProducer;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMasterProducer;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
@@ -188,22 +190,112 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build())
                 .also()
                 .addProp("entityProp.entityProp").asAutocompleter().withProps(pair("desc", true))
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("key").asSinglelineText()
+                .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("bigDecimalProp").asDecimal()
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("stringProp").asSinglelineText().skipValidation()
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("stringProp").asMultilineText()
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("dateProp").asDateTimePicker()
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("booleanProp").asCheckbox()
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("compositeProp").asAutocompleter()
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("requiredValidatedProp").asSpinner()
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
                 .also()
                 .addProp("status").asAutocompleter()
                     .withAction(
@@ -213,16 +305,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 + "self.setEditorValue4Property('status', functionalEntity, 'status');\n"
                                 )) // self.retrieve()
                         .postActionError(new PostActionError(""))
-                        .icon("trending-up")
-                        .shortDesc("Export")
-                        .longDesc("Export action")
+                        .icon("add-circle")
+                        .shortDesc("Create Status")
+                        .longDesc("Creates new status and assignes it back to the Status property")
                         .build())
                 .also()
 
                 .addAction(MasterActions.REFRESH)
-                //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("CANCEL")
-                /*      */.longDesc("Cancels any changes and closes the master (if in dialog)")
+                    .icon("highlight-off")
+                    .shortDesc("CANCEL")
+                    .longDesc("Cancels any changes and closes the master (if in dialog)")
 
                 // ENTITY CUSTOM ACTIONS
                 .addAction(
@@ -276,6 +368,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 // PROPERTY EDITORS
 
                 .addProp("colourProp").asColour()
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
+
                 .also()
                 .addProp("booleanProp").asCheckbox()
                 .also()
@@ -370,6 +473,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         null,
                         injector())).
                 addMaster(TgExportFunctionalEntity.class, EntityMaster.noUiFunctionalMaster(TgExportFunctionalEntity.class, TgExportFunctionalEntityProducer.class, injector())).
+                addMaster(TgDummyAction.class, EntityMaster.noUiFunctionalMaster(TgDummyAction.class, TgDummyActionProducer.class, injector())).
                 addMaster(TgCreatePersistentStatusAction.class, new EntityMaster<TgCreatePersistentStatusAction>(
                         TgCreatePersistentStatusAction.class,
                         TgCreatePersistentStatusActionProducer.class,
