@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.Properties;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
@@ -67,11 +68,28 @@ public class VulcanizingUtility {
     }
 
     /**
-     * Vulcanizes 'startup-resources-origin.html' file into 'startup-resources-vulcanized.html'.
-     *
+     * Vulcanizes '*-startup-resources-origin.html' file into '*-startup-resources-vulcanized.html'.
+     * 
      * @param injector
+     * @param platformVendorResourcesPath
+     * @param platformWebUiResourcesPath
+     * @param appVendorResourcesPath
+     * @param appWebUiResourcesPath
+     * @param loginTargetPlatformSpecificPath
+     * @param mobileAndDesktopAppSpecificPath
+     * @param commandMaker -- a function that produces a sequence of string values to build a vulcanizer process
+     * @param logger
      */
-    public static void vulcanize(final Injector injector, final String platformVendorResourcesPath, final String platformWebUiResourcesPath, final String appVendorResourcesPath, final String appWebUiResourcesPath, final String loginTargetPlatformSpecificPath, final String mobileAndDesktopAppSpecificPath, final Logger logger) {
+    public static void vulcanize(
+            final Injector injector, 
+            final String platformVendorResourcesPath, 
+            final String platformWebUiResourcesPath, 
+            final String appVendorResourcesPath, 
+            final String appWebUiResourcesPath, 
+            final String loginTargetPlatformSpecificPath, 
+            final String mobileAndDesktopAppSpecificPath,
+            final Function<String, String[]> commandMaker,
+            final Logger logger) {
         if (logger == null) {
             throw new IllegalArgumentException("Logger is a required argumet.");
         }
@@ -89,7 +107,7 @@ public class VulcanizingUtility {
         logger.info("\t------------------------------");
 
         logger.info("\tVulcanizing login resources...");
-        vulcanizeStartupResourcesFor("login", DeviceProfile.MOBILE, sourceController, loginTargetPlatformSpecificPath, logger);
+        vulcanizeStartupResourcesFor("login", DeviceProfile.MOBILE, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("login"), logger);
         logger.info("\tVulcanized login resources.");
 
         logger.info("\t------------------------------");
@@ -99,13 +117,13 @@ public class VulcanizingUtility {
 
         logger.info("\tVulcanizing mobile resources...");
         downloadSpecificGeneratedResourcesFor(DeviceProfile.MOBILE, sourceController, logger);
-        vulcanizeStartupResourcesFor("mobile", DeviceProfile.MOBILE, sourceController, mobileAndDesktopAppSpecificPath, logger);
+        vulcanizeStartupResourcesFor("mobile", DeviceProfile.MOBILE, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("mobile"), logger);
         logger.info("\tVulcanized mobile resources.");
         logger.info("\t------------------------------");
 
         logger.info("\tVulcanizing desktop resources...");
         downloadSpecificGeneratedResourcesFor(DeviceProfile.DESKTOP, sourceController, logger);
-        vulcanizeStartupResourcesFor("desktop", DeviceProfile.DESKTOP, sourceController, mobileAndDesktopAppSpecificPath, logger);
+        vulcanizeStartupResourcesFor("desktop", DeviceProfile.DESKTOP, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("desktop"), logger);
         logger.info("\tVulcanized desktop resources.");
         logger.info("\t------------------------------");
 
@@ -142,14 +160,22 @@ public class VulcanizingUtility {
         logger.info("\t\tDownloaded " + deviceProfile + " generated resources.");
     }
 
-    private static void vulcanizeStartupResourcesFor(final String prefix, final DeviceProfile deviceProfile, final ISourceController sourceController, final String targetAppSpecificPath, final Logger logger) {
+    private static void vulcanizeStartupResourcesFor(
+            final String prefix, 
+            final DeviceProfile deviceProfile, 
+            final ISourceController sourceController, 
+            final String targetAppSpecificPath,
+            final String[] commands,
+            final Logger logger) {
         logger.info("\t\tVulcanizing [" + prefix + "-startup-resources-origin.html]...");
         try {
 
             // Windows on Jhou's machine
             //final ProcessBuilder pb = new ProcessBuilder("C:/Users/Yuriy/AppData/Roaming/npm/vulcanize.cmd", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", ">", prefix + "-startup-resources-origin-vulcanized.html");
             
-            final ProcessBuilder pb = new ProcessBuilder("/bin/bash", prefix + "-script.sh");
+            
+            
+            final ProcessBuilder pb = new ProcessBuilder(commands);
             
             // need to enrich the PATH with the paths that point to vulcanize and node
             final String path = System.getenv().get("PATH");

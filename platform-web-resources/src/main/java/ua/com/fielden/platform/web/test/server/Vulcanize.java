@@ -13,6 +13,10 @@ import ua.com.fielden.platform.web.utils.VulcanizingUtility;
  *
  */
 public class Vulcanize extends VulcanizingUtility {
+    
+    public static String[] unixCommands(final String prefix) {
+        return new String[] {"/bin/bash", prefix + "-script.sh"};
+    }
     /**
      * The procedure of vulcanization all-in-one.
      *
@@ -34,7 +38,7 @@ public class Vulcanize extends VulcanizingUtility {
         final String loginTargetPlatformSpecificPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
         final String mobileAndDesktopAppSpecificPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
 
-        vulcanize(component.injector(), platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath, loginTargetPlatformSpecificPath, mobileAndDesktopAppSpecificPath, logger);
+        vulcanize(component.injector(), platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath, loginTargetPlatformSpecificPath, mobileAndDesktopAppSpecificPath, Vulcanize::unixCommands, logger);
     }
 
 }
