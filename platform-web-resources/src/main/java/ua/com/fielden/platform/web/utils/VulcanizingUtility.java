@@ -1,10 +1,12 @@
-package ua.com.fielden.platform.web.test.server;
+package ua.com.fielden.platform.web.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.Properties;
 
@@ -28,19 +30,14 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
  * @author TG Team
  *
  */
-public class AbstractVulcanize {
-    private static final Logger logger = Logger.getLogger(AbstractVulcanize.class);
-
-    protected static Logger logger() {
-        return logger;
-    }
+public class VulcanizingUtility {
 
     /**
      * Retrieves application properties from the specified file.
      *
      * @return
      */
-    protected static Properties retrieveApplicationPropertiesAndConfigureLogging(final String fileName) {
+    public static Properties retrieveApplicationPropertiesAndConfigureLogging(final String fileName) {
         InputStream st = null;
         Properties props = null;
         try {
@@ -73,7 +70,11 @@ public class AbstractVulcanize {
      *
      * @param injector
      */
-    protected static void vulcanize(final Injector injector, final String platformVendorResourcesPath, final String platformWebUiResourcesPath, final String appVendorResourcesPath, final String appWebUiResourcesPath, final String loginTargetPlatformSpecificPath, final String mobileAndDesktopAppSpecificPath) {
+    public static void vulcanize(final Injector injector, final String platformVendorResourcesPath, final String platformWebUiResourcesPath, final String appVendorResourcesPath, final String appWebUiResourcesPath, final String loginTargetPlatformSpecificPath, final String mobileAndDesktopAppSpecificPath, final Logger logger) {
+        if (logger == null) {
+            throw new IllegalArgumentException("Logger is a required argumet.");
+        }
+        
         logger.info("Vulcanizing...");
         final ISourceController sourceController = injector.getInstance(ISourceController.class);
 
@@ -83,27 +84,27 @@ public class AbstractVulcanize {
         final File dir = new File("vulcan");
         dir.mkdir();
 
-        copyStaticResources(platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath);
+        copyStaticResources(platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath, logger);
         logger.info("\t------------------------------");
 
         logger.info("\tVulcanizing login resources...");
-        vulcanizeStartupResourcesFor("login", DeviceProfile.MOBILE, sourceController, loginTargetPlatformSpecificPath);
+        vulcanizeStartupResourcesFor("login", DeviceProfile.MOBILE, sourceController, loginTargetPlatformSpecificPath, logger);
         logger.info("\tVulcanized login resources.");
 
         logger.info("\t------------------------------");
 
-        downloadCommonGeneratedResources(webUiConfig, sourceController);
+        downloadCommonGeneratedResources(webUiConfig, sourceController, logger);
         logger.info("\t------------------------------");
 
         logger.info("\tVulcanizing mobile resources...");
-        downloadSpecificGeneratedResourcesFor(DeviceProfile.MOBILE, sourceController);
-        vulcanizeStartupResourcesFor("mobile", DeviceProfile.MOBILE, sourceController, mobileAndDesktopAppSpecificPath);
+        downloadSpecificGeneratedResourcesFor(DeviceProfile.MOBILE, sourceController, logger);
+        vulcanizeStartupResourcesFor("mobile", DeviceProfile.MOBILE, sourceController, mobileAndDesktopAppSpecificPath, logger);
         logger.info("\tVulcanized mobile resources.");
         logger.info("\t------------------------------");
 
         logger.info("\tVulcanizing desktop resources...");
-        downloadSpecificGeneratedResourcesFor(DeviceProfile.DESKTOP, sourceController);
-        vulcanizeStartupResourcesFor("desktop", DeviceProfile.DESKTOP, sourceController, mobileAndDesktopAppSpecificPath);
+        downloadSpecificGeneratedResourcesFor(DeviceProfile.DESKTOP, sourceController, logger);
+        vulcanizeStartupResourcesFor("desktop", DeviceProfile.DESKTOP, sourceController, mobileAndDesktopAppSpecificPath, logger);
         logger.info("\tVulcanized desktop resources.");
         logger.info("\t------------------------------");
 
@@ -119,42 +120,61 @@ public class AbstractVulcanize {
         logger.info("Vulcanized.");
     }
 
-    private static void downloadCommonGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController) {
+    private static void downloadCommonGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController, final Logger logger) {
         logger.info("\tDownloading common generated resources...");
-        downloadSource("app", "tg-app-config.html", sourceController, null);
-        downloadSource("app", "tg-reflector.html", sourceController, null);
+        downloadSource("app", "tg-app-config.html", sourceController, null, logger);
+        downloadSource("app", "tg-reflector.html", sourceController, null, logger);
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
-            downloadSource("master_ui", masterType.getName(), sourceController, null);
+            downloadSource("master_ui", masterType.getName(), sourceController, null, logger);
         }
         for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
-            downloadSource("centre_ui", centreMiType.getName(), sourceController, null);
-            downloadSource("centre_ui/egi", centreMiType.getName(), sourceController, null);
+            downloadSource("centre_ui", centreMiType.getName(), sourceController, null, logger);
+            downloadSource("centre_ui/egi", centreMiType.getName(), sourceController, null, logger);
         }
         logger.info("\tDownloaded common generated resources.");
     }
 
-    private static void downloadSpecificGeneratedResourcesFor(final DeviceProfile deviceProfile, final ISourceController sourceController) {
+    private static void downloadSpecificGeneratedResourcesFor(final DeviceProfile deviceProfile, final ISourceController sourceController, final Logger logger) {
         logger.info("\t\tDownloading " + deviceProfile + " generated resources...");
-        downloadSource("app", "tg-app.html", sourceController, deviceProfile);
-        downloadSource("app", "tg-element-loader.html", sourceController, deviceProfile);
+        downloadSource("app", "tg-app.html", sourceController, deviceProfile, logger);
+        downloadSource("app", "tg-element-loader.html", sourceController, deviceProfile, logger);
         logger.info("\t\tDownloaded " + deviceProfile + " generated resources.");
     }
 
-    private static void vulcanizeStartupResourcesFor(final String prefix, final DeviceProfile deviceProfile, final ISourceController sourceController, final String targetAppSpecificPath) {
+    private static void vulcanizeStartupResourcesFor(final String prefix, final DeviceProfile deviceProfile, final ISourceController sourceController, final String targetAppSpecificPath, final Logger logger) {
         logger.info("\t\tVulcanizing [" + prefix + "-startup-resources-origin.html]...");
         try {
 
-            final ProcessBuilder pb = new ProcessBuilder("C:/Users/Yuriy/AppData/Roaming/npm/vulcanize.cmd", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", ">", prefix + "-startup-resources-origin-vulcanized.html");
-            // final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "vulcanize", "-p", "'vulcan/'", "/" + prefix + "-startup-resources-origin.html", ">", prefix + "-startup-resources-origin-vulcanized.html");
+            // Windows on Jhou's machine
+            //final ProcessBuilder pb = new ProcessBuilder("C:/Users/Yuriy/AppData/Roaming/npm/vulcanize.cmd", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", ">", prefix + "-startup-resources-origin-vulcanized.html");
+            
+            final ProcessBuilder pb = new ProcessBuilder("/bin/bash", prefix + "-script.sh");
+            
+            // need to enrich the PATH with the paths that point to vulcanize and node
+            final String path = System.getenv().get("PATH");
+            pb.environment().put("PATH", String.format("%s:%s", path, "/usr/local/bin"));
 
-            //            final ProcessBuilder pb = new ProcessBuilder("/bin/bash", prefix + "-script.sh");
+            // redirect error stream to the output
             pb.redirectErrorStream(true);
-            final Process process = pb.start();
-            process.waitFor();
 
-            //            final Runtime r = Runtime.getRuntime();
-            //            r.exec("/home/oleh/.nvm/versions/v0.12.4/bin/vulcanize -p 'vulcan/' /" + prefix + "-startup-resources-origin.html > " + prefix
-            //                    + "-startup-resources-origin-vulcanized.html").waitFor();
+            // start the process
+            final Process process = pb.start();
+            
+            // let's build a process output reader that would collect it into a local variable for printing
+            // should would include errors and any other output produced by the process
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            final StringBuilder builder = new StringBuilder();
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+                builder.append(System.getProperty("line.separator"));
+            }
+            String result = builder.toString();
+            System.out.printf("OUTPUT: \n%s\n", result);
+            
+            // wait for the process to complete before doing anything else...
+            process.waitFor();
+            
         } catch (final IOException | InterruptedException e) {
             logger.error(e.getMessage(), e);
             throw new IllegalStateException(e);
@@ -168,7 +188,7 @@ public class AbstractVulcanize {
             fileInputStream.close();
 
             final PrintStream ps = new PrintStream(prefix + "-startup-resources-origin-vulcanized.html");
-            ps.print(inlineScripts(inlineStyles(vulcanized, sourceController, deviceProfile), sourceController, deviceProfile));
+            ps.print(inlineScripts(inlineStyles(vulcanized, sourceController, deviceProfile, logger), sourceController, deviceProfile, logger));
             ps.close();
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
@@ -195,7 +215,7 @@ public class AbstractVulcanize {
      * @param appVendorResourcesPath
      * @param appWebUiResourcesPath
      */
-    private static void copyStaticResources(final String platformVendorResourcesPath, final String platformWebUiResourcesPath, final String appVendorResourcesPath, final String appWebUiResourcesPath) {
+    private static void copyStaticResources(final String platformVendorResourcesPath, final String platformWebUiResourcesPath, final String appVendorResourcesPath, final String appWebUiResourcesPath, final Logger logger) {
         logger.info("\tCopying static resources...");
         new File("vulcan/resources").mkdir();
         try {
@@ -218,7 +238,7 @@ public class AbstractVulcanize {
         logger.info("\tCopied static resources.");
     }
 
-    private static void downloadSource(final String dir, final String name, final ISourceController sourceController, final DeviceProfile deviceProfile) {
+    private static void downloadSource(final String dir, final String name, final ISourceController sourceController, final DeviceProfile deviceProfile, final Logger logger) {
         PrintStream ps;
         try {
             final File directory = new File("vulcan/" + dir);
@@ -246,7 +266,7 @@ public class AbstractVulcanize {
      *
      * @return
      */
-    private static String inlineStyles(final String source, final ISourceController sourceController, final DeviceProfile deviceProfile) {
+    private static String inlineStyles(final String source, final ISourceController sourceController, final DeviceProfile deviceProfile, final Logger logger) {
         // TODO FRAGILE APPROACH! please, provide better implementation (whitespaces, exchanged rel, type and href, double or single quotes etc.?):
         final String searchString = "<link rel=\"import\" type=\"css\" href=\"";
         final int indexOfCssImport = source.indexOf(searchString);
@@ -256,7 +276,7 @@ public class AbstractVulcanize {
             final String importStatement = source.substring(indexOfCssImport, endIndex);
             final String uri = importStatement.substring(searchString.length(), importStatement.length() - endSearchString.length());
             logger.info("\t\t\tInlining style [" + uri + "]...");
-            return inlineStyles(source.replace(importStatement, "<style>" + sourceController.loadSource(uri, deviceProfile) + "\n</style>"), sourceController, deviceProfile);
+            return inlineStyles(source.replace(importStatement, "<style>" + sourceController.loadSource(uri, deviceProfile) + "\n</style>"), sourceController, deviceProfile, logger);
         } else {
             return source;
         }
@@ -272,7 +292,7 @@ public class AbstractVulcanize {
      *
      * @return
      */
-    private static String inlineScripts(final String source, final ISourceController sourceController, final DeviceProfile deviceProfile) {
+    private static String inlineScripts(final String source, final ISourceController sourceController, final DeviceProfile deviceProfile, final Logger logger) {
         // TODO FRAGILE APPROACH! please, provide better implementation (whitespaces, exchanged charset and src, double or single quotes etc.?)
         final String searchString = "<script src=\"";
         final int indexOfScriptTag = source.indexOf(searchString);
@@ -282,7 +302,7 @@ public class AbstractVulcanize {
             final String scriptTag = source.substring(indexOfScriptTag, endIndex);
             final String uri = scriptTag.substring(searchString.length(), scriptTag.length() - endSearchString.length());
             logger.info("\t\t\tInlining script [" + uri + "]...");
-            return inlineScripts(source.replace(scriptTag, "<script>" + sourceController.loadSource(uri, deviceProfile).replace("//# sourceMappingURL", "//") + "\n</script>"), sourceController, deviceProfile);
+            return inlineScripts(source.replace(scriptTag, "<script>" + sourceController.loadSource(uri, deviceProfile).replace("//# sourceMappingURL", "//") + "\n</script>"), sourceController, deviceProfile, logger);
         } else {
             return source;
         }
