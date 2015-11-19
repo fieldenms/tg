@@ -1,12 +1,11 @@
 package ua.com.fielden.platform.client.svg.combining;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 
 public class SvgCombiningUtility {
@@ -15,70 +14,56 @@ public class SvgCombiningUtility {
 
     }
 
-    private final static File fileBegin = new File("src/test/resources/SvgCombinerBegin");
-    private final static File fileEnd = new File("src/test/resources/SvgCombinerEnd");
+    private final static String fileBegin = "src/test/resources/SvgCombinerBegin";
+    private final static String fileEnd = "src/test/resources/SvgCombinerEnd";
 
-//    public void svgCombining(final File src[], final File dest) throws IOException {
-//
-//        final File fileBegin = new File("src/test/resources/SvgCombinerBegin");
-//        final File fileEnd = new File("src/test/resources/SvgCombinerEnd");
-//
-//        FileUtils.copyFile(fileBegin, dest);
-//        FileUtils.copyFile(src[1], dest);
-//        FileUtils.copyFile(fileEnd, dest);
-//
-//    }
+    public static Stream<String> svgCombining(final String[] srcFiles, final String destFile) {
 
-
-
-    public static void svgCombining (final File[] srcFiles, final File destFile) {
-
-        FileWriter fstream = null;
-        BufferedWriter out = null;
-        try {
-            fstream = new FileWriter(destFile, true);
-             out = new BufferedWriter(fstream);
-        } catch (final IOException e1) {
-            e1.printStackTrace();
-        }
-
-        for (final File file : srcFiles) {
-            FileInputStream fis;
-            try {
-                fis = new FileInputStream(file);
-                final BufferedReader in = new BufferedReader(new InputStreamReader(fis));
-
-                String aLine;
-                while ((aLine = in.readLine()) != null) {
-                    out.write(aLine);
-                    out.newLine();
-                }
-
-                in.close();
-            } catch (final IOException e) {
-                e.printStackTrace();
+        for(final String s:srcFiles){
+            if (s.isEmpty()||!(new File(s).exists())){
+                throw new IllegalArgumentException("One or more src file does`n exist!");
             }
         }
-
+        if(!new File(destFile).exists()||destFile.isEmpty()){
+            throw new IllegalArgumentException("Dest file doesn`t exist!");
+        }
+        Stream<String> stream = null;
         try {
-            out.close();
+            stream = Files.lines(Paths.get(fileBegin));
         } catch (final IOException e) {
             e.printStackTrace();
         }
-
+        return stream;
     }
 
-    public static void main(final String[] args) {
-        final File[] srcFiles = new File[args.length + 1];
+    private static void parse(final Stream<String> lines, final String output) throws IOException {
+        final FileWriter fw = new FileWriter(output);
+        lines.forEach(packageName-> writeToFile(fw, packageName));
+        fw.close();
+        lines.close();
+    }
+
+    private static void writeToFile(final FileWriter fw, final String packageName) {
+        try {
+            fw.write(String.format("%s%n", packageName));
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(final String[] args) throws IOException {
+        final String[] srcFiles = new String[args.length + 1];
         final int lastFile = args.length - 1;
-        final File destFile = new File(args[lastFile]);
+        final String destFile = new String(args[lastFile]);
 
         srcFiles[0] = fileBegin;
         srcFiles[args.length] = fileEnd;
         for (int i = 1; i < lastFile; i++) {
-            srcFiles[i] = new File(args[i]);
+            srcFiles[i] = new String(args[i]);
         }
 
-        svgCombining(srcFiles, destFile);
+        parse(svgCombining(srcFiles, destFile), args[lastFile]);
+       //svgCombining(srcFiles, destFile);
+        //new SvgCombiningUtility().parse(svgCombining(srcFiles, destFile), args[lastFile]);
     }
 }
