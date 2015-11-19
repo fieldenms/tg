@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -162,15 +163,10 @@ public class VulcanizingUtility {
             
             // let's build a process output reader that would collect it into a local variable for printing
             // should would include errors and any other output produced by the process
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            final StringBuilder builder = new StringBuilder();
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                builder.append(line);
-                builder.append(System.getProperty("line.separator"));
+            try (final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));) {
+                final String output = reader.lines().collect(Collectors.joining("\n"));
+                System.out.printf("OUTPUT: \n%s\n", output);
             }
-            String result = builder.toString();
-            System.out.printf("OUTPUT: \n%s\n", result);
             
             // wait for the process to complete before doing anything else...
             process.waitFor();
