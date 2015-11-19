@@ -29,7 +29,7 @@ public class Vulcanize extends VulcanizingUtility {
      */
     public static void main(final String[] args) {
         final Logger logger = Logger.getLogger(Vulcanize.class);
-        
+        final String[] additionalPaths = new String[] {"/usr/local/bin"};
         final Properties props = retrieveApplicationPropertiesAndConfigureLogging("src/main/resources/application.properties");
 
         logger.info("Starting app...");
@@ -52,6 +52,7 @@ public class Vulcanize extends VulcanizingUtility {
                 loginTargetPlatformSpecificPath, 
                 mobileAndDesktopAppSpecificPath, 
                 Vulcanize::unixCommands, 
+                additionalPaths,
                 logger);
     }
 
