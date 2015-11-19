@@ -17,6 +17,11 @@ public class Vulcanize extends VulcanizingUtility {
     public static String[] unixCommands(final String prefix) {
         return new String[] {"/bin/bash", prefix + "-script.sh"};
     }
+    
+    public static String[] windowsCommands4Jhou(final String prefix) {
+        return new String[] {"C:/Users/Yuriy/AppData/Roaming/npm/vulcanize.cmd", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", ">", prefix + "-startup-resources-origin-vulcanized.html"};
+    }
+
     /**
      * The procedure of vulcanization all-in-one.
      *
@@ -38,7 +43,16 @@ public class Vulcanize extends VulcanizingUtility {
         final String loginTargetPlatformSpecificPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
         final String mobileAndDesktopAppSpecificPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
 
-        vulcanize(component.injector(), platformVendorResourcesPath, platformWebUiResourcesPath, appVendorResourcesPath, appWebUiResourcesPath, loginTargetPlatformSpecificPath, mobileAndDesktopAppSpecificPath, Vulcanize::unixCommands, logger);
+        vulcanize(
+                component.injector(), 
+                platformVendorResourcesPath, 
+                platformWebUiResourcesPath, 
+                appVendorResourcesPath, 
+                appWebUiResourcesPath, 
+                loginTargetPlatformSpecificPath, 
+                mobileAndDesktopAppSpecificPath, 
+                Vulcanize::unixCommands, 
+                logger);
     }
 
 }

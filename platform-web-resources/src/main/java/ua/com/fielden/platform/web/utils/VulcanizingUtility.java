@@ -169,17 +169,11 @@ public class VulcanizingUtility {
             final Logger logger) {
         logger.info("\t\tVulcanizing [" + prefix + "-startup-resources-origin.html]...");
         try {
-
-            // Windows on Jhou's machine
-            //final ProcessBuilder pb = new ProcessBuilder("C:/Users/Yuriy/AppData/Roaming/npm/vulcanize.cmd", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", ">", prefix + "-startup-resources-origin-vulcanized.html");
-            
-            
-            
             final ProcessBuilder pb = new ProcessBuilder(commands);
             
             // need to enrich the PATH with the paths that point to vulcanize and node
             final String path = System.getenv().get("PATH");
-            pb.environment().put("PATH", String.format("%s:%s", path, "/usr/local/bin"));
+            pb.environment().put("PATH", String.format("%s%s%s", path, File.pathSeparator, "/usr/local/bin"));
 
             // redirect error stream to the output
             pb.redirectErrorStream(true);
