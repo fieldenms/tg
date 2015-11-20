@@ -30,7 +30,7 @@ public class SvgCombiningUtilityTest {
         final String args[] = new String[3];
         args[0] = "src/test/resources/icon.svg";
         args[1] = "src/test/resources/icon2.svg";
-        args[2] = "src/test/resources/combiningSvgResult.html";
+        args[2] = "src/test/resources/notExistedFile.html";
 
         try {
             SvgCombiningUtility.svgCombining(args);
