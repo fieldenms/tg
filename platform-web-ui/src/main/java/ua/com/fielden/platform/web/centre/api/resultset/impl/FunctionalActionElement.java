@@ -145,7 +145,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");
         attrs.put("post-action-success", "[[" + actionsHolderName + "." + numberOfAction + ".postActionSuccess]]");
         attrs.put("post-action-error", "[[" + actionsHolderName + "." + numberOfAction + ".postActionError]]");
-        if (!StringUtils.isEmpty(chosenProperty)) {
+        
+        // chosenProperty should be ignored strictly when it is null as an empty value means 'this'
+        if (chosenProperty != null) {
             attrs.put("chosen-property", chosenProperty);
         }
 
