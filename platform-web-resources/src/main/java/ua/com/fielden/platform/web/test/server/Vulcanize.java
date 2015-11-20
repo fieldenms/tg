@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
+import java.io.File;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -28,9 +29,29 @@ public class Vulcanize extends VulcanizingUtility {
      * @param args
      */
     public static void main(final String[] args) {
+        if (args.length < 1) {
+            throw new IllegalArgumentException(""
+                    + "One or two arguments are expected: \n"
+                    + "\t1st is the path to the application properties file;\n"
+                    + "\t2nd is the additional paths to be added to the PATH env. variable.\n");
+        }
+        
         final Logger logger = Logger.getLogger(Vulcanize.class);
-        final String[] additionalPaths = new String[] {"/usr/local/bin"};
-        final Properties props = retrieveApplicationPropertiesAndConfigureLogging("src/main/resources/application.properties");
+        if (args.length > 2) {
+            logger.warn("There are more than 2 arguments. Only first two will be used, the rest will be ignored.");
+        }
+        final String propertyFile;
+        final String paths;
+        if (args.length == 1) {
+            propertyFile = args[0];
+            paths = "";
+        } else {
+            propertyFile = args[0];
+            paths = args[1];
+        }
+        
+        final Properties props = retrieveApplicationPropertiesAndConfigureLogging(propertyFile);
+        final String[] additionalPaths = paths.split(File.pathSeparator);
 
         logger.info("Starting app...");
         final TgTestApplicationConfiguration component = new TgTestApplicationConfiguration(props);
