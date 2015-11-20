@@ -1,35 +1,42 @@
 package ua.com.fielden.platform.client.svg.combining;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 import org.junit.Test;
 
 public class SvgCombiningUtilityTest {
 
     @Test
-    public void test_to_copy() throws Exception {
+    public void test_for_copy() throws Exception {
 
-        final String args[] = new String[2];
-        args[0] = "/home/natalie/Pictures/fleet-icons/user.svg";
-        args[1] = "/home/natalie/Pictures/fleet-icons/dest.html";
+        final String args[] = new String[3];
+        args[0] = "src/test/resources/icon.svg";
+        args[1] = "src/test/resources/icon2.svg";
+        args[2] = "src/test/resources/combiningSvgResult.html";
 
-        SvgCombiningUtility.main(args);
+        SvgCombiningUtility.svgCombining(args);
         assertFalse(args[1].isEmpty());
 
     }
 
     @Test
-    public void file_wich_does_not_exist_can_not_be_argument() {
+    public void file_wich_does_not_exist_can_not_be_argument() throws IOException, URISyntaxException {
 
-        final String args[] = new String[2];
-        args[0] = "/home/natalie/Pictures/fleet-icons/user.svg";
-        args[1] = "/home/natalie/Pictures/fleet-icons/d.html";
+        final String args[] = new String[3];
+        args[0] = "src/test/resources/icon.svg";
+        args[1] = "src/test/resources/icon2.svg";
+        args[2] = "src/test/resources/combiningSvgResult.html";
 
         try {
-            SvgCombiningUtility.main(args);
+            SvgCombiningUtility.svgCombining(args);
             fail();
-        } catch (final Exception e) {
+        } catch (final IllegalArgumentException ex) {
+            assertEquals("Dest file does not exist!", ex.getMessage());
         }
 
     }
