@@ -20,12 +20,14 @@
                 box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
             }
             paper-icon-button {
-                position: absolute;
-                top: 0;
-                right: 0;
-                width: 34px;
-                height: 34px;
                 color: var(--paper-deep-orange-300);
+                --paper-icon-button: {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    width: 34px;
+                    height: 34px;
+                };
             }
             paper-icon-button:hover {
                 color: var(--paper-deep-orange-600);
