@@ -11,6 +11,7 @@
     <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
     <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
     <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+    <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
 
     <style>
         .dropdown-content {
@@ -25,22 +26,18 @@
             <div class="fit layout horizontal center-center">
                 <div>
                     <paper-icon-button icon="more-vert" on-tap="showDropdown"></paper-icon-button>
-                    <iron-dropdown id="dropdown" style="color:black" on-tap="closeDropdown">
+                    <iron-dropdown id="dropdown" style="color:black">
                         <div class="dropdown-content layout vertical">
-                            <paper-icon-button icon="menu"></paper-icon-button>
-                            <paper-icon-button icon="clear"></paper-icon-button>
+                           <paper-input label="testing scroll bar"></paper-input>
                         </div>
                     </iron-dropdown>
                 </div>
-            </div>
+            </div>=
         </template>
     </body>
     <script>
         var app = document.querySelector("#app");
         app.showDropdown = function () {
-            app.$.dropdown.toggle();
-        };
-        app.closeDropdown = function () {
             app.$.dropdown.toggle();
         };
     </script>
