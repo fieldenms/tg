@@ -1,60 +1,51 @@
 package ua.com.fielden.platform.client.svg.combining;
 
+import static java.nio.file.Files.notExists;
+import static java.nio.file.Files.readAllBytes;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Paths;
-
-import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Charsets;
 
-
 public class SvgCombiningUtility {
 
-    public SvgCombiningUtility() {
-    }
+    private  OutputStream outputStream;
 
-    private static OutputStream outputStream;
-
-    public static String getContentOfSvgFiles(final String srcFile) throws IOException{
-        final String content = new String(Files.readAllBytes(Paths.get(srcFile)));
+    private  String getContentOfSvgFiles(final String srcFile) throws IOException {
+        final String content = new String(readAllBytes(Paths.get(srcFile)));
         return content;
     }
 
-    public static void combineSvgFilesContent(final String[] srcAndOutputFiles, final int size, final String name ) throws IOException {
+    public  void combineSvgFilesContent(final String[] srcFiles, final String outputFile,  final int size, final String name) throws IOException {
 
-        final String fileBegin = "<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\">" +
-                "\n <link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\">" +
-                "\n <iron-iconset-svg name=\"" + name + "\" size=\"" + size + "\">" + "\n <svg>" + "\n <defs>; \n";
+        final String fileBegin = new FileBegin(name, size).getFileBegin();
 
-        final String fileEnd = "</defs>" + "\n </svg>" + "\n </iron-iconset-svg>";
+        final String fileEnd = new FileEnd().getFileEnd();
 
-        final String outputFile = srcAndOutputFiles[srcAndOutputFiles.length - 1];
-
-        for (int i = 0; i < srcAndOutputFiles.length - 1; i++) {
-            if (StringUtils.isEmpty(srcAndOutputFiles[i]) || Files.notExists(new File(srcAndOutputFiles[i]).toPath())) {
+        for (int i = 0; i < srcFiles.length; i++) {
+            if (isEmpty(srcFiles[i]) || notExists(new File(srcFiles[i]).toPath())) {
                 throw new IllegalArgumentException("One or more src file does not exist!");
             }
         }
 
-        if (StringUtils.isEmpty(outputFile) || Files.notExists(new File(outputFile).toPath())) {
+        if (isEmpty(outputFile) || notExists(new File(outputFile).toPath())) {
             throw new IllegalArgumentException("Dest file does not exist!");
         }
-
         outputStream = new FileOutputStream(outputFile);
-        outputStream.write(fileBegin.getBytes(Charsets.UTF_8));
-        for (int i = 0; i < srcAndOutputFiles.length - 1; i++) {
-            outputStream.write((getContentOfSvgFiles(srcAndOutputFiles[i])+"\n").getBytes(Charsets.UTF_8));
-        }
-        outputStream.write(fileEnd.getBytes(Charsets.UTF_8));
+
         try {
+            outputStream.write(fileBegin.getBytes(Charsets.UTF_8));
+            for (int i = 0; i < srcFiles.length; i++) {
+                outputStream.write((getContentOfSvgFiles(srcFiles[i]) + "\n").getBytes(Charsets.UTF_8));
+            }
+            outputStream.write(fileEnd.getBytes(Charsets.UTF_8));
+        } finally {
             outputStream.close();
-        } catch (final Exception e) {
         }
-
     }
-
 }
