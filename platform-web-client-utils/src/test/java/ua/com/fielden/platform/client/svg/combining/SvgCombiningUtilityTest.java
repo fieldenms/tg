@@ -57,4 +57,23 @@ public class SvgCombiningUtilityTest {
 
     }
 
+    @Test
+    public void file_wich_is_not_able_to_be_writed_can_not_be_an_argument() throws IOException {
+
+        final String args[] = new String[2];
+        args[0] = "src/test/resources/icon.svg";
+        args[1] = "src/test/resources/icon2.svg";
+
+        final String outputFile = "src/test/resources/fileNotForWriting.html";
+        final SvgCombiningUtility svgCombiningUtility = new SvgCombiningUtility(1000, "testName");
+
+        try {
+            svgCombiningUtility.combineSvgFilesContent(args, outputFile);
+            fail();
+        } catch (final IOException ex) {
+            assertEquals("Something is wrong! Iron-iconset-svg was not created!", ex.getMessage());
+        }
+
+    }
+
 }

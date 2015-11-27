@@ -14,8 +14,8 @@ public class SvgCombiningUtility {
     private final int size;
     private final String name;
 
-    public SvgCombiningUtility(final int size, final String nane) {
-        this.name = nane;
+    public SvgCombiningUtility(final int size, final String name) {
+        this.name = name;
         this.size = size;
     }
 
@@ -28,6 +28,8 @@ public class SvgCombiningUtility {
         validator.validate(outputFile);
         try (OutputStream outputStream = new FileOutputStream(outputFile)) {
             write(outputStream, getAndJoinContentOfFiles(srcFiles) + "\n");
+        } catch (final IOException e) {
+            throw new IOException("Something is wrong! Iron-iconset-svg was not created!");
         }
     }
 
