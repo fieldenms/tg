@@ -14,21 +14,15 @@ import com.google.common.base.Charsets;
 
 public class SvgCombiningUtility {
 
-    private  OutputStream outputStream;
 
-    private  String getContentOfSvgFiles(final String srcFile) throws IOException {
-        final String content = new String(readAllBytes(Paths.get(srcFile)));
-        return content;
-    }
-
-    public  void combineSvgFilesContent(final String[] srcFiles, final String outputFile,  final int size, final String name) throws IOException {
+    public void combineSvgFilesContent(final String[] srcFiles, final String outputFile, final int size, final String name) throws IOException {
 
         final String fileBegin = new FileBegin(name, size).getFileBegin();
 
         final String fileEnd = new FileEnd().getFileEnd();
 
-        for (int i = 0; i < srcFiles.length; i++) {
-            if (isEmpty(srcFiles[i]) || notExists(new File(srcFiles[i]).toPath())) {
+        for (final String file : srcFiles) {
+            if (isEmpty(file) || notExists(new File(file).toPath())) {
                 throw new IllegalArgumentException("One or more src file does not exist!");
             }
         }
@@ -36,16 +30,24 @@ public class SvgCombiningUtility {
         if (isEmpty(outputFile) || notExists(new File(outputFile).toPath())) {
             throw new IllegalArgumentException("Dest file does not exist!");
         }
-        outputStream = new FileOutputStream(outputFile);
 
-        try {
+        try (OutputStream outputStream = new FileOutputStream(outputFile)) {
             outputStream.write(fileBegin.getBytes(Charsets.UTF_8));
-            for (int i = 0; i < srcFiles.length; i++) {
-                outputStream.write((getContentOfSvgFiles(srcFiles[i]) + "\n").getBytes(Charsets.UTF_8));
-            }
+            outputStream.write((getAndJoinContentOfFiles(srcFiles) + "\n").getBytes(Charsets.UTF_8));
             outputStream.write(fileEnd.getBytes(Charsets.UTF_8));
-        } finally {
-            outputStream.close();
         }
     }
-}
+
+    private String getAndJoinContentOfFiles(final String[] srcFile) throws IOException {
+        return joinFilesContent(0, srcFile, "");
+    }
+
+    private String joinFilesContent(final int fileToCopy, final String[] files, final String joinedFilesConent) throws IOException{
+        if (fileToCopy == files.length) {
+            return joinedFilesConent;
+        } else {
+            final String fileContent = new String(readAllBytes(Paths.get(files[fileToCopy])));
+            return joinFilesContent(fileToCopy + 1, files, joinedFilesConent + "\n" + fileContent);
+        }
+        }
+    }

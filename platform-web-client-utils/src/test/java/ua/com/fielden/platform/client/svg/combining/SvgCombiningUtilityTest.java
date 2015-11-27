@@ -16,7 +16,7 @@ public class SvgCombiningUtilityTest {
 
 
     @Test
-    public void output_file_sould_contain_each_src_file() throws IOException   {
+    public void output_file_should_contain_each_src_file() throws IOException   {
 
         final String args[] = new String[2];
         args[0] = "src/test/resources/icon.svg";
@@ -31,7 +31,7 @@ public class SvgCombiningUtilityTest {
 
         final SvgCombiningUtility svgCombiningUtility = new SvgCombiningUtility();
 
-        svgCombiningUtility.combineSvgFilesContent(args, outputFile, 1000, "name");
+        svgCombiningUtility.combineSvgFilesContent(args, outputFile, 1000, "testName");
 
         assertTrue(contentOutputFile.contains(contentFirs));
         assertTrue(contentOutputFile.contains(contentSecond));
@@ -49,7 +49,7 @@ public class SvgCombiningUtilityTest {
         final SvgCombiningUtility svgCombiningUtility = new SvgCombiningUtility();
 
         try {
-            svgCombiningUtility.combineSvgFilesContent(args, outputFile, 1000, "name");
+            svgCombiningUtility.combineSvgFilesContent(args, outputFile, 1000, "testName");
             fail();
         } catch (final IllegalArgumentException ex) {
             assertEquals("Dest file does not exist!", ex.getMessage());

@@ -2,9 +2,7 @@ package ua.com.fielden.platform.client.svg.combining;
 
 public class FileBegin {
 
-
-    private String fileBegin = new String();
-
+    private final String fileBegin;
 
     public String getFileBegin() {
         return fileBegin;
