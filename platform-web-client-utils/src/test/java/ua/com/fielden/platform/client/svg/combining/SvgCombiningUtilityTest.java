@@ -52,7 +52,7 @@ public class SvgCombiningUtilityTest {
             svgCombiningUtility.combineSvgFilesContent(args, outputFile, 1000, "testName");
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals("Dest file does not exist!", ex.getMessage());
+            assertEquals("Src or dest file does not exist!", ex.getMessage());
         }
 
     }
