@@ -29,9 +29,9 @@ public class SvgCombiningUtilityTest {
 
         final String contentOutputFile = Files.toString(new File(outputFile), Charsets.UTF_8);
 
-        final SvgCombiningUtility svgCombiningUtility = new SvgCombiningUtility();
+        final SvgCombiningUtility svgCombiningUtility = new SvgCombiningUtility(1000, "testName");
 
-        svgCombiningUtility.combineSvgFilesContent(args, outputFile, 1000, "testName");
+        svgCombiningUtility.combineSvgFilesContent(args, outputFile);
 
         assertTrue(contentOutputFile.contains(contentFirs));
         assertTrue(contentOutputFile.contains(contentSecond));
@@ -46,10 +46,10 @@ public class SvgCombiningUtilityTest {
         args[1] = "src/test/resources/icon2.svg";
 
         final String outputFile = "src/test/resources/notExistedFile.html";
-        final SvgCombiningUtility svgCombiningUtility = new SvgCombiningUtility();
+        final SvgCombiningUtility svgCombiningUtility = new SvgCombiningUtility(1000, "testName");
 
         try {
-            svgCombiningUtility.combineSvgFilesContent(args, outputFile, 1000, "testName");
+            svgCombiningUtility.combineSvgFilesContent(args, outputFile);
             fail();
         } catch (final IllegalArgumentException ex) {
             assertEquals("Src or dest file does not exist!", ex.getMessage());

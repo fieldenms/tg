@@ -11,20 +11,34 @@ import com.google.common.base.Charsets;
 
 public class SvgCombiningUtility {
 
-    public void combineSvgFilesContent(final String[] srcFiles, final String outputFile, final int size, final String name) throws IOException {
-        final String fileBegin = new FileBegin(name, size).getFileBegin();
-        final String fileEnd = new FileEnd().getFileEnd();
+    private final int size;
+    private final String name;
+
+    public SvgCombiningUtility(final int size, final String nane) {
+        this.name = nane;
+        this.size = size;
+    }
+
+    public void combineSvgFilesContent(final String[] srcFiles, final String outputFile) throws IOException {
+
         final Validator validator = new Validator();
         for (final String file : srcFiles) {
             validator.validate(file);
         }
         validator.validate(outputFile);
-
         try (OutputStream outputStream = new FileOutputStream(outputFile)) {
-            outputStream.write(fileBegin.getBytes(Charsets.UTF_8));
-            outputStream.write((getAndJoinContentOfFiles(srcFiles) + "\n").getBytes(Charsets.UTF_8));
-            outputStream.write(fileEnd.getBytes(Charsets.UTF_8));
+            write(outputStream, getAndJoinContentOfFiles(srcFiles) + "\n");
         }
+    }
+
+    private OutputStream write(final OutputStream outputStream, final String string) throws IOException {
+        final String fileBegin = new FileBegin(name, size).getFileBegin();
+        final String fileEnd = new FileEnd().getFileEnd();
+        outputStream.write(fileBegin.getBytes(Charsets.UTF_8));
+        outputStream.write((string).getBytes(Charsets.UTF_8));
+        outputStream.write(fileEnd.getBytes(Charsets.UTF_8));
+        return outputStream;
+
     }
 
     private String getAndJoinContentOfFiles(final String[] srcFile) throws IOException {
