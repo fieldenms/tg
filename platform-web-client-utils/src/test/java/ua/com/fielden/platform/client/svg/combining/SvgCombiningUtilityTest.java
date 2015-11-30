@@ -14,19 +14,16 @@ import com.google.common.io.Files;
 
 public class SvgCombiningUtilityTest {
 
-
     @Test
-    public void output_file_should_contain_each_src_file() throws IOException   {
+    public void output_file_should_contain_each_src_file() throws IOException {
 
         final String args[] = new String[2];
         args[0] = "src/test/resources/icon.svg";
         args[1] = "src/test/resources/icon2.svg";
-
         final String outputFile = "src/test/resources/combiningSvgResult.html";
 
         final String contentFirs = Files.toString(new File(args[0]), Charsets.UTF_8);
         final String contentSecond = Files.toString(new File(args[1]), Charsets.UTF_8);
-
         final String contentOutputFile = Files.toString(new File(outputFile), Charsets.UTF_8);
 
         final SvgCombiningUtility svgCombiningUtility = new SvgCombiningUtility(1000, "testName");
@@ -35,7 +32,6 @@ public class SvgCombiningUtilityTest {
 
         assertTrue(contentOutputFile.contains(contentFirs));
         assertTrue(contentOutputFile.contains(contentSecond));
-
     }
 
     @Test
@@ -44,7 +40,6 @@ public class SvgCombiningUtilityTest {
         final String args[] = new String[2];
         args[0] = "src/test/resources/icon.svg";
         args[1] = "src/test/resources/icon2.svg";
-
         final String outputFile = "src/test/resources/notExistedFile.html";
         final SvgCombiningUtility svgCombiningUtility = new SvgCombiningUtility(1000, "testName");
 
@@ -54,7 +49,6 @@ public class SvgCombiningUtilityTest {
         } catch (final IllegalArgumentException ex) {
             assertEquals("Src or dest file does not exist!", ex.getMessage());
         }
-
     }
 
     @Test
@@ -63,7 +57,6 @@ public class SvgCombiningUtilityTest {
         final String args[] = new String[2];
         args[0] = "src/test/resources/icon.svg";
         args[1] = "src/test/resources/icon2.svg";
-
         final String outputFile = "src/test/resources/fileNotForWriting.html";
         final SvgCombiningUtility svgCombiningUtility = new SvgCombiningUtility(1000, "testName");
 
@@ -73,7 +66,5 @@ public class SvgCombiningUtilityTest {
         } catch (final IOException ex) {
             assertEquals("Something is wrong! Iron-iconset-svg was not created!", ex.getMessage());
         }
-
     }
-
 }

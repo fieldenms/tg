@@ -14,6 +14,15 @@ public class SvgCombiningUtility {
     private final int size;
     private final String name;
 
+    public void main(final String[] args) throws IOException {
+        final String[] srcFiles = new String[args.length - 1];
+        final String outputFile = args[args.length];
+        for (int i = 0; i < args.length - 1; i++) {
+            srcFiles[i] = args[i];
+        }
+        combineSvgFilesContent(srcFiles, outputFile);
+    }
+
     public SvgCombiningUtility(final int size, final String name) {
         this.name = name;
         this.size = size;
@@ -28,6 +37,7 @@ public class SvgCombiningUtility {
         validator.validate(outputFile);
         try (OutputStream outputStream = new FileOutputStream(outputFile)) {
             write(outputStream, getAndJoinContentOfFiles(srcFiles) + "\n");
+            System.out.println("Iron-iconset-svg creation is complete!");
         } catch (final IOException e) {
             throw new IOException("Something is wrong! Iron-iconset-svg was not created!");
         }
