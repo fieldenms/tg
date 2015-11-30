@@ -13,8 +13,8 @@
         }
     </style>
     <template>
-        <paper-icon-button icon="more-vert" on-tap="_showDropDown"></paper-icon-button>
-        <iron-dropdown id="dropdown" style="color:black" on-tap="_closeDropDown">
+        <paper-icon-button icon="more-vert" on-tap="_showDropdown"></paper-icon-button>
+        <iron-dropdown id="dropdown" style="color:black" on-tap="_closeDropdown" on-iron-overlay-opened="_dropdownOpened">
             <div class="dropdown-content">
                 <div class="layout vertical">
                     <template is="dom-repeat" items="[[actions]]" as="action">
@@ -42,12 +42,19 @@
                 currentEntity: Object
             },
 
-            _showDropDown: function (e, detail) {
-                this.$.dropdown.toggle();
+            _showDropdown: function (e, detail) {
+                this.$.dropdown.open();
             },
 
-            _closeDropDown: function (e, detail) {
-                this.$.dropdown.toggle();
+            _closeDropdown: function (e, detail) {
+                this.$.dropdown.close();
+            },
+            
+            _dropdownOpened: function() {
+                var actions = Polymer.dom(this.root).querySelectorAll('tg-ui-action');
+                actions.forEach(function(action) {
+                    action._updateSpinnerIfNeeded();
+                });
             }
         });
     })();
