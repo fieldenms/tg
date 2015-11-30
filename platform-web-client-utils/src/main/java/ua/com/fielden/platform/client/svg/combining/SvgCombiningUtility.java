@@ -11,39 +11,36 @@ import com.google.common.base.Charsets;
 
 public class SvgCombiningUtility {
 
-    private final int size;
-    private final String name;
-
-    public void main(final String[] args) throws IOException {
+    public static void main(final String[] args) throws IOException {
         final String[] srcFiles = new String[args.length - 1];
-        final String outputFile = args[args.length];
-        for (int i = 0; i < args.length - 1; i++) {
+        final String name = args[0];
+        final String size = args[1];
+        final String outputFile = args[2];
+
+        for (int i = 3; i < args.length - 1; i++) {
             srcFiles[i] = args[i];
         }
-        combineSvgFilesContent(srcFiles, outputFile);
+        final SvgCombiningUtility combiningUtility = new SvgCombiningUtility();
+        combiningUtility.combineSvgFilesContent(srcFiles, outputFile, name, size);
     }
 
-    public SvgCombiningUtility(final int size, final String name) {
-        this.name = name;
-        this.size = size;
-    }
-
-    public void combineSvgFilesContent(final String[] srcFiles, final String outputFile) throws IOException {
+    public void combineSvgFilesContent(final String[] srcFiles, final String outputFile, final String name, final String size) throws IOException {
 
         final Validator validator = new Validator();
         for (final String file : srcFiles) {
             validator.validate(file);
         }
         validator.validate(outputFile);
+        validator.validateInt(size);
         try (OutputStream outputStream = new FileOutputStream(outputFile)) {
-            write(outputStream, getAndJoinContentOfFiles(srcFiles) + "\n");
+            write(outputStream, getAndJoinContentOfFiles(srcFiles) + "\n", name, size);
             System.out.println("Iron-iconset-svg creation is complete!");
         } catch (final IOException e) {
             throw new IOException("Something is wrong! Iron-iconset-svg was not created!");
         }
     }
 
-    private OutputStream write(final OutputStream outputStream, final String string) throws IOException {
+    private OutputStream write(final OutputStream outputStream, final String string, final String name, final String size) throws IOException {
         final String fileBegin = new FileBegin(name, size).getFileBegin();
         final String fileEnd = new FileEnd().getFileEnd();
         outputStream.write(fileBegin.getBytes(Charsets.UTF_8));

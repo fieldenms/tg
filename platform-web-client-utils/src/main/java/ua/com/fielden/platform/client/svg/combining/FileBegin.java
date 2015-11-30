@@ -8,7 +8,7 @@ public class FileBegin {
         return fileBegin;
     }
 
-    public FileBegin(final String name, final int size) {
+    public FileBegin(final String name, final String size) {
 
         this.fileBegin = "<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\">" +
                 "\n <link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\">" +

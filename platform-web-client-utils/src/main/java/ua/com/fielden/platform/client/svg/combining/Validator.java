@@ -14,4 +14,12 @@ public class Validator {
         }
     }
 
+    public void validateInt(final String string) {
+        try {
+            Integer.valueOf(string);
+        } catch (final Exception e) {
+            throw new IllegalArgumentException("Type of size have to be integer!");
+        }
+    }
+
 }
