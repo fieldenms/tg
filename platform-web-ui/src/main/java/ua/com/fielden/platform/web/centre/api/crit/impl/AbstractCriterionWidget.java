@@ -88,7 +88,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
      * @return
      */
     protected String propertyName() {
-        return "".equals(propertyName) ? "THIS" : propertyName;
+        return "".equals(propertyName) ? "THIS" : propertyName.replace(".", ":"); // dots are converted to colons to conform to the 'propertyModel' naming convention
     }
 
     /**

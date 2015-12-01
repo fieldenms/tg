@@ -1086,6 +1086,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 ).also()*/
                 .addSecondaryAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withSelectedEntities().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build()
+                )
+                .also()
+                .addSecondaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
                                 icon("assignment-turned-in").

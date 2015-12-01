@@ -53,11 +53,6 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
     @Override
     @SessionRequired
     public TgPersistentEntityWithProperties save(final TgPersistentEntityWithProperties entity) {
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);
         return saved;

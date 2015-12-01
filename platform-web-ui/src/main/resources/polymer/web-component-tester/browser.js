@@ -226,7 +226,7 @@
         pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
       });
     });
-    return '?' + pairs.join('&');
+    return (pairs.length > 0) ? ('?' + pairs.join('&')) : '';
   }
 
   /**
@@ -501,8 +501,11 @@
       'chai/chai.js',
       'sinonjs/sinon.js',
       'sinon-chai/lib/sinon-chai.js',
-      'accessibility-developer-tools/dist/js/axs_testing.js',
-      'web-component-tester/runtime-helpers/a11ySuite.js'
+      'accessibility-developer-tools/dist/js/axs_testing.js'
+    ],
+
+    environmentImports: [
+      'test-fixture/test-fixture.html'
     ],
 
     /** Absolute root for client scripts. Detected in `setup()` if not set. */
@@ -952,6 +955,7 @@
     'pass',
     'fail',
     'pending',
+    'childRunner end'
   ];
 
   // Until a suite has loaded, we assume this many tests in it.
@@ -1346,13 +1350,29 @@
    */
   function loadSync() {
     util_js.debug('Loading environment scripts:');
-    config_js.get('environmentScripts').forEach(function(path) {
+    var a11ySuite = 'web-component-tester/data/a11ySuite.js';
+    var scripts = config_js.get('environmentScripts');
+    var a11ySuiteWillBeLoaded = window.__generatedByWct || scripts.indexOf(a11ySuite) > -1;
+    if (!a11ySuiteWillBeLoaded) {
+      // wct is running as a bower dependency, load a11ySuite from data/
+      scripts.push(a11ySuite);
+    }
+    scripts.forEach(function(path) {
       var url = util_js.expandUrl(path, config_js.get('root'));
       util_js.debug('Loading environment script:', url);
       // Synchronous load.
       document.write('<script src="' + encodeURI(url) + '"></script>'); // jshint ignore:line
     });
     util_js.debug('Environment scripts loaded');
+
+    var imports = config_js.get('environmentImports');
+    imports.forEach(function(path) {
+      var url = util_js.expandUrl(path, config_js.get('root'));
+      util_js.debug('Loading environment import:', url);
+      // Synchronous load.
+      document.write('<link rel="import" href="' + encodeURI(url) + '">'); // jshint ignore:line
+    });
+    util_js.debug('Environment imports loaded');
   }
 
   /**
@@ -1424,6 +1444,142 @@
       }
     };
   }
+
+  var interfaceExtensions = [];
+
+  /**
+   * Registers an extension that extends the global `Mocha` implementation
+   * with new helper methods. These helper methods will be added to the `window`
+   * when tests run for both BDD and TDD interfaces.
+   */
+  function extendInterfaces(helperName, helperFactory) {
+    interfaceExtensions.push(function() {
+      var Mocha = window.Mocha;
+      // For all Mocha interfaces (probably just TDD and BDD):
+      Object.keys(Mocha.interfaces).forEach(function(interfaceName) {
+        // This is the original callback that defines the interface (TDD or BDD):
+        var originalInterface = Mocha.interfaces[interfaceName];
+        // This is the name of the "teardown" or "afterEach" property for the
+        // current interface:
+        var teardownProperty = interfaceName === 'tdd' ? 'teardown' : 'afterEach';
+        // The original callback is monkey patched with a new one that appends to
+        // the global context however we want it to:
+        Mocha.interfaces[interfaceName] = function(suite) {
+          // Call back to the original callback so that we get the base interface:
+          originalInterface.apply(this, arguments);
+          // Register a listener so that we can further extend the base interface:
+          suite.on('pre-require', function(context, file, mocha) {
+            // Capture a bound reference to the teardown function as a convenience:
+            var teardown = context[teardownProperty].bind(context);
+            // Add our new helper to the testing context. The helper is generated
+            // by a factory method that receives the context, the teardown function
+            // and the interface name and returns the new method to be added to
+            // that context:
+            context[helperName] = helperFactory(context, teardown, interfaceName);
+          });
+        };
+      });
+    });
+  }
+
+  /**
+   * Applies any registered interface extensions. The extensions will be applied
+   * as many times as this function is called, so don't call it more than once.
+   */
+  function applyExtensions() {
+    interfaceExtensions.forEach(function(applyExtension) {
+      applyExtension();
+    });
+  }
+
+  extendInterfaces('fixture', function(context, teardown) {
+
+    // Return context.fixture if it is already a thing, for backwards
+    // compatibility with `test-fixture-mocha.js`:
+    return context.fixture || function fixture(fixtureId, model) {
+
+      // Automatically register a teardown callback that will restore the
+      // test-fixture:
+      teardown(function() {
+        document.getElementById(fixtureId).restore();
+      });
+
+      // Find the test-fixture with the provided ID and create it, returning
+      // the results:
+      return document.getElementById(fixtureId).create(model);
+    };
+  });
+
+  extendInterfaces('stub', function(context, teardown) {
+
+    return function stub(tagName, implementation) {
+      // Find the prototype of the element being stubbed:
+      var proto = document.createElement(tagName).constructor.prototype;
+
+      // For all keys in the implementation to stub with..
+      var keys = Object.keys(implementation);
+      keys.forEach(function(key) {
+        // Stub the method on the element prototype with Sinon:
+        sinon.stub(proto, key, implementation[key]);
+      });
+
+      // After all tests..
+      teardown(function() {
+        // For all of the keys in the implementation we stubbed..
+        keys.forEach(function(key) {
+          // Restore the stub:
+          proto[key].restore();
+        });
+      });
+    };
+  });
+
+  extendInterfaces('replace', function(context, teardown) {
+    return function replace(oldTagName) {
+      return {
+        with: function(tagName) {
+          // Keep a reference to the original `Polymer.Base.instanceTemplate`
+          // implementation for later:
+          var originalInstanceTemplate = Polymer.Base.instanceTemplate;
+
+          // Use Sinon to stub `Polymer.Base.instanceTemplate`:
+          sinon.stub(Polymer.Base, 'instanceTemplate', function(template) {
+            // The DOM to replace is the result of calling the "original"
+            // `instanceTemplate` implementation:
+            var dom = originalInstanceTemplate.apply(this, arguments);
+
+            // The nodes to replace are queried from the DOM chunk:
+            var nodes = Array.prototype.slice.call(dom.querySelectorAll(oldTagName));
+
+            // For all of the nodes we want to place...
+            nodes.forEach(function(node) {
+
+              // Create a replacement:
+              var replacement = document.createElement(tagName);
+
+              // For all attributes in the original node..
+              for (var index = 0; index < node.attributes.length; ++index) {
+                // Set that attribute on the replacement:
+                replacement.setAttribute(
+                  node.attributes[index].name, node.attributes[index].value);
+              }
+
+              // Replace the original node with the replacement node:
+              node.parentNode.replaceChild(replacement, node);
+            });
+
+            return dom;
+          });
+
+          // After each test...
+          teardown(function() {
+            // Restore the stubbed version of `Polymer.Base.instanceTemplate`:
+            Polymer.Base.instanceTemplate.restore();
+          });
+        }
+      };
+    };
+  });
 
   var _mocha = {
     get stubInterfaces () { return stubInterfaces; }
@@ -1501,6 +1657,8 @@
       throw new Error(message);
     }
     if (_mochaIsSetup) return;
+
+    applyExtensions();
     mochaOptions.ui = ui;
     mocha.setup(mochaOptions);  // Note that the reporter is configured in run.js.
   }
@@ -1737,8 +1895,8 @@
    * @param {function()} callback
    */
   window.flush = function flush(callback) {
-    // Ideally, this function would be a call to Polymer.flush, but that doesn't
-    // support a callback yet (https://github.com/Polymer/polymer-dev/issues/115),
+    // Ideally, this function would be a call to Polymer.dom.flush, but that doesn't
+    // support a callback yet (https://github.com/Polymer/polymer-dev/issues/851),
     // ...and there's cross-browser flakiness to deal with.
 
     // Make sure that we're invoking the callback with no arguments so that the
@@ -1757,8 +1915,15 @@
     }
 
     // Everyone else gets a regular flush.
-    var scope = window.Polymer || window.WebComponents;
-    if (scope && scope.flush) {
+    var scope;
+    if (window.Polymer && window.Polymer.dom && window.Polymer.dom.flush) {
+      scope = window.Polymer.dom;
+    } else if (window.Polymer && window.Polymer.flush) {
+      scope = window.Polymer;
+    } else if (window.WebComponents && window.WebComponents.flush) {
+      scope = window.WebComponents;
+    }
+    if (scope) {
       scope.flush();
     }
 

@@ -251,12 +251,30 @@
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
                     for (var property in this.propertyModel) {
                         if (this.propertyModel.hasOwnProperty(property)) {
-                        	var prop = 'THIS' === property ? '' : property;
+                        	var prop = this._convertFrom(property);
                             modPropHolder["@@metaValues"][prop] = this._extractModifiedMetaValuesHolder(this.propertyModel[property]);
                         }
                     }
                 }
                 return modPropHolder;
+            },
+            
+            /**
+             * Converts propertyName to 'propertyModel' naming convention which is understandable for Polymer binding.
+             * 
+             * Empty name converts to 'THIS'; dots convert to colons.
+             */
+            _convertTo: function (propertyName) {
+                return propertyName === '' ? 'THIS' : propertyName.replace(/\u002E/g, ':');
+            },
+            
+            /**
+             * Converts the name from 'propertyModel' naming convention to standard dot-notated property names.
+             * 
+             * 'THIS' converts to empty propertyName; colons convert to dots.
+             */
+            _convertFrom: function (name) {
+                return 'THIS' === name ? '' : name.replace(/:/g, '.');
             },
 
             _extractModifiedMetaValuesHolder: function (propertyMetaValues) {
@@ -471,7 +489,7 @@
                 
                 for (var property in metaValues) {
                     if (metaValues.hasOwnProperty(property)) {
-                    	var propertyName = property === '' ? 'THIS' : property;
+                    	var propertyName = this._convertTo(property);
                     	var prop = this.propertyModel[propertyName];
                     	this.notifyPath('propertyModel.' + propertyName + '.orNull', prop.orNull);
                     	this.notifyPath('propertyModel.' + propertyName + '.not', prop.not);
@@ -502,7 +520,7 @@
                         model["datePrefix"] = typeof meta["datePrefix"] === 'undefined' ? null : meta["datePrefix"];
                         model["dateMnemonic"] = typeof meta["dateMnemonic"] === 'undefined' ? null : meta["dateMnemonic"];
                         model["andBefore"] = typeof meta["andBefore"] === 'undefined' ? null : meta["andBefore"];
-                        var propertyName = property === '' ? 'THIS' : property;
+                        var propertyName = this._convertTo(property);
                         propertyModel[propertyName] = model;
                     }
                 }
