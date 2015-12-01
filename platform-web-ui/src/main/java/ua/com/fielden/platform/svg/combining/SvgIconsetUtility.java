@@ -11,21 +11,22 @@ import com.google.common.base.Charsets;
 
 public class SvgIconsetUtility {
 
-    public static void main(final String[] args) throws IOException {
-        final String[] srcFiles = new String[args.length - 3];
-        final String iconsetId = args[0];
-        final String svgWidth = args[1];
-        final String outputFile = args[2];
+//    public static void main(final String[] args) throws IOException {
+//        final String[] srcFiles = new String[args.length - 3];
+//        final String iconsetId = args[0];
+//        final String svgWidth = args[1];
+//        final String outputFile = args[2];
+//
+//        for (int i = 0; i < args.length-3; i++) {
+//            srcFiles[i] = args[i+3];
+//        }
+//        final SvgIconsetUtility combiningUtility = new SvgIconsetUtility();
+//        combiningUtility.createSvgIconset(srcFiles, outputFile, iconsetId, svgWidth);
+//    }
 
-        for (int i = 0; i < args.length-3; i++) {
-            srcFiles[i] = args[i+3];
-        }
-        final SvgIconsetUtility combiningUtility = new SvgIconsetUtility();
-        combiningUtility.createSvgIconset(srcFiles, outputFile, iconsetId, svgWidth);
-    }
+    public static void createSvgIconset(final String[] srcFiles, final String outputFile, final String iconsetId, final String svgWidth) throws IOException {
 
-    public void createSvgIconset(final String[] srcFiles, final String outputFile, final String iconsetId, final String svgWidth) throws IOException {
-
+        final SvgIconsetUtility iconsetUtility = new SvgIconsetUtility();
         final Validator validator = new Validator();
         for (final String file : srcFiles) {
             validator.validate(file);
@@ -33,7 +34,7 @@ public class SvgIconsetUtility {
         validator.validate(outputFile);
         validator.validateInt(svgWidth);
         try (OutputStream outputStream = new FileOutputStream(outputFile)) {
-           writeAllFilesContent(outputStream, getAndJoinContentOfFiles(srcFiles) + "\n", iconsetId, svgWidth);
+           iconsetUtility.writeAllFilesContent(outputStream, iconsetUtility.getAndJoinContentOfFiles(srcFiles) + "\n", iconsetId, svgWidth);
             System.out.println("Iron-iconset-svg creation is complete!");
         } catch (final IOException e) {
             throw new IOException("Something is wrong! Iron-iconset-svg was not created!");
