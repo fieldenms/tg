@@ -8,30 +8,31 @@
 <link rel="import" href="/resources/components/tg-toast.html">
 
 <dom-module id="tg-custom-action-dialog">
-    <style>
-        :host {
-            display: block;
-            background: white;
-            color: black;
-            padding: 0px;
-            overflow: auto;
-            /* this is to make host scorable when needed */
-            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
-        }
-        paper-icon-button {
-            position: absolute;
-            top: 0;
-            right: 0;
-            color: var(--paper-deep-orange-300);
-            --iron-icon-height: 18px;
-            --iron-icon-width: 18px;
-        }
-        paper-icon-button:hover {
-            color: var(--paper-deep-orange-600);
-        }
-    </style>
-
     <template>
+        <style>
+            :host {
+                display: block;
+                background: white;
+                color: black;
+                padding: 0px;
+                overflow: auto;
+                /* this is to make host scorable when needed */
+                box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+            }
+            paper-icon-button {
+                color: var(--paper-deep-orange-300);
+                --paper-icon-button: {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    width: 34px;
+                    height: 34px;
+                };
+            }
+            paper-icon-button:hover {
+                color: var(--paper-deep-orange-600);
+            }
+        </style>
         <tg-element-loader id="elementLoader"></tg-element-loader>
         <tg-toast id="toaster"></tg-toast>
         <paper-icon-button icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
@@ -72,18 +73,20 @@
                  * Properties represent element names and their values -- element instances.
                  */
                 _cachedElements: {
-                	type: Object,
-                	value: function () { return {}; }
+                    type: Object,
+                    value: function () {
+                        return {};
+                    }
                 },
-                
+
                 /** Captures the last action that has been executed by this dialog or is currently in progress. */
                 _lastAction: {
-                	type: Object
+                    type: Object
                 },
-                
+
                 /** A master element that corresponds to the _lastAction. */
                 _lastElement: {
-                	type: Object
+                    type: Object
                 }
             },
 
@@ -96,54 +99,54 @@
             },
 
             closeDialog: function () {
-            	var canClose = true;
-            	if (this._lastElement.classList.contains('canLeave')) {
-            		var reason = this._lastElement.canLeave();
-					if (reason !== undefined) {
-						canClose = false;
-						// the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
-						// for example, when closing a master for a functional entity, the reason states the need to save changes,
-						// while it is also possible and safe to simple cancel them
-						// so, the message below is a good compromise
-	                    this.$.toaster.text = "Please save or cancel changes.";
-	                    this.$.toaster.hasMore = false;
-	                    this.$.toaster.msgText = "";
-	                    this.$.toaster.showProgress = false;
-	                    this.$.toaster.show();
-					}
-            	}
-            	
-            	if (canClose === true) {
-	            	this._closeDialogAndIndicateActionCompletion(this._lastAction);
-            	}
+                var canClose = true;
+                if (this._lastElement.classList.contains('canLeave')) {
+                    var reason = this._lastElement.canLeave();
+                    if (reason !== undefined) {
+                        canClose = false;
+                        // the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
+                        // for example, when closing a master for a functional entity, the reason states the need to save changes,
+                        // while it is also possible and safe to simple cancel them
+                        // so, the message below is a good compromise
+                        this.$.toaster.text = "Please save or cancel changes.";
+                        this.$.toaster.hasMore = false;
+                        this.$.toaster.msgText = "";
+                        this.$.toaster.showProgress = false;
+                        this.$.toaster.show();
+                    }
+                }
+
+                if (canClose === true) {
+                    this._closeDialogAndIndicateActionCompletion(this._lastAction);
+                }
             },
 
             _closeDialogAndIndicateActionCompletion: function (action) {
-            	if (this._lastAction) {
-            		this._lastAction.isActionInProgress = false;
-            	}
-            	this.close();
+                if (this._lastAction) {
+                    this._lastAction.isActionInProgress = false;
+                }
+                this.close();
             },
-            
+
             _handleCloseEvent: function (data, envelope) {
                 this._closeDialogAndIndicateActionCompletion(this._lastAction);
             },
-            
+
             /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
             _getElement: function (customAction) {
-            	var self = this;
-            	var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
-            	if (self._cachedElements.hasOwnProperty(key)) {
-            		console.log("Reusing cached element:", key);
-            		var element = self._cachedElements[key];
-            		self.$.elementLoader.insert(element);
-            		return Promise.resolve(element);
-            	} else {
-            		self.$.elementLoader.import = customAction.componentUri;
-                	self.$.elementLoader.elementName = customAction.elementName;
-                	self.$.elementLoader.attrs = customAction.attrs;
-                	return self.$.elementLoader.reload();
-            	}
+                var self = this;
+                var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+                if (self._cachedElements.hasOwnProperty(key)) {
+                    console.log("Reusing cached element:", key);
+                    var element = self._cachedElements[key];
+                    self.$.elementLoader.insert(element);
+                    return Promise.resolve(element);
+                } else {
+                    self.$.elementLoader.import = customAction.componentUri;
+                    self.$.elementLoader.elementName = customAction.elementName;
+                    self.$.elementLoader.attrs = customAction.attrs;
+                    return self.$.elementLoader.reload();
+                }
             },
 
             /*
@@ -162,25 +165,33 @@
                 } else {
                     var self = this;
                     if (self.isRunning === false) {
-                    	self._lastAction = customAction;
+                        self._lastAction = customAction;
                         self._setIsRunning(true);
-                        
-                    	self._getElement(customAction)
+
+                        self._getElement(customAction)
                             .then(function (element) {
                                 var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                                 if (!self._cachedElements.hasOwnProperty(key)) {
-                                	console.log("caching:", key);
-                            		self._cachedElements[key] = element;
+                                    console.log("caching:", key);
+                                    self._cachedElements[key] = element;
                                 }
                                 var promise = customAction._onExecuted(null, element, null);
                                 if (promise) {
-                                	return promise
-                                	.then(function () {self._showMaster(customAction, element, closeEventChannel, closeEventTopics);})
-                                	.catch(function () {self._setIsRunning(false);});
+                                    return promise
+                                        .then(function () {
+                                            self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
+                                        })
+                                        .catch(function () {
+                                            self._setIsRunning(false);
+                                        });
                                 } else {
                                     return Promise.resolve()
-                                    .then(function () {self._showMaster(customAction, element, closeEventChannel, closeEventTopics);})
-                                    .catch(function () {self._setIsRunning(false);});
+                                        .then(function () {
+                                            self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
+                                        })
+                                        .catch(function () {
+                                            self._setIsRunning(false);
+                                        });
                                 }
                             })
                             .catch(function (error) {
@@ -196,10 +207,10 @@
             },
 
             _showMaster: function (action, element, closeEventChannel, closeEventTopics) {
-            	this._lastElement = element;
-            	if (element.noUI === true) { // is this is the end of action execution?
-                     self._setIsRunning(false);
-                 } else { // otherwise show master in dialog
+                this._lastElement = element;
+                if (element.noUI === true) { // is this is the end of action execution?
+                    self._setIsRunning(false);
+                } else { // otherwise show master in dialog
                     var self = this;
                     // if there would be a master UI then need to subscribe for this dialog closing messages
                     if (closeEventChannel && closeEventTopics && closeEventTopics.length > 0) {
@@ -213,10 +224,10 @@
                                 }));
                         }
                     }
-                    
+
                     if (element.prefDim) {
-                    	var prefDim = element.prefDim;
-                    	this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.unit;
+                        var prefDim = element.prefDim;
+                        this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.unit;
                         this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.unit;
                     } else {
                         this.style.width = "auto";

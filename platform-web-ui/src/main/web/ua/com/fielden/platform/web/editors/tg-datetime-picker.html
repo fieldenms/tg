@@ -30,6 +30,7 @@
     }
     .date-picker {
         line-height: normal;
+        overflow: auto;
     }
 </style>
 <dom-module id="tg-datetime-picker">
@@ -210,12 +211,12 @@
             	var div = domBind.content.ownerDocument.createElement('div');
             	div.innerHTML = 
             	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind">' +
-	                '<tg-calendar id="datePicker" pick-time></tg-calendar>' +
-	                '<div class="buttons">' +
-	                    '<paper-button dialog-dismiss affirmative on-tap="_cancelDateBind">Cancel</paper-button>' +
-	                    '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +
-	                '</div>' +
-	            '</paper-dialog>';
+                    '<tg-calendar id="datePicker" pick-time></tg-calendar>' +
+                    '<div class="buttons">' +
+                        '<paper-button dialog-dismiss affirmative on-tap="_cancelDateBind">Cancel</paper-button>' +
+                        '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +
+                    '</div>' +
+                '</paper-dialog>';
             	
             	domBind.content.appendChild(div);
             	return domBind;

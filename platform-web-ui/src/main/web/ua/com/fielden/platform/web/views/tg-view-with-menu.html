@@ -23,7 +23,7 @@
                 color: #666464;
                 position: absolute;
                 top: 16px;
-                right:16px;
+                right: 16px;
                 z-index: 1;
                 width: 50px;
                 height: 50px;
@@ -59,7 +59,6 @@
             color: white;
             background-color: var(--paper-light-blue-700);
         }
-        
         #drawerPanel:not([narrow]) #menuButton {
             display: none;
         }
@@ -93,12 +92,12 @@
                 <div id="viewToolBar" class="tool-bar layout horizontal center">
                     <div class="layout horizontal center flex">
                         <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
-                        <div class="flex">[[_calcSelectedPageTitle(pageSelected)]]</div>
+                        <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
                     </div>
                     <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
                 </div>
 
-                <neon-animated-pages id="pages" selected=[[pageSelected]] attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-selected-changed="_pageSelectedChanged" on-neon-animation-finish="_animationFinished">
+                <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
                     <div class="menu-item-view" name="__empty__"></div>
                     <template is="dom-repeat" items="[[menuItem.menu]]">
                         <div class="menu-item-view" name$="[[item.title]]">
@@ -173,6 +172,13 @@
                             ]
                         };
                     }
+                },
+
+                //Private memebers those starts with underscore
+
+                _selectedPage: {
+                    type: String,
+                    observer: '_selectedPageChanged'
                 }
             },
 
@@ -325,7 +331,7 @@
             },
 
             _menuItemSelected: function (e, detail, source) {
-                this.pageSelected = detail.value;
+                this._selectedPage = detail.value;
             },
 
             _calcSelectedView: function (selectedPage) {
@@ -348,26 +354,23 @@
                 return this.menuItem.title + '/' + item.title;
             },
 
-            _pageSelectedChanged: function (e, detail, source) {
+            _selectedPageChanged: function (e, detail, source) {
                 var state;
-                if (e.target === this.$.pages) {
-                    state = [this.menuItem.title, this.$.menu.selected];
-                    if (this.startUp) {
-                        this.startUp = false;
-                    } else if (this.restoringState) {
-                        this.restoringState = false;
-                        postal.publish({
-                            channel: "app",
-                            topic: "state.poped",
-                            data: {
-                                state: state
-                            }
-                        });
-                    } else {
-                        history.pushState(state, "");
-                        this._initDrawerPanel();
-                        //this.$.drawerPanel.closeDrawer();
-                    }
+                state = [this.menuItem.title, this.$.menu.selected];
+                if (this.startUp) {
+                    this.startUp = false;
+                } else if (this.restoringState) {
+                    this.restoringState = false;
+                    postal.publish({
+                        channel: "app",
+                        topic: "state.poped",
+                        data: {
+                            state: state
+                        }
+                    });
+                } else {
+                    history.pushState(state, "");
+                    this._initDrawerPanel();
                 }
             },
 
