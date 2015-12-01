@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.client.svg.combining;
+package ua.com.fielden.platform.svg.combining;
 
 public class FileEnd {
 

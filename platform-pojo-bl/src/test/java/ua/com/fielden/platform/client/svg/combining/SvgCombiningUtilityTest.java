@@ -12,6 +12,8 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
+import ua.com.fielden.platform.svg.combining.SvgCombiningUtility;
+
 public class SvgCombiningUtilityTest {
 
     @Test
