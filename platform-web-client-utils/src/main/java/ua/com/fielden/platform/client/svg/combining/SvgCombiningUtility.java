@@ -12,13 +12,13 @@ import com.google.common.base.Charsets;
 public class SvgCombiningUtility {
 
     public static void main(final String[] args) throws IOException {
-        final String[] srcFiles = new String[args.length - 1];
+        final String[] srcFiles = new String[args.length - 3];
         final String name = args[0];
         final String size = args[1];
         final String outputFile = args[2];
 
-        for (int i = 3; i < args.length - 1; i++) {
-            srcFiles[i] = args[i];
+        for (int i = 0; i < args.length-3; i++) {
+            srcFiles[i] = args[i+3];
         }
         final SvgCombiningUtility combiningUtility = new SvgCombiningUtility();
         combiningUtility.combineSvgFilesContent(srcFiles, outputFile, name, size);
