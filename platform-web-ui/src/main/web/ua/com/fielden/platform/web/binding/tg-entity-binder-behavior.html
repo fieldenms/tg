@@ -492,6 +492,13 @@
             },
             
             /**
+             * Hides the toast.
+             */
+            _hideToast: function() {
+                 this._toastGreeting().hide();
+            },
+            
+            /**
              * The inner function for validation to be overridden in descendants (for e.g. context-dependent validation in tg-entity-master)
              */
             _validateForDescendants: function (preparedModifHolder) {
