@@ -314,6 +314,7 @@
              * Starts the process of refreshing of the current page.
              */
             currentPage: function () {
+                this._openToast(null, "Refreshing current page", false, "", true);
                 this._validatePageCount();
                 return this._execute(false);
             },
@@ -333,6 +334,7 @@
              *                        The use of this assignment function should be thought of as a way to implement parameter stack, but at an object level rather than just at the function call level.
              */
             refreshEntities: function (entities, assignmentFun) {
+                this._openToast(null, "Refreshing entities", false, "", true);
                 this._validatePageCount();
                 return this._execute(false, entities, assignmentFun);
             },
@@ -341,6 +343,7 @@
              * Starts the process of centre run.
              */
             nextPage: function () {
+                this._openToast(null, "Loading next page", false, "", true);
                 this._validatePageCount();
                 if (!this._canNext()) {
                     throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
@@ -353,6 +356,7 @@
              * Starts the process of centre run.
              */
             prevPage: function () {
+                this._openToast(null, "Loading previous page", false, "", true);
                 this._validatePageCount();
                 if (!this._canPrev()) {
                     throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
@@ -365,6 +369,7 @@
              * Starts the process of centre run.
              */
             firstPage: function () {
+                this._openToast(null, "Loading first page", false, "", true);
                 this._validatePageCount();
                 if (!this._canFirst()) {
                     throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
@@ -377,6 +382,7 @@
              * Starts the process of centre run.
              */
             lastPage: function () {
+                this._openToast(null, "Loading last page", false, "", true);
                 this._validatePageCount();
                 if (!this._canLast()) {
                     throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";

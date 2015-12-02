@@ -172,11 +172,19 @@
                 for (var index = 0; index < toast.length; index++) {
                     Polymer.dom(document.body).removeChild(toast.item(index));
                 }
-                
+                if (this.showProgress && !this.hasMore) {
+                    this.$.toast.duration = 3600000 //1 hour
+                } else {
+                    this.$.toast.duration = 3000 //3 seconds
+                }
                 this.$.toast.style['z-index'] = 1000;
                 Polymer.dom(document.body).appendChild(this.$.toast);
                 Polymer.dom().flush();
                 this.$.toast.show();
+            },
+            
+            hide: function() {
+                this.$.toast.hide();
             }
         })
     })();
