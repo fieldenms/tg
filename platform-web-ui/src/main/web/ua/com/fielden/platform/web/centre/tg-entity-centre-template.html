@@ -23,6 +23,7 @@
     	<tg-selection-criteria
     		id="dom"
     		mi-type="[[miType]]" 
+            is-running="{{isRunning}}"
     		_post-validated-default="[[_postValidatedDefault]]"
     		_post-validated-default-error="[[_postValidatedDefaultError]]"
     		_process-response="[[_processResponse]]"
@@ -164,6 +165,7 @@
             	page-count="{{pageCount}}"
             	page-number-updated="{{pageNumberUpdated}}"
             	page-count-updated="{{pageCountUpdated}}"
+                is-running="{{isRunning}}"
             	@queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
 
             <tg-@mi_type-grid-inspector id="egi" class="entity-grid-inspector custom-egi" @gridLayout>
@@ -194,24 +196,24 @@
                 	<!-- <span class="span-tooltip" tip>Export to Excel</span>
                 </core-tooltip> -->
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-tab" on-tap="firstPage" disabled$="[[canNotFirst(pageNumber, pageCount)]]"></paper-icon-button>
+                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-tab" on-tap="firstPage" disabled$="[[canNotFirst(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
                     <!-- <span class="span-tooltip" tip>First page</span>
                 </core-tooltip> -->
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button icon="hardware:keyboard-backspace" class="standart-action" on-tap="prevPage" disabled$="[[canNotPrev(pageNumber)]]"></paper-icon-button>
+                    <paper-icon-button icon="hardware:keyboard-backspace" class="standart-action" on-tap="prevPage" disabled$="[[canNotPrev(pageNumber, isRunning)]]"></paper-icon-button>
                     <!-- <span class="span-tooltip" tip>Previous page</span>
                 </core-tooltip> -->
                 <span class="standart-action">[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]</span>
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-backspace" on-tap="nextPage" disabled$="[[canNotNext(pageNumber, pageCount)]]"></paper-icon-button>
+                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-backspace" on-tap="nextPage" disabled$="[[canNotNext(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
                     <!-- <span class="span-tooltip" tip>Next page</span>
                 </core-tooltip> -->
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button icon="hardware:keyboard-tab" class="standart-action" on-tap="lastPage" disabled$="[[canNotLast(pageNumber, pageCount)]]"></paper-icon-button>
+                    <paper-icon-button icon="hardware:keyboard-tab" class="standart-action" on-tap="lastPage" disabled$="[[canNotLast(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
                     <!-- <span class="span-tooltip" tip>Last page</span>
                 </core-tooltip> -->
                 <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="standart-action" icon="refresh" on-tap="currentPage" disabled$="[[canNotCurrent(pageNumber, pageCount)]]"></paper-icon-button>
+                    <paper-icon-button class="standart-action" icon="refresh" on-tap="currentPage" disabled$="[[canNotCurrent(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
                     <!-- <span class="span-tooltip" tip>Refresh</span>
                 </core-tooltip> -->
                 
@@ -247,6 +249,9 @@
             },
             
             properties: {
+                isRunning: {
+                    type: Boolean
+                },
             	_handleScroll: {
             		type: Function
             	},

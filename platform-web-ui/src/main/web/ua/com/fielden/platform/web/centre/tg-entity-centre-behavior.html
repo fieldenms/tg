@@ -618,20 +618,20 @@
                 }
             },
 
-            canNotPrev: function (pageNumber) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canPrev(pageNumber);
+            canNotPrev: function (pageNumber, isRunning) {
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canPrev(pageNumber));
             },
-            canNotNext: function (pageNumber, pageCount) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canNext(pageNumber, pageCount);
+            canNotNext: function (pageNumber, pageCount, isRunning) {
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canNext(pageNumber, pageCount));
             },
-            canNotFirst: function (pageNumber, pageCount) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canFirst(pageNumber, pageCount);
+            canNotFirst: function (pageNumber, pageCount, isRunning) {
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canFirst(pageNumber, pageCount));
             },
-            canNotLast: function (pageNumber, pageCount) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canLast(pageNumber, pageCount);
+            canNotLast: function (pageNumber, pageCount, isRunning) {
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canLast(pageNumber, pageCount));
             },
-            canNotCurrent: function (pageNumber, pageCount) {
-                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : !this.$.selection_criteria._canCurrent(pageNumber, pageCount);
+            canNotCurrent: function (pageNumber, pageCount, isRunning) {
+                return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canCurrent(pageNumber, pageCount));
             },
 
             currPageFeedback: function (pageNumberUpdated, pageCountUpdated) {
