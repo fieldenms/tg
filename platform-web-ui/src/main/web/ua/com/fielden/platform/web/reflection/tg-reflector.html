@@ -771,19 +771,21 @@
          * Returns html representation for the specified exception trace (including 'cause' expanded, if any).
          */
         stackTrace: function (ex) {
-        	var msg = "<p><b>" + this.exceptionMessage(ex) + "</b></p><p>";
-        	if (Array.isArray(ex.stackTrace)) {
-            	for (var i = 0; i < ex.stackTrace.length; i += 1) {
-            		var st = ex.stackTrace[i];
-            		msg = msg + st.className + ".java:" + st.lineNumber + ":" + st.methodName + ";<br>";
-            	}
+        	var msg = "<p><b>Error cause was not provided.</b></p>"; 
+        	if (ex) {
+	        	msg = "<p><b>" + this.exceptionMessage(ex) + "</b></p><p>";
+	        	if (Array.isArray(ex.stackTrace)) {
+	            	for (var i = 0; i < ex.stackTrace.length; i += 1) {
+	            		var st = ex.stackTrace[i];
+	            		msg = msg + st.className + ".java:" + st.lineNumber + ":" + st.methodName + ";<br>";
+	            	}
+	        	}
+	        	msg = msg + "</p>";
+	        	
+	        	if (ex.cause !== null) {
+	        		msg = msg + "<b>Caused By:</b><br>" + this.stackTrace(ex.cause);
+	        	}
         	}
-        	msg = msg + "</p>";
-        	
-        	if (ex.cause !== null) {
-        		msg = msg + "<b>Caused By:</b><br>" + this.stackTrace(ex.cause);
-        	}
-        	
          	return msg;
         },
         
