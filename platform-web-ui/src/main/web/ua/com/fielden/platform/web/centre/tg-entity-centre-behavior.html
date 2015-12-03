@@ -523,6 +523,11 @@
                         self._postFunctionalEntitySaved(data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
                     }
                 });
+                
+                //Select the result view if autoRun is true
+                if (self.autoRun) {
+                    self._selectedView = 1;
+                }
             },
 
             detached: function () {

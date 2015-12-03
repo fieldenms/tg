@@ -80,9 +80,11 @@
                     if (e.target === this.$$("#elementToLoad")) {
                         if (this.menuItem.view.type === 'centre') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                                if (detail.autoRun) {
+                                    detail.run();
+                                }
                                 self.fire("menu-item-view-loaded", self.menuItem);
                             };
-
                             detail.retrieve();
                         } else if (this.menuItem.view.type === 'master') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
