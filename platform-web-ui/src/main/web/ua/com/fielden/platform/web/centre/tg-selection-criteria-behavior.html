@@ -158,14 +158,6 @@
                 	type: Function
                 },
                 
-                /**
-                 * Indicates whether the runner is loading.
-                 */
-                _runnerLoading: {
-                	type: Boolean,
-                	observer: '_runnerLoadingChanged'
-                },
-                
                 /** A promise pointing to the last (resolved or otherwise) entities refresh call. */
                 _refreshPromiseInProgress: {
                     type: Object
@@ -429,7 +421,7 @@
             _execute: function (isRunAction, entitiesToRefresh, assignmentFun) {
                 var self = this;
 
-                if (self._runningInProgress()) {
+                if (self.isRunning) {
                     console.warn("Refresh is already in progress...");
                     self._refreshPromiseInProgress = self._refreshPromiseInProgress
                     .then(function() {
@@ -587,9 +579,6 @@
             	return contextHolder;
             },
             
-            _runningInProgress: function () {
-                return this._ajaxRunner().loading === true;
-            }
         };
     	
 		Polymer.TgBehaviors.TgSelectionCriteriaBehavior = [
