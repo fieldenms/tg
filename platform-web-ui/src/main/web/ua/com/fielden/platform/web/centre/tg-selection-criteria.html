@@ -13,7 +13,7 @@
         <tg-criteria-validator id="validator" mi-type="[[miType]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]" process-error="[[_processError]]"></tg-criteria-validator>
         
         <iron-ajax id="ajaxRetriever" url="[[_url]]" method="GET" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
-        <iron-ajax id="ajaxRunner" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRunnerResponse" on-error="_processRunnerError"></iron-ajax>
+        <iron-ajax id="ajaxRunner" loading="{{isRunning}}" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRunnerResponse" on-error="_processRunnerError"></iron-ajax>
         
         <content></content>
     </template>
@@ -32,6 +32,11 @@
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	
     		miType: String,
+            //Property that determines whether selection criteria is loading data or not.
+            isRunning: {
+                type: Boolean,
+                notify: true
+            },
     		_postValidatedDefault: Function,
     		_postValidatedDefaultError: Function,
     		_processResponse: Function,
