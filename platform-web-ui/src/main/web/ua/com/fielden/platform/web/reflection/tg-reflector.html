@@ -771,22 +771,43 @@
          * Returns html representation for the specified exception trace (including 'cause' expanded, if any).
          */
         stackTrace: function (ex) {
-        	var msg = "<p><b>Error cause was not provided.</b></p>"; 
+        	// collects error cause by traversing the stack into an ordered list
+        	var causeCollector = function (ex, causes) {
+        		if (ex) {
+        			causes = causes + "<li>" + this.exceptionMessage(ex) + "</li>";
+        			printStackTrace(ex);
+        			if (ex.cause !== null) {
+        				causes = causeCollector(ex.cause, causes);
+    	        	}
+        		}
+        		return causes + "</ol>";
+        	}.bind(this);
+
+        	// ouputs the exception stack trace into the console as warning
+        	var printStackTrace = function (ex) {
+        		var msg = "No cause and stack trace."; 
+            	if (ex) {
+    	        	msg = this.exceptionMessage(ex) + '\n';
+    	        	if (Array.isArray(ex.stackTrace)) {
+    	            	for (var i = 0; i < ex.stackTrace.length; i += 1) {
+    	            		var st = ex.stackTrace[i];
+    	            		msg = msg + st.className + '.java:' + st.lineNumber + ':' + st.methodName + ';\n';
+    	            	}
+    	        	}
+            	}
+            	console.warn(msg);
+        	}.bind(this);
+        	
         	if (ex) {
-	        	msg = "<p><b>" + this.exceptionMessage(ex) + "</b></p><p>";
-	        	if (Array.isArray(ex.stackTrace)) {
-	            	for (var i = 0; i < ex.stackTrace.length; i += 1) {
-	            		var st = ex.stackTrace[i];
-	            		msg = msg + st.className + ".java:" + st.lineNumber + ":" + st.methodName + ";<br>";
-	            	}
-	        	}
-	        	msg = msg + "</p>";
-	        	
-	        	if (ex.cause !== null) {
-	        		msg = msg + "<b>Caused By:</b><br>" + this.stackTrace(ex.cause);
-	        	}
+        		var causes = "<b>" + this.exceptionMessage(ex) + "</b>";
+        		printStackTrace(ex);
+            	if (ex.cause !== null) {
+            		causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")
+            	}
+            	
+            	return causes;
         	}
-         	return msg;
+        	
         },
         
         /**
