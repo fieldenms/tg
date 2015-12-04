@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import static java.util.Arrays.*;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -16,7 +16,14 @@ import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.utils.Pair;
-
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.*;
+import static ua.com.fielden.platform.entity.query.fluent.ComparisonOperator.*;
+import static ua.com.fielden.platform.entity.query.fluent.LogicalOperator.*;
+import static ua.com.fielden.platform.entity.query.fluent.Functions.*;
+import static ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator.*;
+import static ua.com.fielden.platform.entity.query.fluent.QueryTokens.*;
+import static ua.com.fielden.platform.entity.query.fluent.JoinType.*;
+import static ua.com.fielden.platform.entity.query.fluent.SortingOrder.*;
 /**
  * Contains internal structure (incrementally collected building blocks) of the entity query request.
  * 
@@ -42,6 +49,10 @@ final class Tokens {
         return values.toString();
     }
 
+    private Tokens add(final TokenCategory cat) {
+        return add(cat, null);
+    }
+
     private Tokens add(final TokenCategory cat, final Object value) {
         final Tokens result = new Tokens(valuePreprocessor, mainSourceType);
         result.values.addAll(values);
@@ -60,85 +71,85 @@ final class Tokens {
     private <E extends Object> List<E> getListFromArray(final E... items) {
         final List<E> result = new ArrayList<E>();
         if (items != null) {
-            result.addAll(Arrays.asList(items));
+            result.addAll(asList(items));
         }
         return result;
     }
 
     public Tokens and() {
-        return add(TokenCategory.LOGICAL_OPERATOR, LogicalOperator.AND);
+        return add(LOGICAL_OPERATOR, AND);
     }
 
     public Tokens or() {
-        return add(TokenCategory.LOGICAL_OPERATOR, LogicalOperator.OR);
+        return add(LOGICAL_OPERATOR, OR);
     }
 
     public Tokens beginCondition(final boolean negated) {
-        return add(TokenCategory.BEGIN_COND, negated);
+        return add(BEGIN_COND, negated);
     }
 
     public Tokens endCondition() {
-        return add(TokenCategory.END_COND, null);
+        return add(END_COND);
     }
 
     public Tokens beginExpression() {
-        return add(TokenCategory.BEGIN_EXPR, null);
+        return add(BEGIN_EXPR);
     }
 
     public Tokens endExpression() {
-        return add(TokenCategory.END_EXPR, null);
+        return add(END_EXPR);
     }
 
     public Tokens exists(final boolean negated, final QueryModel model) {
-        return add(TokenCategory.EXISTS_OPERATOR, negated, TokenCategory.EQUERY_TOKENS, model);
+        return add(EXISTS_OPERATOR, negated, EQUERY_TOKENS, model);
     }
 
     public Tokens existsAnyOf(final boolean negated, final QueryModel... subQueries) {
-        return add(TokenCategory.EXISTS_OPERATOR, negated, TokenCategory.ANY_OF_EQUERY_TOKENS, getListFromArray(subQueries));
+        return add(EXISTS_OPERATOR, negated, ANY_OF_EQUERY_TOKENS, getListFromArray(subQueries));
     }
 
     public Tokens existsAllOf(final boolean negated, final QueryModel... subQueries) {
-        return add(TokenCategory.EXISTS_OPERATOR, negated, TokenCategory.ALL_OF_EQUERY_TOKENS, getListFromArray(subQueries));
+        return add(EXISTS_OPERATOR, negated, ALL_OF_EQUERY_TOKENS, getListFromArray(subQueries));
     }
 
     public Tokens isNull(final boolean negated) {
-        return add(TokenCategory.NULL_OPERATOR, negated);
+        return add(NULL_OPERATOR, negated);
     }
 
     public Tokens lt() {
-        return add(TokenCategory.COMPARISON_OPERATOR, ComparisonOperator.LT);
+        return add(COMPARISON_OPERATOR, LT);
     }
 
     public Tokens gt() {
-        return add(TokenCategory.COMPARISON_OPERATOR, ComparisonOperator.GT);
+        return add(COMPARISON_OPERATOR, GT);
     }
 
     public Tokens le() {
-        return add(TokenCategory.COMPARISON_OPERATOR, ComparisonOperator.LE);
+        return add(COMPARISON_OPERATOR, LE);
     }
 
     public Tokens ge() {
-        return add(TokenCategory.COMPARISON_OPERATOR, ComparisonOperator.GE);
+        return add(COMPARISON_OPERATOR, GE);
     }
 
     public Tokens eq() {
-        return add(TokenCategory.COMPARISON_OPERATOR, ComparisonOperator.EQ);
+        return add(COMPARISON_OPERATOR, EQ);
     }
 
     public Tokens ne() {
-        return add(TokenCategory.COMPARISON_OPERATOR, ComparisonOperator.NE);
+        return add(COMPARISON_OPERATOR, NE);
     }
 
     public Tokens like(final boolean negated) {
-        return add(TokenCategory.LIKE_OPERATOR, negated);
+        return add(LIKE_OPERATOR, negated);
     }
 
     public Tokens iLike(final boolean negated) {
-        return add(TokenCategory.ILIKE_OPERATOR, negated);
+        return add(ILIKE_OPERATOR, negated);
     }
 
     public Tokens in(final boolean negated) {
-        return add(TokenCategory.IN_OPERATOR, negated);
+        return add(IN_OPERATOR, negated);
     }
 
     public Tokens yield(final String yieldName) {
@@ -146,11 +157,11 @@ final class Tokens {
     }
 
     public Tokens prop(final String propName) {
-        return add(TokenCategory.PROP, propName);
+        return add(PROP, propName);
     }
 
     public Tokens extProp(final String propName) {
-        return add(TokenCategory.EXT_PROP, propName);
+        return add(EXT_PROP, propName);
     }
 
     public Tokens val(final Object value) {
@@ -158,24 +169,24 @@ final class Tokens {
         //	if (value == null) {
         //	    throw new RuntimeException("Shouldn't pass Null to val(...) method. Use iVal(...) if condition autoignore feature is required.");
         //	}
-        return add(TokenCategory.VAL, valuePreprocessor.apply(value));
+        return add(VAL, valuePreprocessor.apply(value));
     }
 
     public Tokens iVal(final Object value) {
-        return add(TokenCategory.IVAL, valuePreprocessor.apply(value));
+        return add(IVAL, valuePreprocessor.apply(value));
     }
 
     public Tokens model(final PrimitiveResultQueryModel model) {
-        return add(TokenCategory.EQUERY_TOKENS, model);
+        return add(EQUERY_TOKENS, model);
     }
 
     public Tokens model(final SingleResultQueryModel model) {
-        return add(TokenCategory.EQUERY_TOKENS, model);
+        return add(EQUERY_TOKENS, model);
     }
 
     public Tokens param(final String paramName) {
         if (!StringUtils.isEmpty(paramName)) {
-            return add(TokenCategory.PARAM, paramName);
+            return add(PARAM, paramName);
         } else {
             throw new RuntimeException("Param name has not been specified");
         }
@@ -183,298 +194,298 @@ final class Tokens {
 
     public Tokens iParam(final String paramName) {
         if (!StringUtils.isEmpty(paramName)) {
-            return add(TokenCategory.IPARAM, paramName);
+            return add(IPARAM, paramName);
         } else {
             throw new RuntimeException("Param name has not been specified");
         }
     }
 
     public Tokens expr(final ExpressionModel exprModel) {
-        return add(TokenCategory.EXPR_TOKENS, exprModel);
+        return add(EXPR_TOKENS, exprModel);
     }
 
     public Tokens cond(final ConditionModel conditionModel) {
-        return add(TokenCategory.COND_TOKENS, conditionModel);
+        return add(COND_TOKENS, conditionModel);
     }
 
     public Tokens negatedCond(final ConditionModel conditionModel) {
-        return add(TokenCategory.NEGATED_COND_TOKENS, conditionModel);
+        return add(NEGATED_COND_TOKENS, conditionModel);
     }
 
     public Tokens as(final String yieldAlias) {
-        return add(TokenCategory.AS_ALIAS, yieldAlias);
+        return add(AS_ALIAS, yieldAlias);
     }
 
     public Tokens asRequired(final String yieldAlias) {
-        return add(TokenCategory.AS_ALIAS_REQUIRED, yieldAlias);
+        return add(AS_ALIAS_REQUIRED, yieldAlias);
     }
 
     public Tokens anyOfProps(final String... props) {
-        return add(TokenCategory.ANY_OF_PROPS, getListFromArray(props));
+        return add(ANY_OF_PROPS, getListFromArray(props));
     }
 
     public Tokens anyOfParams(final String... params) {
-        return add(TokenCategory.ANY_OF_PARAMS, getListFromArray(params));
+        return add(ANY_OF_PARAMS, getListFromArray(params));
     }
 
     public Tokens anyOfIParams(final String... params) {
-        return add(TokenCategory.ANY_OF_IPARAMS, getListFromArray(params));
+        return add(ANY_OF_IPARAMS, getListFromArray(params));
     }
 
     public Tokens anyOfModels(final PrimitiveResultQueryModel... models) {
-        return add(TokenCategory.ANY_OF_EQUERY_TOKENS, getListFromArray(models));
+        return add(ANY_OF_EQUERY_TOKENS, getListFromArray(models));
     }
 
     public Tokens anyOfValues(final Object... values) {
-        return add(TokenCategory.ANY_OF_VALUES, valuePreprocessor.apply(values));
+        return add(ANY_OF_VALUES, valuePreprocessor.apply(values));
     }
 
     public Tokens anyOfExpressions(final ExpressionModel... expressions) {
-        return add(TokenCategory.ANY_OF_EXPR_TOKENS, getListFromArray(expressions));
+        return add(ANY_OF_EXPR_TOKENS, getListFromArray(expressions));
     }
 
     public Tokens allOfProps(final String... props) {
-        return add(TokenCategory.ALL_OF_PROPS, getListFromArray(props));
+        return add(ALL_OF_PROPS, getListFromArray(props));
     }
 
     public Tokens allOfParams(final String... params) {
-        return add(TokenCategory.ALL_OF_PARAMS, getListFromArray(params));
+        return add(ALL_OF_PARAMS, getListFromArray(params));
     }
 
     public Tokens allOfIParams(final String... params) {
-        return add(TokenCategory.ALL_OF_IPARAMS, getListFromArray(params));
+        return add(ALL_OF_IPARAMS, getListFromArray(params));
     }
 
     public Tokens allOfModels(final PrimitiveResultQueryModel... models) {
-        return add(TokenCategory.ALL_OF_EQUERY_TOKENS, getListFromArray(models));
+        return add(ALL_OF_EQUERY_TOKENS, getListFromArray(models));
     }
 
     public Tokens allOfValues(final Object... values) {
-        return add(TokenCategory.ALL_OF_VALUES, valuePreprocessor.apply(values));
+        return add(ALL_OF_VALUES, valuePreprocessor.apply(values));
     }
 
     public Tokens allOfExpressions(final ExpressionModel... expressions) {
-        return add(TokenCategory.ALL_OF_EXPR_TOKENS, getListFromArray(expressions));
+        return add(ALL_OF_EXPR_TOKENS, getListFromArray(expressions));
     }
 
     public Tokens any(final SingleResultQueryModel subQuery) {
-        return add(TokenCategory.ANY_OPERATOR, subQuery);
+        return add(ANY_OPERATOR, subQuery);
     }
 
     public Tokens all(final SingleResultQueryModel subQuery) {
-        return add(TokenCategory.ALL_OPERATOR, subQuery);
+        return add(ALL_OPERATOR, subQuery);
     }
 
     public Tokens setOfProps(final String... props) {
-        return add(TokenCategory.SET_OF_PROPS, getListFromArray(props));
+        return add(SET_OF_PROPS, getListFromArray(props));
     }
 
     public Tokens setOfParams(final String... params) {
-        return add(TokenCategory.SET_OF_PARAMS, getListFromArray(params));
+        return add(SET_OF_PARAMS, getListFromArray(params));
     }
 
     public Tokens setOfIParams(final String... params) {
-        return add(TokenCategory.SET_OF_IPARAMS, getListFromArray(params));
+        return add(SET_OF_IPARAMS, getListFromArray(params));
     }
 
     public Tokens setOfValues(final Object... values) {
-        return add(TokenCategory.SET_OF_VALUES, valuePreprocessor.apply(values));
+        return add(SET_OF_VALUES, valuePreprocessor.apply(values));
     }
 
     public Tokens setOfExpressions(final ExpressionModel... expressions) {
-        return add(TokenCategory.SET_OF_EXPR_TOKENS, getListFromArray(expressions));
+        return add(SET_OF_EXPR_TOKENS, getListFromArray(expressions));
     }
 
     public Tokens countDateIntervalFunction() {
-        return add(TokenCategory.FUNCTION, Functions.COUNT_DATE_INTERVAL);
+        return add(FUNCTION, COUNT_DATE_INTERVAL);
     }
 
     public Tokens secondsInterval() {
-        return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.SECOND);
+        return add(FUNCTION_INTERVAL, DateIntervalUnit.SECOND);
     }
 
     public Tokens minutesInterval() {
-        return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.MINUTE);
+        return add(FUNCTION_INTERVAL, DateIntervalUnit.MINUTE);
     }
 
     public Tokens hoursInterval() {
-        return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.HOUR);
+        return add(FUNCTION_INTERVAL, DateIntervalUnit.HOUR);
     }
 
     public Tokens daysInterval() {
-        return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.DAY);
+        return add(FUNCTION_INTERVAL, DateIntervalUnit.DAY);
     }
 
     public Tokens monthsInterval() {
-        return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.MONTH);
+        return add(FUNCTION_INTERVAL, DateIntervalUnit.MONTH);
     }
 
     public Tokens yearsInterval() {
-        return add(TokenCategory.FUNCTION_INTERVAL, DateIntervalUnit.YEAR);
+        return add(FUNCTION_INTERVAL, DateIntervalUnit.YEAR);
     }
 
     public Tokens caseWhenFunction() {
-        return add(TokenCategory.FUNCTION, Functions.CASE_WHEN);
+        return add(FUNCTION, CASE_WHEN);
     }
 
     public Tokens concat() {
-        return add(TokenCategory.FUNCTION, Functions.CONCAT);
+        return add(FUNCTION, CONCAT);
     }
 
     public Tokens round() {
-        return add(TokenCategory.FUNCTION, Functions.ROUND);
+        return add(FUNCTION, ROUND);
     }
 
     public Tokens to(final Integer precision) {
-        return add(TokenCategory.VAL, precision);
+        return add(VAL, precision);
     }
 
     public Tokens ifNull() {
-        return add(TokenCategory.FUNCTION, Functions.IF_NULL);
+        return add(FUNCTION, IF_NULL);
     }
 
     public Tokens uppercase() {
-        return add(TokenCategory.FUNCTION, Functions.UPPERCASE);
+        return add(FUNCTION, UPPERCASE);
     }
 
     public Tokens lowercase() {
-        return add(TokenCategory.FUNCTION, Functions.LOWERCASE);
+        return add(FUNCTION, LOWERCASE);
     }
 
     public Tokens now() {
-        return add(TokenCategory.ZERO_ARG_FUNCTION, Functions.NOW);
+        return add(ZERO_ARG_FUNCTION, NOW);
     }
 
     public Tokens secondOf() {
-        return add(TokenCategory.FUNCTION, Functions.SECOND);
+        return add(FUNCTION, SECOND);
     }
 
     public Tokens minuteOf() {
-        return add(TokenCategory.FUNCTION, Functions.MINUTE);
+        return add(FUNCTION, MINUTE);
     }
 
     public Tokens hourOf() {
-        return add(TokenCategory.FUNCTION, Functions.HOUR);
+        return add(FUNCTION, HOUR);
     }
 
     public Tokens dayOf() {
-        return add(TokenCategory.FUNCTION, Functions.DAY);
+        return add(FUNCTION, DAY);
     }
 
     public Tokens monthOf() {
-        return add(TokenCategory.FUNCTION, Functions.MONTH);
+        return add(FUNCTION, MONTH);
     }
 
     public Tokens yearOf() {
-        return add(TokenCategory.FUNCTION, Functions.YEAR);
+        return add(FUNCTION, YEAR);
     }
 
     public Tokens dateOf() {
-        return add(TokenCategory.FUNCTION, Functions.DATE);
+        return add(FUNCTION, DATE);
     }
 
     public Tokens absOf() {
-        return add(TokenCategory.FUNCTION, Functions.ABS);
+        return add(FUNCTION, ABS);
     }
 
     public Tokens sumOf() {
-        return add(TokenCategory.COLLECTIONAL_FUNCTION, Functions.SUM);
+        return add(AGGREGATE_FUNCTION, SUM);
     }
 
     public Tokens maxOf() {
-        return add(TokenCategory.COLLECTIONAL_FUNCTION, Functions.MAX);
+        return add(AGGREGATE_FUNCTION, MAX);
     }
 
     public Tokens minOf() {
-        return add(TokenCategory.COLLECTIONAL_FUNCTION, Functions.MIN);
+        return add(AGGREGATE_FUNCTION, MIN);
     }
 
     public Tokens countOf() {
-        return add(TokenCategory.COLLECTIONAL_FUNCTION, Functions.COUNT);
+        return add(AGGREGATE_FUNCTION, COUNT);
     }
 
     public Tokens averageOf() {
-        return add(TokenCategory.COLLECTIONAL_FUNCTION, Functions.AVERAGE);
+        return add(AGGREGATE_FUNCTION, AVERAGE);
     }
 
     public Tokens sumOfDistinct() {
-        return add(TokenCategory.COLLECTIONAL_FUNCTION, Functions.SUM_DISTINCT);
+        return add(AGGREGATE_FUNCTION, SUM_DISTINCT);
     }
 
     public Tokens countOfDistinct() {
-        return add(TokenCategory.COLLECTIONAL_FUNCTION, Functions.COUNT_DISTINCT);
+        return add(AGGREGATE_FUNCTION, COUNT_DISTINCT);
     }
 
     public Tokens averageOfDistinct() {
-        return add(TokenCategory.COLLECTIONAL_FUNCTION, Functions.AVERAGE_DISTINCT);
+        return add(AGGREGATE_FUNCTION, AVERAGE_DISTINCT);
     }
 
     public Tokens countAll() {
-        return add(TokenCategory.ZERO_ARG_FUNCTION, Functions.COUNT_ALL);
+        return add(ZERO_ARG_FUNCTION, COUNT_ALL);
     }
 
     public Tokens add() {
-        return add(TokenCategory.ARITHMETICAL_OPERATOR, ArithmeticalOperator.ADD);
+        return add(ARITHMETICAL_OPERATOR, ADD);
     }
 
     public Tokens subtract() {
-        return add(TokenCategory.ARITHMETICAL_OPERATOR, ArithmeticalOperator.SUB);
+        return add(ARITHMETICAL_OPERATOR, SUB);
     }
 
     public Tokens divide() {
-        return add(TokenCategory.ARITHMETICAL_OPERATOR, ArithmeticalOperator.DIV);
+        return add(ARITHMETICAL_OPERATOR, DIV);
     }
 
     public Tokens multiply() {
-        return add(TokenCategory.ARITHMETICAL_OPERATOR, ArithmeticalOperator.MULT);
+        return add(ARITHMETICAL_OPERATOR, MULT);
     }
 
     public Tokens modulo() {
-        return add(TokenCategory.ARITHMETICAL_OPERATOR, ArithmeticalOperator.MOD);
+        return add(ARITHMETICAL_OPERATOR, MOD);
     }
 
     public Tokens asc() {
-        return add(TokenCategory.SORT_ORDER, QueryTokens.ASC);
+        return add(SORT_ORDER, ASC);
     }
 
     public Tokens desc() {
-        return add(TokenCategory.SORT_ORDER, QueryTokens.DESC);
+        return add(SORT_ORDER, DESC);
     }
 
     public Tokens on() {
-        return add(TokenCategory.ON, QueryTokens.ON);
+        return add(ON);
     }
 
     public Tokens conditionStart() {
-        return add(TokenCategory.COND_START, null);
+        return add(COND_START);
     }
 
     public Tokens endOfFunction() {
-        return add(TokenCategory.END_FUNCTION, null);
+        return add(END_FUNCTION);
     }
 
     public Tokens endOfFunction(final ITypeCast typeCast) {
-        return add(TokenCategory.END_FUNCTION, typeCast);
+        return add(END_FUNCTION, typeCast);
     }
 
     public Tokens where() {
-        return add(TokenCategory.QUERY_TOKEN, QueryTokens.WHERE);
+        return add(QUERY_TOKEN, WHERE);
     }
 
     public Tokens yield() {
-        return add(TokenCategory.QUERY_TOKEN, QueryTokens.YIELD);
+        return add(QUERY_TOKEN, SELECT);
     }
 
     public Tokens groupBy() {
-        return add(TokenCategory.QUERY_TOKEN, QueryTokens.GROUP_BY);
+        return add(QUERY_TOKEN, GROUP_BY);
     }
 
     public Tokens orderBy() {
-        return add(TokenCategory.QUERY_TOKEN, QueryTokens.ORDER_BY);
+        return add(QUERY_TOKEN, ORDER_BY);
     }
 
     public Tokens joinAlias(final String alias) {
-        return add(TokenCategory.QRY_SOURCE_ALIAS, alias);
+        return add(QRY_SOURCE_ALIAS, alias);
     }
 
     public <E extends AbstractEntity<?>> Tokens from(final Class<E> entityType) {
@@ -482,13 +493,13 @@ final class Tokens {
             throw new IllegalArgumentException("Missing entity type in query: " + this.values);
         }
         this.mainSourceType = entityType;
-        return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
+        return add(QUERY_TOKEN, FROM, ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
     public Tokens from(final AggregatedResultQueryModel... sourceModels) {
         if (sourceModels.length >= 1) {
             this.mainSourceType = EntityAggregates.class;
-            return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+            return add(QUERY_TOKEN, FROM, QRY_MODELS_AS_QRY_SOURCE, asList(sourceModels));
         } else {
             throw new RuntimeException("No models have been specified as a source in from statement!");
         }
@@ -497,23 +508,23 @@ final class Tokens {
     public <T extends AbstractEntity<?>> Tokens from(final EntityResultQueryModel<T>... sourceModels) {
         if (sourceModels.length >= 1) {
             this.mainSourceType = sourceModels[0].getResultType();
-            return add(TokenCategory.QUERY_TOKEN, QueryTokens.FROM, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+            return add(QUERY_TOKEN, FROM, QRY_MODELS_AS_QRY_SOURCE, asList(sourceModels));
         } else {
             throw new RuntimeException("No models have been specified as a source in from statement!");
         }
     }
 
     public <E extends AbstractEntity<?>> Tokens innerJoin(final Class<E> entityType) {
-        return add(TokenCategory.JOIN_TYPE, JoinType.IJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
+        return add(JOIN_TYPE, IJ, ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
     public <E extends AbstractEntity<?>> Tokens leftJoin(final Class<E> entityType) {
-        return add(TokenCategory.JOIN_TYPE, JoinType.LJ, TokenCategory.ENTITY_TYPE_AS_QRY_SOURCE, entityType);
+        return add(JOIN_TYPE, LJ, ENTITY_TYPE_AS_QRY_SOURCE, entityType);
     }
 
     public Tokens innerJoin(final AggregatedResultQueryModel... sourceModels) {
         if (sourceModels.length >= 1) {
-            return add(TokenCategory.JOIN_TYPE, JoinType.IJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+            return add(JOIN_TYPE, IJ, QRY_MODELS_AS_QRY_SOURCE, asList(sourceModels));
         } else {
             throw new RuntimeException("No models have been specified as a source in from statement!");
         }
@@ -521,7 +532,7 @@ final class Tokens {
 
     public <E extends AbstractEntity<?>> Tokens innerJoin(final EntityResultQueryModel<E>... sourceModels) {
         if (sourceModels.length >= 1) {
-            return add(TokenCategory.JOIN_TYPE, JoinType.IJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+            return add(JOIN_TYPE, IJ, QRY_MODELS_AS_QRY_SOURCE, asList(sourceModels));
         } else {
             throw new RuntimeException("No models have been specified as a source in from statement!");
         }
@@ -529,7 +540,7 @@ final class Tokens {
 
     public Tokens leftJoin(final AggregatedResultQueryModel... sourceModels) {
         if (sourceModels.length >= 1) {
-            return add(TokenCategory.JOIN_TYPE, JoinType.LJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+            return add(JOIN_TYPE, LJ, QRY_MODELS_AS_QRY_SOURCE, asList(sourceModels));
         } else {
             throw new RuntimeException("No models have been specified as a source in from statement!");
         }
@@ -537,7 +548,7 @@ final class Tokens {
 
     public <E extends AbstractEntity<?>> Tokens leftJoin(final EntityResultQueryModel<E>... sourceModels) {
         if (sourceModels.length >= 1) {
-            return add(TokenCategory.JOIN_TYPE, JoinType.LJ, TokenCategory.QRY_MODELS_AS_QRY_SOURCE, Arrays.asList(sourceModels));
+            return add(JOIN_TYPE, LJ, QRY_MODELS_AS_QRY_SOURCE, asList(sourceModels));
         } else {
             throw new RuntimeException("No models have been specified as a source in from statement!");
         }

@@ -131,7 +131,7 @@ public abstract class AbstractTokensBuilder1 implements ITokensBuilder1 {
                 setChild(new ExpressionBuilder1(this, queryBuilder));
                 break;
             case FUNCTION: //eats token
-            case COLLECTIONAL_FUNCTION: //eats token
+            case AGGREGATE_FUNCTION: //eats token
                 add((Functions) value);
                 break;
             case BEGIN_COND: //eats token

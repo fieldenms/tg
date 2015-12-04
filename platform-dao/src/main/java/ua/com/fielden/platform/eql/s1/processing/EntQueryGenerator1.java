@@ -69,7 +69,7 @@ public class EntQueryGenerator1 {
                 case FROM:
                     active = from;
                     break;
-                case YIELD:
+                case SELECT:
                     active = select;
                     select.setChild(new YieldBuilder1(select, this));
                     break;

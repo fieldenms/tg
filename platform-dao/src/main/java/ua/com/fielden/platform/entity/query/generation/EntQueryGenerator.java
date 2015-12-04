@@ -75,7 +75,7 @@ public class EntQueryGenerator {
                 case FROM:
                     active = from;
                     break;
-                case YIELD:
+                case SELECT:
                     active = select;
                     select.setChild(new YieldBuilder(select, this, paramValues));
                     break;
