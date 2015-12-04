@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 
 import com.google.common.base.Charsets;
 
-public class SvgIconsetUtility {
+public class IronIconsetUtility {
 
     public static void createSvgIconset(final String[] srcFiles, final String outputFile, final String iconsetId, final String svgWidth) throws IOException {
         final Validator validator = new Validator();
@@ -26,11 +26,11 @@ public class SvgIconsetUtility {
         }
     }
 
-    private static OutputStream writeAllFilesContent(final OutputStream outputStream, final String string, final String name, final String size) throws IOException {
-        final String fileBegin = new FileBegin(name, size).getFileBegin();
+    private static OutputStream writeAllFilesContent(final OutputStream outputStream, final String filesContent, final String iconsetId, final String svgWidth) throws IOException {
+        final String fileBegin = new FileBegin(iconsetId, svgWidth).getFileBegin();
         final String fileEnd = new FileEnd().getFileEnd();
         outputStream.write(fileBegin.getBytes(Charsets.UTF_8));
-        outputStream.write((string).getBytes(Charsets.UTF_8));
+        outputStream.write((filesContent).getBytes(Charsets.UTF_8));
         outputStream.write(fileEnd.getBytes(Charsets.UTF_8));
         return outputStream;
 

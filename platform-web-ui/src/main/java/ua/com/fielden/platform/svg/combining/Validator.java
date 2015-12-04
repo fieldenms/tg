@@ -21,5 +21,4 @@ public class Validator {
             throw new IllegalArgumentException("Type of size have to be integer!");
         }
     }
-
 }

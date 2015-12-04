@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.menu.iconset;
 
 import java.io.IOException;
 
-import ua.com.fielden.platform.svg.combining.SvgIconsetUtility;
+import ua.com.fielden.platform.svg.combining.IronIconsetUtility;
 
 public class SvgIconset {
     public static void createIconsetSvg() throws IOException{
@@ -20,7 +20,7 @@ public class SvgIconset {
         args[7] = "src/main/resources/images/organisational.svg";
         args[8] = "src/main/resources/images/preventiveMaintenence.svg";
         args[9] = "src/main/resources/images/user.svg";
-        SvgIconsetUtility.createSvgIconset(args, outputFile, iconsetId, svgWidth);
+        IronIconsetUtility.createSvgIconset(args, outputFile, iconsetId, svgWidth);
     }
 
     public static void createDetailIconsetSvg() throws IOException {
@@ -38,7 +38,7 @@ public class SvgIconset {
         args[7] = "src/main/resources/images/detailed/organisational.svg";
         args[8] = "src/main/resources/images/detailed/preventiveMaintenence.svg";
         args[9] = "src/main/resources/images/detailed/user.svg";
-        SvgIconsetUtility.createSvgIconset(args, outputFile, iconsetId, svgWidth);
+        IronIconsetUtility.createSvgIconset(args, outputFile, iconsetId, svgWidth);
     }
 
     public static void main(final String[] args) throws IOException {

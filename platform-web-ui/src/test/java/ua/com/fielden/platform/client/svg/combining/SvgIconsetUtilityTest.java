@@ -12,7 +12,7 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-import ua.com.fielden.platform.svg.combining.SvgIconsetUtility;
+import ua.com.fielden.platform.svg.combining.IronIconsetUtility;
 
 public class SvgIconsetUtilityTest {
 
@@ -28,7 +28,7 @@ public class SvgIconsetUtilityTest {
         final String contentSecond = Files.toString(new File(args[1]), Charsets.UTF_8);
         final String contentOutputFile = Files.toString(new File(outputFile), Charsets.UTF_8);
 
-        final SvgIconsetUtility iconsetUtility = new SvgIconsetUtility();
+        final IronIconsetUtility iconsetUtility = new IronIconsetUtility();
         iconsetUtility.createSvgIconset(args, outputFile, "testName", "1000");
 
         assertTrue(contentOutputFile.contains(contentFirs));
@@ -38,7 +38,7 @@ public class SvgIconsetUtilityTest {
     @Test
     public void file_wich_does_not_exist_can_not_be_an_argument() throws IOException {
 
-        final SvgIconsetUtility iconsetUtility = new SvgIconsetUtility();
+        final IronIconsetUtility iconsetUtility = new IronIconsetUtility();
         final String args[] = new String[2];
         args[0] = "src/test/resources/icon.svg";
         args[1] = "src/test/resources/icon2.svg";
@@ -55,7 +55,7 @@ public class SvgIconsetUtilityTest {
     @Test
     public void wrong_size_can_not_be_an_argument() throws IOException {
 
-        final SvgIconsetUtility iconsetUtility = new SvgIconsetUtility();
+        final IronIconsetUtility iconsetUtility = new IronIconsetUtility();
         final String args[] = new String[2];
         args[0] = "src/test/resources/icon.svg";
         args[1] = "src/test/resources/icon2.svg";
@@ -72,7 +72,7 @@ public class SvgIconsetUtilityTest {
     @Test
     public void file_wich_is_not_able_to_be_writed_can_not_be_an_argument() throws IOException {
 
-        final SvgIconsetUtility iconsetUtility = new SvgIconsetUtility();
+        final IronIconsetUtility iconsetUtility = new IronIconsetUtility();
         final String args[] = new String[2];
         args[0] = "src/test/resources/icon.svg";
         args[1] = "src/test/resources/icon2.svg";
