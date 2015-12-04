@@ -5,6 +5,8 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
@@ -17,8 +19,6 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CriteriaResource;
-
-import com.google.inject.Injector;
 
 /**
  * A factory for criteria resources which instantiate resources based on entity type.
@@ -34,8 +34,8 @@ public class CriteriaResourceFactory extends Restlet {
     private final ICompanionObjectFinder companionFinder;
     private final IWebUiConfig webUiConfig;
     private final ICriteriaGenerator critGenerator;
-    
-    private final IServerGlobalDomainTreeManager serverGdtm; 
+
+    private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
     private final EntityFactory entityFactory;
 
@@ -49,10 +49,9 @@ public class CriteriaResourceFactory extends Restlet {
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
-        this.serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class); 
+        this.serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
         this.userProvider = injector.getInstance(IUserProvider.class);;
         this.entityFactory = injector.getInstance(EntityFactory.class);
-
     }
 
     @Override
@@ -63,12 +62,12 @@ public class CriteriaResourceFactory extends Restlet {
             new CriteriaResource<AbstractEntity<?>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>>(
                     restUtil,
                     (EntityCentre<AbstractEntity<?>>) ResourceFactoryUtils.getEntityCentre(request, webUiConfig),
-                    webUiConfig, 
-                    companionFinder, 
-                    serverGdtm, 
-                    userProvider, 
-                    critGenerator, 
-                    entityFactory, 
+                    webUiConfig,
+                    companionFinder,
+                    serverGdtm,
+                    userProvider,
+                    critGenerator,
+                    entityFactory,
                     getContext(),
                     request,
                     response //

@@ -60,21 +60,21 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
 
     private final ICriteriaGenerator critGenerator;
     private final EntityCentre<T> centre;
-    
-    private final IWebUiConfig webUiConfig; 
-    private final IServerGlobalDomainTreeManager serverGdtm; 
+
+    private final IWebUiConfig webUiConfig;
+    private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
-    private final EntityFactory entityFactory; 
-    
+    private final EntityFactory entityFactory;
+
     public CriteriaResource(
             final RestServerUtil restUtil,
             final EntityCentre<T> centre,
-            final IWebUiConfig webUiConfig, 
-            final ICompanionObjectFinder companionFinder, 
-            final IServerGlobalDomainTreeManager serverGdtm, 
-            final IUserProvider userProvider, 
-            final ICriteriaGenerator critGenerator, 
-            final EntityFactory entityFactory, 
+            final IWebUiConfig webUiConfig,
+            final ICompanionObjectFinder companionFinder,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            final ICriteriaGenerator critGenerator,
+            final EntityFactory entityFactory,
             final Context context,
             final Request request,
             final Response response) {
@@ -85,11 +85,11 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
 
         this.centre = centre;
         this.critGenerator = critGenerator;
-        
-        this.webUiConfig = webUiConfig; 
-        this.serverGdtm = serverGdtm; 
+
+        this.webUiConfig = webUiConfig;
+        this.serverGdtm = serverGdtm;
         this.userProvider = userProvider;
-        this.entityFactory = entityFactory; 
+        this.entityFactory = entityFactory;
     }
 
     /**
@@ -104,13 +104,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
             // NOTE: the following line can be the example how 'criteria retrieval' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during criteria retrieval.");
-            return restUtil.rawListJSONRepresentation(
-                    CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, -1L),
-                    CentreResourceUtils.createCriteriaMetaValuesCustomObject(
-                            CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
-                            CentreResourceUtils.isFreshCentreChanged(miType, gdtm) //
-                    )//
-            );
+            return createCriteriaRetrievalEnvelope(originalCdtmae, miType, gdtm, restUtil, companionFinder, critGenerator);
         }, restUtil);
     }
 
@@ -126,16 +120,43 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
             final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
 
-            // NOTE: the following line can be the example how 'criteria retrieval' server errors manifest to the client application
-            // throw new IllegalStateException("Illegal state during criteria validation.");
-            return restUtil.rawListJSONRepresentation(
-                    CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, originalCdtmae),
-                    CentreResourceUtils.createCriteriaMetaValuesCustomObject(
-                            CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
-                            CentreResourceUtils.isFreshCentreChanged(miType, gdtm)//
-                    )//
-            );
+            return createCriteriaValidationEnvelope(modifiedPropertiesHolder, originalCdtmae, miType, gdtm, restUtil, companionFinder, critGenerator);
         }, restUtil);
+    }
+
+    public static Representation createCriteriaRetrievalEnvelope(
+            final ICentreDomainTreeManagerAndEnhancer cdtmae,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final IGlobalDomainTreeManager gdtm,
+            final RestServerUtil restUtil,
+            final ICompanionObjectFinder companionFinder,
+            final ICriteriaGenerator critGenerator
+                    ) {
+        return restUtil.rawListJSONRepresentation(
+                CentreResourceUtils.createCriteriaValidationPrototype(miType, cdtmae, critGenerator, -1L),
+                CentreResourceUtils.createCriteriaMetaValuesCustomObject(
+                        CentreResourceUtils.createCriteriaMetaValues(cdtmae, CentreResourceUtils.getEntityType(miType)),
+                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm)//
+                )//
+        );
+    }
+
+    private static Representation createCriteriaValidationEnvelope(
+            final Map<String, Object> modifiedPropertiesHolder,
+            final ICentreDomainTreeManagerAndEnhancer cdtmae,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final IGlobalDomainTreeManager gdtm,
+            final RestServerUtil restUtil,
+            final ICompanionObjectFinder companionFinder,
+            final ICriteriaGenerator critGenerator
+                    ) {
+        return restUtil.rawListJSONRepresentation(
+                CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, cdtmae),
+                CentreResourceUtils.createCriteriaMetaValuesCustomObject(
+                        CentreResourceUtils.createCriteriaMetaValues(cdtmae, CentreResourceUtils.getEntityType(miType)),
+                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm)//
+                )//
+        );
     }
 
     /**
@@ -164,14 +185,14 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                             CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
                             centre.getAdditionalFetchProvider(),
                             createQueryEnhancerAndContext(
-                                    webUiConfig, 
-                                    companionFinder, 
-                                    serverGdtm, 
-                                    userProvider, 
-                                    critGenerator, 
-                                    entityFactory, 
-                                    centreContextHolder, 
-                                    centre.getQueryEnhancerConfig(), 
+                                    webUiConfig,
+                                    companionFinder,
+                                    serverGdtm,
+                                    userProvider,
+                                    critGenerator,
+                                    entityFactory,
+                                    centreContextHolder,
+                                    centre.getQueryEnhancerConfig(),
                                     appliedCriteriaEntity));
             if (pair.getValue() == null) {
                 return restUtil.rawListJSONRepresentation(appliedCriteriaEntity, pair.getKey());
@@ -207,27 +228,27 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
     }
 
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> createQueryEnhancerAndContext(
-            final IWebUiConfig webUiConfig, 
-            final ICompanionObjectFinder companionFinder, 
-            final IServerGlobalDomainTreeManager serverGdtm, 
-            final IUserProvider userProvider, 
-            final ICriteriaGenerator critGenerator, 
-            final EntityFactory entityFactory, 
-            final CentreContextHolder centreContextHolder, 
-            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> queryEnhancerConfig, 
+            final IWebUiConfig webUiConfig,
+            final ICompanionObjectFinder companionFinder,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            final ICriteriaGenerator critGenerator,
+            final EntityFactory entityFactory,
+            final CentreContextHolder centreContextHolder,
+            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContextConfig>>> queryEnhancerConfig,
             final M criteriaEntity) {
         if (queryEnhancerConfig.isPresent()) {
             return Optional.of(new Pair<>(
                     queryEnhancerConfig.get().getKey(),
                     CentreResourceUtils.<T, M> createCentreContext(
-                            webUiConfig, 
-                            companionFinder, 
-                            serverGdtm, 
-                            userProvider, 
-                            critGenerator, 
-                            entityFactory, 
-                            centreContextHolder, 
-                            criteriaEntity, 
+                            webUiConfig,
+                            companionFinder,
+                            serverGdtm,
+                            userProvider,
+                            critGenerator,
+                            entityFactory,
+                            centreContextHolder,
+                            criteriaEntity,
                             queryEnhancerConfig.get().getValue())//
             ));
         } else {
