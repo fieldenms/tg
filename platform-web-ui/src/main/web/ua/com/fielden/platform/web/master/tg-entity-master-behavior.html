@@ -229,7 +229,7 @@
 		                var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
 		                
 	                	// @@funcEntityType is really a master entity type, which in this case is not functional!!!
-	                	var masterTypeCarrier = this._reflector().createContextHolder(
+	                	var masterTypeCarrier = this.savingContext ? this.savingContext : this._reflector().createContextHolder(
 	            				null, null, null,
 	            				null, null, null
 	                        );
