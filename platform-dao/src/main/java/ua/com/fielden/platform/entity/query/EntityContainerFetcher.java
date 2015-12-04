@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
 public class EntityContainerFetcher {
@@ -43,23 +44,28 @@ public class EntityContainerFetcher {
         return new EntityContainerEnhancer<E>(this, domainMetadataAnalyser).enhance(result, modelResult.getFetchModel());
     }
     
-    private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, Class<E> resultType, final Integer pageNumber, final Integer pageCapacity) throws Exception {
-        return listAndEnhanceContainers(from(select(resultType).where().prop("id").in().model((SingleResultQueryModel) queryModel.getQueryModel()).model()). //
-        lightweight(queryModel.isLightweight()). //
-        with(queryModel.getOrderModel()). //
-        with(queryModel.getFetchModel()). //
-        with(queryModel.getParamValues()).model(), pageNumber, pageCapacity);
+    private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType, final Integer pageNumber, final Integer pageCapacity) throws Exception {
+        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel) queryModel.getQueryModel()).model();
+        
+        final QueryExecutionModel<E,EntityResultQueryModel<E>> idOnlyQem = from(idOnlyModel).
+        with(queryModel.getOrderModel()).
+        with(queryModel.getFetchModel()).
+        with(queryModel.getParamValues()).model();
+        
+        idOnlyQem.lightweight();
+        
+        return listAndEnhanceContainers(idOnlyQem, pageNumber, pageCapacity);
     }
 
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity)
             throws Exception {
         final EntityTree<E> resultTree = new EntityResultTreeBuilder().buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
 
-        EntityHibernateRetrievalQueryProducer queryProducer = new EntityHibernateRetrievalQueryProducer(modelResult.getSql(), resultTree.getScalarFromEntityTree(), modelResult.getParamValues(), pageNumber, pageCapacity);
+        final EntityHibernateRetrievalQueryProducer queryProducer = new EntityHibernateRetrievalQueryProducer(modelResult.getSql(), resultTree.getScalarFromEntityTree(), modelResult.getParamValues(), pageNumber, pageCapacity);
         
         final Query query = queryProducer.produceHibernateQuery(executionContext.getSession());
 
-        EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<E>(executionContext.getEntityFactory(), executionContext.getCoFinder());
+        final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<E>(executionContext.getEntityFactory());
 
         return entityRawResultConverter.transformFromNativeResult(resultTree, query.list());
     }

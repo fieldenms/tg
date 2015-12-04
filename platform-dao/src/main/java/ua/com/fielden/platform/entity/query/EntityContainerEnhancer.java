@@ -7,13 +7,11 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
@@ -58,7 +56,6 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                             }
                         }
                     } else {
-
                         if (ppi.isUnionEntity()) {
                             enhanceProperty(entities, propName, propFetchModel);
                         } else {
@@ -94,7 +91,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
                                 + "]");
 
                         final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), proxiedProp);
-                        EntityContainer<AbstractEntity<?>> idlessPropContainer = new EntityContainer<AbstractEntity<?>>((Class<AbstractEntity<?>>) ppi.getJavaType(), null);
+                        final EntityContainer<AbstractEntity<?>> idlessPropContainer = new EntityContainer<AbstractEntity<?>>(ppi.getJavaType());
                         idlessPropContainer.setStrictProxy();
                         entContainer.getEntities().put(proxiedProp, idlessPropContainer);
                     }
@@ -102,7 +99,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
 
                 for (final Entry<String, Class<? extends AbstractEntity<?>>> proxiedProp : fetchModel.getProxiedPropsWithoutId().entrySet()) {
                     if (entContainer.getEntities().get(proxiedProp) == null) {
-                        EntityContainer<AbstractEntity<?>> calcPropContainer = new EntityContainer<AbstractEntity<?>>((Class<AbstractEntity<?>>) proxiedProp.getValue(), null);
+                        final EntityContainer<AbstractEntity<?>> calcPropContainer = new EntityContainer<AbstractEntity<?>>((Class<AbstractEntity<?>>) proxiedProp.getValue());
                         calcPropContainer.setStrictProxy();
                         entContainer.getEntities().put(proxiedProp.getKey(), calcPropContainer);
                     }
@@ -254,10 +251,8 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         for (final Map.Entry<Long, List<EntityContainer<T>>> resultEntry : results.entrySet()) {
             // assigns initialised collection to parent collectional property (lazy-collection is already evicted)
             final EntityContainer<E> entity = parentIds.get(resultEntry.getKey());
-            if (SortedSet.class.equals(propType)) {
-                entity.getCollections().put(propertyName, new CollectionContainer<T>(new TreeSet<T>(), resultEntry.getValue()));
-            } else if (Set.class.equals(propType)) {
-                entity.getCollections().put(propertyName, new CollectionContainer<T>(new HashSet<T>(), resultEntry.getValue()));
+            if (SortedSet.class.equals(propType) || Set.class.equals(propType)) {
+                entity.getCollections().put(propertyName, new CollectionContainer<T>(resultEntry.getValue()));
             } else {
                 throw new UnsupportedOperationException("Fetching via models for collections of type [" + propType + "] is not yet supported.");
             }
