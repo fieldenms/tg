@@ -559,8 +559,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .done()
                 .addModule("Division daily management")
                 .description("Division daily management")
-                .icon("menu:divisional-daily-management")
-                .detailIcon("menu-detailed:divisional-daily-management")
+                .icon("menu:divisional-daily-managment")
+                .detailIcon("menu-detailed:divisional-daily-managment")
                 .bgColor("#CFD8DC")
                 .captionBgColor("#78909C")
                 .menu()
@@ -568,8 +568,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
-                .icon("menu:accidents")
-                .detailIcon("menu-detailed:accidents")
+                .icon("menu:assidents")
+                .detailIcon("menu-detailed:assidents")
                 .bgColor("#FF9943")
                 .captionBgColor("#C87137")
                 .view(null)
@@ -629,7 +629,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     }
 
     private static IMaster<TgCreatePersistentStatusAction> masterConfigForTgCreatePersistentStatusAction() {
-        String layout = ""
+        final String layout = ""
                 + "['vertical', 'padding:20px', "
                 + "  ['vertical', "
                 + "      ['width:300px', 'flex'], "
