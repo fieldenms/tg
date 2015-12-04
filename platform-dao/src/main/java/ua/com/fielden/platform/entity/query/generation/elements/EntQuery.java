@@ -283,7 +283,7 @@ public class EntQuery implements ISingleOperand {
                 if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(resultType))) {
                     final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType, sources.getMain().getAlias());
                     for (final String keyMemberProp : keyOrderProps) {
-                        toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
+                        toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.getSortingOrderDirection()));
                     }
                 } else {
                     final Yield correspondingYield = yields.getYieldByAlias(orderBy.getYieldName());
@@ -321,13 +321,13 @@ public class EntQuery implements ISingleOperand {
             if (DynamicEntityKey.class.equals(getKeyType(info.getJavaType()))) {
                 final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(info.getJavaType(), propName.substring(0, propName.length() - 4));
                 for (final String keyMemberProp : keyOrderProps) {
-                    result.add(new OrderBy(new EntProp(keyMemberProp), original.isDesc()));
+                    result.add(new OrderBy(new EntProp(keyMemberProp), original.getSortingOrderDirection()));
                 }
                 return result;
             }
         }
 
-        result.add(new OrderBy(new EntProp(propName), original.isDesc()));
+        result.add(new OrderBy(new EntProp(propName), original.getSortingOrderDirection()));
 
         return result;
     }

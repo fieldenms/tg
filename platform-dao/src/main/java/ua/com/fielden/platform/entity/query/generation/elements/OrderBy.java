@@ -1,13 +1,15 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import ua.com.fielden.platform.entity.query.fluent.SortingOrderDirection;
+
 public class OrderBy {
     private final ISingleOperand operand;
     private final String yieldName;
     private Yield yield;
-    private final boolean desc;
+    private final SortingOrderDirection sortingOrderDirection;
 
     public String sql() {
-        return sqlWithoutSortOrder() + (desc ? " DESC" : " ASC");
+        return sqlWithoutSortOrder() + " " + sortingOrderDirection;
     }
 
     public String sqlWithoutSortOrder() {
@@ -20,21 +22,21 @@ public class OrderBy {
 
     @Override
     public String toString() {
-        return (yieldName == null ? operand : yieldName) + (desc ? " DESC" : " ASC");
+        return (yieldName == null ? operand : yieldName) + " " + sortingOrderDirection;
     }
 
-    public OrderBy(final ISingleOperand operand, final boolean desc) {
+    public OrderBy(final ISingleOperand operand, final SortingOrderDirection sortingOrderDirection) {
         super();
         this.operand = operand;
         this.yieldName = null;
-        this.desc = desc;
+        this.sortingOrderDirection = sortingOrderDirection;
     }
 
-    public OrderBy(final String yieldName, final boolean desc) {
+    public OrderBy(final String yieldName, final SortingOrderDirection sortingOrderDirection) {
         super();
         this.operand = null;
         this.yieldName = yieldName;
-        this.desc = desc;
+        this.sortingOrderDirection = sortingOrderDirection;
     }
 
     public ISingleOperand getOperand() {
@@ -45,18 +47,31 @@ public class OrderBy {
         return yieldName;
     }
 
+    public Yield getYield() {
+        return yield;
+    }
+
+    public void setYield(final Yield yield) {
+        this.yield = yield;
+    }
+
+    public SortingOrderDirection getSortingOrderDirection() {
+        return sortingOrderDirection;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (desc ? 1231 : 1237);
         result = prime * result + ((operand == null) ? 0 : operand.hashCode());
+        result = prime * result + ((sortingOrderDirection == null) ? 0 : sortingOrderDirection.hashCode());
+        result = prime * result + ((yield == null) ? 0 : yield.hashCode());
         result = prime * result + ((yieldName == null) ? 0 : yieldName.hashCode());
         return result;
     }
 
     @Override
-    public boolean equals(final Object obj) {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
@@ -66,15 +81,22 @@ public class OrderBy {
         if (!(obj instanceof OrderBy)) {
             return false;
         }
-        final OrderBy other = (OrderBy) obj;
-        if (desc != other.desc) {
-            return false;
-        }
+        OrderBy other = (OrderBy) obj;
         if (operand == null) {
             if (other.operand != null) {
                 return false;
             }
         } else if (!operand.equals(other.operand)) {
+            return false;
+        }
+        if (sortingOrderDirection != other.sortingOrderDirection) {
+            return false;
+        }
+        if (yield == null) {
+            if (other.yield != null) {
+                return false;
+            }
+        } else if (!yield.equals(other.yield)) {
             return false;
         }
         if (yieldName == null) {
@@ -85,17 +107,5 @@ public class OrderBy {
             return false;
         }
         return true;
-    }
-
-    public Yield getYield() {
-        return yield;
-    }
-
-    public void setYield(final Yield yield) {
-        this.yield = yield;
-    }
-
-    public boolean isDesc() {
-        return desc;
     }
 }

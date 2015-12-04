@@ -17,6 +17,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.SortingOrderDirection;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -342,8 +343,8 @@ public class QueryModelCompositionTest1 extends BaseEntQueryCompositionTCase1 {
         final EntQuery1 act = entResultQry(qry, orderModel);
 
         final List<OrderBy1> orderings = new ArrayList<>();
-        orderings.add(new OrderBy1(expression(prop("model"), compound(_add, new Now1())), false));
-        orderings.add(new OrderBy1(prop("key"), true));
+        orderings.add(new OrderBy1(expression(prop("model"), compound(_add, new Now1())), SortingOrderDirection.ASC));
+        orderings.add(new OrderBy1(prop("key"), SortingOrderDirection.DESC));
         final OrderBys1 exp2 = new OrderBys1(orderings);
         assertEquals("models are different", exp2, act.getOrderings());
     }

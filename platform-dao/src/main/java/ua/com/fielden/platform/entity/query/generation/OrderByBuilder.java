@@ -1,17 +1,16 @@
 package ua.com.fielden.platform.entity.query.generation;
 
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.YIELD;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.*;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.entity.query.fluent.SortingOrder;
+import ua.com.fielden.platform.entity.query.fluent.SortingOrderDirection;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBy;
 import ua.com.fielden.platform.utils.Pair;
 
 public class OrderByBuilder extends AbstractTokensBuilder {
-    private boolean descOrder;
 
     protected OrderByBuilder(final AbstractTokensBuilder parent, final EntQueryGenerator queryBuilder, final Map<String, Object> paramValues) {
         super(parent, queryBuilder, paramValues);
@@ -24,12 +23,12 @@ public class OrderByBuilder extends AbstractTokensBuilder {
 
     @Override
     public Pair<TokenCategory, Object> getResult() {
-        final SortingOrder orderDirection = (SortingOrder) secondValue();
+        final SortingOrderDirection sortingOrderDirection = (SortingOrderDirection) secondValue();
         if (firstCat() == YIELD) {
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy((String) firstValue(), SortingOrder.ASC.equals(orderDirection) ? false : true));
+            return new Pair<TokenCategory, Object>(QRY_YIELD, new OrderBy((String) firstValue(), sortingOrderDirection));
         } else {
             final ISingleOperand operand = getModelForSingleOperand(firstCat(), firstValue());
-            return new Pair<TokenCategory, Object>(TokenCategory.QRY_YIELD, new OrderBy(operand, SortingOrder.ASC.equals(orderDirection) ? false : true));
+            return new Pair<TokenCategory, Object>(QRY_YIELD, new OrderBy(operand, sortingOrderDirection));
         }
     }
 }

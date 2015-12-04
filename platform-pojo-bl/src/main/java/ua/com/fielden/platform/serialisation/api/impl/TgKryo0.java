@@ -83,7 +83,7 @@ import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.Functions;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
-import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
+import ua.com.fielden.platform.entity.query.fluent.QuerySection;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -313,7 +313,7 @@ class TgKryo0 extends Kryo implements ISerialiserEngine {
         register(fetch.class);
         register(OrderingModel.class);
         register(TokenCategory.class);
-        register(QueryTokens.class);
+        register(QuerySection.class);
         register(LogicalOperator.class);
         register(ComparisonOperator.class);
         register(ArithmeticalOperator.class);

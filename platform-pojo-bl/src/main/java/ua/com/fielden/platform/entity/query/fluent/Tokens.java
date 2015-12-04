@@ -21,9 +21,9 @@ import static ua.com.fielden.platform.entity.query.fluent.ComparisonOperator.*;
 import static ua.com.fielden.platform.entity.query.fluent.LogicalOperator.*;
 import static ua.com.fielden.platform.entity.query.fluent.Functions.*;
 import static ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator.*;
-import static ua.com.fielden.platform.entity.query.fluent.QueryTokens.*;
+import static ua.com.fielden.platform.entity.query.fluent.QuerySection.*;
 import static ua.com.fielden.platform.entity.query.fluent.JoinType.*;
-import static ua.com.fielden.platform.entity.query.fluent.SortingOrder.*;
+import static ua.com.fielden.platform.entity.query.fluent.SortingOrderDirection.*;
 /**
  * Contains internal structure (incrementally collected building blocks) of the entity query request.
  * 

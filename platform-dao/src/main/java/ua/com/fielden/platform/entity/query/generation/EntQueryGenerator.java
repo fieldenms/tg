@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
-import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
+import ua.com.fielden.platform.entity.query.fluent.QuerySection;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBys;
@@ -67,7 +67,7 @@ public class EntQueryGenerator {
                     active.add(pair.getKey(), pair.getValue());
                 }
             } else {
-                switch ((QueryTokens) pair.getValue()) {
+                switch ((QuerySection) pair.getValue()) {
                 case WHERE:
                     active = where;
                     where.setChild(new ConditionBuilder(where, this, paramValues));

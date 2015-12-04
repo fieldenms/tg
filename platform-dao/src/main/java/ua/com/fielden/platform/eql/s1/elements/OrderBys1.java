@@ -18,7 +18,7 @@ public class OrderBys1 implements IElement1<OrderBys2> {
     public OrderBys2 transform(final TransformatorToS2 resolver) {
         final List<OrderBy2> transformed = new ArrayList<>();
         for (final OrderBy1 orderBy : models) {
-            transformed.add(new OrderBy2(orderBy.getOperand().transform(resolver), orderBy.isDesc()));
+            transformed.add(new OrderBy2(orderBy.getOperand().transform(resolver), orderBy.getSortingOrderDirection()));
         }
         return new OrderBys2(transformed);
     }

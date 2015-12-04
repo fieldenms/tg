@@ -9,7 +9,7 @@ import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
-import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
+import ua.com.fielden.platform.entity.query.fluent.QuerySection;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -61,7 +61,7 @@ public class EntQueryGenerator1 {
                     active.add(pair.getKey(), pair.getValue());
                 }
             } else {
-                switch ((QueryTokens) pair.getValue()) {
+                switch ((QuerySection) pair.getValue()) {
                 case WHERE:
                     active = where;
                     where.setChild(new ConditionBuilder1(where, this));

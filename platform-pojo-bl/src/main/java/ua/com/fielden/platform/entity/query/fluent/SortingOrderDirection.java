@@ -1,15 +1,11 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
-public enum QueryTokens {
-    SELECT("SELECT"),
-    FROM("FROM"),
-    WHERE("WHERE"), 
-    GROUP_BY("GROUP BY"), 
-    ORDER_BY("ORDER BY");
+public enum SortingOrderDirection {
+    ASC("ASC"), DESC("DESC");
 
     private final String value;
 
-    QueryTokens(final String value) {
+    SortingOrderDirection(final String value) {
         this.value = value;
     }
 

@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.query.fluent.ArithmeticalOperator;
 import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.JoinType;
+import ua.com.fielden.platform.entity.query.fluent.SortingOrderDirection;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryCompositionTCase;
 import ua.com.fielden.platform.entity.query.generation.elements.CaseWhen;
 import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
@@ -343,8 +344,8 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
         System.out.println(act.sql());
 
         final List<OrderBy> orderings = new ArrayList<OrderBy>();
-        orderings.add(new OrderBy(expression(prop("model"), compound(_add, val(1))), false));
-        orderings.add(new OrderBy(prop("key"), true));
+        orderings.add(new OrderBy(expression(prop("model"), compound(_add, val(1))), SortingOrderDirection.ASC));
+        orderings.add(new OrderBy(prop("key"), SortingOrderDirection.DESC));
         final OrderBys exp2 = new OrderBys(orderings);
         assertEquals("models are different", exp2, act.getOrderings());
     }
