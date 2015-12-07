@@ -474,12 +474,11 @@
                     
                     var sc = this.$.selection_criteria;
                     sc._startRefreshCycleModeForEditors();
-	                var holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
     
-                    // cancel previous validation before starting Save process -- it includes validation process internally!
+                    // cancel previous validation before starting Discard process!
                     sc._validator().abortValidationIfAny();
 
-                    this._ajaxDiscarder().body = JSON.stringify(sc._serialiser().serialise(sc._reset(holder)));
+                    this._ajaxDiscarder().body = JSON.stringify('Ok');
                     return this._ajaxDiscarder().generateRequest().completes;
                 }).bind(self);
 

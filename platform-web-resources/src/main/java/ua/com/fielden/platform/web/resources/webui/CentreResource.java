@@ -119,10 +119,6 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
 
-            // TODO consider removal of modifHolder from incoming envelope -- no need to apply any changes before
-            final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
-            CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, CentreResourceUtils.getFreshCentre(gdtm, miType));
-
             discardActualState(gdtm);
 
             // it is necessary to use "fresh" instance of cdtme (after the discarding process)
