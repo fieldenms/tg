@@ -112,6 +112,13 @@
                 _centreChanged: {
                     type: Boolean
                 },
+                
+                /**
+                 * The property which indicates whether the centre has been fully loaded with its criteria entity (should be bound from tg-selection-criteria).
+                 */
+                _criteriaLoaded: {
+                    type: Boolean
+                },
 
                 _saverDisabled: {
                     type: Boolean,
@@ -120,6 +127,11 @@
                 _discarderDisabled: {
                     type: Boolean,
                     computed: '_computeDiscarderDisabled(_centreChanged)'
+                },
+                
+                _runnerDisabled: {
+                    type: Boolean,
+                    computed: '_computeRunnerDisabled(_criteriaLoaded)'
                 },
 
                 _url: {
@@ -263,6 +275,10 @@
             _computeDiscarderDisabled: function (_centreChanged) {
                 return !this.canDiscard(_centreChanged);
             },
+            
+            _computeRunnerDisabled: function (_criteriaLoaded) {
+                return _criteriaLoaded === false;
+            },
 
             /**
              * Initialisation block. It has all children web components already initialised.
@@ -296,30 +312,32 @@
                 self._getSelectedEntities = (function () {
                     return this.$.egi.getSelectedEntities();
                 }).bind(self);
-
+                
                 self._processSaverResponse = function (e) {
-                    self.$.selection_criteria._processResponse(e, "save", function (okString) {
-                        console.log("CENTRE SAVED", okString);
-                        self.retrieve();
+                    self.$.selection_criteria._processResponse(e, "save", function (entityAndCustomObject) {
+                        console.log("CENTRE SAVED", entityAndCustomObject);
+                        self.$.selection_criteria._postValidatedDefault(entityAndCustomObject);
                     });
                 };
                 self._processSaverError = function (e) {
                     self.$.selection_criteria._processError(e, "save", function (errorResult) {
                         // This function will be invoked after server-side error appear.
                         console.warn("SERVER ERROR: ", errorResult);
+                        self.$.selection_criteria._postValidatedDefaultError(errorResult);
                     });
                 };
 
                 self._processDiscarderResponse = function (e) {
-                    self.$.selection_criteria._processResponse(e, "discard", function (okString) {
-                        console.log("CENTRE DISCARDED", okString);
-                        self.retrieve();
+                    self.$.selection_criteria._processResponse(e, "discard", function (entityAndCustomObject) {
+                        console.log("CENTRE DISCARDED", entityAndCustomObject);
+                        self.$.selection_criteria._postValidatedDefault(entityAndCustomObject);
                     });
                 };
                 self._processDiscarderError = function (e) {
                     self.$.selection_criteria._processError(e, "discard", function (errorResult) {
                         // This function will be invoked after server-side error appear.
                         console.warn("SERVER ERROR: ", errorResult);
+                        self.$.selection_criteria._postValidatedDefaultError(errorResult);
                     });
                 };
 
@@ -437,30 +455,15 @@
                     }
                     console.log("CENTRE SAVE");
                     
-                    var self = this;
-                    var sc = self.$.selection_criteria;
-                    return new Promise(function(resolve, reject) {
-                        sc._startRefreshCycleModeForEditors();
-        
-                        sc._persistedModifiedPropertiesHolder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
-        
-                        // cancel previous validation before starting Save process -- it includes validation process internally!
-                        sc._validator().abortValidationIfAny();
-                        resolve(
-    	                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-    	                    //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
-    	                    
-    	                    var contextHolder = self._createContextHolderForRunning(function() {
-                    				return self._reset(self._persistedModifiedPropertiesHolder);
-                    			}, 
-                    			self.requireSelectedEntities, 
-                    			self.requireMasterEntity, 
-                    			entitiesToRefresh
-                    		)
-                            self._ajaxSaver().body = JSON.stringify(sc._serialiser().serialise(contextHolder));
-		                    return self._ajaxSaver().generateRequest().completes;
-                        );
-                    });
+                    var sc = this.$.selection_criteria;
+                    sc._startRefreshCycleModeForEditors();
+	                var holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
+    
+                    // cancel previous validation before starting Save process -- it includes validation process internally!
+                    sc._validator().abortValidationIfAny();
+
+                    this._ajaxSaver().body = JSON.stringify(sc._serialiser().serialise(sc._reset(holder)));
+	                return this._ajaxSaver().generateRequest().completes;
                 }).bind(self);
 
                 self.discard = (function () {
@@ -468,10 +471,23 @@
                         throw "Cannot discard the not modified centre.";
                     }
                     console.log("CENTRE DISCARD");
-                    this._ajaxDiscarder().generateRequest();
+                    
+                    var sc = this.$.selection_criteria;
+                    sc._startRefreshCycleModeForEditors();
+	                var holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
+    
+                    // cancel previous validation before starting Save process -- it includes validation process internally!
+                    sc._validator().abortValidationIfAny();
+
+                    this._ajaxDiscarder().body = JSON.stringify(sc._serialiser().serialise(sc._reset(holder)));
+                    return this._ajaxDiscarder().generateRequest().completes;
                 }).bind(self);
 
                 self.run = (function () {
+                    if (this._criteriaLoaded === false) {
+                        throw "Cannot run centre (not initialised criteria).";
+                    }
+                    
                     var self = this;
                     self.$.egi.clearSelection();
                     self.$.egi.collapseAllCards();

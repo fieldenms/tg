@@ -42,7 +42,7 @@
         <tg-serialiser id="serialiser"></tg-serialiser>
 
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError"></iron-ajax>
-        <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="DELETE" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
+        <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
 
         <iron-pages selected="[[_selectedView]]" on-scroll="_handleScroll">
             <div class="fit">
@@ -57,7 +57,7 @@
                             </div>
                             <div class="layout horizontal">
                             	<paper-button id="view" raised roll="button" on-tap="_activateResultSetView">View</paper-button>
-                            	<paper-button id="runner" raised roll="button" on-tap="run" style="margin-right: 0px;">Run</paper-button>
+                            	<paper-button id="runner" raised roll="button" on-tap="run" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]">Run</paper-button>
                             </div>
                         </div>
                     </div>
@@ -108,6 +108,7 @@
             _handleScroll: Function,
             _saverDisabled: Boolean,
             _discarderDisabled: Boolean,
+            _runnerDisabled: Boolean,
             save: Function,
             discard: Function,
             run: Function,
