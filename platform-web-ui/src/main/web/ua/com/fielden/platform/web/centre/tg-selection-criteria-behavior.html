@@ -94,6 +94,12 @@
                 	notify: true
                 },
                 
+                _criteriaLoaded: {
+                	type: Boolean,
+                	value: false,
+                	notify: true
+                },
+                
                 /**
                  * The current modified properties holder to be used during pagination (it was "persisted" after run() action has been performed).
                  */
@@ -239,6 +245,7 @@
 
             	this._setPropertyModel(customObject.metaValues);
                 this._centreChanged = customObject.isCentreChanged;
+                this._criteriaLoaded = true;
             },
 
             _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
