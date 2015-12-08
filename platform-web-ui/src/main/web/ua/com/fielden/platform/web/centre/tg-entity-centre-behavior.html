@@ -133,6 +133,11 @@
                     type: Boolean,
                     computed: '_computeRunnerDisabled(_criteriaLoaded)'
                 },
+                
+                _viewerDisabled: {
+                    type: Boolean,
+                    computed: '_computeViewerDisabled(_criteriaLoaded)'
+                },
 
                 _url: {
                     type: String,
@@ -277,6 +282,10 @@
             },
             
             _computeRunnerDisabled: function (_criteriaLoaded) {
+                return _criteriaLoaded === false;
+            },
+            
+            _computeViewerDisabled: function (_criteriaLoaded) {
                 return _criteriaLoaded === false;
             },
 
@@ -515,6 +524,10 @@
                  */
     			self._activateResultSetView = (function () {
                 	self.async(function () {
+                        if (self._criteriaLoaded === false) {
+                            throw "Cannot activate result-set view (not initialised criteria).";
+                        }
+                        
                         self._selectedView = 1;
                      }, 100);
                 }).bind(self);

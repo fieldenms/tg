@@ -56,7 +56,7 @@
                                 <paper-button id="discarder" raised roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]">Discard</paper-button>
                             </div>
                             <div class="layout horizontal">
-                            	<paper-button id="view" raised roll="button" on-tap="_activateResultSetView">View</paper-button>
+                            	<paper-button id="view" raised roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]">View</paper-button>
                             	<paper-button id="runner" raised roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]">Run</paper-button>
                             </div>
                         </div>
@@ -109,6 +109,7 @@
             _saverDisabled: Boolean,
             _discarderDisabled: Boolean,
             _runnerDisabled: Boolean,
+            _viewerDisabled: Boolean,
             save: Function,
             discard: Function,
             run: Function,
