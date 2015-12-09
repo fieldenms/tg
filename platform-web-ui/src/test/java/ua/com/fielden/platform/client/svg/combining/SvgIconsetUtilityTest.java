@@ -23,7 +23,7 @@ public class SvgIconsetUtilityTest {
         final String srcFolder = "src/test/resources/icons";
         final Set<String> srcFiles = new HashSet();
         srcFiles.add("src/test/resources/icons/icon.svg");
-        srcFiles.add("src/test/resources/icons/icon2.svg");
+        srcFiles.add("src/test/resources/icons/icon.svg");
         final String outputFile = "src/test/resources/combiningSvgResult.html";
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", "1000");
         iconsetUtility.createSvgIconset(srcFolder, outputFile);
