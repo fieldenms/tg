@@ -21,11 +21,11 @@ public class SvgIconsetUtilityTest {
     public void output_file_should_contain_each_src_file() throws IOException {
 
         final String srcFolder = "src/test/resources/icons";
-        final Set<String> srcFiles = new HashSet();
+        final Set<String> srcFiles = new HashSet<String>();
         srcFiles.add("src/test/resources/icons/icon.svg");
         srcFiles.add("src/test/resources/icons/icon.svg");
         final String outputFile = "src/test/resources/combiningSvgResult.html";
-        final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", "1000");
+        final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000);
         iconsetUtility.createSvgIconset(srcFolder, outputFile);
         final String contentOutputFile = Files.toString(new File(outputFile), Charsets.UTF_8);
 
@@ -37,24 +37,9 @@ public class SvgIconsetUtilityTest {
 
     @org.junit.Ignore
     @Test
-    public void file_wich_does_not_exist_can_not_be_an_argument() throws IOException {
+    public void wrong_size_cannot_be_an_argument() throws IOException {
 
-        final String srcFolder = "src/test/resources/icons";
-        final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", "1000");
-        final String outputFile = "src/test/resources/combiningSvgResult.html";
-
-        try {
-            iconsetUtility.createSvgIconset(srcFolder, outputFile);
-            fail();
-        }catch (final IllegalArgumentException e){
-
-        }
-    }
-
-    @Test
-    public void wrong_size_can_not_be_an_argument() throws IOException {
-
-        final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", "a100");
+        final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 100);
         final String srcFolder = "src/test/resources/icons";
         final String outputFile = "src/test/resources/combiningSvgResult.html";
 
@@ -66,10 +51,10 @@ public class SvgIconsetUtilityTest {
     }
 
     @Test
-    public void file_wich_is_not_able_to_be_writed_can_not_be_an_argument() throws IOException {
+    public void file_not_able_to_be_written_cannot_be_an_argument() throws IOException {
 
         final String srcFolder = "src/test/resources/icons";
-        final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", "1000");
+        final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000);
         final String outputFile = "src/test/resources/fileNotForWriting.html";
 
         try {

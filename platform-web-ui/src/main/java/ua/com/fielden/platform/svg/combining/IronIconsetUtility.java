@@ -8,7 +8,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.DirectoryIteratorException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,16 +22,10 @@ public class IronIconsetUtility {
 
     private final String fileBegin;
     private final String fileEnd;
-    private final String iconsetId;
-    private final String svgWidth;
 
-    public IronIconsetUtility(final String iconsetId, final String svgWidth) {
-        this.iconsetId = iconsetId;
-        this.svgWidth = svgWidth;
-        this.fileBegin = "<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\">" +
-                "\n <link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\">" +
-                "\n <iron-iconset-svg name=\"" + this.iconsetId + "\" size=\"" + this.svgWidth + "\">" + "\n <svg>" + "\n <defs>; \n";
-        this.fileEnd = "</defs>" + "\n </svg>" + "\n </iron-iconset-svg>";
+    public IronIconsetUtility(final String iconsetId, final int svgWidth) {
+        this.fileBegin = String.format("<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\"> \n <link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\"> \n <iron-iconset-svg name=\"%s\" size=\"%d\"> \n <svg> \n <defs>; \n", iconsetId, svgWidth);
+        this.fileEnd = "</defs> \n </svg> \n </iron-iconset-svg>";
     }
 
     public void createSvgIconset(final String srcFolder, final String outputFile) throws IOException {
@@ -36,9 +33,8 @@ public class IronIconsetUtility {
         for (final String file : srcFiles) {
             validateSrcFile(file);
         }
-        validateSvgWidth(svgWidth);
         try (OutputStream outputStream = new FileOutputStream(outputFile)) {
-            writeAllFilesContent(outputStream, joinFilesContent(srcFiles, "") + "\n");
+            writeAllFilesContent(outputStream, joinFilesContent(srcFiles) + "\n");
             System.out.println("Iron-iconset-svg creation is complete!");
         } catch (final IOException e) {
             throw new IOException();
@@ -53,12 +49,13 @@ public class IronIconsetUtility {
 
     }
 
-    private String joinFilesContent(final Set<String> files, String joinedFilesConent) throws IOException {
+    private String joinFilesContent(final Set<String> files) throws IOException {
+        final StringBuilder joinedFilesConent = new StringBuilder();
         for (final String file : files) {
             final String fileContent = new String(readAllBytes(Paths.get(file)));
-            joinedFilesConent = joinedFilesConent + (fileContent);
+            joinedFilesConent.append(fileContent);
         }
-        return joinedFilesConent;
+        return joinedFilesConent.toString();
     }
 
     private void validateSrcFile(final String file) {
@@ -67,21 +64,15 @@ public class IronIconsetUtility {
         }
     }
 
-    private void validateSvgWidth(final String string) {
-        try {
-            Integer.valueOf(string);
-        } catch (final IllegalArgumentException e) {
-            throw new IllegalArgumentException();
-        }
-    }
-
     private Set<String> getFilesFromFolder(final String folder) throws IOException {
-        final Set<String> srcFiles = new HashSet();
-        Files.walk(Paths.get(folder)).forEach(filePath -> {
-            if (Files.isRegularFile(filePath)) {
+        final Set<String> srcFiles = new HashSet<String>();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(folder), "*.svg")) {
+            for (final Path filePath: stream) {
                 srcFiles.add(filePath.toString());
             }
-        });
+        } catch (final DirectoryIteratorException ex) {
+            throw ex.getCause();
+        }
         return srcFiles;
     }
 }
