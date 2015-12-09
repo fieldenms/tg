@@ -34,6 +34,20 @@ public class SvgIconsetUtilityTest {
             assertTrue(contentOutputFile.contains(contentFile));
         }
     }
+    @Test
+    public void output_file_should_contain_correct_begin_and_end() throws IOException {
+
+        final String srcFolder = "src/test/resources/icons";
+        final String outputFile = "src/test/resources/combiningSvgResult.html";
+        final String fileBegin = String.format("<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\"> \n <link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\"> \n <iron-iconset-svg name=\"%s\" size=\"%d\"> \n <svg> \n <defs>; \n", "testName", 1000);
+        final String fileEnd = "</defs> \n </svg> \n </iron-iconset-svg>";
+        final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000);
+        iconsetUtility.createSvgIconset(srcFolder, outputFile);
+        final String contentOutputFile = Files.toString(new File(outputFile), Charsets.UTF_8);
+        assertTrue(contentOutputFile.startsWith(fileBegin)&&contentOutputFile.endsWith(fileEnd));
+
+    }
+
 
     @org.junit.Ignore
     @Test
