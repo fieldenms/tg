@@ -26,7 +26,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -99,9 +98,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     public T createValidationPrototypeWithContext(
             final Long id,
-            final CentreContext<T, AbstractEntity<?>> centreContext, 
-            final String chosenProperty, 
-            final Long compoundMasterEntityId, 
+            final CentreContext<T, AbstractEntity<?>> centreContext,
+            final String chosenProperty,
+            final Long compoundMasterEntityId,
             final AbstractEntity<?> masterContext) {
         if (id != null) {
             return co.findById(id, co.getFetchProvider().fetchModel());
@@ -114,7 +113,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             return defProducer.newEntity();
         }
     }
-    
+
     public Class<T> getEntityType() {
         return entityType;
     }
@@ -302,6 +301,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
+            if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
+                throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s]. Collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
+            }
             if (reflectedValue == null) {
                 return null;
             }
@@ -375,7 +377,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     return new Money(amount, taxPercentage, Currency.getInstance(currencyStr));
                 }
             }
-                        
+
         } else if (Colour.class.isAssignableFrom(propertyType)) {
             if (reflectedValue == null) {
                 return null;
@@ -495,15 +497,15 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return applied validationPrototype and modifiedPropertiesHolder map
      */
     public Pair<T, Map<String, Object>> constructEntity(
-            final Map<String, Object> modifiedPropertiesHolder, 
-            final CentreContext<T, AbstractEntity<?>> centreContext, 
-            final String chosenProperty, 
+            final Map<String, Object> modifiedPropertiesHolder,
+            final CentreContext<T, AbstractEntity<?>> centreContext,
+            final String chosenProperty,
             final Long compoundMasterEntityId,
             final AbstractEntity<?> masterContext) {
-        
+
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-        
+
         return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithContext(id, centreContext, chosenProperty, compoundMasterEntityId, masterContext), getCompanionFinder());
     }
 

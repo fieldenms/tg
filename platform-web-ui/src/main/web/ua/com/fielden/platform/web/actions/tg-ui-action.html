@@ -239,6 +239,15 @@
             	observer: '_actionProgressStatusChanged'
             },
             
+            /**
+             * Callback that allows one to modify binding entity after it was retrieved.
+             *
+             * @param bindingFunctionEntity - the functional master entity that is to be modified with this callback.
+             */
+            modifyFunctionalEntity: {
+                type: Function
+            },
+            
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -377,12 +386,28 @@
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
                 return master.retrieve(master.savingContext)
                 .then(function(value) {
+                    if (self.modifyFunctionalEntity) {
+                        self.modifyFunctionalEntity(master._currBindingEntity);
+                    }
                     if (master.saveOnActivation === true) {
              			return master.save();
                     }
                     return Promise.resolve(value);
                 });
             }).bind(self);
+        },
+        
+        /**
+         * Modifies the value of the currentBindingEntity's property.
+         *
+         * Warning: the method has no impact to the corresponding editor -- this method should be used
+         * only in case where no editor exists.
+         */
+        modifyValue4Property: function (propNameToBeAssigned, bindingEntity, value) {
+            if (typeof bindingEntity[propNameToBeAssigned] === 'undefined') {
+                throw 'modifyValue4Property: no property [' + propNameToBeAssigned + '] exists.';
+            }
+            bindingEntity[propNameToBeAssigned] = value;
         },
         
         _createContextHolderForAction: function () {
