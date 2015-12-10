@@ -407,6 +407,8 @@
                 } else {
                 	if (this.reflector().isEntity(this.entity)) {
 	                    this.entity.set(this.propertyName, newValue);
+	                    this._registerPropertyTouch(this.entity, this.propertyName);
+	                    
     	                if (this._shouldInvokeValidation()) {
         	                this.validationCallback();
             	        } else {
@@ -414,6 +416,24 @@
                     	}
                 	}
                 }
+            },
+            
+            _registerPropertyTouch: function (bindingEntity, propertyName) {
+                var touched = bindingEntity["@@touchedProps"];
+                var names = touched.names;
+                var counts = touched.counts;
+                var index = names.indexOf(propertyName);
+                if (index > -1) {
+                    var prevCount = counts[index];
+                    names.splice(index, 1);
+                    counts.splice(index, 1);
+                    names.push(propertyName);
+                    counts.push(prevCount + 1);
+                } else {
+                    names.push(propertyName);
+                    counts.push(1);
+                }
+                console.log('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
             },
 
             /**

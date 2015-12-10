@@ -600,6 +600,7 @@
                 if (self._reflector().isEntity(bindingEntity)) {
                     modPropHolder["id"] = bindingEntity["id"];
                     modPropHolder["version"] = bindingEntity["version"];
+                    modPropHolder["@@touchedProps"] = bindingEntity["@@touchedProps"].names;
 
                     bindingEntity.traverseProperties(function (propertyName) {
                         var value = bindingEntity.get(propertyName);
@@ -678,7 +679,7 @@
                 // New entity should be promoted to the local cache:
                 self._currEntity = entity;
                 // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
-                self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder);
+                self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
                 self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity);
 
                 this._resetRefreshCycleModeForEditors();
@@ -694,7 +695,7 @@
              * @param previousModifiedPropertiesHolder -- a container holding original and current value for all entity properties used to represent invalid properties to the user; 
              *                                            this container is always null for brand new entity instances that arrive from the sever for the first time (i.e. further client-server conversation re new instances should populate this container). 
             */
-            _extractBindingView: function (entity, previousModifiedPropertiesHolder) {
+            _extractBindingView: function (entity, previousModifiedPropertiesHolder, prevCurrBindingEntity) {
                 var self = this;
                 var bindingView = self._reflector().newEntity(entity.type().fullClassName());
                 bindingView["id"] = entity["id"];
@@ -702,6 +703,7 @@
                 // this property of the bindingView will hold the reference to fully-fledged entity, 
                 //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 
                 bindingView["@@origin"] = entity;
+                bindingView["@@touchedProps"] = (prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"]) ? prevCurrBindingEntity["@@touchedProps"] : { names: [], counts: [] };
 
                 entity.traverseProperties(function (propertyName) {
                     if (self._reflector().isError(entity.prop(propertyName).validationResult())) {

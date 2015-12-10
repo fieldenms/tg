@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -175,10 +176,11 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
 
         final Set<String> modifiedProps = new LinkedHashSet<>();
+        final List<String> touchedProps = (List<String>) modifiedPropertiesHolder.get("@@touchedProps");
         // iterate through modified properties:
         for (final Map.Entry<String, Object> nameAndVal : modifiedPropertiesHolder.entrySet()) {
             final String name = nameAndVal.getKey();
-            if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */) {
+            if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */ && !touchedProps.contains(name)) {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
@@ -214,6 +216,48 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                             logger.info(msg);
                             entity.getProperty(name).setDomainValidationResult(Result.warning(entity, msg));
                         }
+                    }
+                }
+            }
+        }
+        
+        // FIXME: copy-paste from above
+        for (final String touchedProp : touchedProps) {
+            final String name = touchedProp;
+            final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
+            // The 'modified' properties are marked using the existence of "val" sub-property.
+            if (valAndOrigVal.containsKey("val")) { // this is a modified property
+                modifiedProps.add(name);
+                final Object newValue = convert(type, name, valAndOrigVal.get("val"), companionFinder);
+                if (notFoundEntity(type, name, valAndOrigVal.get("val"), newValue)) {
+                    final String msg = String.format("The entity has not been found for [%s].", valAndOrigVal.get("val"));
+                    logger.info(msg);
+                    entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+                } else if (multipleFoundEntities(type, name, valAndOrigVal.get("val"), newValue)) {
+                    final String msg = String.format("Multiple entities have been found for [%s].", valAndOrigVal.get("val"));
+                    logger.info(msg);
+                    entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+                } else if (!isEntityStale) {
+                    entity.set(name, newValue);
+                } else {
+                    final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
+                    if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
+                        final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
+                        logger.info(msg);
+                        entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+                    } else {
+                        entity.set(name, newValue);
+                    }
+                }
+            } else { // this is unmodified property -- FIXME NEEDS TO BE APPLIED TOO!
+                if (!isEntityStale) {
+                    // do nothing
+                } else {
+                    final Object originalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
+                    if (EntityUtils.isStale(originalValue, entity.get(name))) {
+                        final String msg = "The property has been recently changed by other user.";
+                        logger.info(msg);
+                        entity.getProperty(name).setDomainValidationResult(Result.warning(entity, msg));
                     }
                 }
             }
