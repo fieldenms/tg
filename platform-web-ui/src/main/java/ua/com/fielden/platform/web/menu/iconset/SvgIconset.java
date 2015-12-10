@@ -15,11 +15,10 @@ public class SvgIconset {
         final String outputFile = "src/main/resources/images/menu.html";
         final String outputFileDet = "src/main/resources/images/detailed/menu-detailed.html";
 
-        final IronIconsetUtility iconsetUtility = new IronIconsetUtility(iconsetId, svgWidth);
-        final IronIconsetUtility iconsetUtilityDet = new IronIconsetUtility(iconsetIdDet, svgWidth);
-        iconsetUtility.createSvgIconset(srcFolder, outputFile);
-        iconsetUtilityDet.createSvgIconset(srcFolderDet, outputFileDet);
-
+        final IronIconsetUtility iconsetUtility = new IronIconsetUtility(iconsetId, svgWidth, srcFolder);
+        final IronIconsetUtility iconsetUtilityDet = new IronIconsetUtility(iconsetIdDet, svgWidth, srcFolderDet);
+        iconsetUtility.createSvgIconset(outputFile);
+        iconsetUtilityDet.createSvgIconset(outputFileDet);
 
     }
 

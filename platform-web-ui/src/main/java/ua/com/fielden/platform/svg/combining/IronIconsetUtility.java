@@ -22,19 +22,17 @@ public class IronIconsetUtility {
 
     private final String fileBegin;
     private final String fileEnd;
+    private final String srcFolder;
 
-    public IronIconsetUtility(final String iconsetId, final int svgWidth) {
-        this.fileBegin = String.format("<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\"> \n <link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\"> \n <iron-iconset-svg name=\"%s\" size=\"%d\"> \n <svg> \n <defs>; \n", iconsetId, svgWidth);
+    public IronIconsetUtility(final String iconsetId, final int svgWidth, final String srcFolder) {
+        this.fileBegin = String.format("<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\"> \n <link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\"> \n <iron-iconset-svg name=\"%s\" size=\"%d\"> \n <svg> \n <defs> \n", iconsetId, svgWidth);
         this.fileEnd = "</defs> \n </svg> \n </iron-iconset-svg>";
+        this.srcFolder = srcFolder;
     }
 
-    public void createSvgIconset(final String srcFolder, final String outputFile) throws IOException {
-        final Set<String> srcFiles = getFilesFromFolder(srcFolder);
-        for (final String file : srcFiles) {
-            validateSrcFile(file);
-        }
+    public void createSvgIconset(final String outputFile) throws IOException {
         try (OutputStream outputStream = new FileOutputStream(outputFile)) {
-            writeAllFilesContent(outputStream, joinFilesContent(srcFiles) + "\n");
+            writeAllFilesContent(outputStream, joinFilesContent());
             System.out.println("Iron-iconset-svg creation is complete!");
         } catch (final IOException e) {
             throw new IOException();
@@ -42,20 +40,22 @@ public class IronIconsetUtility {
     }
 
     private OutputStream writeAllFilesContent(final OutputStream outputStream, final String filesContent) throws IOException {
-        outputStream.write(fileBegin.getBytes(Charsets.UTF_8));
         outputStream.write((filesContent).getBytes(Charsets.UTF_8));
-        outputStream.write(fileEnd.getBytes(Charsets.UTF_8));
         return outputStream;
 
     }
 
-    private String joinFilesContent(final Set<String> files) throws IOException {
-        final StringBuilder joinedFilesConent = new StringBuilder();
+    public String joinFilesContent() throws IOException {
+        final Set<String> files = getFilesFromFolder(srcFolder);
+        for (final String file : files) {
+            validateSrcFile(file);
+        }
+        final StringBuilder joinedFilesConent = new StringBuilder().append(fileBegin);
         for (final String file : files) {
             final String fileContent = new String(readAllBytes(Paths.get(file)));
             joinedFilesConent.append(fileContent);
         }
-        return joinedFilesConent.toString();
+        return joinedFilesConent.append(fileEnd).toString();
     }
 
     private void validateSrcFile(final String file) {
