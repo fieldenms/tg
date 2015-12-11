@@ -3,16 +3,16 @@
 <dom-module id="centre-comp-spike">
     <template>
         <style>
-            :host {
+            .main-container {
                 background-color: #CFD8DC;
             }
         </style>
-        <div class="layout horizontal justified">
+        <div class="main-container layout horizontal justified">
             <div class="layout vertical start">
                 <content select=".left-insertion-point"></content>
             </div>
 
-            <div class="layout vertical start">
+            <div class="layout vertical flex">
                 <content select=".custom-egi"></content>
                 <content select=".bottom-insertion-point"></content>
             </div>

@@ -23,11 +23,16 @@
             font-size: 10pt;
         }
         .left-insertion-point,
-        .rightinsertion-point,
+        .right-insertion-point,
         .bottom-insertion-point {
             background-color: white;
-            width: 350px;
+            margin: 10px;
             height: 450px;
+        }
+        .left-insertion-point,
+        .right-insertion-point
+        {
+            width: 350px;
         }
     </style>
 
@@ -36,11 +41,11 @@
 <body unresolved class="fullbleed">
     <template is="dom-bind" id="app">
         <centre-comp-spike class="fit">
-            <paper-material><div class="layout horizontal center-center left-insertion-point">left-top insertion point</div></paper-material>
-            <paper-material><div class="layout horizontal center-center left-insertion-point">left-bot insertion point</div></paper-material>
-            <paper-material><div class="layout horizontal center-center right-insertion-point">right-top insertion point</div></paper-material>
-            <paper-material><div class="layout horizontal center-center right-insertion-point">right-bot insertion point</div></paper-material>
-            <paper-material><div class="layout horizontal center-center bottom-insertion-point">bottom insertion point</div></paper-material>
+            <paper-material class="layout horizontal center-center left-insertion-point"><div>left-top insertion point</div></paper-material>
+            <paper-material class="layout horizontal center-center left-insertion-point"><div>left-bot insertion point</div></paper-material>
+            <paper-material class="layout horizontal center-center right-insertion-point"><div>right-top insertion point</div></paper-material>
+            <paper-material class="layout horizontal center-center right-insertion-point"><div>right-bot insertion point</div></paper-material>
+            <paper-material class="layout horizontal center-center bottom-insertion-point"><div>bottom insertion point</div></paper-material>
             <egi-comp-spike class="custom-egi">
                 
                 <paper-icon-button class="entity-specific-action" icon="code"></paper-icon-button>

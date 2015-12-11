@@ -7,113 +7,156 @@
 
 <dom-module id="egi-comp-spike">
     <template>
+        <style>
+            /*miscellanea styles*/
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            paper-material {
+                border-radius: 2px;
+            }
+            /*Toolbar layout related*/
+            .align-left {
+                float: left;
+            }
+            .align-right {
+                float: right;
+            }
+            .grid-toolbar {
+                height: auto;
+                min-height: 4rem;
+                margin: auto 0.6rem;
+                overflow: hidden;
+            }
+            /*Table related styles*/
+            .data-table {
+                background-color: white;
+                border-radius: 2px;
+            }
+            .table-header-row {
+                font-size: 0.9rem;
+                font-weight: 400;
+                color: #757575;
+                height: 3rem;
+                cursor: default;
+                -webkit-font-smoothing: antialiased;
+                text-rendering: optimizeLegibility;
+                min-width: fit-content;
+            }
+            .table-data-row {
+                font-size: 1rem;
+                font-weight: 400;
+                color: #212121;
+                height: 1.5rem;
+                border-top: 1px solid #e3e3e3;
+                cursor: default;
+                -webkit-font-smoothing: antialiased;
+                text-rendering: optimizeLegibility;
+                min-width: fit-content;
+            }
+            .table-data-row[selected] {
+                background-color: #F5F5F5;
+            }
+            .table-data-row:hover {
+                background-color: #EEEEEE;
+            }
+            .table-footer-row {
+                font-size: 0.9rem;
+                color: #757575;
+                height: 3.5rem;
+                cursor: default;
+                border-top: 1px solid #e3e3e3;
+            }
+            .table-cell,
+            .table-data-cell {
+                padding: 0 0.6rem;
+            }
+            .table-cell:first-of-type,
+            .table-data-cell:first-of-type {
+                padding-right: 0.6rem;
+                padding-left: 1.2rem;
+            }
+            .table-cell:last-of-type,
+            .table-data-cell:last-of-type {
+                padding-left: 0.6rem;
+                padding-right: 1.2rem;
+            }
+            .table-data-cell {
+                cursor: pointer;
+            }
+            paper-checkbox::shadow #checkboxLabel {
+                display: none;
+            }
+            paper-checkbox.blue {
+                --paper-checkbox-checked-color: #0288D1;
+                --paper-checkbox-checked-ink-color: #0288D1;
+            }
+            paper-checkbox.header {
+                --paper-checkbox-unchecked-color: #757575;
+                --paper-checkbox-unchecked-ink-color: #757575;
+            }
+            paper-checkbox.body {
+                --paper-checkbox-unchecked-color: #212121;
+                --paper-checkbox-unchecked-ink-color: #212121;
+            }
+            .table-icon {
+                --iron-icon-width: 1.3rem;
+                --iron-icon-height: 1.3rem;
+            }
+        </style>
         <paper-material elevation="1" style="margin: 10px 10px;">
-                <div class="layout vertical data-table">
-                    <!--Table toolbar-->
-                    <div class="grid-toolbar layout horizontal justified" hidden$="[[!toolbarVisible]]">
-                        <div class="layout horizontal center">
-                            <content select=".entity-specific-action"></content>
-                        </div>
-                        <div class="layout horizontal center">
-                            <content select=".standart-action"></content>
-                        </div>
+            <div class="layout vertical data-table">
+                <!--Table toolbar-->
+                <div class="layout horizontal center wrap grid-toolbar">
+                    <div class="layout horizontal center">
+                        <content select=".entity-specific-action"></content>
                     </div>
-                    <!-- Table header -->
+                    <div class="layout horizontal center" style="margin-left: auto">
+                        <content select=".standart-action"></content>
+                    </div>
+                </div>
+                <!-- Table header -->
+                <div style="overflow-x: auto; overflow-y:hidden">
                     <div class="layout horizontal table-header-row">
-                        <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                            <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                        <div class="table-cell layout horizontal center">
+                            <paper-checkbox class="blue header"></paper-checkbox>
                         </div>
-                        <template is="dom-if" if="[[primaryAction]]">
-                            <div class="table-cell layout horizontal center" style="width:40px">
-                                <!--Primary action stub header goes here-->
-                            </div>
-                        </template>
+                        <div class="table-cell layout horizontal center" style="max-width:40px;min-width:40px">
+                            <!--Primary action stub header goes here-->
+                        </div>
                         <template is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]" tooltip-text$="[[item.columnDesc]]">
-                                <div class="truncate" style$="[[_calcColumnHeaderStyle(item)]]">[[item.columnTitle]]</div>
+                            <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]">
+                                <div class="truncate" style="width:100%">[[item.title]]</div>
                             </div>
                         </template>
-                        <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                            <div class="table-cell layout horizontal center" style="width:40px">
-                                <!--Secondary actions header goes here-->
-                            </div>
-                        </template>
+                        <div class="table-cell layout horizontal center" style="max-width:40px;min-width:40px">
+                            <!--Secondary actions header goes here-->
+                        </div>
                     </div>
                     <!-- Table body -->
-                    <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                        <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]">
-                            <div class="table-cell layout horizontal center" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
-                                <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
+                    <template is="dom-repeat" items="[[data]]" as="entity" index-as="entityIndex">
+                        <div class="layout horizontal table-data-row">
+                            <div class="table-cell layout horizontal center">
+                                <paper-checkbox class="blue body"></paper-checkbox>
                             </div>
-                            <template is="dom-if" if="[[primaryAction]]">
-                                <div class="table-cell layout horizontal center">
-                                    <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
-                                    <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]"  ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
-                                </div>
-                            </template>
+                            <div class="table-cell layout horizontal center">
+                                <paper-icon-button icon="code"></paper-icon-button>
+                            </div>
                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
-                                    <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
-                                    </div>
-                                    <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                        <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
-                                    </template>
-                                    <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                        <div class="truncate relative" style$="[[_calcColumnStyle(column)]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
-                                    </template>
+                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]">
+                                    <div class="truncate relative" style="width: 100%">[[_getValue(entity, index)]]</div>
                                 </div>
                             </template>
-                            <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                                <div class="table-cell layout horizontal center">
-                                    <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                        <tg-page-action icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" pref-dim="[[secondaryActions.0.prefDim]]"></tg-page-action>
-                                        <tg-ui-action show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]"  should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]"  ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
-                                    </template>
-                                    <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                        <tg-secondary-action-button current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
-                                    </template>
-                                </div>
-                            </template>
+                            <div class="table-cell layout horizontal center">
+                                <paper-icon-button icon="code"></paper-icon-button>
+                            </div>
                         </div>
                     </template>
-                    <!-- Table footer -->
-                    <template is="dom-if" if="[[totals]]">
-                        <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
-                            <div class="layout horizontal table-footer-row">
-                                <div class="table-cell layout horizontal center" style="width:18px">
-                                    <!-- checkbox stub for table footer -->
-                                </div>
-                                <template is="dom-if" if="[[primaryAction]]">
-                                    <div class="table-cell layout horizontal center" style="width:40px">
-                                        <!--Primary action footer goes here-->
-                                    </div>
-                                </template>
-                                <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
-                                    <template is="dom-if" if="[[summary]]">
-                                        <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
-                                            <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
-                                            </template>
-                                            <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                                <div class="truncate relative" style$="[[_calcColumnStyle(summary)]]">[[_getValue(totals, summary.property, summary.type)]]</div>
-                                            </template>
-                                        </div>
-                                    </template>
-                                    <template is="dom-if" if="[[!summary]]">
-                                        <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns)]]">
-                                        </div>
-                                    </template>
-                                </template>
-                                <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]" style="width:40px">
-                                    <div class="table-cell layout horizontal center" style="width:40px">
-                                        <!--Secondary actions header goes here-->
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-                    </template>
                 </div>
-            </paper-material>
+            </div>
+        </paper-material>
     </template>
 </dom-module>
 <script>
@@ -128,11 +171,14 @@
             },
 
             ready: function () {
-                var dataIndex = 0;
-                var dataEntryIndex = 0;
-                var dataEntry;
-                //Configuring data
-                this.data=[];
+                var dataIndex, dataEntryIndex, dataEntry, columnData, tempSum;
+                this.data = this._initData();
+                this.columns = this._initColumnData();
+            },
+
+            _initData: function () {
+                var dataIndex, dataEntryIndex, dataEntry, data;
+                data = [];
                 for (dataIndex = 0; dataIndex < 10; dataIndex++) {
                     dataEntry = [];
                     data.push(dataEntry);
@@ -140,11 +186,66 @@
                         dataEntry.push("data entry " + dataIndex + ", " + dataEntryIndex);
                     }
                 }
-                //Configuring columns
-                this.columns=[];
+                return data;
+            },
+
+            _initColumnData: function () {
+                var dataIndex, columnData, columns;
+                columns = [];
                 for (dataIndex = 0; dataIndex < 10; dataIndex++) {
-                    data.push("column " + dataIndex);
+                    columnData = {
+                        title: "title " + dataIndex
+                    };
+                    columns.push(columnData);
                 }
+                return this._initColumnsWidth(columns);
+            },
+
+            _initColumnsWidth: function (columns) {
+                columns[0].preferedWidth = 30;
+                columns[1].preferedWidth = 63;
+                columns[2].preferedWidth = 0;
+                columns[3].preferedWidth = 100;
+                columns[4].preferedWidth = 31;
+                columns[5].preferedWidth = 71;
+                columns[6].preferedWidth = 51;
+                columns[7].preferedWidth = 37;
+                columns[8].preferedWidth = 83;
+                columns[9].preferedWidth = 42;
+                return this._initColumnsGrowFactor(columns);
+            },
+
+            _initColumnsGrowFactor: function (columns) {
+                var dataIndex, tempMin;
+                columns.forEach(function (elem) {
+                    if (!tempMin && elem.preferedWidth) {
+                        tempMin = elem.preferedWidth;
+                    } else if (tempMin && elem.preferedWidth && elem.preferedWidth < tempMin) {
+                        tempMin = elem.preferedWidth;
+                    }
+                });
+                columns.forEach(function (elem) {
+                    elem.growFactor = tempMin ? Math.round(elem.preferedWidth / tempMin) : 0;
+                });
+                return columns;
+            },
+
+            /**
+             * Calculates the column's header style.
+             */
+            _calcColumnHeaderStyle: function (item) {
+                return "min-width: " + item.preferedWidth + "px; width: " + item.preferedWidth + "px; flex-grow: " + item.growFactor + (item.preferedWidth === 0 ? "; padding: 0;" : ";");
+            },
+
+            /**
+             * Calculates the column's style.
+             */
+            _calcColumnStyle: function (item) {
+                return "min-width: " + item.preferedWidth + "px; width: " + item.preferedWidth + "px; flex-grow: " + item.growFactor + (item.preferedWidth === 0 ? "; padding: 0;" : ";");
+            },
+
+            _getValue: function (entity, index) {
+                return entity[index];
             }
         });
     })();
