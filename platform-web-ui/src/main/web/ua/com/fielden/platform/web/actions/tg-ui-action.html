@@ -386,6 +386,13 @@
                 // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
                 return master.retrieve(master.savingContext)
                 .then(function(value) {
+                	// the following IF block handles conditional displaying of the associated entity master
+                	if (typeof master._currBindingEntity['skipUi'] !== 'undefined' && master._currBindingEntity['skipUi'] === true) {
+                	    master.noUI = true; // instructs the tg-custom-action-dialog not to be diplayed
+                	    self._isSpinnerRequired = master.noUI; // instructs this action's UI representation to use the spinner for progress indication 
+                	    master.saveOnActivation = true; // and of course the entity needs to be executed immediately
+                	}
+                	
                     if (self.modifyFunctionalEntity) {
                         self.modifyFunctionalEntity(master._currBindingEntity);
                     }
