@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.client.svg.combining;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -35,6 +36,7 @@ public class SvgIconsetUtilityTest {
             assertTrue(contentOutputFile.contains(contentFile));
         }
     }
+
     @Test
     public void output_file_should_contain_correct_begin_and_end() throws IOException {
 
@@ -43,17 +45,17 @@ public class SvgIconsetUtilityTest {
         final String fileBegin = String.format("<link rel=\"import\" href=\"/resources/polymer/iron-icon/iron-icon.html\"> \n <link rel=\"import\" href=\"/resources/polymer/iron-iconset-svg/iron-iconset-svg.html\"> \n <iron-iconset-svg name=\"%s\" size=\"%d\"> \n <svg> \n <defs> \n", "testName", 1000);
         final String fileEnd = "</defs> \n </svg> \n </iron-iconset-svg>";
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000, srcFolder);
-        iconsetUtility.createSvgIconset( outputFile);
+        iconsetUtility.createSvgIconset(outputFile);
         final String contentOutputFile = Files.toString(new File(outputFile), Charsets.UTF_8);
-        assertTrue(contentOutputFile.startsWith(fileBegin)&&contentOutputFile.endsWith(fileEnd));
+        assertTrue(contentOutputFile.startsWith(fileBegin) && contentOutputFile.endsWith(fileEnd));
     }
 
     @Test
     public void joined_files_string_should_contain_correct_number_of_svg_elements() throws IOException {
         final String srcFolder = "src/test/resources/icons";
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000, srcFolder);
-        assertTrue(StringUtils.countMatches(iconsetUtility.joinFilesContent(), "<svg")==3);
-        assertTrue(StringUtils.countMatches(iconsetUtility.joinFilesContent(), "</svg>")==3);
+        assertEquals(StringUtils.countMatches(iconsetUtility.joinFilesContent(), "<svg"), 3);
+        assertEquals(StringUtils.countMatches(iconsetUtility.joinFilesContent(), "</svg>"), 3);
     }
 
     @Test
@@ -61,7 +63,7 @@ public class SvgIconsetUtilityTest {
         final String srcFolder = "src/test/resources/icons";
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000, srcFolder);
         assertTrue(iconsetUtility.joinFilesContent().contains("id=\"svg2\""));
-        assertTrue(StringUtils.countMatches(iconsetUtility.joinFilesContent(), "id=\"svg2\"")==2);
+        assertEquals((StringUtils.countMatches(iconsetUtility.joinFilesContent(), "id=\"svg2\"")), 2);
     }
 
     @Test
@@ -74,6 +76,34 @@ public class SvgIconsetUtilityTest {
             iconsetUtility.createSvgIconset(outputFile);
             fail();
         } catch (final IOException ex) {
+        }
+    }
+
+    @Test
+    public void src_files_should_be_valid() throws IOException {
+        final String srcFolder = "src/test/resources/testIcons";
+        final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000, srcFolder);
+        final String outputFile = "src/test/resources/combiningSvgResult.html";
+
+        try {
+            iconsetUtility.createSvgIconset(outputFile);
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertTrue(ex.getMessage() == "Not valid file! Src file should not be empty.");
+        }
+    }
+
+    @Test
+    public void src_folder_should_be_not_empty() throws IOException {
+        final String srcFolder = "src/test/resources/emptyFolder";
+        final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000, srcFolder);
+        final String outputFile = "src/test/resources/combiningSvgResult.html";
+
+        try {
+            iconsetUtility.createSvgIconset(outputFile);
+            fail();
+        } catch (final IllegalArgumentException ex) {
+            assertTrue(ex.getMessage() == "Empty src directory!");
         }
     }
 

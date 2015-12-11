@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.svg.combining;
 
-import static java.nio.file.Files.notExists;
 import static java.nio.file.Files.readAllBytes;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -59,8 +57,15 @@ public class IronIconsetUtility {
     }
 
     private void validateSrcFile(final String file) {
-        if (isEmpty(file) || notExists(new File(file).toPath())) {
-            throw new IllegalArgumentException();
+        final File fileToValidate = new File(file);
+        if (fileToValidate.length()==0) {
+            throw new IllegalArgumentException("Not valid file! Src file should not be empty.");
+        }
+    }
+
+    private void validateSrcFolder(final Set<String> srcFiles) {
+        if (!srcFiles.iterator().hasNext()) {
+            throw new IllegalArgumentException("Empty src directory!");
         }
     }
 
@@ -73,6 +78,7 @@ public class IronIconsetUtility {
         } catch (final DirectoryIteratorException ex) {
             throw ex.getCause();
         }
+        validateSrcFolder(srcFiles);
         return srcFiles;
     }
 }
