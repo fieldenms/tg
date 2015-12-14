@@ -40,13 +40,15 @@ public class IronIconsetUtility {
     private OutputStream writeAllFilesContent(final OutputStream outputStream, final String filesContent) throws IOException {
         outputStream.write((filesContent).getBytes(Charsets.UTF_8));
         return outputStream;
-
     }
 
     public String joinFilesContent() throws IOException {
         final Set<String> files = getFilesFromFolder(srcFolder);
         for (final String file : files) {
-            validateSrcFile(file);
+            final File fileToValidate = new File(file);
+            if (fileToValidate.length() == 0) {
+                throw new IllegalArgumentException("Not valid file! Src file should not be empty.");
+            }
         }
         final StringBuilder joinedFilesConent = new StringBuilder().append(fileBegin);
         for (final String file : files) {
@@ -56,29 +58,18 @@ public class IronIconsetUtility {
         return joinedFilesConent.append(fileEnd).toString();
     }
 
-    private void validateSrcFile(final String file) {
-        final File fileToValidate = new File(file);
-        if (fileToValidate.length()==0) {
-            throw new IllegalArgumentException("Not valid file! Src file should not be empty.");
-        }
-    }
-
-    private void validateSrcFolder(final Set<String> srcFiles) {
-        if (!srcFiles.iterator().hasNext()) {
-            throw new IllegalArgumentException("Empty src directory!");
-        }
-    }
-
     private Set<String> getFilesFromFolder(final String folder) throws IOException {
         final Set<String> srcFiles = new HashSet<String>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(folder), "*.svg")) {
-            for (final Path filePath: stream) {
+            for (final Path filePath : stream) {
                 srcFiles.add(filePath.toString());
             }
         } catch (final DirectoryIteratorException ex) {
             throw ex.getCause();
         }
-        validateSrcFolder(srcFiles);
+        if (!srcFiles.iterator().hasNext()) {
+            throw new IllegalArgumentException("Empty src directory!");
+        }
         return srcFiles;
     }
 }
