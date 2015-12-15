@@ -28,7 +28,7 @@
         properties: {
             _onChange: {
                 type: Function
-            }
+            } 
         },
 
         ready: function () {
@@ -36,7 +36,12 @@
             
             this._onChange = (function (event) {
                 console.log("_onChange:", event);
-                this._editingValue = this.convertToString(event.srcElement.checked);
+                var newEditingValue = this.convertToString(event.srcElement.checked);
+                
+                if (newEditingValue === this._editingValue) {
+                    throw 'this._editingValue [' + this._editingValue + '] equals to newEditingValue [' + newEditingValue + '] which is originated from event.srcElement.checked [' + event.srcElement.checked + ']';
+                }
+                this._editingValue = newEditingValue;
                 
     			var parentFunction = Polymer.TgBehaviors.TgEditorBehavior.properties._onChange.value.call(this);
     			parentFunction.call(this, event);
