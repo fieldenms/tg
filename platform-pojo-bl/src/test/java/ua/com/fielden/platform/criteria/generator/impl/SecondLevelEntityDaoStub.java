@@ -196,4 +196,16 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public int batchDelete(EntityResultQueryModel<SecondLevelEntity> model) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public int batchDelete(EntityResultQueryModel<SecondLevelEntity> model, Map<String, Object> paramValues) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
 }

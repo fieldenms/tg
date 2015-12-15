@@ -36,6 +36,7 @@ import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityBatchDeleter;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
@@ -892,6 +893,27 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model) {
         defaultDelete(model, Collections.<String, Object> emptyMap());
+    }
+
+    /**
+     * A convenient default implementation for batch deletion of entities specified by provided query model.
+     *
+     * @param entity
+     */
+    @SessionRequired
+    protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+        if (model == null) {
+            throw new Result(new IllegalArgumentException("Null is not an acceptable value for eQuery model."));
+        }
+        
+        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
+
+        return new EntityBatchDeleter(queryExecutionContext).deleteEntities(model, paramValues);
+    }
+
+    @SessionRequired
+    protected int defaultBatchDelete(final EntityResultQueryModel<T> model) {
+        return defaultBatchDelete(model, Collections.<String, Object> emptyMap());
     }
 
     protected EntityFactory getEntityFactory() {
