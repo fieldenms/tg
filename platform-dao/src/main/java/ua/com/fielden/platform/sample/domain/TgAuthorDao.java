@@ -43,5 +43,12 @@ public class TgAuthorDao extends CommonEntityDao<TgAuthor> implements ITgAuthor 
     public void delete(final EntityResultQueryModel<TgAuthor> model, final Map<String, Object> paramValues) {
         defaultDelete(model, paramValues);
     }
+    
+    @Override
+    @SessionRequired
+    public int batchDelete(final EntityResultQueryModel<TgAuthor> model) {
+        return defaultBatchDelete(model);
+    }
+    
 
 }

@@ -204,6 +204,16 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     }
 
     @Override
+    public int batchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+        throw new UnsupportedOperationException("By default batch deletion is not supported.");
+    }
+
+    @Override
+    public int batchDelete(final EntityResultQueryModel<T> model) {
+        return batchDelete(model, Collections.<String, Object> emptyMap());
+    }
+
+    @Override
     public final IFetchProvider<T> getFetchProvider() {
         if (fetchProvider == null) {
             fetchProvider = createFetchProvider();
