@@ -237,4 +237,16 @@ public class UserControllerForTestPurposes implements IUserEx {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public int batchDelete(EntityResultQueryModel<User> model) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public int batchDelete(EntityResultQueryModel<User> model, Map<String, Object> paramValues) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
 }
