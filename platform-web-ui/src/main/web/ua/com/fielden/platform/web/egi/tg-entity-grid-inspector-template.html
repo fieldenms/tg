@@ -515,8 +515,8 @@
             },
             
             _getTotalTooltip: function(summary) {
-                var tooltip = summary.columnTitle ? summary.columnTitle : "";
-                tooltip += summary.columnDesc ? (tooltip ? " - " + summary.columnDesc : summary.columnDesc) : "";
+                var tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>": "";
+                tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
                 return tooltip;
             },
             //End of Tooltip related functions
