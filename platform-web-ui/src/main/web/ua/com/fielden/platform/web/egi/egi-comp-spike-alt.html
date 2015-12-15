@@ -5,10 +5,14 @@
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 
-<dom-module id="egi-comp-spike">
+<dom-module id="egi-comp-spike-alt">
     <template>
         <style>
             /*miscellanea styles*/
+            .no-flexible {
+                flex-grow: 0;
+                flex-shrink: 0;
+            }
             .truncate {
                 white-space: nowrap;
                 overflow: hidden;
@@ -27,10 +31,40 @@
             .grid-toolbar {
                 height: auto;
                 min-height: 4rem;
-                margin: auto 0.6rem;
+                margin: 0 0.6rem;
                 overflow: hidden;
             }
             /*Table related styles*/
+            .fixed-header-coll-left {
+                position: absolute;
+                top: 0;
+                left: 0;
+                height: 3rem;
+                background-color: white;
+            }
+            .fixed-header-coll-right {
+                position: absolute;
+                top: 0;
+                right: 0;
+                height: 3rem;
+                background-color: white;
+            }
+            .fixed-coll-left {
+                position: absolute;
+                background-color: white;
+                height: 1.5rem;
+                left: 0;
+            }
+            .fixed-coll-right {
+                position: absolute;
+                background-color: white;
+                height: 1.5rem;
+                right: 0;
+            }
+            .table-data-row:hover .fixed-coll-right,
+            .table-data-row:hover .fixed-coll-left {
+                background-color: #EEEEEE;
+            }
             .data-table {
                 background-color: white;
                 border-radius: 2px;
@@ -59,7 +93,7 @@
             .table-data-row[selected] {
                 background-color: #F5F5F5;
             }
-            .table-data-row[onover] {
+            .table-data-row:hover {
                 background-color: #EEEEEE;
             }
             .table-footer-row {
@@ -118,55 +152,59 @@
                     </div>
                 </div>
                 <!-- Table header -->
-
-                <div class="layout horizontal">
-                    <div class="layout vertical">
+                <div class="relative" style="overflow:hidden">
+                    <div style="overflow-x: auto; overflow-y:hidden">
                         <div class="layout horizontal table-header-row">
-                            <div class="table-cell layout horizontal center">
-                                <paper-checkbox class="blue header"></paper-checkbox>
+                            <div class="table-cell no-flexible" style="width:18px">
+                                <!--Select all checkbox stub goes here-->
                             </div>
-                            <div class="table-cell layout horizontal center" style="width:40px">
+                            <div class="table-cell no-flexible" style="width:40px;">
                                 <!--Primary action stub header goes here-->
                             </div>
-                        </div>
-                        <template is="dom-repeat" items="[[data]]" as="entity" index-as="entityIndex">
-                            <div class="layout horizontal table-data-row" on-mouseenter="_rowMouseOver" on-mouseleave="_rowMouseOut" onover$="[[entity.isOver]]">
-                                <div class="table-cell layout horizontal center">
-                                    <paper-checkbox class="blue body"></paper-checkbox>
-                                </div>
-                                <div class="table-cell layout horizontal center">
-                                    <paper-icon-button icon="code"></paper-icon-button>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                    <div class="layout vertical flex" style="overflow-x: auto; overflow-y:hidden">
-                        <div class="layout horizontal table-header-row">
                             <template is="dom-repeat" items="[[columns]]">
                                 <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]">
                                     <div class="truncate" style="width:100%">[[item.title]]</div>
                                 </div>
                             </template>
+                            <div class="table-cell no-flexible" style="width:40px">
+                                <!--Secondary actions header goes here-->
+                            </div>
+                            <div class="fixed-header-coll-left layout horizontal">
+                                <div class="table-cell layout horizontal center">
+                                    <paper-checkbox class="blue header"></paper-checkbox>
+                                </div>
+                                <div class="table-cell no-flexible" style="width:40px;">
+                                    <!--Primary action stub header goes here-->
+                                </div>
+                            </div>
+                            <div class="fixed-header-coll-right table-cell" style="width:40px;"></div>
                         </div>
+                        <!-- Table body -->
                         <template is="dom-repeat" items="[[data]]" as="entity" index-as="entityIndex">
-                            <div class="layout horizontal table-data-row" on-mouseenter="_rowMouseOver" on-mouseleave="_rowMouseOut" onover$="[[entity.isOver]]">
+                            <div class="layout horizontal table-data-row">
+                                <div class="table-cell no-flexible" style="width:18px;">
+                                    <!--Select checkbox stub goes here-->
+                                </div>
+                                <div class="table-cell no-flexible" style="width:40px;">
+                                    <!--Primary action stub goes here-->
+                                </div>
                                 <template is="dom-repeat" items="[[columns]]" as="column">
                                     <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]">
                                         <div class="truncate relative" style="width: 100%">[[_getValue(entity, index)]]</div>
                                     </div>
                                 </template>
-                            </div>
-                        </template>
-                    </div>
-                    <div class="layout vertical">
-                        <div class="layout horizontal table-header-row">
-                            <div class="table-cell layout horizontal center" style="width:40px">
-                                <!--Secondary actions header goes here-->
-                            </div>
-                        </div>
-                        <template is="dom-repeat" items="[[data]]" as="entity" index-as="entityIndex">
-                            <div class="layout horizontal table-data-row" on-mouseenter="_rowMouseOver" on-mouseleave="_rowMouseOut" onover$="[[entity.isOver]]">
-                                <div class="table-cell layout horizontal center">
+                                <div class="table-cell no-flexible" style="width:40px">
+                                    <!-- Secondary action stub goes here -->
+                                </div>
+                                <div class="fixed-coll-left layout horizontal" style="[[_calculateCollPosition(entityIndex)]]">
+                                    <div class="table-cell layout horizontal center">
+                                        <paper-checkbox class="blue body"></paper-checkbox>
+                                    </div>
+                                    <div class="table-cell layout horizontal center">
+                                        <paper-icon-button icon="code"></paper-icon-button>
+                                    </div>
+                                </div>
+                                <div class="fixed-coll-right table-cell layout horizontal center" style$="[[_calcColumnStyle(column)]]">
                                     <paper-icon-button icon="code"></paper-icon-button>
                                 </div>
                             </div>
@@ -181,7 +219,7 @@
     (function () {
         Polymer({
 
-            is: "egi-comp-spike",
+            is: "egi-comp-spike-alt",
 
             properties: {
                 data: Array,
@@ -262,20 +300,15 @@
                 return "min-width: " + item.preferedWidth + "px; width: " + item.preferedWidth + "px; flex-grow: " + item.growFactor + (item.preferedWidth === 0 ? "; padding: 0;" : ";");
             },
 
+            /**
+             * Calculatesd the top position of fixed columns.
+             */
+            _calculateCollPosition: function (entityIndex) {
+                return "top: calc(3rem + 1.5rem * " + entityIndex + ");"
+            },
+
             _getValue: function (entity, index) {
                 return entity[index];
-            },
-            
-            _rowMouseOver: function (event) {
-                var entity = event.model.entity;
-                entity.isOver=true;
-                console.log(entity);
-            },
-            
-            _rowMouseOut: function (event) {
-                var entity = event.model.entity;
-                entity.isOver = false;
-                console.log(entity);
             }
         });
     })();
