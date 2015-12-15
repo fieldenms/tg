@@ -177,6 +177,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
         final Set<String> modifiedProps = new LinkedHashSet<>();
         final List<String> touchedProps = (List<String>) modifiedPropertiesHolder.get("@@touchedProps");
+        System.out.println("touchedProps = " + touchedProps);
         // iterate through modified properties:
         for (final Map.Entry<String, Object> nameAndVal : modifiedPropertiesHolder.entrySet()) {
             final String name = nameAndVal.getKey();
@@ -184,28 +185,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    modifiedProps.add(name);
-                    final Object newValue = convert(type, name, valAndOrigVal.get("val"), companionFinder);
-                    if (notFoundEntity(type, name, valAndOrigVal.get("val"), newValue)) {
-                        final String msg = String.format("The entity has not been found for [%s].", valAndOrigVal.get("val"));
-                        logger.info(msg);
-                        entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-                    } else if (multipleFoundEntities(type, name, valAndOrigVal.get("val"), newValue)) {
-                        final String msg = String.format("Multiple entities have been found for [%s].", valAndOrigVal.get("val"));
-                        logger.info(msg);
-                        entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-                    } else if (!isEntityStale) {
-                        entity.set(name, newValue);
-                    } else {
-                        final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
-                        if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
-                            final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
-                            logger.info(msg);
-                            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-                        } else {
-                            entity.set(name, newValue);
-                        }
-                    }
+                    applyModifiedPropertyValue(modifiedProps, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
                 } else { // this is unmodified property
                     if (!isEntityStale) {
                         // do nothing
@@ -221,45 +201,14 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             }
         }
         
-        // FIXME: copy-paste from above
         for (final String touchedProp : touchedProps) {
             final String name = touchedProp;
             final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                modifiedProps.add(name);
-                final Object newValue = convert(type, name, valAndOrigVal.get("val"), companionFinder);
-                if (notFoundEntity(type, name, valAndOrigVal.get("val"), newValue)) {
-                    final String msg = String.format("The entity has not been found for [%s].", valAndOrigVal.get("val"));
-                    logger.info(msg);
-                    entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-                } else if (multipleFoundEntities(type, name, valAndOrigVal.get("val"), newValue)) {
-                    final String msg = String.format("Multiple entities have been found for [%s].", valAndOrigVal.get("val"));
-                    logger.info(msg);
-                    entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-                } else if (!isEntityStale) {
-                    entity.set(name, newValue);
-                } else {
-                    final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
-                    if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
-                        final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
-                        logger.info(msg);
-                        entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-                    } else {
-                        entity.set(name, newValue);
-                    }
-                }
+                applyModifiedPropertyValue(modifiedProps, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             } else { // this is unmodified property -- FIXME NEEDS TO BE APPLIED TOO!
-                if (!isEntityStale) {
-                    // do nothing
-                } else {
-                    final Object originalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
-                    if (EntityUtils.isStale(originalValue, entity.get(name))) {
-                        final String msg = "The property has been recently changed by other user.";
-                        logger.info(msg);
-                        entity.getProperty(name).setDomainValidationResult(Result.warning(entity, msg));
-                    }
-                }
+                applyUnmodifiedPropertyValue(modifiedProps, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -270,6 +219,73 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         disregardRequiredProperties(entity, modifiedProps);
 
         return entity;
+    }
+    
+    private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(final Set<String> modifiedProps, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        modifiedProps.add(name);
+        final Object val = valAndOrigVal.get("val");
+        final Object newValue = convert(type, name, val, companionFinder);
+        if (notFoundEntity(type, name, val, newValue)) {
+            final String msg = String.format("The entity has not been found for [%s].", val);
+            logger.info(msg);
+            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+        } else if (multipleFoundEntities(type, name, val, newValue)) {
+            final String msg = String.format("Multiple entities have been found for [%s].", val);
+            logger.info(msg);
+            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+        } else if (!isEntityStale) {
+            entity.set(name, newValue);
+        } else {
+            final Object origVal = valAndOrigVal.get("origVal");
+            final Object staleOriginalValue = convert(type, name, origVal, companionFinder);
+            if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
+                final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
+                logger.info(msg);
+                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+            } else {
+                entity.set(name, newValue);
+            }
+        }
+    }
+    
+    private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Set<String> modifiedProps, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        // TODO investigate implications! modifiedProps.add(name);
+        final Object origVal = valAndOrigVal.get("origVal");
+        final Object val = origVal; // valAndOrigVal.get("val");
+        final Object newValue = convert(type, name, val, companionFinder);
+        if (notFoundEntity(type, name, val, newValue)) {
+            final String msg = String.format("The entity has not been found for [%s].", val);
+            logger.info(msg);
+            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+        } else if (multipleFoundEntities(type, name, val, newValue)) {
+            final String msg = String.format("Multiple entities have been found for [%s].", val);
+            logger.info(msg);
+            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+        } else if (!isEntityStale) {
+            final MetaProperty<Object> metaProperty = entity.getProperty(name);
+            if (metaProperty.isEnforceMutator()) {
+                throw new UnsupportedOperationException("EnforceMutator flag is already set!.");
+            }
+            metaProperty.setEnforceMutator(true);
+            try {
+                entity.set(name, newValue);
+            } finally {
+                if (!metaProperty.isEnforceMutator()) {
+                    throw new UnsupportedOperationException("EnforceMutator flag should be set to true, but it didn't!.");
+                }
+                metaProperty.setEnforceMutator(false);
+            }
+        } else {
+            throw new UnsupportedOperationException("Stale entity is not supported for application of unmodified touched property at this stage.");
+//            final Object staleOriginalValue = convert(type, name, origVal, companionFinder);
+//            if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
+//                final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
+//                logger.info(msg);
+//                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+//            } else {
+//                entity.set(name, newValue);
+//            }
+        }
     }
 
     /**
