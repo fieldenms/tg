@@ -125,17 +125,6 @@
              	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
              	//   populate their default values in ready callback (to have these values populated in children)!     //
              	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-             	
-             	/**
-             	 * Governs children editors by 'turning on' refresh cycle mode.
-             	 *
-             	 * 'ACTIVATED' and null are the only permitted values. 
-             	 */
-                _refreshCycleMode: {
-                	type: String,
-                	observer: '_refreshCycleModeChanged'
-                },
-                
                 /**
                  * Represents the view of current entity for binding.
                  */
@@ -281,7 +270,6 @@
             ready: function () {
                 var self = this;
                 
-                this._resetRefreshCycleModeForEditors(); // init the value for '_refreshCycleMode'
                 self._resetState();
                 
                 self._createModifiedPropertiesHolder = (function () {
@@ -397,7 +385,6 @@
                 	} else {
                 		this._ajaxRetriever().body = null;
                 	}
-                    this._startRefreshCycleModeForEditors();
                     return this._ajaxRetriever().generateRequest().completes;
                 }).bind(self);
                 
@@ -634,25 +621,6 @@
                 return id === null ? "new" : ("" + id);
             },
 
-            _refreshCycleModeChanged: function (newValue, oldValue) {
-                // console.log("_refreshCycleModeChanged", newValue, oldValue);
-            },
-
-            /**
-             * Initialises a special state for the editors called "refresh cycle". In this state
-             * the editors promotes their values through the chain: entity => editingValue (commit) => commValue => acceptedValue.
-             *
-             * If the state is simple -- the value promotes through the following chain: editingValue (commit) => commValue => acceptedValue =>
-             * => entity prop value (validate) => new entity prop.
-             */
-            _startRefreshCycleModeForEditors: function () {
-                this._refreshCycleMode = "ACTIVATED";
-            },
-
-            _resetRefreshCycleModeForEditors: function () {
-                this._refreshCycleMode = null;
-            },
-
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
             /**
              * Implements the default action to (re)bind freshly received entity. Entity receival is the result of actions Refresh, Validate, Save and Run.
@@ -681,8 +649,6 @@
                 // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
                 self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
                 self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity);
-
-                this._resetRefreshCycleModeForEditors();
 
                 console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
                 return self._currBindingEntity;

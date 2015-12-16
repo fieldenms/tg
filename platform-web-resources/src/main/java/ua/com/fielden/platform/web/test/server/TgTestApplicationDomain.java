@@ -10,6 +10,7 @@ import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
@@ -56,6 +57,7 @@ public class TgTestApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityForColourMaster.class);
         add(TgCreatePersistentStatusAction.class);
         add(TgDummyAction.class);
+        add(TgEntityWithPropertyDependency.class);
    }
 
     @Override
