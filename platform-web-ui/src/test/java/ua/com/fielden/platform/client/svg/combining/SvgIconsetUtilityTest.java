@@ -54,15 +54,15 @@ public class SvgIconsetUtilityTest {
     public void joined_files_string_should_contain_correct_number_of_svg_elements() throws IOException {
         final String srcFolder = "src/test/resources/icons";
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000, srcFolder);
-        assertEquals(StringUtils.countMatches(iconsetUtility.joinFilesContent(), "<svg"), 3);
-        assertEquals(StringUtils.countMatches(iconsetUtility.joinFilesContent(), "</svg>"), 3);
+        assertEquals(3, StringUtils.countMatches(iconsetUtility.joinFilesContent(), "<svg"));
+        assertEquals(3, StringUtils.countMatches(iconsetUtility.joinFilesContent(), "</svg>"));
     }
 
     @Test
     public void joined_files_string_should_contain_svg_id() throws IOException {
         final String srcFolder = "src/test/resources/icons";
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000, srcFolder);
-        assertEquals((StringUtils.countMatches(iconsetUtility.joinFilesContent(), "id=\"svg2\"")), 2);
+        assertEquals(2, (StringUtils.countMatches(iconsetUtility.joinFilesContent(), "id=\"svg2\"")));
     }
 
     @Test
@@ -88,7 +88,7 @@ public class SvgIconsetUtilityTest {
             iconsetUtility.createSvgIconset(outputFile);
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(ex.getMessage(), "Not valid file! Src file should not be empty.");
+            assertEquals("Not valid file! Src file should not be empty.", ex.getMessage());
         }
     }
 
@@ -102,7 +102,7 @@ public class SvgIconsetUtilityTest {
             iconsetUtility.createSvgIconset(outputFile);
             fail();
         } catch (final IllegalArgumentException ex) {
-            assertEquals(ex.getMessage(), "Empty src directory!");
+            assertEquals("Empty src directory!", ex.getMessage());
         }
     }
 
