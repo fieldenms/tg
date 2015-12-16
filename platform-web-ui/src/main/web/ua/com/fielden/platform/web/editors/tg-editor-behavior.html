@@ -225,8 +225,6 @@
                     		
                     		if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
                     			this.commit();
-                    		} else {
-                                console.error('_onChange [', this.propertyName, ']: this._editingValue [', this._editingValue, '] does equal to this._commValue [', this._commValue, ']!');
                     		}
                     	}).bind(this);
                 	}
@@ -260,11 +258,6 @@
                     		console.log("_onInput:", event);
                     	}).bind(this);
                 	}
-                },
-                
-                needToUpdateCommValueSilently: {
-                    type: Boolean,
-                    value: false
                 }
                 
                 /* The following functions will potentially be needed. In this case, use the appropriate form of 'function-property' definition (to be able to bind to child elements). */
@@ -345,7 +338,7 @@
              * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
              */
             _editingValueChanged: function (newValue, oldValue) {
-                console.log("_editingValueChanged for [", this.propertyName, "] ", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
+                // console.log("_editingValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
                 
                 // TODO provide alternative?
                 // TODO provide alternative?
@@ -357,16 +350,6 @@
 
                 if (this._refreshCycleStarted === true) {
                     this.commit();
-                } else {
-                    // there are two potential cases -- 1) user interaction and 2) validate cycle
-                    // need to recognise validate cycle and update commValue:
-                    if (this.needToUpdateCommValueSilently === true) {
-                        if (this._commValue === this._editingValue) {
-                            this.needToUpdateCommValueSilently = false;
-                        } else {
-                            this._commValue = this._editingValue;
-                        }
-                    }
                 }
             },
 
@@ -390,17 +373,8 @@
                 if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
                 	this._refreshCycleStarted = false;
                 }
-                if (newEditingValue !== this._editingValue && (this._refreshCycleStarted === false) ) {
-                    this.needToUpdateCommValueSilently = true;
-                }
                 this._editingValue = newEditingValue;
-                
-/*                this.async((function() {
-                    if (this._editingValue !== this._commValue) {
-                        console.error('this._editingValue ' + this._editingValue + ' !== this._commValue ' + this._commValue + '!');
-                    }
-                }).bind(this), 100);
-*/            },
+            },
 
             /**
              * This method is called once the the accepted value was changed after the editor has commited its value.
@@ -408,23 +382,14 @@
              * IMPORTANT: please do not override this method.
              */
             _commValueChanged: function (newValue, oldValue) {
-                    console.log("_commValueChanged for [", this.propertyName, "] ", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
-                    try {
-                        var conv = this.convertFromString(newValue);
-                        
-                        if (this.needToUpdateCommValueSilently === true && this._acceptedValue === conv) {
-                            this.needToUpdateCommValueSilently = false;
-                        }
-                        
-                        this._acceptedValue = conv;
-                        this._editorValidationMsg = null;
-                    } catch (error) {
-                        if (this.needToUpdateCommValueSilently === true) {
-                            this.needToUpdateCommValueSilently = false;
-                        }
-                        // console.log("_commValueChanged catched", error, this);
-                        this._editorValidationMsg = error;
-                    }
+                // console.log("_commValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
+                try {
+                    this._acceptedValue = this.convertFromString(newValue);
+                    this._editorValidationMsg = null;
+                } catch (error) {
+                    // console.log("_commValueChanged catched", error, this);
+                    this._editorValidationMsg = error;
+                }
             },
 
             /**
@@ -434,27 +399,22 @@
              * _shouldInvokeValidation() and _skipValidationAction().
              */
             _acceptedValueChanged: function (newValue, oldValue) {
-                console.log("_acceptedValueChanged for [", this.propertyName, "] ", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
-                if (this.needToUpdateCommValueSilently === false) {
-                    console.log("_acceptedValueChanged for [", this.propertyName, "] -- going further for validation");
+                // console.log("_acceptedValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
 
-                    if (this._refreshCycleStarted) {
-                        this._refreshCycleStarted = false;
-                        // console.log("_acceptedValueChanged should become false. _refreshCycleStarted ==", this._refreshCycleStarted);
-                    } else {
-                    	if (this.reflector().isEntity(this.entity)) {
-    	                    this.entity.set(this.propertyName, newValue);
-    	                    this._registerPropertyTouch(this.entity, this.propertyName);
-    	                    
-        	                if (this._shouldInvokeValidation()) {
-            	                this.validationCallback();
-                	        } else {
-                    	        this._skipValidationAction();
-                        	}
-                    	}
-                    }
+                if (this._refreshCycleStarted) {
+                    this._refreshCycleStarted = false;
+                    // console.log("_acceptedValueChanged should become false. _refreshCycleStarted ==", this._refreshCycleStarted);
                 } else {
-                    this.needToUpdateCommValueSilently = false;
+                	if (this.reflector().isEntity(this.entity)) {
+	                    this.entity.set(this.propertyName, newValue);
+	                    this._registerPropertyTouch(this.entity, this.propertyName);
+	                    
+    	                if (this._shouldInvokeValidation()) {
+        	                this.validationCallback();
+            	        } else {
+                	        this._skipValidationAction();
+                    	}
+                	}
                 }
             },
             
@@ -508,7 +468,7 @@
              * Commits editing value.
              */
             commit: function () {
-                console.log("commit [", this._editingValue, "] value.");
+                // console.log("commit [", this._editingValue, "] value.");
    	            this._commValue = this._editingValue;
             },
 
