@@ -185,7 +185,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    applyModifiedPropertyValue(modifiedProps, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                    modifiedProps.add(name);
+                    applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
                 } else { // this is unmodified property
                     if (!isEntityStale) {
                         // do nothing
@@ -206,9 +207,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                applyModifiedPropertyValue(modifiedProps, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
-            } else { // this is unmodified property -- FIXME NEEDS TO BE APPLIED TOO!
-                applyUnmodifiedPropertyValue(modifiedProps, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                modifiedProps.add(name);
+                applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+            } else { // this is unmodified property
+                applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             }
         }
         // IMPORTANT: the check for invalid will populate 'required' checks.
@@ -221,9 +223,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         return entity;
     }
     
-    private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(final Set<String> modifiedProps, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        modifiedProps.add(name);
-        final Object val = valAndOrigVal.get("val");
+    private static <M extends AbstractEntity<?>> void applyPropertyValue(final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        final Object val = shouldApplyOriginalValue ? valAndOrigVal.get("origVal") : valAndOrigVal.get("val");
         final Object newValue = convert(type, name, val, companionFinder);
         if (notFoundEntity(type, name, val, newValue)) {
             final String msg = String.format("The entity has not been found for [%s].", val);
@@ -234,34 +235,29 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             logger.info(msg);
             entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
         } else if (!isEntityStale) {
-            entity.set(name, newValue);
+            enforceSet(shouldApplyOriginalValue, name, entity, newValue);
         } else {
-            final Object origVal = valAndOrigVal.get("origVal");
-            final Object staleOriginalValue = convert(type, name, origVal, companionFinder);
+            final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
             if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
                 final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
                 logger.info(msg);
                 entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {
-                entity.set(name, newValue);
+                enforceSet(shouldApplyOriginalValue, name, entity, newValue);
             }
         }
     }
     
-    private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Set<String> modifiedProps, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        // TODO investigate implications! modifiedProps.add(name);
-        final Object origVal = valAndOrigVal.get("origVal");
-        final Object val = origVal; // valAndOrigVal.get("val");
-        final Object newValue = convert(type, name, val, companionFinder);
-        if (notFoundEntity(type, name, val, newValue)) {
-            final String msg = String.format("The entity has not been found for [%s].", val);
-            logger.info(msg);
-            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-        } else if (multipleFoundEntities(type, name, val, newValue)) {
-            final String msg = String.format("Multiple entities have been found for [%s].", val);
-            logger.info(msg);
-            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-        } else if (!isEntityStale) {
+    private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        applyPropertyValue(false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+    }
+    
+    private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        applyPropertyValue(true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+    }
+
+    private static <M extends AbstractEntity<?>> void enforceSet(final boolean enforce, final String name, final M entity, final Object newValue) {
+        if (enforce) {
             final MetaProperty<Object> metaProperty = entity.getProperty(name);
             if (metaProperty.isEnforceMutator()) {
                 throw new UnsupportedOperationException("EnforceMutator flag is already set!.");
@@ -276,15 +272,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 metaProperty.setEnforceMutator(false);
             }
         } else {
-            throw new UnsupportedOperationException("Stale entity is not supported for application of unmodified touched property at this stage.");
-//            final Object staleOriginalValue = convert(type, name, origVal, companionFinder);
-//            if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
-//                final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
-//                logger.info(msg);
-//                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-//            } else {
-//                entity.set(name, newValue);
-//            }
+            entity.set(name, newValue);
         }
     }
 
