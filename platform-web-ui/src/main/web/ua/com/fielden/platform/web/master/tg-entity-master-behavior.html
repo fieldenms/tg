@@ -303,8 +303,6 @@
                         throw new SimultaneousSaveException();
                     }
 
-                    this._startRefreshCycleModeForEditors();
-
                     var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                     // cancel previous validation before starting saving process -- it includes validation process internally!
                     this._validator().abortValidationIfAny();

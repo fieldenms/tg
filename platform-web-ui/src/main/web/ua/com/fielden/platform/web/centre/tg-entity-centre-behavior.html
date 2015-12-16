@@ -465,7 +465,6 @@
                     console.log("CENTRE SAVE");
                     
                     var sc = this.$.selection_criteria;
-                    sc._startRefreshCycleModeForEditors();
 	                var holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
     
                     // cancel previous validation before starting Save process -- it includes validation process internally!
@@ -482,7 +481,6 @@
                     console.log("CENTRE DISCARD");
                     
                     var sc = this.$.selection_criteria;
-                    sc._startRefreshCycleModeForEditors();
     
                     // cancel previous validation before starting Discard process!
                     sc._validator().abortValidationIfAny();

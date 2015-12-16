@@ -115,15 +115,6 @@
                 },
 
                 ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
-                
-                /**
-                 * The switch, that turns on refresh cycle.
-                 */
-                externalRefreshCycle: {
-                	type: String,
-                	observer: '_externalRefreshCycleChanged'
-                },
-                
                 /**
                  * Controls rendering of debug information for an entity editor. 
                  */
@@ -361,6 +352,11 @@
             _entityChanged: function (newValue, oldValue) {
                 // console.log("_entityChanged", newValue, oldValue, "still _refreshCycleStarted ==", this._refreshCycleStarted);
                 if (this.reflector().isEntity(newValue)) {
+                    // IMPORTANT: Initiate 'refresh cycle' -- in new logic refresh cycle is also mandatory after 'validation' has been performed,
+                    // not only after master's 'save' / 'refresh' or centre's 'run', 'save' or 'discard'
+                    // (to be precise it is done for every case when _currBindingEntity is changed for this editor)
+                    this._refreshCycleStarted = true;
+                    
                 	this.assignValue(newValue, this.propertyName, this.reflector().getBindingValue.bind(this.reflector()));
                 } else {
                     console.log("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
@@ -450,13 +446,6 @@
             commit: function () {
                 // console.log("commit [", this._editingValue, "] value.");
    	            this._commValue = this._editingValue;
-            },
-
-            _externalRefreshCycleChanged: function (newValue, oldValue) {
-                if (newValue === "ACTIVATED") {
-                    // console.log("externalRefreshCycleChanged", oldValue, newValue);
-                    this._refreshCycleStarted = true;
-                }
             },
 
             _bindMessages: function (entity, property, _editorValidationMsg) {
