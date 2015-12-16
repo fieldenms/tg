@@ -212,6 +212,24 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     void delete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
 
     /**
+     * Performs batch deletion of entities returned by provided query model
+     *
+     * @param model
+     */
+    default int batchDelete(final EntityResultQueryModel<T> model) {
+        throw new UnsupportedOperationException("Batch deletion should be implemented in descendants.");
+    }
+
+    /**
+     * Performs batch deletion of entities returned by provided query model with provided param values.
+     *
+     * @param model
+     */
+    default int batchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+        throw new UnsupportedOperationException("Batch deletion should be implemented in descendants.");
+    }
+
+    /**
      * Deletes entities returned by provided query model
      *
      * @param model

@@ -24,8 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -46,7 +44,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -95,7 +92,9 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
@@ -1527,9 +1526,23 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         final EntityAggregates item = models.get(0);
         assertEquals("Incorrect key", new BigDecimal("120.00"), item.get("lq"));
     }
+ 
+    @Test
+    public void test_batch_deletion() {
+        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").eq().val("Date").model();
+        assertEquals(1, authorDao.batchDelete(qry));
+    }
+    
+    @Test
+    public void test_batch_deletion_of_whole_table() {
+        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
+        int count = authorDao.count(qry);
+        assertEquals(count, authorDao.batchDelete(qry));
+    }
 
     @Override
     protected void populateDomain() {
+        
         final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
         final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
 

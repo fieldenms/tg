@@ -168,4 +168,16 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public int batchDelete(EntityResultQueryModel<TopLevelEntity> model) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public int batchDelete(EntityResultQueryModel<TopLevelEntity> model, Map<String, Object> paramValues) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
 }
