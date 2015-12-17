@@ -1,9 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
-<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
-<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 
 <dom-module id="egi-comp-spike-alt">
     <template>
@@ -13,8 +14,12 @@
                 flex-grow: 0;
                 flex-shrink: 0;
             }
-            .absolute {
+            .absolute,
+            .absolutelyWhite {
                 position: absolute;
+            }
+            .absolutelyWhite {
+                background-color: white;
             }
             .truncate {
                 white-space: nowrap;
@@ -78,6 +83,7 @@
                 -webkit-font-smoothing: antialiased;
                 text-rendering: optimizeLegibility;
                 min-width: fit-content;
+                background-color: white;
             }
             .table-cell,
             .table-data-cell {
@@ -102,6 +108,19 @@
             .first-fixed-cell {
                 padding-right: 0.6rem;
                 padding-left: 1.2rem;
+            }
+            #lockContainer {
+                pointer-events: none;
+            }
+            #topLockPanel,
+            #bottomLockPanel,
+            #rightLockPanel,
+            #leftLockPanel,
+            #topRightLockPanel,
+            #topLeftLockPanel,
+            #bottomRightLockPanel,
+            #bottomLeftLockPanel {
+                pointer-events: all;
             }
             .last-fixed-cell {
                 padding-left: 0.6rem;
@@ -138,99 +157,133 @@
                         <content select=".standart-action"></content>
                     </div>
                 </div>
-                <!-- Table header -->
-                <div class="relative" style="overflow: auto;" on-scroll="_scrollEvent">
-                    <div class="layout horizontal table-header-row">
-                        <div class="table-cell no-flexible" style="width:18px">
-                            <!--Select all checkbox stub goes here-->
-                        </div>
-                        <div class="table-cell no-flexible" style="width:40px;">
-                            <!--Primary action stub header goes here-->
-                        </div>
-                        <template is="dom-repeat" items="[[columns]]">
-                            <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]">
-                                <!--Column title stub goes here-->
-                            </div>
-                        </template>
-                        <div class="table-cell no-flexible" style="width:40px">
-                            <!--Secondary actions header goes here-->
-                        </div>
-                    </div>
-                    <!-- Table body -->
-                    <template is="dom-repeat" items="[[data]]" as="entity" index-as="entityIndex">
-                        <div class="layout horizontal table-data-row">
-                            <div class="table-cell no-flexible" style="width:18px;">
-                                <!--Select checkbox stub goes here-->
+                <div class=relative>
+                    <div id="scrollContainer" style="overflow: auto;height:calc(3rem + 7 * 1.5rem + 7 * 1px)" on-scroll="_scrollEvent">
+                        <!-- Table header -->
+                        <div class="layout horizontal table-header-row">
+                            <div class="table-cell no-flexible" style="width:18px">
+                                <!--Select all checkbox stub goes here-->
                             </div>
                             <div class="table-cell no-flexible" style="width:40px;">
-                                <!--Primary action stub goes here-->
+                                <!--Primary action stub header goes here-->
                             </div>
-                            <template is="dom-repeat" items="[[columns]]" as="column">
-                                <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]">
-                                    <div class="truncate relative" style="width: 100%">[[_getValue(entity, index)]]</div>
+                            <template is="dom-repeat" items="[[columns]]">
+                                <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]">
+                                    <!--Column title stub goes here-->
                                 </div>
                             </template>
                             <div class="table-cell no-flexible" style="width:40px">
-                                <!-- Secondary action stub goes here -->
+                                <!--Secondary actions header goes here-->
                             </div>
                         </div>
-                    </template>
-                    <!-- table footer -->
-                    <template is="dom-repeat" items="[[totals]]" as="summaryRow" index-as="summaryRowIndex">
-                        <div class="layout horizontal table-footer-row">
-                            <div class="table-cell no-flexible" style="width:18px;">
-                                <!--Select checkbox stub goes here-->
-                            </div>
-                            <div class="table-cell no-flexible" style="width:40px;">
-                                <!--Primary action stub goes here-->
-                            </div>
-                            <template is="dom-repeat" items="[[columns]]" as="summary" index-as="summaryIndex">
-                                <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
-                                    <!-- Total stub goes here -->
+                        <!-- Table body -->
+                        <template is="dom-repeat" items="[[data]]" as="entity" index-as="entityIndex">
+                            <div class="layout horizontal table-data-row">
+                                <div class="table-cell no-flexible" style="width:18px;">
+                                    <!--Select checkbox stub goes here-->
                                 </div>
-                            </template>
-                            <div class="table-cell no-flexible" style="width:40px">
-                                <!-- Secondary action stub goes here -->
-                            </div>
-                        </div>
-                    </template>
-                    <!-- Not scrollable elements -->
-                    <div id="topLockPanel" class="absolute layout horizontal table-header-row" style$="[[_calculateTopLockPanelPosition()]]">
-                        <template is="dom-repeat" items="[[columns]]">
-                            <div class="fixed-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]">
-                                <div class="truncate" style="width:100%">[[item.title]]</div>
-                            </div>
-                        </template>
-                    </div>
-                    <div id="bottomLockPanel" class="absolute layout vertical" style$="[[_calculateBottomLockPanelPosition()]]">
-                        <template is="dom-repeat" items="[[totals]]" as="summaryRow" index-as="summaryRowIndex">
-                            <div class="layout horizontal table-footer-row">
-                                <template is="dom-repeat" items="[[columns]]" as="summary" index-as="summaryIndex">
-                                    <div class="fixed-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
-                                        <div class="truncate relative" style$="width: 100%">[[_getValue(summaryRow, summaryIndex)]]</div>
+                                <div class="table-cell no-flexible" style="width:40px;">
+                                    <!--Primary action stub goes here-->
+                                </div>
+                                <template is="dom-repeat" items="[[columns]]" as="column">
+                                    <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction">
+                                        <div class="truncate relative" style="width: 100%">[[_getValue(entity, index)]]</div>
                                     </div>
                                 </template>
+                                <div class="table-cell no-flexible" style="width:40px">
+                                    <!-- Secondary action stub goes here -->
+                                </div>
+                            </div>
+                        </template>
+                        <!-- table footer -->
+                        <template is="dom-repeat" items="[[totals]]" as="summaryRow" index-as="summaryRowIndex">
+                            <div class="layout horizontal table-footer-row">
+                                <div class="table-cell no-flexible" style="width:18px;">
+                                    <!--Select checkbox stub goes here-->
+                                </div>
+                                <div class="table-cell no-flexible" style="width:40px;">
+                                    <!--Primary action stub goes here-->
+                                </div>
+                                <template is="dom-repeat" items="[[columns]]" as="summary" index-as="summaryIndex">
+                                    <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
+                                        <!-- Total stub goes here -->
+                                    </div>
+                                </template>
+                                <div class="table-cell no-flexible" style="width:40px">
+                                    <!-- Secondary action stub goes here -->
+                                </div>
                             </div>
                         </template>
                     </div>
-                    <div id="leftLockPanel" class="absolute layout vertical" style$="[[_calculateLeftLockPanelPosition()]]">
-                        <template is="dom-repeat" items="[[data]]">
-                            <div class="table-data-row layout horizontal center">
-                                <div class="first-fixed-cell">
-                                    <paper-checkbox class="blue header"></paper-checkbox>
+                    <!-- Not scrollable container -->
+                    <div id="lockContainer" class="absolute" style="overflow:hidden;top:0;bottom:0;left:0;right:0">
+                        <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelPosition()]]">
+                            <template is="dom-repeat" items="[[columns]]">
+                                <div class="fixed-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]">
+                                    <div class="truncate" style="width:100%">[[item.title]]</div>
                                 </div>
-                                <div class="fixed-cell no-flexible" style="width:40px;">
+                            </template>
+                        </div>
+                        <div id="bottomLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateBottomLockPanelPosition()]]">
+                            <template is="dom-repeat" items="[[totals]]" as="summaryRow" index-as="summaryRowIndex">
+                                <div class="layout horizontal table-footer-row">
+                                    <template is="dom-repeat" items="[[columns]]" as="summary" index-as="summaryIndex">
+                                        <div class="fixed-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]">
+                                            <div class="truncate relative" style$="width: 100%">[[_getValue(summaryRow, summaryIndex)]]</div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                        <div id="leftLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateLeftLockPanelPosition()]]">
+                            <template is="dom-repeat" items="[[data]]">
+                                <div class="table-data-row layout horizontal center">
+                                    <div class="first-fixed-cell">
+                                        <paper-checkbox class="blue body"></paper-checkbox>
+                                    </div>
+                                    <div class="fixed-cell no-flexible" style="width:40px;">
+                                        <paper-icon-button icon="code"></paper-icon-button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <div id="rightLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateRightPanlePosition()]]">
+                            <template is="dom-repeat" items="[[data]]">
+                                <div class="table-data-row last-fixed-cell layout horizontal center" style$="[[_calcColumnStyle(column)]]">
                                     <paper-icon-button icon="code"></paper-icon-button>
                                 </div>
+                            </template>
+                        </div>
+                        <div id="topLeftLockPanel" class="absolutelyWhite layout horizontal center table-header-row" style="top:0;left:0;">
+                            <div class="first-fixed-cell">
+                                <paper-checkbox class="blue header"></paper-checkbox>
                             </div>
-                        </template>
-                    </div>
-                    <div id="rightLockPanel" class="absolute layout vertical" style$="[[_calculateRightPanlePosition()]]">
-                        <template is="dom-repeat" items="[[data]]">
-                            <div class="table-data-row last-fixed-cell layout horizontal center" style$="[[_calcColumnStyle(column)]]">
-                                <paper-icon-button icon="code"></paper-icon-button>
+                            <div class="fixed-cell no-flexible" style="width:40px;">
+                                <!-- primary action header column -->
                             </div>
-                        </template>
+                        </div>
+                        <div id="topRightLockPanel" class="absolutelyWhite layout horizontal table-header-row last-fixed-cell" style="top:0;right:0;width:40px">
+                            <!-- secondary action header column -->
+                        </div>
+                        <div id="bottomLeftLockPanel" class="absolutelyWhite layout vertical" style="bottom:0;left:0;">
+                            <template is="dom-repeat" items="[[totals]]">
+                                <div class="table-footer-row layout horizontal center">
+                                    <div class="first-fixed-cell no-flexible" style="width:18px;">
+                                        <!-- Checkbox column footer column -->
+                                    </div>
+                                    <div class="fixed-cell no-flexible" style="width:40px;">
+                                        <!-- Primary action footer column -->
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <div id="bottomRightLockPanel" class="absolutelyWhite layout vertical" style="bottom:0;right:0;">
+                            <template is="dom-repeat" items="[[totals]]">
+                                <div class="table-footer-row last-fixed-cell" style="width:40px;">
+                                    <!-- secondary action footer column -->
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -246,14 +299,26 @@
             properties: {
                 data: Array,
                 columns: Array,
-                totals: Array
+                totals: Array,
+                _previousClientWidth: Number
             },
+
+            behaviors: [Polymer.IronResizableBehavior],
 
             ready: function () {
                 var dataIndex, dataEntryIndex, dataEntry, columnData, tempSum;
                 this.data = this._initData();
                 this.columns = this._initColumnData();
                 this.totals = this._initTotals();
+                this._previousClientWidth = this.$.scrollContainer.clientWidth;
+                //Initialising event listeners.
+                this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+            },
+
+            attached: function () {
+                this.async(function () {
+                    this._resizeEventListener();
+                }.bind(this), 1);
             },
 
             _initData: function () {
@@ -322,6 +387,10 @@
                 }
                 return totals;
             },
+            
+            _tapAction: function (e, detail) {
+                console.log("tap: ", e, detail);
+            },
 
             /**
              * Calculates the column's header style.
@@ -337,19 +406,63 @@
                 return "min-width: " + item.preferedWidth + "px; width: " + item.preferedWidth + "px; flex-grow: " + item.growFactor + (item.preferedWidth === 0 ? "; padding: 0;" : ";");
             },
 
-            /**
-             * Calculatesd the top position of fixed columns.
-             */
-            _calculateCollPosition: function (entityIndex) {
-                return "top: calc(3rem + 1.5rem * " + entityIndex + ");"
-            },
-
             _getValue: function (entity, index) {
                 return entity[index];
             },
 
+            _resizeEventListener: function (event, details) {
+                if (this._hasHorizontalScrollBar()) {
+                    var bottomPosition = this._calcHorizontalScrollBarHeight();
+                    this.$.lockContainer.style.bottom = bottomPosition + "px";
+                    this.$.scrollContainer.style.height = "calc(3rem + 7 * 1.5rem + 7 * 1px + " + bottomPosition + "px)";
+                } else {
+                    this.$.lockContainer.style.bottom = "0px";
+                    this.$.scrollContainer.style.height = "calc(3rem + 7 * 1.5rem + 7 * 1px)"
+                }
+                this.$.lockContainer.style.right = this._hasVerticalScrollBar() ? this._calcVerticalScrollBarWidth() + "px" : "0px";
+            },
+            
+            _hasVerticalScrollBar: function () {
+                return this.$.scrollContainer.scrollHeight > this.$.scrollContainer.clientHeight;
+            },
+            
+            _calcVerticalScrollBarWidth: function () {
+                return this.$.scrollContainer.offsetWidth - this.$.scrollContainer.clientWidth;
+            },
+
+            /**
+             * Determines whether horizontal scroll bar is visible or not.
+             */
+            _hasHorizontalScrollBar: function () {
+                return this.$.scrollContainer.scrollWidth > this.$.scrollContainer.clientWidth;
+            },
+
+            /**
+             * Calculates the horizontal scrollbar height.
+             */
+            _calcHorizontalScrollBarHeight: function () {
+                return this.$.scrollContainer.offsetHeight - this.$.scrollContainer.clientHeight;
+            },
+
             _scrollEvent: function (event) {
-                console.log("scroll: ", event)
+                this._updateTopAndBottomPanels();
+                this._updateLeftAndRightPanels();
+            },
+            
+            _updateLeftAndRightPanels: function () {
+                var scrollInc = this.$.scrollContainer.scrollTop;
+                this.$.leftLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
+                this.$.leftLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
+                this.$.rightLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
+                this.$.rightLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
+            },
+            
+            _updateTopAndBottomPanels: function () {
+                var scrollInc = this.$.scrollContainer.scrollLeft;
+                this.$.topLockPanel.style.left = "calc(18px + 40px + 3rem - " + scrollInc + "px)";
+                this.$.topLockPanel.style.right = "calc(40px + 1.8rem + " + scrollInc + "px)";
+                this.$.bottomLockPanel.style.left = "calc(18px + 40px + 3rem - " + scrollInc + "px)";
+                this.$.bottomLockPanel.style.right = "calc(40px + 1.8rem + " + scrollInc + "px)";
             },
 
             _calculateLeftLockPanelPosition: function () {
