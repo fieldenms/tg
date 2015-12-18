@@ -17,6 +17,7 @@
             .absolute,
             .absolutelyWhite {
                 position: absolute;
+                pointer-events: auto;
             }
             .absolutelyWhite {
                 background-color: white;
@@ -30,12 +31,6 @@
                 border-radius: 2px;
             }
             /*Toolbar layout related*/
-            .align-left {
-                float: left;
-            }
-            .align-right {
-                float: right;
-            }
             .grid-toolbar {
                 height: auto;
                 min-height: 4rem;
@@ -111,16 +106,6 @@
             }
             #lockContainer {
                 pointer-events: none;
-            }
-            #topLockPanel,
-            #bottomLockPanel,
-            #rightLockPanel,
-            #leftLockPanel,
-            #topRightLockPanel,
-            #topLeftLockPanel,
-            #bottomRightLockPanel,
-            #bottomLeftLockPanel {
-                pointer-events: all;
             }
             .last-fixed-cell {
                 padding-left: 0.6rem;

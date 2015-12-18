@@ -110,7 +110,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
             attrs.put("tooltip-property", this.tooltipProp.get());
         }
         attrs.put("property", this.propertyName()); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
-        attrs.put("width", width + "px");
+        attrs.put("width", width);
         attrs.put("type", this.propertyType);
         attrs.put("column-title", this.titleDesc.getKey());
         attrs.put("column-desc", this.titleDesc.getValue());

@@ -55,7 +55,7 @@ public class SummaryElement implements IRenderable, IImportable {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
         attrs.put("property", propertyName); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
-        attrs.put("width", width + "px");
+        attrs.put("width", width);
         attrs.put("type", egiRepresentationFor(DynamicEntityClassLoader.getOriginalType(this.propertyType)));
         attrs.put("column-title", this.titleDesc.getKey());
         attrs.put("column-desc", this.titleDesc.getValue());
