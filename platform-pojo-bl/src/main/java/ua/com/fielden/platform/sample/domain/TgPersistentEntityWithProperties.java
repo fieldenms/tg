@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
 import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IMoneyUserType;
 
 /**
  * Master entity object.
@@ -99,6 +101,7 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Money prop", desc = "Money prop desc")
+    // @PersistedType(userType = IMoneyUserType.class)
     private Money moneyProp;
 
     @IsProperty
