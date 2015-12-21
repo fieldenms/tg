@@ -89,7 +89,7 @@
         .table-data-row[selected] {
             background-color: #F5F5F5;
         }
-        .table-data-row:hover {
+        .table-data-row[over] {
             background-color: #EEEEEE;
         }
         .table-footer-row {
@@ -291,7 +291,7 @@
                             </div>
                             <!-- Table body -->
                             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                                <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]">
+                                <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                     <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                         <paper-checkbox class="blue body" hidden$="[[scrollable]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                                     </div>
@@ -369,7 +369,7 @@
                         </div>
                         <!-- Not scrollable container -->
                         <div id="lockContainer" class="absolute fit" style="overflow:hidden">
-                            <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelPosition()]]">
+                            <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelPosition(checkboxVisible, primaryAction, secondaryActions)]]">
                                 <template is="dom-repeat" items="[[columns]]">
                                     <div class="fixed-cell layout horizontal center" style$="[[_calcColumnHeaderStyle(item)]]" tooltip-text$="[[item.columnDesc]]">
                                         <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
@@ -377,7 +377,7 @@
                                 </template>
                             </div>
                             <template is="dom-if" if="[[totals]]">
-                                <div id="bottomLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateBottomLockPanelPosition()]]">
+                                <div id="bottomLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateBottomLockPanelPosition(checkboxVisible, primaryAction, secondaryActions)]]">
                                     <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                         <div class="layout horizontal table-footer-row">
                                             <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
@@ -402,7 +402,7 @@
                             </template>
                             <div id="leftLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateLeftLockPanelPosition()]]">
                                 <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                                    <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]">
+                                    <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                         <div class="first-fixed-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                             <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                                         </div>
@@ -418,7 +418,7 @@
                             <div id="rightLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateRightPanlePosition()]]">
                                 <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                                     <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                                        <div class="last-fixed-cell layout horizontal center table-data-row last-fixed-cell no-flexible" selected$="[[egiEntity.selected]]" style="width:40px">
+                                        <div class="last-fixed-cell layout horizontal center table-data-row last-fixed-cell no-flexible" selected$="[[egiEntity.selected]]" style="width:40px" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                             <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
                                                 <tg-page-action icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" pref-dim="[[secondaryActions.0.prefDim]]"></tg-page-action>
                                                 <tg-ui-action show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
@@ -652,13 +652,125 @@
                 Array.prototype.forEach.call(Polymer.dom(this.$.secondary_action_selector).getDistributedNodes(), function (item) {
                     this.secondaryActions.push(item);
                 }.bind(this));
+
+                //Initialising event listeners.
+                this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+            },
+
+            attached: function () {
+                this.async(function () {
+                    this._resizeEventListener();
+                }.bind(this), 1);
+            },
+
+            _mouseRowEnter: function (event, detail) {
+                var index = event.model.entityIndex;
+                this.set("egiModel." + index + ".over", true);
+            },
+
+            _mouseRowLeave: function (event, detail) {
+                var index = event.model.entityIndex;
+                this.set("egiModel." + index + ".over", false);
+            },
+
+            /**
+             * Resize event handler that adjasts the lockcontainer size and position.
+             */
+            _resizeEventListener: function (event, details) {
+                var lockContainer = this.$$("#lockContainer");
+                var scrollContainer = this.$$("#scrollContainer");
+                if (lockContainer) {
+                    var bottomPosition = this._hasHorizontalScrollBar() ? this._calcHorizontalScrollBarHeight() : 0;
+                    lockContainer.style.bottom = bottomPosition + "px";
+                    if (this.visibleRowCount > 0) {
+                        var rowCount = this.visibleRowCount + this._totalsRowCount;
+                        scrollContainer.style.height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px)";
+                    } else {
+                        scrollContainer.style.height = "auto";
+                    }
+                    lockContainer.style.right = this._hasVerticalScrollBar() ? this._calcVerticalScrollBarWidth() + "px" : "0px";
+                }
+            },
+
+            _hasVerticalScrollBar: function () {
+                var lockContainer = this.$$("#lockContainer");
+                var scrollContainer = this.$$("#scrollContainer");
+                if (lockContainer) {
+                    return scrollContainer.scrollHeight > scrollContainer.clientHeight;
+                }
+                return false;
+            },
+
+            _calcVerticalScrollBarWidth: function () {
+                var lockContainer = this.$$("#lockContainer");
+                var scrollContainer = this.$$("#scrollContainer");
+                if (lockContainer) {
+                    return scrollContainer.offsetWidth - scrollContainer.clientWidth;
+                }
+                return 0;
+            },
+
+            /**
+             * Determines whether horizontal scroll bar is visible or not.
+             */
+            _hasHorizontalScrollBar: function () {
+                var lockContainer = this.$$("#lockContainer");
+                var scrollContainer = this.$$("#scrollContainer");
+                if (lockContainer) {
+                    return scrollContainer.scrollWidth > scrollContainer.clientWidth;
+                }
+                return false;
+            },
+
+            /**
+             * Calculates the horizontal scrollbar height.
+             */
+            _calcHorizontalScrollBarHeight: function () {
+                var lockContainer = this.$$("#lockContainer");
+                var scrollContainer = this.$$("#scrollContainer");
+                if (lockContainer) {
+                    return scrollContainer.offsetHeight - scrollContainer.clientHeight;
+                }
+                return 0;
             },
 
             /**
              * Scrolling and resizing event handlers.
              */
             _handleScrollEvent: function () {
-                console.log("scroll event handler");
+                this._updateTopAndBottomPanels();
+                this._updateLeftAndRightPanels();
+            },
+
+            _updateLeftAndRightPanels: function () {
+                var scrollInc = this.$$("#scrollContainer").scrollTop;
+                var leftLockPanel = this.$$("#leftLockPanel");
+                var rightLockPanel = this.$$("#rightLockPanel");
+                if (leftLockPanel) {
+                    leftLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
+                    leftLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
+                }
+                if (rightLockPanel) {
+                    rightLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
+                    rightLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
+                }
+            },
+
+            _updateTopAndBottomPanels: function () {
+                var scrollInc = this.$$("#scrollContainer").scrollLeft;
+                var topLockPanel = this.$$("#topLockPanel");
+                var bottomLockPanel = this.$$("#bottomLockPanel");
+                var checkboxWidth = this._calculateCheckboxWidth(this.checkboxVisible);
+                var primaryActionWidth = this._calculatePrimaryActionWidth(this.primaryAction);
+                var secondaryActionWidth = this._calculateSecondaryActionWidth(this.secondaryActions);
+                if (topLockPanel) {
+                    topLockPanel.style.left = "calc(" + checkboxWidth + " + " + primaryActionWidth + " - " + scrollInc + "px)";
+                    topLockPanel.style.right = "calc(" + secondaryActionWidth + " + " + scrollInc + "px)";
+                }
+                if (bottomLockPanel) {
+                    bottomLockPanel.style.left = "calc(" + checkboxWidth + " + " + primaryActionWidth + " - " + scrollInc + "px)";
+                    bottomLockPanel.style.right = "calc(" + secondaryActionWidth + " + " + scrollInc + "px)";
+                }
             },
             /////////////////end of scrolling and resizing event handlers
 
@@ -686,7 +798,7 @@
 
             _getTooltip: function (entity, column) {
                 if (column.tooltipProperty) {
-                    return this._getValue(entity, column.tooltipProperty, "String ").toString()
+                    return this._getValue(entity, column.tooltipProperty, "String").toString()
                 } else if (this.$.reflector.findTypeByName(column.type)) {
                     return entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
                 } else {
@@ -807,7 +919,7 @@
              */
             _cardLayoutChanged: function (newValue, oldValue) {
                 if (newValue) {
-                    this.style.width = "100 %";
+                    this.style.width = "100%";
                 } else {
                     this.style.removeProperty("width");
                 }
@@ -852,7 +964,7 @@
                 var i;
                 if (this.egiModel) {
                     for (i = 0; i < this.egiModel.length; i += 1) {
-                        this.set("egiModel." + i + ".selected ", e.srcElement.checked);
+                        this.set("egiModel." + i + ".selected", e.srcElement.checked);
                         _processEntitySelection(this.selectedEntities, this.entities[i], e.srcElement.checked);
                     }
                     this.selectedAll = e.srcElement.checked;
@@ -866,7 +978,7 @@
                 var index;
                 if (this.egiModel) {
                     index = e.model.entityIndex;
-                    this.set("egiModel." + index + ".selected ", e.srcElement.checked);
+                    this.set("egiModel." + index + ".selected", e.srcElement.checked);
                     _processEntitySelection(this.selectedEntities, this.entities[index], e.srcElement.checked);
                     if (this.selectedAll && !e.srcElement.checked) {
                         this.selectedAll = false;
@@ -884,7 +996,7 @@
             _toggleCollapsePanel: function (e) {
                 var index = e.model.entityIndex,
                     opened = this.egiModel[index].opened;
-                this.set("egiModel." + index + ".opened ", !opened);
+                this.set("egiModel." + index + ".opened", !opened);
                 _processEntitySelection(this.openedEntities, this.entities[index], !opened);
             },
             /**
@@ -962,12 +1074,24 @@
                 return "left:0;top:3rem";
             },
 
-            _calculateTopLockPanelPosition: function () {
-                return "top:0;left:calc(18px + 40px + 3rem);right:calc(40px + 1.8rem)";
+            _calculateTopLockPanelPosition: function (checkboxVisible, primaryAction, secondaryActions) {
+                return "top:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible) + " + " + this._calculatePrimaryActionWidth(primaryAction) + ");right:calc(" + this._calculateSecondaryActionWidth(secondaryActions) + ")";
             },
 
-            _calculateBottomLockPanelPosition: function () {
-                return "bottom:0;left:calc(18px + 40px + 3rem);right:calc(40px + 1.8rem)";
+            _calculateBottomLockPanelPosition: function (checkboxVisible, primaryAction, secondaryActions) {
+                return "bottom:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible) + " + " + this._calculatePrimaryActionWidth(primaryAction) + ");right:calc(" + this._calculateSecondaryActionWidth(secondaryActions) + ")";
+            },
+            
+            _calculateCheckboxWidth: function (checkboxVisible) {
+                return checkboxVisible ? "18px + 1.8rem" : "0px";
+            },
+            
+            _calculatePrimaryActionWidth: function (primaryAction) {
+                return primaryAction ? "40px + 1.2rem" : "0px";
+            },
+            
+            _calculateSecondaryActionWidth: function (secondaryActions) {
+                return this._isSecondaryActionsPresent(secondaryActions) ? "40px + 1.8rem" : "0px";
             },
 
             _calculateRightPanlePosition: function () {
@@ -995,7 +1119,7 @@
                 } else if (this.$.reflector.findTypeByName(type)) {
                     return this.$.reflector.convert(this._get(entity, property));
                 } else if (type === 'Date') {
-                    return moment(entity.get(property)).format("L LT ");
+                    return moment(entity.get(property)).format("L LT");
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
                         return entity.get(property).toLocaleString(this.$.appConfig.locale, {
@@ -1074,7 +1198,7 @@
              * Returns icon that represents the boolean value.
              */
             _getBooleanIcon: function (entity, property) {
-                return "icons: " + (this._get(entity, property) ? "check " : "clear ");
+                return "icons: " + (this._get(entity, property) ? "check" : "clear");
             },
             /**
              * Tap action on data column. TODO: implement this.
@@ -1113,7 +1237,7 @@
                 return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
             },
             _calcTabletQuery: function () {
-                return " (min-width: " + this.$.appConfig.minTabletWidth + "px) and (max-width: " + (this.$.appConfig.minDesktopWidth - 1) + "px)";
+                return "(min-width: " + this.$.appConfig.minTabletWidth + "px) and (max-width: " + (this.$.appConfig.minDesktopWidth - 1) + "px)";
             },
             _calcDesktopQuery: function () {
                 return "min-width: " + this.$.appConfig.minDesktopWidth + "px";
@@ -1154,7 +1278,7 @@
             clearSelection: function () {
                 var i;
                 for (i = 0; i < this.egiModel.length; i++) {
-                    this.set("egiModel." + i + ".selected ", false);
+                    this.set("egiModel." + i + ".selected", false);
                 }
                 this.selectedEntities = [];
             },
@@ -1164,7 +1288,7 @@
             collapseAllCards: function () {
                 var i;
                 for (i = 0; i < this.egiModel.length; i++) {
-                    this.set("egiModel." + i + ".opened ", false);
+                    this.set("egiModel." + i + ".opened", false);
                 }
                 this.openedEntities = [];
             },

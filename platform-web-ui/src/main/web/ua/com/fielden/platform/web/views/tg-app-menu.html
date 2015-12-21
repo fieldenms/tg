@@ -6,6 +6,7 @@
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/views/tg-app-animation-behavior.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 
 <dom-module id="tg-app-menu">
     <style>
@@ -104,7 +105,8 @@
 
             behaviors: [
                 Polymer.NeonAnimatableBehavior,
-                Polymer.TgBehaviors.TgAppAnimationBehavior
+                Polymer.TgBehaviors.TgAppAnimationBehavior,
+                Polymer.IronResizableBehavior
             ],
 
             ready: function () {

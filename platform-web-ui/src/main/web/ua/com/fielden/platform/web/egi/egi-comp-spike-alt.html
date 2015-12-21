@@ -284,8 +284,7 @@
             properties: {
                 data: Array,
                 columns: Array,
-                totals: Array,
-                _previousClientWidth: Number
+                totals: Array
             },
 
             behaviors: [Polymer.IronResizableBehavior],
@@ -295,7 +294,6 @@
                 this.data = this._initData();
                 this.columns = this._initColumnData();
                 this.totals = this._initTotals();
-                this._previousClientWidth = this.$.scrollContainer.clientWidth;
                 //Initialising event listeners.
                 this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
             },

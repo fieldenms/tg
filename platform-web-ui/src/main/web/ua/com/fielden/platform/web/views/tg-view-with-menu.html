@@ -101,9 +101,9 @@
                 <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
                     <div class="menu-item-view" name="__empty__"></div>
                     <template is="dom-repeat" items="[[menuItem.menu]]">
-                        <div class="menu-item-view" name$="[[item.title]]">
-                            <tg-menu-item-view menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
-                        </div>
+                        <!--<div class="menu-item-view" name$="[[item.title]]">-->
+                            <tg-menu-item-view class="menu-item-view" name$="[[item.title]]" menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
+                        <!--</div>-->
                     </template>
                 </neon-animated-pages>
 
@@ -378,7 +378,7 @@
             _animationFinished: function (e, detail, source) {
                 var viewToLoad;
                 if (this.$.menu.selected != '__empty__') {
-                    viewToLoad = Polymer.dom(detail.toPage).querySelector('tg-menu-item-view');
+                    viewToLoad = detail.toPage;
                     if (viewToLoad && !viewToLoad.wasLoaded()) {
                         viewToLoad.load();
                     }
