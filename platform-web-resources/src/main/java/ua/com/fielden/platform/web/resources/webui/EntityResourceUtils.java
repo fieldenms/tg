@@ -177,7 +177,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
         final Set<String> appliedProps = new LinkedHashSet<>();
         final List<String> touchedProps = (List<String>) modifiedPropertiesHolder.get("@@touchedProps");
-        System.out.println("touchedProps = " + touchedProps);
         
         // iterate through untouched properties first:
         //  (the order of application does not really matter - untouched properties were really applied earlier through some definers, that originate from touched properties)
