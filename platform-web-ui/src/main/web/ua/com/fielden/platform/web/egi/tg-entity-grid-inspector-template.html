@@ -73,6 +73,7 @@
             cursor: default;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+            min-width: fit-content;
         }
         .table-data-row {
             font-size: 1rem;
@@ -83,6 +84,7 @@
             cursor: default;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+            min-width: fit-content;
         }
         .table-data-row[selected] {
             background-color: #F5F5F5;
@@ -130,8 +132,10 @@
             cursor: pointer;
         }
         .grid-toolbar {
-            height: 4rem;
+            height: auto;
+            min-height: 4rem;
             margin: 0 0.6rem;
+            overflow: hidden;
         }
         paper-checkbox::shadow #checkboxLabel {
             display: none;
@@ -616,7 +620,7 @@
              * Initialises selection model, primary action, secondary actions, property columns, card layout.
              */
             ready: function () {
-                var tempColumns, primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
+                var primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
                 this.visibleRowCount = 0;
                 this._totalsRowCount = 0;
                 this.scrollable = true;
@@ -637,7 +641,7 @@
                 Array.prototype.forEach.call(Polymer.dom(this.$.column_selector).getDistributedNodes(), function (item) {
                     tempColumns.push(item);
                 });
-                this.columns = this._initColumnsGrowFactor(tempColumns);
+                this.columns = tempColumns;
 
                 //Initialising the primary action.
                 this.primaryAction = null;
@@ -648,24 +652,6 @@
                 Array.prototype.forEach.call(Polymer.dom(this.$.secondary_action_selector).getDistributedNodes(), function (item) {
                     this.secondaryActions.push(item);
                 }.bind(this));
-            },
-
-            /**
-             * Calculates the relative grow factor for all columns.
-             */
-            _initColumnsGrowFactor: function (columns) {
-                var dataIndex, tempMin;
-                columns.forEach(function (elem) {
-                    if (!tempMin && elem.width) {
-                        tempMin = elem.width;
-                    } else if (tempMin && elem.width && elem.width < tempMin) {
-                        tempMin = elem.width;
-                    }
-                });
-                columns.forEach(function (elem) {
-                    elem.growFactor = tempMin ? Math.round(elem.width / tempMin) : 0;
-                });
-                return columns;
             },
 
             /**

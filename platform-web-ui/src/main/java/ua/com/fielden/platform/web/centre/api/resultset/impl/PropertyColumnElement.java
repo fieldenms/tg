@@ -23,12 +23,14 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     private final Optional<String> tooltipProp;
     private final String widgetName;
     private final String widgetPath;
-    private final int width;
     private final Object propertyType;
     private final Pair<String, String> titleDesc;
     private final Optional<FunctionalActionElement> action;
     private final List<SummaryElement> summary;
     private boolean debug = false;
+    private int growFactor;
+
+    public final int width;
 
     /**
      * Creates {@link PropertyColumnElement} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -111,6 +113,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         }
         attrs.put("property", this.propertyName()); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
         attrs.put("width", width);
+        attrs.put("grow-factor", growFactor);
         attrs.put("type", this.propertyType);
         attrs.put("column-title", this.titleDesc.getKey());
         attrs.put("column-desc", this.titleDesc.getValue());
@@ -130,6 +133,11 @@ public class PropertyColumnElement implements IRenderable, IImportable {
 
     public Optional<FunctionalActionElement> getAction() {
         return action;
+    }
+
+    public void setGrowFactor(final int growFactor) {
+        this.growFactor = growFactor;
+        summary.forEach(element -> element.setGrowFactor(growFactor));
     }
 
     @Override
