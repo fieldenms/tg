@@ -16,6 +16,8 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -31,6 +33,7 @@ import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.MiDetailsCentre;
+import ua.com.fielden.platform.sample.domain.MiTgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties1;
@@ -45,6 +48,8 @@ import ua.com.fielden.platform.sample.domain.TgDummyAction;
 import ua.com.fielden.platform.sample.domain.TgDummyActionProducer;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMasterProducer;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependencyProducer;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
@@ -96,8 +101,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 
-import com.google.inject.Inject;
-
 /**
  * App-specific {@link IWebUiConfig} implementation.
  *
@@ -143,10 +146,28 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .setFetchProvider(EntityUtils.fetch(TgFetchProviderTestEntity.class).with("additionalProperty"))
                         // .addProp("additionalProp")
                         .build(), injector(), null);
-
-        configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
-
+         configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
+       
         final EntityCentre<TgPersistentEntityWithProperties> detailsCentre = createEntityCentre(MiDetailsCentre.class, "Details Centre", createEntityCentreConfig(false, true, true));
+        final EntityCentre<TgEntityWithPropertyDependency> propDependencyCentre = new EntityCentre<>(MiTgEntityWithPropertyDependency.class, "Property Dependency Example",
+                EntityCentreBuilder.centreFor(TgEntityWithPropertyDependency.class)
+                .runAutomatically()
+                .addCrit("property").asMulti().text().also()
+                .addCrit("dependentProp").asMulti().text()
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
+
+                .addProp("this").also()
+                .addProp("property").also()
+                .addProp("dependentProp")
+                .addPrimaryAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
+                .build(), injector(), (centre) -> {
+                    // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
+                    centre.getSecondTick().setWidth(TgEntityWithPropertyDependency.class, "", 60);
+                    centre.getSecondTick().setWidth(TgEntityWithPropertyDependency.class, "property", 60);
+                    centre.getSecondTick().setWidth(TgEntityWithPropertyDependency.class, "dependentProp", 60);
+                    return centre;
+                });
+
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, true, false));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(false, false, false));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(false, false, false));
@@ -159,6 +180,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().addCentre(MiTgPersistentEntityWithProperties3.class, entityCentre3);
         configApp().addCentre(MiTgPersistentEntityWithProperties4.class, entityCentre4);
         configApp().addCentre(MiDetailsCentre.class, detailsCentre);
+        configApp().addCentre(MiTgEntityWithPropertyDependency.class, propDependencyCentre);
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);
@@ -413,6 +435,30 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                         + "[['flex']],"
                                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).done();
+        
+        final IMaster<TgEntityWithPropertyDependency> masterConfigForPropDependencyExample = new SimpleMasterBuilder<TgEntityWithPropertyDependency>()
+            .forEntity(TgEntityWithPropertyDependency.class)
+            .addProp("property").asSinglelineText()
+            .also()
+            .addProp("dependentProp").asSinglelineText()
+            .also()
+            .addAction(MasterActions.REFRESH)
+            //      */.icon("trending-up") SHORT-CUT
+            /*      */.shortDesc("CANCEL")
+            /*      */.longDesc("Cancel action")
+            .addAction(MasterActions.VALIDATE)
+            .addAction(MasterActions.SAVE)
+            .addAction(MasterActions.EDIT)
+            .addAction(MasterActions.VIEW)
+    
+            .setLayoutFor(Device.DESKTOP, Optional.empty(), (
+                    "      ['padding:20px', "
+                    + format("[[%s], ['flex']],", fmr)
+                    + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
+                    + "    ]"))
+            .done();
+
+        
         final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>()
                 .forEntity(TgFunctionalEntityWithCentreContext.class) // forEntityWithSaveOnActivate
                 .addProp("valueToInsert").asSinglelineText()
@@ -451,6 +497,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().
             addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
+            addMaster(TgEntityWithPropertyDependency.class, new EntityMaster<TgEntityWithPropertyDependency>(
+                    TgEntityWithPropertyDependency.class,
+                    TgEntityWithPropertyDependencyProducer.class,
+                    masterConfigForPropDependencyExample,
+                    injector())).
             addMaster(TgEntityForColourMaster.class, clourMaster).//
 
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(
@@ -565,6 +616,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .captionBgColor("#78909C")
                 .menu()
                 .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
+                .addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
@@ -1154,7 +1206,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                }
         return scl.build();
     }
-
+    
     private EntityCentre<TgPersistentEntityWithProperties> createEntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<TgPersistentEntityWithProperties> entityCentreConfig) {
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre = new EntityCentre<>(miType, name, entityCentreConfig, injector(), (centre) -> {
             // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.

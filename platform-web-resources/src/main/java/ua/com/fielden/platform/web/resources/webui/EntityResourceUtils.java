@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -163,7 +164,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Applies the values from <code>dirtyPropertiesHolder</code> into the <code>entity</code>. The values needs to be converted from the client-side component-specific form into
+     * Applies the values from <code>modifiedPropertiesHolder</code> into the <code>entity</code>. The values needs to be converted from the client-side component-specific form into
      * the values, which can be set into Java entity's property.
      *
      * @param modifiedPropertiesHolder
@@ -174,36 +175,19 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         final Class<M> type = (Class<M>) entity.getType();
         final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
 
-        final Set<String> modifiedProps = new LinkedHashSet<>();
-        // iterate through modified properties:
+        final Set<String> appliedProps = new LinkedHashSet<>();
+        final List<String> touchedProps = (List<String>) modifiedPropertiesHolder.get("@@touchedProps");
+        
+        // iterate through untouched properties first:
+        //  (the order of application does not really matter - untouched properties were really applied earlier through some definers, that originate from touched properties)
         for (final Map.Entry<String, Object> nameAndVal : modifiedPropertiesHolder.entrySet()) {
             final String name = nameAndVal.getKey();
-            if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */) {
+            if (!name.equals(AbstractEntity.ID) && !name.equals(AbstractEntity.VERSION) && !name.startsWith("@") /* custom properties disregarded */ && !touchedProps.contains(name)) {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
-                    modifiedProps.add(name);
-                    final Object newValue = convert(type, name, valAndOrigVal.get("val"), companionFinder);
-                    if (notFoundEntity(type, name, valAndOrigVal.get("val"), newValue)) {
-                        final String msg = String.format("The entity has not been found for [%s].", valAndOrigVal.get("val"));
-                        logger.info(msg);
-                        entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-                    } else if (multipleFoundEntities(type, name, valAndOrigVal.get("val"), newValue)) {
-                        final String msg = String.format("Multiple entities have been found for [%s].", valAndOrigVal.get("val"));
-                        logger.info(msg);
-                        entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-                    } else if (!isEntityStale) {
-                        entity.set(name, newValue);
-                    } else {
-                        final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
-                        if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
-                            final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
-                            logger.info(msg);
-                            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-                        } else {
-                            entity.set(name, newValue);
-                        }
-                    }
+                    applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+                    appliedProps.add(name);
                 } else { // this is unmodified property
                     if (!isEntityStale) {
                         // do nothing
@@ -218,36 +202,145 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 }
             }
         }
+        // iterate through touched properties:
+        //  (the order of application is strictly the same as was done by the user in Web UI client - the only difference is 
+        //  such that properties, that were touched twice or more times, will be applied only once)
+        for (final String touchedProp : touchedProps) {
+            final String name = touchedProp;
+            final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
+            // The 'modified' properties are marked using the existence of "val" sub-property.
+            if (valAndOrigVal.containsKey("val")) { // this is a modified property
+                applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+            } else { // this is unmodified property
+                // IMPORTANT:
+                // Unlike to the case of untouched properties, all touched properties should be applied,
+                //  even unmodified ones.
+                // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
+                //  to have the ACE handlers executed for all touched properties.
+                applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+            }
+            appliedProps.add(name);
+        }
         // IMPORTANT: the check for invalid will populate 'required' checks.
         //            It is necessary in case when some property becomes required after the change of other properties.
         entity.isValid();
 
         disregardCritOnlyRequiredProperties(entity);
-        disregardRequiredProperties(entity, modifiedProps);
+        disregardNotAppliedRequiredProperties(entity, appliedProps);
 
         return entity;
     }
+    
+    /**
+     * Applies the property value against the entity.
+     * 
+     * @param shouldApplyOriginalValue - indicates whether the 'origVal' should be applied (with 'enforced mutation') or 'val' (with simple mutation)
+     * @param type
+     * @param name
+     * @param valAndOrigVal
+     * @param entity
+     * @param companionFinder
+     * @param isEntityStale
+     */
+    private static <M extends AbstractEntity<?>> void applyPropertyValue(final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        final Object val = shouldApplyOriginalValue ? valAndOrigVal.get("origVal") : valAndOrigVal.get("val");
+        final Object newValue = convert(type, name, val, companionFinder);
+        if (notFoundEntity(type, name, val, newValue)) {
+            final String msg = String.format("The entity has not been found for [%s].", val);
+            logger.info(msg);
+            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+        } else if (multipleFoundEntities(type, name, val, newValue)) {
+            final String msg = String.format("Multiple entities have been found for [%s].", val);
+            logger.info(msg);
+            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+        } else if (!isEntityStale) {
+            enforceSet(shouldApplyOriginalValue, name, entity, newValue);
+        } else {
+            final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
+            if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
+                final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
+                logger.info(msg);
+                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+            } else {
+                enforceSet(shouldApplyOriginalValue, name, entity, newValue);
+            }
+        }
+    }
+    
+    /**
+     * Applies the modified property value ('val') against the entity.
+     * 
+     * @param type
+     * @param name
+     * @param valAndOrigVal
+     * @param entity
+     * @param companionFinder
+     * @param isEntityStale
+     */
+    private static <M extends AbstractEntity<?>> void applyModifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        applyPropertyValue(false, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+    }
+    
+    /**
+     * Applies the unmodified property value ('origVal') against the entity (using 'enforced mutation').
+     * 
+     * @param type
+     * @param name
+     * @param valAndOrigVal
+     * @param entity
+     * @param companionFinder
+     * @param isEntityStale
+     */
+    private static <M extends AbstractEntity<?>> void applyUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
+        applyPropertyValue(true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
+    }
 
     /**
-     * Disregards the 'required' errors for those properties, that were not 'modified' (for both criteria and simple entities).
+     * Sets the value for the entity property.
+     * 
+     * @param enforce - indicates whether to use 'enforced mutation'
+     * @param name
+     * @param entity
+     * @param newValue
+     */
+    private static <M extends AbstractEntity<?>> void enforceSet(final boolean enforce, final String name, final M entity, final Object newValue) {
+        if (enforce) {
+            final MetaProperty<Object> metaProperty = entity.getProperty(name);
+            final boolean currEnforceMutator = metaProperty.isEnforceMutator();
+            metaProperty.setEnforceMutator(true);
+            try {
+                entity.set(name, newValue);
+            } finally {
+                metaProperty.setEnforceMutator(currEnforceMutator);
+            }
+        } else {
+            entity.set(name, newValue);
+        }
+    }
+
+    /**
+     * Disregards the 'required' errors for those properties, that were not 'applied' (for both criteria and simple entities).
      *
      * @param entity
-     * @param modifiedProps
-     *            -- list of 'modified' properties
+     * @param appliedProps
+     *            -- list of 'applied' properties, i.e. those for which the setter has been invoked (maybe in 'enforced' manner)
      * @return
      */
-    public static <M extends AbstractEntity<?>> M disregardRequiredProperties(final M entity, final Set<String> modifiedProps) {
-        // disregard requiredness validation errors for properties on masters for non-criteria types
+    public static <M extends AbstractEntity<?>> M disregardNotAppliedRequiredProperties(final M entity, final Set<String> appliedProps) {
         for (final Map.Entry<String, MetaProperty<?>> entry : entity.getProperties().entrySet()) {
-            if (entry.getValue().isRequired() && !modifiedProps.contains(entry.getKey())) {
+            if (entry.getValue().isRequired() && !appliedProps.contains(entry.getKey())) {
                 entry.getValue().setRequiredValidationResult(Result.successful(entity));
             }
         }
         return entity;
     }
 
+    /**
+     * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types.
+     * 
+     * @param entity
+     */
     public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
-        // disregard requiredness validation errors for crit-only properties on masters for non-criteria types
         final Class<?> managedType = entity.getType();
         if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
             for (final Map.Entry<String, MetaProperty<?>> entry : entity.getProperties().entrySet()) {

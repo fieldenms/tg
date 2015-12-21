@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.sample.domain.MiDetailsCentre;
+import ua.com.fielden.platform.sample.domain.MiTgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties1;
@@ -36,6 +37,7 @@ public class TemplateMainMenu implements IMainMenuStructureBuilder {
                 .push(MiTgPersistentEntityWithProperties3.class.getName())
                 .push(MiTgPersistentEntityWithProperties4.class.getName())
                 .push(MiDetailsCentre.class.getName())
+                .push(MiTgEntityWithPropertyDependency.class.getName())
                 .push(MiTgFetchProviderTestEntity.class.getName())
                 .pop();
     }

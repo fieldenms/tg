@@ -445,8 +445,6 @@
                 var self = this;
             
                 return new Promise(function(resolve, reject) {
-                    self._startRefreshCycleModeForEditors();
-    
                     if (isRunAction) {
                         self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                     }

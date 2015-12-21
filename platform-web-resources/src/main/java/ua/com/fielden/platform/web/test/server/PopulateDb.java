@@ -17,6 +17,7 @@ import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
@@ -149,6 +150,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgEntityForColourMaster colourEntity = new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setColourProp(new Colour("aaacdc"));
         final TgEntityForColourMaster defaultColourEnt = save(colourEntity);
         System.out.println("defaultColourEnt.getId() == " + defaultColourEnt.getId());
+        
+        final TgEntityWithPropertyDependency entWithPropDependency = save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS"));
+        System.out.println("entWithPropDependency.getId() == " + entWithPropDependency.getId());
 
         final User demo = ((IUser) ao(User.class)).findByKey("DEMO");
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
