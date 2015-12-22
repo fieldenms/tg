@@ -137,6 +137,7 @@
         /*Card related styles*/
         .card-material {
             margin: 20px 30px;
+            overflow: hidden;
         }
         .card-toolbar {
             background-color: white;
@@ -322,7 +323,7 @@
                                         </template>
                                         <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
                                             <template is="dom-if" if="[[summary]]">
-                                        <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
+                                                <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
                                                     <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
                                                         <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
                                                     </template>
@@ -658,29 +659,31 @@
              * Resize event handler that adjasts the lockcontainer size and position.
              */
             _resizeEventListener: function (event, details) {
-                var lockContainer = this.$$("#lockContainer");
                 var scrollContainer = this.$$("#scrollContainer");
-                var bottomPosition = this._hasHorizontalScrollBar() ? this._calcHorizontalScrollBarHeight() : 0;
-                if (this.visibleRowCount > 0) {
-                    var rowCount = this.visibleRowCount + (this.scrollable ? this._totalsRowCount : 0);
-                    scrollContainer.style.maxHeight = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px)";
-                } else {
-                    scrollContainer.style.removeProperty("maxHeight");
-                }
-                if (lockContainer) {
-                    lockContainer.style.bottom = bottomPosition + "px";
-                    lockContainer.style.right = this._hasVerticalScrollBar() ? this._calcVerticalScrollBarWidth() + "px" : "0px";
+                if (scrollContainer) {
+                    var lockContainer = this.$$("#lockContainer");
+                    var bottomPosition = this._hasHorizontalScrollBar() ? this._calcHorizontalScrollBarHeight() : 0;
+                    if (this.visibleRowCount > 0) {
+                        var rowCount = this.visibleRowCount + (this.scrollable ? this._totalsRowCount : 0);
+                        scrollContainer.style.maxHeight = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px)";
+                    } else {
+                        scrollContainer.style.removeProperty("maxHeight");
+                    }
+                    if (lockContainer) {
+                        lockContainer.style.bottom = bottomPosition + "px";
+                        lockContainer.style.right = this._hasVerticalScrollBar() ? this._calcVerticalScrollBarWidth() + "px" : "0px";
+                    }
                 }
             },
 
             _hasVerticalScrollBar: function () {
                 var scrollContainer = this.$$("#scrollContainer");
-                return scrollContainer.scrollHeight > scrollContainer.clientHeight;
+                return scrollContainer ? scrollContainer.scrollHeight > scrollContainer.clientHeight : false;
             },
 
             _calcVerticalScrollBarWidth: function () {
                 var scrollContainer = this.$$("#scrollContainer");
-                return scrollContainer.offsetWidth - scrollContainer.clientWidth;
+                return scrollContainer ? scrollContainer.offsetWidth - scrollContainer.clientWidth : 0;
             },
 
             /**
@@ -688,7 +691,7 @@
              */
             _hasHorizontalScrollBar: function () {
                 var scrollContainer = this.$$("#scrollContainer");
-                return scrollContainer.scrollWidth > scrollContainer.clientWidth;
+                return scrollContainer ? scrollContainer.scrollWidth > scrollContainer.clientWidth : false;
             },
 
             /**
@@ -696,7 +699,7 @@
              */
             _calcHorizontalScrollBarHeight: function () {
                 var scrollContainer = this.$$("#scrollContainer");
-                return scrollContainer.offsetHeight - scrollContainer.clientHeight;
+                return scrollContainer ? scrollContainer.offsetHeight - scrollContainer.clientHeight : 0;
             },
 
             /**
@@ -710,7 +713,8 @@
             },
 
             _updateLeftAndRightPanels: function () {
-                var scrollInc = this.$$("#scrollContainer").scrollTop;
+                var scrollContainer = this.$$("#scrollContainer");
+                var scrollInc = scrollContainer ? scrollContainer.scrollTop : 0;
                 var leftLockPanel = this.$$("#leftLockPanel");
                 var rightLockPanel = this.$$("#rightLockPanel");
                 if (leftLockPanel) {
@@ -724,7 +728,8 @@
             },
 
             _updateTopAndBottomPanels: function () {
-                var scrollInc = this.$$("#scrollContainer").scrollLeft;
+                var scrollContainer = this.$$("#scrollContainer");
+                var scrollInc = scrollContainer ? scrollContainer.scrollLeft : 0;
                 var topLockPanel = this.$$("#topLockPanel");
                 var bottomLockPanel = this.$$("#bottomLockPanel");
                 var checkboxWidth = this._calculateCheckboxWidth(this.checkboxVisible);
@@ -771,9 +776,9 @@
                     return this._getValue(entity, column.property, column.type).toString();
                 }
             },
-            
-            _getTotalTooltip: function(summary) {
-                var tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>": "";
+
+            _getTotalTooltip: function (summary) {
+                var tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
                 tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
                 return tooltip;
             },
