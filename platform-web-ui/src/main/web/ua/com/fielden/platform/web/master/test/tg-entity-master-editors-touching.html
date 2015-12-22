@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>entity-master basic tests</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	
+	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+	<script src="/resources/polymer/web-component-tester/browser.js"></script>
+	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+	
+	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+  
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency">
+</head>
+
+<body>
+	<tg-reflector id="reflector"></tg-reflector>
+	<test-fixture id="MasterFixture">
+    	<template>
+   		    <tg-TgEntityWithPropertyDependency-master 
+		    	id="master" 
+		    	entity-type="ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency" 
+		    	entity-id="new" 
+		    	current-state="EDIT">
+    		</tg-TgEntityWithPropertyDependency-master>
+    	</template>
+	</test-fixture>
+
+	<script>
+		suite('editors touching', function() {
+		    var master, reflector;
+		
+		    setup(function() {
+				master = fixture('MasterFixture');
+		      	reflector = document.querySelector('#reflector');
+		    });
+		
+		    test('works for property, that is dependent on touched property', function(done) {
+		        var edProperty = master.$.editor_4_property;
+		        var edDependentProp = master.$.editor_4_dependentProp;
+		        
+ 	            master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+	                assert.strictEqual(edProperty._editingValue, 'IS', "_editingValue should be 'IS'.");
+	                assert.strictEqual(edProperty._commValue, 'IS', "_commValue should be 'IS'.");
+	                assert.strictEqual(edProperty._acceptedValue, 'IS', "_acceptedValue should be 'IS'.");
+	                assert.strictEqual(edDependentProp._editingValue, 'InService', "_editingValue for dependent property should be 'InService' after 'property' ACE.");
+	                assert.strictEqual(edDependentProp._commValue, 'InService', "_commValue for dependent property should be 'InService' after 'property' ACE.");
+	                assert.strictEqual(edDependentProp._acceptedValue, 'InService', "_acceptedValue for dependent property should be 'InService' after 'property' ACE.");
+	                
+	                assert.strictEqual(validatedEntity.get("property"), 'IS', "'property' value should be 'IS' after modification.");
+	                assert.strictEqual(bindingEntity.get("property"), 'IS', "Binding 'property' value should be 'IS' after modification.");
+	                assert.strictEqual(validatedEntity.get("dependentProp"), 'InService', "'dependentProp' value should be 'InService' after 'property' ACE.");
+	                assert.strictEqual(bindingEntity.get("dependentProp"), 'InService', "Binding 'dependentProp' value should be 'InService' after 'property' ACE.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function (entity, bindingEntity, customObject) {
+	                assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
+	                assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
+	                assert.strictEqual(edProperty._acceptedValue, null, "_acceptedValue should be empty on start (null).");
+	                assert.strictEqual(edDependentProp._editingValue, '', "_editingValue for dependent property should be empty on start (empty string).");
+	                assert.strictEqual(edDependentProp._commValue, '', "_commValue for dependent property should be empty on start (empty string).");
+	                assert.strictEqual(edDependentProp._acceptedValue, null, "_acceptedValue for dependent property should be empty on start (null).");
+	                
+	                assert.strictEqual(entity.get("property"), null, "'property' value should be empty on start (null).");
+	                assert.strictEqual(bindingEntity.get("property"), null, "Binding 'property' value should be empty on start (null).");
+	                assert.strictEqual(entity.get("dependentProp"), null, "'dependentProp' value should be empty on start (null).");
+	                assert.strictEqual(bindingEntity.get("dependentProp"), null, "Binding 'dependentProp' value should be empty on start (null).");
+	                
+	                edProperty._editingValue = 'IS';
+	                edProperty.commit();
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for property, that is dependent on touched property when resetting to the previous value', function(done) {
+		        var edProperty = master.$.editor_4_property;
+		        var edDependentProp = master.$.editor_4_dependentProp;
+		        
+ 	            master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+	                assert.strictEqual(edProperty._editingValue, 'IS', "_editingValue should be 'IS'.");
+	                assert.strictEqual(edProperty._commValue, 'IS', "_commValue should be 'IS'.");
+	                assert.strictEqual(edProperty._acceptedValue, 'IS', "_acceptedValue should be 'IS'.");
+	                assert.strictEqual(edDependentProp._editingValue, 'InService', "_editingValue for dependent property should be 'InService' after 'property' ACE.");
+	                assert.strictEqual(edDependentProp._commValue, 'InService', "_commValue for dependent property should be 'InService' after 'property' ACE.");
+	                assert.strictEqual(edDependentProp._acceptedValue, 'InService', "_acceptedValue for dependent property should be 'InService' after 'property' ACE.");
+	                
+	                assert.strictEqual(validatedEntity.get("property"), 'IS', "'property' value should be 'IS' after modification.");
+	                assert.strictEqual(bindingEntity.get("property"), 'IS', "Binding 'property' value should be 'IS' after modification.");
+	                assert.strictEqual(validatedEntity.get("dependentProp"), 'InService', "'dependentProp' value should be 'InService' after 'property' ACE.");
+	                assert.strictEqual(bindingEntity.get("dependentProp"), 'InService', "Binding 'dependentProp' value should be 'InService' after 'property' ACE.");
+	                
+	 	            master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+		                assert.strictEqual(edProperty._editingValue, 'IS', "_editingValue should be 'IS'.");
+		                assert.strictEqual(edProperty._commValue, 'IS', "_commValue should be 'IS'.");
+		                assert.strictEqual(edProperty._acceptedValue, 'IS', "_acceptedValue should be 'IS'.");
+		                assert.strictEqual(edDependentProp._editingValue, '', "_editingValue for dependent property should become empty after explicit modification.");
+		                assert.strictEqual(edDependentProp._commValue, '', "_commValue for dependent property should become empty after explicit modification.");
+		                assert.strictEqual(edDependentProp._acceptedValue, null, "_acceptedValue for dependent property should become empty after explicit modification.");
+		                
+		                assert.strictEqual(validatedEntity.get("property"), 'IS', "'property' value should be 'IS' after modification.");
+		                assert.strictEqual(bindingEntity.get("property"), 'IS', "Binding 'property' value should be 'IS' after modification.");
+		                assert.strictEqual(validatedEntity.get("dependentProp"), null, "'dependentProp' value should become empty after explicit modification.");
+		                assert.strictEqual(bindingEntity.get("dependentProp"), null, "Binding 'dependentProp' value should become empty after explicit modification.");
+
+		                done();
+		            };
+		            
+	                edDependentProp._editingValue = '';
+	                edDependentProp.commit();
+	            };
+
+	            master.postRetrieved = function (entity, bindingEntity, customObject) {
+	                assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
+	                assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
+	                assert.strictEqual(edProperty._acceptedValue, null, "_acceptedValue should be empty on start (null).");
+	                assert.strictEqual(edDependentProp._editingValue, '', "_editingValue for dependent property should be empty on start (empty string).");
+	                assert.strictEqual(edDependentProp._commValue, '', "_commValue for dependent property should be empty on start (empty string).");
+	                assert.strictEqual(edDependentProp._acceptedValue, null, "_acceptedValue for dependent property should be empty on start (null).");
+	                
+	                assert.strictEqual(entity.get("property"), null, "'property' value should be empty on start (null).");
+	                assert.strictEqual(bindingEntity.get("property"), null, "Binding 'property' value should be empty on start (null).");
+	                assert.strictEqual(entity.get("dependentProp"), null, "'dependentProp' value should be empty on start (null).");
+	                assert.strictEqual(bindingEntity.get("dependentProp"), null, "Binding 'dependentProp' value should be empty on start (null).");
+	                
+	                edProperty._editingValue = 'IS';
+	                edProperty.commit();
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		});
+	</script>
+</body>
+
+</html>

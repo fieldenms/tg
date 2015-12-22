@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.test.server;
 
 import java.io.FileInputStream;
 import java.math.BigDecimal;
+import java.util.Currency;
 import java.util.List;
 import java.util.Properties;
 import java.util.SortedSet;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
@@ -96,7 +98,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         System.out.println("ent3.getId() == " + ent3.getId());
         save(ent2.setEntityProp(ent3));
 
-        final TgPersistentEntityWithProperties moneyEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY4").setIntegerProp(63).setMoneyProp(new Money(new BigDecimal(23.0))).setDesc("Description for entity with key 4.").setRequiredValidatedProp(30));
+        final TgPersistentEntityWithProperties moneyEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY4").setIntegerProp(63).setMoneyProp(new Money("23.0", Currency.getInstance("USD"))).setDesc("Description for entity with key 4.").setRequiredValidatedProp(30));
         System.out.println("moneyEnt1.getId() == " + moneyEnt1.getId());
 
         final TgPersistentEntityWithProperties bigDecimalEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY5").setBigDecimalProp(new BigDecimal(23.0)).setDesc("Description for entity with key 5.").setRequiredValidatedProp(30));
@@ -114,7 +116,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
                 // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
                 // .setProducerInitProp(ent1)
-                .setIntegerProp(7).setMoneyProp(new Money(new BigDecimal(7))).setBigDecimalProp(new BigDecimal(7.7))
+                .setIntegerProp(7).setMoneyProp(new Money("7.0", Currency.getInstance("USD"))).setBigDecimalProp(new BigDecimal(7.7))
                 .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30);
         de.setDesc("Default entity description");
         final TgPersistentEntityWithProperties defaultEnt = save(de);
@@ -148,6 +150,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgEntityForColourMaster colourEntity = new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setColourProp(new Colour("aaacdc"));
         final TgEntityForColourMaster defaultColourEnt = save(colourEntity);
         System.out.println("defaultColourEnt.getId() == " + defaultColourEnt.getId());
+        
+        final TgEntityWithPropertyDependency entWithPropDependency = save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS"));
+        System.out.println("entWithPropDependency.getId() == " + entWithPropDependency.getId());
 
         final User demo = ((IUser) ao(User.class)).findByKey("DEMO");
         save(new_composite(UserAndRoleAssociation.class, demo, admin));

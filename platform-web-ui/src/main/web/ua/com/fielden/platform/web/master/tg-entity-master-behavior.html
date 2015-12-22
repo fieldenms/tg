@@ -303,8 +303,6 @@
                         throw new SimultaneousSaveException();
                     }
 
-                    this._startRefreshCycleModeForEditors();
-
                     var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                     // cancel previous validation before starting saving process -- it includes validation process internally!
                     this._validator().abortValidationIfAny();
@@ -592,7 +590,21 @@
             	var editor = this.$.masterDom.querySelector('[id=editor_4_' + propNameToBeAssigned + ']');
                 editor.assignValue(functionalEntity, propNameFromFuncEntityToAssign, editor.reflector().getPropertyValue.bind(editor.reflector()));
                 editor.commit();
+            },
+            
+            /** 
+             * This method is used to drive the master visibility and auto-run logic.
+             */
+            shouldSkipUi: function () {
+            	return typeof this._currBindingEntity['skipUi'] !== 'undefined' && 
+            	       this._currBindingEntity['skipUi'] === true;
+            },
+            
+            /** A helper method to assist in making the caching decision. Used as an optimisation technique. */
+            canBeCached: function () {
+            	return typeof this._currBindingEntity['skipUi'] === 'undefined';
             }
+
         };
     	
 		Polymer.TgBehaviors.TgEntityMasterBehavior = [

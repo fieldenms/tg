@@ -115,15 +115,6 @@
                 },
 
                 ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
-                
-                /**
-                 * The switch, that turns on refresh cycle.
-                 */
-                externalRefreshCycle: {
-                	type: String,
-                	observer: '_externalRefreshCycleChanged'
-                },
-                
                 /**
                  * Controls rendering of debug information for an entity editor. 
                  */
@@ -361,6 +352,11 @@
             _entityChanged: function (newValue, oldValue) {
                 // console.log("_entityChanged", newValue, oldValue, "still _refreshCycleStarted ==", this._refreshCycleStarted);
                 if (this.reflector().isEntity(newValue)) {
+                    // IMPORTANT: Initiate 'refresh cycle' -- in new logic refresh cycle is also mandatory after 'validation' has been performed,
+                    // not only after master's 'save' / 'refresh' or centre's 'run', 'save' or 'discard'
+                    // (to be precise it is done for every case when _currBindingEntity is changed for this editor)
+                    this._refreshCycleStarted = true;
+                    
                 	this.assignValue(newValue, this.propertyName, this.reflector().getBindingValue.bind(this.reflector()));
                 } else {
                     console.log("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
@@ -407,6 +403,8 @@
                 } else {
                 	if (this.reflector().isEntity(this.entity)) {
 	                    this.entity.set(this.propertyName, newValue);
+	                    this._registerPropertyTouch(this.entity, this.propertyName);
+	                    
     	                if (this._shouldInvokeValidation()) {
         	                this.validationCallback();
             	        } else {
@@ -414,6 +412,35 @@
                     	}
                 	}
                 }
+            },
+            
+            /**
+             * In case where user interaction takes place, this method registers such 'property touch' for the purposes 
+             * of collecting the queue of 'touched' properties.
+             *
+             * The property that was touched last will reside last in that queue. Also the count of 'touches' is recorded
+             * for each property (mainly for logging purposes).
+             *
+             * Please, note that 'touched' property does not mean 'modified' from technical perspective.
+             * But, even if it is not modified -- such property will be forced to be mutated on server (with its origVal) 
+             * to have properly invoked its ACE handlers.
+             */
+            _registerPropertyTouch: function (bindingEntity, propertyName) {
+                var touched = bindingEntity["@@touchedProps"];
+                var names = touched.names;
+                var counts = touched.counts;
+                var index = names.indexOf(propertyName);
+                if (index > -1) {
+                    var prevCount = counts[index];
+                    names.splice(index, 1);
+                    counts.splice(index, 1);
+                    names.push(propertyName);
+                    counts.push(prevCount + 1);
+                } else {
+                    names.push(propertyName);
+                    counts.push(1);
+                }
+                console.log('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
             },
 
             /**
@@ -450,13 +477,6 @@
             commit: function () {
                 // console.log("commit [", this._editingValue, "] value.");
    	            this._commValue = this._editingValue;
-            },
-
-            _externalRefreshCycleChanged: function (newValue, oldValue) {
-                if (newValue === "ACTIVATED") {
-                    // console.log("externalRefreshCycleChanged", oldValue, newValue);
-                    this._refreshCycleStarted = true;
-                }
             },
 
             _bindMessages: function (entity, property, _editorValidationMsg) {

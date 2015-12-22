@@ -91,7 +91,6 @@ public abstract class AbstractWidget implements IRenderable, IImportable {
         attrs.put("prop-title", this.title);
         attrs.put("prop-desc", this.desc);
         attrs.put("current-state", "[[currentState]]");
-        attrs.put("external-refresh-cycle", "[[_refreshCycleMode]]");
         if (criterionEditor) {
             attrs.put("class", "criterion-editors");
         }

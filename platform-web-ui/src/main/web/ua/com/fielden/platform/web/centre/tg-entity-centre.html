@@ -42,7 +42,7 @@
         <tg-serialiser id="serialiser"></tg-serialiser>
 
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError"></iron-ajax>
-        <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="DELETE" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
+        <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
 
         <iron-pages selected="[[_selectedView]]" on-scroll="_handleScroll">
             <div class="fit">
@@ -52,12 +52,12 @@
                         
                         <div class="layout horizontal justified" style="margin-top:24px;">
                             <div class="layout horizontal">
-                                <paper-button id="saver" raised roll="button" on-tap="save" disabled$="[[_saverDisabled]]">Save</paper-button>
-                                <paper-button id="discarder" raised roll="button" on-tap="discard" disabled$="[[_discarderDisabled]]">Discard</paper-button>
+                                <paper-button id="saver" raised roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]">Save</paper-button>
+                                <paper-button id="discarder" raised roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]">Discard</paper-button>
                             </div>
                             <div class="layout horizontal">
-                            	<paper-button id="view" raised roll="button" on-tap="_activateResultSetView">View</paper-button>
-                            	<paper-button id="runner" raised roll="button" on-tap="run" style="margin-right: 0px;">Run</paper-button>
+                            	<paper-button id="view" raised roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]">View</paper-button>
+                            	<paper-button id="runner" raised roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]">Run</paper-button>
                             </div>
                         </div>
                     </div>
@@ -108,6 +108,8 @@
             _handleScroll: Function,
             _saverDisabled: Boolean,
             _discarderDisabled: Boolean,
+            _runnerDisabled: Boolean,
+            _viewerDisabled: Boolean,
             save: Function,
             discard: Function,
             run: Function,
@@ -140,6 +142,27 @@
          */
         _reflector: function () {
             return this.$.serialiser.$.reflector;
+        }, 
+        
+        saveAsync: function () {
+            var self = this;
+            this.async(function () {
+                self.save();
+            }, 100);
+        },
+        
+        discardAsync: function () {
+            var self = this;
+            this.async(function () {
+                self.discard();
+            }, 100);
+        },
+        
+        runAsync: function () {
+            var self = this;
+            this.async(function () {
+                self.run();
+            }, 100);
         }
     });
 </script>

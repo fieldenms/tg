@@ -1,21 +1,27 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
-import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
-import org.restlet.resource.ResourceException;
+import org.restlet.resource.Put;
 import org.restlet.resource.ServerResource;
 
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -33,13 +39,21 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
     private final RestServerUtil restUtil;
 
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
-    private final IGlobalDomainTreeManager gdtm;
+
+    private final IServerGlobalDomainTreeManager serverGdtm;
+    private final IUserProvider userProvider;
+    private final ICompanionObjectFinder companionFinder;
+    private final ICriteriaGenerator critGenerator;
 
     public CentreResource(
             final RestServerUtil restUtil,
 
             final EntityCentre centre,
-            final IGlobalDomainTreeManager gdtm,
+
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            final ICompanionObjectFinder companionFinder,
+            final ICriteriaGenerator critGenerator,
 
             final Context context,
             final Request request,
@@ -49,46 +63,66 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
         this.restUtil = restUtil;
 
         miType = centre.getMenuItemType();
-        this.gdtm = gdtm;
+        this.serverGdtm = serverGdtm;
+        this.userProvider = userProvider;
+        this.companionFinder = companionFinder;
+        this.critGenerator = critGenerator;
     }
 
     /**
      * Handles POST request resulting from tg-entity-centre <code>save()</code> method.
+     *
+     * Internally validation process is also performed.
      */
     @Post
-    @Override
-    public Representation post(final Representation envelope) {
+    public Representation save(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
-            //            // NOTE: the following line can be the example how 'centre saving' server errors manifest to the client application
-            //            throw new IllegalStateException("Illegal state during centre saving.");
-            // gets the fresh centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'fresh centre')
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreResourceUtils.freshCentre(gdtm, miType);
-            // removes the fresh centre -- to be later re-populated
-            CentreResourceUtils.removeFreshCentre(gdtm, miType);
+            final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
+            final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
 
-            final ICentreDomainTreeManagerAndEnhancer defaultCentre = CentreResourceUtils.getDefaultCentre(gdtm, miType);
-            // creates differences centre from the differences between 'default centre' and 'fresh centre'
-            final ICentreDomainTreeManagerAndEnhancer differencesCentre = CentreUtils.createDifferencesCentre(freshCentre, defaultCentre, CentreResourceUtils.getEntityType(miType), gdtm);
+            // before SAVING process there is a need to apply all actual criteria from modifHolder:
+            CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, CentreResourceUtils.getFreshCentre(gdtm, miType));
 
-            // override old 'diff centre' with recently created one and save it
-            CentreResourceUtils.overrideAndSaveDifferencesCentre(gdtm, miType, differencesCentre);
+            saveActualState(gdtm);
 
-            return restUtil.rawListJSONRepresentation("OK");
+            // it is necessary to use "fresh" instance of cdtme (after the saving process)
+            return CriteriaResource.createCriteriaRetrievalEnvelope(CentreResourceUtils.getFreshCentre(gdtm, miType), miType, gdtm, restUtil, companionFinder, critGenerator);
         }, restUtil);
     }
 
+    private void saveActualState(final IGlobalDomainTreeManager gdtm) {
+        // gets the fresh centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'fresh centre')
+        final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreResourceUtils.freshCentre(gdtm, miType);
+        // removes the fresh centre -- to be later re-populated
+        CentreResourceUtils.removeFreshCentre(gdtm, miType);
+
+        final ICentreDomainTreeManagerAndEnhancer defaultCentre = CentreResourceUtils.getDefaultCentre(gdtm, miType);
+        // creates differences centre from the differences between 'default centre' and 'fresh centre'
+        final ICentreDomainTreeManagerAndEnhancer differencesCentre = CentreUtils.createDifferencesCentre(freshCentre, defaultCentre, CentreResourceUtils.getEntityType(miType), gdtm);
+
+        // override old 'diff centre' with recently created one and save it
+        CentreResourceUtils.overrideAndSaveDifferencesCentre(gdtm, miType, differencesCentre);
+    }
+
+    private void discardActualState(final IGlobalDomainTreeManager gdtm) {
+        // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)
+        CentreResourceUtils.discardFreshCentre(gdtm, miType);
+    }
+
     /**
-     * Handles DELETE request resulting from tg-entity-centre <code>discard()</code> method.
+     * Handles PUT request resulting from tg-entity-centre <code>discard()</code> method.
+     *
+     * Internally validation process is also performed.
      */
-    @Delete
-    @Override
-    public Representation delete() {
+    @Put
+    public Representation discard(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
-            //            // NOTE: the following line can be the example how 'centre discarding' server errors manifest to the client application
-            //            throw new IllegalStateException("Illegal state during centre discarding.");
-            // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)
-            CentreResourceUtils.discardFreshCentre(gdtm, miType);
-            return restUtil.rawListJSONRepresentation("OK");
+            final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
+
+            discardActualState(gdtm);
+
+            // it is necessary to use "fresh" instance of cdtme (after the discarding process)
+            return CriteriaResource.createCriteriaRetrievalEnvelope(CentreResourceUtils.getFreshCentre(gdtm, miType), miType, gdtm, restUtil, companionFinder, critGenerator);
         }, restUtil);
     }
 }

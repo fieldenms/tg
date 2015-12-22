@@ -170,15 +170,17 @@
 
                         self._getElement(customAction)
                             .then(function (element) {
-                                var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
-                                if (!self._cachedElements.hasOwnProperty(key)) {
-                                    console.log("caching:", key);
-                                    self._cachedElements[key] = element;
-                                }
                                 var promise = customAction._onExecuted(null, element, null);
                                 if (promise) {
                                     return promise
                                         .then(function () {
+                                            var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+                                            if (!self._cachedElements.hasOwnProperty(key)) {
+                                                if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
+            	                                    console.log("caching:", key);
+                                                	self._cachedElements[key] = element;
+                                                }
+                                            }
                                             self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
                                         })
                                         .catch(function () {

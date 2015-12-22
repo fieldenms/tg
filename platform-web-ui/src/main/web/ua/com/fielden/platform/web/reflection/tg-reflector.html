@@ -1065,7 +1065,7 @@
          */
         discardAllRequests: function (ajaxElement) {
         	var number = 0;
-        	if (ajaxElement.loading) {
+        	if (ajaxElement.loading && ajaxElement.activeRequests.length > 0) { // need to ensure that activeRequests are not empty; if they are empty, 'loading' property of 'ajaxElement' can still be true. 
         		// get oldest request and discard it
         		var oldestRequest = ajaxElement.activeRequests[0];
         		// there is a need to explicitly abort iron-request instance since _discardRequest() does not perform that action:
