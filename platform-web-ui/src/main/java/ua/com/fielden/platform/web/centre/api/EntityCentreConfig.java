@@ -11,10 +11,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -35,6 +31,10 @@ import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
+
 /**
  *
  * Represents a final structure of an entity centre as produced by means of using Entity Centre DSL.
@@ -46,6 +46,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     private final boolean hideCheckboxes;
     private final boolean hideToolbar;
+    private final boolean notScrollable;
+    private final int pageCapacity;
+    private final int visibleRowsCount;
 
     /////////////////////////////////////////////
     ///////////// TOP LEVEL ACTIONS /////////////
@@ -282,6 +285,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     public EntityCentreConfig(
             final boolean hideCheckboxes,
             final boolean hideToolbar,
+            final boolean notScrollable,
+            final int pageCapacity,
+            final int visibleRowsCount,
 
             final List<Pair<EntityActionConfig, Optional<String>>> topLevelActions,
             final List<EntityActionConfig> insertionPointActions,
@@ -337,6 +343,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final IFetchProvider<T> fetchProvider) {
         this.hideCheckboxes = hideCheckboxes;
         this.hideToolbar = hideToolbar;
+        this.notScrollable = notScrollable;
+        this.pageCapacity = pageCapacity;
+        this.visibleRowsCount = visibleRowsCount;
 
         this.topLevelActions.addAll(topLevelActions);
         this.insertionPointActions.addAll(insertionPointActions);
@@ -679,5 +688,17 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean shouldHideToolbar() {
         return hideToolbar;
+    }
+
+    public boolean isScrollable() {
+        return !notScrollable;
+    }
+
+    public int getPageCapacity() {
+        return pageCapacity;
+    }
+
+    public int getVisibleRowsCount() {
+        return visibleRowsCount;
     }
 }

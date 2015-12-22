@@ -644,6 +644,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String egiStr = text.
                 replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
                 replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
+                replace("@scrollable", dslDefaultConfig.isScrollable() + "").
+                replace("@visibleRowCount", dslDefaultConfig.getVisibleRowsCount() + "").
                 replaceAll("@miType", getMenuItemType().getSimpleName()).
                 replaceAll("@gridCardDom", Matcher.quoteReplacement(domContainer.toString()));
         return new IRenderable() {

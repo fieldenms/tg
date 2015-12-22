@@ -578,7 +578,10 @@
                 /**
                  * Defines the number of visible rows.
                  */
-                visibleRowCount: Number,
+                visibleRowCount: {
+                    type: Number,
+                    value: @visibleRowCount
+                },
                 cardLayout: {
                     type: Boolean,
                     readOnly: true,
@@ -599,7 +602,8 @@
 
                 /** Determines whether grid is scrollable with locked columns and rows or not.*/
                 scrollable: {
-                    type: Boolean
+                    type: Boolean,
+                    value: @scrollable
                 },
 
                 //Private property that defines the number of summary rows.
@@ -621,9 +625,7 @@
              */
             ready: function () {
                 var primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
-                this.visibleRowCount = 0;
                 this._totalsRowCount = 0;
-                this.scrollable = true;
 
                 //Initialising entities.
                 this.entities = [];

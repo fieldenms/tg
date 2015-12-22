@@ -10,9 +10,6 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -37,6 +34,9 @@ import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+
 /**
  * A class implementing the Entity Centre DSL contracts.
  *
@@ -54,7 +54,10 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     protected boolean hideCheckboxes = false;
     protected boolean hideToolbar = false;
-    
+    protected boolean notScrollable = false;
+    protected int pageCapacity = 30;
+    protected int visibleRowsCount = 0;
+
     ////////////////////////////////////////////////
     //////////////// SELECTION CRITERIA ////////////
     ////////////////////////////////////////////////
@@ -149,6 +152,9 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
         return new EntityCentreConfig<T>(
         		hideCheckboxes,
         		hideToolbar,
+                notScrollable,
+                pageCapacity,
+                visibleRowsCount,
                 topLevelActions,
                 insertionPointActions,
                 selectionCriteria,
