@@ -245,7 +245,7 @@
                         </div>
                     </div>
                     <div class="relative">
-                        <div id="scrollContainer" on-scroll="_handleScrollEvent" style$="[[_calculateScrollContainerStyle(visibleRowCount, _totalsRowCount)]]">
+                        <div id="scrollContainer" on-scroll="_handleScrollEvent" style$="[[_calculateScrollContainerStyle(scrollable, visibleRowCount, _totalsRowCount)]]">
                             <!-- Table header -->
                             <div class="layout horizontal table-header-row">
                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
@@ -662,7 +662,7 @@
                 var scrollContainer = this.$$("#scrollContainer");
                 var bottomPosition = this._hasHorizontalScrollBar() ? this._calcHorizontalScrollBarHeight() : 0;
                 if (this.visibleRowCount > 0) {
-                    var rowCount = this.visibleRowCount + this._totalsRowCount;
+                    var rowCount = this.visibleRowCount + (this.scrollable ? this._totalsRowCount : 0);
                     scrollContainer.style.maxHeight = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px)";
                 } else {
                     scrollContainer.style.removeProperty("maxHeight");
@@ -744,9 +744,9 @@
             /**
              * Calculates the height of the scrollcontainer.
              */
-            _calculateScrollContainerStyle: function (visibleRowCount, _totalsRowCount) {
+            _calculateScrollContainerStyle: function (scrollable, visibleRowCount, _totalsRowCount) {
                 if (visibleRowCount > 0) {
-                    var rowCount = visibleRowCount + _totalsRowCount;
+                    var rowCount = visibleRowCount + (scrollable ? _totalsRowCount : 0);
                     return "max-height:calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px)";
                 }
             },

@@ -869,6 +869,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getSimpleName()).
                 replace("@full_mi_type", miType.getName()).
+                replace("@pageCapacity", Integer.toString(dslDefaultConfig.getPageCapacity())).
                 replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).
                 replace("<!--@criteria_editors-->", editorContainer.toString()).
                 replace("<!--@egi_columns-->", egiColumns.toString()).
