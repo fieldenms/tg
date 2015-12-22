@@ -69,6 +69,8 @@ import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntit
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
+import ua.com.fielden.platform.sample.domain.TgUpdateRolesAction;
+import ua.com.fielden.platform.sample.domain.TgUpdateRolesActionProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -442,6 +444,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .also()
             .addProp("dependentProp").asSinglelineText()
             .also()
+            .addProp("roles").asSinglelineText()
+                .withAction(
+                    action(TgUpdateRolesAction.class)
+                    .withContext(context().withMasterEntity().build())
+                    .postActionSuccess(new PostActionSuccess(""
+                            + "// self.setEditorValue4Property('status', functionalEntity, 'status');\n"
+                            )) // self.retrieve()
+                    .postActionError(new PostActionError(""))
+                    .icon("add-circle")
+                    .shortDesc("Add / Remove roles")
+                    .longDesc("Add / Remove roles")
+                    .build())
+            .also()
             .addAction(MasterActions.REFRESH)
             //      */.icon("trending-up") SHORT-CUT
             /*      */.shortDesc("CANCEL")
@@ -453,7 +468,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     
             .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                     "      ['padding:20px', "
-                    + format("[[%s], ['flex']],", fmr)
+                    + format("[[%s], [%s], ['flex']],", fmr, fmr)
                     + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                     + "    ]"))
             .done();
@@ -487,6 +502,28 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("actionMr", actionMr))
                 .done();
+        
+        final IMaster<TgUpdateRolesAction> masterConfigForUpdateRolesAction = new SimpleMasterBuilder<TgUpdateRolesAction>()
+                .forEntity(TgUpdateRolesAction.class)
+                .addProp("roles").asSinglelineText()
+                .also()
+                .addProp("chosenRoleNumbers").asSinglelineText()
+                .also()
+                .addAction(MasterActions.REFRESH)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("CANCEL")
+                /*      */.longDesc("Cancel action")
+                .addAction(MasterActions.VALIDATE)
+                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.EDIT)
+                .addAction(MasterActions.VIEW)
+        
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
+                        "      ['padding:20px', "
+                        + format("[[%s], ['flex']],", fmr)
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + "    ]"))
+                .done();
 
         final EntityMaster<TgPersistentEntityWithProperties> entityMaster = new EntityMaster<TgPersistentEntityWithProperties>(
                 TgPersistentEntityWithProperties.class,
@@ -501,6 +538,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgEntityWithPropertyDependency.class,
                     TgEntityWithPropertyDependencyProducer.class,
                     masterConfigForPropDependencyExample,
+                    injector())).
+            addMaster(TgUpdateRolesAction.class, new EntityMaster<TgUpdateRolesAction>(
+                    TgUpdateRolesAction.class,
+                    TgUpdateRolesActionProducer.class,
+                    masterConfigForUpdateRolesAction,
                     injector())).
             addMaster(TgEntityForColourMaster.class, clourMaster).//
 
