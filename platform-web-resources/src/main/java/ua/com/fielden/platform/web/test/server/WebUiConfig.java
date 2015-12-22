@@ -971,6 +971,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
+                //.hideCheckboxes()
+                //.notScrollable()
+                .setVisibleRowsCount(15)
                 .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
                 .also()
                 .addProp("desc").withAction(action(TgFunctionalEntityWithCentreContext.class).
@@ -1070,9 +1073,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
-                .addPrimaryAction(
-                        //                        EntityActionConfig.createMasterInvocationActionConfig()
-                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
+                                .addPrimaryAction(
+                                        EntityActionConfig.createMasterInvocationActionConfig()
+//                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 //                        action(TgFunctionalEntityWithCentreContext.class).
                 //                                withContext(context().withSelectedEntities().build()).
                 //                                icon("assignment-turned-in").
@@ -1087,14 +1090,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 ).also()*/
                 .addSecondaryAction(
                         action(TgDummyAction.class)
-                        .withContext(context().withSelectedEntities().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                ))
-                        .icon("accessibility")
-                        .shortDesc("Dummy")
-                        .longDesc("Dummy action, simply prints its result into console.")
-                        .build()
+                                .withContext(context().withSelectedEntities().build())
+                                .postActionSuccess(new PostActionSuccess(""
+                                        + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                        ))
+                                .icon("accessibility")
+                                .shortDesc("Dummy")
+                                .longDesc("Dummy action, simply prints its result into console.")
+                                .build()
                 )
                 .also()
                 .addSecondaryAction(
