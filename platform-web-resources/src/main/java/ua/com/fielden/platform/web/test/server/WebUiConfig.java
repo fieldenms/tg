@@ -503,7 +503,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("basedOnUser").asAutocompleter()
                 .also()
-                .addProp("roles").asSinglelineText()
+                .addProp("roles").asCollectionalRepresentor()
                     .withAction(
                         action(TgUpdateRolesAction.class)
                         .withContext(context().withMasterEntity().build())
