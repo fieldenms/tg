@@ -72,6 +72,7 @@ import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgUpdateRolesAction;
 import ua.com.fielden.platform.sample.domain.TgUpdateRolesActionProducer;
+import ua.com.fielden.platform.sample.domain.UserProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -493,7 +494,43 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                     + "    ]"))
             .done();
-
+        
+        final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
+                .forEntity(User.class)
+                .addProp("key").asSinglelineText()
+                .also()
+                .addProp("base").asCheckbox()
+                .also()
+                .addProp("basedOnUser").asAutocompleter()
+                .also()
+                .addProp("roles").asSinglelineText()
+                    .withAction(
+                        action(TgUpdateRolesAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "// self.setEditorValue4Property('status', functionalEntity, 'status');\n"
+                                )) // self.retrieve()
+                        .postActionError(new PostActionError(""))
+                        .icon("add-circle")
+                        .shortDesc("Add / Remove roles")
+                        .longDesc("Add / Remove roles")
+                        .build())
+                .also()
+                .addAction(MasterActions.REFRESH)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("CANCEL")
+                /*      */.longDesc("Cancel action")
+                .addAction(MasterActions.VALIDATE)
+                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.EDIT)
+                .addAction(MasterActions.VIEW)
+        
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
+                        "      ['padding:20px', "
+                        + format("[[%s], [%s], [%s], ['flex']],", fmr, fmr, fmr)
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + "    ]"))
+                .done();
         
         final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>()
                 .forEntity(TgFunctionalEntityWithCentreContext.class) // forEntityWithSaveOnActivate
@@ -559,6 +596,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgEntityWithPropertyDependency.class,
                     TgEntityWithPropertyDependencyProducer.class,
                     masterConfigForPropDependencyExample,
+                    injector())).
+            addMaster(User.class, new EntityMaster<User>(
+                    User.class,
+                    UserProducer.class,
+                    masterConfigForUser,
                     injector())).
             addMaster(TgUpdateRolesAction.class, new EntityMaster<TgUpdateRolesAction>(
                     TgUpdateRolesAction.class,
