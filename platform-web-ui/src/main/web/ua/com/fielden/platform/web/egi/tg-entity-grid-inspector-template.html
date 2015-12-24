@@ -110,6 +110,32 @@
         .table-data-cell {
             cursor: pointer;
         }
+        /*tg-page-action,
+        tg-ui-action,
+        tg-secondary-action-button {
+            width: 1rem;
+            height: 1rem;
+            --iron-icon-width: 1rem;
+            --iron-icon-height: 1rem;
+        }
+        .picker-button::shadow #ink {
+            width: 1.9rem;
+            height: 1.9rem;
+            top: -0.3rem;
+            left: -0.3rem;
+        }
+        .picker-button {
+            --iron-icon-height: 1.3rem;
+            --iron-icon-width: 1.3rem;
+            width: 1.3rem;
+            height: 1.3rem;
+            padding: 0;
+        }
+        paper-checkbox::shadow #checkboxContainer {
+            height: 1rem;
+            width: 1rem;
+            min-width: 1rem;
+        }*/
         .grid-toolbar {
             height: auto;
             min-height: 4rem;
@@ -349,7 +375,37 @@
                         <!-- Not scrollable container -->
                         <template is="dom-if" if="[[scrollable]]">
                             <div id="lockContainer" class="absolute fit" style="overflow:hidden">
-                                <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelPosition(checkboxVisible, primaryAction, secondaryActions)]]">
+                                <div id="leftLockPanel" class="absolutelyWhite layout vertical" on-wheel="_handleWheel" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop)]]">
+                                    <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
+                                        <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                                            <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
+                                                <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
+                                            </div>
+                                            <template is="dom-if" if="[[primaryAction]]">
+                                                <div class="table-cell layout horizontal center no-flexible" style="width:40px;">
+                                                    <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
+                                                    <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                                <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
+                                    <div id="rightLockPanel" class="absolutelyWhite layout vertical" on-wheel="_handleWheel" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop)]]">
+                                        <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
+                                            <div class="table-cell layout horizontal center table-data-row no-flexible" selected$="[[egiEntity.selected]]" style="width:40px" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                                                <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
+                                                    <tg-page-action icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" pref-dim="[[secondaryActions.0.prefDim]]"></tg-page-action>
+                                                    <tg-ui-action show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
+                                                </template>
+                                                <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
+                                                    <tg-secondary-action-button current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                                <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, secondaryActions, _scrollLeft)]]">
                                     <template is="dom-repeat" items="[[columns]]">
                                         <div class="table-cell layout horizontal center" style$="[[_calcColumnHeaderStyle(item)]]" tooltip-text$="[[item.columnDesc]]">
                                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
@@ -357,7 +413,7 @@
                                     </template>
                                 </div>
                                 <template is="dom-if" if="[[totals]]">
-                                    <div id="bottomLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateBottomLockPanelPosition(checkboxVisible, primaryAction, secondaryActions)]]">
+                                    <div id="bottomLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, secondaryActions, _scrollLeft)]]">
                                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                             <div class="layout horizontal table-footer-row">
                                                 <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
@@ -375,36 +431,6 @@
                                                         <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns)]]">
                                                         </div>
                                                     </template>
-                                                </template>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </template>
-                                <div id="leftLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateLeftLockPanelPosition()]]">
-                                    <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                                        <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                            <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
-                                                <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
-                                            </div>
-                                            <template is="dom-if" if="[[primaryAction]]">
-                                                <div class="table-cell layout horizontal center no-flexible" style="width:40px;">
-                                                    <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
-                                                    <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </template>
-                                </div>
-                                <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                                    <div id="rightLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateRightPanlePosition()]]">
-                                        <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                                            <div class="table-cell layout horizontal center table-data-row no-flexible" selected$="[[egiEntity.selected]]" style="width:40px" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
-                                                <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                                    <tg-page-action icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" pref-dim="[[secondaryActions.0.prefDim]]"></tg-page-action>
-                                                    <tg-ui-action show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
-                                                </template>
-                                                <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                                    <tg-secondary-action-button current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
                                                 </template>
                                             </div>
                                         </template>
@@ -450,6 +476,10 @@
                                         </template>
                                     </div>
                                 </template>
+                                <template is="dom-if" if="[[totals]]">
+                                    <div id="bottomShadow" class="absolute shadow" style$="[[_calcBottomShadowStyle(_totalsRowCount, _showBottomShadow)]]"></div>
+                                </template>
+                                <div id="topShadow" class="absolute shadow" style$="[[_calcTopShadowStyle(_showTopShadow)]]"></div>
                             </div>
                         </template>
                     </div>
@@ -589,7 +619,15 @@
 
                 //Private properties that defines config object for totals.
                 _totalsRowCount: Number,
-                _totalsRows: Array
+                _totalsRows: Array,
+                //Shadow related properties
+                _showBottomShadow: Boolean,
+                _showTopShadow: Boolean,
+                _showLeftShadow: Boolean,
+                _showRightShadow: Boolean,
+                //Scroling properties
+                _scrollLeft: Number,
+                _scrollTop: Number
             },
 
             observers: [
@@ -608,6 +646,16 @@
             ready: function () {
                 var primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
                 this._totalsRowCount = 0;
+
+                //Initialising shadows
+                this._showTopShadow = false;
+                this._showBottomShadow = false;
+                this._showLeftShadow = false;
+                this._showRightShadow = false;
+
+                //Initilialising scrolling properties
+                this._scrollLeft = 0;
+                this._scrollTop = 0;
 
                 //Initialising entities.
                 this.entities = [];
@@ -655,6 +703,17 @@
                 this.set("egiModel." + index + ".over", false);
             },
 
+            _handleWheel: function (e, detail) {
+                var scrollContainer = this.$$("#scrollContainer");
+                var wheelEvent;
+                
+                if (scrollContainer) {
+                    wheelEvent = new WheelEvent(e.type, e);
+                    scrollContainer.dispatchEvent(wheelEvent);
+                }
+                console.log(e, detail);
+            },
+
             /**
              * Resize event handler that adjasts the lockcontainer size and position.
              */
@@ -662,7 +721,7 @@
                 var scrollContainer = this.$$("#scrollContainer");
                 if (scrollContainer) {
                     var lockContainer = this.$$("#lockContainer");
-                    var bottomPosition = this._hasHorizontalScrollBar() ? this._calcHorizontalScrollBarHeight() : 0;
+                    var bottomPosition = this._calcHorizontalScrollBarHeight();
                     if (this.visibleRowCount > 0) {
                         var rowCount = this.visibleRowCount + (this.scrollable ? this._totalsRowCount : 0);
                         scrollContainer.style.maxHeight = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px)";
@@ -671,27 +730,26 @@
                     }
                     if (lockContainer) {
                         lockContainer.style.bottom = bottomPosition + "px";
-                        lockContainer.style.right = this._hasVerticalScrollBar() ? this._calcVerticalScrollBarWidth() + "px" : "0px";
+                        lockContainer.style.right = this._calcVerticalScrollBarWidth() + "px";
                     }
+                    this._updateShadows();
                 }
             },
 
-            _hasVerticalScrollBar: function () {
+            _updateShadows: function () {
                 var scrollContainer = this.$$("#scrollContainer");
-                return scrollContainer ? scrollContainer.scrollHeight > scrollContainer.clientHeight : false;
+                var lockContainer = this.$$("#lockContainer");
+                if (scrollContainer && lockContainer) {
+                    this._showLeftShadow = scrollContainer.scrollLeft !== 0;
+                    this._showRightShadow = (scrollContainer.clientWidth + scrollContainer.scrollLeft) !== scrollContainer.scrollWidth;
+                    this._showTopShadow = scrollContainer.scrollTop !== 0;
+                    this._showBottomShadow = (scrollContainer.clientHeight + scrollContainer.scrollTop) !== scrollContainer.scrollHeight;
+                }
             },
 
             _calcVerticalScrollBarWidth: function () {
                 var scrollContainer = this.$$("#scrollContainer");
                 return scrollContainer ? scrollContainer.offsetWidth - scrollContainer.clientWidth : 0;
-            },
-
-            /**
-             * Determines whether horizontal scroll bar is visible or not.
-             */
-            _hasHorizontalScrollBar: function () {
-                var scrollContainer = this.$$("#scrollContainer");
-                return scrollContainer ? scrollContainer.scrollWidth > scrollContainer.clientWidth : false;
             },
 
             /**
@@ -707,44 +765,12 @@
              */
             _handleScrollEvent: function () {
                 if (this.scrollable) {
-                    this._updateTopAndBottomPanels();
-                    this._updateLeftAndRightPanels();
+                    var scrollContainer = this.$$("#scrollContainer");
+                    this._scrollLeft = scrollContainer.scrollLeft;
+                    this._scrollTop = scrollContainer.scrollTop;
+                    this._updateShadows();
                 }
             },
-
-            _updateLeftAndRightPanels: function () {
-                var scrollContainer = this.$$("#scrollContainer");
-                var scrollInc = scrollContainer ? scrollContainer.scrollTop : 0;
-                var leftLockPanel = this.$$("#leftLockPanel");
-                var rightLockPanel = this.$$("#rightLockPanel");
-                if (leftLockPanel) {
-                    leftLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
-                    leftLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
-                }
-                if (rightLockPanel) {
-                    rightLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
-                    rightLockPanel.style.top = "calc(3rem - " + scrollInc + "px)";
-                }
-            },
-
-            _updateTopAndBottomPanels: function () {
-                var scrollContainer = this.$$("#scrollContainer");
-                var scrollInc = scrollContainer ? scrollContainer.scrollLeft : 0;
-                var topLockPanel = this.$$("#topLockPanel");
-                var bottomLockPanel = this.$$("#bottomLockPanel");
-                var checkboxWidth = this._calculateCheckboxWidth(this.checkboxVisible);
-                var primaryActionWidth = this._calculatePrimaryActionWidth(this.primaryAction);
-                var secondaryActionWidth = this._calculateSecondaryActionWidth(this.secondaryActions);
-                if (topLockPanel) {
-                    topLockPanel.style.left = "calc(" + checkboxWidth + " + " + primaryActionWidth + " - " + scrollInc + "px)";
-                    topLockPanel.style.right = "calc(" + secondaryActionWidth + " + " + scrollInc + "px)";
-                }
-                if (bottomLockPanel) {
-                    bottomLockPanel.style.left = "calc(" + checkboxWidth + " + " + primaryActionWidth + " - " + scrollInc + "px)";
-                    bottomLockPanel.style.right = "calc(" + secondaryActionWidth + " + " + scrollInc + "px)";
-                }
-            },
-            /////////////////end of scrolling and resizing event handlers
 
             /**
              * Calculates the height of the scrollcontainer.
@@ -1059,16 +1085,20 @@
             /**
              * Below are function related to lock panels position calculation logic.
              */
-            _calculateLeftLockPanelPosition: function () {
-                return "left:0;top:3rem";
+            _calculateLeftLockPanelStyle: function (_showLeftShadow, _scrollTop) {
+                return "left:0;top:calc(3rem - " + _scrollTop + "px)" + (_showLeftShadow ? ";box-shadow: 3px 0px 6px -2px rgba(0,0,0,0.7);" : "");
             },
 
-            _calculateTopLockPanelPosition: function (checkboxVisible, primaryAction, secondaryActions) {
-                return "top:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible) + " + " + this._calculatePrimaryActionWidth(primaryAction) + ");right:calc(" + this._calculateSecondaryActionWidth(secondaryActions) + ")";
+            _calculateRightLockPanelStyle: function (_showRightShadow, _scrollTop) {
+                return "right:0;top:calc(3rem - " + _scrollTop + "px)" + (_showRightShadow ? ";box-shadow: -3px 0px 6px -2px rgba(0,0,0,0.7);" : "");
             },
 
-            _calculateBottomLockPanelPosition: function (checkboxVisible, primaryAction, secondaryActions) {
-                return "bottom:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible) + " + " + this._calculatePrimaryActionWidth(primaryAction) + ");right:calc(" + this._calculateSecondaryActionWidth(secondaryActions) + ")";
+            _calculateTopLockPanelStyle: function (checkboxVisible, primaryAction, secondaryActions, _scrollLeft) {
+                return "top:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible) + " + " + this._calculatePrimaryActionWidth(primaryAction) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions) + " + " + _scrollLeft + "px)";
+            },
+
+            _calculateBottomLockPanelStyle: function (checkboxVisible, primaryAction, secondaryActions, _scrollLeft) {
+                return "bottom:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible) + " + " + this._calculatePrimaryActionWidth(primaryAction) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions) + " + " + _scrollLeft + "px)";
             },
 
             _calculateCheckboxWidth: function (checkboxVisible) {
@@ -1083,9 +1113,6 @@
                 return this._isSecondaryActionsPresent(secondaryActions) ? "40px + 1.2rem" : "0px";
             },
 
-            _calculateRightPanlePosition: function () {
-                return "right:0;top:3rem"
-            },
             /**
              * Determines whether totals button is enable or disabled (only in card layout mode).
              */
@@ -1281,6 +1308,25 @@
                 }
                 this.openedEntities = [];
             },
+            /*
+             * Below are functions those are related to shadow style calculation.
+             */
+            _calcBottomShadowStyle: function (_totalsRowCount, _showBottomShadow) {
+                var shadowStyle = "left:0;right:0;bottom:0;";
+                shadowStyle += "height:calc(1.5rem * " + _totalsRowCount + " + " + _totalsRowCount + "px);";
+                if (_showBottomShadow) {
+                    shadowStyle += "box-shadow: 0px -3px 6px -2px rgba(0,0,0,0.7);";
+                }
+                return shadowStyle;
+            },
+
+            _calcTopShadowStyle: function (_showTopShadow) {
+                var shadowStyle = "left:0;right:0;top:0;height:3rem;";
+                if (_showTopShadow) {
+                    shadowStyle += "box-shadow: 0px 3px 6px -2px rgba(0,0,0,0.7);";
+                }
+                return shadowStyle;
+            }
         })
     })()
 </script>
