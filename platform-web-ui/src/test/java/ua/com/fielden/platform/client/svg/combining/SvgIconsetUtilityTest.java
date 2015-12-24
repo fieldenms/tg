@@ -70,6 +70,8 @@ public class SvgIconsetUtilityTest {
         final String srcFolder = "src/test/resources/icons";
         final IronIconsetUtility iconsetUtility = new IronIconsetUtility("testName", 1000, srcFolder);
         final String outputFile = "src/test/resources/fileNotForWriting.html";
+        final File readOnly = new File(outputFile);
+        readOnly.setReadOnly();
 
         try {
             iconsetUtility.createSvgIconset(outputFile);
