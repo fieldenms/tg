@@ -872,7 +872,7 @@
                 return value;
             } else if (typeof value === "string") { // for string value -- return the same value for editors
                 return value;
-            } else if (value.constructor === Array) { // for Array value -- return the same value for tg-entity-search-criteria editor
+            } else if (value.constructor === Array) { // for Array value -- return the same value for tg-entity-search-criteria editor (and tg-collectional-representor)
                 return value;
             } else if ( typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 
                 return value;
