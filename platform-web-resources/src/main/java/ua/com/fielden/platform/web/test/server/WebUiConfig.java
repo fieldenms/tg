@@ -40,6 +40,7 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties1
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4;
+import ua.com.fielden.platform.sample.domain.MiUser;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
@@ -169,6 +170,25 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     centre.getSecondTick().setWidth(TgEntityWithPropertyDependency.class, "dependentProp", 60);
                     return centre;
                 });
+        
+        final EntityCentre<User> userCentre = new EntityCentre<>(MiUser.class, "Users",
+                EntityCentreBuilder.centreFor(User.class)
+                .runAutomatically()
+                .addCrit("base").asMulti().bool().also()
+                .addCrit("basedOnUser").asMulti().autocompleter(User.class)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
+
+                .addProp("this").also()
+                .addProp("base").also()
+                .addProp("basedOnUser")
+                .addPrimaryAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
+                .build(), injector(), (centre) -> {
+                    // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
+                    centre.getSecondTick().setWidth(User.class, "", 60);
+                    centre.getSecondTick().setWidth(User.class, "base", 60);
+                    centre.getSecondTick().setWidth(User.class, "basedOnUser", 60);
+                    return centre;
+                });
 
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, true, false));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(false, false, false));
@@ -183,6 +203,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().addCentre(MiTgPersistentEntityWithProperties4.class, entityCentre4);
         configApp().addCentre(MiDetailsCentre.class, detailsCentre);
         configApp().addCentre(MiTgEntityWithPropertyDependency.class, propDependencyCentre);
+        configApp().addCentre(MiUser.class, userCentre);
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);
@@ -659,6 +680,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .menu()
                 .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
                 .addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
+                .addMenuItem("Users").description("User centre").centre(userCentre).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")

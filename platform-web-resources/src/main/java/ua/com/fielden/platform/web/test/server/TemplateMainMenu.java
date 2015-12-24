@@ -13,6 +13,7 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties1
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4;
+import ua.com.fielden.platform.sample.domain.MiUser;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
@@ -38,6 +39,7 @@ public class TemplateMainMenu implements IMainMenuStructureBuilder {
                 .push(MiTgPersistentEntityWithProperties4.class.getName())
                 .push(MiDetailsCentre.class.getName())
                 .push(MiTgEntityWithPropertyDependency.class.getName())
+                .push(MiUser.class.getName())
                 .push(MiTgFetchProviderTestEntity.class.getName())
                 .pop();
     }
