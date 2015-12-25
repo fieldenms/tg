@@ -30,16 +30,8 @@ public class IronIconsetUtility {
 
     public void createSvgIconset(final String outputFile) throws IOException {
         try (OutputStream outputStream = new FileOutputStream(outputFile)) {
-            writeAllFilesContent(outputStream, joinFilesContent());
-            System.out.println("Iron-iconset-svg creation is complete!");
-        } catch (final IOException e) {
-            throw new IOException();
+            outputStream.write(joinFilesContent().getBytes(Charsets.UTF_8));
         }
-    }
-
-    private OutputStream writeAllFilesContent(final OutputStream outputStream, final String filesContent) throws IOException {
-        outputStream.write((filesContent).getBytes(Charsets.UTF_8));
-        return outputStream;
     }
 
     public String joinFilesContent() throws IOException {
