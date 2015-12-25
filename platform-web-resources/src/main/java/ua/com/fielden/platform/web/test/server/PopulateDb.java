@@ -160,6 +160,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
         mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));
         save(mainMenu);
+        
+        save(new_(UserRole.class, "STATION_MGR", "A role, which has access to the the station managing functionality."));
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);

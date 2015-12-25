@@ -580,7 +580,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
         
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
-                        + format("[[%s], [%s], ['flex']],", fmr, fmr)
+                        + format("[[%s], ['flex']],", fmr)
+                        + format("[['flex']],")
                         + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .done();

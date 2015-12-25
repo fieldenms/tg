@@ -21,7 +21,9 @@
     		_on-change="[[_onChange]]"
     		_on-input="[[_onInput]]"
     		_on-keydown="[[_onKeydown]]"
-        	current-state="[[currentState]]">
+        	current-state="[[currentState]]"
+        	entities="[[_entities]]"
+        	selected-entities="{{_selectedEntities}}">
         	<content class=".property-action"></content>
     	</tg-editor>
     </template>
@@ -38,17 +40,34 @@
     	     */
     	    chosenNumbersPropertyName: {
     	        type: String
-    	    }
+    	    },
+    	    
+    	    _entities: Array,
+    	    _selectedEntities: Array
     	},
     	
     	ready: function () {
-    		this.$.editorDom._editorKind = "SINGLELINE_TEXT";
+    		this.$.editorDom._editorKind = "COLLECTIONAL";
+    		
+    		// this._entities = [ { key: 'KEY1' }, { key: 'KEY2' } ];
+    		// this._selectedEntities = [ { key: 'KEY2' } ];
     	},
     	
         /**
          * This method promotes 'IRRELEVANT' into _editingValue which should not be a problem, since this 'editor' edits entity property (with name 'chosenNumbersPropertyName') directly.
          */
         convertToString: function (value) {
+            this._entities = value;
+            
+            var chosenNumbers = this.entity.get(this.chosenNumbersPropertyName);
+            
+            var selEntities = [];
+            
+            for (var i = 0; i < chosenNumbers.length; i++ ) {
+                console.log('chosenNumbers[i] ', chosenNumbers[i]);
+                selEntities.push(this._entities[chosenNumbers[i]]);
+            }
+            this._selectedEntities = selEntities;
             return 'IRRELEVANT';
         },
 

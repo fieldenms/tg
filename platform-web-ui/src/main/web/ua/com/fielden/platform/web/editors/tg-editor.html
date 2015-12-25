@@ -7,6 +7,7 @@
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-list/iron-list.html">
 <link rel="import" href="/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html">
 
 <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
@@ -43,6 +44,63 @@
         #input-container {
             @apply(--layout-flex);
         }
+        
+        .coll-editor {
+        	height: 12.8rem;
+        }
+        
+        /* TODO the following methods to be moved outside tg-editor: */
+        .item {
+            @apply(--layout-horizontal);
+            cursor: pointer;
+            padding: 16px 22px;
+            border-bottom: 1px solid #DDD;
+        }
+        
+        .item:hover {
+            background-color: var(--google-grey-100);
+        }
+        
+        .item:focus,
+        .item.selected:focus {
+            outline: 0;
+        }
+        
+        .item.selected .star {
+            color: var(--paper-blue-600);
+        }
+        .item.selected {
+            background-color: var(--google-grey-100);
+        }
+        
+        .avatar {
+            height: 40px;
+            width: 40px;
+            border-radius: 20px;
+            box-sizing: border-box;
+            background-color: #DDD;
+        }
+        
+        .pad {
+            @apply(--layout-flex);
+            @apply(--layout-vertical);
+            padding: 0 16px;
+        }
+        .primary {
+            font-size: 16px;
+        }
+        .secondary {
+            font-size: 14px;
+        }
+        .dim {
+            color: gray;
+        }
+        .star {
+            width: 24px;
+            height: 24px;
+        }
+        /* TODO the following methods to be moved outside tg-editor [END] */
+        
         /* Styles for boolean property editors. */
         paper-checkbox {
             -moz-user-select: none;
@@ -181,6 +239,26 @@
 
                     <input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
 
+                    <iron-list id="input" class="coll-editor" hidden$="[[!_isCollectional(_editorKind)]]" disabled$="[[_disabled]]" items="[[entities]]" selected-items="{{selectedEntities}}" selection-enabled multi-selection>
+                        <template>
+                            <div>
+				              <div tabindex="0" class$="[[_computedClass(selected)]]"> <!-- aria-label$="[[_getAriaLabel(item, selected)]]"  -->
+				                <!-- <img class="avatar" src="[[item.image]]"> -->
+				                <div class="pad">
+				                  <div class="primary">
+				                    [[item.key]]
+				                  </div>
+				                  <div class="secondary dim">[[item.desc]]</div>
+				                </div>
+				                <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
+				              </div>
+				              <div class="border"></div>
+				            </div>
+    					</template>
+                    </iron-list>
+                    
+                    <!-- bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown"  -->
+
                     <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
                         <!--  flex -->
                         <textarea id="input" disabled$="[[_disabled]]"></textarea>
@@ -246,9 +324,15 @@
             _maxLength: Number,
             _autocompleterBlurEventHandler: Function,
             _calcColourTextStyle : Function,
-            currentState: String
+            currentState: String,
+    	    entities: Array,
+    	    selectedEntities: {
+    	        type: Array,
+                notify: true,
+                observer: '_selectedEntitiesChanged'
+    	    }
         },
-
+        
         _isDecimal: function (editorKind) {
             return 'DECIMAL' === editorKind;
         },
@@ -309,6 +393,10 @@
             return editingValue === 'true';
         },
         
+        _isCollectional: function (editorKind) {
+            return "COLLECTIONAL" === editorKind;
+        },
+        
         /**
          * The observer to the '_disabled' property, which maintains appropriately the class list of the decorator (regarding the class 'decorator-disabled').
          */
@@ -319,6 +407,24 @@
         		this.$.decorator.classList.remove("decorator-disabled");
         	}
             this.updateStyles();
+        },
+        
+        // TODO the following methods to be moved outside tg-editor:
+        _computedClass: function (isSelected) {
+            var classes = 'item';
+            if (isSelected) {
+              classes += ' selected';
+            }
+            return classes;
+        },
+        
+        iconForItem: function (isSelected) {
+            return isSelected ? 'star' : 'star-border';
+        },
+        
+        _selectedEntitiesChanged: function (newValue, oldValue) {
+            console.log("_selectedEntitiesChanged: ", newValue, oldValue);
         }
+        // TODO the following methods to be moved outside tg-editor [END]
     });
 </script>
