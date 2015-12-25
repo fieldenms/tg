@@ -10,12 +10,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.asm5.ClassReader;
 import org.kohsuke.asm5.ClassWriter;
 
-import ua.com.fielden.platform.classloader.TgSystemClassLoader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.utils.Pair;
@@ -31,10 +31,14 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class DynamicEntityClassLoader extends ClassLoader {
 
-    private final Map<String, Pair<Class<?>, byte[]>> cache = new HashMap<String, Pair<Class<?>, byte[]>>();
+    private final Map<String, Pair<Class<?>, byte[]>> cache = new ConcurrentHashMap<>(512);
     private final DynamicTypeNamingService namingService;
 
     private static DynamicEntityClassLoader instance;
+
+    private byte[] currentType;
+    private String currentName;
+
     
     public static DynamicEntityClassLoader getInstance(final ClassLoader parent) {
         if (instance == null) {
@@ -45,14 +49,8 @@ public class DynamicEntityClassLoader extends ClassLoader {
     
     private DynamicEntityClassLoader(final ClassLoader parent) {
         super(parent);
-        if (parent instanceof TgSystemClassLoader) {
-            ((TgSystemClassLoader) parent).register(this);
-        }
         this.namingService = new DynamicTypeNamingService();
     }
-
-    private byte[] currentType;
-    private String currentName;
 
     /**
      * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
@@ -71,8 +69,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
             currentName = typeName;
         } else {
             final String resource = typeName.replace('.', '/') + ".class";
-            final InputStream is = getResourceAsStream(resource);
-            try {
+            try (final InputStream is = getResourceAsStream(resource)) {
                 final ClassReader cr = new ClassReader(is);
                 final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
                 final DoNothingAdapter cv = new DoNothingAdapter(cw);
@@ -310,6 +307,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
      * @param type
      * @return
      */
+    @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity<?>> Class<T> getOriginalType(final Class<?> type) {
         final String typeName = type.getName();
         if (isEnhanced(type)) {
