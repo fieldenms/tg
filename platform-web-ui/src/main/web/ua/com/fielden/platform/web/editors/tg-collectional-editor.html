@@ -1,0 +1,62 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+
+<dom-module id="tg-collectional-editor">
+    <style>
+    </style>
+
+    <template>
+    	<tg-editor 
+    		id="editorDom" 
+    		prop-title="[[propTitle]]"
+    		_disabled="[[_disabled]]" 
+    		_editing-value="{{_editingValue}}" 
+    		action="[[action]]" 
+    		_error="[[_error]]" 
+    		_comm-value="[[_commValue]]" 
+    		_accepted-value="[[_acceptedValue]]" 
+    		debug="[[debug]]" 
+    		_on-change="[[_onChange]]"
+    		_on-input="[[_onInput]]"
+    		_on-keydown="[[_onKeydown]]"
+        	current-state="[[currentState]]">
+        	<content class=".property-action"></content>
+    	</tg-editor>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+    	is: 'tg-collectional-editor',
+    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+    	
+    	properties: {
+    	    /**
+    	     * TODO docs
+    	     */
+    	    chosenNumbersPropertyName: {
+    	        type: String
+    	    }
+    	},
+    	
+    	ready: function () {
+    		this.$.editorDom._editorKind = "SINGLELINE_TEXT";
+    	},
+    	
+        /**
+         * This method promotes 'IRRELEVANT' into _editingValue which should not be a problem, since this 'editor' edits entity property (with name 'chosenNumbersPropertyName') directly.
+         */
+        convertToString: function (value) {
+            return 'IRRELEVANT';
+        },
+
+        /**
+         * This method promotes 'IRRELEVANT' into _acceptedValue which should not be a problem, since this 'representor' is not editable at all.
+         */
+        convertFromString: function (strValue) {
+            return 'IRRELEVANT';
+        }
+    });
+</script>

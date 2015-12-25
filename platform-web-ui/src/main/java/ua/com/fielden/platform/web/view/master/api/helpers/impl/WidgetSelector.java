@@ -9,6 +9,7 @@ import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.widgets.IAutocompleterConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ICheckboxConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.ICollectionalEditorConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ICollectionalRepresentorConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IColourConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDatePickerConfig;
@@ -25,12 +26,14 @@ import ua.com.fielden.platform.web.view.master.api.widgets.ISpinnerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ITimePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.EntityAutocompletionWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.checkbox.impl.CheckboxWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalEditorWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalRepresentorWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.colour.impl.ColourWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.CheckboxConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.CollectionalEditorConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.CollectionalRepresentorConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.ColourConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DateTimePickerConfig;
@@ -86,6 +89,12 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
     public ICollectionalRepresentorConfig<T> asCollectionalRepresentor() {
         widget = new CollectionalRepresentorWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new CollectionalRepresentorConfig<>((CollectionalRepresentorWidget) widget, smBuilder);
+    }
+    
+    @Override
+    public ICollectionalEditorConfig<T> asCollectionalEditor(final String chosenNumbersPropertyName) {
+        widget = new CollectionalEditorWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName, chosenNumbersPropertyName);
+        return new CollectionalEditorConfig<>((CollectionalEditorWidget) widget, smBuilder);
     }
 
     @Override

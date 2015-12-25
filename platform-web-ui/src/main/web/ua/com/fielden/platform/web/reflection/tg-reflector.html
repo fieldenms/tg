@@ -872,6 +872,7 @@
                 return value;
             } else if (typeof value === "string") { // for string value -- return the same value for editors
                 return value;
+            // TODO implement conversion logic for Array of entities, which should convert to array of keys
             } else if (value.constructor === Array) { // for Array value -- return the same value for tg-entity-search-criteria editor (and tg-collectional-representor)
                 return value;
             } else if ( typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 

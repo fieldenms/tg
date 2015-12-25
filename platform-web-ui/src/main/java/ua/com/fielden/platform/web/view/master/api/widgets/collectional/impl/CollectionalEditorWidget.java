@@ -19,14 +19,14 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  * @author TG Team
  *
  */
-public class CollectionalWidget extends AbstractWidget {
+public class CollectionalEditorWidget extends AbstractWidget {
     /**
      * The name of 'chosenNumbers' property, that represents the container with ordered list of chosen entity numbers, which corresponds to 
      * list of all entities, that reside in propertyName'd property.
      */
     private final String chosenNumbersPropertyName;
 
-    public CollectionalWidget(final Pair<String, String> titleAndDesc, final String propertyName, final String chosenNumbersPropertyName) {
+    public CollectionalEditorWidget(final Pair<String, String> titleAndDesc, final String propertyName, final String chosenNumbersPropertyName) {
         super("editors/tg-collectional-editor", titleAndDesc, propertyName);
         this.chosenNumbersPropertyName = chosenNumbersPropertyName;
     }

@@ -12,6 +12,7 @@ import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
 /**
@@ -35,7 +36,7 @@ public class TgUpdateRolesActionProducer extends DefaultEntityProducerWithContex
         if (getCentreContext() != null) {
             entity.setContext(getCentreContext());
 
-            final TgEntityWithPropertyDependency me = (TgEntityWithPropertyDependency) entity.getContext().getMasterEntity();
+            final User me = (User) entity.getContext().getMasterEntity();
             if (me.isDirty()) {
                 throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
             }

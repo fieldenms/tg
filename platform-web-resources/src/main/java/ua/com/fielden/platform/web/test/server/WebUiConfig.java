@@ -567,6 +567,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("chosenRoleNumbers").asSinglelineText()
                 .also()
+                .addProp("roles").asCollectionalEditor("chosenRoleNumbers")
+                .also()
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
                 /*      */.shortDesc("CANCEL")
@@ -578,7 +580,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
-                        + format("[[%s], ['flex']],", fmr)
+                        + format("[[%s], [%s], ['flex']],", fmr, fmr)
                         + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .done();
