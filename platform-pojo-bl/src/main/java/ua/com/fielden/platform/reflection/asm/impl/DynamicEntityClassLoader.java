@@ -18,7 +18,6 @@ import org.kohsuke.asm5.ClassWriter;
 import ua.com.fielden.platform.classloader.TgSystemClassLoader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -35,7 +34,16 @@ public class DynamicEntityClassLoader extends ClassLoader {
     private final Map<String, Pair<Class<?>, byte[]>> cache = new HashMap<String, Pair<Class<?>, byte[]>>();
     private final DynamicTypeNamingService namingService;
 
-    public DynamicEntityClassLoader(final ClassLoader parent) {
+    private static DynamicEntityClassLoader instance;
+    
+    public static DynamicEntityClassLoader getInstance(final ClassLoader parent) {
+        if (instance == null) {
+            instance = new DynamicEntityClassLoader(parent); 
+        }
+        return instance;
+    }
+    
+    private DynamicEntityClassLoader(final ClassLoader parent) {
         super(parent);
         if (parent instanceof TgSystemClassLoader) {
             ((TgSystemClassLoader) parent).register(this);
@@ -255,11 +263,28 @@ public class DynamicEntityClassLoader extends ClassLoader {
     }
 
     public Class<?> defineClass(final byte[] currentType) {
+        // let's find out whether currentType has already been loaded
+        // if it is then simply return the previously cached class
+        final String typeName = readClassName(currentType);
+        if (cache.containsKey(typeName)) {
+            return cache.get(typeName).getKey();
+        }
+
+        // the class was not yet loaded, so it needs to be loaded and cached to later reuse
         final Class<?> klass = defineClass(null, currentType, 0, currentType.length);
         cache.put(klass.getName(), new Pair<Class<?>, byte[]>(klass, currentType));
         return klass;
     }
-
+    
+    /**
+     * Obtains the class name from the passed in type as byte array.
+     * @param currentType
+     * @return
+     */
+    public String readClassName(final byte[] currentType) {
+        return new ClassReader(currentType).getClassName().replace("/", ".");
+    }
+    
     private boolean skipAdaptation(final String name) {
         return name.startsWith("java.");
     }
@@ -310,15 +335,4 @@ public class DynamicEntityClassLoader extends ClassLoader {
     public byte[] getCachedByteArray(final String name) {
         return cache.containsKey(name) ? cache.get(name).getValue() : null;
     }
-
-    public static void main(final String[] args) throws ClassNotFoundException {
-        final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(getSystemClassLoader());
-
-        cl.startModification(TgVehicle.class.getName());
-        cl.modifyTypeName(TgVehicle.class.getName() + "_enhanced");
-        cl.endModification();
-
-        System.out.println(cl.findClass(TgVehicle.class.getName() + "_enhanced"));
-    }
-
 }

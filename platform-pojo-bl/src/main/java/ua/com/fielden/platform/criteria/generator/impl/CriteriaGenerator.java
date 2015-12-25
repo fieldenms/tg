@@ -113,7 +113,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                         newProperties.addAll(generateCriteriaProperties(root, cdtme.getEnhancer(), propertyName));
                     }
                 }
-                final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+                final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
 
                 queryCriteriaClass = (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) cl.startModification(entityClass.getName()).addClassAnnotations(customAnnotations).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
                 generatedClasses.put(cdtme, queryCriteriaClass);

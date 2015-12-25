@@ -71,7 +71,7 @@ public class QueryForDynamicEntityTypeSerialisationTest {
     @Before
     public void setUp() {
         observed = false;
-        cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
     }
 
     @Test
