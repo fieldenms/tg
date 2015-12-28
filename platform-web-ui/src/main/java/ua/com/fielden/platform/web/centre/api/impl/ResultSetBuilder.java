@@ -38,6 +38,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9Render
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
@@ -376,7 +378,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilder1bPageCapacity<T> notScrollable() {
-        this.builder.notScrollable = true;
+        this.builder.scrollConfig = ScrollConfig.configScroll()
+                .withFixedCheckboxesAndPrimaryActions()
+                .withFixedSecondaryActions()
+                .withFixedHeader()
+                .withFixedSummary()
+                .done();
         return this;
     }
 
@@ -389,6 +396,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder2Properties<T> setVisibleRowsCount(final int visibleRowsCount) {
         this.builder.visibleRowsCount = visibleRowsCount;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1bPageCapacity<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+        this.builder.scrollConfig = scrollConfig;
         return this;
     }
 }

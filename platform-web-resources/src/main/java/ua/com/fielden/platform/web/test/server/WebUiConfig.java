@@ -1024,7 +1024,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 //.hideCheckboxes()
-                //.notScrollable()
+                .notScrollable()
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
                 .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())

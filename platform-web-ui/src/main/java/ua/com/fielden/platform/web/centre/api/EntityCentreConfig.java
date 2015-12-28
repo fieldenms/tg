@@ -29,6 +29,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -46,7 +47,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     private final boolean hideCheckboxes;
     private final boolean hideToolbar;
-    private final boolean notScrollable;
+    private final IScrollConfig scrollConfig;
     private final int pageCapacity;
     private final int visibleRowsCount;
 
@@ -285,7 +286,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     public EntityCentreConfig(
             final boolean hideCheckboxes,
             final boolean hideToolbar,
-            final boolean notScrollable,
+            final IScrollConfig scrollConfig,
             final int pageCapacity,
             final int visibleRowsCount,
 
@@ -343,7 +344,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final IFetchProvider<T> fetchProvider) {
         this.hideCheckboxes = hideCheckboxes;
         this.hideToolbar = hideToolbar;
-        this.notScrollable = notScrollable;
+        this.scrollConfig = scrollConfig;
         this.pageCapacity = pageCapacity;
         this.visibleRowsCount = visibleRowsCount;
 
@@ -690,8 +691,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return hideToolbar;
     }
 
-    public boolean isScrollable() {
-        return !notScrollable;
+    public IScrollConfig getScrollConfig() {
+        return scrollConfig;
     }
 
     public int getPageCapacity() {

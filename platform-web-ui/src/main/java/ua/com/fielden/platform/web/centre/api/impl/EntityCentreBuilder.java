@@ -31,6 +31,8 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
+import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollConfig;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
@@ -54,7 +56,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     protected boolean hideCheckboxes = false;
     protected boolean hideToolbar = false;
-    protected boolean notScrollable = false;
+    protected IScrollConfig scrollConfig = ScrollConfig.configScroll().done();
     protected int pageCapacity = 30;
     protected int visibleRowsCount = 0;
 
@@ -152,7 +154,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
         return new EntityCentreConfig<T>(
         		hideCheckboxes,
         		hideToolbar,
-                notScrollable,
+                scrollConfig,
                 pageCapacity,
                 visibleRowsCount,
                 topLevelActions,
