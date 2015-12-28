@@ -155,13 +155,15 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_preconditions() {
         try {
-            cl.addProperties(pd1).endModification();
+            final TypeMaker tp = new TypeMaker(cl);
+            tp.addProperties(pd1).endModification();
             fail("An exception should have been thrown due to omitted startModification call.");
         } catch (final Exception e) {
         }
 
         try {
-            cl.endModification();
+            final TypeMaker tp = new TypeMaker(cl);
+            tp.endModification();
             fail("An exception should have been thrown due to omitted startModification call.");
         } catch (final Exception e) {
         }

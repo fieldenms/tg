@@ -81,7 +81,8 @@ public class DynamicEntityTypeModificationTest {
         // specify what property of what owning type should be replaced with the enhanced entity type
         final NewProperty mp = NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType);
         try {
-            cl.modifyProperties(mp).endModification();
+            final TypeMaker tp = new TypeMaker(cl);
+            tp.modifyProperties(mp).endModification();
             fail("An exception should have been thrown due to omitted startModification call.");
         } catch (final Exception e) {
         }
