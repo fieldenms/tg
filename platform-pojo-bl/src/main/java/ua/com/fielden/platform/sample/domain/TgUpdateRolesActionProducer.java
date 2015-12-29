@@ -47,7 +47,7 @@ public class TgUpdateRolesActionProducer extends DefaultEntityProducerWithContex
             
             final Set<Long> chosenRoleIds = new LinkedHashSet<>();
             chosenRoleIds.add(64L);
-            chosenRoleIds.add(2L);
+            // chosenRoleIds.add(2L);
             entity.setChosenRoleIds(chosenRoleIds);
         }
         

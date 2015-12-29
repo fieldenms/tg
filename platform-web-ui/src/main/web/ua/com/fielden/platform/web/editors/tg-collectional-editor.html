@@ -79,11 +79,9 @@
             _on-change="[[_onChange]]"
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]"
-            current-state="[[currentState]]"
-            entities="[[_entities]]"
-            selected-entities="[[_selectedEntities]]">
+            current-state="[[currentState]]">
             <!-- <content class=".property-action"></content> -->
-            <iron-list id="input" class="coll-editor custom-input" items="[[_entities]]" selection-enabled multi-selection>
+            <iron-list id="input" class="coll-editor custom-input" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]" >
                       <div tabindex="0" class$="[[_computedClass(selected)]]"> <!-- aria-label$="[[_getAriaLabel(item, selected)]]"  -->
@@ -129,12 +127,26 @@
                 type: String
             },
             
-            _entities: Array,
+            _entities: {
+                type: Array
+            },
             _selectedEntities: {
-                type: Array,
-                observer: '_selectedEntitiesChanged'
+                type: Array
+            },
+            
+            _disableSelectionListeners: {
+                type: Boolean,
+                value: false
+            },
+            
+            _originalChosenIds: {
+                type: Array
             }
         },
+        
+        observers: [
+            '_selectedEntitiesAddedOrRemoved(_selectedEntities.splices)'
+        ],
         
         ready: function () {
             this.$.editorDom._editorKind = "COLLECTIONAL";
@@ -149,13 +161,22 @@
             var selEntities = [];
             var chosenIds = this.entity.get(this.chosenIdsPropertyName);
             
+            this._originalChosenIds = [];
+            
             for (var index = 0; index < chosenIds.length; index++) {
                 selEntities.push(this._find(this._entities, chosenIds[index]) );
+                this._originalChosenIds.push(chosenIds[index]);
             }
             
             console.log('SELECTED ENTITIES', selEntities);
-            this._selectedEntities = selEntities;
+
+            this._disableSelectionListeners = true;
+            this.$.input.clearSelection();
             
+            for (var index = 0; index < selEntities.length; index++) {
+                this.$.input.selectItem(selEntities[index]);
+            }
+            this._disableSelectionListeners = false;
             return 'IRRELEVANT';
         },
         
@@ -172,9 +193,6 @@
          * This method promotes 'IRRELEVANT' into _acceptedValue which should not be a problem, since this 'representor' is not editable at all.
          */
         convertFromString: function (strValue) {
-            this.entity.set(this.chosenIdsPropertyName, [ 2 ] );
-            this.entity.set(this.addedIdsPropertyName, [] );
-            this.entity.set(this.removedIdsPropertyName, [ 2 ] );
             this.entity.set(this.propertyName, null);
             
             return 'IRRELEVANT';
@@ -200,12 +218,69 @@
             return isSelected ? 'star' : 'star-border';
         },
         
-        _selectedEntitiesChanged: function (selectedEntities, oldValue) {
-            console.log("_selectedEntitiesChanged: ", selectedEntities, oldValue);
-            this.$.input.clearSelection();
-            
-            for (var index = 0; index < selectedEntities.length; index++) {
-                this.$.input.selectItem(selectedEntities[index]);
+        _selectedEntitiesAddedOrRemoved: function (changeRecord) {
+            // this.entity.set(this.chosenIdsPropertyName, [ 2 ] );
+            // this.entity.set(this.addedIdsPropertyName, [] );
+            // this.entity.set(this.removedIdsPropertyName, [ 2 ] );
+
+            if (changeRecord && this.entity && this._disableSelectionListeners === false) {
+                var chosenIds = this.entity.get(this.chosenIdsPropertyName);
+                var addedIds = this.entity.get(this.addedIdsPropertyName);
+                var removedIds = this.entity.get(this.removedIdsPropertyName);
+                
+                console.log('_selectedEntitiesAddedOrRemoved: chosenIds = ', chosenIds, ' addedIds = ', addedIds, ' removedIds = ', removedIds);
+                
+	            changeRecord.indexSplices.forEach(function (s) {
+	                s.removed.forEach(function (removed) {
+	                    console.log(removed.key + ' was removed');
+	                    
+	                    if (removedIds.indexOf(removed.id) > -1) {
+	                        throw 'Cannot remove ' + removed.id + ' again (removedIds = ' + removedIds + ').';
+	                    } else {
+	                        var foundId = addedIds.indexOf(removed.id);
+	                        if (foundId > -1) {
+	                            addedIds.splice(foundId, 1);
+	                        } else {
+	                            removedIds.push(removed.id);
+	                        }
+	                        
+	                        var foundInChosenIds = chosenIds.indexOf(removed.id);
+	                        if (foundInChosenIds > -1) {
+	                            chosenIds.splice(foundInChosenIds, 1);
+	                        } else {
+	                            throw 'Cannot remove ' + removed.id + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
+	                        }
+	                    }
+	                });
+	                
+	                for (var i = s.index; i < s.index + s.addedCount; i++) {
+	                    var added = this._selectedEntities[i];
+	                    console.log(added.key + ' was added');
+	                    
+	                    if (addedIds.indexOf(added.id) > -1) {
+	                        throw 'Cannot add ' + added.id + ' again (addedIds = ' + addedIds + ').';
+	                    } else {
+	                        var foundId = removedIds.indexOf(added.id);
+	                        if (foundId > -1) {
+	                            removedIds.splice(foundId, 1);
+	                        } 
+	                        
+	                        var foundInChosenIds = chosenIds.indexOf(added.id);
+	                        if (foundInChosenIds > -1) {
+	                            throw 'Cannot add ' + added.id + ' which is chosen already (chosenIds = ' + chosenIds + ').';
+	                        }
+                            
+                            chosenIds.push(added.id);
+                            if (this._originalChosenIds.indexOf(added.id) <= -1) {
+                                addedIds.push(added.id);
+                            }
+	                    }
+	                }
+	                
+	                console.log('_selectedEntitiesAddedOrRemoved [POST]: chosenIds = ', chosenIds, ' addedIds = ', addedIds, ' removedIds = ', removedIds);
+	            }, this);
+            } else {
+                console.log('						_selectedEntitiesAddedOrRemoved: undefined changeRecord');
             }
         }
     });
