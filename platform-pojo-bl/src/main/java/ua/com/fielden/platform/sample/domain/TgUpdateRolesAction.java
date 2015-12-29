@@ -2,11 +2,12 @@ package ua.com.fielden.platform.sample.domain;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -31,19 +32,34 @@ public class TgUpdateRolesAction extends AbstractFunctionalEntityWithCentreConte
     @Title(value = "A list of applicable roles", desc = "A list of applicable roles")
     private Set<UserRole> roles = new LinkedHashSet<UserRole>();
     
-    @IsProperty(Integer.class)
+    @IsProperty(Long.class) // TODO investigate the type parameter 
     @Title(value = "Chosen roles", desc = "Chosen role numbers")
-    private Set<Integer> chosenRoleNumbers = new LinkedHashSet<Integer>();
+    private Map<Long, Boolean> chosenRoleIds = new LinkedHashMap<Long, Boolean>();
+    
+    @IsProperty(Long.class)
+    @Title(value = "Removed role ids", desc = "IDs of removed roles")
+    private Set<Long> removedRoleIds = new LinkedHashSet<Long>();
 
     @Observable
-    protected TgUpdateRolesAction setChosenRoleNumbers(final Set<Integer> chosenRoleNumbers) {
-        this.chosenRoleNumbers.clear();
-        this.chosenRoleNumbers.addAll(chosenRoleNumbers);
+    protected TgUpdateRolesAction setRemovedRoleIds(final Set<Long> removedRoleIds) {
+        this.removedRoleIds.clear();
+        this.removedRoleIds.addAll(removedRoleIds);
         return this;
     }
 
-    public Set<Integer> getChosenRoleNumbers() {
-        return Collections.unmodifiableSet(chosenRoleNumbers);
+    public Set<Long> getRemovedRoleIds() {
+        return Collections.unmodifiableSet(removedRoleIds);
+    }
+
+    @Observable
+    protected TgUpdateRolesAction setChosenRoleIds(final Map<Long, Boolean> chosenRoleIds) {
+        this.chosenRoleIds.clear();
+        this.chosenRoleIds.putAll(chosenRoleIds);
+        return this;
+    }
+
+    public Map<Long, Boolean> getChosenRoleIds() {
+        return Collections.unmodifiableMap(chosenRoleIds);
     }
 
     @Observable
@@ -56,7 +72,4 @@ public class TgUpdateRolesAction extends AbstractFunctionalEntityWithCentreConte
     public Set<UserRole> getRoles() {
         return Collections.unmodifiableSet(roles);
     }
-
-    
-
 }

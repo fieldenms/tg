@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.sample.domain;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.inject.Inject;
@@ -45,9 +47,10 @@ public class TgUpdateRolesActionProducer extends DefaultEntityProducerWithContex
             final Set<UserRole> roles = new LinkedHashSet<>(allAvailableRoles);
             entity.setRoles(roles);
             
-            final Set<Integer> chosenRoleNumbers = new LinkedHashSet<>();
-            chosenRoleNumbers.add(0);
-            entity.setChosenRoleNumbers(chosenRoleNumbers);
+            final Map<Long, Boolean> chosenRoleIds = new LinkedHashMap<>();
+            chosenRoleIds.put(64L, null);
+            // chosenRoleIds.put(2L, null);
+            entity.setChosenRoleIds(chosenRoleIds);
         }
         
         return entity;

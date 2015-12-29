@@ -10,9 +10,11 @@ import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -479,6 +481,17 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
             final String hashlessUppercasedColourValue = (String) map.get("hashlessUppercasedColourValue");
             return hashlessUppercasedColourValue == null ? null : new Colour(hashlessUppercasedColourValue);
+        } else if (Map.class.isAssignableFrom(propertyType)) {
+            if (reflectedValue == null) {
+                return null;
+            }
+            final Map<String, Boolean> map = (Map<String, Boolean>) reflectedValue;
+            final Map<Long, Boolean> resultMap = new LinkedHashMap<>();
+            for (final Entry<String, Boolean> entry : map.entrySet()) {
+                resultMap.put(Long.parseLong(entry.getKey()), entry.getValue());
+            }
+            System.out.println("resultMAP: " + resultMap);
+            return resultMap;
         } else {
             throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s].", type.getSimpleName(), propertyName, reflectedValue));
         }

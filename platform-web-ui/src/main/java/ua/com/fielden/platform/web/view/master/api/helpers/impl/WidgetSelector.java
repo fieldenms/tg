@@ -92,8 +92,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
     }
     
     @Override
-    public ICollectionalEditorConfig<T> asCollectionalEditor(final String chosenNumbersPropertyName) {
-        widget = new CollectionalEditorWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName, chosenNumbersPropertyName);
+    public ICollectionalEditorConfig<T> asCollectionalEditor(final String chosenIdsPropertyName, final String removedIdsPropertyName) {
+        widget = new CollectionalEditorWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName, chosenIdsPropertyName, removedIdsPropertyName);
         return new CollectionalEditorConfig<>((CollectionalEditorWidget) widget, smBuilder);
     }
 

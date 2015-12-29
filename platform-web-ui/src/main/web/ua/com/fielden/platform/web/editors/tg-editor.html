@@ -239,7 +239,7 @@
 
                     <input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
 
-                    <iron-list id="input" class="coll-editor" hidden$="[[!_isCollectional(_editorKind)]]" disabled$="[[_disabled]]" items="[[entities]]" selected-items="{{selectedEntities}}" selection-enabled multi-selection>
+                    <iron-list id="input" class="coll-editor" hidden$="[[!_isCollectional(_editorKind)]]" disabled$="[[_disabled]]" items="[[entities]]" selection-enabled multi-selection>
                         <template>
                             <div>
 				              <div tabindex="0" class$="[[_computedClass(selected)]]"> <!-- aria-label$="[[_getAriaLabel(item, selected)]]"  -->
@@ -328,7 +328,6 @@
     	    entities: Array,
     	    selectedEntities: {
     	        type: Array,
-                notify: true,
                 observer: '_selectedEntitiesChanged'
     	    }
         },
@@ -422,8 +421,14 @@
             return isSelected ? 'star' : 'star-border';
         },
         
-        _selectedEntitiesChanged: function (newValue, oldValue) {
-            console.log("_selectedEntitiesChanged: ", newValue, oldValue);
+        _selectedEntitiesChanged: function (selectedEntities, oldValue) {
+            console.log("_selectedEntitiesChanged: ", selectedEntities, oldValue);
+            // selected-items="{{selectedEntities}}" 
+            this.querySelector('iron-list').clearSelection();
+            
+            for (var i = 0; i < selectedEntities.length; i++) {
+                this.querySelector('iron-list').selectItem(selectedEntities[i]);
+            }
         }
         // TODO the following methods to be moved outside tg-editor [END]
     });

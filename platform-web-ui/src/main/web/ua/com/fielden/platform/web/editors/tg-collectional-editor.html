@@ -23,7 +23,7 @@
     		_on-keydown="[[_onKeydown]]"
         	current-state="[[currentState]]"
         	entities="[[_entities]]"
-        	selected-entities="{{_selectedEntities}}">
+        	selected-entities="[[_selectedEntities]]">
         	<content class=".property-action"></content>
     	</tg-editor>
     </template>
@@ -38,7 +38,13 @@
     	    /**
     	     * TODO docs
     	     */
-    	    chosenNumbersPropertyName: {
+    	    chosenIdsPropertyName: {
+    	        type: String
+    	    },
+    	    /**
+    	     * TODO docs
+    	     */
+    	    removedIdsPropertyName: {
     	        type: String
     	    },
     	    
@@ -59,22 +65,38 @@
         convertToString: function (value) {
             this._entities = value;
             
-            var chosenNumbers = this.entity.get(this.chosenNumbersPropertyName);
-            
             var selEntities = [];
+            var chosenIds = this.entity.get(this.chosenIdsPropertyName);
             
-            for (var i = 0; i < chosenNumbers.length; i++ ) {
-                console.log('chosenNumbers[i] ', chosenNumbers[i]);
-                selEntities.push(this._entities[chosenNumbers[i]]);
+            for (var entityId in chosenIds) {
+                if (chosenIds.hasOwnProperty(entityId)) {
+                    selEntities.push(this._find(this._entities, parseInt(entityId)) );
+                }
             }
+            
+            console.log('SELECTED ENTITIES', selEntities);
             this._selectedEntities = selEntities;
+            
             return 'IRRELEVANT';
+        },
+        
+        _find: function (entities, id) {
+            for (var i = 0; i < entities.length; i++) {
+                if (id === entities[i].id) {
+                    return entities[i];
+                }
+            }
+            throw 'The entity with id ' + id + ' does not exist in entities list ' + entities;
         },
 
         /**
          * This method promotes 'IRRELEVANT' into _acceptedValue which should not be a problem, since this 'representor' is not editable at all.
          */
         convertFromString: function (strValue) {
+            this.entity.set(this.chosenIdsPropertyName, { 2: true });
+            this.entity.set(this.removedIdsPropertyName, [ 64 ] );
+            this.entity.set(this.propertyName, null);
+            
             return 'IRRELEVANT';
         }
     });

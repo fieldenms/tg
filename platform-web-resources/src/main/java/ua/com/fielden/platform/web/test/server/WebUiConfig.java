@@ -565,9 +565,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .forEntity(TgUpdateRolesAction.class)
                 .addProp("roles").asSinglelineText()
                 .also()
-                .addProp("chosenRoleNumbers").asSinglelineText()
+                .addProp("chosenRoleIds").asSinglelineText()
                 .also()
-                .addProp("roles").asCollectionalEditor("chosenRoleNumbers")
+                .addProp("removedRoleIds").asSinglelineText()
+                .also()
+                .addProp("roles").asCollectionalEditor("chosenRoleIds", "removedRoleIds")
                 .also()
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
@@ -581,6 +583,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
                         + format("[[%s], ['flex']],", fmr)
+                        + format("[['flex']],")
                         + format("[['flex']],")
                         + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
