@@ -1,10 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -32,13 +29,28 @@ public class TgUpdateRolesAction extends AbstractFunctionalEntityWithCentreConte
     @Title(value = "A list of applicable roles", desc = "A list of applicable roles")
     private Set<UserRole> roles = new LinkedHashSet<UserRole>();
     
-    @IsProperty(Long.class) // TODO investigate the type parameter 
-    @Title(value = "Chosen roles", desc = "Chosen role numbers")
-    private Map<Long, Boolean> chosenRoleIds = new LinkedHashMap<Long, Boolean>();
+    @IsProperty(Long.class) 
+    @Title(value = "Chosen roles", desc = "IDs of chosen roles (added and remained chosen)")
+    private Set<Long> chosenRoleIds = new LinkedHashSet<Long>();
+    
+    @IsProperty(Long.class)
+    @Title(value = "Added role ids", desc = "IDs of added roles")
+    private Set<Long> addedRoleIds = new LinkedHashSet<Long>();
     
     @IsProperty(Long.class)
     @Title(value = "Removed role ids", desc = "IDs of removed roles")
     private Set<Long> removedRoleIds = new LinkedHashSet<Long>();
+
+    @Observable
+    protected TgUpdateRolesAction setAddedRoleIds(final Set<Long> addedRoleIds) {
+        this.addedRoleIds.clear();
+        this.addedRoleIds.addAll(addedRoleIds);
+        return this;
+    }
+
+    public Set<Long> getAddedRoleIds() {
+        return Collections.unmodifiableSet(addedRoleIds);
+    }
 
     @Observable
     protected TgUpdateRolesAction setRemovedRoleIds(final Set<Long> removedRoleIds) {
@@ -52,14 +64,14 @@ public class TgUpdateRolesAction extends AbstractFunctionalEntityWithCentreConte
     }
 
     @Observable
-    protected TgUpdateRolesAction setChosenRoleIds(final Map<Long, Boolean> chosenRoleIds) {
+    protected TgUpdateRolesAction setChosenRoleIds(final Set<Long> chosenRoleIds) {
         this.chosenRoleIds.clear();
-        this.chosenRoleIds.putAll(chosenRoleIds);
+        this.chosenRoleIds.addAll(chosenRoleIds);
         return this;
     }
 
-    public Map<Long, Boolean> getChosenRoleIds() {
-        return Collections.unmodifiableMap(chosenRoleIds);
+    public Set<Long> getChosenRoleIds() {
+        return Collections.unmodifiableSet(chosenRoleIds);
     }
 
     @Observable

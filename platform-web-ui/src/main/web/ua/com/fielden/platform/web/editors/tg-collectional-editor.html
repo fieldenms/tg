@@ -44,6 +44,12 @@
     	    /**
     	     * TODO docs
     	     */
+    	    addedIdsPropertyName: {
+    	        type: String
+    	    },
+    	    /**
+    	     * TODO docs
+    	     */
     	    removedIdsPropertyName: {
     	        type: String
     	    },
@@ -68,10 +74,8 @@
             var selEntities = [];
             var chosenIds = this.entity.get(this.chosenIdsPropertyName);
             
-            for (var entityId in chosenIds) {
-                if (chosenIds.hasOwnProperty(entityId)) {
-                    selEntities.push(this._find(this._entities, parseInt(entityId)) );
-                }
+            for (var index = 0; index < chosenIds.length; index++) {
+                selEntities.push(this._find(this._entities, chosenIds[index]) );
             }
             
             console.log('SELECTED ENTITIES', selEntities);
@@ -93,8 +97,9 @@
          * This method promotes 'IRRELEVANT' into _acceptedValue which should not be a problem, since this 'representor' is not editable at all.
          */
         convertFromString: function (strValue) {
-            this.entity.set(this.chosenIdsPropertyName, { 2: true });
-            this.entity.set(this.removedIdsPropertyName, [ 64 ] );
+            this.entity.set(this.chosenIdsPropertyName, [ 2 ] );
+            this.entity.set(this.addedIdsPropertyName, [] );
+            this.entity.set(this.removedIdsPropertyName, [ 2 ] );
             this.entity.set(this.propertyName, null);
             
             return 'IRRELEVANT';

@@ -567,9 +567,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("chosenRoleIds").asSinglelineText()
                 .also()
+                .addProp("addedRoleIds").asSinglelineText()
+                .also()
                 .addProp("removedRoleIds").asSinglelineText()
                 .also()
-                .addProp("roles").asCollectionalEditor("chosenRoleIds", "removedRoleIds")
+                .addProp("roles").asCollectionalEditor("chosenRoleIds", "addedRoleIds", "removedRoleIds")
                 .also()
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
@@ -583,7 +585,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
                         + format("[[%s], ['flex']],", fmr)
-                        + format("[['flex']],")
+                        + format("[[%s], ['flex']],", fmr)
                         + format("[['flex']],")
                         + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))

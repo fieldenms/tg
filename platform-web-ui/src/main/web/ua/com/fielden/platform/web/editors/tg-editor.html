@@ -426,8 +426,8 @@
             // selected-items="{{selectedEntities}}" 
             this.querySelector('iron-list').clearSelection();
             
-            for (var i = 0; i < selectedEntities.length; i++) {
-                this.querySelector('iron-list').selectItem(selectedEntities[i]);
+            for (var index = 0; index < selectedEntities.length; index++) {
+                this.querySelector('iron-list').selectItem(selectedEntities[index]);
             }
         }
         // TODO the following methods to be moved outside tg-editor [END]
