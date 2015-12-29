@@ -58,27 +58,27 @@ public class ScrollConfig implements IScrollConfig, IScrollConfigForLeftPanel {
     }
 
     @Override
-    public boolean areCheckboxesFixed() {
+    public boolean isCheckboxesFixed() {
         return fixedCheckboxes;
     }
 
     @Override
-    public boolean areCheckboxesWithPrimaryActionsFixed() {
+    public boolean isCheckboxesWithPrimaryActionsFixed() {
         return fixedCheckboxesWithPrimaryActions;
     }
 
     @Override
-    public boolean areSecondaryActionsFixed() {
+    public boolean isSecondaryActionsFixed() {
         return fixedSecondaryActions;
     }
 
     @Override
-    public boolean areHeaderFixed() {
+    public boolean isHeaderFixed() {
         return fixedHeader;
     }
 
     @Override
-    public boolean areSummaryFixed() {
+    public boolean isSummaryFixed() {
         return fixedSummary;
     }
 

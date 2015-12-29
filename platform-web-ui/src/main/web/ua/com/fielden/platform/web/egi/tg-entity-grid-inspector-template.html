@@ -110,32 +110,6 @@
         .table-data-cell {
             cursor: pointer;
         }
-        /*tg-page-action,
-        tg-ui-action,
-        tg-secondary-action-button {
-            width: 1rem;
-            height: 1rem;
-            --iron-icon-width: 1rem;
-            --iron-icon-height: 1rem;
-        }
-        .picker-button::shadow #ink {
-            width: 1.9rem;
-            height: 1.9rem;
-            top: -0.3rem;
-            left: -0.3rem;
-        }
-        .picker-button {
-            --iron-icon-height: 1.3rem;
-            --iron-icon-width: 1.3rem;
-            width: 1.3rem;
-            height: 1.3rem;
-            padding: 0;
-        }
-        paper-checkbox::shadow #checkboxContainer {
-            height: 1rem;
-            width: 1rem;
-            min-width: 1rem;
-        }*/
         .grid-toolbar {
             height: auto;
             min-height: 4rem;
@@ -336,7 +310,7 @@
                                 </div>
                             </template>
                             <!-- Table footer -->
-                            <template ics="dom-if" if="[[totals]]">
+                            <template is="dom-if" if="[[totals]]">
                                 <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                     <div class="layout horizontal table-footer-row" style$="[[_calcFooterRowStyle(summaryFixed)]]">
                                         <div class="table-cell layout horizontal center no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
@@ -381,7 +355,7 @@
                                             <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                                             </div>
-                                            <template is="dom-if" if="[[primaryAction]]">
+                                            <template is="dom-if" if="[[_isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed)]]">
                                                 <div class="table-cell layout horizontal center no-flexible" style="width:40px;">
                                                     <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
                                                     <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
@@ -405,6 +379,12 @@
                                         </div>
                                     </template>
                                 </div>
+                            </template>
+                            <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                                <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]"></div>
+                            </template>
+                            <template is="dom-if" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
+                                <div id="topShadow" class="absolute" style$="[[_calcRightShadowStyle(secondaryActions, secondaryActionsFixed, _showRightShadow)]]"></div>
                             </template>
                             <template is="dom-if" if="[[_isHeaderFixed(headerFixed)]]">
                                 <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, _scrollLeft)]]">
@@ -440,7 +420,7 @@
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isTopLeftPanelVisible(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, headerFixed)]]">
-                                <div id="topLeftLockPanel" class="absolutelyWhite layout horizontal center table-header-row" style="top:0;left:0;">
+                                <div id="topLeftLockPanel" class="absolutelyWhite layout horizontal center table-header-row" style$="[[_calculateTopLeftLockPanelStyle(checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, _scrollLeft, _scrollTop)]]">
                                     <div class="table-cell" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                         <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                     </div>
@@ -452,12 +432,12 @@
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSecondaryActionsHeaderPresentAndFixed(secondaryActions, secondaryActionsFixed, headerFixed)]]">
-                                <div id="topRightLockPanel" class="absolutelyWhite layout horizontal table-header-row table-cell" style="top:0;right:0;width:40px">
+                                <div id="topRightLockPanel" class="absolutelyWhite layout horizontal table-header-row table-cell" style$="[[_calculateTopRightLockPanelStyle(secondaryActionsFixed, headerFixed, _scrollLeft, _scrollTop, _clientWidth, _scrollWidth)]]">
                                     <!-- secondary action header column -->
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isBottomLeftPanelVisibleAndFixed(totals, summaryFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                <div id="bottomLeftLockPanel" class="absolutelyWhite layout vertical" style="bottom:0;left:0;">
+                                <div id="bottomLeftLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateBottomLeftLockPanelStyle(summaryFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _scrollLeft, _scrollTop, _clientHeight, _scrollHeight)]]">
                                     <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                         <div class="layout horizontal table-footer-row">
                                             <div class="table-cell no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
@@ -473,7 +453,7 @@
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isBottomRightPanelVisibleAndFixed(totals, summaryFixed, secondaryActions, secondaryActionsFixed)]]">
-                                <div id="bottomRightLockPanel" class="absolutelyWhite layout vertical" style="bottom:0;right:0;">
+                                <div id="bottomRightLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateBottomRightLockPanelStyle(summaryFixed, secondaryActionsFixed, _scrollLeft, _scrollTop, _clientWidth, _scrollWidth, _clientHeight, _scrollHeight)]]">
                                     <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                         <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
                                             <div class="table-footer-row table-cell" style="width:40px">
@@ -651,7 +631,12 @@
                 _showRightShadow: Boolean,
                 //Scroling properties
                 _scrollLeft: Number,
-                _scrollTop: Number
+                _scrollTop: Number,
+                //Size properties
+                _clientHeight: Number,
+                _clientWidth: Number,
+                _scrollHeight: Number,
+                _scrollWidth: Number
             },
 
             observers: [
@@ -758,13 +743,24 @@
                         lockContainer.style.right = this._calcVerticalScrollBarWidth() + "px";
                     }
                     this._updateShadows();
+                    this._updateSizeParams();
                 }
             },
 
+            _updateSizeParams: function () {
+                var scrollContainer = this.$$("#scrollContainer");
+                if (scrollContainer) {
+                    this._clientHeight = scrollContainer.clientHeight;
+                    this._clientWidth = scrollContainer.clientWidth;
+                    this._scrollHeight = scrollContainer.scrollHeight;
+                    this._scrollWidth = scrollContainer.scrollWidth;
+                }
+            },
+
+
             _updateShadows: function () {
                 var scrollContainer = this.$$("#scrollContainer");
-                var lockContainer = this.$$("#lockContainer");
-                if (scrollContainer && lockContainer) {
+                if (scrollContainer) {
                     this._showLeftShadow = scrollContainer.scrollLeft !== 0;
                     this._showRightShadow = (scrollContainer.clientWidth + scrollContainer.scrollLeft) !== scrollContainer.scrollWidth;
                     this._showTopShadow = scrollContainer.scrollTop !== 0;
@@ -826,7 +822,7 @@
             },
 
             _isLeftLockPanelVisble: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed) {
-                return (checkboxesVisible && checkboxesFixed) || (primaryAction && checkboxesWithPrimaryActionsFixed)
+                return (checkboxVisible && checkboxesFixed) || (primaryAction && checkboxesWithPrimaryActionsFixed)
             },
 
             _isTopLeftPanelVisible: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, headerFixed) {
@@ -842,7 +838,7 @@
             },
 
             _isBottomLeftPanelVisibleAndFixed: function (totals, summaryFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed) {
-                return totals && (summaryFixed || (checkboxesVisible && checkboxesFixed) || (primaryAction && checkboxesWithPrimaryActionsFixed));
+                return totals && (summaryFixed || (checkboxVisible && checkboxesFixed) || (primaryAction && checkboxesWithPrimaryActionsFixed));
             },
 
             _isPrimaryActionSummaryVisibleAndFixed: function (primaryAction, checkboxesWithPrimaryActionsFixed, summaryFixed) {
@@ -1167,11 +1163,11 @@
              * Below are function related to lock panels position calculation logic.
              */
             _calculateLeftLockPanelStyle: function (_showLeftShadow, _scrollTop) {
-                return "left:0;top:calc(3rem - " + _scrollTop + "px)" + (_showLeftShadow ? ";box-shadow: 3px 0px 6px -2px rgba(0,0,0,0.7);" : "");
+                return "left:0;top:calc(3rem - " + _scrollTop + "px);";
             },
 
             _calculateRightLockPanelStyle: function (_showRightShadow, _scrollTop) {
-                return "right:0;top:calc(3rem - " + _scrollTop + "px)" + (_showRightShadow ? ";box-shadow: -3px 0px 6px -2px rgba(0,0,0,0.7);" : "");
+                return "right:0;top:calc(3rem - " + _scrollTop + "px);";
             },
 
             _calculateTopLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, _scrollLeft) {
@@ -1180,6 +1176,31 @@
 
             _calculateBottomLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, _scrollLeft) {
                 return "bottom:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
+            },
+
+            _calculateTopLeftLockPanelStyle: function (checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, _scrollLeft, _scrollTop) {
+                var style = (checkboxesFixed || checkboxesWithPrimaryActionsFixed) ? "left:0;" : ("left:" + (0 - _scrollLeft) + "px;");
+                style += headerFixed ? "top:0;" : ("top:" + (0 - _scrollTop) + "px;");
+                return style;
+            },
+
+            _calculateTopRightLockPanelStyle: function (secondaryActionsFixed, headerFixed, _scrollLeft, _scrollTop, _clientWidth, _scrollWidth) {
+                var style = "width:40px;";
+                style += secondaryActionsFixed ? "right:0;" : ("right:" + (_clientWidth - _scrollWidth + _scrollLeft) + "px;");
+                style += headerFixed ? "top:0;" : ("top:" + (0 - _scrollTop) + "px;");
+                return style;
+            },
+
+            _calculateBottomLeftLockPanelStyle: function (summaryFixed, checkboxesFixed, checkboxesWithPrimaryActionsFixed, _scrollLeft, _scrollTop, _clientHeight, _scrollHeight) {
+                var style = (checkboxesFixed || checkboxesWithPrimaryActionsFixed) ? "left:0;" : ("left:" + (0 - _scrollLeft) + "px;");
+                style += summaryFixed ? "bottom:0;" : ("bottom:" + (_clientHeight - _scrollHeight + _scrollTop) + "px;");
+                return style;
+            },
+
+            _calculateBottomRightLockPanelStyle: function (summaryFixed, secondaryActionsFixed, _scrollLeft, _scrollTop, _clientWidth, _scrollWidth, _clientHeight, _scrollHeight) {
+                var style = secondaryActionsFixed ? "right:0;" : ("right:" + (_clientWidth - _scrollWidth + _scrollLeft) + "px;");
+                style += summaryFixed ? "bottom:0;" : ("bottom:" + (_clientHeight - _scrollHeight + _scrollTop) + "px;");
+                return style;
             },
 
             _calculateCheckboxWidth: function (checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed) {
@@ -1405,6 +1426,22 @@
                 var shadowStyle = "left:0;right:0;top:0;height:3rem;";
                 if (_showTopShadow) {
                     shadowStyle += "box-shadow: 0px 3px 6px -2px rgba(0,0,0,0.7);";
+                }
+                return shadowStyle;
+            },
+
+            _calcLeftShadowStyle: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, _showLeftShadow) {
+                var shadowStyle = "left:0;top:0;bottom:0;width:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed) + ");";
+                if (_showLeftShadow) {
+                    shadowStyle += "box-shadow: 3px 0px 6px -2px rgba(0,0,0,0.7);";
+                }
+                return shadowStyle;
+            },
+
+            _calcRightShadowStyle: function (secondaryActions, secondaryActionsFixed, _showRightShadow) {
+                var shadowStyle = "right:0;top:0;bottom:0;width:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + ");";
+                if (_showRightShadow) {
+                    shadowStyle += "box-shadow: -3px 0px 6px -2px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             }

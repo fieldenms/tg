@@ -85,6 +85,7 @@ import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSet
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
@@ -1024,7 +1025,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
                 //.hideCheckboxes()
-                .notScrollable()
+                .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxes().withFixedHeader().done())
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
                 .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())

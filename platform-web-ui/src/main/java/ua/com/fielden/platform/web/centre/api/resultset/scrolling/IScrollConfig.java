@@ -4,13 +4,13 @@ package ua.com.fielden.platform.web.centre.api.resultset.scrolling;
 
 public interface IScrollConfig {
 
-    boolean areCheckboxesFixed();
+    boolean isCheckboxesFixed();
 
-    boolean areCheckboxesWithPrimaryActionsFixed();
+    boolean isCheckboxesWithPrimaryActionsFixed();
 
-    boolean areSecondaryActionsFixed();
+    boolean isSecondaryActionsFixed();
 
-    boolean areHeaderFixed();
+    boolean isHeaderFixed();
 
-    boolean areSummaryFixed();
+    boolean isSummaryFixed();
 }
