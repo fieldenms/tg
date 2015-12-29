@@ -7,14 +7,13 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -40,6 +39,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.types.Colour;
@@ -481,17 +481,20 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
             final String hashlessUppercasedColourValue = (String) map.get("hashlessUppercasedColourValue");
             return hashlessUppercasedColourValue == null ? null : new Colour(hashlessUppercasedColourValue);
-        } else if (Map.class.isAssignableFrom(propertyType)) {
+        } else if (PropertyTypeDeterminator.isCollectional(type, propertyName) && Set.class.isAssignableFrom(Finder.findFieldByName(type, propertyName).getType()) && Long.class.isAssignableFrom(propertyType)) {
             if (reflectedValue == null) {
                 return null;
             }
-            final Map<String, Boolean> map = (Map<String, Boolean>) reflectedValue;
-            final Map<Long, Boolean> resultMap = new LinkedHashMap<>();
-            for (final Entry<String, Boolean> entry : map.entrySet()) {
-                resultMap.put(Long.parseLong(entry.getKey()), entry.getValue());
+            final List<Object> list = (ArrayList<Object>) reflectedValue;
+            final Set<Long> resultSet = new LinkedHashSet<>();
+            for (final Object entry : list) {
+                if (entry == null) {
+                    resultSet.add(null);
+                } else {
+                    resultSet.add(Long.parseLong(entry.toString()));
+                }
             }
-            System.out.println("resultMAP: " + resultMap);
-            return resultMap;
+            return resultSet;
         } else {
             throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s].", type.getSimpleName(), propertyName, reflectedValue));
         }
