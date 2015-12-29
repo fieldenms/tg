@@ -6,6 +6,10 @@
 
 <dom-module id="tg-collectional-editor">
     <style>
+        .item-disabled {
+            pointer-events: none;
+        }
+        
         .coll-editor {
         	height: 12.8rem;
         }
@@ -79,9 +83,9 @@
             entities="[[_entities]]"
             selected-entities="[[_selectedEntities]]">
             <!-- <content class=".property-action"></content> -->
-            <iron-list id="input" class="coll-editor custom-input" disabled$="[[_disabled]]" items="[[_entities]]" selection-enabled multi-selection>
+            <iron-list id="input" class="coll-editor custom-input" items="[[_entities]]" selection-enabled multi-selection>
                 <template>
-                    <div>
+                    <div class$="[[_computedItemClass(_disabled)]]" >
                       <div tabindex="0" class$="[[_computedClass(selected)]]"> <!-- aria-label$="[[_getAriaLabel(item, selected)]]"  -->
                         <!-- <img class="avatar" src="[[item.image]]"> -->
                         <div class="pad">
@@ -180,6 +184,14 @@
             var classes = 'item';
             if (isSelected) {
               classes += ' selected';
+            }
+            return classes;
+        },
+        
+        _computedItemClass: function (isDisabled) {
+            var classes = '';
+            if (isDisabled) {
+              classes += ' item-disabled';
             }
             return classes;
         },
