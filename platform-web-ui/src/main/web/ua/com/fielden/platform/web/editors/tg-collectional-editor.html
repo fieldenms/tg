@@ -2,69 +2,140 @@
 
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
+<link rel="import" href="/resources/polymer/iron-list/iron-list.html">
 
 <dom-module id="tg-collectional-editor">
     <style>
+        .coll-editor {
+        	height: 12.8rem;
+        }
+        
+        .item {
+            @apply(--layout-horizontal);
+            cursor: pointer;
+            padding: 16px 22px;
+            border-bottom: 1px solid #DDD;
+        }
+        
+        .item:hover {
+            background-color: var(--google-grey-100);
+        }
+        
+        .item:focus,
+        .item.selected:focus {
+            outline: 0;
+        }
+        
+        .item.selected .star {
+            color: var(--paper-blue-600);
+        }
+        .item.selected {
+            background-color: var(--google-grey-100);
+        }
+        
+        .avatar {
+            height: 40px;
+            width: 40px;
+            border-radius: 20px;
+            box-sizing: border-box;
+            background-color: #DDD;
+        }
+        
+        .pad {
+            @apply(--layout-flex);
+            @apply(--layout-vertical);
+            padding: 0 16px;
+        }
+        .primary {
+            font-size: 16px;
+        }
+        .secondary {
+            font-size: 14px;
+        }
+        .dim {
+            color: gray;
+        }
+        .star {
+            width: 24px;
+            height: 24px;
+        }
     </style>
 
     <template>
-    	<tg-editor 
-    		id="editorDom" 
-    		prop-title="[[propTitle]]"
-    		_disabled="[[_disabled]]" 
-    		_editing-value="{{_editingValue}}" 
-    		action="[[action]]" 
-    		_error="[[_error]]" 
-    		_comm-value="[[_commValue]]" 
-    		_accepted-value="[[_acceptedValue]]" 
-    		debug="[[debug]]" 
-    		_on-change="[[_onChange]]"
-    		_on-input="[[_onInput]]"
-    		_on-keydown="[[_onKeydown]]"
-        	current-state="[[currentState]]"
-        	entities="[[_entities]]"
-        	selected-entities="[[_selectedEntities]]">
-        	<content class=".property-action"></content>
+        <tg-editor 
+            id="editorDom" 
+            prop-title="[[propTitle]]"
+            _disabled="[[_disabled]]" 
+            _editing-value="{{_editingValue}}" 
+            action="[[action]]" 
+            _error="[[_error]]" 
+            _comm-value="[[_commValue]]" 
+            _accepted-value="[[_acceptedValue]]" 
+            debug="[[debug]]" 
+            _on-change="[[_onChange]]"
+            _on-input="[[_onInput]]"
+            _on-keydown="[[_onKeydown]]"
+            current-state="[[currentState]]"
+            entities="[[_entities]]"
+            selected-entities="[[_selectedEntities]]">
+            <!-- <content class=".property-action"></content> -->
+            <iron-list id="input" class="coll-editor custom-input" disabled$="[[_disabled]]" items="[[_entities]]" selection-enabled multi-selection>
+                <template>
+                    <div>
+                      <div tabindex="0" class$="[[_computedClass(selected)]]"> <!-- aria-label$="[[_getAriaLabel(item, selected)]]"  -->
+                        <!-- <img class="avatar" src="[[item.image]]"> -->
+                        <div class="pad">
+                          <div class="primary">
+                            [[item.key]]
+                          </div>
+                          <div class="secondary dim">[[item.desc]]</div>
+                        </div>
+                        <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
+                      </div>
+                      <div class="border"></div>
+                    </div>
+                </template>
+            </iron-list>
     	</tg-editor>
     </template>
 </dom-module>
 
 <script>
     Polymer({
-    	is: 'tg-collectional-editor',
-    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
-    	
-    	properties: {
-    	    /**
-    	     * TODO docs
-    	     */
-    	    chosenIdsPropertyName: {
-    	        type: String
-    	    },
-    	    /**
-    	     * TODO docs
-    	     */
-    	    addedIdsPropertyName: {
-    	        type: String
-    	    },
-    	    /**
-    	     * TODO docs
-    	     */
-    	    removedIdsPropertyName: {
-    	        type: String
-    	    },
-    	    
-    	    _entities: Array,
-    	    _selectedEntities: Array
-    	},
-    	
-    	ready: function () {
-    		this.$.editorDom._editorKind = "COLLECTIONAL";
-    		
-    		// this._entities = [ { key: 'KEY1' }, { key: 'KEY2' } ];
-    		// this._selectedEntities = [ { key: 'KEY2' } ];
-    	},
-    	
+        is: 'tg-collectional-editor',
+        behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+        
+        properties: {
+            /**
+             * TODO docs
+             */
+            chosenIdsPropertyName: {
+                type: String
+            },
+            /**
+             * TODO docs
+             */
+            addedIdsPropertyName: {
+                type: String
+            },
+            /**
+             * TODO docs
+             */
+            removedIdsPropertyName: {
+                type: String
+            },
+            
+            _entities: Array,
+            _selectedEntities: {
+                type: Array,
+                observer: '_selectedEntitiesChanged'
+            }
+        },
+        
+        ready: function () {
+            this.$.editorDom._editorKind = "COLLECTIONAL";
+        },
+        
         /**
          * This method promotes 'IRRELEVANT' into _editingValue which should not be a problem, since this 'editor' edits entity property (with name 'chosenNumbersPropertyName') directly.
          */
@@ -103,6 +174,27 @@
             this.entity.set(this.propertyName, null);
             
             return 'IRRELEVANT';
+        }, 
+        
+        _computedClass: function (isSelected) {
+            var classes = 'item';
+            if (isSelected) {
+              classes += ' selected';
+            }
+            return classes;
+        },
+        
+        iconForItem: function (isSelected) {
+            return isSelected ? 'star' : 'star-border';
+        },
+        
+        _selectedEntitiesChanged: function (selectedEntities, oldValue) {
+            console.log("_selectedEntitiesChanged: ", selectedEntities, oldValue);
+            this.$.input.clearSelection();
+            
+            for (var index = 0; index < selectedEntities.length; index++) {
+                this.$.input.selectItem(selectedEntities[index]);
+            }
         }
     });
 </script>
