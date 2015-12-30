@@ -10,15 +10,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.asm5.ClassReader;
 import org.kohsuke.asm5.ClassWriter;
 
-import ua.com.fielden.platform.classloader.TgSystemClassLoader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -32,20 +32,31 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class DynamicEntityClassLoader extends ClassLoader {
 
-    private final Map<String, Pair<Class<?>, byte[]>> cache = new HashMap<String, Pair<Class<?>, byte[]>>();
-    private final DynamicTypeNamingService namingService;
+    private final Map<String, Pair<Class<?>, byte[]>> cache = new ConcurrentHashMap<>(512);
+    
 
-    public DynamicEntityClassLoader(final ClassLoader parent) {
-        super(parent);
-        if (parent instanceof TgSystemClassLoader) {
-            ((TgSystemClassLoader) parent).register(this);
+    private static DynamicEntityClassLoader instance;
+
+    public static DynamicEntityClassLoader getInstance(final ClassLoader parent) {
+        if (instance == null) {
+            instance = new DynamicEntityClassLoader(parent); 
         }
-        this.namingService = new DynamicTypeNamingService();
+        return instance;
+    }
+    
+    private DynamicEntityClassLoader(final ClassLoader parent) {
+        super(parent);
     }
 
-    private byte[] currentType;
-    private String currentName;
-
+    public Optional<Pair<Class<?>, byte[]>> getTypeByNameFromCache(final String typeName) {
+        return Optional.ofNullable(cache.get(typeName));
+    }
+    
+    public DynamicEntityClassLoader putTypeIntoCache(final String typeName, final Pair<Class<?>, byte[]> typePair) {
+        cache.put(typeName, typePair);
+        return this;
+    }
+    
     /**
      * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
      *
@@ -53,217 +64,37 @@ public class DynamicEntityClassLoader extends ClassLoader {
      * @return
      * @throws ClassNotFoundException
      */
-    public DynamicEntityClassLoader startModification(final String typeName) throws ClassNotFoundException {
-        if (skipAdaptation(typeName)) {
-            throw new IllegalArgumentException("Java system classes should not be enhanced.");
-        }
-        // try loading the specified type by either actually loading from disk or finding it in cache
-        if (cache.get(typeName) != null) {
-            currentType = cache.get(typeName).getValue();
-            currentName = typeName;
-        } else {
-            final String resource = typeName.replace('.', '/') + ".class";
-            final InputStream is = getResourceAsStream(resource);
-            try {
-                final ClassReader cr = new ClassReader(is);
-                final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-                final DoNothingAdapter cv = new DoNothingAdapter(cw);
-                cr.accept(cv, ClassReader.SKIP_FRAMES);
-                currentType = cw.toByteArray();
-                currentName = typeName;
-            } catch (final Exception e) {
-                throw new ClassNotFoundException(typeName, e);
-            }
-        }
-
-        return this;
+    public TypeMaker startModification(final String typeName) throws ClassNotFoundException {
+        return new TypeMaker(this).startModification(typeName);
     }
 
-    /**
-     * Adds the specified properties to the type. The provided properties are checked for conflicts with the type being modified -- only non-conflicting ones are added. Also,
-     * duplicate properties are eliminated.
-     *
-     * @param properties
-     * @return
-     */
-    public DynamicEntityClassLoader addProperties(final NewProperty... properties) {
-        if (currentType == null || currentName == null) {
-            throw new IllegalStateException("Current type or name are not specified.");
-        }
-
-        if (properties == null || properties.length == 0) {
-            return this;
-        }
-
-        final Map<String, NewProperty> propertiesToAdd = new LinkedHashMap<String, NewProperty>();
-        for (final NewProperty prop : properties) {
-            propertiesToAdd.put(prop.name, prop);
-        }
-
-        try {
-            final ClassReader cr = new ClassReader(currentType);
-            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            final AdvancedAddPropertyAdapter cv = new AdvancedAddPropertyAdapter(cw, namingService, propertiesToAdd);
-            cr.accept(cv, ClassReader.SKIP_FRAMES);
-            currentType = cw.toByteArray();
-            currentName = cv.getEnhancedName().replace('/', '.');
-        } catch (final Exception e) {
-            e.printStackTrace();
-            throw new IllegalStateException(e);
-        }
-
-        return this;
+    protected final Class<?> defineType(String name, byte[] b, int off, int len) {
+        return super.defineClass(name, b, off, len);
     }
-
-    /**
-     *
-     * Adds the specified class level annotation to the class.
-     * <p>
-     * It is important that these annotation have their target specified as <code>TYPE</code> and retention as <code>RUNTIME</code>. Otherwise, method throws an illegal argument
-     * exception.
-     *
-     * @param annotations
-     * @return
-     */
-    public DynamicEntityClassLoader addClassAnnotations(final Annotation... annotations) {
-        if (currentType == null || currentName == null) {
-            throw new IllegalStateException("Current type or name are not specified.");
-        }
-
-        if (annotations == null || annotations.length == 0) {
-            return this;
-        }
-
-        // let's validate provided annotations
-        for (final Annotation annot : annotations) {
-            // check retention policy
-            final Retention retention = annot.annotationType().getAnnotation(Retention.class);
-            if (retention == null || retention.value() != RetentionPolicy.RUNTIME) {
-                throw new IllegalArgumentException(String.format("The provided annotation %s should have runtime retention policy.", annot.annotationType().getSimpleName()));
-            }
-
-            // check target
-            final Target target = annot.annotationType().getAnnotation(Target.class);
-            if (target == null || Arrays.stream(target.value()).filter(t -> t == ElementType.TYPE).count() == 0) {
-                throw new IllegalArgumentException(String.format("The provided annotation %s should have 'type' target.", annot.annotationType().getSimpleName()));
-            }
-        }
-
-        // proceed with type construction
-        try {
-            final ClassReader cr = new ClassReader(currentType);
-            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            final AdvancedAddClassAnnotationAdapter cv = new AdvancedAddClassAnnotationAdapter(cw, namingService, annotations);
-            cr.accept(cv, ClassReader.SKIP_FRAMES);
-            currentType = cw.toByteArray();
-            currentName = cv.getEnhancedName().replace('/', '.');
-        } catch (final Exception e) {
-            e.printStackTrace();
-            throw new IllegalStateException(e);
-        }
-
-        return this;
-    }
-
-    /**
-     * Modifies type's name with the specified <code>newTypeName</code>. Note that, if type name is needed to be changed, it should be made after all other modifications
-     * (properties adding / adapting etc.).
-     *
-     * @param newTypeName
-     * @return
-     */
-    public DynamicEntityClassLoader modifyTypeName(final String newTypeName) {
-        if (StringUtils.isEmpty(newTypeName)) {
-            throw new IllegalStateException("New type name is 'null' or empty.");
-        }
-        if (currentType == null || currentName == null) {
-            throw new IllegalStateException("Current type or name are not specified.");
-        }
-        try {
-            final ClassReader cr = new ClassReader(currentType);
-            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES); //Opcodes..ASM5
-            final AdvancedChangeNameAdapter cv = new AdvancedChangeNameAdapter(cw, currentName.replace('.', '/'), newTypeName.replace('.', '/')); //
-            cr.accept(cv, ClassReader.SKIP_FRAMES); //  EXPAND_FRAMES
-            currentType = cw.toByteArray();
-            currentName = cv.getNewTypeName().replace('/', '.');
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
-        return this;
-    }
-
-    public DynamicEntityClassLoader modifySupertypeName(final String newSupertypeName) {
-        if (StringUtils.isEmpty(newSupertypeName)) {
-            throw new IllegalStateException("New supertype name is 'null' or empty.");
-        }
-        if (currentType == null || currentName == null) {
-            throw new IllegalStateException("Current type or name are not specified.");
-        }
-        try {
-            final ClassReader cr = new ClassReader(currentType);
-            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            final AdvancedChangeSupertypeAdapter cv = new AdvancedChangeSupertypeAdapter(newSupertypeName.replace('.', '/'), cw); //
-            cr.accept(cv, ClassReader.SKIP_FRAMES); //ClassReader.EXPAND_FRAMES
-            currentType = cw.toByteArray();
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
-        return this;
-    }
-
-    /**
-     * Modifies type's properties with the specified information.
-     *
-     * @param propertyReplacements
-     * @return
-     */
-    public DynamicEntityClassLoader modifyProperties(final NewProperty... propertyReplacements) {
-        if (currentType == null || currentName == null) {
-            throw new IllegalStateException("Current type or name are not specified.");
-        }
-
-        if (propertyReplacements == null || propertyReplacements.length == 0) {
-            return this;
-        }
-
-        final Map<String, NewProperty> propertiesToAdapt = new HashMap<String, NewProperty>();
-        for (final NewProperty prop : propertyReplacements) {
-            propertiesToAdapt.put(prop.name, prop);
-        }
-
-        try {
-            final ClassReader cr = new ClassReader(currentType);
-            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            final AdvancedModifyPropertyAdapter cv = new AdvancedModifyPropertyAdapter(cw, namingService, propertiesToAdapt);
-            cr.accept(cv, ClassReader.SKIP_FRAMES);
-            currentType = cw.toByteArray();
-            currentName = cv.getEnhancedName().replace('/', '.');
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
-
-        return this;
-    }
-
-    public Class<?> endModification() {
-        final Class<?> klass = defineClass(currentName, currentType, 0, currentType.length);
-        cache.put(currentName, new Pair<Class<?>, byte[]>(klass, currentType));
-
-        currentType = null;
-        currentName = null;
-        return klass;
-    }
-
+    
     public Class<?> defineClass(final byte[] currentType) {
+        // let's find out whether currentType has already been loaded
+        // if it is then simply return the previously cached class
+        final String typeName = readClassName(currentType);
+        if (cache.containsKey(typeName)) {
+            return cache.get(typeName).getKey();
+        }
+
+        // the class was not yet loaded, so it needs to be loaded and cached to later reuse
         final Class<?> klass = defineClass(null, currentType, 0, currentType.length);
         cache.put(klass.getName(), new Pair<Class<?>, byte[]>(klass, currentType));
         return klass;
     }
-
-    private boolean skipAdaptation(final String name) {
-        return name.startsWith("java.");
+    
+    /**
+     * Obtains the class name from the passed in type as byte array.
+     * @param currentType
+     * @return
+     */
+    private String readClassName(final byte[] currentType) {
+        return new ClassReader(currentType).getClassName().replace("/", ".");
     }
-
+    
     public static boolean isEnhanced(final Class<?> type) {
         return type.getName().contains(DynamicTypeNamingService.APPENDIX);
     }
@@ -285,6 +116,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
      * @param type
      * @return
      */
+    @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity<?>> Class<T> getOriginalType(final Class<?> type) {
         final String typeName = type.getName();
         if (isEnhanced(type)) {
@@ -299,10 +131,6 @@ public class DynamicEntityClassLoader extends ClassLoader {
         }
     }
 
-    public String getCurrentName() {
-        return currentName;
-    }
-
     public Class<?> getCachedClass(final String name) {
         return cache.containsKey(name) ? cache.get(name).getKey() : null;
     }
@@ -310,15 +138,4 @@ public class DynamicEntityClassLoader extends ClassLoader {
     public byte[] getCachedByteArray(final String name) {
         return cache.containsKey(name) ? cache.get(name).getValue() : null;
     }
-
-    public static void main(final String[] args) throws ClassNotFoundException {
-        final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(getSystemClassLoader());
-
-        cl.startModification(TgVehicle.class.getName());
-        cl.modifyTypeName(TgVehicle.class.getName() + "_enhanced");
-        cl.endModification();
-
-        System.out.println(cl.findClass(TgVehicle.class.getName() + "_enhanced"));
-    }
-
 }
