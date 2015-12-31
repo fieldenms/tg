@@ -124,17 +124,17 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
             logger.debug("Ended maintaining the version of centre instance for [" + eccKey + "].");
             return new Pair<CentreDomainTreeManagerAndEnhancer, Boolean>(cdtmae, false);
         } catch (final Exception e) {
-            System.out.println("EXCEPTION:" + e.getMessage());
-            //e.printStackTrace();
-            // smth is wrong -- try previous versions
-            final CentreDomainTreeManagerAndEnhancer0 cdtmae0 = serialiser0.deserialise(array, CentreDomainTreeManagerAndEnhancer0.class);
-            logger.warn("\tA centre instance for [" + eccKey + "] is of OLD (0) version -- trying to convert it to CURRENT (1) version.");
-
-            // all is okay -- the version is 0 -- convert it to current and return
-            final CentreDomainTreeManagerAndEnhancer cdtmae = convert(cdtmae0, serialiser);
-            logger.warn("\tA centre instance for [" + eccKey + "] has been converted succesfully to CURRENT (1) version from OLD (0) version.");
-
-            return new Pair<CentreDomainTreeManagerAndEnhancer, Boolean>(cdtmae, true);
+            logger.debug("Ended maintaining the version of centre instance for [" + eccKey + "] -- the exception has occured.");
+            throw e;
+//            // smth is wrong -- try previous versions
+//            final CentreDomainTreeManagerAndEnhancer0 cdtmae0 = serialiser0.deserialise(array, CentreDomainTreeManagerAndEnhancer0.class);
+//            logger.warn("\tA centre instance for [" + eccKey + "] is of OLD (0) version -- trying to convert it to CURRENT (1) version.");
+//
+//            // all is okay -- the version is 0 -- convert it to current and return
+//            final CentreDomainTreeManagerAndEnhancer cdtmae = convert(cdtmae0, serialiser);
+//            logger.warn("\tA centre instance for [" + eccKey + "] has been converted succesfully to CURRENT (1) version from OLD (0) version.");
+//
+//            return new Pair<CentreDomainTreeManagerAndEnhancer, Boolean>(cdtmae, true);
         }
     }
 

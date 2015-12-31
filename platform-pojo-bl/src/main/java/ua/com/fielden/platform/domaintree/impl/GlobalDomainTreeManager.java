@@ -477,14 +477,24 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             init(menuItemType, name, versionMaintainer.maintainCentreVersion(ecc), owning);
             return;
         } catch (final Exception e) {
+            logger.error("============================================ CENTRE DESERIALISATION HAS FAILED ============================================");
+            logger.error("Unable to deserialise a entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
+            + "] for current user [" + currentUser() + "]. The exception is the following: ", e);
+            
+            logger.error("Started creation of default entity-centre configuration for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
+            + "] for current user [" + currentUser() + "].");
+            
             init(menuItemType, name, createDefaultCentre(centreConfigurator, root, menuItemType), owning);
-            final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, name);
-            ecc.setConfigBody(getSerialiser().serialise(centre));
+            
+            logger.error("Started saving of default entity-centre configuration for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
+            + "] for current user [" + currentUser() + "].");
+            
+            ecc.setConfigBody(getSerialiser().serialise(getEntityCentreManager(menuItemType, name)));
             saveCentre(getEntityCentreManager(menuItemType, name), ecc);
-            e.printStackTrace();
-            final String message = "Unable to deserialise a entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
-                    + "] for current user [" + currentUser() + "]. The  default configuration was opened.";
-            error(message);
+            
+            logger.error("Ended creation and saving of default entity-centre configuration for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
+            + "] for current user [" + currentUser() + "]. For now it can be used.");
+            logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
         }
     }
 

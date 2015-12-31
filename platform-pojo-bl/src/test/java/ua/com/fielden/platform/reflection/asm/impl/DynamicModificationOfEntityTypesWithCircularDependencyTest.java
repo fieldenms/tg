@@ -35,7 +35,7 @@ public class DynamicModificationOfEntityTypesWithCircularDependencyTest {
 
     @Before
     public void setUp() {
-        cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
     }
 
     @Test

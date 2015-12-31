@@ -83,7 +83,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         this.originalAndEnhancedRootTypesAndArrays.putAll(createOriginalAndEnhancedRootTypesAndArraysFromRootTypes(rootTypes));
 
         // complement a map with enhanced types. A new instance of classLoader is needed for loading enhanced "byte arrays".
-        final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         for (final Entry<Class<?>, Map<String, ByteArray>> entry : originalTypesAndEnhancedArrays.entrySet()) {
             final Map<String, ByteArray> arrays = Collections.unmodifiableMap(entry.getValue());
             if (arrays.isEmpty()) {
@@ -155,7 +155,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
      */
     protected static Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> generateHierarchy(final Set<Class<?>> rootTypes, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties) {
         // single classLoader instance is needed for single "apply" transaction
-        final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypes = createOriginalAndEnhancedRootTypesAndArraysFromRootTypes(rootTypes);
         final Map<Class<?>, Map<String, Map<String, CalculatedProperty>>> groupedCalculatedProperties = groupByPaths(calculatedProperties, rootTypes);
 
