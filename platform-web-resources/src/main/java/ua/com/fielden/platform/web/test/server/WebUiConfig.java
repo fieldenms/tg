@@ -1024,9 +1024,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
-                //.hideCheckboxes()
+                .hideCheckboxes()
                 //.notScrollable()
-                .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesAndPrimaryActions().withFixedSecondaryActions().done())
+                .withScrollingConfig(ScrollConfig.configScroll().withFixedSecondaryActions().withFixedSummary().done())
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
                 .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
@@ -1128,8 +1128,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
-                                .addPrimaryAction(
-                                        EntityActionConfig.createMasterInvocationActionConfig()
+                .addPrimaryAction(
+                        EntityActionConfig.createMasterInvocationActionConfig()
                 //       EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 //                        action(TgFunctionalEntityWithCentreContext.class).
                 //                                withContext(context().withSelectedEntities().build()).

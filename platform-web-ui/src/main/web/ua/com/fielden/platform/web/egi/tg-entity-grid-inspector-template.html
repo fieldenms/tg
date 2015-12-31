@@ -104,8 +104,12 @@
             background-color: white;
         }
         .table-cell,
-        .table-data-cell {
+        .table-data-cell,
+        .action-cell{
             padding: 0 0.6rem;
+        }
+        .action-cell {
+            width: 40px;
         }
         .table-data-cell {
             cursor: pointer;
@@ -253,7 +257,7 @@
                                     <paper-checkbox class="blue header" hidden$="[[_isCheckboxesOrHeaderFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed)]]" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                 </div>
                                 <template is="dom-if" if="[[primaryAction]]">
-                                    <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                    <div class="action-cell layout horizontal center no-flexible">
                                         <!--Primary action stub header goes here-->
                                     </div>
                                 </template>
@@ -263,7 +267,7 @@
                                     </div>
                                 </template>
                                 <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                                    <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                    <div class="action-cell layout horizontal center no-flexible">
                                         <!--Secondary actions header goes here-->
                                     </div>
                                 </template>
@@ -275,7 +279,7 @@
                                         <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                                     </div>
                                     <template is="dom-if" if="[[primaryAction]]">
-                                        <div class="table-cell layout horizontal center no-flexible" style="width:40px;">
+                                        <div class="action-cell layout horizontal center no-flexible">
                                             <template is="dom-if" if="[[!_isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed)]]">
                                                 <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
                                                 <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
@@ -295,7 +299,7 @@
                                         </div>
                                     </template>
                                     <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                                        <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                        <div class="action-cell layout horizontal center no-flexible">
                                             <template is="dom-if" if="[[!_isSecondaryActionsFixed(secondaryActionsFixed)]]">
                                                 <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
                                                     <tg-page-action icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" pref-dim="[[secondaryActions.0.prefDim]]"></tg-page-action>
@@ -317,7 +321,7 @@
                                             <!-- checkbox stub for table footer -->
                                         </div>
                                         <template is="dom-if" if="[[primaryAction]]">
-                                            <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                            <div class="action-cell layout horizontal center no-flexible">
                                                 <!--Primary action footer goes here-->
                                             </div>
                                         </template>
@@ -338,7 +342,7 @@
                                             </template>
                                         </template>
                                         <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                                            <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                            <div class="action-cell layout horizontal center no-flexible">
                                                 <!--Secondary actions header goes here-->
                                             </div>
                                         </template>
@@ -356,7 +360,7 @@
                                             <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                         </div>
                                         <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                            <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                            <div class="action-cell layout horizontal center no-flexible">
                                                 <!--Primary action stub header goes here-->
                                             </div>
                                         </template>
@@ -368,7 +372,7 @@
                                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                                             </div>
                                             <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                                <div class="table-cell layout horizontal center no-flexible" style="width:40px;">
+                                                <div class="action-cell layout horizontal center no-flexible">
                                                     <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
                                                     <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
                                                 </div>
@@ -383,7 +387,7 @@
                                                     <!-- checkbox stub for table footer -->
                                                 </div>
                                                 <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                                    <div class="table-cell no-flexible" style="width:40px">
+                                                    <div class="action-cell no-flexible">
                                                         <!--Primary action footer goes here-->
                                                     </div>
                                                 </template>
@@ -396,13 +400,13 @@
                                 <div id="rightLockPanel" class="absolutelyWhite layout vertical" on-wheel="_handleWheel" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
                                     <div class="layout horizontal table-header-row" hidden$="[[_isHeaderFixed(headerFixed)]]">
-                                        <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                        <div class="action-cell layout horizontal center no-flexible">
                                             <!--Secondary actions header goes here-->
                                         </div>
                                     </div>
                                     <!--body-->
                                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
-                                        <div class="table-cell layout horizontal center table-data-row no-flexible" selected$="[[egiEntity.selected]]" style="width:40px" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
+                                        <div class="action-cell layout horizontal center table-data-row no-flexible" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                             <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
                                                 <tg-page-action icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" pref-dim="[[secondaryActions.0.prefDim]]"></tg-page-action>
                                                 <tg-ui-action show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
@@ -416,7 +420,7 @@
                                     <template is="dom-if" if="[[_isSummaryNotFixedAndPresent(totals, summaryFixed)]]">
                                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                             <div class="layout horizontal table-footer-row">
-                                                <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                                <div class="action-cell layout horizontal center no-flexible">
                                                     <!--Secondary actions header goes here-->
                                                 </div>
                                             </div>
@@ -436,7 +440,7 @@
                                         <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                     </div>
                                     <template is="dom-if" if="[[_isPrimaryActionsNotFixedAndPresent(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                        <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                        <div class="action-cell layout horizontal center no-flexible">
                                             <!--Primary action stub header goes here-->
                                         </div>
                                     </template>
@@ -446,7 +450,7 @@
                                         </div>
                                     </template>
                                     <template is="dom-if" if="[[_isSecondaryActionsPresentAndNotFixed(secondaryActions, secondaryActionsFixed)]]">
-                                        <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                        <div class="action-cell layout horizontal center no-flexible">
                                             <!--Secondary actions header goes here-->
                                         </div>
                                     </template>
@@ -460,7 +464,7 @@
                                                 <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                             </div>
                                             <template is="dom-if" if="[[_isPrimaryActionsNotFixedAndPresent(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                                <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                                <div class="action-cell layout horizontal center no-flexible">
                                                     <!--Primary action stub header goes here-->
                                                 </div>
                                             </template>
@@ -481,7 +485,7 @@
                                                 </template>
                                             </template>
                                             <template is="dom-if" if="[[_isSecondaryActionsPresentAndNotFixed(secondaryActions, secondaryActionsFixed)]]">
-                                                <div class="table-cell layout horizontal center no-flexible" style="width:40px">
+                                                <div class="action-cell layout horizontal center no-flexible">
                                                     <!--Secondary actions header goes here-->
                                                 </div>
                                             </template>
@@ -495,14 +499,14 @@
                                         <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                     </div>
                                     <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                        <div class="table-cell no-flexible" style="width:40px">
+                                        <div class="action-cell no-flexible">
                                             <!--Primary action stub header goes here-->
                                         </div>
                                     </template>
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isTopRightPanelVisible(secondaryActions, secondaryActionsFixed, headerFixed)]]">
-                                <div id="topRightLockPanel" class="absolutelyWhite layout horizontal table-header-row table-cell" style="width:40px;top:0;right:0">
+                                <div id="topRightLockPanel" class="absolutelyWhite layout horizontal table-header-row action-cell" style="top:0;right:0">
                                     <!-- secondary action header column -->
                                 </div>
                             </template>
@@ -514,7 +518,7 @@
                                                 <!-- checkbox stub for table footer -->
                                             </div>
                                             <template is="dom-if" if="[[_isPrimaryActionSummaryVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, summaryFixed)]]">
-                                                <div class="table-cell no-flexible" style="width:40px">
+                                                <div class="action-cell no-flexible">
                                                     <!--Primary action footer goes here-->
                                                 </div>
                                             </template>
@@ -526,7 +530,7 @@
                                 <div id="bottomRightLockPanel" class="absolutelyWhite layout vertical" style="bottom:0;right:0">
                                     <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                         <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
-                                            <div class="table-footer-row table-cell" style="width:40px">
+                                            <div class="table-footer-row action-cell">
                                                 <!--Secondary actions header goes here-->
                                             </div>
                                         </template>
@@ -698,7 +702,12 @@
                 _showRightShadow: Boolean,
                 //Scroling properties
                 _scrollLeft: Number,
-                _scrollTop: Number
+                _scrollTop: Number,
+                //miscelenia private variables
+                _actionWidth: {
+                    type: String,
+                    value: "40px"
+                }
             },
 
             observers: [
@@ -891,11 +900,11 @@
             },
 
             _isLeftLockPanelVisble: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed) {
-                return (checkboxVisible && checkboxesFixed) || (primaryAction && checkboxesWithPrimaryActionsFixed)
+                return (checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed);
             },
 
             _isTopLeftPanelVisible: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, headerFixed) {
-                return ((checkboxVisible && checkboxesFixed) || (primaryAction && checkboxesWithPrimaryActionsFixed)) && headerFixed;
+                return ((checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed)) && headerFixed;
             },
 
             _isPrimaryActionVisibleAndFixed: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
@@ -907,7 +916,7 @@
             },
 
             _isBottomLeftPanelVisible: function (totals, summaryFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed) {
-                return totals && summaryFixed && ((checkboxVisible && checkboxesFixed) || (primaryAction && checkboxesWithPrimaryActionsFixed));
+                return totals && summaryFixed && ((checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed));
             },
 
             _isPrimaryActionSummaryVisibleAndFixed: function (primaryAction, checkboxesWithPrimaryActionsFixed, summaryFixed) {
@@ -1252,11 +1261,11 @@
             },
 
             _calculatePrimaryActionWidth: function (primaryAction, fixed) {
-                return (primaryAction && fixed) ? "40px + 1.2rem" : "0px";
+                return (primaryAction && fixed) ? this._actionWidth + " + 1.2rem" : "0px";
             },
 
             _calculateSecondaryActionWidth: function (secondaryActions, fixed) {
-                return (this._isSecondaryActionsPresent(secondaryActions) && fixed) ? "40px + 1.2rem" : "0px";
+                return (this._isSecondaryActionsPresent(secondaryActions) && fixed) ? this._actionWidth + " + 1.2rem" : "0px";
             },
 
             /**
