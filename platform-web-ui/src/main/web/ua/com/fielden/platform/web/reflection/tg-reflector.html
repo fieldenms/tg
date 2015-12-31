@@ -300,7 +300,15 @@
             if (instanceMetaProperty.isChangedFromOriginal()) {
                 return instanceMetaProperty.originalValue();
             } else {
-                return value;
+                if (value && value.constructor && value.constructor === Array) {
+                    var arrayCopy = [];
+                    for (var i = 0; i < value.length; i++) {
+                        arrayCopy.push(value[i]);
+                    }
+                    return arrayCopy;
+                } else {
+                    return value;
+                }
             }
         }
 
