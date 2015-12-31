@@ -245,7 +245,7 @@
                             <content select=".standart-action"></content>
                         </div>
                     </div>
-                    <div class="relative">
+                    <div id="baseContainer" class="relative">
                         <div id="scrollContainer" on-scroll="_handleScrollEvent" style$="[[_calculateScrollContainerStyle(summaryFixed, visibleRowCount, _totalsRowCount)]]">
                             <!-- Table header -->
                             <div class="layout horizontal table-header-row">
@@ -533,12 +533,9 @@
                                     </template>
                                 </div>
                             </template>
-                            <template is="dom-if" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
-                                <div id="bottomShadow" class="absolute shadow" style$="[[_calcBottomShadowStyle(_totalsRowCount, _showBottomShadow)]]"></div>
-                            </template>
-                            <template is="dom-if" if="[[_isHeaderFixed(headerFixed)]]">
-                                <div id="topShadow" class="absolute shadow" style$="[[_calcTopShadowStyle(_showTopShadow)]]"></div>
-                            </template>
+                            <div id="bottomShadow" class="absolute" hidden$="[[!_isSummaryPresentAndFixed(totals, summaryFixed)]]" style$="[[_calcBottomShadowStyle(_totalsRowCount, _showBottomShadow)]]"></div>
+                            <div id="topShadow" class="absolute" hidden$="[[!_isHeaderFixed(headerFixed)]]" style$="[[_calcTopShadowStyle(_showTopShadow)]]"></div>
+                            <div id="tbShadow" class="absolute" hidden$="[[_isHeaderFixed(headerFixed)]]" style$="[[_calcTBShadowStyle(_showTopShadow)]]"></div>
                         </div>
                     </div>
                 </div>
@@ -793,14 +790,17 @@
              * Resize event handler that adjasts the lockcontainer size and position.
              */
             _resizeEventListener: function (event, details) {
+                var baseContainer = this.$$("#baseContainer");
                 var scrollContainer = this.$$("#scrollContainer");
-                if (scrollContainer) {
+                if (baseContainer && scrollContainer) {
                     var lockContainer = this.$$("#lockContainer");
                     var bottomPosition = this._calcHorizontalScrollBarHeight();
                     if (this.visibleRowCount > 0) {
                         var rowCount = this.visibleRowCount + (this.summaryFixed ? this._totalsRowCount : 0);
+                        baseContainer.style.maxHeight = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px)";
                         scrollContainer.style.maxHeight = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px)";
                     } else {
+                        baseContainer.style.removeProperty("maxHeight");
                         scrollContainer.style.removeProperty("maxHeight");
                     }
                     if (lockContainer) {
@@ -1486,6 +1486,14 @@
                 var shadowStyle = "right:0;top:0;bottom:0;width:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + ");";
                 if (_showRightShadow) {
                     shadowStyle += "box-shadow: -3px 0px 6px -2px rgba(0,0,0,0.7);";
+                }
+                return shadowStyle;
+            },
+
+            _calcTBShadowStyle: function (_showTopShadow) {
+                var shadowStyle = "left:0;right:0;top:-50px;height:50px;";
+                if (_showTopShadow) {
+                    shadowStyle += "box-shadow: 0px 3px 6px -2px rgba(0,0,0,0.7);";
                 }
                 return shadowStyle;
             }
