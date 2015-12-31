@@ -158,6 +158,8 @@
         convertToString: function (value) {
             this._entities = value;
             
+            this.entity.set(this.propertyName, null);
+            
             var selEntities = [];
             var chosenIds = this.entity.get(this.chosenIdsPropertyName);
             
@@ -193,8 +195,6 @@
          * This method promotes 'IRRELEVANT' into _acceptedValue which should not be a problem, since this 'representor' is not editable at all.
          */
         convertFromString: function (strValue) {
-            this.entity.set(this.propertyName, null);
-            
             return 'IRRELEVANT';
         }, 
         
