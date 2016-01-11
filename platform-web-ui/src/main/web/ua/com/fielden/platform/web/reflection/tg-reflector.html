@@ -885,8 +885,6 @@
                 return value;
             } else if (typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 
                 return value;
-            } else if (typeof value === "object") { // TODO need to somehow differentiate conversion of Map<Long, Boolean> properties from other properties with "object" structure 
-                return value; // Map<Long, Boolean>
             } else {
                 throw new _UCEPrototype(value);
             }
