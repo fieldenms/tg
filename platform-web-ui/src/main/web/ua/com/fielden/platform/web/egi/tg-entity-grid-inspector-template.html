@@ -104,12 +104,8 @@
             background-color: white;
         }
         .table-cell,
-        .table-data-cell,
-        .action-cell{
+        .table-data-cell {
             padding: 0 0.6rem;
-        }
-        .action-cell {
-            width: 40px;
         }
         .table-data-cell {
             cursor: pointer;
@@ -137,6 +133,38 @@
         .table-icon {
             --iron-icon-width: 1.3rem;
             --iron-icon-height: 1.3rem;
+        }
+        /* Action cell related styles*/
+        .action-cell {
+            width: 20px;
+            padding: 0 0.3rem;
+        }
+        .action {
+            --tg-ui-action-icon-button-height: 1.6rem;
+            --tg-ui-action-icon-button-width: 1.6rem;
+            --tg-ui-action-icon-button-padding: 2px;
+            --tg-page-action-icon-button-height: 1.6rem;
+            --tg-page-action-icon-button-width: 1.6rem;
+            --tg-page-action-icon-button-padding: 2px;
+            --tg-secondary-action-icon-button-height: 1.6rem;
+            --tg-secondary-action-icon-button-width: 1.6rem;
+            --tg-secondary-action-icon-button-padding: 2px;
+            --tg-ui-action-spinner-width: 1.5rem;
+            --tg-ui-action-spinner-height: 1.5rem;
+            --tg-ui-action-spinner-min-width: 1rem;
+            --tg-ui-action-spinner-min-height: 1rem;
+            --tg-ui-action-spinner-max-width: 1.5rem;
+            --tg-ui-action-spinner-max-height: 1.5rem;
+            --tg-ui-action-spinner-padding: 0px;
+            --tg-ui-action-spinner-margin-left: 0;
+            --tg-secondary-action-spinner-width: 1.5rem;
+            --tg-secondary-action-spinner-height: 1.5rem;
+            --tg-secondary-action-spinner-min-width: 1rem;
+            --tg-secondary-action-spinner-min-height: 1rem;
+            --tg-secondary-action-spinner-max-width: 1.5rem;
+            --tg-secondary-action-spinner-max-height: 1.5rem;
+            --tg-secondary-action-spinner-padding: 0px;
+            --tg-secondary-action-spinner-margin-left: 0;
         }
         /*Card related styles*/
         .card-material {
@@ -281,8 +309,8 @@
                                     <template is="dom-if" if="[[primaryAction]]">
                                         <div class="action-cell layout horizontal center no-flexible">
                                             <template is="dom-if" if="[[!_isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed)]]">
-                                                <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
-                                                <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
+                                                <tg-page-action class="action" icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
+                                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
                                             </template>
                                         </div>
                                     </template>
@@ -302,11 +330,11 @@
                                         <div class="action-cell layout horizontal center no-flexible">
                                             <template is="dom-if" if="[[!_isSecondaryActionsFixed(secondaryActionsFixed)]]">
                                                 <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                                    <tg-page-action icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" pref-dim="[[secondaryActions.0.prefDim]]"></tg-page-action>
-                                                    <tg-ui-action show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
+                                                    <tg-page-action class="action" icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" pref-dim="[[secondaryActions.0.prefDim]]"></tg-page-action>
+                                                    <tg-ui-action class="action" show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
                                                 </template>
                                                 <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                                    <tg-secondary-action-button current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
+                                                    <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
                                                 </template>
                                             </template>
                                         </div>
@@ -373,8 +401,8 @@
                                             </div>
                                             <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                                                 <div class="action-cell layout horizontal center no-flexible">
-                                                    <tg-page-action icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
-                                                    <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
+                                                    <tg-page-action class="action" icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
+                                                    <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
                                                 </div>
                                             </template>
                                         </div>
@@ -408,11 +436,11 @@
                                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                                         <div class="action-cell layout horizontal center table-data-row no-flexible" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                             <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                                <tg-page-action icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" pref-dim="[[secondaryActions.0.prefDim]]"></tg-page-action>
-                                                <tg-ui-action show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
+                                                <tg-page-action class="action" icon="[[secondaryActions.0.icon]]" action="[[secondaryActions.0.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!secondaryActions.0.action]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" component-uri="[[secondaryActions.0.componentUri]]" view-type="[[secondaryActions.0.viewType]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" pref-dim="[[secondaryActions.0.prefDim]]"></tg-page-action>
+                                                <tg-ui-action class="action" show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[secondaryActions.0.action]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
                                             </template>
                                             <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                                <tg-secondary-action-button current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
+                                                <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
                                             </template>
                                         </div>
                                     </template>
@@ -461,7 +489,6 @@
                                     <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                         <div class="layout horizontal table-footer-row">
                                             <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                                                <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                             </div>
                                             <template is="dom-if" if="[[_isPrimaryActionsNotFixedAndPresent(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
                                                 <div class="action-cell layout horizontal center no-flexible">
@@ -706,7 +733,7 @@
                 //miscelenia private variables
                 _actionWidth: {
                     type: String,
-                    value: "40px"
+                    value: "20px"
                 }
             },
 
@@ -1261,11 +1288,11 @@
             },
 
             _calculatePrimaryActionWidth: function (primaryAction, fixed) {
-                return (primaryAction && fixed) ? this._actionWidth + " + 1.2rem" : "0px";
+                return (primaryAction && fixed) ? this._actionWidth + " + 0.6rem" : "0px";
             },
 
             _calculateSecondaryActionWidth: function (secondaryActions, fixed) {
-                return (this._isSecondaryActionsPresent(secondaryActions) && fixed) ? this._actionWidth + " + 1.2rem" : "0px";
+                return (this._isSecondaryActionsPresent(secondaryActions) && fixed) ? this._actionWidth + " + 0.6rem" : "0px";
             },
 
             /**

@@ -1024,7 +1024,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
-                .hideCheckboxes()
+                //.hideCheckboxes()
                 //.notScrollable()
                 .withScrollingConfig(ScrollConfig.configScroll().withFixedSecondaryActions().withFixedSummary().done())
                 .setPageCapacity(20)

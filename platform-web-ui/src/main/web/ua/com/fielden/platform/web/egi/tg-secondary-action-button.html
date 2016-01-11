@@ -11,6 +11,29 @@
             box-shadow: 0px 2px 6px #ccc;
             padding: 5px;
         }
+        paper-icon-button {
+            height: var(--tg-secondary-action-icon-button-height);
+            width: var(--tg-secondary-action-icon-button-width);
+            padding: var(--tg-secondary-action-icon-button-padding);
+        }
+        tg-page-action {
+            --tg-page-action-icon-button-height: var(--tg-secondary-action-icon-button-height);
+            --tg-page-action-icon-button-width: var(--tg-secondary-action-icon-button-width);
+            --tg-page-action-icon-button-padding: var(--tg-secondary-action-icon-button-padding);
+        }
+        tg-ui-action {
+            --tg-ui-action-icon-button-height: var(--tg-secondary-action-icon-button-height);
+            --tg-ui-action-icon-button-width: var(--tg-secondary-action-icon-button-width);
+            --tg-ui-action-icon-button-padding: var(--tg-secondary-action-icon-button-padding);
+            --tg-ui-action-spinner-width: var(--tg-secondary-action-spinner-width);
+            --tg-ui-action-spinner-height: var(--tg-secondary-action-spinner-height);
+            --tg-ui-action-spinner-min-width: var(--tg-secondary-action-spinner-min-width);
+            --tg-ui-action-spinner-min-height: var(--tg-secondary-action-spinner-min-height);
+            --tg-ui-action-spinner-max-width: var(--tg-secondary-action-spinner-max-width);
+            --tg-ui-action-spinner-max-height: var(--tg-secondary-action-spinner-max-height);
+            --tg-ui-action-spinner-padding: var(--tg-secondary-action-spinner-padding);
+            --tg-ui-action-spinner-margin-left: var(--tg-secondary-action-spinner-margin-left);
+        }
     </style>
     <template>
         <paper-icon-button icon="more-vert" on-tap="_showDropdown"></paper-icon-button>
@@ -49,10 +72,10 @@
             _closeDropdown: function (e, detail) {
                 this.$.dropdown.close();
             },
-            
-            _dropdownOpened: function() {
+
+            _dropdownOpened: function () {
                 var actions = Polymer.dom(this.root).querySelectorAll('tg-ui-action');
-                actions.forEach(function(action) {
+                actions.forEach(function (action) {
                     action._updateSpinnerIfNeeded();
                 });
             }
