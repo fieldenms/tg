@@ -4,6 +4,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
@@ -22,8 +24,9 @@ import ua.com.fielden.platform.security.user.UserRole;
  *
  */
 public class TgUpdateRolesActionProducer extends DefaultEntityProducerWithContext<TgUpdateRolesAction, TgUpdateRolesAction> implements IEntityProducer<TgUpdateRolesAction> {
+    private final Logger logger = Logger.getLogger(getClass());
     private final IUserRoleDao coUserRole;
-
+    
     @Inject
     public TgUpdateRolesActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IUserRoleDao coUserRole) {
         super(factory, TgUpdateRolesAction.class, companionFinder);
@@ -37,6 +40,8 @@ public class TgUpdateRolesActionProducer extends DefaultEntityProducerWithContex
             entity.setContext(getCentreContext());
 
             final User me = (User) entity.getContext().getMasterEntity();
+            logger.error("TgUpdateRolesActionProducer: masterEntity = " + me);
+            logger.error("TgUpdateRolesActionProducer: masterEntity.getRoles() = " + me.getRoles());
             if (me.isDirty()) {
                 throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
             }

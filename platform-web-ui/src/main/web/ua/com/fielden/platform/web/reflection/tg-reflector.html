@@ -16,6 +16,45 @@
         return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Warning";
     };
     
+    var _arrayEqualsEx = function (value1, value2) {
+        // if the other array is a falsy value, return
+        if (value2 && value2.constructor && value2.constructor === Array) {
+            // compare lengths - can save a lot of time 
+            if (value1.length !== value2.length) {
+                return false;
+            }
+            
+            for (var i = 0; i < value1.length; i++) {
+                if (!_equalsEx(value1[i], value2[i])) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    };
+    
+    /**
+     * Returns 'true' if the regular values are equal, 'false' otherwise.
+     */
+    var _equalsEx = function (value1, value2) {
+        // if (value1) {
+        //     if (!value2) {
+        //         return false;
+        //     } else {
+        //         return ...
+        //     }
+        // }
+
+        // TODO: potentially, extend implementation to support composite types: objects (arrays are already supported)
+        if (value1 && value1.constructor && value1.constructor === Array) {
+            return _arrayEqualsEx(value1, value2);
+        } else {
+            return value1 === value2;
+        }
+    };
+
 	/**
 	 * 'EntityTypeProp' creator. Dependencies: none.
 	 */
@@ -728,24 +767,14 @@
         getStrictProxyExceptionPrototype: function () {
             return _SPEPrototype;
         },
-
+        
         /**
          * Returns 'true' if the regular values are equal, 'false' otherwise.
          */
         equalsEx: function (value1, value2) {
-            // if (value1) {
-            //     if (!value2) {
-            //         return false;
-            //     } else {
-            //         return ...
-            //     }
-            // }
-
-            // TODO 1: rectify whether this implementation is good
-            // TODO 2: potentially, extend implementation to support composite types: arrays and objects?
-            return value1 === value2;
+            return _equalsEx(value1, value2);
         },
-
+        
         /**
          * Determines whether result represents the error.
          */
