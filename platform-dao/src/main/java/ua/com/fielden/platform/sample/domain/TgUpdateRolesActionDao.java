@@ -51,6 +51,7 @@ public class TgUpdateRolesActionDao extends CommonEntityDao<TgUpdateRolesAction>
             throw res;
         }
         
+        logger.error("entity.getRoles() = " + entity.getRoles());
         logger.error("entity.getContext().getMasterEntity() = " + entity.getContext().getMasterEntity());
         logger.error("((User) entity.getContext().getMasterEntity()).getRoles() = " + ((User) entity.getContext().getMasterEntity()).getRoles() );
         
@@ -63,11 +64,17 @@ public class TgUpdateRolesActionDao extends CommonEntityDao<TgUpdateRolesAction>
         
         final Set<UserAndRoleAssociation> addedAssociations = new LinkedHashSet<>();
         for (final Long addedRoleId : entity.getAddedRoleIds()) {
+            if (!roles.containsKey(addedRoleId)) {
+                throw Result.failure(String.format("Another user has deleted the role with id = %s.", addedRoleId));
+            }
             addedAssociations.add(new UserAndRoleAssociation(userBeingUpdated, roles.get(addedRoleId)));
         }
 
         final Set<UserAndRoleAssociation> removedAssociations = new LinkedHashSet<>();
         for (final Long removedRoleId : entity.getRemovedRoleIds()) {
+            if (!roles.containsKey(removedRoleId)) {
+                throw Result.failure(String.format("Another user has deleted the role with id = %s.", removedRoleId));
+            }
             removedAssociations.add(new UserAndRoleAssociation(userBeingUpdated, roles.get(removedRoleId)));
         }
 
