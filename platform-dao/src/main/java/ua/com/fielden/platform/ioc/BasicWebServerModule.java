@@ -23,7 +23,9 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.ServerAuthorisationModel;
+import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionDao;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
@@ -172,5 +174,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
+        bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
     }
 }

@@ -158,12 +158,14 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final User demo = ((IUser) ao(User.class)).findByKey("DEMO");
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
 
+        final UserRole stationMgr = save(new_(UserRole.class, "STATION_MGR", "A role, which has access to the the station managing functionality."));
+        System.out.println("stationMgr.getId() == " + stationMgr.getId());
+        final UserAndRoleAssociation su2StationMgr = save(new_composite(UserAndRoleAssociation.class, su, stationMgr));
+        System.out.println("su2StationMgr.getId() == " + su2StationMgr.getId());
+
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
         mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));
         save(mainMenu);
-        
-        final UserRole stationMgr = save(new_(UserRole.class, "STATION_MGR", "A role, which has access to the the station managing functionality."));
-        System.out.println("stationMgr.getId() == " + stationMgr.getId());
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);

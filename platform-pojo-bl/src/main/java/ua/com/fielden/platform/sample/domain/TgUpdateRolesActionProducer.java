@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 
 /**
@@ -51,8 +52,9 @@ public class TgUpdateRolesActionProducer extends DefaultEntityProducerWithContex
             entity.setRoles(roles);
             
             final Set<Long> chosenRoleIds = new LinkedHashSet<>();
-            chosenRoleIds.add(64L);
-            // chosenRoleIds.add(2L);
+            for (final UserAndRoleAssociation association: me.getRoles()) {
+                chosenRoleIds.add(association.getUserRole().getId());
+            }
             entity.setChosenRoleIds(chosenRoleIds);
         }
         
