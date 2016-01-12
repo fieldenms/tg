@@ -1,0 +1,282 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+
+<dom-module id="egi-comp-spike">
+    <template>
+        <style>
+            /*miscellanea styles*/
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            paper-material {
+                border-radius: 2px;
+            }
+            /*Toolbar layout related*/
+            .align-left {
+                float: left;
+            }
+            .align-right {
+                float: right;
+            }
+            .grid-toolbar {
+                height: auto;
+                min-height: 4rem;
+                margin: auto 0.6rem;
+                overflow: hidden;
+            }
+            /*Table related styles*/
+            .data-table {
+                background-color: white;
+                border-radius: 2px;
+            }
+            .table-header-row {
+                font-size: 0.9rem;
+                font-weight: 400;
+                color: #757575;
+                height: 3rem;
+                cursor: default;
+                -webkit-font-smoothing: antialiased;
+                text-rendering: optimizeLegibility;
+                min-width: fit-content;
+            }
+            .table-data-row {
+                font-size: 1rem;
+                font-weight: 400;
+                color: #212121;
+                height: 1.5rem;
+                border-top: 1px solid #e3e3e3;
+                cursor: default;
+                -webkit-font-smoothing: antialiased;
+                text-rendering: optimizeLegibility;
+                min-width: fit-content;
+            }
+            .table-data-row[selected] {
+                background-color: #F5F5F5;
+            }
+            .table-data-row[onover] {
+                background-color: #EEEEEE;
+            }
+            .table-footer-row {
+                font-size: 0.9rem;
+                color: #757575;
+                height: 3.5rem;
+                cursor: default;
+                border-top: 1px solid #e3e3e3;
+            }
+            .table-cell,
+            .table-data-cell {
+                padding: 0 0.6rem;
+            }
+            .table-cell:first-of-type,
+            .table-data-cell:first-of-type {
+                padding-right: 0.6rem;
+                padding-left: 1.2rem;
+            }
+            .table-cell:last-of-type,
+            .table-data-cell:last-of-type {
+                padding-left: 0.6rem;
+                padding-right: 1.2rem;
+            }
+            .table-data-cell {
+                cursor: pointer;
+            }
+            paper-checkbox::shadow #checkboxLabel {
+                display: none;
+            }
+            paper-checkbox.blue {
+                --paper-checkbox-checked-color: #0288D1;
+                --paper-checkbox-checked-ink-color: #0288D1;
+            }
+            paper-checkbox.header {
+                --paper-checkbox-unchecked-color: #757575;
+                --paper-checkbox-unchecked-ink-color: #757575;
+            }
+            paper-checkbox.body {
+                --paper-checkbox-unchecked-color: #212121;
+                --paper-checkbox-unchecked-ink-color: #212121;
+            }
+            .table-icon {
+                --iron-icon-width: 1.3rem;
+                --iron-icon-height: 1.3rem;
+            }
+        </style>
+        <paper-material elevation="1" style="margin: 10px 10px;">
+            <div class="layout vertical data-table">
+                <!--Table toolbar-->
+                <div class="layout horizontal center wrap grid-toolbar">
+                    <div class="layout horizontal center">
+                        <content select=".entity-specific-action"></content>
+                    </div>
+                    <div class="layout horizontal center" style="margin-left: auto">
+                        <content select=".standart-action"></content>
+                    </div>
+                </div>
+                <!-- Table header -->
+
+                <div class="layout horizontal">
+                    <div class="layout vertical">
+                        <div class="layout horizontal table-header-row">
+                            <div class="table-cell layout horizontal center">
+                                <paper-checkbox class="blue header"></paper-checkbox>
+                            </div>
+                            <div class="table-cell layout horizontal center" style="width:40px">
+                                <!--Primary action stub header goes here-->
+                            </div>
+                        </div>
+                        <template is="dom-repeat" items="[[data]]" as="entity" index-as="entityIndex">
+                            <div class="layout horizontal table-data-row" on-mouseenter="_rowMouseOver" on-mouseleave="_rowMouseOut" onover$="[[entity.isOver]]">
+                                <div class="table-cell layout horizontal center">
+                                    <paper-checkbox class="blue body"></paper-checkbox>
+                                </div>
+                                <div class="table-cell layout horizontal center">
+                                    <paper-icon-button icon="code"></paper-icon-button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="layout vertical flex" style="overflow-x: auto; overflow-y:hidden">
+                        <div class="layout horizontal table-header-row">
+                            <template is="dom-repeat" items="[[columns]]">
+                                <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]">
+                                    <div class="truncate" style="width:100%">[[item.title]]</div>
+                                </div>
+                            </template>
+                        </div>
+                        <template is="dom-repeat" items="[[data]]" as="entity" index-as="entityIndex">
+                            <div class="layout horizontal table-data-row" on-mouseenter="_rowMouseOver" on-mouseleave="_rowMouseOut" onover$="[[entity.isOver]]">
+                                <template is="dom-repeat" items="[[columns]]" as="column">
+                                    <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]">
+                                        <div class="truncate relative" style="width: 100%">[[_getValue(entity, index)]]</div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="layout vertical">
+                        <div class="layout horizontal table-header-row">
+                            <div class="table-cell layout horizontal center" style="width:40px">
+                                <!--Secondary actions header goes here-->
+                            </div>
+                        </div>
+                        <template is="dom-repeat" items="[[data]]" as="entity" index-as="entityIndex">
+                            <div class="layout horizontal table-data-row" on-mouseenter="_rowMouseOver" on-mouseleave="_rowMouseOut" onover$="[[entity.isOver]]">
+                                <div class="table-cell layout horizontal center">
+                                    <paper-icon-button icon="code"></paper-icon-button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </paper-material>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "egi-comp-spike",
+
+            properties: {
+                data: Array,
+                columns: Array
+            },
+
+            ready: function () {
+                var dataIndex, dataEntryIndex, dataEntry, columnData, tempSum;
+                this.data = this._initData();
+                this.columns = this._initColumnData();
+            },
+
+            _initData: function () {
+                var dataIndex, dataEntryIndex, dataEntry, data;
+                data = [];
+                for (dataIndex = 0; dataIndex < 10; dataIndex++) {
+                    dataEntry = [];
+                    data.push(dataEntry);
+                    for (dataEntryIndex = 0; dataEntryIndex < 10; dataEntryIndex++) {
+                        dataEntry.push("data entry " + dataIndex + ", " + dataEntryIndex);
+                    }
+                }
+                return data;
+            },
+
+            _initColumnData: function () {
+                var dataIndex, columnData, columns;
+                columns = [];
+                for (dataIndex = 0; dataIndex < 10; dataIndex++) {
+                    columnData = {
+                        title: "title " + dataIndex
+                    };
+                    columns.push(columnData);
+                }
+                return this._initColumnsWidth(columns);
+            },
+
+            _initColumnsWidth: function (columns) {
+                columns[0].preferedWidth = 30;
+                columns[1].preferedWidth = 63;
+                columns[2].preferedWidth = 0;
+                columns[3].preferedWidth = 100;
+                columns[4].preferedWidth = 31;
+                columns[5].preferedWidth = 71;
+                columns[6].preferedWidth = 51;
+                columns[7].preferedWidth = 37;
+                columns[8].preferedWidth = 83;
+                columns[9].preferedWidth = 42;
+                return this._initColumnsGrowFactor(columns);
+            },
+
+            _initColumnsGrowFactor: function (columns) {
+                var dataIndex, tempMin;
+                columns.forEach(function (elem) {
+                    if (!tempMin && elem.preferedWidth) {
+                        tempMin = elem.preferedWidth;
+                    } else if (tempMin && elem.preferedWidth && elem.preferedWidth < tempMin) {
+                        tempMin = elem.preferedWidth;
+                    }
+                });
+                columns.forEach(function (elem) {
+                    elem.growFactor = tempMin ? Math.round(elem.preferedWidth / tempMin) : 0;
+                });
+                return columns;
+            },
+
+            /**
+             * Calculates the column's header style.
+             */
+            _calcColumnHeaderStyle: function (item) {
+                return "min-width: " + item.preferedWidth + "px; width: " + item.preferedWidth + "px; flex-grow: " + item.growFactor + (item.preferedWidth === 0 ? "; padding: 0;" : ";");
+            },
+
+            /**
+             * Calculates the column's style.
+             */
+            _calcColumnStyle: function (item) {
+                return "min-width: " + item.preferedWidth + "px; width: " + item.preferedWidth + "px; flex-grow: " + item.growFactor + (item.preferedWidth === 0 ? "; padding: 0;" : ";");
+            },
+
+            _getValue: function (entity, index) {
+                return entity[index];
+            },
+            
+            _rowMouseOver: function (event) {
+                var entity = event.model.entity;
+                entity.isOver=true;
+                console.log(entity);
+            },
+            
+            _rowMouseOut: function (event) {
+                var entity = event.model.entity;
+                entity.isOver = false;
+                console.log(entity);
+            }
+        });
+    })();
+</script>

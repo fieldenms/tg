@@ -70,7 +70,14 @@
                  */
                 postRun: {
                 	type: Function
-                }, 
+                },
+                
+                /**
+                 * Currently immutable capacity of the page.
+                 */
+                pageCapacity: {
+                	type: Number
+                },
                 
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
@@ -80,14 +87,6 @@
             	//   alternatively, computing function needs to be specified). 									       //
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                /**
-                 * Currently immutable capacity of the page.
-                 */
-                _pageCapacity: {
-                	type: Number,
-                	value: 30
-                },
-                
                 _centreChanged: {
                 	type: Boolean,
                 	value: false,
@@ -566,7 +565,7 @@
             	var self = this;
             	var contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
             	
-            	self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self._pageCapacity);
+            	self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
                 if (self.pageCount !== null) {
                 	self._reflector().setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
                 	self._reflector().setCustomProperty(contextHolder, "@@pageCount", self.pageCount);

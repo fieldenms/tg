@@ -27,6 +27,9 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1Toolbar;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aScroll;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bPageCapacity;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisibleRows;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4OrderingDirection;
@@ -35,6 +38,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9Render
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.IExpandedCardLayoutConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
@@ -360,14 +365,43 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder2Properties<T> hideToolbar() {
+    public IResultSetBuilder1Toolbar<T> hideCheckboxes() {
+        this.builder.hideCheckboxes = true;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1aScroll<T> hideToolbar() {
         this.builder.hideToolbar = true;
         return this;
     }
 
     @Override
-    public IResultSetBuilder1Toolbar<T> hideCheckboxes() {
-        this.builder.hideCheckboxes = true;
+    public IResultSetBuilder1bPageCapacity<T> notScrollable() {
+        this.builder.scrollConfig = ScrollConfig.configScroll()
+                .withFixedCheckboxesAndPrimaryActions()
+                .withFixedSecondaryActions()
+                .withFixedHeader()
+                .withFixedSummary()
+                .done();
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1cVisibleRows<T> setPageCapacity(final int pageCapacity) {
+        this.builder.pageCapacity = pageCapacity;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder2Properties<T> setVisibleRowsCount(final int visibleRowsCount) {
+        this.builder.visibleRowsCount = visibleRowsCount;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1bPageCapacity<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+        this.builder.scrollConfig = scrollConfig;
         return this;
     }
 }

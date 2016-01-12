@@ -25,6 +25,7 @@ public class SummaryElement implements IRenderable, IImportable {
     private final int width;
     private final Class<?> propertyType;
     private final Pair<String, String> titleDesc;
+    private int growFactor;
 
     /**
      * Creates {@link SummaryElement} with <code>propertyType</code>, <code>propertyName</code> width, title and description.
@@ -55,7 +56,8 @@ public class SummaryElement implements IRenderable, IImportable {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
         attrs.put("property", propertyName); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
-        attrs.put("width", width + "px");
+        attrs.put("width", width);
+        attrs.put("grow-factor", growFactor);
         attrs.put("type", egiRepresentationFor(DynamicEntityClassLoader.getOriginalType(this.propertyType)));
         attrs.put("column-title", this.titleDesc.getKey());
         attrs.put("column-desc", this.titleDesc.getValue());
@@ -64,6 +66,10 @@ public class SummaryElement implements IRenderable, IImportable {
 
     private Object egiRepresentationFor(final Class<?> propertyType) {
         return EntityUtils.isEntityType(propertyType) ? propertyType.getName() : (EntityUtils.isBoolean(propertyType) ? "Boolean" : propertyType.getSimpleName());
+    }
+
+    public void setGrowFactor(final int growFactor) {
+        this.growFactor = growFactor;
     }
 
     @Override

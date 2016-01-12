@@ -16,8 +16,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -87,6 +85,7 @@ import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSet
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
@@ -100,6 +99,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
+
+import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -147,7 +148,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         // .addProp("additionalProp")
                         .build(), injector(), null);
          configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
-       
+
         final EntityCentre<TgPersistentEntityWithProperties> detailsCentre = createEntityCentre(MiDetailsCentre.class, "Details Centre", createEntityCentreConfig(false, true, true));
         final EntityCentre<TgEntityWithPropertyDependency> propDependencyCentre = new EntityCentre<>(MiTgEntityWithPropertyDependency.class, "Property Dependency Example",
                 EntityCentreBuilder.centreFor(TgEntityWithPropertyDependency.class)
@@ -435,7 +436,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                         + "[['flex']],"
                                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                                         + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).done();
-        
+
         final IMaster<TgEntityWithPropertyDependency> masterConfigForPropDependencyExample = new SimpleMasterBuilder<TgEntityWithPropertyDependency>()
             .forEntity(TgEntityWithPropertyDependency.class)
             .addProp("property").asSinglelineText()
@@ -450,7 +451,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .addAction(MasterActions.SAVE)
             .addAction(MasterActions.EDIT)
             .addAction(MasterActions.VIEW)
-    
+
             .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                     "      ['padding:20px', "
                     + format("[[%s], ['flex']],", fmr)
@@ -458,7 +459,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     + "    ]"))
             .done();
 
-        
+
         final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>()
                 .forEntity(TgFunctionalEntityWithCentreContext.class) // forEntityWithSaveOnActivate
                 .addProp("valueToInsert").asSinglelineText()
@@ -1023,6 +1024,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 "['center-justified', 'start', mrLast]]")
                                 .replaceAll("mrLast", centreMrLast).replaceAll("mr", centreMr)
                 )
+                //.hideCheckboxes()
+                //.notScrollable()
+                .withScrollingConfig(ScrollConfig.configScroll().withFixedSecondaryActions().withFixedSummary().done())
+                .setPageCapacity(20)
+                .setVisibleRowsCount(10)
                 .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
                 .also()
                 .addProp("desc").withAction(action(TgFunctionalEntityWithCentreContext.class).
@@ -1093,27 +1099,27 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                        "["
                 //                                + "[['flex', 'select:property=stringProp']]"
                 //                                + "]")
-                .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(),
-                        "["
-                                + "[['flex', 'select:property=this'],           ['flex', 'select:property=desc'],       ['flex', 'select:property=integerProp']],"
-                                + "[['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']]"
-                                + "]")
-                .withExpansionLayout(
-                        "["
-                                + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
-                                + "[['flex', 'select:property=stringProp']]"
-                                + "]")
-                .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(),
-                        "["
-                                + "[['flex', 'select:property=this'],        ['flex', 'select:property=desc']],"
-                                + "[['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']]"
-                                + "]")
-                .withExpansionLayout(
-                        "["
-                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
-                                + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
-                                + "[['flex', 'select:property=stringProp']]"
-                                + "]")
+                //                .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(),
+                //                        "["
+                //                                + "[['flex', 'select:property=this'],           ['flex', 'select:property=desc'],       ['flex', 'select:property=integerProp']],"
+                //                                + "[['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']]"
+                //                                + "]")
+                //                .withExpansionLayout(
+                //                        "["
+                //                                + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
+                //                                + "[['flex', 'select:property=stringProp']]"
+                //                                + "]")
+                //                .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(),
+                //                        "["
+                //                                + "[['flex', 'select:property=this'],        ['flex', 'select:property=desc']],"
+                //                                + "[['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']]"
+                //                                + "]")
+                //                .withExpansionLayout(
+                //                        "["
+                //                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
+                //                                + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
+                //                                + "[['flex', 'select:property=stringProp']]"
+                //                                + "]")
                 //                .also()
                 //                .addProp("status")
 
@@ -1123,8 +1129,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
                 .addPrimaryAction(
-                        //                        EntityActionConfig.createMasterInvocationActionConfig()
-                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
+                        EntityActionConfig.createMasterInvocationActionConfig()
+                //       EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 //                        action(TgFunctionalEntityWithCentreContext.class).
                 //                                withContext(context().withSelectedEntities().build()).
                 //                                icon("assignment-turned-in").
@@ -1139,14 +1145,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 ).also()*/
                 .addSecondaryAction(
                         action(TgDummyAction.class)
-                        .withContext(context().withSelectedEntities().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                ))
-                        .icon("accessibility")
-                        .shortDesc("Dummy")
-                        .longDesc("Dummy action, simply prints its result into console.")
-                        .build()
+                                .withContext(context().withSelectedEntities().build())
+                                .postActionSuccess(new PostActionSuccess(""
+                                        + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                        ))
+                                .icon("accessibility")
+                                .shortDesc("Dummy")
+                                .longDesc("Dummy action, simply prints its result into console.")
+                                .build()
                 )
                 .also()
                 .addSecondaryAction(
@@ -1206,7 +1212,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                }
         return scl.build();
     }
-    
+
     private EntityCentre<TgPersistentEntityWithProperties> createEntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final EntityCentreConfig<TgPersistentEntityWithProperties> entityCentreConfig) {
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre = new EntityCentre<>(miType, name, entityCentreConfig, injector(), (centre) -> {
             // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.

@@ -4,6 +4,7 @@
 <link rel="import" href="/resources/views/tg-view.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 <link rel="import" href="/resources/views/tg-view-with-menu.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 
 <dom-module id="tg-app-view">
     <style>
@@ -58,7 +59,8 @@
 
             behaviors: [
                 Polymer.NeonAnimatableBehavior,
-                Polymer.TgBehaviors.TgAppAnimationBehavior
+                Polymer.TgBehaviors.TgAppAnimationBehavior,
+                Polymer.IronResizableBehavior
             ],
 
             /**
