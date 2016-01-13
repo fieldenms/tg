@@ -1,19 +1,19 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.custom_view.CustomView;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
-import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 public class WebView implements IExecutable {
 
-    private final IRenderable customView;
+    private final CustomView customView;
     private final EntityCentre<?> entityCentre;
     private final EntityMaster<?> entityMaster;
 
-    public WebView(final IRenderable customView) {
+    public WebView(final CustomView customView) {
         this(customView, null, null);
     }
 
@@ -25,7 +25,7 @@ public class WebView implements IExecutable {
         this(null, null, entityMaster);
     }
 
-    private WebView(final IRenderable customView, final EntityCentre<?> entityCentre, final EntityMaster<?> entityMaster) {
+    private WebView(final CustomView customView, final EntityCentre<?> entityCentre, final EntityMaster<?> entityMaster) {
         this.customView = customView;
         this.entityCentre = entityCentre;
         this.entityMaster = entityMaster;
@@ -38,10 +38,10 @@ public class WebView implements IExecutable {
         } else {
             final String viewUrl = entityMaster != null ? "master_ui" : (entityCentre != null ? "centre_ui" : "custom_view");
             final String typeUrl = entityMaster != null ? entityMaster.getEntityType().getName() : (entityCentre != null ? entityCentre.getMenuItemType().getName()
-                    : customView.getClass().getName());
+                    : customView.getViewName());
             final String importUrl = "\"/" + viewUrl + "/" + typeUrl + "\"";
             final String typeName = entityMaster != null ? (entityMaster.getEntityType().getSimpleName() + "-master")
-                    : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : (customView.getClass().getSimpleName() + "-view"));
+                    : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : (customView.getViewName() + "-view"));
             final String elementName = "\"tg-" + typeName + "\"";
             final String viewType = entityMaster != null ? "\"master\"" : (entityCentre != null ? "\"centre\"" : "\"view\"");
             final StringBuilder attrs = new StringBuilder();

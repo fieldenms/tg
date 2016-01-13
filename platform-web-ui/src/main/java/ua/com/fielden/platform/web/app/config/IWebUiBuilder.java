@@ -4,6 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.custom_view.CustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -71,6 +72,14 @@ public interface IWebUiBuilder {
      * @return
      */
     <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(Class<M> menuType, EntityCentre<?> centre);
+
+    /**
+     * Adds the custom view to the application configuration object.
+     *
+     * @param customView
+     * @return
+     */
+    IWebUiBuilder addCustomView(CustomView customView);
 
     /**
      * Finish to configure the web application.
