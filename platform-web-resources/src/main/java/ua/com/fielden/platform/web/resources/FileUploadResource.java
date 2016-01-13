@@ -53,7 +53,6 @@ public class FileUploadResource extends ServerResource {
             final BufferedReader br = new BufferedReader(new InputStreamReader(stream));
             String line = null;
             while ((line = br.readLine()) != null) {
-                long sizeRead = line.getBytes().length;
                 sb.append(line).append("\n");
             }
             sb.append("\n\n");

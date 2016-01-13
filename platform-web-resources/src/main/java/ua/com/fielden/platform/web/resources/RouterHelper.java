@@ -89,7 +89,7 @@ public final class RouterHelper {
     
     public void registerFileUploadResource(final Router router) {
         final FileUploadResourceFactory factory = new FileUploadResourceFactory(injector);
-        router.attach("/users/{username}/file-processing/{processor-type}", factory);
+        router.attach("/file-processing/{processor-type}", factory);
     }
 
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerInstanceResource(final Router router, final Class<DAO> daoType) {

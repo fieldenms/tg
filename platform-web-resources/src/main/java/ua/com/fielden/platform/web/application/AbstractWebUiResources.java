@@ -11,6 +11,7 @@ import org.restlet.security.Authenticator;
 
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.factories.FileUploadResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.AppIndexResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreEgiResourceFactory;
@@ -128,6 +129,9 @@ public abstract class AbstractWebUiResources extends Application {
         ///////////////////////////////////////////
         final Authenticator guard = new DefaultWebResourceGuard(getContext(), webApp.getDomainName(), webApp.getPath(), injector);
         guard.setNext(router);
+        
+        final FileUploadResourceFactory factory = new FileUploadResourceFactory(injector);
+        router.attach("/file-processing/{processor-type}", factory);
 
         final Router mainRouter = new Router(getContext());
         // standard Polymer components and other resources should not be guarded

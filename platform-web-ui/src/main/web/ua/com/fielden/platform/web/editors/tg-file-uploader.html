@@ -1,123 +1,34 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<meta charset="UTF-8">
-<title>File(s) size</title>
-<style>
-	.over {
-	  border: 2px dashed #000;
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+<title>FileUpload Test</title>
+
+<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/editors/tg-file-upload-element.html">
+
+
+<style is="custom-style">
+
+	body {
+		font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial',
+			'sans-serif';
+		font-size: 10pt;
+		background: #eee;
+		-webkit-font-smoothing: antialiased;
 	}
+
 </style>
-<script>
-    function handleFiles(oFiles) {
-        var fileNames = "";
-        var mimeTypes = "";
-        var nBytes = 0;
-        var nFiles = oFiles.length;
-        for (var nFileId = 0; nFileId < nFiles; nFileId++) {
-            var file = oFiles[nFileId];
-            fileNames += file.name + '; ';
-            nBytes += file.size;
-            mimeTypes = mimeTypes + file.type + '  ';
-            
-            // just experimenting with object URLs
-            // they can be used to, for example, display images (in <img>) or even PDF (<iframe>) from the recevied blob... if that was an image or a PDF
-            var objectURL = window.URL.createObjectURL(file);
-            console.log(objectURL);
-            window.URL.revokeObjectURL(objectURL);
-        }
-        var sOutput = nBytes + " bytes";
-        // optional code for multiples approximation
-        for (var aMultiples = [ "KiB", "MiB", "GiB", "TiB", "PiB", "EiB",
-                "ZiB", "YiB" ], nMultiple = 0, nApprox = nBytes / 1024; nApprox > 1; nApprox /= 1024, nMultiple++) {
-            sOutput = nApprox.toFixed(3) + " " + aMultiples[nMultiple] + " ("
-                    + nBytes + " bytes)";
-        }
-        // end of optional code
-        document.getElementById("fileNames").innerHTML = fileNames;
-        document.getElementById("fileNum").innerHTML = nFiles;
-        document.getElementById("fileSize").innerHTML = sOutput;
-        document.getElementById("mimeTypes").innerHTML = mimeTypes;
-        
-        // uploading the files
-        if (nFiles > 0) {
-            var file = oFiles[0];
-            var oReq = new XMLHttpRequest();
-            oReq.open("PUT", "/v1/users/SU/file-processing/fielden.FileConsumer", true);
-            oReq.onload = function (oEvent) {
-               console.log('file uploaded')
-            };
-            oReq.upload.onprogress = function (event) {
-                console.log('loaded:', event.loaded, 'total:', event.total);
-            }
 
-            oReq.send(file);
-            
-        }
-    }
-
-    function addHandlers() {
-        var fileSelect = document.getElementById("fileSelect");
-        var fileElem = document.getElementById("uploadInput");
-
-        fileSelect.addEventListener("dragenter", dragenter, false);
-        fileSelect.addEventListener("dragover", dragover, false);
-        fileSelect.addEventListener("dragleave", dragleave, false);
-        fileSelect.addEventListener("drop", drop, false);
-        
-        fileSelect.addEventListener("click", function(e) {
-            if (fileElem) {
-                fileElem.click();
-            }
-            e.preventDefault(); // prevent navigation to "#"
-        }, false);
-
-    }
-
-    function dragenter(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        var fileSelect = document.getElementById("fileSelect");
-        fileSelect.classList.add('over');
-    }
-
-    function dragover(e) {
-        e.stopPropagation();
-        e.preventDefault();
-    }
-    
-    function dragleave(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        fileSelect.classList.remove('over');
-    }
-
-    function drop(e) {
-        e.stopPropagation();
-        e.preventDefault();
-
-        var dt = e.dataTransfer;
-        var files = dt.files;
-
-	    fileSelect.classList.remove('over');
-        
-        handleFiles(files);
-    }
-</script>
 </head>
 
-<body onload="addHandlers()">
-	<p>
-		<input id='uploadInput' type='file' name='myFiles' multiple
-			accept='.csv,.txt' style='display: none'
-			onchange='handleFiles(this.files)'> <a href="#"
-			id="fileSelect">Tap to select files or drag them here (only images accepted).</a>
-	</p>
+<body unresolved class="fullbleed">
 
-	<p>
-	    names of selected files: <span id="fileNames">[none]</span><br/>
-		number of selected files: <span id="fileNum">0</span>;<br/> 
-		total size: <span id="fileSize">0</span>;<br/> 
-		mime type(s): <span id="mimeTypes"></span>
-	</p>
+	<tg-file-upload-element></tg-file-upload-element>
 </body>
+
+</html>

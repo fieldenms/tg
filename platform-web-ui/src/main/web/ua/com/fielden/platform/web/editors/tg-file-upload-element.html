@@ -1,0 +1,128 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<dom-module id="tg-file-upload-element">
+    <template>
+    	<style>
+    		.over {
+				border: 2px dashed #000;
+			}
+    	</style>
+
+		<input id='uploadInput' type='file' name='myFiles' multiple
+			accept='.csv,.txt' style='display: none'
+			on-change='_filesAdded'> 
+			<a href="#"	id="fileSelect">Tap to select files or drag them here (only images accepted).</a>
+
+		<p>
+		    names of selected files: <span id="fileNames">[none]</span><br/>
+			number of selected files: <span id="fileNum">0</span>;<br/> 
+			total size: <span id="fileSize">0</span>;<br/> 
+			mime type(s): <span id="mimeTypes"></span>
+		</p>
+
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+    	is: 'tg-file-upload-element',
+    	
+    	ready: function () {
+            var fileSelect = this.$.fileSelect;
+            var fileElem = this.$.uploadInput;
+
+            fileSelect.addEventListener("dragenter", this.dragenter.bind(this), false);
+            fileSelect.addEventListener("dragover", this.dragover.bind(this), false);
+            fileSelect.addEventListener("dragleave", this.dragleave.bind(this), false);
+            fileSelect.addEventListener("drop", this.drop.bind(this), false);
+            
+            fileSelect.addEventListener("click", function(e) {
+                if (fileElem) {
+                    fileElem.click();
+                }
+                e.preventDefault(); // prevent navigation to "#"
+            }, false);
+    	},
+    	
+    	properties: {
+    	    url: {
+    	        type: String,
+    	        value: '/file-processing/FileConsumer'
+    	    }
+    	},
+    	
+	    _filesAdded: function() {
+    		this.handleFiles(this.$.uploadInput.files);
+	    },
+    	
+        handleFiles: function (oFiles) {
+            var fileNames = "";
+            var mimeTypes = "";
+            var nBytes = 0;
+            var nFiles = oFiles.length;
+            for (var nFileId = 0; nFileId < nFiles; nFileId++) {
+                var file = oFiles[nFileId];
+                fileNames += file.name + '; ';
+                nBytes += file.size;
+                mimeTypes = mimeTypes + file.type + '  ';
+            }
+            var sOutput = nBytes + " bytes";
+            // optional code for multiples approximation
+            for (var aMultiples = [ "KiB", "MiB", "GiB", "TiB", "PiB", "EiB",
+                    "ZiB", "YiB" ], nMultiple = 0, nApprox = nBytes / 1024; nApprox > 1; nApprox /= 1024, nMultiple++) {
+                sOutput = nApprox.toFixed(3) + " " + aMultiples[nMultiple] + " ("
+                        + nBytes + " bytes)";
+            }
+            // end of optional code
+            this.$.fileNames.innerHTML = fileNames;
+            this.$.fileNum.innerHTML = nFiles;
+            this.$.fileSize.innerHTML = sOutput;
+            this.$.mimeTypes.innerHTML = mimeTypes;
+            
+            // uploading the files
+            if (nFiles > 0) {
+                var file = oFiles[0];
+                var oReq = new XMLHttpRequest();
+                oReq.open("PUT", "/file-processing/fielden.FileConsumer", true);
+                oReq.onload = function (oEvent) {
+                   console.log('file uploaded')
+                };
+                oReq.upload.onprogress = function (event) {
+                    console.log('loaded:', event.loaded, 'total:', event.total);
+                }
+
+                oReq.send(file);
+            }
+        },
+
+        dragenter: function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            this.$.fileSelect.classList.add('over');
+        },
+
+        dragover: function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        },
+        
+        dragleave: function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            this.$.fileSelect.classList.remove('over');
+        },
+
+        drop: function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            var dt = e.dataTransfer;
+            var files = dt.files;
+
+            this.$.fileSelect.classList.remove('over');
+            
+            this.handleFiles(files);
+        }
+
+    });
+</script>

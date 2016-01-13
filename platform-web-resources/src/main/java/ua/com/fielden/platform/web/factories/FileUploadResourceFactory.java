@@ -28,8 +28,6 @@ public class FileUploadResourceFactory extends Restlet {
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
 
-        final String username = (String) request.getAttributes().get("username");
-        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
         if (Method.PUT.equals(request.getMethod())) {
             new FileUploadResource(injector, getContext(), request, response).handle();
         }

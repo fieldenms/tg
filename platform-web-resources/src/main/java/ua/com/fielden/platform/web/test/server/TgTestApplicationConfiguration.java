@@ -68,7 +68,7 @@ public class TgTestApplicationConfiguration extends Component {
 
             // attach application specific resources, which are versioned
             getDefaultHost().attach("/v1",//
-                    new ServerApplication(
+                    new TgTestServerApplication(
                             "Web UI Testing Server", //
                             getContext().createChildContext(),//
                             injector,//

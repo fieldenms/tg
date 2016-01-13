@@ -124,6 +124,7 @@ public abstract class BasicServerApplication extends Application {
         final Authenticator guard;
 
         if (securityRealm != null) {
+            // FIXME Should be removed in favor of a new AbstractWebResourceGuard based guard
             guard = new ResourceGuard(getContext(), securityRealm, serverRestUtil, injector);
         } else {
             guard = authenticator;
@@ -133,8 +134,6 @@ public abstract class BasicServerApplication extends Application {
         final Router mainRouter = new Router(getContext());
         // FIXME Insecure resources!!!
         helper.registerAttachment(mainRouter, attachmentLocation);
-        // TODO to be removed in favor of application level registration (guarded + domain specific configuration) 
-        helper.registerFileUploadResource(mainRouter);
         
         mainRouter.attach(guard);
 
