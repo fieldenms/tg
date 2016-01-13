@@ -10,11 +10,13 @@
 </style>
 <script>
     function handleFiles(oFiles) {
+        var fileNames = "";
         var mimeTypes = "";
         var nBytes = 0;
         var nFiles = oFiles.length;
         for (var nFileId = 0; nFileId < nFiles; nFileId++) {
             var file = oFiles[nFileId];
+            fileNames += file.name + '; ';
             nBytes += file.size;
             mimeTypes = mimeTypes + file.type + '  ';
             
@@ -32,9 +34,26 @@
                     + nBytes + " bytes)";
         }
         // end of optional code
+        document.getElementById("fileNames").innerHTML = fileNames;
         document.getElementById("fileNum").innerHTML = nFiles;
         document.getElementById("fileSize").innerHTML = sOutput;
         document.getElementById("mimeTypes").innerHTML = mimeTypes;
+        
+        // uploading the files
+        if (nFiles > 0) {
+            var file = oFiles[0];
+            var oReq = new XMLHttpRequest();
+            oReq.open("PUT", "/v1/users/SU/file-processing/fielden.FileConsumer", true);
+            oReq.onload = function (oEvent) {
+               console.log('file uploaded')
+            };
+            oReq.upload.onprogress = function (event) {
+                console.log('loaded:', event.loaded, 'total:', event.total);
+            }
+
+            oReq.send(file);
+            
+        }
     }
 
     function addHandlers() {
@@ -90,13 +109,15 @@
 <body onload="addHandlers()">
 	<p>
 		<input id='uploadInput' type='file' name='myFiles' multiple
-			accept='image/*' style='display: none'
+			accept='.csv,.txt' style='display: none'
 			onchange='handleFiles(this.files)'> <a href="#"
 			id="fileSelect">Tap to select files or drag them here (only images accepted).</a>
 	</p>
 
 	<p>
-		selected files: <span id="fileNum">0</span>;<br /> total size: <span
-			id="fileSize">0</span>;<br /> mime type(s): <span id="mimeTypes"></span>
+	    names of selected files: <span id="fileNames">[none]</span><br/>
+		number of selected files: <span id="fileNum">0</span>;<br/> 
+		total size: <span id="fileSize">0</span>;<br/> 
+		mime type(s): <span id="mimeTypes"></span>
 	</p>
 </body>

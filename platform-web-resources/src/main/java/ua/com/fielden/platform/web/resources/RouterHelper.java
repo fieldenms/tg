@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.resources;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -20,12 +22,11 @@ import ua.com.fielden.platform.web.factories.EntityInstanceResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityLifecycleResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityQueryExportResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityTypeResourceFactory;
+import ua.com.fielden.platform.web.factories.FileUploadResourceFactory;
 import ua.com.fielden.platform.web.factories.GeneratedEntityQueryExportResourceFactory;
 import ua.com.fielden.platform.web.factories.GeneratedEntityQueryResourceFactory;
 import ua.com.fielden.platform.web.factories.ReportResourceFactory;
 import ua.com.fielden.platform.web.factories.SnappyQueryRestlet;
-
-import com.google.inject.Injector;
 
 /**
  * Provides convenient methods for routing standard entity resources.
@@ -84,6 +85,11 @@ public final class RouterHelper {
 
         final Restlet instanceResource = new AttachmentInstanceResourceFactory(location, injector, factory);
         router.attach("/users/{username}/" + Attachment.class.getSimpleName() + "/{entity-id}", instanceResource);
+    }
+    
+    public void registerFileUploadResource(final Router router) {
+        final FileUploadResourceFactory factory = new FileUploadResourceFactory(injector);
+        router.attach("/users/{username}/file-processing/{processor-type}", factory);
     }
 
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerInstanceResource(final Router router, final Class<DAO> daoType) {

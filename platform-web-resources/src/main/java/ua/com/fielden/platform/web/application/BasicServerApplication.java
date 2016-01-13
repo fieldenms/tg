@@ -131,8 +131,11 @@ public abstract class BasicServerApplication extends Application {
         guard.setNext(routerForResources);
 
         final Router mainRouter = new Router(getContext());
-        // FIXME Insecure resource!!!
+        // FIXME Insecure resources!!!
         helper.registerAttachment(mainRouter, attachmentLocation);
+        // TODO to be removed in favor of application level registration (guarded + domain specific configuration) 
+        helper.registerFileUploadResource(mainRouter);
+        
         mainRouter.attach(guard);
 
         // register snappy query resource

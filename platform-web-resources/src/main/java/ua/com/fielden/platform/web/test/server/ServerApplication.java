@@ -24,5 +24,6 @@ public class ServerApplication extends BasicServerApplication {
 
     @Override
     protected void registerApplicationResources(final Router routerForResources) {
+        //helper.registerFileUploadResource(routerForResources);
     }
 }
