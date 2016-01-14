@@ -1,14 +1,32 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
 
 <dom-module id="tg-file-upload-element">
     <template>
     	<style>
+    	
+    		:host {
+		      display: inline-block;
+		      position: relative;
+		      box-sizing: border-box;
+		      text-align: center;
+		      font: inherit;
+		      outline: none;
+		      -moz-user-select: none;
+		      -ms-user-select: none;
+		      -webkit-user-select: none;
+		      user-select: none;
+		      cursor: pointer;
+		      z-index: 0;
+		    }
+		    
     		.over {
 				background: #bbdefb;
 			}
 			
 			#fileSelect {
-				width: 200px;
 				cursor: pointer;
 			}
 
@@ -48,14 +66,28 @@
 			}
 
 			.paper-blue > span {
- 	 			background-color: #64b5f6;
-  				background-image: linear-gradient(to bottom, #64b5f6, #2196f3);
+ 	 			background-color: var(--paper-blue-100);
+  				background-image: linear-gradient(to bottom, var(--paper-blue-100), var(--paper-blue-300));
 			}
 
 			.red > span {
   				background-color: #f0a3a3;
   				background-image: linear-gradient(to bottom, #f0a3a3, #f42323);
-			}			
+			}
+			
+			paper-spinner {
+	            position: absolute;
+	            top: 0px;
+	            padding: 2px;
+	            margin: 0px;
+	            width: 24px;
+	            height: 24px;
+	            --paper-spinner-layer-1-color: var(--paper-blue-500);
+	            --paper-spinner-layer-2-color: var(--paper-blue-500);
+	            --paper-spinner-layer-3-color: var(--paper-blue-500);
+	            --paper-spinner-layer-4-color: var(--paper-blue-500);
+	        }
+						
     	</style>
 
 		<!-- a hidden input for file selection -->
@@ -64,17 +96,35 @@
 			on-change='_filesAdded'> 
 		
 		<!-- this is how the element actually looks like -->
-		<div id="fileSelect" on-tap='_fileSelectTap' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
+<!-- 		<div id="fileSelect" on-tap='_fileSelectTap' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
 			<span>Tap to select files or D`n`D them here.</span>
 			
-			<!-- unfortunately the standard HTML5 progress element cannot be styled consistently across different browsers -->
+			unfortunately the standard HTML5 progress element cannot be styled consistently across different browsers
+			progress max="[[_fileSize]]" value="[[_fileSizeUploaded]]"></progress
+			
+			instead a span based approach is used to indicate the progress
+			<div class="meter paper-blue">
+	  			<span id="progressBar" style="width: 0%"></span>
+			</div>
+		</div>
+ -->		
+		<paper-button raised roll="button" id="fileSelect" on-tap='_fileSelectTap' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop' style="width:100%" disabled$="[[_disabled]]">
+            <paper-spinner id="spinner" active="[[_working]]" class="blue" style="visibility: hidden;" alt="in progress">
+            </paper-spinner>
+            
+            <span>Tap to select files or D`n`D them here.</span>
+            <!-- span>[[shortDesc]]</span-->
+            
+            			<!-- unfortunately the standard HTML5 progress element cannot be styled consistently across different browsers -->
 			<!-- progress max="[[_fileSize]]" value="[[_fileSizeUploaded]]"></progress-->
 			
 			<!-- instead a span based approach is used to indicate the progress -->
 			<div class="meter paper-blue">
 	  			<span id="progressBar" style="width: 0%"></span>
 			</div>
-		</div>
+            
+        </paper-button>
+		
 		
 		<!-- need also support some debug information on a selected file -->
 		<template is='dom-if' if='{{debug}}'>
@@ -169,13 +219,15 @@
 
                     var prc = event.loaded / event.total * 100; 
                     this.$.progressBar.style.width = prc + '%';
+
+                    // TODO call fileUploaded callback if provided
                 }.bind(this);
 
                 oReq.send(file);
             }
         },
 
-        _fileSelectTap: function () {
+        _fileSelectTap: function (e	) {
             if (this.$.uploadInput) {
                 this.$.uploadInput.click();
             }
