@@ -16,6 +16,7 @@ import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactor
 import ua.com.fielden.platform.web.factories.webui.CentreEgiResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.CustomViewResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
@@ -116,6 +117,9 @@ public abstract class AbstractWebUiResources extends Application {
         // Registering entity masters:
         attachMasterResources(router, webApp, restUtil);
 
+        // Registering custom views:
+        attachCustomViewResources(router, restUtil);
+
         // Registering autocompletion resources:
         attachAutocompletionResources(router, webApp);
 
@@ -151,6 +155,10 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/validation/{entityType}", new EntityValidationResourceFactory(webUiConfig, injector));
         router.attach("/master_ui/Test_TgPersistentEntityWithProperties", new MasterTestsComponentResourceFactory(injector));
         router.attach("/master_ui/{entityType}", new MasterComponentResourceFactory(sourceController, restUtil));
+    }
+
+    private void attachCustomViewResources(final Router router, final RestServerUtil restUtil) {
+        router.attach("/custom_view/{viewName}", new CustomViewResourceFactory(sourceController, restUtil));
     }
 
     /**
