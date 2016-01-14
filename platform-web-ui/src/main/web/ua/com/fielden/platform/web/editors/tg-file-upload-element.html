@@ -23,58 +23,28 @@
 		    }
 		    
     		.over {
-				background: #bbdefb;
+				background: var(--paper-green-100);
 			}
 			
 			#fileSelect {
 				cursor: pointer;
 			}
 
-			.meter { 
-				height: 10px;  /* Can be anything */
-				position: relative;
-				background: #555;
-				-moz-border-radius: 2px;
-				-webkit-border-radius: 2px;
-				border-radius: 2px;
-				padding: 1px;
-				box-shadow: inset 0 -1px 1px rgba(255,255,255,0.3);
-			}
-			.meter > span {
-				display: block;
+			.meter-span {
+				display: inline-block;
 			  	height: 100%;
 			  	border-top-right-radius: 2px;
 			  	border-bottom-right-radius: 2px;
 			  	border-top-left-radius: 2px;
 			  	border-bottom-left-radius: 2px;
-			  	background-color: rgb(43,194,83);
-			  	background-image: linear-gradient(
-			    	center bottom,
-			    	rgb(43,194,83) 37%,
-			    	rgb(84,240,84) 69%
-			  	);
-			  	box-shadow: 
-			    	inset 0 2px 9px  rgba(255,255,255,0.3),
-			    	inset 0 -2px 6px rgba(0,0,0,0.4);
-			  	position: relative;
+			  	background-color: var(--paper-blue-100);
+			  	position: absolute;
 			  	overflow: hidden;
-			}
-			
-			.orange > span {
- 	 			background-color: #f1a165;
-  				background-image: linear-gradient(to bottom, #f1a165, #f36d0a);
+			  	bottom: 0;
+    			left: 0;
+    			z-index: -1;
 			}
 
-			.paper-blue > span {
- 	 			background-color: var(--paper-blue-100);
-  				background-image: linear-gradient(to bottom, var(--paper-blue-100), var(--paper-blue-300));
-			}
-
-			.red > span {
-  				background-color: #f0a3a3;
-  				background-image: linear-gradient(to bottom, #f0a3a3, #f42323);
-			}
-			
 			paper-spinner {
 	            position: absolute;
 	            top: 0px;
@@ -95,34 +65,18 @@
 			accept='.csv,.txt,text/plain,text/csv' style='display: none'
 			on-change='_filesAdded'> 
 		
-		<!-- this is how the element actually looks like -->
-<!-- 		<div id="fileSelect" on-tap='_fileSelectTap' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
-			<span>Tap to select files or D`n`D them here.</span>
-			
-			unfortunately the standard HTML5 progress element cannot be styled consistently across different browsers
-			progress max="[[_fileSize]]" value="[[_fileSizeUploaded]]"></progress
-			
-			instead a span based approach is used to indicate the progress
-			<div class="meter paper-blue">
-	  			<span id="progressBar" style="width: 0%"></span>
-			</div>
-		</div>
- -->		
 		<paper-button raised roll="button" id="fileSelect" on-tap='_fileSelectTap' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop' style="width:100%" disabled$="[[_disabled]]">
             <paper-spinner id="spinner" active="[[_working]]" class="blue" style="visibility: hidden;" alt="in progress">
             </paper-spinner>
             
-            <span>Tap to select files or D`n`D them here.</span>
             <!-- span>[[shortDesc]]</span-->
             
             			<!-- unfortunately the standard HTML5 progress element cannot be styled consistently across different browsers -->
 			<!-- progress max="[[_fileSize]]" value="[[_fileSizeUploaded]]"></progress-->
 			
 			<!-- instead a span based approach is used to indicate the progress -->
-			<div class="meter paper-blue">
-	  			<span id="progressBar" style="width: 0%"></span>
-			</div>
-            
+	  		<span class="meter-span" id="progressBar" style="width: 0%"></span>
+			<span>Tap to select or D`n`D file here</span>            
         </paper-button>
 		
 		
@@ -154,6 +108,11 @@
     	        value: '/file-processing/FileConsumer'
     	    },
     	    
+    	    _disabled: {
+    	        type: Boolean,
+    	        value: false
+    	    },
+    	    
     	    _debug_fileNames: {
     	        type: String,
     	        value: '[none]'
@@ -183,6 +142,8 @@
 	    },
     	
         _handleFiles: function (oFiles) {
+            this._disabled = true;
+            
             var fileNames = "";
             var mimeTypes = "";
             var nBytes = 0;
@@ -212,8 +173,12 @@
                 var oReq = new XMLHttpRequest();
                 oReq.open("PUT", "/file-processing/fielden.FileConsumer", true);
                 oReq.onload = function (oEvent) {
-                   console.log('file uploaded')
-                };
+                   console.log('file uploaded');
+                   
+                   this._disabled = false;
+                   this.$.progressBar.style.width = '0%';
+                }.bind(this);
+                
                 oReq.upload.onprogress = function (event) {
                     console.log('loaded:', event.loaded, 'total:', event.total);
 
@@ -227,11 +192,14 @@
             }
         },
 
-        _fileSelectTap: function (e	) {
-            if (this.$.uploadInput) {
-                this.$.uploadInput.click();
-            }
-            e.preventDefault();
+        _fileSelectTap: function (e) {
+            // let give a chance for tap animation to do its work
+            this.async( function () {
+                if (this.$.uploadInput) {
+                    this.$.uploadInput.click();
+                }
+           	}, 200);
+
         },
         
         _dragenter: function (e) {
