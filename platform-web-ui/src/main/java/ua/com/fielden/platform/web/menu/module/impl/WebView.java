@@ -41,7 +41,7 @@ public class WebView implements IExecutable {
                     : customView.getViewName());
             final String importUrl = "\"/" + viewUrl + "/" + typeUrl + "\"";
             final String typeName = entityMaster != null ? (entityMaster.getEntityType().getSimpleName() + "-master")
-                    : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : (customView.getViewName() + "-view"));
+                    : (entityCentre != null ? (entityCentre.getMenuItemType().getSimpleName() + "-centre") : customView.getViewName());
             final String elementName = "\"tg-" + typeName + "\"";
             final String viewType = entityMaster != null ? "\"master\"" : (entityCentre != null ? "\"centre\"" : "\"view\"");
             final StringBuilder attrs = new StringBuilder();

@@ -39,6 +39,19 @@
     </dom-modules>
     <script>
         (function () {
+            var isPropertyDefined = function (obj, property) {
+                var dotIndex = property.indexOf(".");
+                var firstProp;
+                if (!obj) {
+                    return false;
+                } else if (dotIndex < 0) {
+                    return !!obj[property]
+                } else {
+                    firstProp = property.substr(0, dotIndex);
+                    return isPropertyDefined(obj[firstProp], property.slice(dotIndex + 1))
+                }
+            };
+
             Polymer({
 
                 is: "tg-menu-item-view",
@@ -63,7 +76,7 @@
                 attached: function () {
                     var self = this;
                     self.async(function () {
-                        if (self.menuItem && self.menuItem.view) {
+                        if (isPropertyDefined(self, "menuItem.view.attrs")) {
                             self.menuItem.view.attrs.uuid = self.uuid;
                             self.menuItem.view.attrs.moduleId = self.moduleId;
                         }

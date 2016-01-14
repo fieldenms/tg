@@ -182,6 +182,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().addCentre(MiTgPersistentEntityWithProperties4.class, entityCentre4);
         configApp().addCentre(MiDetailsCentre.class, detailsCentre);
         configApp().addCentre(MiTgEntityWithPropertyDependency.class, propDependencyCentre);
+
+        //Add custom view
+        final CustomTestView customView = new CustomTestView();
+        configApp().addCustomView(customView);
+
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);
@@ -617,6 +622,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .captionBgColor("#78909C")
                 .menu()
                 .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
+                .addMenuItem("Custom View").description("Custom view description").view(customView).done()
                 .addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
                 .done().done()
                 .addModule("Accidents")
