@@ -4,21 +4,87 @@
     <template>
     	<style>
     		.over {
-				border: 2px dashed #000;
+				background: #bbdefb;
 			}
+			
+			#fileSelect {
+				width: 200px;
+				cursor: pointer;
+			}
+
+			.meter { 
+				height: 10px;  /* Can be anything */
+				position: relative;
+				background: #555;
+				-moz-border-radius: 2px;
+				-webkit-border-radius: 2px;
+				border-radius: 2px;
+				padding: 1px;
+				box-shadow: inset 0 -1px 1px rgba(255,255,255,0.3);
+			}
+			.meter > span {
+				display: block;
+			  	height: 100%;
+			  	border-top-right-radius: 2px;
+			  	border-bottom-right-radius: 2px;
+			  	border-top-left-radius: 2px;
+			  	border-bottom-left-radius: 2px;
+			  	background-color: rgb(43,194,83);
+			  	background-image: linear-gradient(
+			    	center bottom,
+			    	rgb(43,194,83) 37%,
+			    	rgb(84,240,84) 69%
+			  	);
+			  	box-shadow: 
+			    	inset 0 2px 9px  rgba(255,255,255,0.3),
+			    	inset 0 -2px 6px rgba(0,0,0,0.4);
+			  	position: relative;
+			  	overflow: hidden;
+			}
+			
+			.orange > span {
+ 	 			background-color: #f1a165;
+  				background-image: linear-gradient(to bottom, #f1a165, #f36d0a);
+			}
+
+			.paper-blue > span {
+ 	 			background-color: #64b5f6;
+  				background-image: linear-gradient(to bottom, #64b5f6, #2196f3);
+			}
+
+			.red > span {
+  				background-color: #f0a3a3;
+  				background-image: linear-gradient(to bottom, #f0a3a3, #f42323);
+			}			
     	</style>
 
+		<!-- a hidden input for file selection -->
 		<input id='uploadInput' type='file' name='myFiles' multiple
-			accept='.csv,.txt' style='display: none'
+			accept='.csv,.txt,text/plain,text/csv' style='display: none'
 			on-change='_filesAdded'> 
-			<a href="#"	id="fileSelect">Tap to select files or drag them here (only images accepted).</a>
-
+		
+		<!-- this is how the element actually looks like -->
+		<div id="fileSelect" on-tap='_fileSelectTap' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop'>
+			<span>Tap to select files or D`n`D them here.</span>
+			
+			<!-- unfortunately the standard HTML5 progress element cannot be styled consistently across different browsers -->
+			<!-- progress max="[[_fileSize]]" value="[[_fileSizeUploaded]]"></progress-->
+			
+			<!-- instead a span based approach is used to indicate the progress -->
+			<div class="meter paper-blue">
+	  			<span id="progressBar" style="width: 0%"></span>
+			</div>
+		</div>
+		
+		<!-- need also support some debug information on a selected file -->
+		<template is='dom-if' if='{{debug}}'>
 		<p>
-		    names of selected files: <span id="fileNames">[none]</span><br/>
-			number of selected files: <span id="fileNum">0</span>;<br/> 
-			total size: <span id="fileSize">0</span>;<br/> 
-			mime type(s): <span id="mimeTypes"></span>
+		    names of selected files: <span>[[_debug_fileNames]]</span><br/>
+			number of selected files: <span>[[_debug_fileNum]]</span>;<br/> 
+			total size: <span>[[_debug_fileSize]]</span>;<br/> 
+			mime type(s): <span>[[_debug_mimeTypes]]</span>
 		</p>
+		</template>
 
     </template>
 </dom-module>
@@ -26,36 +92,47 @@
 <script>
     Polymer({
     	is: 'tg-file-upload-element',
-    	
-    	ready: function () {
-            var fileSelect = this.$.fileSelect;
-            var fileElem = this.$.uploadInput;
 
-            fileSelect.addEventListener("dragenter", this.dragenter.bind(this), false);
-            fileSelect.addEventListener("dragover", this.dragover.bind(this), false);
-            fileSelect.addEventListener("dragleave", this.dragleave.bind(this), false);
-            fileSelect.addEventListener("drop", this.drop.bind(this), false);
-            
-            fileSelect.addEventListener("click", function(e) {
-                if (fileElem) {
-                    fileElem.click();
-                }
-                e.preventDefault(); // prevent navigation to "#"
-            }, false);
-    	},
-    	
     	properties: {
+    	    debug: {
+    	        type: Boolean,
+    	        value: false
+    	    },
+    	    
     	    url: {
     	        type: String,
     	        value: '/file-processing/FileConsumer'
+    	    },
+    	    
+    	    _debug_fileNames: {
+    	        type: String,
+    	        value: '[none]'
+    	    },
+    	    
+    	    _debug_fileNum: {
+    	        type: Number,
+    	        value: '0'
+    	    },
+    	    
+    	    _debug_fileSize: {
+    	        type: String,
+    	        value: '[none]'
+    	    },
+    	    
+    	    _debug_mimeTypes: {
+    	        type: String,
+    	        value: '[none]'
     	    }
+    	},
+
+    	ready: function () {
     	},
     	
 	    _filesAdded: function() {
-    		this.handleFiles(this.$.uploadInput.files);
+    		this._handleFiles(this.$.uploadInput.files);
 	    },
     	
-        handleFiles: function (oFiles) {
+        _handleFiles: function (oFiles) {
             var fileNames = "";
             var mimeTypes = "";
             var nBytes = 0;
@@ -74,10 +151,10 @@
                         + nBytes + " bytes)";
             }
             // end of optional code
-            this.$.fileNames.innerHTML = fileNames;
-            this.$.fileNum.innerHTML = nFiles;
-            this.$.fileSize.innerHTML = sOutput;
-            this.$.mimeTypes.innerHTML = mimeTypes;
+    	    this._debug_fileNames = fileNames;
+    	    this._debug_fileNum = nFiles;
+    	    this._debug_fileSize = sOutput;
+    	    this._debug_mimeTypes = mimeTypes;
             
             // uploading the files
             if (nFiles > 0) {
@@ -89,30 +166,41 @@
                 };
                 oReq.upload.onprogress = function (event) {
                     console.log('loaded:', event.loaded, 'total:', event.total);
-                }
+
+                    var prc = event.loaded / event.total * 100; 
+                    this.$.progressBar.style.width = prc + '%';
+                }.bind(this);
 
                 oReq.send(file);
             }
         },
 
-        dragenter: function (e) {
+        _fileSelectTap: function () {
+            if (this.$.uploadInput) {
+                this.$.uploadInput.click();
+            }
+            e.preventDefault();
+        },
+        
+        _dragenter: function (e) {
             e.stopPropagation();
             e.preventDefault();
             this.$.fileSelect.classList.add('over');
         },
 
-        dragover: function (e) {
+        _dragover: function (e) {
             e.stopPropagation();
             e.preventDefault();
+            this.$.fileSelect.classList.add('over');
         },
         
-        dragleave: function (e) {
+        _dragleave: function (e) {
             e.stopPropagation();
             e.preventDefault();
             this.$.fileSelect.classList.remove('over');
         },
 
-        drop: function (e) {
+        _drop: function (e) {
             e.stopPropagation();
             e.preventDefault();
 
@@ -121,7 +209,7 @@
 
             this.$.fileSelect.classList.remove('over');
             
-            this.handleFiles(files);
+            this._handleFiles(files);
         }
 
     });
