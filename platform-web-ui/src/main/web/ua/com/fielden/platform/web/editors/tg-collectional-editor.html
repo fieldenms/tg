@@ -108,25 +108,6 @@
         behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
         
         properties: {
-            /**
-             * TODO docs
-             */
-            chosenIdsPropertyName: {
-                type: String
-            },
-            /**
-             * TODO docs
-             */
-            addedIdsPropertyName: {
-                type: String
-            },
-            /**
-             * TODO docs
-             */
-            removedIdsPropertyName: {
-                type: String
-            },
-            
             _entities: {
                 type: Array
             },
@@ -161,7 +142,7 @@
             this.entity.set(this.propertyName, null);
             
             var selEntities = [];
-            var chosenIds = this.entity.get(this.chosenIdsPropertyName);
+            var chosenIds = this.entity.get('chosenIds');
             
             this._originalChosenIds = [];
             
@@ -219,14 +200,10 @@
         },
         
         _selectedEntitiesAddedOrRemoved: function (changeRecord) {
-            // this.entity.set(this.chosenIdsPropertyName, [ 2 ] );
-            // this.entity.set(this.addedIdsPropertyName, [] );
-            // this.entity.set(this.removedIdsPropertyName, [ 2 ] );
-
             if (changeRecord && this.entity && this._disableSelectionListeners === false) {
-                var chosenIds = this.entity.get(this.chosenIdsPropertyName);
-                var addedIds = this.entity.get(this.addedIdsPropertyName);
-                var removedIds = this.entity.get(this.removedIdsPropertyName);
+                var chosenIds = this.entity.get('chosenIds');
+                var addedIds = this.entity.get('addedIds');
+                var removedIds = this.entity.get('removedIds');
                 
                 console.log('_selectedEntitiesAddedOrRemoved: chosenIds = ', chosenIds, ' addedIds = ', addedIds, ' removedIds = ', removedIds);
                 

@@ -384,12 +384,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	public Class<? extends AbstractEntity<?>> getDerivedFromType() {
         Class<? extends AbstractEntity<?>> tmpDerivedFromType = getType();
         final String name = getType().getName();
-        int index = name.indexOf("$$");
+        final int index = name.indexOf("$$");
         if (index > 0) {
         	final String cleanName = name.substring(0, index);
         	try {
 				tmpDerivedFromType = (Class<? extends AbstractEntity<?>>) Class.forName(cleanName);
-			} catch (ClassNotFoundException e) {
+			} catch (final ClassNotFoundException e) {
 				e.printStackTrace();
 			} 
         }
@@ -688,7 +688,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 }
 
                 final Class<? extends AbstractEntity<?>> entityType = getType();
-                if (isCollectional && EntityUtils.isPersistedEntityType(entityType) && !Finder.hasLinkProperty(entityType, field.getName())) {
+                if (isCollectional && EntityUtils.isPersistedEntityType(entityType) && !Finder.hasLinkProperty(entityType, field.getName()) && !isSpecialCollection(entityType, field.getName())) {
                     final String error = "Property "
                             + field.getName()
                             + " in "
@@ -742,6 +742,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             }
         }
         //logger.debug("Finished meta construction for type " + getType());
+    }
+    
+    private final static boolean isSpecialCollection(final Class<?> entityType, final String propertyName) {
+        return (propertyName.equals("chosenIds") || propertyName.equals("addedIds") || propertyName.equals("removedIds")) && AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(entityType);
     }
 
     /**

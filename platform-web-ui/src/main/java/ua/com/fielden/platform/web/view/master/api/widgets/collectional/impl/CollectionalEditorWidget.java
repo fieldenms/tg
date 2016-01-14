@@ -32,30 +32,14 @@ public class CollectionalEditorWidget extends AbstractWidget {
      * The name of 'chosenIds' property, that represents the container with ordered list of chosen entity ids, which should exist in the 
      * list of all entities, that reside in propertyName'd property.
      */
-    private final String chosenIdsPropertyName;
     /**
      * The name of 'addedIds' property, that represents the container with unordered list of added entity ids.
      */
-    private final String addedIdsPropertyName;
     /**
      * The name of 'removedIds' property, that represents the container with unordered list of removed entity ids.
      */
-    private final String removedIdsPropertyName;
 
-    public CollectionalEditorWidget(final Pair<String, String> titleAndDesc, final String propertyName, final String chosenIdsPropertyName, final String addedIdsPropertyName, final String removedIdsPropertyName) {
+    public CollectionalEditorWidget(final Pair<String, String> titleAndDesc, final String propertyName) {
         super("editors/tg-collectional-editor", titleAndDesc, propertyName);
-        this.chosenIdsPropertyName = chosenIdsPropertyName;
-        this.addedIdsPropertyName = addedIdsPropertyName;
-        this.removedIdsPropertyName = removedIdsPropertyName;
     }
-
-    @Override
-    protected Map<String, Object> createCustomAttributes() {
-        final Map<String, Object> attrs = super.createCustomAttributes();
-        attrs.put("chosen-ids-property-name", this.chosenIdsPropertyName);
-        attrs.put("added-ids-property-name", this.addedIdsPropertyName);
-        attrs.put("removed-ids-property-name", this.removedIdsPropertyName);
-        return attrs;
-    };
-
 }

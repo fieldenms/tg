@@ -4,6 +4,7 @@ import static java.util.Locale.getDefault;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -41,6 +42,8 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.sample.domain.TgUpdateRolesAction;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
@@ -175,6 +178,19 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     public static <M extends AbstractEntity<?>> M apply(final Map<String, Object> modifiedPropertiesHolder, final M entity, final ICompanionObjectFinder companionFinder) {
         final Class<M> type = (Class<M>) entity.getType();
+        if (!entity.isPersisted() && getVersion(modifiedPropertiesHolder) > 0) {
+            logger.error("!entity.isPersisted() && getVersion(modifiedPropertiesHolder) != 0: ");
+            try {
+                final Method setVersion = Reflector.getMethod(entity.getType(), "setVersion", Long.class);
+                final boolean isAccesible = setVersion.isAccessible();
+                setVersion.setAccessible(true);
+                setVersion.invoke(entity, getVersion(modifiedPropertiesHolder));
+                setVersion.setAccessible(isAccesible);
+            } catch (final Exception e) {
+                throw new IllegalStateException(e);
+            }
+            logger.error("!entity.isPersisted() && getVersion(modifiedPropertiesHolder) != 0: entity.getVersion() after modification == " + entity.getVersion());
+        }
         final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
 
         final Set<String> appliedProps = new LinkedHashSet<>();
@@ -262,7 +278,21 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
                 final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
                 logger.info(msg);
-                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
+                // entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {
                 enforceSet(shouldApplyOriginalValue, name, entity, newValue);
             }
@@ -392,15 +422,15 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     private static <M extends AbstractEntity<?>> Object convert(final Class<M> type, final String propertyName, final Object reflectedValue, final ICompanionObjectFinder companionFinder) {
+        if (reflectedValue == null) {
+            return null;
+        }
         final Class propertyType = PropertyTypeDeterminator.determinePropertyType(type, propertyName);
 
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
             if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
                 throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s]. Collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
-            }
-            if (reflectedValue == null) {
-                return null;
             }
             final Class<AbstractEntity<?>> entityPropertyType = propertyType;
 
@@ -421,38 +451,31 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
         } else if (EntityUtils.isString(propertyType)) {
-            return reflectedValue == null ? null : reflectedValue;
+            return reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {
-            return reflectedValue == null ? null : reflectedValue;
+            return reflectedValue;
         } else if (EntityUtils.isBoolean(propertyType)) {
-            return reflectedValue == null ? null : reflectedValue;
+            return reflectedValue;
         } else if (EntityUtils.isDate(propertyType)) {
-            return reflectedValue == null ? null : (reflectedValue instanceof Integer ? new Date(((Integer) reflectedValue).longValue()) : new Date((Long) reflectedValue));
+            return reflectedValue instanceof Integer ? new Date(((Integer) reflectedValue).longValue()) : new Date((Long) reflectedValue);
         } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            if (reflectedValue == null) {
-                return null;
-            } else {
-                final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, propertyName);
-                final CritOnly critOnly = AnnotationReflector.getPropertyAnnotation(CritOnly.class, type, propertyName);
-                final Integer propertyScale = mapTo != null && mapTo.scale() >= 0 ? ((int) mapTo.scale())
-                        : (critOnly != null && critOnly.scale() >= 0 ? ((int) critOnly.scale()) : 2)/* default value from Hibernate */;
+            final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, propertyName);
+            final CritOnly critOnly = AnnotationReflector.getPropertyAnnotation(CritOnly.class, type, propertyName);
+            final Integer propertyScale = mapTo != null && mapTo.scale() >= 0 ? ((int) mapTo.scale())
+                    : (critOnly != null && critOnly.scale() >= 0 ? ((int) critOnly.scale()) : 2)/* default value from Hibernate */;
 
-                if (reflectedValue instanceof Integer) {
-                    return new BigDecimal((Integer) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
-                } else if (reflectedValue instanceof Long) {
-                    return BigDecimal.valueOf((Long) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
-                } else if (reflectedValue instanceof BigInteger) {
-                    return new BigDecimal((BigInteger) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
-                } else if (reflectedValue instanceof BigDecimal) {
-                    return ((BigDecimal) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
-                } else {
-                    throw new IllegalStateException("Unknown number type for 'reflectedValue'.");
-                }
+            if (reflectedValue instanceof Integer) {
+                return new BigDecimal((Integer) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+            } else if (reflectedValue instanceof Long) {
+                return BigDecimal.valueOf((Long) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+            } else if (reflectedValue instanceof BigInteger) {
+                return new BigDecimal((BigInteger) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+            } else if (reflectedValue instanceof BigDecimal) {
+                return ((BigDecimal) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+            } else {
+                throw new IllegalStateException("Unknown number type for 'reflectedValue'.");
             }
         } else if (Money.class.isAssignableFrom(propertyType)) {
-            if (reflectedValue == null) {
-                return null;
-            }
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
 
             final BigDecimal amount = new BigDecimal(map.get("amount").toString());
@@ -474,17 +497,11 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             }
 
         } else if (Colour.class.isAssignableFrom(propertyType)) {
-            if (reflectedValue == null) {
-                return null;
-            }
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
 
             final String hashlessUppercasedColourValue = (String) map.get("hashlessUppercasedColourValue");
             return hashlessUppercasedColourValue == null ? null : new Colour(hashlessUppercasedColourValue);
         } else if (PropertyTypeDeterminator.isCollectional(type, propertyName) && Set.class.isAssignableFrom(Finder.findFieldByName(type, propertyName).getType()) && Long.class.isAssignableFrom(propertyType)) {
-            if (reflectedValue == null) {
-                return null;
-            }
             final List<Object> list = (ArrayList<Object>) reflectedValue;
             final Set<Long> resultSet = new LinkedHashSet<>();
             for (final Object entry : list) {

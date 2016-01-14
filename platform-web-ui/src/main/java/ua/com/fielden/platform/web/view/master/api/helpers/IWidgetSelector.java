@@ -34,7 +34,7 @@ public interface IWidgetSelector<T extends AbstractEntity<?>> {
     IMultilineTextConfig<T> asMultilineText();
     IHiddenTextConfig<T> asHiddenText();
     ICollectionalRepresentorConfig<T> asCollectionalRepresentor();
-    ICollectionalEditorConfig<T> asCollectionalEditor(final String chosenIdsPropertyName, final String addedIdsPropertyName, final String removedIdsPropertyName);
+    ICollectionalEditorConfig<T> asCollectionalEditor();
 
     IFileConfig<T> asFile();
 
