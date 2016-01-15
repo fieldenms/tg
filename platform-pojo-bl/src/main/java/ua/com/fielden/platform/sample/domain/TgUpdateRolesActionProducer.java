@@ -92,9 +92,8 @@ public class TgUpdateRolesActionProducer extends DefaultEntityProducerWithContex
         return entity;
     }
     
-    public static <T extends AbstractEntity<?>> Integer surrogateVersion(final T persistedEntity) {
-        final Integer currentVersion = persistedEntity == null ? 99 : persistedEntity.getVersion().intValue() + 100;
-        return currentVersion;
+    public static <T extends AbstractEntity<?>> Long surrogateVersion(final T persistedEntity) {
+        return persistedEntity == null ? 99L : (persistedEntity.getVersion() + 100L);
     }
     
     public static TgUpdateRolesAction retrieveActionFor(final User user, final ITgUpdateRolesAction coTgUpdateRolesAction) {

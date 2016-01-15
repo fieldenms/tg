@@ -40,15 +40,15 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
     
     @IsProperty
     @Title(value = "Surrogate Version", desc = "Surrogate Version")
-    private Integer surrogateVersion;
+    private Long surrogateVersion;
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<K> setSurrogateVersion(final Integer surrogateVersion) {
+    public AbstractFunctionalEntityForCollectionModification<K> setSurrogateVersion(final Long surrogateVersion) {
         this.surrogateVersion = surrogateVersion;
         return this;
     }
 
-    public Integer getSurrogateVersion() {
+    public Long getSurrogateVersion() {
         return surrogateVersion;
     }
 

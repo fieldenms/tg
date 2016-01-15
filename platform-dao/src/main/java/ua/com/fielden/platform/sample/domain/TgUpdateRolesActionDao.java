@@ -103,14 +103,14 @@ public class TgUpdateRolesActionDao extends CommonEntityDao<TgUpdateRolesAction>
         
         final TgUpdateRolesAction persistedEntity = TgUpdateRolesActionProducer.retrieveActionFor(userBeingUpdated, this);
         final TgUpdateRolesAction entityToSave = persistedEntity == null ? new TgUpdateRolesAction().setKey(userBeingUpdated) : persistedEntity;
-        final Integer currentVersion = TgUpdateRolesActionProducer.surrogateVersion(persistedEntity);
+        
+        if (TgUpdateRolesActionProducer.surrogateVersion(persistedEntity) > entity.getSurrogateVersion()) {
+            throw Result.failure(String.format("Another user has changed 'roles' collection of [%s]. surrogateVersion(persistedEntity) = %s > entity.getSurrogateVersion() = %s", userBeingUpdated, TgUpdateRolesActionProducer.surrogateVersion(persistedEntity), entity.getSurrogateVersion()));
+        }
+        
         // entityToSave.setDirtinessMarker(Long.valueOf(universalConstants.now().getMillis()).toString() );
         if (persistedEntity != null) {
             entityToSave.setDirtinessMarker(!persistedEntity.getDirtinessMarker());
-        }
-        
-        if (currentVersion > entity.getSurrogateVersion()) {
-            throw Result.failure(String.format("Another user has changed 'roles' collection of [%s]. entityToSave.getVersion() = %s entity.getVersion() = %s", userBeingUpdated, entityToSave.getVersion(), entity.getVersion()));
         }
         
         coUserAndRoleAssociationBatchAction.save(action);

@@ -499,6 +499,16 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 }
             }
             return resultSet;
+        } else if (Long.class.isAssignableFrom(propertyType)) {
+            if (reflectedValue instanceof Integer) {
+                return ((Integer) reflectedValue).longValue();
+            } else if (reflectedValue instanceof Long) {
+                return reflectedValue;
+            } else if (reflectedValue instanceof BigInteger) {
+                return ((BigInteger) reflectedValue).longValue();
+            } else {
+                throw new IllegalStateException(String.format("Unknown number type for 'reflectedValue' (%s) - can not convert to Long.", reflectedValue));
+            }
         } else {
             throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s].", type.getSimpleName(), propertyName, reflectedValue));
         }
