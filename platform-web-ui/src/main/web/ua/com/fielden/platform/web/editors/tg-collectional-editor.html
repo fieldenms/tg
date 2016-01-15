@@ -199,6 +199,20 @@
             return isSelected ? 'star' : 'star-border';
         },
         
+        searchForPhrase: function (entities, phrase) {
+            var entitiesWithPhrase = {};
+            for( var entityIndex = 0; entityIndex < entities.length; entityIndex++){
+                var currentEntity = entities[entityIndex];
+                var positionInKey = currentEntity.get('key').search(phrase);
+                var positionInDesc = currentEntity.get('desc').search(phrase);
+                
+                if(positionInKey > 0 || positionInDesc > 0){
+	                entitiesWithPhrase[entityIndex + ""] = [positionInKey, positionInDesc]; 
+                }
+            }
+            return entitiesWithPhrase;
+        },
+        
         _selectedEntitiesAddedOrRemoved: function (changeRecord) {
             if (changeRecord && this.entity && this._disableSelectionListeners === false) {
                 var chosenIds = this.entity.get('chosenIds');
