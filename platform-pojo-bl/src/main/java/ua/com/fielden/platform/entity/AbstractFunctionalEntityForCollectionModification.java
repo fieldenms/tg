@@ -82,4 +82,21 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
     public Set<Long> getChosenIds() {
         return Collections.unmodifiableSet(chosenIds);
     }
+    
+    /**
+     * Override to ignore link property requiredness for collectional properties 
+     * <code>chosenIds</code>, <code>addedIds</code>, <code>removedIds</code>.
+     *  
+     * @param entityType
+     * @param propertyName
+     * @return
+     */
+    @Override
+    protected boolean isLinkPropertyRequiredButMissing(String propertyName) {
+        if (!"chosenIds".equals(propertyName) && !"addedIds".equals(propertyName) && !"removedIds".equals(propertyName)) {
+            return super.isLinkPropertyRequiredButMissing(propertyName);
+        } else {
+            return false;
+        }
+    }
 }

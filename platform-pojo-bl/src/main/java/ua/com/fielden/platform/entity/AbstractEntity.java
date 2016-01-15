@@ -25,6 +25,8 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
@@ -69,8 +71,6 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
-
-import com.google.inject.Inject;
 
 /**
  * <h3>General Info</h3>
@@ -688,7 +688,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 }
 
                 final Class<? extends AbstractEntity<?>> entityType = getType();
-                if (isCollectional && EntityUtils.isPersistedEntityType(entityType) && !Finder.hasLinkProperty(entityType, field.getName()) && !isSpecialCollection(entityType, field.getName())) {
+                if (isCollectional && isLinkPropertyRequiredButMissing(field.getName())) {
                     final String error = "Property "
                             + field.getName()
                             + " in "
@@ -744,8 +744,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         //logger.debug("Finished meta construction for type " + getType());
     }
     
-    private final static boolean isSpecialCollection(final Class<?> entityType, final String propertyName) {
-        return (propertyName.equals("chosenIds") || propertyName.equals("addedIds") || propertyName.equals("removedIds")) && AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(entityType);
+    /**
+     * A predicate method to identify whether a collectional property requires, but is missing a corresponding <code>link property</code> information.
+     * 
+     * @param propertyName
+     * @return
+     */
+    protected boolean isLinkPropertyRequiredButMissing(final String propertyName) {
+        return EntityUtils.isPersistedEntityType(getType()) && !Finder.hasLinkProperty(getType(), propertyName);
     }
 
     /**
