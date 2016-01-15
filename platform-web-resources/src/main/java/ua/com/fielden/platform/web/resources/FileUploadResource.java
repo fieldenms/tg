@@ -10,6 +10,7 @@ import javax.activation.MimetypesFileTypeMap;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
+import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Put;
@@ -27,6 +28,8 @@ import com.google.inject.Injector;
  */
 public class FileUploadResource extends ServerResource {
 
+    private final long sizeLimit = 10 * 1024 * 1024; // Kilobytes
+
     public FileUploadResource(final Injector injector, final Context context, final Request request, final Response response) {
         init(context, request, response);
     }
@@ -37,7 +40,10 @@ public class FileUploadResource extends ServerResource {
      */
     @Put
     public Representation receiveFile(final Representation entity) throws Exception {
-        if (entity != null) { // && MediaType.MULTIPART_FORM_DATA.equals(entity.getMediaType(), true)
+        final Representation response;
+        if (entity == null) {
+            response = new StringRepresentation("There is nothing to process");
+        } else { // && MediaType.MULTIPART_FORM_DATA.equals(entity.getMediaType(), true)
             // Create a factory for disk-based file items
 
             // Request is parsed by the handler which generates a list of FileItems
@@ -46,22 +52,31 @@ public class FileUploadResource extends ServerResource {
             sb.append("file size : ");
             sb.append(entity.getSize()).append("\n");
 
-            
-            final InputStream stream = entity.getStream();
+            if (entity.getSize() == -1) {
+                getResponse().setStatus(Status.CLIENT_ERROR_LENGTH_REQUIRED);
+                response = new StringRepresentation("File size is required.");
+            } else if (entity.getSize() > sizeLimit) {
+                getResponse().setStatus(Status.CLIENT_ERROR_REQUEST_ENTITY_TOO_LARGE);
+                response = new StringRepresentation("File is too large.");
+            } else {
+                final InputStream stream = entity.getStream();
+    
+                
+                final BufferedReader br = new BufferedReader(new InputStreamReader(stream));
+                String line = null;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line).append("\n");
+                }
+                sb.append("\n\n");
+    
+                System.out.println(sb.toString());
+                Thread.currentThread().sleep(5000);
 
-            
-            final BufferedReader br = new BufferedReader(new InputStreamReader(stream));
-            String line = null;
-            while ((line = br.readLine()) != null) {
-                sb.append(line).append("\n");
+                response = new StringRepresentation("Processed the file.");
             }
-            sb.append("\n\n");
-
-            System.out.println(sb.toString());
-            Thread.currentThread().sleep(5000);
-            //result = new StringRepresentation(sb.toString(), MediaType.TEXT_PLAIN);
         }
 
-        return new StringRepresentation("no result");
+        return response;
+        
     }
 }

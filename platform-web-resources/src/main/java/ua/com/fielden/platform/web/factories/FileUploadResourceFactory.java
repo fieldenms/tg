@@ -7,8 +7,6 @@ import org.restlet.data.Method;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.security.provider.IUserEx;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.FileUploadResource;
 
 /**
