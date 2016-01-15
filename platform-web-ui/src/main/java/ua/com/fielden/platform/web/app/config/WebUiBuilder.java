@@ -9,7 +9,7 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.custom_view.CustomView;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -43,7 +43,7 @@ public class WebUiBuilder implements IWebUiBuilder {
     /**
      * Holds the map between custom view name and custom view instance.
      */
-    private final Map<String, CustomView> viewMap = new LinkedHashMap<>();
+    private final Map<String, AbstractCustomView> viewMap = new LinkedHashMap<>();
 
     /**
      * Creates new instance of {@link WebUiBuilder} for the specified {@link IWebUiConfig} instance.
@@ -109,7 +109,7 @@ public class WebUiBuilder implements IWebUiBuilder {
         return centreMap;
     }
 
-    public Map<String, CustomView> getCustomViews() {
+    public Map<String, AbstractCustomView> getCustomViews() {
         return viewMap;
     }
 
@@ -131,7 +131,7 @@ public class WebUiBuilder implements IWebUiBuilder {
     }
 
     @Override
-    public IWebUiBuilder addCustomView(final CustomView customView) {
+    public IWebUiBuilder addCustomView(final AbstractCustomView customView) {
         viewMap.put(customView.getViewName(), customView);
         return this;
     }

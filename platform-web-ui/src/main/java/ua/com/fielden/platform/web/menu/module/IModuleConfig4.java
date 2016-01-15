@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.menu.module;
 
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.custom_view.CustomView;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IModuleMenuConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -22,7 +22,7 @@ public interface IModuleConfig4 {
      * @param view
      * @return
      */
-    IModuleConfigDone view(final CustomView view);
+    IModuleConfigDone view(final AbstractCustomView view);
 
     //TODO must provide other custom views.
 

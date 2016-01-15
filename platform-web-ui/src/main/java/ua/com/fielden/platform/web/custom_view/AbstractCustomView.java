@@ -3,12 +3,12 @@ package ua.com.fielden.platform.web.custom_view;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 
 /**
- * Base class for all custom views. All custom view should have unique name.
+ * Base class for all custom views. All custom view should have unique names.
  *
  * @author TG Team
  *
  */
-public abstract class CustomView {
+public abstract class AbstractCustomView {
 
     /**
      * Unique name for custom view.
@@ -20,7 +20,7 @@ public abstract class CustomView {
      *
      * @param viewName
      */
-    public CustomView(final String viewName) {
+    public AbstractCustomView(final String viewName) {
         this.viewName = viewName;
     }
 
@@ -34,7 +34,7 @@ public abstract class CustomView {
     }
 
     /**
-     * Returns the renderable representation for this custom view.
+     * Should be implemented by descendants to return a renderable representation for a specific view.
      *
      * @return
      */

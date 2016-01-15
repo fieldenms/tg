@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.menu.item.impl;
 
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.custom_view.CustomView;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IModuleMenuConfigWithDone;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig0;
 import ua.com.fielden.platform.web.menu.item.IModuleMenuConfig1;
@@ -34,7 +34,7 @@ public class MenuItemConfig implements IModuleMenuConfig0, IModuleMenuConfig1, I
     }
 
     @Override
-    public IModuleMenuConfig2 view(final CustomView view) {
+    public IModuleMenuConfig2 view(final AbstractCustomView view) {
         menuItem.view(new WebView(view));
         return this;
     }

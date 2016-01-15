@@ -2,18 +2,18 @@ package ua.com.fielden.platform.web.menu.module.impl;
 
 import static java.lang.String.format;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.custom_view.CustomView;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 public class WebView implements IExecutable {
 
-    private final CustomView customView;
+    private final AbstractCustomView customView;
     private final EntityCentre<?> entityCentre;
     private final EntityMaster<?> entityMaster;
 
-    public WebView(final CustomView customView) {
+    public WebView(final AbstractCustomView customView) {
         this(customView, null, null);
     }
 
@@ -25,7 +25,7 @@ public class WebView implements IExecutable {
         this(null, null, entityMaster);
     }
 
-    private WebView(final CustomView customView, final EntityCentre<?> entityCentre, final EntityMaster<?> entityMaster) {
+    private WebView(final AbstractCustomView customView, final EntityCentre<?> entityCentre, final EntityMaster<?> entityMaster) {
         this.customView = customView;
         this.entityCentre = entityCentre;
         this.entityMaster = entityMaster;

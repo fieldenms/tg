@@ -4,7 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.custom_view.CustomView;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -79,7 +79,7 @@ public interface IWebUiBuilder {
      * @param customView
      * @return
      */
-    IWebUiBuilder addCustomView(CustomView customView);
+    IWebUiBuilder addCustomView(AbstractCustomView customView);
 
     /**
      * Finish to configure the web application.

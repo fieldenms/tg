@@ -10,7 +10,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.custom_view.CustomView;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 import com.google.inject.Injector;
@@ -96,7 +96,7 @@ public class ResourceFactoryUtils {
         return webUiConfig.getCentres().get(miType);
     }
 
-    public static CustomView getCustomView(final String viewName, final IWebUiConfig webUiConfig) {
+    public static AbstractCustomView getCustomView(final String viewName, final IWebUiConfig webUiConfig) {
         return webUiConfig.getCustomViews().get(viewName);
     }
 }

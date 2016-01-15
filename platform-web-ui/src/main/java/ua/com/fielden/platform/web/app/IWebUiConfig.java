@@ -7,7 +7,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.custom_view.CustomView;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -109,7 +109,7 @@ public interface IWebUiConfig {
      *
      * @return
      */
-    Map<String, CustomView> getCustomViews();
+    Map<String, AbstractCustomView> getCustomViews();
 
     /**
      * Implement this in order to provide custom configurations for entity centre, master and other views.
