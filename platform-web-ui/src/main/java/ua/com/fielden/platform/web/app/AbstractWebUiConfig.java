@@ -7,8 +7,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
@@ -16,9 +14,12 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.app.config.WebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+
+import com.google.inject.Injector;
 
 /**
  * The base implementation for Web UI configuration, which should be inherited from in concrete applications for defining the final application specific Web UI configuration.
@@ -137,6 +138,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> getCentres() {
         return webUiBuilder.getCentres();
+    }
+
+    @Override
+    public Map<String, AbstractCustomView> getCustomViews() {
+        return webUiBuilder.getCustomViews();
     }
 
     public void setInjector(final Injector injector) {

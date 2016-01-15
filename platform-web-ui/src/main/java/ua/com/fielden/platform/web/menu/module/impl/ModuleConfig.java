@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilderWithLayout;
 import ua.com.fielden.platform.web.menu.IModuleConfig;
 import ua.com.fielden.platform.web.menu.IModuleMenuConfig;
@@ -67,7 +67,7 @@ public class ModuleConfig implements IModuleConfig, IModuleConfig0, IModuleConfi
     }
 
     @Override
-    public IModuleConfigDone view(final IRenderable view) {
+    public IModuleConfigDone view(final AbstractCustomView view) {
         module.view(new WebView(view));
         return this;
     }

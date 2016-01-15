@@ -9,6 +9,7 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -38,6 +39,11 @@ public class WebUiBuilder implements IWebUiBuilder {
      * Holds the map between entity centre's menu item type and entity centre.
      */
     private final Map<Class<? extends MiWithConfigurationSupport<?>>, EntityCentre<?>> centreMap = new LinkedHashMap<>();
+
+    /**
+     * Holds the map between custom view name and custom view instance.
+     */
+    private final Map<String, AbstractCustomView> viewMap = new LinkedHashMap<>();
 
     /**
      * Creates new instance of {@link WebUiBuilder} for the specified {@link IWebUiConfig} instance.
@@ -103,6 +109,10 @@ public class WebUiBuilder implements IWebUiBuilder {
         return centreMap;
     }
 
+    public Map<String, AbstractCustomView> getCustomViews() {
+        return viewMap;
+    }
+
     /**
      * Generates a HTML representation of the web application UI preferences.
      *
@@ -118,5 +128,11 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replaceAll("@locale", "\"" + this.locale + "\"").
                 replaceAll("@dateFormat", "\"" + this.dateFormat + "\"").
                 replaceAll("@timeFormat", "\"" + this.timeFormat + "\"");
+    }
+
+    @Override
+    public IWebUiBuilder addCustomView(final AbstractCustomView customView) {
+        viewMap.put(customView.getViewName(), customView);
+        return this;
     }
 }
