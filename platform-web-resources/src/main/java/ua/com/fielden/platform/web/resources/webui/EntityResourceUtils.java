@@ -265,21 +265,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
                 final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
                 logger.info(msg);
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // TODO THIS IS VERY IMPORTANT LINE, IT SHOULD BE UNCOMMENTED
-                // entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
             } else {
                 enforceSet(shouldApplyOriginalValue, name, entity, newValue);
             }
