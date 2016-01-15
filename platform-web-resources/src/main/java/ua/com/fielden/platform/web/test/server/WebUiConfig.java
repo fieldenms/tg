@@ -571,7 +571,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("removedIds").asSinglelineText()
                 .also()
-                .addProp("dirtinessMarker").asCheckbox()
+                .addProp("surrogateVersion").asSpinner()
                 .also()
                 .addProp("roles").asCollectionalEditor()
                 .also()

@@ -35,11 +35,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
     
     @IsProperty
     @MapTo
-    @Title(value = "Dirtiness Marker", desc = "The property to mark this entity as dirty for saving purposes")
-    private boolean dirtinessMarker = false;
-    
-    @IsProperty
-    @Title(value = "Surrogate Version", desc = "Surrogate Version")
+    @Title(value = "Surrogate Version", desc = "Surrogate Version (used also as the property to mark this entity as dirty for saving purposes)")
     private Long surrogateVersion;
 
     @Observable
@@ -50,16 +46,6 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
 
     public Long getSurrogateVersion() {
         return surrogateVersion;
-    }
-
-    @Observable
-    public AbstractFunctionalEntityForCollectionModification<K> setDirtinessMarker(final boolean dirtinessMarker) {
-        this.dirtinessMarker = dirtinessMarker;
-        return this;
-    }
-
-    public boolean getDirtinessMarker() {
-        return dirtinessMarker;
     }
 
     @Observable

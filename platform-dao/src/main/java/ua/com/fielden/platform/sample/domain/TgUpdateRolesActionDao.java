@@ -108,14 +108,15 @@ public class TgUpdateRolesActionDao extends CommonEntityDao<TgUpdateRolesAction>
             throw Result.failure(String.format("Another user has changed 'roles' collection of [%s]. surrogateVersion(persistedEntity) = %s > entity.getSurrogateVersion() = %s", userBeingUpdated, TgUpdateRolesActionProducer.surrogateVersion(persistedEntity), entity.getSurrogateVersion()));
         }
         
-        // entityToSave.setDirtinessMarker(Long.valueOf(universalConstants.now().getMillis()).toString() );
+        // the next block of code is intended to mark entityToSave as 'dirty' to be properly saved and to increase its db-related version. New entity (persistedEntity == null) is always dirty - no need to do anything.
         if (persistedEntity != null) {
-            entityToSave.setDirtinessMarker(!persistedEntity.getDirtinessMarker());
+            entityToSave.setSurrogateVersion(persistedEntity.getVersion() + 1L);
         }
         
         coUserAndRoleAssociationBatchAction.save(action);
         final TgUpdateRolesAction saved = super.save(entityToSave);
         logger.error("saved.getVersion() = " + saved.getVersion());
+        logger.error("saved.getSurrogateVersion() = " + saved.getSurrogateVersion());
         return saved;
     }
     
