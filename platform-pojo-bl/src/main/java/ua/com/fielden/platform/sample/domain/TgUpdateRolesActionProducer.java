@@ -58,32 +58,26 @@ public class TgUpdateRolesActionProducer extends DefaultEntityProducerWithContex
     protected TgUpdateRolesAction provideDefaultValues(final TgUpdateRolesAction entity) {
         if (getCentreContext() != null) {
             entity.setContext(getCentreContext());
+
             final User user = (User) entity.getContext().getMasterEntity();
-            entity.setKey(user);
-            entity.getProperty(AbstractEntity.KEY).resetState();
-
-            try {
-                final Method setVersion = Reflector.getMethod(TgUpdateRolesAction.class, "setVersion", Long.class);
-                final boolean isAccesible = setVersion.isAccessible();
-                setVersion.setAccessible(true);
-                
-                final TgUpdateRolesAction persistedEntity = retrieveActionFor(user, companion);
-                final Long currentVersion = surrogateVersion(persistedEntity);
-                
-                setVersion.invoke(entity, currentVersion);
-                setVersion.setAccessible(isAccesible);
-            } catch (final Exception e) {
-                throw new IllegalStateException(e);
-            }
-            logger.error("surrogate version after modification == " + entity.getVersion());
-            
-
-            // logger.error("TgUpdateRolesActionProducer: masterEntity = " + user);
-            // logger.error("TgUpdateRolesActionProducer: masterEntity.getRoles() = " + user.getRoles());
             if (user.isDirty()) {
                 throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
             }
             
+            // IMPORTANT: it is necessary to reset state for "key" property after its change.
+            //   This is necessary to make the property marked as 'not changed from original' (origVal == val == 'DEMO') to be able not to re-apply afterwards
+            //   the initial value against "key" property
+            entity.setKey(user);
+            entity.getProperty(AbstractEntity.KEY).resetState();
+            
+            final TgUpdateRolesAction persistedEntity = retrieveActionFor(user, companion);
+            
+            // IMPORTANT: it is necessary not to reset state for "surrogateVersion" property after its change.
+            //   This is necessary to leave the property marked as 'changed from original' (origVal == null) to be able to apply afterwards
+            //   the initial value against '"surrogateVersion", that was possibly changed by another user'
+            entity.setSurrogateVersion(surrogateVersion(persistedEntity));
+            logger.error("surrogate version after modification == " + entity.getSurrogateVersion());
+
             final List<UserRole> allAvailableRoles = coUserRole.findAll();
             final Set<UserRole> roles = new LinkedHashSet<>(allAvailableRoles);
             entity.setRoles(roles);
@@ -98,8 +92,8 @@ public class TgUpdateRolesActionProducer extends DefaultEntityProducerWithContex
         return entity;
     }
     
-    public static <T extends AbstractEntity<?>> Long surrogateVersion(final T persistedEntity) {
-        final Long currentVersion = persistedEntity == null ? 99 : persistedEntity.getVersion() + 100;
+    public static <T extends AbstractEntity<?>> Integer surrogateVersion(final T persistedEntity) {
+        final Integer currentVersion = persistedEntity == null ? 99 : persistedEntity.getVersion().intValue() + 100;
         return currentVersion;
     }
     

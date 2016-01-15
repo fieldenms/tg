@@ -178,19 +178,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     public static <M extends AbstractEntity<?>> M apply(final Map<String, Object> modifiedPropertiesHolder, final M entity, final ICompanionObjectFinder companionFinder) {
         final Class<M> type = (Class<M>) entity.getType();
-        if (!entity.isPersisted() && getVersion(modifiedPropertiesHolder) > 0) {
-            logger.error("!entity.isPersisted() && getVersion(modifiedPropertiesHolder) != 0: ");
-            try {
-                final Method setVersion = Reflector.getMethod(entity.getType(), "setVersion", Long.class);
-                final boolean isAccesible = setVersion.isAccessible();
-                setVersion.setAccessible(true);
-                setVersion.invoke(entity, getVersion(modifiedPropertiesHolder));
-                setVersion.setAccessible(isAccesible);
-            } catch (final Exception e) {
-                throw new IllegalStateException(e);
-            }
-            logger.error("!entity.isPersisted() && getVersion(modifiedPropertiesHolder) != 0: entity.getVersion() after modification == " + entity.getVersion());
-        }
         final boolean isEntityStale = entity.getVersion() > getVersion(modifiedPropertiesHolder);
 
         final Set<String> appliedProps = new LinkedHashSet<>();

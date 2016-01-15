@@ -68,7 +68,7 @@ public class TgUpdateRolesActionDao extends CommonEntityDao<TgUpdateRolesAction>
             throw res;
         }
         
-        logger.error("surrogate version after returning to the server == " + entity.getVersion());
+        logger.error("surrogate version after returning to the server == " + entity.getSurrogateVersion());
         
         // logger.error("entity.getRoles() = " + entity.getRoles());
         // logger.error("entity.getContext().getMasterEntity() = " + entity.getContext().getMasterEntity());
@@ -103,13 +103,13 @@ public class TgUpdateRolesActionDao extends CommonEntityDao<TgUpdateRolesAction>
         
         final TgUpdateRolesAction persistedEntity = TgUpdateRolesActionProducer.retrieveActionFor(userBeingUpdated, this);
         final TgUpdateRolesAction entityToSave = persistedEntity == null ? new TgUpdateRolesAction().setKey(userBeingUpdated) : persistedEntity;
-        final Long currentVersion = TgUpdateRolesActionProducer.surrogateVersion(persistedEntity);
+        final Integer currentVersion = TgUpdateRolesActionProducer.surrogateVersion(persistedEntity);
         // entityToSave.setDirtinessMarker(Long.valueOf(universalConstants.now().getMillis()).toString() );
         if (persistedEntity != null) {
             entityToSave.setDirtinessMarker(!persistedEntity.getDirtinessMarker());
         }
         
-        if (currentVersion > entity.getVersion()) {
+        if (currentVersion > entity.getSurrogateVersion()) {
             throw Result.failure(String.format("Another user has changed 'roles' collection of [%s]. entityToSave.getVersion() = %s entity.getVersion() = %s", userBeingUpdated, entityToSave.getVersion(), entity.getVersion()));
         }
         

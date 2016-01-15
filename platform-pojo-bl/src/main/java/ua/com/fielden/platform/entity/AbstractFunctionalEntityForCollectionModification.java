@@ -5,8 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -39,6 +37,20 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
     @MapTo
     @Title(value = "Dirtiness Marker", desc = "The property to mark this entity as dirty for saving purposes")
     private boolean dirtinessMarker = false;
+    
+    @IsProperty
+    @Title(value = "Surrogate Version", desc = "Surrogate Version")
+    private Integer surrogateVersion;
+
+    @Observable
+    public AbstractFunctionalEntityForCollectionModification<K> setSurrogateVersion(final Integer surrogateVersion) {
+        this.surrogateVersion = surrogateVersion;
+        return this;
+    }
+
+    public Integer getSurrogateVersion() {
+        return surrogateVersion;
+    }
 
     @Observable
     public AbstractFunctionalEntityForCollectionModification<K> setDirtinessMarker(final boolean dirtinessMarker) {
@@ -92,7 +104,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
      * @return
      */
     @Override
-    protected boolean isLinkPropertyRequiredButMissing(String propertyName) {
+    protected boolean isLinkPropertyRequiredButMissing(final String propertyName) {
         if (!"chosenIds".equals(propertyName) && !"addedIds".equals(propertyName) && !"removedIds".equals(propertyName)) {
             return super.isLinkPropertyRequiredButMissing(propertyName);
         } else {
