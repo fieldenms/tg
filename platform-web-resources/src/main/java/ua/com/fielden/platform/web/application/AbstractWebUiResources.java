@@ -86,6 +86,17 @@ public abstract class AbstractWebUiResources extends Application {
         setOwner(owner);
         setAuthor(author);
     }
+    
+    
+    /**
+     * An insertion point for registering a domain specific web resources.
+     * The provided router is guarded, making all domain web resources automatically secure.
+     * 
+     * @param router
+     */
+    protected void registerDomainWebResources(final Router router) {
+        // The implementation is empty to ensure backward compatibility with existing projects.
+    }
 
     /**
      * Creates router and configures it with default resources and their paths.
@@ -120,6 +131,9 @@ public abstract class AbstractWebUiResources extends Application {
         // Registering autocompletion resources:
         attachAutocompletionResources(router, webApp);
 
+        // register domain specific resources if any
+        registerDomainWebResources(router);
+        
         // attache internal components and related resources
         //final Set<String> webComponents = new HashSet<>();
         //webComponents.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
@@ -130,9 +144,6 @@ public abstract class AbstractWebUiResources extends Application {
         final Authenticator guard = new DefaultWebResourceGuard(getContext(), webApp.getDomainName(), webApp.getPath(), injector);
         guard.setNext(router);
         
-        final FileUploadResourceFactory factory = new FileUploadResourceFactory(injector);
-        router.attach("/file-processing/{processor-type}", factory);
-
         final Router mainRouter = new Router(getContext());
         // standard Polymer components and other resources should not be guarded
         // Register resources those are in resource paths.
