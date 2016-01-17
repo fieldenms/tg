@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.web.test.server;
 
 import org.restlet.Context;
+import org.restlet.routing.Router;
 
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebUiResources;
+import ua.com.fielden.platform.web.factories.FileUploadResourceFactory;
 
 /**
  * Custom {@link AbstractWebUiResources} descendant for Web UI Testing Server. Provided in order to configure entity centres, masters and other client specific stuff.
@@ -36,5 +38,11 @@ public class WebUiResources extends AbstractWebUiResources {
             final String author,
             final IWebUiConfig webApp) {
         super(context, injector, name, desc, owner, author, webApp);
+    }
+    
+    @Override
+    protected void registerDomainWebResources(final Router router) {
+        final FileUploadResourceFactory factory = new FileUploadResourceFactory(injector);
+        router.attach("/file-processing/{processor-type}", factory);
     }
 }
