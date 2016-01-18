@@ -13,8 +13,6 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Put;
 import org.restlet.resource.ServerResource;
 
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;

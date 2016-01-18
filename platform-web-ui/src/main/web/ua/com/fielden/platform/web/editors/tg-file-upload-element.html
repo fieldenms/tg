@@ -61,7 +61,7 @@
     	</style>
 
 		<!-- a hidden input for file selection -->
-		<input id='uploadInput' type='file' name='myFiles' multiple
+		<input id='uploadInput' type='file' name='myFiles' multiple$="[[multi]]"
 			accept='.csv,.txt,text/plain,text/csv' style='display: none'
 			on-change='_filesAdded'> 
 		
@@ -81,7 +81,7 @@
 		
 		
 		<!-- need also support some debug information on a selected file -->
-		<template is='dom-if' if='{{debug}}'>
+		<template is='dom-if' if='[[debug]]'>
 		<p>
 		    names of selected files: <span>[[_debug_fileNames]]</span><br/>
 			number of selected files: <span>[[_debug_fileNum]]</span>;<br/> 
@@ -98,13 +98,37 @@
     	is: 'tg-file-upload-element',
 
     	properties: {
+    	    /* If enabled will output names, number, total size and mime types of the selected files. */
     	    debug: {
     	        type: Boolean,
     	        value: false
     	    },
     	    
+    	    /* URI that points to a file processing resource. */
     	    url: {
     	        type: String,
+    	    },
+    	    
+    	    /* Indicates whether multiple (true) or a single (false, default) file can be uploaded for processing. 
+    	     *
+    	     * TODO At this stage this feature is resevered and only the first selected file gets uploaded if multiple are selected.
+    	     *      At some stage later there should be a support for uploading multiple files.
+    	     */
+            multi: {
+            	type: Boolean,
+            	value: false
+            },
+            
+    	    processResponse: {
+    	        type: Function
+    	    },
+    	    
+    	    processError: {
+    	        type: Function
+    	    },
+    	    
+    	    processFileUploadedEvent: {
+    	        type: Function
     	    },
     	    
     	    _disabled: {
@@ -169,25 +193,52 @@
             // uploading the files
             if (nFiles > 0) {
                 var file = oFiles[0];
-                var oReq = new XMLHttpRequest();
-                oReq.open("PUT", this.url, true);
-                oReq.onload = function (oEvent) {
-                   console.log('file uploaded');
+                var xhr = new XMLHttpRequest();
+                xhr.open("PUT", this.url, true);
+                
+                // let's add onload handler to return the element ot its original look
+                // and to invoke an external response handler if provided
+                xhr.onload = function (e) {
+                   if (this.processResponse) {
+                       this.processResponse(e);
+                   }
                    
                    this._disabled = false;
                    this.$.progressBar.style.width = '0%';
                 }.bind(this);
-                
-                oReq.upload.onprogress = function (event) {
+
+                // let's also monitor and provide indicattion of the file upload...
+                xhr.upload.onprogress = function (event) {
                     console.log('loaded:', event.loaded, 'total:', event.total);
 
                     var prc = event.loaded / event.total * 100; 
                     this.$.progressBar.style.width = prc + '%';
 
                     // TODO call fileUploaded callback if provided
+                    if (prc >= 100 && this.processFileUploadedEvent) {
+                    	this.processFileUploadedEvent();
+                	}
                 }.bind(this);
 
-                oReq.send(file);
+                // file uploading/processing error might also need to be handled externally
+                // and to invoke an external response handler if provided
+                xhr.onerror = function (e) {
+                   if (this.processError) {
+                       this.processError(e);
+                   }
+                   
+                   this._disabled = false;
+                   this.$.progressBar.style.width = '0%';
+                }.bind(this);
+                
+                // let's clean up if the call was aborted
+                xhr.onabort = function (e) {
+                    this._disabled = false;
+                    this.$.progressBar.style.width = '0%';
+                 }.bind(this);
+
+
+                xhr.send(file);
             }
         },
 

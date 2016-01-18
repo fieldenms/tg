@@ -28,7 +28,26 @@
 
 <body unresolved class="fullbleed">
 
-	<tg-file-upload-element url="/csv-txt-file-processing" style="width: 200px"></tg-file-upload-element>
+	<template id="t" is="dom-bind">
+		<tg-file-upload-element id="fileUploader" url="/csv-txt-file-processing" style="width: 200px"></tg-file-upload-element>
+	</template>
 </body>
 
+<script>
+    var t = document.querySelector('#t');
+
+    t.addEventListener('dom-change', function() {
+        t.$.fileUploader.processFileUploadedEvent = function() {
+            console.log("file uploaded!");
+        };
+
+        t.$.fileUploader.processResponse = function(e) {
+            console.log("file processed:", e);
+        }
+
+        t.$.fileUploader.processError = function(e) {
+            console.log("file processing resulted in error:", e);
+        }
+    }.bind(t));
+</script>
 </html>
