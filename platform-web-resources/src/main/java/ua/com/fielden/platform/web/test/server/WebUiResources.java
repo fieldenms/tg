@@ -8,6 +8,8 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebUiResources;
 import ua.com.fielden.platform.web.factories.FileUploadResourceFactory;
+import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
+import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 
 /**
  * Custom {@link AbstractWebUiResources} descendant for Web UI Testing Server. Provided in order to configure entity centres, masters and other client specific stuff.
@@ -42,7 +44,13 @@ public class WebUiResources extends AbstractWebUiResources {
     
     @Override
     protected void registerDomainWebResources(final Router router) {
+        // register some file processors
         final FileUploadResourceFactory factory = new FileUploadResourceFactory(injector);
         router.attach("/file-processing/{processor-type}", factory);
+        
+        // register some server-side eventing
+        // router.attach("/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment
+        router.attach("/entity-centre-events",  new EventSourcingResourceFactory(injector, TgPersistentEntityWithPropertiesEventSrouce.class));
+
     }
 }
