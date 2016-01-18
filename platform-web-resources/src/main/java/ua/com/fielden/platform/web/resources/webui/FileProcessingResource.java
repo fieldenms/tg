@@ -1,24 +1,25 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-
-import javax.activation.MimetypesFileTypeMap;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
-import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Put;
 import org.restlet.resource.ServerResource;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.web.resources.AttachmentTypeResource;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * This resource should be used for uploading files.
@@ -28,12 +29,32 @@ import ua.com.fielden.platform.web.resources.AttachmentTypeResource;
  * @author TG Team
  * 
  */
-public class FileProcessingResource extends ServerResource {
+public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends ServerResource {
 
-    private final long sizeLimit = 10 * 1024 * 1024; // Kilobytes
+    private final IEntityDao<T> companion;
+    private final EntityFactory factory;
+    private final Function<EntityFactory, T> entityCreator;
+    private final RestServerUtil restUtil;
+    private final long sizeLimit;
+    private final Set<MediaType> types;
 
-    public FileProcessingResource(final Injector injector, final Context context, final Request request, final Response response) {
+    public FileProcessingResource(
+            final IEntityDao<T> companion,
+            final EntityFactory factory,
+            final Function<EntityFactory, T> entityCreator,
+            final RestServerUtil restUtil,
+            final long fileSizeLimit,
+            final Set<MediaType> types, 
+            final Context context, 
+            final Request request, 
+            final Response response) {
         init(context, request, response);
+        this.companion = companion;
+        this.factory = factory;
+        this.entityCreator = entityCreator;
+        this.restUtil = restUtil;
+        this.sizeLimit = fileSizeLimit;
+        this.types = types;
     }
 
     /**
@@ -44,41 +65,30 @@ public class FileProcessingResource extends ServerResource {
     public Representation receiveFile(final Representation entity) throws Exception {
         final Representation response;
         if (entity == null) {
-            response = new StringRepresentation("There is nothing to process");
-        } else { // && MediaType.MULTIPART_FORM_DATA.equals(entity.getMediaType(), true)
-            // Create a factory for disk-based file items
-
-            // Request is parsed by the handler which generates a list of FileItems
-            StringBuilder sb = new StringBuilder("media type: ");
-            sb.append(entity.getMediaType()).append("\n");
-            sb.append("file size : ");
-            sb.append(entity.getSize()).append("\n");
-
-            if (entity.getSize() == -1) {
-                getResponse().setStatus(Status.CLIENT_ERROR_LENGTH_REQUIRED);
-                response = new StringRepresentation("File size is required.");
-            } else if (entity.getSize() > sizeLimit) {
-                getResponse().setStatus(Status.CLIENT_ERROR_REQUEST_ENTITY_TOO_LARGE);
-                response = new StringRepresentation("File is too large.");
-            } else {
-                final InputStream stream = entity.getStream();
-    
-                
-                final BufferedReader br = new BufferedReader(new InputStreamReader(stream));
-                String line = null;
-                while ((line = br.readLine()) != null) {
-                    sb.append(line).append("\n");
-                }
-                sb.append("\n\n");
-    
-                System.out.println(sb.toString());
-                Thread.currentThread().sleep(5000);
-
-                response = new StringRepresentation("Processed the file.");
-            }
+            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            return restUtil.errorJSONRepresentation("There is nothing to process");
+        } else if (!types.contains(entity.getMediaType())) {
+            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            return restUtil.errorJSONRepresentation("Unexpected media type.");
+        } else if (entity.getSize() == -1) {
+            getResponse().setStatus(Status.CLIENT_ERROR_LENGTH_REQUIRED);
+            return restUtil.errorJSONRepresentation("File size is required.");
+        } else if (entity.getSize() > sizeLimit) {
+            getResponse().setStatus(Status.CLIENT_ERROR_REQUEST_ENTITY_TOO_LARGE);
+            return restUtil.errorJSONRepresentation("File is too large.");
+        } else {
+            final InputStream stream = entity.getStream();
+            response = EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> tryToProcess(stream), restUtil);
         }
 
         return response;
-        
     }
+    
+    private Representation tryToProcess(final InputStream stream) {
+        final T entity = entityCreator.apply(factory);
+        entity.setInputStream(stream);
+        final T applied = companion.save(entity);
+        return restUtil.singleJSONRepresentation(applied);
+    }
+
 }

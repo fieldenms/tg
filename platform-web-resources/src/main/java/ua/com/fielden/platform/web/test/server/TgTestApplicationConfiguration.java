@@ -6,17 +6,11 @@ import org.restlet.Component;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.application.BasicServerApplication;
-import ua.com.fielden.platform.web.factories.UserAuthResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginResourceFactory;
 import ua.com.fielden.platform.web.resources.OldVersionResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
-import ua.com.fielden.platform.web.system.SystemResources;
-import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 
 /**
  * Configuration point for Web UI Testing Server.

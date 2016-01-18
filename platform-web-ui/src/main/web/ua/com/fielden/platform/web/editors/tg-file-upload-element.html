@@ -105,7 +105,6 @@
     	    
     	    url: {
     	        type: String,
-    	        value: '/file-processing/FileConsumer'
     	    },
     	    
     	    _disabled: {
@@ -171,7 +170,7 @@
             if (nFiles > 0) {
                 var file = oFiles[0];
                 var oReq = new XMLHttpRequest();
-                oReq.open("PUT", "/file-processing/fielden.FileConsumer", true);
+                oReq.open("PUT", this.url, true);
                 oReq.onload = function (oEvent) {
                    console.log('file uploaded');
                    
