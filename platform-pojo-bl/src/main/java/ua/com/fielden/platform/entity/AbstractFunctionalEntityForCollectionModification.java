@@ -10,26 +10,30 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
- * A base class for functional entities that are intended to modify entity collectional association properties.
+ * A base class for functional entities that are intended to modify entity (master entity) collectional association properties. The master entity, whose collection modifies,
+ * needs to have persistent nature.
+ * <p>
+ * The key type for the functional entity should be the same as the master entity type. Implementors should also implement producer that is descendant of 
+ * {@link AbstractFunctionalEntityProducerForCollectionModification} -- this producer will assign the key for this functional entity and will do other preparation job.
  * <p>
  * Concrete implementors need to be persistent (do not forget to annotate with @MapEntityTo annotation).
  *
  * @author TG Team
  *
- * @param <K> -- the type of the persistent entity, whose collection modifies
+ * @param <K> -- the type of the master entity, whose collection modifies
  */
 public abstract class AbstractFunctionalEntityForCollectionModification<K extends AbstractEntity<?>> extends AbstractFunctionalEntityWithCentreContext<K> {
     private static final long serialVersionUID = 1L;
     
-    @IsProperty(value = Long.class, linkProperty = "smth") 
+    @IsProperty(value = Long.class) 
     @Title(value = "Chosen ids", desc = "IDs of chosen entities (added and / or remained chosen)")
     private Set<Long> chosenIds = new LinkedHashSet<Long>();
     
-    @IsProperty(value = Long.class, linkProperty = "smth")
+    @IsProperty(value = Long.class)
     @Title(value = "Added ids", desc = "IDs of added entities")
     private Set<Long> addedIds = new LinkedHashSet<Long>();
     
-    @IsProperty(value = Long.class, linkProperty = "smth")
+    @IsProperty(value = Long.class)
     @Title(value = "Removed ids", desc = "IDs of removed entities")
     private Set<Long> removedIds = new LinkedHashSet<Long>();
     

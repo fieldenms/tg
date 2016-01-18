@@ -183,6 +183,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addProp("base").also()
                 .addProp("basedOnUser")
                 .addPrimaryAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
+                .also()
+                .addSecondaryAction(
+                    action(TgUpdateRolesAction.class)
+                    .withContext(context().withCurrentEntity().build())
+                    .icon("add-circle")
+                    .shortDesc("Add / Remove roles")
+                    .longDesc("Add / Remove roles")
+                    .build())
                 .build(), injector(), (centre) -> {
                     // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
                     centre.getSecondTick().setWidth(User.class, "", 60);

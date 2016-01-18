@@ -1,17 +1,7 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -20,18 +10,12 @@ import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
@@ -39,7 +23,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /** 
  * DAO implementation for companion object {@link ITgUpdateRolesAction}.
@@ -78,7 +61,7 @@ public class TgUpdateRolesActionDao extends CommonEntityDao<TgUpdateRolesAction>
         logger.error("entity.getAddedIds() = " + entity.getAddedIds());
         logger.error("entity.getRemovedIds() = " + entity.getRemovedIds());
         
-        final User userBeingUpdated = (User) entity.getContext().getMasterEntity();
+        final User userBeingUpdated = entity.getKey();
         final Map<Long, UserRole> roles = mapById(coUserRole.findAll());
         
         final Set<UserAndRoleAssociation> addedAssociations = new LinkedHashSet<>();
@@ -101,10 +84,10 @@ public class TgUpdateRolesActionDao extends CommonEntityDao<TgUpdateRolesAction>
         action.setSaveEntities(addedAssociations);
         action.setRemoveEntities(removedAssociations);
         
-        final TgUpdateRolesAction persistedEntity = TgUpdateRolesActionProducer.retrieveActionFor(userBeingUpdated, this);
+        final TgUpdateRolesAction persistedEntity = AbstractFunctionalEntityProducerForCollectionModification.retrieveActionFor(userBeingUpdated, this, TgUpdateRolesAction.class);
         final TgUpdateRolesAction entityToSave = persistedEntity == null ? new TgUpdateRolesAction().setKey(userBeingUpdated) : persistedEntity;
         
-        if (TgUpdateRolesActionProducer.surrogateVersion(persistedEntity) > entity.getSurrogateVersion()) {
+        if (AbstractFunctionalEntityProducerForCollectionModification.surrogateVersion(persistedEntity) > entity.getSurrogateVersion()) {
             throw Result.failure(String.format("Another user has changed 'roles' collection of [%s]. surrogateVersion(persistedEntity) = %s > entity.getSurrogateVersion() = %s", userBeingUpdated, TgUpdateRolesActionProducer.surrogateVersion(persistedEntity), entity.getSurrogateVersion()));
         }
         

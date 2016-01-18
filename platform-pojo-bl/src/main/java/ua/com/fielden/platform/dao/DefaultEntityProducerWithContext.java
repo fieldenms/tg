@@ -17,7 +17,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C extends AbstractEntity<?>> implements IEntityProducer<T> {
 
     private final EntityFactory factory;
-    private final Class<T> entityType;
+    protected final Class<T> entityType;
     private final IEntityDao<T> companion;
     // optional centre context for context-dependent entity producing logic
     private CentreContext<C, AbstractEntity<?>> centreContext;
@@ -83,7 +83,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
         return masterEntity;
     }
 
-    public void setMasterEntity(AbstractEntity<?> masterEntity) {
+    public void setMasterEntity(final AbstractEntity<?> masterEntity) {
         this.masterEntity = masterEntity;
     }
 
@@ -117,7 +117,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
         return compoundMasterEntityId;
     }
 
-    public void setCompoundMasterEntityId(Long compoundMasterEntityId) {
+    public void setCompoundMasterEntityId(final Long compoundMasterEntityId) {
         this.compoundMasterEntityId = compoundMasterEntityId;
     }
 }
