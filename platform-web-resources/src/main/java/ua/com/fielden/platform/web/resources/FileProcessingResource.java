@@ -26,11 +26,11 @@ import com.google.inject.Injector;
  * @author TG Team
  * 
  */
-public class FileUploadResource extends ServerResource {
+public class FileProcessingResource extends ServerResource {
 
     private final long sizeLimit = 10 * 1024 * 1024; // Kilobytes
 
-    public FileUploadResource(final Injector injector, final Context context, final Request request, final Response response) {
+    public FileProcessingResource(final Injector injector, final Context context, final Request request, final Response response) {
         init(context, request, response);
     }
 

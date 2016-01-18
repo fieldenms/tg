@@ -22,7 +22,7 @@ import ua.com.fielden.platform.web.factories.EntityInstanceResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityLifecycleResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityQueryExportResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityTypeResourceFactory;
-import ua.com.fielden.platform.web.factories.FileUploadResourceFactory;
+import ua.com.fielden.platform.web.factories.FileProcessingResourceFactory;
 import ua.com.fielden.platform.web.factories.GeneratedEntityQueryExportResourceFactory;
 import ua.com.fielden.platform.web.factories.GeneratedEntityQueryResourceFactory;
 import ua.com.fielden.platform.web.factories.ReportResourceFactory;
@@ -87,11 +87,6 @@ public final class RouterHelper {
         router.attach("/users/{username}/" + Attachment.class.getSimpleName() + "/{entity-id}", instanceResource);
     }
     
-    public void registerFileUploadResource(final Router router) {
-        final FileUploadResourceFactory factory = new FileUploadResourceFactory(injector);
-        router.attach("/file-processing/{processor-type}", factory);
-    }
-
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerInstanceResource(final Router router, final Class<DAO> daoType) {
         final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimise it
         final Restlet instanceResource = new EntityInstanceResourceFactory<T, DAO>(daoType, injector, factory);

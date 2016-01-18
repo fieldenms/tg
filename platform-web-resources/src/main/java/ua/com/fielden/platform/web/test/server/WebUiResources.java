@@ -7,7 +7,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebUiResources;
-import ua.com.fielden.platform.web.factories.FileUploadResourceFactory;
+import ua.com.fielden.platform.web.factories.FileProcessingResourceFactory;
 import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
 import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 
@@ -45,7 +45,7 @@ public class WebUiResources extends AbstractWebUiResources {
     @Override
     protected void registerDomainWebResources(final Router router) {
         // register some file processors
-        final FileUploadResourceFactory factory = new FileUploadResourceFactory(injector);
+        final FileProcessingResourceFactory factory = new FileProcessingResourceFactory(injector);
         router.attach("/file-processing/{processor-type}", factory);
         
         // register some server-side eventing

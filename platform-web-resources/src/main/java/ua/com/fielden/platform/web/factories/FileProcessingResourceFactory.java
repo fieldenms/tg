@@ -7,18 +7,18 @@ import org.restlet.data.Method;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.web.resources.FileUploadResource;
+import ua.com.fielden.platform.web.resources.FileProcessingResource;
 
 /**
- * Factory to instantiate {@link FileUploadResource}.
+ * Factory to instantiate {@link FileProcessingResource}.
  *
  * @author TG Team
  *
  */
-public class FileUploadResourceFactory extends Restlet {
+public class FileProcessingResourceFactory extends Restlet {
     private final Injector injector;
 
-    public FileUploadResourceFactory(final Injector injector) {
+    public FileProcessingResourceFactory(final Injector injector) {
         this.injector = injector;
     }
 
@@ -27,7 +27,7 @@ public class FileUploadResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.PUT.equals(request.getMethod())) {
-            new FileUploadResource(injector, getContext(), request, response).handle();
+            new FileProcessingResource(injector, getContext(), request, response).handle();
         }
     }
 }

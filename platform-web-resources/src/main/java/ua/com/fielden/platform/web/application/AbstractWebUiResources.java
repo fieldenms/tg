@@ -11,7 +11,7 @@ import org.restlet.security.Authenticator;
 
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.factories.FileUploadResourceFactory;
+import ua.com.fielden.platform.web.factories.FileProcessingResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.AppIndexResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreEgiResourceFactory;
