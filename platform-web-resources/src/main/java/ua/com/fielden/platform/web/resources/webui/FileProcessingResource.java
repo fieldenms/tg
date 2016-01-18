@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.resources;
+package ua.com.fielden.platform.web.resources.webui;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -17,6 +17,8 @@ import org.restlet.resource.Put;
 import org.restlet.resource.ServerResource;
 
 import com.google.inject.Injector;
+
+import ua.com.fielden.platform.web.resources.AttachmentTypeResource;
 
 /**
  * This resource should be used for uploading files.

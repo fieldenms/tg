@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.factories;
+package ua.com.fielden.platform.web.factories.webui;
 
 import org.restlet.Request;
 import org.restlet.Response;
@@ -7,7 +7,7 @@ import org.restlet.data.Method;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.web.resources.FileProcessingResource;
+import ua.com.fielden.platform.web.resources.webui.FileProcessingResource;
 
 /**
  * Factory to instantiate {@link FileProcessingResource}.

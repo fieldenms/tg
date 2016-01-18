@@ -7,7 +7,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebUiResources;
-import ua.com.fielden.platform.web.factories.FileProcessingResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.FileProcessingResourceFactory;
 import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
 import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 

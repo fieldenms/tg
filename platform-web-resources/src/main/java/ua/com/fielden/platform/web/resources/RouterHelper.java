@@ -22,11 +22,11 @@ import ua.com.fielden.platform.web.factories.EntityInstanceResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityLifecycleResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityQueryExportResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityTypeResourceFactory;
-import ua.com.fielden.platform.web.factories.FileProcessingResourceFactory;
 import ua.com.fielden.platform.web.factories.GeneratedEntityQueryExportResourceFactory;
 import ua.com.fielden.platform.web.factories.GeneratedEntityQueryResourceFactory;
 import ua.com.fielden.platform.web.factories.ReportResourceFactory;
 import ua.com.fielden.platform.web.factories.SnappyQueryRestlet;
+import ua.com.fielden.platform.web.factories.webui.FileProcessingResourceFactory;
 
 /**
  * Provides convenient methods for routing standard entity resources.
