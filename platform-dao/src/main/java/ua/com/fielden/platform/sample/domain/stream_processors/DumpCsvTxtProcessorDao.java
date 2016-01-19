@@ -3,6 +3,9 @@ package ua.com.fielden.platform.sample.domain.stream_processors;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import com.google.inject.Inject;
 
@@ -32,23 +35,49 @@ public class DumpCsvTxtProcessorDao extends CommonEntityDao<DumpCsvTxtProcessor>
             throw Result.failure("Input stream was not provided.");
         }
         
+        // lets read the data from file line by line
         final BufferedReader br = new BufferedReader(new InputStreamReader(entity.getInputStream()));
-        final StringBuilder sb = new StringBuilder();
+        final List<String> data = new ArrayList<>();
         String line = null;
-        int linesCount = 0;
         try {
             while ((line = br.readLine()) != null) {
-                sb.append(line).append("\n");
-                linesCount++;
+                data.add(line);
             }
         } catch (IOException e) {
             throw Result.failure(e);
         }
-        sb.append("\n\n");
 
-        System.out.println(sb.toString());
+        // now let's emulate data processing and report progress update if a corresponding subject was provided
+        int prc = -1;
+        final double total = data.size();
+        final Random rnd = new Random();
+        for (int index = 0; index < data.size(); index++) {
+            try {
+                // let's pretend something is being computed by sleeping the thread
+                final String entry = data.get(index);
+                Thread.sleep(rnd.nextInt(2));
+            } catch (InterruptedException e) {
+            }
+            
+            if (entity.getEventSourceSubject().isPresent()) {
+                // in practice there is no need to report every percent completed
+                // instead a time based stepping function could have been used
+                final double x = index;
+                final int currPrc = (int) (x / total * 100.0);
+                if (currPrc > prc || currPrc >= 100) {
+                    prc = currPrc;
+                    entity.getEventSourceSubject().get().publish(prc);
+                }
+            }
+        }
         
-        return entity.setNoOfProcessedLines(Integer.valueOf(linesCount));
+        // make sure we report 100% completion
+        if (entity.getEventSourceSubject().isPresent()) {
+            entity.getEventSourceSubject().get().publish(100);
+        }
+
+        
+        return entity.setNoOfProcessedLines(Integer.valueOf(data.size()));
     }
 
 }

@@ -3,6 +3,8 @@
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 
+<link rel="import" href="/resources/sse/tg-sse-behavior.html">
+
 <dom-module id="tg-file-upload-element">
     <template>
     	<style>
@@ -76,7 +78,7 @@
 			
 			<!-- instead a span based approach is used to indicate the progress -->
 	  		<span class="meter-span" id="progressBar" style="width: 0%"></span>
-			<span>Tap to select or D`n`D file here</span>            
+			<span>[[title]]</span>            
         </paper-button>
 		
 		
@@ -97,11 +99,18 @@
     Polymer({
     	is: 'tg-file-upload-element',
 
+    	behaviors: [Polymer.TgBehaviors.TgSseBehavior],
+    	
     	properties: {
     	    /* If enabled will output names, number, total size and mime types of the selected files. */
     	    debug: {
     	        type: Boolean,
     	        value: false
+    	    },
+    	    
+    	    title: {
+    	        type: String,
+    	        value: 'Tap or D`n`D'
     	    },
     	    
     	    /* URI that points to a file processing resource. */
@@ -158,12 +167,29 @@
     	},
 
     	ready: function () {
+            this.dataHandler = function(data) {
+                var self = this;
+                var msg = JSON.parse(data);
+
+                this.$.progressBar.style.width = msg.prc + '%';
+            }.bind(this);
+
     	},
     	
 	    _filesAdded: function() {
     		this._handleFiles(this.$.uploadInput.files);
 	    },
     	
+	    generateUUID: function () {
+            var d = new Date().getTime();
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = (d + Math.random() * 16) % 16 | 0;
+                d = Math.floor(d / 16);
+                return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+            return uuid;
+        },
+        
         _handleFiles: function (oFiles) {
             this._disabled = true;
             
@@ -195,34 +221,50 @@
                 var file = oFiles[0];
                 var xhr = new XMLHttpRequest();
                 xhr.open("PUT", this.url, true);
+
+                // unique job UUID is required to register a progress update event source
+                // which is provided to the server as a header value
+                var jobUid = this.generateUUID();
+                xhr.setRequestHeader('jobUid', jobUid);
                 
                 // let's add onload handler to return the element ot its original look
                 // and to invoke an external response handler if provided
                 xhr.onload = function (e) {
-                   if (this.processResponse) {
-                       this.processResponse(e);
-                   }
+                    this.closeEventSource();
+                    
+                   	if (this.processResponse) {
+                    	this.processResponse(e);
+                   	}
                    
-                   this._disabled = false;
-                   this.$.progressBar.style.width = '0%';
+                   	this._disabled = false;
+                   	this.$.progressBar.style.width = '0%';
+                   	this.title = 'Tap or D`n`D';
                 }.bind(this);
 
                 // let's also monitor and provide indicattion of the file upload...
                 xhr.upload.onprogress = function (event) {
-                    console.log('loaded:', event.loaded, 'total:', event.total);
-
+                    this.title = 'Uploading...';
+                    
                     var prc = event.loaded / event.total * 100; 
                     this.$.progressBar.style.width = prc + '%';
 
-                    // TODO call fileUploaded callback if provided
-                    if (prc >= 100 && this.processFileUploadedEvent) {
-                    	this.processFileUploadedEvent();
+                    if (prc >= 100) {
+                        if (this.processFileUploadedEvent) {
+                    		this.processFileUploadedEvent();
+                        }
+
+                        // can now subscribe to a server side processing progress eventing source
+                    	this.uri = this.url + "/" + jobUid;
+                    	this.title = "Processing...";
                 	}
+
                 }.bind(this);
 
                 // file uploading/processing error might also need to be handled externally
                 // and to invoke an external response handler if provided
                 xhr.onerror = function (e) {
+                    this.closeEventSource(); 
+                    
                    if (this.processError) {
                        this.processError(e);
                    }
@@ -233,6 +275,7 @@
                 
                 // let's clean up if the call was aborted
                 xhr.onabort = function (e) {
+                    this.closeEventSource();
                     this._disabled = false;
                     this.$.progressBar.style.width = '0%';
                  }.bind(this);
