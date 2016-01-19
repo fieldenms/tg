@@ -27,19 +27,18 @@ import ua.com.fielden.platform.security.user.UserRole;
 public class TgUpdateTokensAction extends AbstractFunctionalEntityForCollectionModification<UserRole> {
     private static final long serialVersionUID = 1L;
     
-    // TODO fix the next lines:
-    @IsProperty(UserRole.class)
+    @IsProperty(TgSecurityToken.class)
     @Title(value = "A list of applicable tokens", desc = "A list of applicable tokens")
-    private Set<UserRole> tokens = new LinkedHashSet<UserRole>();
+    private Set<TgSecurityToken> tokens = new LinkedHashSet<TgSecurityToken>();
 
     @Observable
-    protected TgUpdateTokensAction setTokens(final Set<UserRole> tokens) {
+    protected TgUpdateTokensAction setTokens(final Set<TgSecurityToken> tokens) {
         this.tokens.clear();
         this.tokens.addAll(tokens);
         return this;
     }
 
-    public Set<UserRole> getTokens() {
+    public Set<TgSecurityToken> getTokens() {
         return Collections.unmodifiableSet(tokens);
     }
 }

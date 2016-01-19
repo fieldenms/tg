@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,9 +16,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
 import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -42,9 +42,11 @@ public class TgUpdateTokensActionProducer extends AbstractFunctionalEntityProduc
     @Override
     protected TgUpdateTokensAction provideCurrentlyAssociatedValues(final TgUpdateTokensAction entity, final UserRole masterEntity) {
         // TODO implement
-//        final List<UserRole> allAvailableRoles = coUserRole.findAll();
-//        final Set<UserRole> roles = new LinkedHashSet<>(allAvailableRoles);
-//        entity.setRoles(roles);
+        final List<TgSecurityToken> allAvailableTokens = new ArrayList<>();// coUserRole.findAll();
+        allAvailableTokens.add(factory().newEntity(TgSecurityToken.class, 1999L, AlwaysAccessibleToken.class.getName(), "Controls permission to select and review accidents.").setTitle("Accident Review"));
+        
+        final Set<TgSecurityToken> tokens = new LinkedHashSet<>(allAvailableTokens);
+        entity.setTokens(tokens);
 //        
 //        final Set<Long> chosenRoleIds = new LinkedHashSet<>();
 //        for (final UserAndRoleAssociation association: masterEntity.getRoles()) {

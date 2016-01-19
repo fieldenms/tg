@@ -22,6 +22,7 @@ import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.TgSecurityToken;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgUpdateRolesAction;
 import ua.com.fielden.platform.sample.domain.TgUpdateTokensAction;
@@ -62,6 +63,7 @@ public class TgTestApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityWithPropertyDependency.class);
         add(TgUpdateRolesAction.class);
         add(TgUpdateTokensAction.class);
+        add(TgSecurityToken.class);
    }
 
     @Override
