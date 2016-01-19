@@ -27,9 +27,23 @@
     		    /* An optional function to react to SSE errors. Accepts error event as an argument. */
     		    errorHandler: {
     		        type: Function
+    		    },
+    		    
+    		    /* A reference to an established EventSource object. */
+    		    _source: {
+    		        type: Object,
+    		        value: null    		        
     		    }
     		},
             
+    		/* Closes an existing event source connection. */
+    		closeEventSource: function () {
+    		    if (this._source) {
+    		        this._source.close();
+    		        this._source = null;
+    		    }
+    		},
+    		
     		/** EventSource registration happens as the result of assiging the value to property uri. */
     		_registerEventSource: function () {
                 var self = this;
@@ -55,7 +69,10 @@
             _registerEventSourceHandlers: function () {
                 var self = this;
                 console.log("Registering EventSrouce handlers for URI ", self.uri);
-                var source = new EventSource(self.uri);
+                
+                self._source = new EventSource(self.uri);
+                var source = self._source;
+                
                 source.addEventListener('message', function (e) {
                     self.dataHandler(e.data);
                 }, false);
