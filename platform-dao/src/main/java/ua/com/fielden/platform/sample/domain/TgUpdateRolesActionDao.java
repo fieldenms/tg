@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;

@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
 /** 
@@ -21,25 +20,26 @@ import ua.com.fielden.platform.security.user.UserRole;
  * @author Developers
  *
  */
-@CompanionObject(ITgUpdateRolesAction.class)
-@KeyType(User.class)
+@CompanionObject(ITgUpdateTokensAction.class)
+@KeyType(UserRole.class)
 @MapEntityTo
-@KeyTitle(value = "User", desc = "User, whose 'roles' collection modifies by this functional action.")
-public class TgUpdateRolesAction extends AbstractFunctionalEntityForCollectionModification<User> {
+@KeyTitle(value = "User Role", desc = "User role, whose 'tokens' collection modifies by this functional action.")
+public class TgUpdateTokensAction extends AbstractFunctionalEntityForCollectionModification<UserRole> {
     private static final long serialVersionUID = 1L;
     
+    // TODO fix the next lines:
     @IsProperty(UserRole.class)
-    @Title(value = "A list of applicable roles", desc = "A list of applicable roles")
-    private Set<UserRole> roles = new LinkedHashSet<UserRole>();
+    @Title(value = "A list of applicable tokens", desc = "A list of applicable tokens")
+    private Set<UserRole> tokens = new LinkedHashSet<UserRole>();
 
     @Observable
-    protected TgUpdateRolesAction setRoles(final Set<UserRole> roles) {
-        this.roles.clear();
-        this.roles.addAll(roles);
+    protected TgUpdateTokensAction setTokens(final Set<UserRole> tokens) {
+        this.tokens.clear();
+        this.tokens.addAll(tokens);
         return this;
     }
 
-    public Set<UserRole> getRoles() {
-        return Collections.unmodifiableSet(roles);
+    public Set<UserRole> getTokens() {
+        return Collections.unmodifiableSet(tokens);
     }
 }

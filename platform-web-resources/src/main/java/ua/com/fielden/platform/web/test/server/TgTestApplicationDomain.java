@@ -24,6 +24,7 @@ import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgUpdateRolesAction;
+import ua.com.fielden.platform.sample.domain.TgUpdateTokensAction;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -60,6 +61,7 @@ public class TgTestApplicationDomain implements IApplicationDomainProvider {
         add(TgDummyAction.class);
         add(TgEntityWithPropertyDependency.class);
         add(TgUpdateRolesAction.class);
+        add(TgUpdateTokensAction.class);
    }
 
     @Override

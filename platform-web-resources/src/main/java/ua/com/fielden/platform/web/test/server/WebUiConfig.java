@@ -73,6 +73,8 @@ import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgUpdateRolesAction;
 import ua.com.fielden.platform.sample.domain.TgUpdateRolesActionProducer;
+import ua.com.fielden.platform.sample.domain.TgUpdateTokensAction;
+import ua.com.fielden.platform.sample.domain.TgUpdateTokensActionProducer;
 import ua.com.fielden.platform.sample.domain.UserProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -213,11 +215,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addPrimaryAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
                 .also()
                 .addSecondaryAction(
-                    action(TgUpdateRolesAction.class)
+                    action(TgUpdateTokensAction.class)
                     .withContext(context().withCurrentEntity().build())
                     .icon("add-circle")
-                    .shortDesc("Add / Remove roles")
-                    .longDesc("Add / Remove roles")
+                    .shortDesc("Add / Remove tokens")
+                    .longDesc("Add / Remove tokens")
                     .build())
                 .build(),
                 injector(), (centre) -> {
@@ -504,17 +506,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .addProp("dependentProp").asSinglelineText()
             .also()
             .addProp("roles").asSinglelineText()
-                .withAction(
-                    action(TgUpdateRolesAction.class)
-                    .withContext(context().withMasterEntity().build())
-                    .postActionSuccess(new PostActionSuccess(""
-                            + "// self.setEditorValue4Property('status', functionalEntity, 'status');\n"
-                            )) // self.retrieve()
-                    .postActionError(new PostActionError(""))
-                    .icon("add-circle")
-                    .shortDesc("Add / Remove roles")
-                    .longDesc("Add / Remove roles")
-                    .build())
             .also()
             .addAction(MasterActions.REFRESH)
             //      */.icon("trending-up") SHORT-CUT
@@ -544,10 +535,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     .withAction(
                         action(TgUpdateRolesAction.class)
                         .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "// self.setEditorValue4Property('status', functionalEntity, 'status');\n"
-                                )) // self.retrieve()
-                        .postActionError(new PostActionError(""))
                         .icon("add-circle")
                         .shortDesc("Add / Remove roles")
                         .longDesc("Add / Remove roles")
@@ -630,6 +617,39 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .done();
+        
+        final IMaster<TgUpdateTokensAction> masterConfigForUpdateTokensAction = new SimpleMasterBuilder<TgUpdateTokensAction>()
+                .forEntity(TgUpdateTokensAction.class)
+                .addProp("tokens").asSinglelineText()
+                .also()
+                .addProp("chosenIds").asSinglelineText()
+                .also()
+                .addProp("addedIds").asSinglelineText()
+                .also()
+                .addProp("removedIds").asSinglelineText()
+                .also()
+                .addProp("surrogateVersion").asSpinner()
+                .also()
+                .addProp("tokens").asCollectionalEditor()
+                .also()
+                .addAction(MasterActions.REFRESH)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("CANCEL")
+                /*      */.longDesc("Cancel action")
+                .addAction(MasterActions.VALIDATE)
+                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.EDIT)
+                .addAction(MasterActions.VIEW)
+        
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
+                        "      ['padding:20px', "
+                        + format("[[%s], ['flex']],", fmr)
+                        + format("[[%s], ['flex']],", fmr)
+                        + format("[['flex']],")
+                        + format("[['flex']],")
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + "    ]"))
+                .done();
 
         final EntityMaster<TgPersistentEntityWithProperties> entityMaster = new EntityMaster<TgPersistentEntityWithProperties>(
                 TgPersistentEntityWithProperties.class,
@@ -654,6 +674,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgUpdateRolesAction.class,
                     TgUpdateRolesActionProducer.class,
                     masterConfigForUpdateRolesAction,
+                    injector())).
+            addMaster(TgUpdateTokensAction.class, new EntityMaster<TgUpdateTokensAction>(
+                    TgUpdateTokensAction.class,
+                    TgUpdateTokensActionProducer.class,
+                    masterConfigForUpdateTokensAction,
                     injector())).
             addMaster(TgEntityForColourMaster.class, clourMaster).//
 

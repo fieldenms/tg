@@ -4,7 +4,6 @@ import static java.util.Locale.getDefault;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -42,8 +41,6 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.sample.domain.TgUpdateRolesAction;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
