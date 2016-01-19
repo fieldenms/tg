@@ -39,16 +39,18 @@
     		/* Closes an existing event source connection. */
     		closeEventSource: function () {
     		    if (this._source) {
-    		        this._source.close();
+    		        this._initialised = false;
+    		        var src = this._source; 
     		        this._source = null;
+    		        src.close();
     		    }
     		},
     		
     		/** EventSource registration happens as the result of assiging the value to property uri. */
-    		_registerEventSource: function () {
+    		_registerEventSource: function (newUri, oldUri) {
                 var self = this;
                 if (self._initialised === true) {
-                	throw new Error('EventSource for URI "', self.uri, '" should not be initialised twice.');
+                	throw new Error('EventSource for URI [' + oldUri + '] should not be initialised to [' + newUri + '] without closing an existing event source connection.');
                 }
                 // if uri value is missing then skip EvenSource registration
                 if (self.uri) {
