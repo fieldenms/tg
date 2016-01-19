@@ -67,7 +67,7 @@
 		<dependency>
 			<groupId>io.reactivex</groupId>
 			<artifactId>rxjava</artifactId>
-			<version>1.0.11</version>
+			<version>1.1.0</version>
 		</dependency>
 
 		<!-- Hibernate 3.2.6.ga conflicts with ASM 3.3.1, thus Guice packaged version 
