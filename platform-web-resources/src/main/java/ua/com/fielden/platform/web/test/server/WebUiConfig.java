@@ -41,6 +41,7 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties2
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4;
 import ua.com.fielden.platform.sample.domain.MiUser;
+import ua.com.fielden.platform.sample.domain.MiUserRole;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
@@ -75,6 +76,7 @@ import ua.com.fielden.platform.sample.domain.TgUpdateRolesActionProducer;
 import ua.com.fielden.platform.sample.domain.UserProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -198,6 +200,32 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     centre.getSecondTick().setWidth(User.class, "basedOnUser", 60);
                     return centre;
                 });
+        
+        final EntityCentre<UserRole> userRoleCentre = new EntityCentre<>(MiUserRole.class, "User Roles",
+                EntityCentreBuilder.centreFor(UserRole.class)
+                .runAutomatically()
+                .addCrit("this").asMulti().autocompleter(UserRole.class).also()
+                .addCrit("desc").asMulti().text()
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
+
+                .addProp("this").also()
+                .addProp("desc")
+                .addPrimaryAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
+                .also()
+                .addSecondaryAction(
+                    action(TgUpdateRolesAction.class)
+                    .withContext(context().withCurrentEntity().build())
+                    .icon("add-circle")
+                    .shortDesc("Add / Remove roles")
+                    .longDesc("Add / Remove roles")
+                    .build())
+                .build(),
+                injector(), (centre) -> {
+                    // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
+                    centre.getSecondTick().setWidth(UserRole.class, "", 120);
+                    centre.getSecondTick().setWidth(UserRole.class, "desc", 360);
+                    return centre;
+                });
 
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, true, false));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(false, false, false));
@@ -213,6 +241,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().addCentre(MiDetailsCentre.class, detailsCentre);
         configApp().addCentre(MiTgEntityWithPropertyDependency.class, propDependencyCentre);
         configApp().addCentre(MiUser.class, userCentre);
+        configApp().addCentre(MiUserRole.class, userRoleCentre);
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);
@@ -742,6 +771,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
                 .addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
                 .addMenuItem("Users").description("User centre").centre(userCentre).done()
+                .addMenuItem("User Roles").description("User role centre").centre(userRoleCentre).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
