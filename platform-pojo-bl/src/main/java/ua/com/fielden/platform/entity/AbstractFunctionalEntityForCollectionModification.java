@@ -21,21 +21,22 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * @author TG Team
  *
  * @param <K> -- the type of the master entity, whose collection modifies
+ * @param <ID_TYPE> -- the type of identificators for collection items (usually Long.class for persisted entities, otherwise it should be equal to key type).
  */
-public abstract class AbstractFunctionalEntityForCollectionModification<K extends AbstractEntity<?>> extends AbstractFunctionalEntityWithCentreContext<K> {
+public abstract class AbstractFunctionalEntityForCollectionModification<K extends AbstractEntity<?>, ID_TYPE> extends AbstractFunctionalEntityWithCentreContext<K> {
     private static final long serialVersionUID = 1L;
     
     @IsProperty(value = Long.class) 
     @Title(value = "Chosen ids", desc = "IDs of chosen entities (added and / or remained chosen)")
-    private Set<Long> chosenIds = new LinkedHashSet<Long>();
+    private Set<ID_TYPE> chosenIds = new LinkedHashSet<>();
     
     @IsProperty(value = Long.class)
     @Title(value = "Added ids", desc = "IDs of added entities")
-    private Set<Long> addedIds = new LinkedHashSet<Long>();
+    private Set<ID_TYPE> addedIds = new LinkedHashSet<>();
     
     @IsProperty(value = Long.class)
     @Title(value = "Removed ids", desc = "IDs of removed entities")
-    private Set<Long> removedIds = new LinkedHashSet<Long>();
+    private Set<ID_TYPE> removedIds = new LinkedHashSet<>();
     
     @IsProperty
     @MapTo
@@ -43,7 +44,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
     private Long surrogateVersion;
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<K> setSurrogateVersion(final Long surrogateVersion) {
+    public AbstractFunctionalEntityForCollectionModification<K, ID_TYPE> setSurrogateVersion(final Long surrogateVersion) {
         this.surrogateVersion = surrogateVersion;
         return this;
     }
@@ -53,36 +54,40 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
     }
 
     @Observable
-    protected AbstractFunctionalEntityForCollectionModification<K> setAddedIds(final Set<Long> addedIds) {
+    protected AbstractFunctionalEntityForCollectionModification<K, ID_TYPE> setAddedIds(final Set<ID_TYPE> addedIds) {
         this.addedIds.clear();
         this.addedIds.addAll(addedIds);
         return this;
     }
 
-    public Set<Long> getAddedIds() {
+    public Set<ID_TYPE> getAddedIds() {
         return Collections.unmodifiableSet(addedIds);
     }
 
     @Observable
-    protected AbstractFunctionalEntityForCollectionModification<K> setRemovedIds(final Set<Long> removedIds) {
+    protected AbstractFunctionalEntityForCollectionModification<K, ID_TYPE> setRemovedIds(final Set<ID_TYPE> removedIds) {
         this.removedIds.clear();
         this.removedIds.addAll(removedIds);
         return this;
     }
 
-    public Set<Long> getRemovedIds() {
+    public Set<ID_TYPE> getRemovedIds() {
         return Collections.unmodifiableSet(removedIds);
     }
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<K> setChosenIds(final Set<Long> chosenIds) {
+    public AbstractFunctionalEntityForCollectionModification<K, ID_TYPE> setChosenIds(final Set<ID_TYPE> chosenIds) {
         this.chosenIds.clear();
         this.chosenIds.addAll(chosenIds);
         return this;
     }
 
-    public Set<Long> getChosenIds() {
+    public Set<ID_TYPE> getChosenIds() {
         return Collections.unmodifiableSet(chosenIds);
+    }
+    
+    public static boolean isCollectionOfIds(final String propertyName) {
+        return "chosenIds".equals(propertyName) || "addedIds".equals(propertyName) || "removedIds".equals(propertyName);
     }
     
     /**
@@ -95,7 +100,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
      */
     @Override
     protected boolean isLinkPropertyRequiredButMissing(final String propertyName) {
-        if (!"chosenIds".equals(propertyName) && !"addedIds".equals(propertyName) && !"removedIds".equals(propertyName)) {
+        if (!isCollectionOfIds(propertyName)) {
             return super.isLinkPropertyRequiredButMissing(propertyName);
         } else {
             return false;

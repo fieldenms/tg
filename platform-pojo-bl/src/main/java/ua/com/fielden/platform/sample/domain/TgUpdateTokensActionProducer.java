@@ -1,14 +1,17 @@
 package ua.com.fielden.platform.sample.domain;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.IUserRoleDao;
@@ -16,6 +19,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.security.provider.SecurityTokenNode;
+import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -31,17 +36,28 @@ public class TgUpdateTokensActionProducer extends AbstractFunctionalEntityProduc
     private final Logger logger = Logger.getLogger(getClass());
     private final IUserRoleDao coUserRole;
     private final IUser coUser;
+    private final SecurityTokenProvider securityTokenProvider;
     
     @Inject
-    public TgUpdateTokensActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IUserRoleDao coUserRole, final IUser coUser) {
+    public TgUpdateTokensActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IUserRoleDao coUserRole, final IUser coUser, final IApplicationSettings applicationSettings) throws Exception {
         super(factory, TgUpdateTokensAction.class, companionFinder);
         this.coUserRole = coUserRole;
         this.coUser = coUser;
+        this.securityTokenProvider = new SecurityTokenProvider(applicationSettings.pathToSecurityTokens(), applicationSettings.securityTokensPackageName());
     }
     
     @Override
     protected TgUpdateTokensAction provideCurrentlyAssociatedValues(final TgUpdateTokensAction entity, final UserRole masterEntity) {
-        // TODO implement
+        // synchronise security tokens classes with persistent entities
+        final SortedSet<SecurityTokenNode> topLevelTokens = securityTokenProvider.getTopLevelSecurityTokenNodes();
+        for (final SecurityTokenNode node : topLevelTokens) {
+            logger.error("node == " + node.getLongDesc());
+        }
+        final String dtr = AlwaysAccessibleToken.class.getName();
+        logger.error("new BigInteger(dtr.getBytes()) == " + new BigInteger(dtr.getBytes()));
+        logger.error("new BigInteger(dtr.getBytes()).longValue() == " + new BigInteger(dtr.getBytes()).longValue());
+        
+        
         final List<TgSecurityToken> allAvailableTokens = new ArrayList<>();// coUserRole.findAll();
         allAvailableTokens.add(factory().newEntity(TgSecurityToken.class, 1999L, AlwaysAccessibleToken.class.getName(), "Controls permission to select and review accidents.").setTitle("Accident Review"));
         

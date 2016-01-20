@@ -42,7 +42,7 @@ public class TgUpdateTokensActionDao extends CommonEntityDao<TgUpdateTokensActio
     @Override
     @SessionRequired
     public TgUpdateTokensAction save(final TgUpdateTokensAction action) {
-        final TgUpdateTokensAction actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getTokens(), this, factory);
+        final TgUpdateTokensAction actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getTokens(), this, factory, String.class);
 
         // TODO implement
 //        // after all validations have passed -- the association changes could be saved:

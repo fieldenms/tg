@@ -35,7 +35,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  *
  */
-public abstract class AbstractFunctionalEntityProducerForCollectionModification<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE>> extends DefaultEntityProducerWithContext<T, T> implements IEntityProducer<T> {
+public abstract class AbstractFunctionalEntityProducerForCollectionModification<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE, ?>> extends DefaultEntityProducerWithContext<T, T> implements IEntityProducer<T> {
     private final static Logger logger = Logger.getLogger(AbstractFunctionalEntityProducerForCollectionModification.class);
     private final IEntityDao<T> companion;
     private final ICompanionObjectFinder companionFinder;
@@ -116,7 +116,7 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         return persistedEntity == null ? 99L : (persistedEntity.getVersion() + 100L);
     }
     
-    private static <MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE>> T retrieveActionFor(final MASTER_TYPE masterEntity, final IEntityDao<T> companion, final Class<T> actionType) {
+    private static <MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE, ?>> T retrieveActionFor(final MASTER_TYPE masterEntity, final IEntityDao<T> companion, final Class<T> actionType) {
         return companion.getEntity(
                 from(select(actionType).where().prop(AbstractEntity.KEY).eq().val(masterEntity).model())
                 .with(fetch(actionType).with(AbstractEntity.KEY)).model()
@@ -133,7 +133,7 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
      * @param factory
      * @return
      */
-    public static <MASTER_TYPE extends AbstractEntity<?>, ITEM extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE>> T validateAction(final T action, final Function<T, Collection<ITEM>> availableEntitiesGetter, final IEntityDao<T> companion, final EntityFactory factory) {
+    public static <MASTER_TYPE extends AbstractEntity<?>, ITEM extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE, ID_TYPE>, ID_TYPE> T validateAction(final T action, final Function<T, Collection<ITEM>> availableEntitiesGetter, final IEntityDao<T> companion, final EntityFactory factory, final Class<ID_TYPE> idType) {
         final Result res = action.isValid();
         // throw validation result of the action if it is not successful:
         if (!res.isSuccessful()) {
@@ -147,14 +147,15 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         logger.error("action's removedIds = " + action.getRemovedIds());
         
         final MASTER_TYPE masterEntityBeingUpdated = action.getKey(); // existence of master entity is checked during "producing" of functional action
-        final Map<Long, ITEM> availableEntities = mapById(availableEntitiesGetter.apply(action));
         
-        for (final Long addedId : action.getAddedIds()) {
+        final Map<Object, ITEM> availableEntities = mapById(availableEntitiesGetter.apply(action), idType);
+        
+        for (final ID_TYPE addedId : action.getAddedIds()) {
             if (!availableEntities.containsKey(addedId)) {
                 throw Result.failure("Another user has deleted the item, that you're trying to choose. " + TRY_AGAIN_MSG);
             }
         }
-        for (final Long removedId : action.getRemovedIds()) {
+        for (final ID_TYPE removedId : action.getRemovedIds()) {
             if (!availableEntities.containsKey(removedId)) {
                 throw Result.failure("Another user has deleted the item, that you're trying to un-tick. " + TRY_AGAIN_MSG);
             }
@@ -185,10 +186,15 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
      * @param entities
      * @return
      */
-    public static <T extends AbstractEntity<?>> Map<Long, T> mapById(final Collection<T> entities) {
-        final Map<Long, T> map = new HashMap<>();
+    public static <T extends AbstractEntity<?>> Map<Object, T> mapById(final Collection<T> entities, final Class<?> idType) {
+        final Map<Object, T> map = new HashMap<>();
+        final boolean isLongId = Long.class.isAssignableFrom(idType);
         for (final T entity : entities) {
-            map.put(entity.getId(), entity);
+            if (isLongId) {
+                map.put(entity.getId(), entity);
+            } else {
+                map.put(entity.getKey(), entity);
+            }
         }
         return map;
     }

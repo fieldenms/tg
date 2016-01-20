@@ -25,7 +25,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 @KeyType(User.class)
 @MapEntityTo
 @KeyTitle(value = "User", desc = "User, whose 'roles' collection modifies by this functional action.")
-public class TgUpdateRolesAction extends AbstractFunctionalEntityForCollectionModification<User> {
+public class TgUpdateRolesAction extends AbstractFunctionalEntityForCollectionModification<User, Long> {
     private static final long serialVersionUID = 1L;
     
     @IsProperty(UserRole.class)

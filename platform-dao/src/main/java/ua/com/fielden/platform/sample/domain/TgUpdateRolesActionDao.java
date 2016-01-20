@@ -42,11 +42,11 @@ public class TgUpdateRolesActionDao extends CommonEntityDao<TgUpdateRolesAction>
     @Override
     @SessionRequired
     public TgUpdateRolesAction save(final TgUpdateRolesAction action) {
-        final TgUpdateRolesAction actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getRoles(), this, factory);
+        final TgUpdateRolesAction actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getRoles(), this, factory, Long.class);
         
         // after all validations have passed -- the association changes could be saved:
         final User userBeingUpdated = action.getKey();
-        final Map<Long, UserRole> availableRoles = AbstractFunctionalEntityProducerForCollectionModification.mapById(action.getRoles());
+        final Map<Object, UserRole> availableRoles = AbstractFunctionalEntityProducerForCollectionModification.mapById(action.getRoles(), Long.class);
         
         final Set<UserAndRoleAssociation> addedAssociations = new LinkedHashSet<>();
         for (final Long addedId : action.getAddedIds()) {

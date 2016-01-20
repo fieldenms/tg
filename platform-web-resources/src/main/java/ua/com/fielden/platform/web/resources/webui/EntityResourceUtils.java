@@ -4,6 +4,8 @@ import static java.util.Locale.getDefault;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -28,6 +30,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -382,6 +385,36 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private static <M extends AbstractEntity<?>> boolean multipleFoundEntities(final Class<M> type, final String propertyName, final Object reflectedValue, final Object newValue) {
         return reflectedValue != null && Arrays.asList().equals(newValue) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
     }
+    
+    /**
+     * Determines property type.
+     * <p>
+     * The exception from standard logic is only for "collection modification func action", where the type of "chosenIds", "addedIds" and "removedIds" properties
+     * determines from the second type parameter of the func action type. This is done due to generic nature of that types (see ID_TYPE parameter in {@link AbstractFunctionalEntityForCollectionModification}).
+     * 
+     * @param type
+     * @param propertyName
+     * @return
+     */
+    private static Class determinePropertyType(final Class<?> type, final String propertyName) {
+        final Class propertyType;
+        if (AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(type) && AbstractFunctionalEntityForCollectionModification.isCollectionOfIds(propertyName)) {
+            if (type.getAnnotatedSuperclass() == null) {
+                throw Result.failure(new IllegalStateException(String.format("The AnnotatedSuperclass of functional entity %s (for collection modification) is somehow not defined.", type.getSimpleName())));
+            }
+            if (!(type.getAnnotatedSuperclass().getType() instanceof ParameterizedType)) {
+                throw Result.failure(new IllegalStateException(String.format("The AnnotatedSuperclass's Type %s of functional entity %s (for collection modification) is somehow not ParameterizedType.", type.getAnnotatedSuperclass().getType(), type.getSimpleName())));
+            }
+            final ParameterizedType parameterizedEntityType = (ParameterizedType) type.getAnnotatedSuperclass().getType();
+            if (parameterizedEntityType.getActualTypeArguments().length != 2 || !(parameterizedEntityType.getActualTypeArguments()[1] instanceof Class)) {
+                throw Result.failure(new IllegalStateException(String.format("The type parameters %s of functional entity %s (for collection modification) is malformed.", Arrays.asList(parameterizedEntityType.getActualTypeArguments()), type.getSimpleName())));
+            }
+            propertyType = (Class) parameterizedEntityType.getActualTypeArguments()[1];
+        } else {
+            propertyType = PropertyTypeDeterminator.determinePropertyType(type, propertyName);
+        }
+        return propertyType;
+    }
 
     /**
      * Converts <code>reflectedValue</code> (which is a string, number, boolean or null) into a value of appropriate type (the type of actual property).
@@ -395,8 +428,8 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         if (reflectedValue == null) {
             return null;
         }
-        final Class propertyType = PropertyTypeDeterminator.determinePropertyType(type, propertyName);
-
+        final Class propertyType = determinePropertyType(type, propertyName);
+        
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
             if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
