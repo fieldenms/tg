@@ -453,6 +453,17 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 }
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
+        } else if (PropertyTypeDeterminator.isCollectional(type, propertyName) && Set.class.isAssignableFrom(Finder.findFieldByName(type, propertyName).getType()) && String.class.isAssignableFrom(propertyType)) {
+            final List<Object> list = (ArrayList<Object>) reflectedValue;
+            final Set<String> resultSet = new LinkedHashSet<>();
+            for (final Object entry : list) {
+                if (entry == null) {
+                    resultSet.add(null);
+                } else {
+                    resultSet.add(entry.toString());
+                }
+            }
+            return resultSet;
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {
