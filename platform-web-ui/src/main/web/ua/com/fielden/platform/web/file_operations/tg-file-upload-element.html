@@ -1,9 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 
-<link rel="import" href="/resources/sse/tg-sse-behavior.html">
+<link rel="import" href="/resources/file_operations/tg-file-processing-behavior.html">
 
 <dom-module id="tg-file-upload-element">
     <template>
@@ -62,20 +61,10 @@
 						
     	</style>
 
-		<!-- a hidden input for file selection -->
-		<input id='uploadInput' type='file' name='myFiles' multiple$="[[multi]]"
-			accept='.csv,.txt,text/plain,text/csv' style='display: none'
-			on-change='_filesAdded'> 
-		
-		<paper-button raised roll="button" id="fileSelect" on-tap='_fileSelectTap' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop' style="width:100%" disabled$="[[_disabled]]">
+		<paper-button raised roll="button" id="fileSelect" on-tap='openFileDialog' on-dragenter='_dragenter' on-dragover='_dragover' on-dragleave='_dragleave' on-drop='_drop' style="width:100%" disabled$="[[_disabled]]">
             <paper-spinner id="spinner" active="[[_working]]" class="blue" style="visibility: hidden;" alt="in progress">
             </paper-spinner>
             
-            <!-- span>[[shortDesc]]</span-->
-            
-            			<!-- unfortunately the standard HTML5 progress element cannot be styled consistently across different browsers -->
-			<!-- progress max="[[_fileSize]]" value="[[_fileSizeUploaded]]"></progress-->
-			
 			<!-- instead a span based approach is used to indicate the progress -->
 	  		<span class="meter-span" id="progressBar" style="width: 0%"></span>
 			<span>[[title]]</span>            
@@ -84,12 +73,12 @@
 		
 		<!-- need also support some debug information on a selected file -->
 		<template is='dom-if' if='[[debug]]'>
-		<p>
-		    names of selected files: <span>[[_debug_fileNames]]</span><br/>
-			number of selected files: <span>[[_debug_fileNum]]</span>;<br/> 
-			total size: <span>[[_debug_fileSize]]</span>;<br/> 
-			mime type(s): <span>[[_debug_mimeTypes]]</span>
-		</p>
+			<ul style='text-align: left;overflow: scroll'>
+		    	<li>names of selected files: <span style='color: #6a1b9a'>[[_debug_fileNames]]</span></li>
+				<li>number of selected files: <span style='color: #6a1b9a'>[[_debug_fileNum]]</span></li> 
+				<li>total size: <span style='color: #6a1b9a'>[[_debug_fileSize]]</span></li> 
+				<li>mime type(s): <span style='color: #6a1b9a'>[[_debug_mimeTypes]]</span></li>
+			</ul>
 		</template>
 
     </template>
@@ -99,35 +88,15 @@
     Polymer({
     	is: 'tg-file-upload-element',
 
-    	behaviors: [Polymer.TgBehaviors.TgSseBehavior],
+    	behaviors: [Polymer.TgBehaviors.TgFileProcessingBehavior],
     	
     	properties: {
-    	    /* If enabled will output names, number, total size and mime types of the selected files. */
-    	    debug: {
-    	        type: Boolean,
-    	        value: false
-    	    },
     	    
     	    title: {
     	        type: String,
     	        value: 'Tap or D`n`D'
     	    },
     	    
-    	    /* URI that points to a file processing resource. */
-    	    url: {
-    	        type: String,
-    	    },
-    	    
-    	    /* Indicates whether multiple (true) or a single (false, default) file can be uploaded for processing. 
-    	     *
-    	     * TODO At this stage this feature is resevered and only the first selected file gets uploaded if multiple are selected.
-    	     *      At some stage later there should be a support for uploading multiple files.
-    	     */
-            multi: {
-            	type: Boolean,
-            	value: false
-            },
-            
     	    processResponse: {
     	        type: Function
     	    },
@@ -138,163 +107,50 @@
     	    
     	    processFileUploadedEvent: {
     	        type: Function
-    	    },
-    	    
-    	    _disabled: {
-    	        type: Boolean,
-    	        value: false
-    	    },
-    	    
-    	    _debug_fileNames: {
-    	        type: String,
-    	        value: '[none]'
-    	    },
-    	    
-    	    _debug_fileNum: {
-    	        type: Number,
-    	        value: '0'
-    	    },
-    	    
-    	    _debug_fileSize: {
-    	        type: String,
-    	        value: '[none]'
-    	    },
-    	    
-    	    _debug_mimeTypes: {
-    	        type: String,
-    	        value: '[none]'
     	    }
-    	},
 
-    	ready: function () {
-            this.dataHandler = function(data) {
-                var self = this;
-                var msg = JSON.parse(data);
+		},
 
-                this.$.progressBar.style.width = msg.prc + '%';
-            }.bind(this);
+        ready: function() {
+        	this.fpResponseHandler = function (e) {
+               	this.$.progressBar.style.width = '0%';
+               	this.title = 'Tap or D`n`D';
 
-    	},
-    	
-	    _filesAdded: function() {
-    		this._handleFiles(this.$.uploadInput.files);
-	    },
-    	
-	    generateUUID: function () {
-            var d = new Date().getTime();
-            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                var r = (d + Math.random() * 16) % 16 | 0;
-                d = Math.floor(d / 16);
-                return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-            });
-            return uuid;
-        },
-        
-        _handleFiles: function (oFiles) {
-            this._disabled = true;
-            
-            var fileNames = "";
-            var mimeTypes = "";
-            var nBytes = 0;
-            var nFiles = oFiles.length;
-            for (var nFileId = 0; nFileId < nFiles; nFileId++) {
-                var file = oFiles[nFileId];
-                fileNames += file.name + '; ';
-                nBytes += file.size;
-                mimeTypes = mimeTypes + file.type + '  ';
-            }
-            var sOutput = nBytes + " bytes";
-            // optional code for multiples approximation
-            for (var aMultiples = [ "KiB", "MiB", "GiB", "TiB", "PiB", "EiB",
-                    "ZiB", "YiB" ], nMultiple = 0, nApprox = nBytes / 1024; nApprox > 1; nApprox /= 1024, nMultiple++) {
-                sOutput = nApprox.toFixed(3) + " " + aMultiples[nMultiple] + " ("
-                        + nBytes + " bytes)";
-            }
-            // end of optional code
-    	    this._debug_fileNames = fileNames;
-    	    this._debug_fileNum = nFiles;
-    	    this._debug_fileSize = sOutput;
-    	    this._debug_mimeTypes = mimeTypes;
-            
-            // uploading the files
-            if (nFiles > 0) {
-                var file = oFiles[0];
-                var xhr = new XMLHttpRequest();
-                xhr.open("PUT", this.url, true);
+               	if (this.processResponse) {
+               		this.processResponse(e);
+               	}
+        	}.bind(this);
+        	
+        	this.fpErrorHanlder = function (e) {
+                this.$.progressBar.style.width = '0%';
 
-                // unique job UUID is required to register a progress update event source
-                // which is provided to the server as a header value
-                var jobUid = this.generateUUID();
-                xhr.setRequestHeader('jobUid', jobUid);
-                
-                // let's add onload handler to return the element ot its original look
-                // and to invoke an external response handler if provided
-                xhr.onload = function (e) {
-                    this.closeEventSource();
-                    
-                   	if (this.processResponse) {
-                    	this.processResponse(e);
-                   	}
-                   
-                   	this._disabled = false;
-                   	this.$.progressBar.style.width = '0%';
-                   	this.title = 'Tap or D`n`D';
-                }.bind(this);
+               	if (this.processError) {
+               		this.processError(e);
+               	}
+        	}.bind(this);
+        	
+        	this.fpAbortEventHandler = function (e) {
+                this.$.progressBar.style.width = '0%';
+        	}.bind(this);
 
-                // let's also monitor and provide indicattion of the file upload...
-                xhr.upload.onprogress = function (event) {
-                    this.title = 'Uploading...';
-                    
-                    var prc = event.loaded / event.total * 100; 
-                    this.$.progressBar.style.width = prc + '%';
-
-                    if (prc >= 100) {
-                        if (this.processFileUploadedEvent) {
-                    		this.processFileUploadedEvent();
-                        }
-
-                        // can now subscribe to a server side processing progress eventing source
-                    	this.uri = this.url + "/" + jobUid;
-                    	this.title = "Processing...";
-                	}
-
-                }.bind(this);
-
-                // file uploading/processing error might also need to be handled externally
-                // and to invoke an external response handler if provided
-                xhr.onerror = function (e) {
-                    this.closeEventSource(); 
-                    
-                   if (this.processError) {
-                       this.processError(e);
-                   }
-                   
-                   this._disabled = false;
-                   this.$.progressBar.style.width = '0%';
-                }.bind(this);
-                
-                // let's clean up if the call was aborted
-                xhr.onabort = function (e) {
-                    this.closeEventSource();
-                    this._disabled = false;
-                    this.$.progressBar.style.width = '0%';
-                 }.bind(this);
-
-
-                xhr.send(file);
-            }
-        },
-
-        _fileSelectTap: function (e) {
-            // let give a chance for tap animation to do its work
-            this.async( function () {
-                if (this.$.uploadInput) {
-                    this.$.uploadInput.click();
-                }
-           	}, 200);
+        	this.fpFileUploadingProgressEventHandler = function (prc) {
+                this.title = 'Uploading...';
+                this.$.progressBar.style.width = prc + '%';
+        	}.bind(this);
+        	
+        	this.fpFileProcessingProgressEventHandler = function (prc) {
+            	this.title = "Processing...";
+                this.$.progressBar.style.width = prc + '%';
+        	}
+        	
+        	this.fpFileUploadedEventHandler = function () {
+        	    if (this.processFileUploadedEvent) {
+        	        this.processFileUploadedEvent();
+        	    }
+        	}.bind(this);
 
         },
-        
+		
         _dragenter: function (e) {
             e.stopPropagation();
             e.preventDefault();
@@ -322,6 +178,7 @@
 
             this.$.fileSelect.classList.remove('over');
             
+            // _handleFiles is mixed in from TgFileProcessingBehavior
             this._handleFiles(files);
         }
 

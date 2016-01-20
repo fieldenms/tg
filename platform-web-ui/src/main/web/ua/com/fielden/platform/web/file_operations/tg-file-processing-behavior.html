@@ -28,24 +28,28 @@
 	            	value: false
 	            },
 	            
-	    	    processResponse: {
+	    	    fpResponseHandler: {
 	    	        type: Function
 	    	    },
 	    	    
-	    	    processError: {
+	    	    fpErrorHanlder: {
 	    	        type: Function
 	    	    },
 	    	    
-	    	    processFileUploadedEvent: {
+	    	    fpFileUploadedEventHandler: {
 	    	        type: Function
 	    	    },
 
-	    	    processFileUploadingProgressEvent: {
+	    	    fpFileUploadingProgressEventHandler: {
 	    	        type: Function
 	    	    },
 	    	    
-	    	    processFileProcessingProgressEvent: {
+	    	    fpFileProcessingProgressEventHandler: {
 	    	        type: Function
+	    	    },
+	    	    
+	    	    fpAbortEventHandler: {
+	    	    	type: Function  
 	    	    },
 
 	    	    _disabled: {
@@ -73,9 +77,8 @@
 	    	        value: '[none]'
 	    	    },
 	    	    
-	    	    uploadInput: {
+	    	    _uploadInput: {
 	    	        type: Object,
-	    	        //observer: '_uploadInputChanged'
 	    	    },
 	    	    
 	    	    /* A function to be bound to on-tap of some visual element, trigerring openning of a file dialog to choose file for uploading */  
@@ -85,10 +88,10 @@
 		                return function (e) {
 				            // let give a chance for tap animation to do its work
 				            this.async( function () {
-				                if (this.uploadInput) {
-				                    this.uploadInput.click();
+				                if (this._uploadInput) {
+				                    this._uploadInput.click();
 				                } else {
-				                	throw new Error('this.uploadInput is not defined!');
+				                	throw new Error('this._uploadInput is not defined!');
 				                }
 				           	}.bind(this), 200);
 				        } 
@@ -103,35 +106,20 @@
 	            this.dataHandler = function(data) {
 	                var msg = JSON.parse(data);
 					
-	                if (this.processFileProcessingProgressEvent){
-	                    this.processFileProcessingProgressEvent(msg.prc);
+	                if (this.fpFileProcessingProgressEventHandler){
+	                    this.fpFileProcessingProgressEventHandler(msg.prc);
 	                }
 	            }.bind(this);
 	            
 	            
-	            // let's create a dummy file input element to be used for file selection
-	            this.uploadInput = document.createElement('input');
-	            this.uploadInput.type = 'file';
-	            this.uploadInput.name = 'myFiles';
-	            this.uploadInput.style.display = 'none';
-	            this.uploadInput.accept = '.csv,.txt,text/plain,text/csv'; 
-	            this.uploadInput.onchange = this._filesAdded.bind(this);
-	            // TODO should element uploadInput be added to the DOM??? 
-	            
-	            
-	    		/* <input id='uploadInput' type='file' name='myFiles' multiple$="[[multi]]"
-	    			accept='.csv,.txt,text/plain,text/csv' style='display: none'
-	    			on-change='_filesAdded'> */ 
-
+	            // let's create a dummy file input element to be used for opening a file dialog
+	            this._uploadInput = document.createElement('input');
+	            this._uploadInput.type = 'file';
+	            this._uploadInput.accept = '.csv,.txt,text/plain,text/csv'; 
+	            this._uploadInput.onchange = function() {
+		    		this._handleFiles(this._uploadInput.files);
+			    }.bind(this);
 	    	},
-	    	
-	    	/* _uploadInputChanged: function (newInput, oldInput) {
-	    	    newInput.onchange = this._filesAdded.bind(this);
-	    	}, */
-	    	
-		    _filesAdded: function() {
-	    		this._handleFiles(this.uploadInput.files);
-		    },
 	    	
 		    /* A utility method to generate SSE web resource URI suffix. */
 		    generateUUID: function () {
@@ -187,8 +175,8 @@
 	                xhr.onload = function (e) {
 	                    this.closeEventSource();
 	                    
-	                   	if (this.processResponse) {
-	                    	this.processResponse(e);
+	                   	if (this.fpResponseHandler) {
+	                    	this.fpResponseHandler(e);
 	                   	}
 	                   
 	                   	this._disabled = false;
@@ -197,13 +185,13 @@
 	                // let's also monitor and provide indicattion of the file upload...
 	                xhr.upload.onprogress = function (event) {
 	                    var prc = event.loaded / event.total * 100; 
-	                    if (this.processFileUploadingProgressEvent) {
-                    		this.processFileUploadingProgressEvent(prc);
+	                    if (this.fpFileUploadingProgressEventHandler) {
+                    		this.fpFileUploadingProgressEventHandler(prc);
                         }
 	
 	                    if (prc >= 100) {
-	                        if (this.processFileUploadedEvent) {
-	                    		this.processFileUploadedEvent();
+	                        if (this.fpFileUploadedEventHandler) {
+	                    		this.fpFileUploadedEventHandler();
 	                        }
 	
 	                        // can now subscribe to a server side processing progress eventing source
@@ -217,8 +205,8 @@
 	                xhr.onerror = function (e) {
 	                    this.closeEventSource(); 
 	                    
-	                   if (this.processError) {
-	                       this.processError(e);
+	                   if (this.fpErrorHanlder) {
+	                       this.fpErrorHanlder(e);
 	                   }
 	                   
 	                   this._disabled = false;
@@ -228,6 +216,10 @@
 	                xhr.onabort = function (e) {
 	                    this.closeEventSource();
 	                    this._disabled = false;
+	                    
+	                    if (this.fpAbortEventHandler) {
+	                        this.fpAbortEventHandler(e);
+	                    }
 	                 }.bind(this);
 	
 	
