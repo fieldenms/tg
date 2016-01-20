@@ -21,11 +21,14 @@
 	    	    /* Indicates whether multiple (true) or a single (false, default) file can be uploaded for processing. 
 	    	     *
 	    	     * TODO At this stage this feature is resevered and only the first selected file gets uploaded if multiple are selected.
-	    	     *      At some stage later there should be a support for uploading multiple files.
+	    	     *      At some stage later there should be a support for uploading multiple files if the need arises.
+	    	     *      There is a need to use FormData for uploading multiple files.
+	    	     *      This also means that a corresponding web resource should handle FormData as the request's envelope.
 	    	     */
 	            multi: {
 	            	type: Boolean,
-	            	value: false
+	            	value: false,
+	            	observer: '_multiChanged'
 	            },
 	            
 	    	    fpResponseHandler: {
@@ -119,6 +122,15 @@
 	            this._uploadInput.onchange = function() {
 		    		this._handleFiles(this._uploadInput.files);
 			    }.bind(this);
+	    	},
+	    	
+	    	_multiChanged: function (newValue, oldValue) {
+	    	    if (newValue === true) {
+	    	        // set empty value as the atribute is valueless
+	    	    	this._uploadInput.setAttribute('multiple', '');
+	    	    } else {
+	    	        this._uploadInput.removeAttribute('multiple');
+	    	    }
 	    	},
 	    	
 		    /* A utility method to generate SSE web resource URI suffix. */
