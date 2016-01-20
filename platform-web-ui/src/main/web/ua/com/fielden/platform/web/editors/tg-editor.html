@@ -186,11 +186,11 @@
                         <textarea id="input" disabled$="[[_disabled]]"></textarea>
                     </iron-autogrow-textarea>
 
-                    <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanChecked(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal center">[[propTitle]]</paper-checkbox>
+                    <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanCheckedIfExists(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal center">[[propTitle]]</paper-checkbox>
 
                     <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
                     
-                    <input id="input" is="iron-input" hidden$="[[!_isColourEditor(_editorKind)]]" bind-value="{{_editingValue}}" style$="[[_calcColourTextStyle(_editingValue)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
+                    <input id="input" is="iron-input" hidden$="[[!_isColourEditor(_editorKind)]]" bind-value="{{_editingValue}}" style$="[[_calcColourTextStyleIfExists(_editingValue)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
                 </div>
                 <!-- CONTENT HERE: -->
                 <content select=".custom-icon-buttons"></content>
@@ -245,8 +245,9 @@
             _onInput: Function,
             _maxLength: Number,
             _autocompleterBlurEventHandler: Function,
-            _calcColourTextStyle : Function,
-            currentState: String
+            _calcColourTextStyle: Function,
+            currentState: String,
+            _isBooleanChecked: Function
         },
 
         _isDecimal: function (editorKind) {
@@ -302,11 +303,12 @@
             return style;
         },
         
-        /**
-         * Returns value that indicates whether boolean editor is checked or not.
-         */
-        _isBooleanChecked: function (editingValue) {
-            return editingValue === 'true';
+        _isBooleanCheckedIfExists: function (editingValue) {
+            return this._isBooleanChecked ? this._isBooleanChecked(editingValue) : false;
+        },
+        
+        _calcColourTextStyleIfExists: function (editingValue) {
+            return this._calcColourTextStyle ? this._calcColourTextStyle(editingValue) : "margin-left: 1px; color: #DD2C00";
         },
         
         /**

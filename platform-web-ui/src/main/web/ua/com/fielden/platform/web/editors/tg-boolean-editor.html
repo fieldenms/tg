@@ -15,7 +15,8 @@
         	_accepted-value="[[_acceptedValue]]"
         	debug="[[debug]]"
         	_on-change="[[_onChange]]"
-        	current-state="[[currentState]]">
+        	current-state="[[currentState]]"
+        	_is-boolean-checked="[[_isBooleanChecked]]">
         	<content class=".property-action"></content>
         </tg-editor>
     </template>
@@ -27,6 +28,10 @@
 
         properties: {
             _onChange: {
+                type: Function
+            },
+            
+            _isBooleanChecked: {
                 type: Function
             }
         },
@@ -40,6 +45,10 @@
                 
     			var parentFunction = Polymer.TgBehaviors.TgEditorBehavior.properties._onChange.value.call(this);
     			parentFunction.call(this, event);
+            }).bind(this);
+            
+            this._isBooleanChecked = (function (editingValue) {
+                return editingValue === 'true';
             }).bind(this);
         },
         

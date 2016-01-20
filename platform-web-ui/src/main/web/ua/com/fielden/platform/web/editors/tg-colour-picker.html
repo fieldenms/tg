@@ -119,21 +119,19 @@
                 },
                 
                 _calcColourTextStyle: {
-                    type: Function,
-                    value: function () {
-                        return (function (editingValue) {
-                            if (editingValue === "" || editingValue.length === 3 || editingValue.length === 6) {
-                                return "margin-left: 1px; color: #212121";                    
-                            } else {
-                                return "margin-left: 1px; color: #DD2C00";
-                            }
-                        }).bind(this);
-                    }
-                },
+                    type: Function
+                }
             },
             
             ready: function () {
                 this.$.editorDom._editorKind = "COLOUR";
+                this._calcColourTextStyle = (function (editingValue) {
+                    if (editingValue === "" || editingValue.length === 3 || editingValue.length === 6) {
+                        return "margin-left: 1px; color: #212121";                    
+                    } else {
+                        return "margin-left: 1px; color: #DD2C00";
+                    }
+                }).bind(this);  
             },
 
             convertToString: function (value) {
