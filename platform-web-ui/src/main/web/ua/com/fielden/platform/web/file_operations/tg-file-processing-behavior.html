@@ -69,7 +69,8 @@
 	    	    	type: Function  
 	    	    },
 
-	    	    _disabled: {
+	    	    /* Indicates whether file processing is in progres. */
+	    	    _fpInProgress: {
 	    	        type: Boolean,
 	    	        value: false
 	    	    },
@@ -153,7 +154,7 @@
 	    	
 	    	/* A helper method to clean up resources post files processing or error handling. */
 	    	_cleanup: function () {
-	    	    this._disabled = false;
+	    	    this._fpInProgress = false;
 	    	 	
 	    	    // remove previously selected files
 	    	 	// the file input onchange is not invoked when assigning the value 
@@ -173,7 +174,7 @@
 	        },
 	        
 	        _handleFiles: function (oFiles) {
-	            this._disabled = true;
+	            this._fpInProgress = true;
 	            
 	            var fileNames = "";
 	            var mimeTypes = "";
