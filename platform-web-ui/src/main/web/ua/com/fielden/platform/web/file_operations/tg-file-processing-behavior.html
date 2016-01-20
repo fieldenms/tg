@@ -151,6 +151,15 @@
 	    		this._uploadInput.setAttribute('accept', newValue);
 	    	},
 	    	
+	    	/* A helper method to clean up resources post files processing or error handling. */
+	    	_cleanup: function () {
+	    	    this._disabled = false;
+	    	 	
+	    	    // remove previously selected files
+	    	 	// the file input onchange is not invoked when assigning the value 
+	    	    this._uploadInput.value = '';
+	    	},
+	    	
 		    /* A utility method to generate SSE web resource URI suffix. */
 		    generateUUID: function () {
 	            var d = new Date().getTime();
@@ -195,7 +204,7 @@
 	    	    // if the total number of bytes to be uploaded is greater than the limit
 	    	    // then stop further processing by throwing an error
 	            if (nBytes > maxAllowedBytes) {
-	                this._disabled = false;
+	                this._cleanup();
 	                throw new Error('The maximum upload size is exceeded.');
 	            }
 	    	    
@@ -217,7 +226,7 @@
 	    	    // if the count of acceptable files is less than the number of mime types derived from selected files
 	    	    // then we have a problem and any further processing should be stopped
 	    	    if (count < mimeTypesFromFiles.length) {
-	    	        this._disabled = false;
+	    	        this._cleanup();
 	                throw new Error('Unsupported file type');
 	    	    }
 	    	    // end of mime type validation
@@ -243,7 +252,7 @@
 	                    	this.fpResponseHandler(e);
 	                   	}
 	                   
-	                   	this._disabled = false;
+	                   	this._cleanup();
 	                }.bind(this);
 	
 	                // let's also monitor and provide indicattion of the file upload...
@@ -273,13 +282,13 @@
 	                       this.fpErrorHanlder(e);
 	                   }
 	                   
-	                   this._disabled = false;
+	                   this._cleanup();
 	                }.bind(this);
 	                
 	                // let's clean up if the call was aborted
 	                xhr.onabort = function (e) {
 	                    this.closeEventSource();
-	                    this._disabled = false;
+	                    this._cleanup();
 	                    
 	                    if (this.fpAbortEventHandler) {
 	                        this.fpAbortEventHandler(e);
