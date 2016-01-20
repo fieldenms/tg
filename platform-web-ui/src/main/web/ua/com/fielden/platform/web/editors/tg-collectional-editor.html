@@ -163,13 +163,20 @@
             return 'IRRELEVANT';
         },
         
-        _find: function (entities, id) {
+        /**
+         * Returns identificator of the entity. If it is persisted -- such identificator is represented by id, otherwise -- by key.
+         */
+        idOrKey: function (entity) {
+            return entity.id === null ? entity.get('key') : entity.id;
+        },
+        
+        _find: function (entities, idOrKey) {
             for (var i = 0; i < entities.length; i++) {
-                if (id === entities[i].id) {
+                if (idOrKey === this.idOrKey(entities[i])) {
                     return entities[i];
                 }
             }
-            throw 'The entity with id ' + id + ' does not exist in entities list ' + entities;
+            throw 'The entity with idOrKey ' + idOrKey + ' does not exist in entities list ' + entities;
         },
 
         /**
@@ -214,10 +221,11 @@
         },
         
         _selectedEntitiesAddedOrRemoved: function (changeRecord) {
-            if (changeRecord && this.entity && this._disableSelectionListeners === false) {
-                var chosenIds = this.entity.get('chosenIds');
-                var addedIds = this.entity.get('addedIds');
-                var removedIds = this.entity.get('removedIds');
+            var self = this;
+            if (changeRecord && self.entity && self._disableSelectionListeners === false) {
+                var chosenIds = self.entity.get('chosenIds');
+                var addedIds = self.entity.get('addedIds');
+                var removedIds = self.entity.get('removedIds');
                 
                 console.log('_selectedEntitiesAddedOrRemoved: chosenIds = ', chosenIds, ' addedIds = ', addedIds, ' removedIds = ', removedIds);
                 
@@ -225,51 +233,51 @@
 	                s.removed.forEach(function (removed) {
 	                    console.log(removed.key + ' was removed');
 	                    
-	                    if (removedIds.indexOf(removed.id) > -1) {
-	                        throw 'Cannot remove ' + removed.id + ' again (removedIds = ' + removedIds + ').';
+	                    if (removedIds.indexOf(self.idOrKey(removed)) > -1) {
+	                        throw 'Cannot remove ' + self.idOrKey(removed) + ' again (removedIds = ' + removedIds + ').';
 	                    } else {
-	                        var foundId = addedIds.indexOf(removed.id);
+	                        var foundId = addedIds.indexOf(self.idOrKey(removed));
 	                        if (foundId > -1) {
 	                            addedIds.splice(foundId, 1);
 	                        } else {
-	                            removedIds.push(removed.id);
+	                            removedIds.push(self.idOrKey(removed));
 	                        }
 	                        
-	                        var foundInChosenIds = chosenIds.indexOf(removed.id);
+	                        var foundInChosenIds = chosenIds.indexOf(self.idOrKey(removed));
 	                        if (foundInChosenIds > -1) {
 	                            chosenIds.splice(foundInChosenIds, 1);
 	                        } else {
-	                            throw 'Cannot remove ' + removed.id + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
+	                            throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
 	                        }
 	                    }
 	                });
 	                
 	                for (var i = s.index; i < s.index + s.addedCount; i++) {
-	                    var added = this._selectedEntities[i];
+	                    var added = self._selectedEntities[i];
 	                    console.log(added.key + ' was added');
 	                    
-	                    if (addedIds.indexOf(added.id) > -1) {
-	                        throw 'Cannot add ' + added.id + ' again (addedIds = ' + addedIds + ').';
+	                    if (addedIds.indexOf(self.idOrKey(added)) > -1) {
+	                        throw 'Cannot add ' + self.idOrKey(added) + ' again (addedIds = ' + addedIds + ').';
 	                    } else {
-	                        var foundId = removedIds.indexOf(added.id);
+	                        var foundId = removedIds.indexOf(self.idOrKey(added));
 	                        if (foundId > -1) {
 	                            removedIds.splice(foundId, 1);
 	                        } 
 	                        
-	                        var foundInChosenIds = chosenIds.indexOf(added.id);
+	                        var foundInChosenIds = chosenIds.indexOf(self.idOrKey(added));
 	                        if (foundInChosenIds > -1) {
-	                            throw 'Cannot add ' + added.id + ' which is chosen already (chosenIds = ' + chosenIds + ').';
+	                            throw 'Cannot add ' + self.idOrKey(added) + ' which is chosen already (chosenIds = ' + chosenIds + ').';
 	                        }
                             
-                            chosenIds.push(added.id);
-                            if (this._originalChosenIds.indexOf(added.id) <= -1) {
-                                addedIds.push(added.id);
+                            chosenIds.push(self.idOrKey(added));
+                            if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
+                                addedIds.push(self.idOrKey(added));
                             }
 	                    }
 	                }
 	                
 	                console.log('_selectedEntitiesAddedOrRemoved [POST]: chosenIds = ', chosenIds, ' addedIds = ', addedIds, ' removedIds = ', removedIds);
-	            }, this);
+	            }, self);
             } else {
                 console.log('						_selectedEntitiesAddedOrRemoved: undefined changeRecord');
             }

@@ -59,7 +59,9 @@ public class TgUpdateTokensActionProducer extends AbstractFunctionalEntityProduc
         
         
         final List<TgSecurityToken> allAvailableTokens = new ArrayList<>();// coUserRole.findAll();
-        allAvailableTokens.add(factory().newEntity(TgSecurityToken.class, 1999L, AlwaysAccessibleToken.class.getName(), "Controls permission to select and review accidents.").setTitle("Accident Review"));
+        allAvailableTokens.add(factory().newEntity(TgSecurityToken.class, null, AlwaysAccessibleToken.class.getName(), "Controls permission to select and review accidents.").setTitle("Accident Review"));
+        allAvailableTokens.add(factory().newEntity(TgSecurityToken.class, null, AlwaysAccessibleToken.class.getName() + "2", "2 Controls permission to select and review accidents.").setTitle("Accident Review 2"));
+        allAvailableTokens.add(factory().newEntity(TgSecurityToken.class, null, AlwaysAccessibleToken.class.getName() + "3", "3 Controls permission to select and review accidents.").setTitle("Accident Review 3"));
         
         final Set<TgSecurityToken> tokens = new LinkedHashSet<>(allAvailableTokens);
         entity.setTokens(tokens);
