@@ -1,0 +1,309 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/lodash-lib.html">
+<link rel="import" href="/resources/sse/tg-sse-behavior.html">
+
+<script>
+	(function () {
+	    Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+    	Polymer.TgBehaviors.TgFileProcessingBehaviorImpl = {
+
+	    	properties: {
+	    	    /* If enabled will output names, number, total size and mime types of the selected files. */
+	    	    debug: {
+	    	        type: Boolean,
+	    	        value: false
+	    	    },
+	    	    
+	    	    /* URI that points to a file processing resource. */
+	    	    url: {
+	    	        type: String,
+	    	    },
+	    	    
+	    	    /* The limit of data to be uploaded for processing in Kibibytes. Counts all files in case of multiple selected. */
+	    	    uploadSizeLimitKb: {
+	    	        type: Number,
+	    	    	value: 20480 // 20 Mebibyte
+	    	    },
+	    	    
+	    	    /* Acceptable mime types for the files to be uploaded. */
+	    	    mimeTypesAccepted: {
+	    	    	type: String,
+	    	    	value: '*/*',
+	    	    	observer: '_mimeTypesAcceptedChanged'
+	    	    },
+	    	    
+	    	    /* Indicates whether multiple (true) or a single (false, default) file can be uploaded for processing. 
+	    	     *
+	    	     * TODO At this stage this feature is resevered and only the first selected file gets uploaded if multiple are selected.
+	    	     *      At some stage later there should be a support for uploading multiple files if the need arises.
+	    	     *      There is a need to use FormData for uploading multiple files.
+	    	     *      This also means that a corresponding web resource should handle FormData as the request's envelope.
+	    	     */
+	            multi: {
+	            	type: Boolean,
+	            	value: false,
+	            	observer: '_multiChanged'
+	            },
+	            
+	    	    fpResponseHandler: {
+	    	        type: Function
+	    	    },
+	    	    
+	    	    fpErrorHanlder: {
+	    	        type: Function
+	    	    },
+	    	    
+	    	    fpFileUploadedEventHandler: {
+	    	        type: Function
+	    	    },
+
+	    	    fpFileUploadingProgressEventHandler: {
+	    	        type: Function
+	    	    },
+	    	    
+	    	    fpFileProcessingProgressEventHandler: {
+	    	        type: Function
+	    	    },
+	    	    
+	    	    fpAbortEventHandler: {
+	    	    	type: Function  
+	    	    },
+
+	    	    /* Indicates whether file processing is in progres. */
+	    	    _fpInProgress: {
+	    	        type: Boolean,
+	    	        value: false
+	    	    },
+	    	    
+	    	    _debug_fileNames: {
+	    	        type: String,
+	    	        value: '[none]'
+	    	    },
+	    	    
+	    	    _debug_fileNum: {
+	    	        type: Number,
+	    	        value: '0'
+	    	    },
+	    	    
+	    	    _debug_fileSize: {
+	    	        type: String,
+	    	        value: '[none]'
+	    	    },
+	    	    
+	    	    _debug_mimeTypes: {
+	    	        type: String,
+	    	        value: '[none]'
+	    	    },
+	    	    
+	    	    _uploadInput: {
+	    	        type: Object,
+	    	    },
+	    	    
+	    	    /* A function to be bound to on-tap of some visual element, trigerring openning of a file dialog to choose file for uploading */  
+		        openFileDialog: {
+		            type: Function,
+		            value: function () {
+		                return function (e) {
+				            // let give a chance for tap animation to do its work
+				            this.async( function () {
+				                if (this._uploadInput) {
+				                    this._uploadInput.click();
+				                } else {
+				                	throw new Error('this._uploadInput is not defined!');
+				                }
+				           	}.bind(this), 200);
+				        } 
+		            }
+		        } 
+
+	    	},
+	
+	    	/* A create callback to perform initialisation. */
+	    	created: function () {
+	    	    // need to assigne SSE data handler to reflect the server side file processing progress
+	            this.dataHandler = function(data) {
+	                var msg = JSON.parse(data);
+					
+	                if (this.fpFileProcessingProgressEventHandler){
+	                    this.fpFileProcessingProgressEventHandler(msg.prc);
+	                }
+	            }.bind(this);
+	            
+	            
+	            // let's create a dummy file input element to be used for opening a file dialog
+	            this._uploadInput = document.createElement('input');
+	            this._uploadInput.type = 'file';
+	            this._uploadInput.accept = '.csv,.txt,text/plain,text/csv'; 
+	            this._uploadInput.onchange = function() {
+		    		this._handleFiles(this._uploadInput.files);
+			    }.bind(this);
+	    	},
+	    	
+	    	_multiChanged: function (newValue, oldValue) {
+	    	    if (newValue === true) {
+	    	        // set empty value as the atribute is valueless
+	    	    	this._uploadInput.setAttribute('multiple', '');
+	    	    } else {
+	    	        this._uploadInput.removeAttribute('multiple');
+	    	    }
+	    	},
+	    	
+	    	_mimeTypesAcceptedChanged: function (newValue, oldValue) {
+	    		this._uploadInput.setAttribute('accept', newValue);
+	    	},
+	    	
+	    	/* A helper method to clean up resources post files processing or error handling. */
+	    	_cleanup: function () {
+	    	    this._fpInProgress = false;
+	    	 	
+	    	    // remove previously selected files
+	    	 	// the file input onchange is not invoked when assigning the value 
+	    	    this._uploadInput.value = '';
+	    	},
+	    	
+		    /* A utility method to generate SSE web resource URI suffix. */
+		    generateUUID: function () {
+	            var d = new Date().getTime();
+	            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+	                var r = (d + Math.random() * 16) % 16 | 0;
+	                d = Math.floor(d / 16);
+	                return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+	            });
+	            // TODO It is worth while prepending the current user name to make the UUID event more unique 
+	            return uuid;
+	        },
+	        
+	        _handleFiles: function (oFiles) {
+	            this._fpInProgress = true;
+	            
+	            var fileNames = "";
+	            var mimeTypes = "";
+	            var nBytes = 0;
+	            var nFiles = oFiles.length;
+	            for (var nFileId = 0; nFileId < nFiles; nFileId++) {
+	                var moreToCome = nFileId < nFiles - 1;
+	                var file = oFiles[nFileId];
+	                fileNames += file.name + (moreToCome ? ',' : '');
+	                nBytes += file.size;
+	                mimeTypes = mimeTypes + file.type + (moreToCome ? ',' : '');
+	            }
+	            var sOutput = nBytes + " bytes";
+	            // optional code for multiples approximation
+	            for (var aMultiples = [ "KiB", "MiB", "GiB", "TiB", "PiB", "EiB",
+	                    "ZiB", "YiB" ], nMultiple = 0, nApprox = nBytes / 1024; nApprox > 1; nApprox /= 1024, nMultiple++) {
+	                sOutput = nApprox.toFixed(3) + " " + aMultiples[nMultiple] + " ("
+	                        + nBytes + " bytes)";
+	            }
+	            // end of optional code
+	            
+	            var maxAllowedBytes = 1024 * this.uploadSizeLimitKb;
+	    	    this._debug_fileNames = fileNames;
+	    	    this._debug_fileNum = nFiles;
+	    	    this._debug_fileSize = sOutput + ' our of possible ' + this.uploadSizeLimitKb + ' KiB ' + '(' + (maxAllowedBytes) + ' bytes)';
+	    	    this._debug_mimeTypes = mimeTypes + ' (acceptable are '+ this.mimeTypesAccepted + ')';
+
+	    	    // if the total number of bytes to be uploaded is greater than the limit
+	    	    // then stop further processing by throwing an error
+	            if (nBytes > maxAllowedBytes) {
+	                this._cleanup();
+	                throw new Error('The maximum upload size is exceeded.');
+	            }
+	    	    
+	    	    // it has been observed that some browsers (namely Chrome) incorrectly allow selection of files 
+	    	    // that have different than the specified in the file input accept argument.
+	    	    // for example, .js files are triated by the file open dialog as text/plain.
+	    	    // however, the mime types identified by the File API is correct.
+	    	    // thus, in order to be more defensive need to perform mime type validation
+	    	    // (other browsers such as Safary identify mime types more reliable)
+	    	    var mimeTypesFromFiles = _.uniq(mimeTypes.split(','));
+	    	    var mimeTypesAccepted = this.mimeTypesAccepted.split(',');
+	    	    var count = 0;
+	    	    mimeTypesFromFiles.forEach(function (mime) {
+	    	         if (_.contains(mimeTypesAccepted, mime)) {
+	    	             count = count + 1;
+	    	         }
+	    	    }, this);
+	    	    
+	    	    // if the count of acceptable files is less than the number of mime types derived from selected files
+	    	    // then we have a problem and any further processing should be stopped
+	    	    if (count < mimeTypesFromFiles.length) {
+	    	        this._cleanup();
+	                throw new Error('Unsupported file type');
+	    	    }
+	    	    // end of mime type validation
+	    	    
+	    	    
+	            // uploading the files
+	            if (nFiles > 0) {
+	                var file = oFiles[0];
+	                var xhr = new XMLHttpRequest();
+	                xhr.open("PUT", this.url, true);
+	
+	                // unique job UUID is required to register a progress update event source
+	                // which is provided to the server as a header value
+	                var jobUid = this.generateUUID();
+	                xhr.setRequestHeader('jobUid', jobUid);
+	                
+	                // let's add onload handler to return the element ot its original look
+	                // and to invoke an external response handler if provided
+	                xhr.onload = function (e) {
+	                    this.closeEventSource();
+	                    
+	                   	if (this.fpResponseHandler) {
+	                    	this.fpResponseHandler(e);
+	                   	}
+	                   
+	                   	this._cleanup();
+	                }.bind(this);
+	
+	                // let's also monitor and provide indicattion of the file upload...
+	                xhr.upload.onprogress = function (event) {
+	                    var prc = event.loaded / event.total * 100; 
+	                    if (this.fpFileUploadingProgressEventHandler) {
+                    		this.fpFileUploadingProgressEventHandler(prc);
+                        }
+	
+	                    if (prc >= 100) {
+	                        if (this.fpFileUploadedEventHandler) {
+	                    		this.fpFileUploadedEventHandler();
+	                        }
+	
+	                        // can now subscribe to a server side processing progress eventing source
+	                    	this.uri = this.url + "/" + jobUid;
+	                	}
+	
+	                }.bind(this);
+	
+	                // file uploading/processing error might also need to be handled externally
+	                // and to invoke an external response handler if provided
+	                xhr.onerror = function (e) {
+	                    this.closeEventSource(); 
+	                    
+	                   if (this.fpErrorHanlder) {
+	                       this.fpErrorHanlder(e);
+	                   }
+	                   
+	                   this._cleanup();
+	                }.bind(this);
+	                
+	                // let's clean up if the call was aborted
+	                xhr.onabort = function (e) {
+	                    this.closeEventSource();
+	                    this._cleanup();
+	                    
+	                    if (this.fpAbortEventHandler) {
+	                        this.fpAbortEventHandler(e);
+	                    }
+	                 }.bind(this);
+	
+	
+	                xhr.send(file);
+	            }
+	        },
+	
+    	}; // end of behaviour implementation
+    	
+    	// define the behavior
+    	Polymer.TgBehaviors.TgFileProcessingBehavior = [ Polymer.TgBehaviors.TgSseBehavior, Polymer.TgBehaviors.TgFileProcessingBehaviorImpl ]
+    })();
+</script>

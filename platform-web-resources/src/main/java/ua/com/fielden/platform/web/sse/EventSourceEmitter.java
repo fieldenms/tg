@@ -140,6 +140,7 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
             async.complete();
             eventSource.onClose();
         } finally {
+            System.out.println("event source emitter closed!");
             shouldResourceThreadBeBlocked.set(false);
         }
     }

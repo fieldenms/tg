@@ -23,6 +23,7 @@ import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -58,6 +59,7 @@ public class TgTestApplicationDomain implements IApplicationDomainProvider {
         add(TgCreatePersistentStatusAction.class);
         add(TgDummyAction.class);
         add(TgEntityWithPropertyDependency.class);
+        add(DumpCsvTxtProcessor.class);
    }
 
     @Override

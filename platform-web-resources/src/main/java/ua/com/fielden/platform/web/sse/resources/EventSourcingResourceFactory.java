@@ -22,17 +22,29 @@ public class EventSourcingResourceFactory extends Restlet {
 
     private final Injector injector;
     private final Class<? extends AbstractEventSource<?, ?>> eventSourceType;
+    private final AbstractEventSource<?, ?> eventSource;
 
     public EventSourcingResourceFactory(final Injector injector, final Class<? extends AbstractEventSource<?, ?>> eventSourceType) {
         this.injector = injector;
         this.eventSourceType = eventSourceType;
+        this.eventSource = null;
+    }
+
+    public EventSourcingResourceFactory(final AbstractEventSource<?, ?> eventSource) {
+        this.injector = null;
+        this.eventSource = eventSource;
+        this.eventSourceType = null;
     }
 
     @Override
     public void handle(final Request request, final Response response) {
 
         if (Method.GET == request.getMethod()) {
-            new EventSourcingResource(injector.getInstance(eventSourceType), getContext(), request, response).handle();
+            if (this.eventSource != null) {
+                new EventSourcingResource(eventSource, getContext(), request, response).handle();
+            } else {
+                new EventSourcingResource(injector.getInstance(eventSourceType), getContext(), request, response).handle();
+            }
         }
     }
 

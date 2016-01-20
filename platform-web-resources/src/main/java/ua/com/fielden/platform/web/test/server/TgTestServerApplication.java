@@ -16,13 +16,14 @@ import com.google.inject.Injector;
  *
  * @author TG Team
  */
-public class ServerApplication extends BasicServerApplication {
+public class TgTestServerApplication extends BasicServerApplication {
 
-    public ServerApplication(final String securityRealm, final Context context, final Injector injector, final EntityFactory factory, final RestServerUtil serverRestUtil, final String attachmentLocation, final Class<IEntityDao>[] controllerTypes) {
+    public TgTestServerApplication(final String securityRealm, final Context context, final Injector injector, final EntityFactory factory, final RestServerUtil serverRestUtil, final String attachmentLocation, final Class<IEntityDao>[] controllerTypes) {
         super(securityRealm, context, injector, factory, serverRestUtil, attachmentLocation, controllerTypes);
     }
 
     @Override
     protected void registerApplicationResources(final Router routerForResources) {
+        
     }
 }

@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.resources;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -24,8 +26,7 @@ import ua.com.fielden.platform.web.factories.GeneratedEntityQueryExportResourceF
 import ua.com.fielden.platform.web.factories.GeneratedEntityQueryResourceFactory;
 import ua.com.fielden.platform.web.factories.ReportResourceFactory;
 import ua.com.fielden.platform.web.factories.SnappyQueryRestlet;
-
-import com.google.inject.Injector;
+import ua.com.fielden.platform.web.factories.webui.FileProcessingResourceFactory;
 
 /**
  * Provides convenient methods for routing standard entity resources.
@@ -85,7 +86,7 @@ public final class RouterHelper {
         final Restlet instanceResource = new AttachmentInstanceResourceFactory(location, injector, factory);
         router.attach("/users/{username}/" + Attachment.class.getSimpleName() + "/{entity-id}", instanceResource);
     }
-
+    
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerInstanceResource(final Router router, final Class<DAO> daoType) {
         final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimise it
         final Restlet instanceResource = new EntityInstanceResourceFactory<T, DAO>(daoType, injector, factory);
