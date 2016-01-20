@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/lodash-lib.html">
 <link rel="import" href="/resources/sse/tg-sse-behavior.html">
 
 <script>
@@ -22,6 +23,13 @@
 	    	    uploadSizeLimitKb: {
 	    	        type: Number,
 	    	    	value: 20480 // 20 Mebibyte
+	    	    },
+	    	    
+	    	    /* Acceptable mime types for the files to be uploaded. */
+	    	    mimeTypesAccepted: {
+	    	    	type: String,
+	    	    	value: '*/*',
+	    	    	observer: '_mimeTypesAcceptedChanged'
 	    	    },
 	    	    
 	    	    /* Indicates whether multiple (true) or a single (false, default) file can be uploaded for processing. 
@@ -139,6 +147,10 @@
 	    	    }
 	    	},
 	    	
+	    	_mimeTypesAcceptedChanged: function (newValue, oldValue) {
+	    		this._uploadInput.setAttribute('accept', newValue);
+	    	},
+	    	
 		    /* A utility method to generate SSE web resource URI suffix. */
 		    generateUUID: function () {
 	            var d = new Date().getTime();
@@ -159,10 +171,11 @@
 	            var nBytes = 0;
 	            var nFiles = oFiles.length;
 	            for (var nFileId = 0; nFileId < nFiles; nFileId++) {
+	                var moreToCome = nFileId < nFiles - 1;
 	                var file = oFiles[nFileId];
-	                fileNames += file.name + '; ';
+	                fileNames += file.name + (moreToCome ? ',' : '');
 	                nBytes += file.size;
-	                mimeTypes = mimeTypes + file.type + '  ';
+	                mimeTypes = mimeTypes + file.type + (moreToCome ? ',' : '');
 	            }
 	            var sOutput = nBytes + " bytes";
 	            // optional code for multiples approximation
@@ -177,7 +190,7 @@
 	    	    this._debug_fileNames = fileNames;
 	    	    this._debug_fileNum = nFiles;
 	    	    this._debug_fileSize = sOutput + ' our of possible ' + this.uploadSizeLimitKb + ' KiB ' + '(' + (maxAllowedBytes) + ' bytes)';
-	    	    this._debug_mimeTypes = mimeTypes;
+	    	    this._debug_mimeTypes = mimeTypes + ' (acceptable are '+ this.mimeTypesAccepted + ')';
 
 	    	    // if the total number of bytes to be uploaded is greater than the limit
 	    	    // then stop further processing by throwing an error
@@ -185,6 +198,30 @@
 	                this._disabled = false;
 	                throw new Error('The maximum upload size is exceeded.');
 	            }
+	    	    
+	    	    // it has been observed that some browsers (namely Chrome) incorrectly allow selection of files 
+	    	    // that have different than the specified in the file input accept argument.
+	    	    // for example, .js files are triated by the file open dialog as text/plain.
+	    	    // however, the mime types identified by the File API is correct.
+	    	    // thus, in order to be more defensive need to perform mime type validation
+	    	    // (other browsers such as Safary identify mime types more reliable)
+	    	    var mimeTypesFromFiles = _.uniq(mimeTypes.split(','));
+	    	    var mimeTypesAccepted = this.mimeTypesAccepted.split(',');
+	    	    var count = 0;
+	    	    mimeTypesFromFiles.forEach(function (mime) {
+	    	         if (_.contains(mimeTypesAccepted, mime)) {
+	    	             count = count + 1;
+	    	         }
+	    	    }, this);
+	    	    
+	    	    // if the count of acceptable files is less than the number of mime types derived from selected files
+	    	    // then we have a problem and any further processing should be stopped
+	    	    if (count < mimeTypesFromFiles.length) {
+	    	        this._disabled = false;
+	                throw new Error('Unsupported file type');
+	    	    }
+	    	    // end of mime type validation
+	    	    
 	    	    
 	            // uploading the files
 	            if (nFiles > 0) {
