@@ -18,6 +18,12 @@
 	    	        type: String,
 	    	    },
 	    	    
+	    	    /* The limit of data to be uploaded for processing in Kibibytes. Counts all files in case of multiple selected. */
+	    	    uploadSizeLimitKb: {
+	    	        type: Number,
+	    	    	value: 20480 // 20 Mebibyte
+	    	    },
+	    	    
 	    	    /* Indicates whether multiple (true) or a single (false, default) file can be uploaded for processing. 
 	    	     *
 	    	     * TODO At this stage this feature is resevered and only the first selected file gets uploaded if multiple are selected.
@@ -166,11 +172,20 @@
 	                        + nBytes + " bytes)";
 	            }
 	            // end of optional code
+	            
+	            var maxAllowedBytes = 1024 * this.uploadSizeLimitKb;
 	    	    this._debug_fileNames = fileNames;
 	    	    this._debug_fileNum = nFiles;
-	    	    this._debug_fileSize = sOutput;
+	    	    this._debug_fileSize = sOutput + ' our of possible ' + this.uploadSizeLimitKb + ' KiB ' + '(' + (maxAllowedBytes) + ' bytes)';
 	    	    this._debug_mimeTypes = mimeTypes;
-	            
+
+	    	    // if the total number of bytes to be uploaded is greater than the limit
+	    	    // then stop further processing by throwing an error
+	            if (nBytes > maxAllowedBytes) {
+	                this._disabled = false;
+	                throw new Error('The maximum upload size is exceeded.');
+	            }
+	    	    
 	            // uploading the files
 	            if (nFiles > 0) {
 	                var file = oFiles[0];
