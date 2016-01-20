@@ -1,0 +1,243 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/sse/tg-sse-behavior.html">
+
+<script>
+	(function () {
+	    Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+    	Polymer.TgBehaviors.TgFileProcessingBehaviorImpl = {
+
+	    	properties: {
+	    	    /* If enabled will output names, number, total size and mime types of the selected files. */
+	    	    debug: {
+	    	        type: Boolean,
+	    	        value: false
+	    	    },
+	    	    
+	    	    /* URI that points to a file processing resource. */
+	    	    url: {
+	    	        type: String,
+	    	    },
+	    	    
+	    	    /* Indicates whether multiple (true) or a single (false, default) file can be uploaded for processing. 
+	    	     *
+	    	     * TODO At this stage this feature is resevered and only the first selected file gets uploaded if multiple are selected.
+	    	     *      At some stage later there should be a support for uploading multiple files.
+	    	     */
+	            multi: {
+	            	type: Boolean,
+	            	value: false
+	            },
+	            
+	    	    processResponse: {
+	    	        type: Function
+	    	    },
+	    	    
+	    	    processError: {
+	    	        type: Function
+	    	    },
+	    	    
+	    	    processFileUploadedEvent: {
+	    	        type: Function
+	    	    },
+
+	    	    processFileUploadingProgressEvent: {
+	    	        type: Function
+	    	    },
+	    	    
+	    	    processFileProcessingProgressEvent: {
+	    	        type: Function
+	    	    },
+
+	    	    _disabled: {
+	    	        type: Boolean,
+	    	        value: false
+	    	    },
+	    	    
+	    	    _debug_fileNames: {
+	    	        type: String,
+	    	        value: '[none]'
+	    	    },
+	    	    
+	    	    _debug_fileNum: {
+	    	        type: Number,
+	    	        value: '0'
+	    	    },
+	    	    
+	    	    _debug_fileSize: {
+	    	        type: String,
+	    	        value: '[none]'
+	    	    },
+	    	    
+	    	    _debug_mimeTypes: {
+	    	        type: String,
+	    	        value: '[none]'
+	    	    },
+	    	    
+	    	    uploadInput: {
+	    	        type: Object,
+	    	        //observer: '_uploadInputChanged'
+	    	    },
+	    	    
+	    	    /* A function to be bound to on-tap of some visual element, trigerring openning of a file dialog to choose file for uploading */  
+		        openFileDialog: {
+		            type: Function,
+		            value: function () {
+		                return function (e) {
+				            // let give a chance for tap animation to do its work
+				            this.async( function () {
+				                if (this.uploadInput) {
+				                    this.uploadInput.click();
+				                } else {
+				                	throw new Error('this.uploadInput is not defined!');
+				                }
+				           	}.bind(this), 200);
+				        } 
+		            }
+		        } 
+
+	    	},
+	
+	    	/* A create callback to perform initialisation. */
+	    	created: function () {
+	    	    // need to assigne SSE data handler to reflect the server side file processing progress
+	            this.dataHandler = function(data) {
+	                var msg = JSON.parse(data);
+					
+	                if (this.processFileProcessingProgressEvent){
+	                    this.processFileProcessingProgressEvent(msg.prc);
+	                }
+	            }.bind(this);
+	            
+	            
+	            // let's create a dummy file input element to be used for file selection
+	            this.uploadInput = document.createElement('input');
+	            this.uploadInput.type = 'file';
+	            this.uploadInput.name = 'myFiles';
+	            this.uploadInput.style.display = 'none';
+	            this.uploadInput.accept = '.csv,.txt,text/plain,text/csv'; 
+	            this.uploadInput.onchange = this._filesAdded.bind(this);
+	            // TODO should element uploadInput be added to the DOM??? 
+	            
+	            
+	    		/* <input id='uploadInput' type='file' name='myFiles' multiple$="[[multi]]"
+	    			accept='.csv,.txt,text/plain,text/csv' style='display: none'
+	    			on-change='_filesAdded'> */ 
+
+	    	},
+	    	
+	    	/* _uploadInputChanged: function (newInput, oldInput) {
+	    	    newInput.onchange = this._filesAdded.bind(this);
+	    	}, */
+	    	
+		    _filesAdded: function() {
+	    		this._handleFiles(this.uploadInput.files);
+		    },
+	    	
+		    /* A utility method to generate SSE web resource URI suffix. */
+		    generateUUID: function () {
+	            var d = new Date().getTime();
+	            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+	                var r = (d + Math.random() * 16) % 16 | 0;
+	                d = Math.floor(d / 16);
+	                return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+	            });
+	            // TODO It is worth while prepending the current user name to make the UUID event more unique 
+	            return uuid;
+	        },
+	        
+	        _handleFiles: function (oFiles) {
+	            this._disabled = true;
+	            
+	            var fileNames = "";
+	            var mimeTypes = "";
+	            var nBytes = 0;
+	            var nFiles = oFiles.length;
+	            for (var nFileId = 0; nFileId < nFiles; nFileId++) {
+	                var file = oFiles[nFileId];
+	                fileNames += file.name + '; ';
+	                nBytes += file.size;
+	                mimeTypes = mimeTypes + file.type + '  ';
+	            }
+	            var sOutput = nBytes + " bytes";
+	            // optional code for multiples approximation
+	            for (var aMultiples = [ "KiB", "MiB", "GiB", "TiB", "PiB", "EiB",
+	                    "ZiB", "YiB" ], nMultiple = 0, nApprox = nBytes / 1024; nApprox > 1; nApprox /= 1024, nMultiple++) {
+	                sOutput = nApprox.toFixed(3) + " " + aMultiples[nMultiple] + " ("
+	                        + nBytes + " bytes)";
+	            }
+	            // end of optional code
+	    	    this._debug_fileNames = fileNames;
+	    	    this._debug_fileNum = nFiles;
+	    	    this._debug_fileSize = sOutput;
+	    	    this._debug_mimeTypes = mimeTypes;
+	            
+	            // uploading the files
+	            if (nFiles > 0) {
+	                var file = oFiles[0];
+	                var xhr = new XMLHttpRequest();
+	                xhr.open("PUT", this.url, true);
+	
+	                // unique job UUID is required to register a progress update event source
+	                // which is provided to the server as a header value
+	                var jobUid = this.generateUUID();
+	                xhr.setRequestHeader('jobUid', jobUid);
+	                
+	                // let's add onload handler to return the element ot its original look
+	                // and to invoke an external response handler if provided
+	                xhr.onload = function (e) {
+	                    this.closeEventSource();
+	                    
+	                   	if (this.processResponse) {
+	                    	this.processResponse(e);
+	                   	}
+	                   
+	                   	this._disabled = false;
+	                }.bind(this);
+	
+	                // let's also monitor and provide indicattion of the file upload...
+	                xhr.upload.onprogress = function (event) {
+	                    var prc = event.loaded / event.total * 100; 
+	                    if (this.processFileUploadingProgressEvent) {
+                    		this.processFileUploadingProgressEvent(prc);
+                        }
+	
+	                    if (prc >= 100) {
+	                        if (this.processFileUploadedEvent) {
+	                    		this.processFileUploadedEvent();
+	                        }
+	
+	                        // can now subscribe to a server side processing progress eventing source
+	                    	this.uri = this.url + "/" + jobUid;
+	                	}
+	
+	                }.bind(this);
+	
+	                // file uploading/processing error might also need to be handled externally
+	                // and to invoke an external response handler if provided
+	                xhr.onerror = function (e) {
+	                    this.closeEventSource(); 
+	                    
+	                   if (this.processError) {
+	                       this.processError(e);
+	                   }
+	                   
+	                   this._disabled = false;
+	                }.bind(this);
+	                
+	                // let's clean up if the call was aborted
+	                xhr.onabort = function (e) {
+	                    this.closeEventSource();
+	                    this._disabled = false;
+	                 }.bind(this);
+	
+	
+	                xhr.send(file);
+	            }
+	        },
+	
+    	}; // end of behaviour implementation
+    	
+    	// define the behavior
+    	Polymer.TgBehaviors.TgFileProcessingBehavior = [ Polymer.TgBehaviors.TgSseBehavior, Polymer.TgBehaviors.TgFileProcessingBehaviorImpl ]
+    })();
+</script>
