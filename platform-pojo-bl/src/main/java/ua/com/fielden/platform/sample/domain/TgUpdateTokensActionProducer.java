@@ -1,5 +1,14 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -14,15 +23,22 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
 import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -37,13 +53,15 @@ public class TgUpdateTokensActionProducer extends AbstractFunctionalEntityProduc
     private final IUserRoleDao coUserRole;
     private final IUser coUser;
     private final SecurityTokenProvider securityTokenProvider;
+    private final ISecurityRoleAssociationDao associationCompanion;
     
     @Inject
-    public TgUpdateTokensActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IUserRoleDao coUserRole, final IUser coUser, final IApplicationSettings applicationSettings) throws Exception {
+    public TgUpdateTokensActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IUserRoleDao coUserRole, final IUser coUser, final IApplicationSettings applicationSettings, final ISecurityRoleAssociationDao associationCompanion) throws Exception {
         super(factory, TgUpdateTokensAction.class, companionFinder);
         this.coUserRole = coUserRole;
         this.coUser = coUser;
         this.securityTokenProvider = new SecurityTokenProvider(applicationSettings.pathToSecurityTokens(), applicationSettings.securityTokensPackageName());
+        this.associationCompanion = associationCompanion;
     }
     
     @Override
@@ -53,24 +71,25 @@ public class TgUpdateTokensActionProducer extends AbstractFunctionalEntityProduc
         for (final SecurityTokenNode node : topLevelTokens) {
             logger.error("node == " + node.getLongDesc());
         }
-        final String dtr = AlwaysAccessibleToken.class.getName();
-        logger.error("new BigInteger(dtr.getBytes()) == " + new BigInteger(dtr.getBytes()));
-        logger.error("new BigInteger(dtr.getBytes()).longValue() == " + new BigInteger(dtr.getBytes()).longValue());
         
-        
-        final List<TgSecurityToken> allAvailableTokens = new ArrayList<>();// coUserRole.findAll();
-        allAvailableTokens.add(factory().newEntity(TgSecurityToken.class, null, AlwaysAccessibleToken.class.getName(), "Controls permission to select and review accidents.").setTitle("Accident Review"));
-        allAvailableTokens.add(factory().newEntity(TgSecurityToken.class, null, AlwaysAccessibleToken.class.getName() + "2", "2 Controls permission to select and review accidents.").setTitle("Accident Review 2"));
-        allAvailableTokens.add(factory().newEntity(TgSecurityToken.class, null, AlwaysAccessibleToken.class.getName() + "3", "3 Controls permission to select and review accidents.").setTitle("Accident Review 3"));
+        final List<TgSecurityToken> allAvailableTokens = new ArrayList<>();
+        for (final SecurityTokenNode topLevelToken : topLevelTokens) {
+            allAvailableTokens.add(factory().newEntity(TgSecurityToken.class, null, topLevelToken.getToken().getName(), topLevelToken.getLongDesc()).setTitle(topLevelToken.getShortDesc()));
+        }
         
         final Set<TgSecurityToken> tokens = new LinkedHashSet<>(allAvailableTokens);
         entity.setTokens(tokens);
-//        
-//        final Set<Long> chosenRoleIds = new LinkedHashSet<>();
-//        for (final UserAndRoleAssociation association: masterEntity.getRoles()) {
-//            chosenRoleIds.add(association.getUserRole().getId());
-//        }
-//        entity.setChosenIds(chosenRoleIds);
+        
+        final Set<String> chosenRoleIds = new LinkedHashSet<>();
+        final List<SecurityRoleAssociation> associations = associationCompanion.getAllEntities(
+                from(select(SecurityRoleAssociation.class).where().prop("role").eq().val(masterEntity).model())
+                .with(fetchAll(SecurityRoleAssociation.class)).model()
+        );
+        
+        for (final SecurityRoleAssociation association: associations) {
+            chosenRoleIds.add(association.getSecurityToken().getName());
+        }
+        entity.setChosenIds(chosenRoleIds);
         return entity;
     }
     
