@@ -391,7 +391,12 @@
             /* Invokes _search with '*' as the default search value, so than when nothing was typed, but 
              * the search button has been pressed then the search happens as if wildcard has been typed. */
             _searchOnTap: function (e) {
-                this._search('*');
+                // need to execute the tap action on async to ensure committing of any uncommitted
+                // values in other property editors that might influence the matching logic at the server side
+                this.async((function () {
+                    this._search('*');
+                }).bind(this), 10);
+                
             },
             
             /* Invokes _search with an emply string as the default search value, which ensures what no search would happen
