@@ -133,7 +133,6 @@
 	            // let's create a dummy file input element to be used for opening a file dialog
 	            this._uploadInput = document.createElement('input');
 	            this._uploadInput.type = 'file';
-	            this._uploadInput.accept = '.csv,.txt,text/plain,text/csv'; 
 	            this._uploadInput.onchange = function() {
 		    		this._handleFiles(this._uploadInput.files);
 			    }.bind(this);
