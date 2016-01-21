@@ -16,6 +16,7 @@ import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
+import org.restlet.data.Status;
 import org.restlet.security.ChallengeAuthenticator;
 
 import ua.com.fielden.platform.security.session.Authenticator;
@@ -89,6 +90,10 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
             final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString());
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
+                // TODO this is an interesting approach to prevent any further processing of the request, this event prevents receiving it completely
+                // useful to prevent unauthorised file uploads
+                // However, the client side would not be able to receive a response.
+                //request.abort();
                 forbid(response);
                 return false;
             }

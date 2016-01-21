@@ -27,14 +27,30 @@
     		    /* An optional function to react to SSE errors. Accepts error event as an argument. */
     		    errorHandler: {
     		        type: Function
+    		    },
+    		    
+    		    /* A reference to an established EventSource object. */
+    		    _source: {
+    		        type: Object,
+    		        value: null    		        
     		    }
     		},
             
+    		/* Closes an existing event source connection. */
+    		closeEventSource: function () {
+    		    if (this._source) {
+    		        this._initialised = false;
+    		        var src = this._source; 
+    		        this._source = null;
+    		        src.close();
+    		    }
+    		},
+    		
     		/** EventSource registration happens as the result of assiging the value to property uri. */
-    		_registerEventSource: function () {
+    		_registerEventSource: function (newUri, oldUri) {
                 var self = this;
                 if (self._initialised === true) {
-                	throw new Error('EventSource for URI "', self.uri, '" should not be initialised twice.');
+                	throw new Error('EventSource for URI [' + oldUri + '] should not be initialised to [' + newUri + '] without closing an existing event source connection.');
                 }
                 // if uri value is missing then skip EvenSource registration
                 if (self.uri) {
@@ -55,7 +71,10 @@
             _registerEventSourceHandlers: function () {
                 var self = this;
                 console.log("Registering EventSrouce handlers for URI ", self.uri);
-                var source = new EventSource(self.uri);
+                
+                self._source = new EventSource(self.uri);
+                var source = self._source;
+                
                 source.addEventListener('message', function (e) {
                     self.dataHandler(e.data);
                 }, false);

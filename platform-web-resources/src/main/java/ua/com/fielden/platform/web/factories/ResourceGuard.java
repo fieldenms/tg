@@ -23,6 +23,7 @@ import com.google.inject.Injector;
  * @author TG Team
  * 
  */
+@Deprecated
 public class ResourceGuard extends ChallengeAuthenticator {
 
     private final RestServerUtil util;

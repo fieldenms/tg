@@ -160,6 +160,7 @@
             	_criteria-loaded="{{_criteriaLoaded}}"
             	uuid="[[uuid]]"
             	mi-type="@full_mi_type"
+                page-capacity="[[pageCapacity]]"
             	post-run="[[_postRun]]"
             	get-selected-entities="[[_getSelectedEntities]]"
             	get-master-entity="[[getMasterEntity]]"
@@ -258,6 +259,10 @@
             	_handleScroll: {
             		type: Function
             	},
+                pageCapacity: {
+                    type: Number,
+                    value: @pageCapacity
+                },
             	pageNumber: Number,
             	pageCount: Number,
             	pageNumberUpdated: Number,

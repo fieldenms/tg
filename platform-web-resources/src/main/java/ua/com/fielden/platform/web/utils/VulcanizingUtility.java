@@ -18,14 +18,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
-import com.google.common.base.Charsets;
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
+
+import com.google.common.base.Charsets;
+import com.google.inject.Injector;
 
 /**
  * A set of utilities to facilitate Web UI application vulcanization.
@@ -70,7 +70,7 @@ public class VulcanizingUtility {
 
     /**
      * Vulcanizes '*-startup-resources-origin.html' file into '*-startup-resources-vulcanized.html'.
-     * 
+     *
      * @param injector
      * @param platformVendorResourcesPath
      * @param platformWebUiResourcesPath
@@ -82,12 +82,12 @@ public class VulcanizingUtility {
      * @param logger
      */
     public static void vulcanize(
-            final Injector injector, 
-            final String platformVendorResourcesPath, 
-            final String platformWebUiResourcesPath, 
-            final String appVendorResourcesPath, 
-            final String appWebUiResourcesPath, 
-            final String loginTargetPlatformSpecificPath, 
+            final Injector injector,
+            final String platformVendorResourcesPath,
+            final String platformWebUiResourcesPath,
+            final String appVendorResourcesPath,
+            final String appWebUiResourcesPath,
+            final String loginTargetPlatformSpecificPath,
             final String mobileAndDesktopAppSpecificPath,
             final Function<String, String[]> commandMaker,
             final String[] additionalPaths,
@@ -95,7 +95,7 @@ public class VulcanizingUtility {
         if (logger == null) {
             throw new IllegalArgumentException("Logger is a required argumet.");
         }
-        
+
         logger.info("Vulcanizing...");
         final ISourceController sourceController = injector.getInstance(ISourceController.class);
 
@@ -152,6 +152,9 @@ public class VulcanizingUtility {
             downloadSource("centre_ui", centreMiType.getName(), sourceController, null, logger);
             downloadSource("centre_ui/egi", centreMiType.getName(), sourceController, null, logger);
         }
+        for (final String viewName : webUiConfig.getCustomViews().keySet()) {
+            downloadSource("custom_view", viewName, sourceController, null, logger);
+        }
         logger.info("\tDownloaded common generated resources.");
     }
 
@@ -163,9 +166,9 @@ public class VulcanizingUtility {
     }
 
     private static void vulcanizeStartupResourcesFor(
-            final String prefix, 
-            final DeviceProfile deviceProfile, 
-            final ISourceController sourceController, 
+            final String prefix,
+            final DeviceProfile deviceProfile,
+            final ISourceController sourceController,
             final String targetAppSpecificPath,
             final String[] commands,
             final String[] additionalPaths,
@@ -174,34 +177,34 @@ public class VulcanizingUtility {
         if (additionalPaths == null) {
             throw new IllegalArgumentException("Argument additionalPaths cannot be null, but can be empty if no additiona paths are required for the PATH env. variable.");
         }
-        
+
         logger.info("\t\tVulcanizing [" + prefix + "-startup-resources-origin.html]...");
         try {
             final ProcessBuilder pb = new ProcessBuilder(commands);
-            
+
             // need to enrich the PATH with the paths that point to vulcanize and node
             if (additionalPaths.length > 0) {
                 final String addPaths = Arrays.stream(additionalPaths).collect(Collectors.joining(File.pathSeparator));
                 final String path = System.getenv().get("PATH");
                 pb.environment().put("PATH", String.format("%s%s%s", path, File.pathSeparator, addPaths));
             }
-            
+
             // redirect error stream to the output
             pb.redirectErrorStream(true);
 
             // start the process
             final Process process = pb.start();
-            
+
             // let's build a process output reader that would collect it into a local variable for printing
             // should would include errors and any other output produced by the process
             try (final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));) {
                 final String output = reader.lines().collect(Collectors.joining("\n"));
                 System.out.printf("OUTPUT: \n%s\n", output);
             }
-            
+
             // wait for the process to complete before doing anything else...
             process.waitFor();
-            
+
         } catch (final IOException | InterruptedException e) {
             logger.error(e.getMessage(), e);
             throw new IllegalStateException(e);

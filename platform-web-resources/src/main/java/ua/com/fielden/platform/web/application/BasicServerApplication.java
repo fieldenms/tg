@@ -124,6 +124,7 @@ public abstract class BasicServerApplication extends Application {
         final Authenticator guard;
 
         if (securityRealm != null) {
+            // FIXME Should be removed in favor of a new AbstractWebResourceGuard based guard
             guard = new ResourceGuard(getContext(), securityRealm, serverRestUtil, injector);
         } else {
             guard = authenticator;
@@ -131,8 +132,9 @@ public abstract class BasicServerApplication extends Application {
         guard.setNext(routerForResources);
 
         final Router mainRouter = new Router(getContext());
-        // FIXME Insecure resource!!!
+        // FIXME Insecure resources!!!
         helper.registerAttachment(mainRouter, attachmentLocation);
+        
         mainRouter.attach(guard);
 
         // register snappy query resource

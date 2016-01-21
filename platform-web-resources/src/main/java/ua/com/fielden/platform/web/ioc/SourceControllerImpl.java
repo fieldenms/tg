@@ -12,9 +12,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import com.google.common.base.Charsets;
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -27,6 +24,9 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
+
+import com.google.common.base.Charsets;
+import com.google.inject.Inject;
 
 /**
  * {@link ISourceController} implementation.
@@ -298,6 +298,8 @@ public class SourceControllerImpl implements ISourceController {
             return getCentreEgiSource(resourceURI.replaceFirst("/centre_ui/egi/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/centre_ui")) {
             return getCentreSource(resourceURI.replaceFirst("/centre_ui/", ""), webUiConfig);
+        } else if (resourceURI.startsWith("/custom_view")) {
+            return getCustomViewSource(resourceURI.replaceFirst("/custom_view/", ""), webUiConfig);
         } else if (resourceURI.startsWith("/resources/")) {
             return getFileSource(resourceURI, webUiConfig.resourcePaths());
         } else {
@@ -385,6 +387,10 @@ public class SourceControllerImpl implements ISourceController {
 
     private static String getCentreSource(final String mitypeString, final IWebUiConfig webUiConfig) {
         return ResourceFactoryUtils.getEntityCentre(mitypeString, webUiConfig).build().render().toString();
+    }
+
+    private static String getCustomViewSource(final String viewName, final IWebUiConfig webUiConfig) {
+        return ResourceFactoryUtils.getCustomView(viewName, webUiConfig).build().render().toString();
     }
 
     private String getCentreEgiSource(final String mitypeString, final IWebUiConfig webUiConfig) {

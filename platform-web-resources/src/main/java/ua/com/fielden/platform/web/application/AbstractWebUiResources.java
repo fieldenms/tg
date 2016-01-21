@@ -16,6 +16,7 @@ import ua.com.fielden.platform.web.factories.webui.CentreComponentResourceFactor
 import ua.com.fielden.platform.web.factories.webui.CentreEgiResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CentreResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.CriteriaResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.CustomViewResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
@@ -86,6 +87,17 @@ public abstract class AbstractWebUiResources extends Application {
         setAuthor(author);
     }
 
+
+    /**
+     * An insertion point for registering a domain specific web resources. The provided router is guarded, making all domain web resources automatically secure.
+     *
+     * @param router
+     * @param webApp2
+     */
+    protected void registerDomainWebResources(final Router router, final IWebUiConfig webApp) {
+        // The implementation is empty to ensure backward compatibility with existing projects.
+    }
+
     /**
      * Creates router and configures it with default resources and their paths.
      *
@@ -116,8 +128,14 @@ public abstract class AbstractWebUiResources extends Application {
         // Registering entity masters:
         attachMasterResources(router, webApp, restUtil);
 
+        // Registering custom views:
+        attachCustomViewResources(router, restUtil);
+
         // Registering autocompletion resources:
         attachAutocompletionResources(router, webApp);
+
+        // register domain specific resources if any
+        registerDomainWebResources(router, webApp);
 
         // attache internal components and related resources
         //final Set<String> webComponents = new HashSet<>();
@@ -151,6 +169,10 @@ public abstract class AbstractWebUiResources extends Application {
         router.attach("/validation/{entityType}", new EntityValidationResourceFactory(webUiConfig, injector));
         router.attach("/master_ui/Test_TgPersistentEntityWithProperties", new MasterTestsComponentResourceFactory(injector));
         router.attach("/master_ui/{entityType}", new MasterComponentResourceFactory(sourceController, restUtil));
+    }
+
+    private void attachCustomViewResources(final Router router, final RestServerUtil restUtil) {
+        router.attach("/custom_view/{viewName}", new CustomViewResourceFactory(sourceController, restUtil));
     }
 
     /**
