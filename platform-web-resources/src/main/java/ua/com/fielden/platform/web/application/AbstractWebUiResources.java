@@ -21,7 +21,6 @@ import ua.com.fielden.platform.web.factories.webui.EgiExampleResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityAutocompletionResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.EntityValidationResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.FileProcessingResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
@@ -87,15 +86,15 @@ public abstract class AbstractWebUiResources extends Application {
         setOwner(owner);
         setAuthor(author);
     }
-    
-    
+
+
     /**
-     * An insertion point for registering a domain specific web resources.
-     * The provided router is guarded, making all domain web resources automatically secure.
-     * 
+     * An insertion point for registering a domain specific web resources. The provided router is guarded, making all domain web resources automatically secure.
+     *
      * @param router
+     * @param webApp2
      */
-    protected void registerDomainWebResources(final Router router) {
+    protected void registerDomainWebResources(final Router router, final IWebUiConfig webApp) {
         // The implementation is empty to ensure backward compatibility with existing projects.
     }
 
@@ -136,8 +135,8 @@ public abstract class AbstractWebUiResources extends Application {
         attachAutocompletionResources(router, webApp);
 
         // register domain specific resources if any
-        registerDomainWebResources(router);
-        
+        registerDomainWebResources(router, webApp);
+
         // attache internal components and related resources
         //final Set<String> webComponents = new HashSet<>();
         //webComponents.addAll(Arrays.asList("", "ua/com/fielden/platform/web/"));
@@ -147,7 +146,7 @@ public abstract class AbstractWebUiResources extends Application {
         ///////////////////////////////////////////
         final Authenticator guard = new DefaultWebResourceGuard(getContext(), webApp.getDomainName(), webApp.getPath(), injector);
         guard.setNext(router);
-        
+
         final Router mainRouter = new Router(getContext());
         // standard Polymer components and other resources should not be guarded
         // Register resources those are in resource paths.
