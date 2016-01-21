@@ -198,6 +198,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final Optional<Map<String, OrderDirection>> propOrdering = dslDefaultConfig.getResultSetOrdering();
         if (propOrdering.isPresent()) {
+            
+            // by default ordering occurs by "this" that is why it needs to be switched off in the presence of alternative ordering configuration
+            if (cdtmae.getSecondTick().isChecked(entityType, "")) {
+                cdtmae.getSecondTick().toggleOrdering(entityType, "");
+                cdtmae.getSecondTick().toggleOrdering(entityType, "");
+            }
+
+            // let's now apply the ordering as per configuration
             for (final Map.Entry<String, OrderDirection> propAndOrderDirection : propOrdering.get().entrySet()) {
                 if (OrderDirection.ASC == propAndOrderDirection.getValue()) {
                     cdtmae.getSecondTick().toggleOrdering(entityType, treeName(propAndOrderDirection.getKey()));
