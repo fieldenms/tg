@@ -14,6 +14,8 @@ import ua.com.fielden.platform.migration.MigrationHistory;
 import ua.com.fielden.platform.migration.MigrationRun;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
+import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
@@ -38,7 +40,9 @@ public class PlatformDomainTypes {
         types.add(UserSession.class);
         types.add(UserRole.class);
         types.add(UserAndRoleAssociation.class);
+        // TODO add this here or in the end of the list? types.add(UserAndRoleAssociationBatchAction.class);
         types.add(SecurityRoleAssociation.class);
+        // TODO add this here or in the end of the list? types.add(SecurityRoleAssociationBatchAction.class);
         types.add(EntityCentreConfig.class);
         types.add(EntityCentreAnalysisConfig.class);
         types.add(EntityMasterConfig.class);

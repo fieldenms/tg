@@ -2,6 +2,9 @@ package ua.com.fielden.web;
 
 import org.hibernate.SessionFactory;
 
+import com.google.inject.Scopes;
+import com.google.inject.name.Names;
+
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.dao.AttachmentDao;
 import ua.com.fielden.platform.dao.DomainMetadata;
@@ -9,7 +12,9 @@ import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
+import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.SecurityRoleAssociationBatchActionDao;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionDao;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
@@ -28,9 +33,6 @@ import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
 import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntityDao;
-
-import com.google.inject.Scopes;
-import com.google.inject.name.Names;
 
 /**
  * Guice injector module for Hibernate related injections, which are specific to testing.
@@ -68,5 +70,6 @@ public class WebHibernateModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("attachments.location")).to(".");
         bind(IAttachment.class).to(AttachmentDao.class);
         bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
+        bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
     }
 }
