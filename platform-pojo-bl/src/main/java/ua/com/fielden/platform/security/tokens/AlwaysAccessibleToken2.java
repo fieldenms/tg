@@ -12,6 +12,6 @@ import ua.com.fielden.platform.security.provider.ISecurityTokenController;
  * security tokens.
  */
 @KeyTitle(value = "Always accessible token 2", desc = "Always accessible token 2.")
-public final class AlwaysAccessibleToken2 implements ISecurityToken {
+public class AlwaysAccessibleToken2 implements ISecurityToken {
 
 }

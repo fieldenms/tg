@@ -19,6 +19,7 @@ import java.util.SortedSet;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
+import com.sun.org.apache.regexp.internal.recompile;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
@@ -66,19 +67,10 @@ public class TgUpdateTokensActionProducer extends AbstractFunctionalEntityProduc
     
     @Override
     protected TgUpdateTokensAction provideCurrentlyAssociatedValues(final TgUpdateTokensAction entity, final UserRole masterEntity) {
-        // synchronise security tokens classes with persistent entities
         final SortedSet<SecurityTokenNode> topLevelTokens = securityTokenProvider.getTopLevelSecurityTokenNodes();
-        for (final SecurityTokenNode node : topLevelTokens) {
-            logger.error("node == " + node.getLongDesc());
-        }
-        
-        final List<TgSecurityToken> allAvailableTokens = new ArrayList<>();
-        for (final SecurityTokenNode topLevelToken : topLevelTokens) {
-            allAvailableTokens.add(factory().newEntity(TgSecurityToken.class, null, topLevelToken.getToken().getName(), topLevelToken.getLongDesc()).setTitle(topLevelToken.getShortDesc()));
-        }
-        
-        final Set<TgSecurityToken> tokens = new LinkedHashSet<>(allAvailableTokens);
-        entity.setTokens(tokens);
+        final Set<TgSecurityToken> linearisedTokens = lineariseTokens(topLevelTokens, factory());
+        logger.error("linearisedTokens == " + linearisedTokens);
+        entity.setTokens(linearisedTokens);
         
         final Set<String> chosenRoleIds = new LinkedHashSet<>();
         final List<SecurityRoleAssociation> associations = associationCompanion.getAllEntities(
@@ -91,6 +83,26 @@ public class TgUpdateTokensActionProducer extends AbstractFunctionalEntityProduc
         }
         entity.setChosenIds(chosenRoleIds);
         return entity;
+    }
+    
+    private static Set<TgSecurityToken> lineariseTokens(final SortedSet<SecurityTokenNode> topLevelTokenNodes, final EntityFactory factory) {
+        final Set<TgSecurityToken> setOfTokens = new LinkedHashSet<>();
+        for (final SecurityTokenNode node: topLevelTokenNodes){
+            setOfTokens.addAll(lineariseToken(node, factory));
+        }
+        return setOfTokens;
+    }
+    
+    private static List<TgSecurityToken> lineariseToken(final SecurityTokenNode tokenNode, final EntityFactory factory) {
+        final TgSecurityToken tokenEntity = factory.newEntity(TgSecurityToken.class, null, tokenNode.getToken().getName(), tokenNode.getLongDesc()).setTitle(tokenNode.getShortDesc());
+        final List<TgSecurityToken> listOfTokens = new ArrayList<>();
+        listOfTokens.add(tokenEntity);
+        final List<SecurityTokenNode> children = tokenNode.daughters();
+        for (final SecurityTokenNode child: children) {
+            final List<TgSecurityToken> childList = lineariseToken(child, factory);
+            listOfTokens.addAll(childList);
+        }
+        return listOfTokens;
     }
     
     @Override
