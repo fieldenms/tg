@@ -198,7 +198,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final Optional<Map<String, OrderDirection>> propOrdering = dslDefaultConfig.getResultSetOrdering();
         if (propOrdering.isPresent()) {
-            
+
             // by default ordering occurs by "this" that is why it needs to be switched off in the presence of alternative ordering configuration
             if (cdtmae.getSecondTick().isChecked(entityType, "")) {
                 cdtmae.getSecondTick().toggleOrdering(entityType, "");
@@ -738,7 +738,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, tooltipProp, centre.getSecondTick().getWidth(root, resultPropName), egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, null, tooltipProp, centre.getSecondTick().getWidth(root, resultPropName), egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
                     final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));

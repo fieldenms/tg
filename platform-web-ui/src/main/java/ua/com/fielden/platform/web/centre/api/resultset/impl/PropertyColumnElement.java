@@ -20,6 +20,7 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
  */
 public class PropertyColumnElement implements IRenderable, IImportable {
     private final String propertyName;
+    private final Optional<String> underlyingPropertyName;
     private final Optional<String> tooltipProp;
     private final String widgetName;
     private final String widgetPath;
@@ -38,10 +39,11 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      * @param criteriaType
      * @param propertyName
      */
-    public PropertyColumnElement(final String propertyName, final String tooltipProp, final int width, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
+    public PropertyColumnElement(final String propertyName, final String underlyingPropertyName, final String tooltipProp, final int width, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
+        this.underlyingPropertyName = Optional.ofNullable(underlyingPropertyName);
         this.tooltipProp = Optional.ofNullable(tooltipProp);
         this.width = width;
         this.propertyType = propertyType;
@@ -98,6 +100,10 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         return propertyName;
     }
 
+    protected Optional<String> underlyingPropertyName() {
+        return underlyingPropertyName;
+    }
+
     /**
      * Creates an attributes that will be used for widget component generation (generic attributes).
      *
@@ -112,6 +118,9 @@ public class PropertyColumnElement implements IRenderable, IImportable {
             attrs.put("tooltip-property", this.tooltipProp.get());
         }
         attrs.put("property", this.propertyName()); // TODO the problem appears for "" property => translates to 'property' not 'property=""'
+        if (this.underlyingPropertyName().isPresent()) {
+            attrs.put("underlying-property", this.underlyingPropertyName().get());
+        }
         attrs.put("width", width);
         attrs.put("grow-factor", growFactor);
         attrs.put("type", this.propertyType);
