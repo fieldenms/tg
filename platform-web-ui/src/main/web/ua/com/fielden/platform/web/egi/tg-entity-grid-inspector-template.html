@@ -1146,6 +1146,7 @@
                     this.selectedAll = false;
                 }
                 self.egiModel = tempEgiModel;
+                this.fire("egi-selection-changed", this.getSelectedEntities());
                 this._updateTableSizeAsync();
             },
 
@@ -1166,6 +1167,7 @@
                     }
                     this.selectedAll = e.srcElement.checked;
                     console.log("all ", this.getSelectedRows());
+                    this.fire("egi-selection-changed", this.getSelectedEntities());
                 }
             },
             /**
@@ -1184,6 +1186,7 @@
                     })) {
                         this.selectedAll = true;
                     }
+                    this.fire("egi-selection-changed", this.getSelectedEntities());
                 }
                 console.log("single checkbox: " + index, this.getSelectedRows());
             },
@@ -1478,6 +1481,7 @@
                 for (i = 0; i < this.egiModel.length; i++) {
                     this.set("egiModel." + i + ".selected", false);
                 }
+                this.fire("egi-selection-changed", this.getSelectedEntities());
                 this.selectedEntities = [];
             },
             /**
