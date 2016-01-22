@@ -10,10 +10,6 @@
             pointer-events: none;
         }
         
-        .coll-editor {
-        	height: 12.8rem;
-        }
-        
         .item {
             @apply(--layout-horizontal);
             cursor: pointer;
@@ -81,7 +77,7 @@
             _on-keydown="[[_onKeydown]]"
             current-state="[[currentState]]">
             <!-- <content class=".property-action"></content> -->
-            <iron-list id="input" class="coll-editor custom-input" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
+            <iron-list id="input" class="custom-input" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]" >
                       <div tabindex="0" class$="[[_computedClass(selected)]]"> <!-- aria-label$="[[_getAriaLabel(item, selected)]]"  -->
