@@ -976,7 +976,11 @@
             },
 
             _getTooltip: function (entity, column) {
-                if (column.tooltipProperty) {
+                var property = entity.prop(column.property);
+                var validationResult = property.validationResult();
+                if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
+                    return validationResult.message;
+                } else if (column.tooltipProperty) {
                     return this._getValue(entity, column.tooltipProperty, "String").toString()
                 } else if (this.$.reflector.findTypeByName(column.type)) {
                     return entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
