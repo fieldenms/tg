@@ -66,7 +66,7 @@ public class WebView implements IExecutable {
                 }
                 attrs.append("}");
             } else {
-                attrs.append("null");
+                attrs.append("{}");
             }
             final String code = "{ import: " + importUrl + ", "
                     + "elementName: " + elementName + ", "
