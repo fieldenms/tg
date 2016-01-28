@@ -7,16 +7,16 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 
 public class CentreToolbar implements IToolbarConfig {
 
-    private final DomElement newButton = new DomElement("tg-page-action").clazz("entity-specific-action").attr("tabIndex", "-1").
+    protected final DomElement newButton = new DomElement("tg-page-action").clazz("entity-specific-action").attr("tabIndex", "-1").
             attr("icon", "add-circle-outline").attr("action", "[[_newAction]]").attr("short-desc", "Create new entity");
-    private final DomElement editButton = new DomElement("tg-page-action").clazz("entity-specific-action").attr("tabIndex", "-1").
+    protected final DomElement editButton = new DomElement("tg-page-action").clazz("entity-specific-action").attr("tabIndex", "-1").
             attr("icon", "editor:mode-edit").attr("action", "[[_editAction]]").attr("short-desc", "Edit selected entity");
-    private final DomElement deleteButton = new DomElement("tg-page-action").clazz("entity-specific-action").attr("tabIndex", "-1").
+    protected final DomElement deleteButton = new DomElement("tg-page-action").clazz("entity-specific-action").attr("tabIndex", "-1").
             attr("icon", "remove-circle-outline").attr("action", "[[_deleteAction]]").attr("short-desc", "Delete selected entities");
-    private final InnerTextElement topLevelPlacement = new InnerTextElement("<!-- GENERATED FUNCTIONAL ACTIONS: -->\n<!--@functional_actions-->");
-    private final DomElement configButton = new DomElement("paper-icon-button").clazz("standart-action").
+    protected final InnerTextElement topLevelPlacement = new InnerTextElement("<!-- GENERATED FUNCTIONAL ACTIONS: -->\n<!--@functional_actions-->");
+    protected final DomElement configButton = new DomElement("paper-icon-button").clazz("standart-action").
             attr("icon", "icons:settings").attr("on-tap", "_activateSelectionCriteriaView").attr("disabled$", "[[isRunning]]");
-    private final DomElement pagination = new DomContainer().
+    protected final DomElement pagination = new DomContainer().
             add(new DomElement("paper-icon-button").clazz("revers", "standart-action").attr("icon", "hardware:keyboard-tab").
                     attr("on-tap", "firstPage").attr("disabled$", "[[canNotFirst(pageNumber, pageCount, isRunning)]]")).
             add(new DomElement("paper-icon-button").clazz("standart-action").attr("icon", "hardware:keyboard-backspace").
@@ -26,12 +26,20 @@ public class CentreToolbar implements IToolbarConfig {
                     attr("on-tap", "nextPage").attr("disabled$", "[[canNotNext(pageNumber, pageCount, isRunning)]]")).
             add(new DomElement("paper-icon-button").clazz("standart-action").attr("icon", "hardware:keyboard-tab").
                     attr("on-tap", "lastPage").attr("disabled$", "[[canNotLast(pageNumber, pageCount, isRunning)]]"));
-    private final DomElement refreshButton = new DomElement("paper-icon-button").clazz("standart-action").
+    protected final DomElement refreshButton = new DomElement("paper-icon-button").clazz("standart-action").
             attr("icon", "refresh").attr("on-tap", "currentPage").attr("disabled$", "[[canNotCurrent(pageNumber, pageCount, isRunning)]]");
-    private final DomElement toolbarElement = new DomContainer().add(newButton, editButton, deleteButton, topLevelPlacement, configButton, pagination, refreshButton);
+    private final DomElement toolbarElement;
+
+    public CentreToolbar() {
+        this.toolbarElement = createToolbarElement();
+    }
+
+    protected DomElement createToolbarElement() {
+        return new DomContainer().add(newButton, editButton, deleteButton, topLevelPlacement, configButton, pagination, refreshButton);
+    }
 
     @Override
-    public DomElement render() {
+    public final DomElement render() {
         return toolbarElement;
     }
 
