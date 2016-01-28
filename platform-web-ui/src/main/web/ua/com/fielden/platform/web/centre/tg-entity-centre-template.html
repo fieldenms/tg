@@ -176,50 +176,7 @@
                 <!-- EGI COLUMNS DOM (GENERATED) -->
                 <!--@egi_columns-->
 
-                <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
-                    <core-icon-button icon="add-circle-outline"></core-icon-button> -->
-                    <tg-page-action class="delayed entity-specific-action" tabIndex="-1" icon="add-circle-outline" action="[[_newAction]]" short-desc="Create new entity"></tg-page-action>
-                    <!-- <span class="span-tooltip" tip>Create new entity</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1"> -->
-                    <tg-page-action class="delayed entity-specific-action" tabIndex="-1" icon="editor:mode-edit" action="[[_editAction]]" short-desc="Edit selected entity"></tg-page-action>
-                    <!-- <span class="span-tooltip" tip>Edit selected entity</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1"> -->
-                    <tg-page-action class="delayed entity-specific-action" tabIndex="-1" icon="remove-circle-outline" action="[[_deleteAction]]" short-desc="Delete selected entities"></tg-page-action>
-                    <!-- <span class="span-tooltip" tip>Delete selected entities</span>
-                </core-tooltip> -->
-                <!-- GENERATED FUNCTIONAL ACTIONS: -->
-                <!--@functional_actions-->
-
-
-				<!-- standard actions -->
-				<paper-icon-button icon="icons:settings" class="standart-action" on-tap="_activateSelectionCriteriaView" disabled$="[[isRunning]]"></paper-icon-button>
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                	<!-- paper-icon-button icon="file-download" class="standart-action"></paper-icon-button-->
-                	<!-- <span class="span-tooltip" tip>Export to Excel</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-tab" on-tap="firstPage" disabled$="[[canNotFirst(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
-                    <!-- <span class="span-tooltip" tip>First page</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button icon="hardware:keyboard-backspace" class="standart-action" on-tap="prevPage" disabled$="[[canNotPrev(pageNumber, isRunning)]]"></paper-icon-button>
-                    <!-- <span class="span-tooltip" tip>Previous page</span>
-                </core-tooltip> -->
-                <span class="standart-action">[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]</span>
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-backspace" on-tap="nextPage" disabled$="[[canNotNext(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
-                    <!-- <span class="span-tooltip" tip>Next page</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button icon="hardware:keyboard-tab" class="standart-action" on-tap="lastPage" disabled$="[[canNotLast(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
-                    <!-- <span class="span-tooltip" tip>Last page</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="standart-action" icon="refresh" on-tap="currentPage" disabled$="[[canNotCurrent(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
-                    <!-- <span class="span-tooltip" tip>Refresh</span>
-                </core-tooltip> -->
+                <!--@toolbar-->
                 
                 <!--@primary_action-->
                 <!--@secondary_actions-->

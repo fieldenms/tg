@@ -33,6 +33,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
@@ -55,6 +57,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final List<EntityActionConfig> insertionPointActions = new ArrayList<>();
 
     protected boolean hideCheckboxes = false;
+    protected IToolbarConfig toolbarConfig = new CentreToolbar();
     protected boolean hideToolbar = false;
     protected IScrollConfig scrollConfig = ScrollConfig.configScroll().done();
     protected int pageCapacity = 30;
@@ -153,6 +156,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
         return new EntityCentreConfig<T>(
         		hideCheckboxes,
+                toolbarConfig,
         		hideToolbar,
                 scrollConfig,
                 pageCapacity,

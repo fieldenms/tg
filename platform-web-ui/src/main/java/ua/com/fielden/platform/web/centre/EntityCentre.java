@@ -896,6 +896,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         : propActionsString).
                 replace("//@layoutConfig", layout.code().toString()).
                 replace("//gridLayoutConfig", gridLayoutConfig.getValue()).
+                replace("<!--@toolbar-->", dslDefaultConfig.getToolbarConfig().render().toString()).
                 replace("<!--@functional_actions-->", functionalActionsDom.toString()).
                 replace("<!--@primary_action-->", primaryActionDom.toString()).
                 replace("<!--@secondary_actions-->", secondaryActionsDom.toString()).

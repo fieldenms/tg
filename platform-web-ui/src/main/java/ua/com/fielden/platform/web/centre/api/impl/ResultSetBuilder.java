@@ -42,6 +42,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
@@ -402,6 +403,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder1bPageCapacity<T> withScrollingConfig(final IScrollConfig scrollConfig) {
         this.builder.scrollConfig = scrollConfig;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1aScroll<T> setToolbar(final IToolbarConfig toolbar) {
+        this.builder.toolbarConfig = toolbar;
         return this;
     }
 }
