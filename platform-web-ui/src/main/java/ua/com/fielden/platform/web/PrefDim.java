@@ -34,30 +34,36 @@ public class PrefDim {
 	
 	public final String width;
 	public final String height;
-	public final Unit unit;
+	public final Unit widthUnit;
+	public final Unit heightUnit;
 	
-	private PrefDim(final String width, final String height, final Unit unit) {
+	private PrefDim(final String width, final Unit widthUnit, final String height, final Unit heightUnit) {
 		if (StringUtils.isEmpty(width) || StringUtils.isEmpty(height)) {
 			throw new IllegalArgumentException("Both width and height should contain values.");
 		}
 		this.width = width;
 		this.height = height;
-		this.unit = unit;
+		this.widthUnit = widthUnit;
+		this.heightUnit = heightUnit;
 	}
 	
 	public static PrefDim mkDim(final String widthExpr, final String heightExpr, final Unit unit) {
-		return new PrefDim(widthExpr, heightExpr, unit);
+		return new PrefDim(widthExpr, unit, heightExpr, unit);
 	}
 	
 	public static PrefDim mkDim(final String widthExpr, final String heightExpr) {
-		return new PrefDim(widthExpr, heightExpr, Unit.PX);
+		return new PrefDim(widthExpr, Unit.PX, heightExpr, Unit.PX);
 	}
 	
 	public static PrefDim mkDim(final int width, final int height, final Unit unit) {
-		return new PrefDim(String.valueOf(width), String.valueOf(height), unit);
+		return new PrefDim(String.valueOf(width), unit, String.valueOf(height), unit);
 	}
 	
 	public static PrefDim mkDim(final int width, final int height) {
-		return new PrefDim(String.valueOf(width), String.valueOf(height), Unit.PX);
+		return new PrefDim(String.valueOf(width), Unit.PX, String.valueOf(height), Unit.PX);
 	}
+	
+	public static PrefDim mkDim(final int width, final Unit widthUnit, final int height, final Unit heightUnit) {
+        return new PrefDim(String.valueOf(width), widthUnit, String.valueOf(height), heightUnit);
+    }
 }

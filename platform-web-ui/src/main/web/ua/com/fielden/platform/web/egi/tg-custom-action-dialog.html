@@ -229,8 +229,8 @@
 
                     if (element.prefDim) {
                         var prefDim = element.prefDim;
-                        this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.unit;
-                        this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.unit;
+                        this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                        this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
                     } else {
                         this.style.width = "auto";
                         this.style.height = "auto";
