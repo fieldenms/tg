@@ -29,7 +29,7 @@ public class EntityFromContainerInstantiator {
     private final boolean lightweight;
     private final ICompanionObjectFinder coFinder;
     private final EntityFromContainerInstantiatorCache containerInstantiatorCache;
-    
+
     public EntityFromContainerInstantiator(final EntityFactory entFactory, final boolean lightweight,  final ProxyMode proxyMode, final ProxyCache cache, final ICompanionObjectFinder coFinder) {
         super();
         this.entFactory = entFactory;
@@ -47,7 +47,7 @@ public class EntityFromContainerInstantiator {
     public <R extends AbstractEntity<?>> R instantiateInitially(final EntityContainer<R> entContainer) {
         return lightweight ? entFactory.newPlainEntity(entContainer.getResultType(), entContainer.getId()) : entFactory.newEntity(entContainer.getResultType(), entContainer.getId());
     }
-    
+
     public <R extends AbstractEntity<?>> R instantiateFully(final EntityContainer<R> entityContainer, final R justAddedEntity) {
         justAddedEntity.beginInitialising();
 
@@ -78,7 +78,7 @@ public class EntityFromContainerInstantiator {
             setPropertyValue(justAddedEntity, entityEntry.getKey(), instantiate(entityEntry.getValue().getContainers()), entityContainer.getResultType());
         }
 
-        if (!lightweight && !isGenerated(entityContainer.getResultType())) {
+        if (!lightweight /*&& !isGenerated(entityContainer.getResultType())*/) {
             EntityUtils.handleMetaProperties(justAddedEntity, proxiedProps);
         }
 
@@ -86,17 +86,17 @@ public class EntityFromContainerInstantiator {
 
         return justAddedEntity;
     }
-    
+
     private <E extends AbstractEntity<?>> boolean isGenerated(final Class<E> resultType) {
         return !resultType.equals(DynamicEntityClassLoader.getOriginalType(resultType));
     }
-    
+
     private Object instantiate(final ValueContainer valueContainer) {
         return valueContainer.getHibType().instantiate(valueContainer.getPrimitives());
     }
-    
+
     private <R extends AbstractEntity<?>> Collection<R> instantiate(final List<EntityContainer<R>> containers) {
-        final SortedSet<R> result = new TreeSet<>(); 
+        final SortedSet<R> result = new TreeSet<>();
         for (final EntityContainer<R> container : containers) {
             if (!container.notYetInitialised()) {
                 result.add(instantiate(container));
@@ -105,7 +105,7 @@ public class EntityFromContainerInstantiator {
 
         return result;
     }
-    
+
     private <E extends AbstractEntity<?>> Object instantiateStrictProxy(final Class<E> entityType, final Long id, final ProxyCache cache) {
         return cache.getProxy(entityType, id);
     }
@@ -115,7 +115,7 @@ public class EntityFromContainerInstantiator {
         final IEntityDao<E> coForProxy = coFinder.find(entityType);
         return epf.create(id, owningEntity, propName, coForProxy, ProxyMode.LAZY);
     }
-    
+
     private <R extends AbstractEntity<?>> Object determinePropValue(final R owningEntity, final String propName, final EntityContainer<? extends AbstractEntity<?>> entityContainer) {
         if (entityContainer.isProxy()) {
             switch (proxyMode) {
@@ -134,7 +134,7 @@ public class EntityFromContainerInstantiator {
             return containerInstantiatorCache.getEntity(entityContainer);
         }
     }
-    
+
     private <R extends AbstractEntity<?>> void setPropertyValue(final R entity, final String propName, final Object propValue, final Class<R> resultType) {
         try {
             if (EntityAggregates.class.equals(resultType) || propValue instanceof Set) {
@@ -148,7 +148,7 @@ public class EntityFromContainerInstantiator {
                     + "] due to:" + e);
         }
     }
-    
+
     private <R extends AbstractEntity<?>> void setPropertyToField(final R entity, final String propName, final Object propValue, final Class<R> resultType) throws Exception {
         final Field field = Finder.findFieldByName(resultType, propName);
         field.setAccessible(true);
