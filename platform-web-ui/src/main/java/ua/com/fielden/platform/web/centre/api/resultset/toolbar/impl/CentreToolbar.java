@@ -28,11 +28,6 @@ public class CentreToolbar implements IToolbarConfig {
                     attr("on-tap", "lastPage").attr("disabled$", "[[canNotLast(pageNumber, pageCount, isRunning)]]"));
     protected final DomElement refreshButton = new DomElement("paper-icon-button").clazz("standart-action").
             attr("icon", "refresh").attr("on-tap", "currentPage").attr("disabled$", "[[canNotCurrent(pageNumber, pageCount, isRunning)]]");
-    private final DomElement toolbarElement;
-
-    public CentreToolbar() {
-        this.toolbarElement = createToolbarElement();
-    }
 
     protected DomElement createToolbarElement() {
         return new DomContainer().add(newButton, editButton, deleteButton, topLevelPlacement, configButton, pagination, refreshButton);
@@ -40,7 +35,12 @@ public class CentreToolbar implements IToolbarConfig {
 
     @Override
     public final DomElement render() {
-        return toolbarElement;
+        return createToolbarElement();
+    }
+
+    @Override
+    public String importPath() {
+        return "paper-icon-button";
     }
 
 }
