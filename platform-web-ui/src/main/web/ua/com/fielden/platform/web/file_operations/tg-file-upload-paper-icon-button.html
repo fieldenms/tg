@@ -18,6 +18,10 @@
         behaviors: [Polymer.TgBehaviors.TgFileProcessingBehavior],
 
         properties: {
+            
+            progressUpdater: {
+                type: Function
+            },
 
             processResponse: {
                 type: Function
@@ -34,34 +38,46 @@
         },
 
         ready: function () {
+            
             this.fpResponseHandler = function (e) {
-
+                this._updateProgress(0, "", false);
                 if (this.processResponse) {
                     this.processResponse(e);
                 }
             }.bind(this);
 
             this.fpErrorHanlder = function (e) {
+                this._updateProgress(0, "", false);
                 if (this.processError) {
                     this.processError(e);
                 }
             }.bind(this);
 
             this.fpAbortEventHandler = function (e) {
+                this._updateProgress(0, "", false);
             }.bind(this);
 
             this.fpFileUploadingProgressEventHandler = function (prc) {
+                this._updateProgress(prc, "uploading", true);
             }.bind(this);
 
             this.fpFileProcessingProgressEventHandler = function (prc) {
-            }
+                this._updateProgress(prc, "processing", true);
+            }.bind(this);
 
             this.fpFileUploadedEventHandler = function () {
+                this._updateProgress(0, "", false);
                 if (this.processFileUploadedEvent) {
                     this.processFileUploadedEvent();
                 }
             }.bind(this);
 
+        },
+        
+        _updateProgress: function(prc, clazz, isVisible) {
+            if (this.progressUpdater) {
+                this.progressUpdater(prc, clazz, isVisible);
+            }
         },
 
         _dragenter: function (e) {

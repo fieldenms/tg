@@ -55,6 +55,13 @@
                 },
 
                 /**
+                 * Function that updates the progress bar.
+                 */
+                updateProgress: {
+                    type: Function
+                },
+
+                /**
                  * The module where the centre is located.
                  *
                  * This parameter is populated during dynamic loading of the centre.
@@ -69,10 +76,10 @@
                  * Right away it is appended to document.body.
                  */
                 actionDialog: {
-                  type: Object,
-                  value: null
+                    type: Object,
+                    value: null
                 },
-                
+
                 /**
                  * Indcates whether the centre should load data immediately after it was loaded.
                  */
@@ -80,7 +87,7 @@
                     type: Boolean,
                     value: false
                 },
-                
+
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +119,7 @@
                 _centreChanged: {
                     type: Boolean
                 },
-                
+
                 /**
                  * The property which indicates whether the centre has been fully loaded with its criteria entity (should be bound from tg-selection-criteria).
                  */
@@ -128,12 +135,12 @@
                     type: Boolean,
                     computed: '_computeDiscarderDisabled(_centreChanged)'
                 },
-                
+
                 _runnerDisabled: {
                     type: Boolean,
                     computed: '_computeRunnerDisabled(_criteriaLoaded)'
                 },
-                
+
                 _viewerDisabled: {
                     type: Boolean,
                     computed: '_computeViewerDisabled(_criteriaLoaded)'
@@ -192,14 +199,14 @@
                 _showMasterInDialog: {
                     type: Function
                 },
-                
+
                 /**
                  * Shows the custom view (centre, master, user defined view) in dialog.
                  */
                 _showCustomViewInDialog: {
                     type: Function
                 },
-                
+
                 /**
                  * Activates the insertion point
                  */
@@ -248,30 +255,30 @@
                 _getSelectedEntities: {
                     type: Function
                 },
-                
+
                 /**
                  * Activate the view with the result set.
                  */
-    			_activateResultSetView: {
-                	type: Function
+                _activateResultSetView: {
+                    type: Function
                 }
             },
-            
+
             _getMasterEntityAssigned: function (newValue, oldValue) {
                 var self = this;
-       	 		if (oldValue === undefined) {
-       	 			self.retrieve().then(function () {
+                if (oldValue === undefined) {
+                    self.retrieve().then(function () {
                         if (self.autoRun) {
                             self.run();
-              			}
-              		});
-       	 		} else {
+                        }
+                    });
+                } else {
                     if (self.autoRun) {
                         self.run();
-          			}
-	       	    }
+                    }
+                }
             },
-            
+
 
             _computeSaverDisabled: function (_centreChanged) {
                 return !this.canSave(_centreChanged);
@@ -280,11 +287,11 @@
             _computeDiscarderDisabled: function (_centreChanged) {
                 return !this.canDiscard(_centreChanged);
             },
-            
+
             _computeRunnerDisabled: function (_criteriaLoaded) {
                 return _criteriaLoaded === false;
             },
-            
+
             _computeViewerDisabled: function (_criteriaLoaded) {
                 return _criteriaLoaded === false;
             },
@@ -296,6 +303,7 @@
                 var self = this;
 
                 self._selectedView = 0;
+                self._showProgress = false;
 
                 self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
@@ -321,7 +329,7 @@
                 self._getSelectedEntities = (function () {
                     return this.$.egi.getSelectedEntities();
                 }).bind(self);
-                
+
                 self._processSaverResponse = function (e) {
                     self.$.selection_criteria._processResponse(e, "save", function (entityAndCustomObject) {
                         console.log("CENTRE SAVED", entityAndCustomObject);
@@ -399,20 +407,20 @@
                     var simpleTypeName = entity.type()._notEnhancedSimpleClassName();
                     var closeEventChannel = self.uuid;
                     var closeEventTopics = ['save.post.success', 'refresh.post.success'];
-                    
+
                     action.componentUri = "/master_ui/" + fullTypeName;
                     action.elementName = "tg-" + simpleTypeName + "-master";
                     action.elementAlias = action.elementName + "-" + entity.id;
-                    
+
                     var prefDim = null;
                     if (action.prefDim) {
-                    	if (typeof action.prefDim === 'string') {
-                    		prefDim = JSON.parse(action.prefDim);
-                    	} else {
-                    		prefDim = action.prefDim;
-                    	}
+                        if (typeof action.prefDim === 'string') {
+                            prefDim = JSON.parse(action.prefDim);
+                        } else {
+                            prefDim = action.prefDim;
+                        }
                     }
-                    
+
                     action.attrs = {
                         entityId: entity.id,
                         entityType: fullTypeName,
@@ -421,20 +429,20 @@
                         prefDim: prefDim
                     };
                     action.viewType = 'master';
-                    
+
                     this.async(function () {
                         this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                     }.bind(this), 1);
-                    
+
                 }).bind(this);
-                
-                self._showCustomViewInDialog = (function(action) {
+
+                self._showCustomViewInDialog = (function (action) {
                     this.async(function () {
                         this.actionDialog.showDialog(action);
                     }.bind(this), 1);
                 }).bind(this);
-                
-                self._activateInsertionPoint = (function(insertionPointId, action) {
+
+                self._activateInsertionPoint = (function (insertionPointId, action) {
                     this.async(function () {
                         this.$[insertionPointId].activate(action);
                     }.bind(this), 1);
@@ -463,15 +471,15 @@
                         throw "Cannot save the not modified centre.";
                     }
                     console.log("CENTRE SAVE");
-                    
+
                     var sc = this.$.selection_criteria;
-	                var holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
-    
+                    var holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
+
                     // cancel previous validation before starting Save process -- it includes validation process internally!
                     sc._validator().abortValidationIfAny();
 
                     this._ajaxSaver().body = JSON.stringify(sc._serialiser().serialise(sc._reset(holder)));
-	                return this._ajaxSaver().generateRequest().completes;
+                    return this._ajaxSaver().generateRequest().completes;
                 }).bind(self);
 
                 self.discard = (function () {
@@ -479,9 +487,9 @@
                         throw "Cannot discard the not modified centre.";
                     }
                     console.log("CENTRE DISCARD");
-                    
+
                     var sc = this.$.selection_criteria;
-    
+
                     // cancel previous validation before starting Discard process!
                     sc._validator().abortValidationIfAny();
 
@@ -493,15 +501,15 @@
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
                     }
-                    
+
                     var self = this;
                     self.$.egi.clearSelection();
                     self.$.egi.collapseAllCards();
                     self._triggerRun = true;
                     return self.$.selection_criteria.run()
-                    	.then(function () {
-                        	self.runInsertionPointActions();
-                    	});
+                        .then(function () {
+                            self.runInsertionPointActions();
+                        });
                 }).bind(self);
 
                 self._showDialog = (function (action) {
@@ -511,29 +519,36 @@
                         this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                     }.bind(self), 1);
                 }).bind(self);
-                
+
                 self._showInsertionPoint = (function (action) {
                     this.async(function () {
-                    	this._activateInsertionPoint('ip' + action.numberOfAction, action);
+                        this._activateInsertionPoint('ip' + action.numberOfAction, action);
                     }.bind(self), 1);
                 }).bind(self);
                 /**
                  * Activate the view with the result set.
                  */
-    			self._activateResultSetView = (function () {
-                	self.async(function () {
+                self._activateResultSetView = (function () {
+                    self.async(function () {
                         if (self._criteriaLoaded === false) {
                             throw "Cannot activate result-set view (not initialised criteria).";
                         }
-                        
+
                         self._selectedView = 1;
-                     }, 100);
+                    }, 100);
                 }).bind(self);
+                /**
+                 * Updates the progress bar state.
+                 */
+                self.updateProgress = (function (percentage, clazz, isVisible) {
+                    this.$.egi.updateProgress(percentage, clazz, isVisible);
+                }).bind(self);
+
             }, // end of ready callback
 
             attached: function () {
                 var self = this;
-                
+
                 if (this.actionDialog == null) {
                     this.actionDialog = document.createElement('tg-custom-action-dialog');
                     Polymer.dom(this.actionDialog).setAttribute("id", self.uuid + '');
@@ -573,7 +588,7 @@
                         self._postFunctionalEntitySaved(data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
                     }
                 });
-                
+
                 //Select the result view if autoRun is true
                 if (self.autoRun) {
                     self._selectedView = 1;
@@ -594,17 +609,17 @@
                 return this.entityType.substring(ind);
             },
 
-            
+
             /**
              * Activate the view with selection criteria.
              */
             _activateSelectionCriteriaView: function () {
-            	var self = this;
-            	self.async(function () {
-                     self._selectedView = 0;
-                 }, 100);
+                var self = this;
+                self.async(function () {
+                    self._selectedView = 0;
+                }, 100);
             },
-            
+
             /**
              * Starts the process of criteria entity retrieval.
              */
@@ -620,12 +635,12 @@
              * Starts the process of refreshing the current page (only after run() has been already performed).
              */
             currentPage: function () {
-            	var self = this;
+                var self = this;
                 this.$.selection_criteria.currentPage()
-                .then(function () {
-                	console.log("current page invocation");
-                	self.runInsertionPointActions();
-            	});
+                    .then(function () {
+                        console.log("current page invocation");
+                        self.runInsertionPointActions();
+                    });
             },
 
             /**
@@ -665,8 +680,10 @@
              */
             refreshEntities: function (entities) {
                 if (this.$.egi.egiModel.length > 0) {
-                    if (entities !== null && entities.length > 0) {                        
-                        this.$.selection_criteria.refreshEntities(entities, (function (entities) {this._entitiesThatShouldBeUpdated = entities;}).bind(this)); // this._entitiesThatShouldBeUpdated
+                    if (entities !== null && entities.length > 0) {
+                        this.$.selection_criteria.refreshEntities(entities, (function (entities) {
+                            this._entitiesThatShouldBeUpdated = entities;
+                        }).bind(this)); // this._entitiesThatShouldBeUpdated
                     } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
                         this.currentPage();
                     }
@@ -711,15 +728,17 @@
             _computeUrl: function (miType) {
                 return "/centre/" + miType;
             },
-            
+
             runInsertionPointActions: function () {
-            	var self = this;
-            	var actions = Polymer.dom(self.$.egi).querySelectorAll('.insertion-point-action');
-            	if (actions) {
-            	    actions.forEach(function (action) {
-            	    	self.async(function(){action._run();}, 1);
-            	    });
-            	}
+                var self = this;
+                var actions = Polymer.dom(self.$.egi).querySelectorAll('.insertion-point-action');
+                if (actions) {
+                    actions.forEach(function (action) {
+                        self.async(function () {
+                            action._run();
+                        }, 1);
+                    });
+                }
             }
         };
 
