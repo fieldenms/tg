@@ -21,7 +21,7 @@
 <dom-module id="tg-@mi_type-selection-criteria">
     <template>
     	<tg-selection-criteria
-    		id="dom"
+    		id="masterDom"
     		mi-type="[[miType]]" 
             is-running="{{isRunning}}"
     		_post-validated-default="[[_postValidatedDefault]]"
@@ -51,7 +51,7 @@
         	},
             
             _dom: function () {
-            	return this.$.dom;
+            	return this.$.masterDom;
             },
             
             /**

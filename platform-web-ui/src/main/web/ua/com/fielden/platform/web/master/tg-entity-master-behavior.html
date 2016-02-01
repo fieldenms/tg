@@ -586,12 +586,6 @@
 				self.retrieve(self.getMasterEntity());
             },
             
-            setEditorValue4Property: function (propNameToBeAssigned, functionalEntity, propNameFromFuncEntityToAssign) {
-            	var editor = this.$.masterDom.querySelector('[id=editor_4_' + propNameToBeAssigned + ']');
-                editor.assignValue(functionalEntity, propNameFromFuncEntityToAssign, editor.reflector().getPropertyValue.bind(editor.reflector()));
-                editor.commit();
-            },
-            
             /** 
              * This method is used to drive the master visibility and auto-run logic.
              */
