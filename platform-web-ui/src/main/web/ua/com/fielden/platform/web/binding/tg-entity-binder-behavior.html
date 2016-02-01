@@ -744,6 +744,24 @@
             	if (oldValue !== undefined) {
             		console.warn('Property uuid for element <', this.is, '> has changed from "', oldValue, '" to "', newValue, '".');
             	}
+            },
+            
+            /**
+             * Sets the value of entity property ('propNameFromFuncEntityToAssign') to the property editor with propertyName 'propNameToBeAssigned'.
+             */
+            setEditorValue4Property: function (propNameToBeAssigned, entity, propNameFromFuncEntityToAssign) {
+            	var editor = this.$.masterDom.querySelector('[id=editor_4_' + propNameToBeAssigned + ']');
+                editor.assignValue(entity, propNameFromFuncEntityToAssign, editor.reflector().getPropertyValue.bind(editor.reflector()));
+                editor.commit();
+            },
+            
+            /**
+             * Sets the value of entity property ('propNameFromFuncEntityToAssign') to the property editor with propertyName 'propNameToBeAssigned'.
+             */
+            setEditorValue4PropertyFromConcreteValue: function (propNameToBeAssigned, value) {
+            	var editor = this.$.masterDom.querySelector('[id=editor_4_' + propNameToBeAssigned + ']');
+                editor.assignConcreteValue(value, editor.reflector().convert.bind(editor.reflector()));
+                editor.commit();
             }
         };
     })();

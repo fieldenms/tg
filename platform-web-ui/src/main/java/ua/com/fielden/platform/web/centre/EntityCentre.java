@@ -848,6 +848,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             insertionPointActionsDom.add(el.render().clazz("insertion-point-action").attr("hidden", null));
             insertionPointActionsObjects.append(prefix + createActionObject(el));
         }
+        importPaths.add(dslDefaultConfig.getToolbarConfig().importPath());
 
         final DomContainer leftInsertionPointsDom = new DomContainer();
         final DomContainer rightInsertionPointsDom = new DomContainer();
@@ -881,6 +882,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@gridLayout", gridLayoutConfig.getKey()).
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getSimpleName()).
+                replace("<!--@toolbar-->", dslDefaultConfig.getToolbarConfig().render().toString()).
                 replace("@full_mi_type", miType.getName()).
                 replace("@pageCapacity", Integer.toString(dslDefaultConfig.getPageCapacity())).
                 replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).

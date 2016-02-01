@@ -7,11 +7,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -22,6 +17,11 @@ import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.utils.Pair;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
     private final Class<T> type;
@@ -107,7 +107,11 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
                 if (value != null || !excludeNulls) {
                     final MetaProperty<Object> metaProperty = entity.getProperty(name);
-                    if (!metaProperty.isProxy()) {
+                    if (metaProperty == null) {
+                        // write actual property
+                        generator.writeFieldName(name);
+                        generator.writeObject(value);
+                    } else if (/* metaProperty != null && */!metaProperty.isProxy()) {
                         // write actual property
                         generator.writeFieldName(name);
                         generator.writeObject(value);

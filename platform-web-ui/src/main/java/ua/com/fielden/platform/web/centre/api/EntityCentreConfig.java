@@ -30,6 +30,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -46,6 +47,7 @@ import com.google.common.collect.ListMultimap;
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     private final boolean hideCheckboxes;
+    private final IToolbarConfig toolbarConfig;
     private final boolean hideToolbar;
     private final IScrollConfig scrollConfig;
     private final int pageCapacity;
@@ -285,6 +287,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////////////////////////////////
     public EntityCentreConfig(
             final boolean hideCheckboxes,
+            final IToolbarConfig toolbarConfig,
             final boolean hideToolbar,
             final IScrollConfig scrollConfig,
             final int pageCapacity,
@@ -343,6 +346,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final IFetchProvider<T> fetchProvider) {
         this.hideCheckboxes = hideCheckboxes;
+        this.toolbarConfig = toolbarConfig;
         this.hideToolbar = hideToolbar;
         this.scrollConfig = scrollConfig;
         this.pageCapacity = pageCapacity;
@@ -685,6 +689,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean shouldHideCheckboxes() {
         return hideCheckboxes;
+    }
+
+    public IToolbarConfig getToolbarConfig() {
+        return toolbarConfig;
     }
 
     public boolean shouldHideToolbar() {

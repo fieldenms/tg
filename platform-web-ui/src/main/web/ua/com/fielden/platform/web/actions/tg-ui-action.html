@@ -314,7 +314,7 @@
                 console.log(this.shortDesc + ": execute");
 
                 if (this.preAction) {
-                    if (this.preAction()) { // returns 'true' in case whether the action should proceed
+                    if (this.preAction(this)) { // returns 'true' in case whether the action should proceed
                         this.showDialog(this);
                     }
                 } else {
