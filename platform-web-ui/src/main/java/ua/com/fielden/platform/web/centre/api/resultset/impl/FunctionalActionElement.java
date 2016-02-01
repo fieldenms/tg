@@ -5,8 +5,6 @@ import static java.lang.String.format;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
-
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
@@ -55,7 +53,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     /**
      * Creates an entity (aka primary) action for master.
-     * 
+     *
      * @param entityActionConfig
      * @param numberOfAction
      * @return
@@ -68,7 +66,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     /**
      * Creates a property action for master.
-     * 
+     *
      * @param entityActionConfig
      * @param numberOfAction
      * @return
@@ -126,26 +124,26 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("element-name", elementName);
         attrs.put("number-of-action", numberOfAction);
         attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);
-        
+
         // in case of an menu item action show-dialog assignment happens within tg-master-menu
         if (FunctionalActionKind.INSERTION_POINT == functionalActionKind) {
             attrs.put("show-dialog", "[[_showInsertionPoint]]");
         } else if (FunctionalActionKind.MENU_ITEM != functionalActionKind) {
             attrs.put("show-dialog", "[[_showDialog]]");
         }
-        
-        // in case of an action that models a menu item for an entity master with menu, context gets assigned 
+
+        // in case of an action that models a menu item for an entity master with menu, context gets assigned
         // only after the main entity is saved at the client side as part of tg-master-menu logic.
         if (FunctionalActionKind.MENU_ITEM != functionalActionKind) {
             attrs.put("create-context-holder", "[[_createContextHolder]]");
         }
-        
+
         final String actionsHolderName = functionalActionKind.holderName;
         attrs.put("attrs", "[[" + actionsHolderName + "." + numberOfAction + ".attrs]]");
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");
         attrs.put("post-action-success", "[[" + actionsHolderName + "." + numberOfAction + ".postActionSuccess]]");
         attrs.put("post-action-error", "[[" + actionsHolderName + "." + numberOfAction + ".postActionError]]");
-        
+
         // chosenProperty should be ignored strictly when it is null as an empty value means 'this'
         if (chosenProperty != null) {
             attrs.put("chosen-property", chosenProperty);
@@ -244,7 +242,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public String createActionObject() {
         final StringBuilder attrs = new StringBuilder("{\n");
 
-        attrs.append("preAction: function () {\n");
+        attrs.append("preAction: function (action) {\n");
         attrs.append("    console.log('preAction: " + conf().shortDesc.get() + "');\n");
         if (conf().preAction.isPresent()) {
             attrs.append(conf().preAction.get().build().toString());
@@ -283,7 +281,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         return forMaster;
     }
 
-    public void setForMaster(boolean forMaster) {
+    public void setForMaster(final boolean forMaster) {
         this.forMaster = forMaster;
     }
 }
