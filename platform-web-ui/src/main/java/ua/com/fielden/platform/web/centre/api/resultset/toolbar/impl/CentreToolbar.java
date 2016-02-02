@@ -40,7 +40,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     @Override
     public String importPath() {
-        return "paper-icon-button";
+        return "polymer/paper-icon-button/paper-icon-button";
     }
 
 }
