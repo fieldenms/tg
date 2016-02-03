@@ -505,45 +505,6 @@
                     return this._ajaxDiscarder().generateRequest().completes;
                 }).bind(self);
                 
-                self.openFileSuccess = (function (event) {
-                    var response = event.target.response;
-
-                    var sc = this.$.selection_criteria;
-                    var datasetEntity = sc._serialiser().deserialise(JSON.parse(response)).instance;
-                    
-                    console.log("--------------------datasetEntity: ", datasetEntity);
-                    
-                    var value = [ datasetEntity.get('key') ];
-
-                    // TODO provide generic solution instead of 'driverImportRow...'
-                    sc.setEditorValue4PropertyFromConcreteValue('driverImportRow_dataset', value);
-                    sc.setEditorValue4PropertyFromConcreteValue('driverImportRow_errorMarker', "");
-                    return this.run()
-                    	.then(function () {
-                        	self.save();
-                    	});
-                }).bind(self);
-                self.showAll = (function (event) {
-                    this.$.selection_criteria.setEditorValue4PropertyFromConcreteValue('driverImportRow_errorMarker', "");
-                    return this.run();
-                }).bind(self);
-                self.showErrors = (function (event) {
-                    this.$.selection_criteria.setEditorValue4PropertyFromConcreteValue('driverImportRow_errorMarker', "INVALID");
-                    return this.run();
-                }).bind(self);
-                self.showDuplicates = (function (event) {
-                    this.$.selection_criteria.setEditorValue4PropertyFromConcreteValue('driverImportRow_errorMarker', "DUPLICATE");
-                    return this.run();
-                }).bind(self);
-                self.showWarnings = (function (event) {
-                    this.$.selection_criteria.setEditorValue4PropertyFromConcreteValue('driverImportRow_errorMarker', "WARNING");
-                    return this.run();
-                }).bind(self);
-                self.showValidRows = (function (event) {
-                    this.$.selection_criteria.setEditorValue4PropertyFromConcreteValue('driverImportRow_errorMarker', "VALID");
-                    return this.run();
-                }).bind(self);
-
                 self.run = (function () {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
