@@ -3,6 +3,8 @@ package ua.com.fielden.platform.dao.streaming;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -17,12 +19,16 @@ import ua.com.fielden.platform.pagination.IPage;
  */
 public class SequentialPageSpliterator<T extends AbstractEntity<?>> implements Spliterator<T> {
 
+    private transient final Logger logger = Logger.getLogger(this.getClass());
+    
     private final IEntityDao<T> companion;
     private final QueryExecutionModel<T, ?> qem;
     private final int pageCapacity;
     private IPage<T> currPage;
     private Spliterator<T> currPageSliterator;
-    private int callCount;
+    
+    // this is just for debugging purposes to count the number of page retrievals
+    private int countOfPageRetrievals;
     
     public SequentialPageSpliterator(
             final IEntityDao<T> companion,
@@ -39,7 +45,7 @@ public class SequentialPageSpliterator<T extends AbstractEntity<?>> implements S
         // if the currPage is not assigned then this is the first time the data being accessed
         // which means that the first page needs to be obtained
         if (currPage == null) {
-            callCount++;
+            countOfPageRetrievals++;
             currPage = companion.firstPage(qem, pageCapacity);
             currPageSliterator = currPage.data().stream().spliterator();
         }
@@ -50,11 +56,12 @@ public class SequentialPageSpliterator<T extends AbstractEntity<?>> implements S
         // otherwise, this is the end of the data
         if (!hasAdvanced) {
             if (currPage.hasNext()) {
-                callCount++;
+                countOfPageRetrievals++;
                 currPage = currPage.next();
                 currPageSliterator = currPage.data().stream().spliterator();
-                return tryAdvance(action);
+                return currPageSliterator.tryAdvance(action);
             } else {
+                logger.debug(String.format("The number of page calls: %s", countOfPageRetrievals));
                 return false;
             }
         }
