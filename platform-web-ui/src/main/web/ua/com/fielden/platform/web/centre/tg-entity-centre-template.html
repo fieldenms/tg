@@ -100,41 +100,21 @@
 </script>
 
 <dom-module id="tg-@mi_type-centre">
-    <style>
-    	paper-icon-button.revers {
-            --paper-icon-button: {
-                transform: scale(-1, 1);
-            };
-        }
-        /* * /deep/ core-tooltip::shadow #tooltip {
-            white-space: normal;
-        }
-        * /deep/ core-tooltip .span-tooltip {
-            line-height: 15px;
-        }
-        core-tooltip.delayed:hover::shadow .core-tooltip,
-        core-tooltip.delayed:focus::shadow .core-tooltip {
-            opacity: 1;
-            -webkit-transition-delay: 1s;
-            transition-delay: 1s;
-            transform: translate3d(0px, 0px, 0px);
-        } */
-        .selection-criteria {
-            background-color: white;
-        }
-        .group {
-            margin-left: 30px;
-        }
-
-        /* core-icon-button,
-        tg-ui-action::shadow core-icon-button,
-        tg-page-action::shadow core-icon-button {
-            padding: 4px;
-            margin: 0px;
-        } */
-    </style>
-
     <template>
+        <style>
+    	   paper-icon-button.revers {
+                --paper-icon-button: {
+                    transform: scale(-1, 1);
+                };
+            }
+            .selection-criteria {
+                background-color: white;
+            }
+            .group {
+                margin-left: 30px;
+            }
+            /*toolbarStyles*/
+        </style>
         <tg-entity-centre
         	id="dom"
         	_selected-view="{{_selectedView}}"
@@ -259,9 +239,12 @@
             },
             
             ready: function () {
+                var self = this;
             	console.timeEnd("created-to-ready");
             	console.warn("tg-@mi_type-centre: ready");
             	console.time("ready-to-attached");
+                
+                //toolbarGeneratedFunction
             },
         	
             /**

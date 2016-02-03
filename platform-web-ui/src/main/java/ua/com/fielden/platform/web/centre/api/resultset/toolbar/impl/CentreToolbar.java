@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl;
 
+import ua.com.fielden.platform.dom.CssStyles;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
+import ua.com.fielden.platform.web.minijs.JsCode;
 
 public class CentreToolbar implements IToolbarConfig {
 
@@ -41,6 +43,16 @@ public class CentreToolbar implements IToolbarConfig {
     @Override
     public String importPath() {
         return "polymer/paper-icon-button/paper-icon-button";
+    }
+
+    @Override
+    public JsCode code(final Class<?> entityType) {
+        return new JsCode("");
+    }
+
+    @Override
+    public CssStyles styles() {
+        return new CssStyles();
     }
 
 }

@@ -236,14 +236,6 @@
                 },
 
                 /**
-                 * Import utility specific function for Open File action. After success of this action it should assign concrete dataset 'key' to selection criteria of
-                 * import utility centre, save the centre and trigger run.
-                 */
-                openFileSuccess: {
-                    type: Function
-                },
-
-                /**
                  * Shows the dialog relative to this centre's EGI ('tg-ui-action's).
                  */
                 _showDialog: {
@@ -505,24 +497,6 @@
                     return this._ajaxDiscarder().generateRequest().completes;
                 }).bind(self);
                 
-                self.openFileSuccess = (function (event) {
-                    var response = event.target.response;
-
-                    var sc = this.$.selection_criteria;
-                    var datasetEntity = sc._serialiser().deserialise(JSON.parse(response)).instance;
-                    
-                    console.log("--------------------datasetEntity: ", datasetEntity);
-                    
-                    var value = [ datasetEntity.get('key') ];
-
-                    // TODO provide generic solution instead of 'driverImportRow...'
-                    sc.setEditorValue4PropertyFromConcreteValue('driverImportRow_dataset', value);
-                    return this.run()
-                    	.then(function () {
-                        	self.save();
-                    	});
-                }).bind(self);
-
                 self.run = (function () {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
