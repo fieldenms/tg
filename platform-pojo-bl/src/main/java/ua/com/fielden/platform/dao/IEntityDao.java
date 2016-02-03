@@ -3,7 +3,11 @@ package ua.com.fielden.platform.dao;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
+import ua.com.fielden.platform.dao.streaming.SequentialPageSpliterator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -189,6 +193,28 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      */
     IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
 
+    /**
+     * Returns a non-parallel stream with the data based on the provided query.
+     * 
+     * @param qem -- EQL model
+     * @param pageCapacity -- a batch size for retrieve the next lot of data to feed the stream
+     * @return
+     */
+    default Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int pageCapacity) {
+        final Spliterator<T> spliterator = new SequentialPageSpliterator<>(this, qem, pageCapacity);
+        return StreamSupport.stream(spliterator, false);
+    }
+    
+    /**
+     * A convenience method based on {@link #stream(QueryExecutionModel, int), but with a default page capacity. 
+     * 
+     * @param qem
+     * @return
+     */
+    default Stream<T> stream(final QueryExecutionModel<T, ?> qem) {
+        return stream(qem, DEFAULT_PAGE_CAPACITY);
+    }
+    
     /**
      * Persists (saves/updates) the entity.
      *
