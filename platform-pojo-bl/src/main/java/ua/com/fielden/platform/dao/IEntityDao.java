@@ -206,6 +206,16 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     }
     
     /**
+     * A convenience method based on {@link #stream(QueryExecutionModel, int), but with a default page capacity. 
+     * 
+     * @param qem
+     * @return
+     */
+    default Stream<T> stream(final QueryExecutionModel<T, ?> qem) {
+        return stream(qem, DEFAULT_PAGE_CAPACITY);
+    }
+    
+    /**
      * Persists (saves/updates) the entity.
      *
      * @param entity

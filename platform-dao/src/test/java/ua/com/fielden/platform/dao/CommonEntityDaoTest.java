@@ -115,12 +115,16 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(query).model();
 
         final Stream<EntityWithMoney> streamBy3 = dao.stream(qem, 3);
-        assertFalse("The stream should not be parallel", streamBy3.isParallel());
         assertEquals("Incorrect number of entities in the stream", dao.count(query), streamBy3.count());
         
         final Stream<EntityWithMoney> streamBy1 = dao.stream(qem, 1);
         assertFalse("The stream should not be parallel", streamBy1.isParallel());
         assertEquals("Incorrect number of entities in the stream", dao.count(query), streamBy1.count());
+    }
+
+    public void test_that_there_is_API_for_streaming_with_default_page_capacity() {
+        final Stream<EntityWithMoney> stream = dao.stream(from(select(EntityWithMoney.class).model()).model());
+        assertEquals("Incorrect number of entities in the stream", 4, stream.count());
     }
 
     public void test_streaming_based_on_ordered_qem_should_have_the_same_traversal_order() {
@@ -141,6 +145,25 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 
         final Stream<EntityWithMoney> stream = dao.stream(qem, 2);
         assertEquals("Incorrect number of entities in the stream", dao.count(query), stream.count());
+    }
+
+    public void test_stream_should_not_be_parallel() {
+        final Stream<EntityWithMoney> streamBy3 = dao.stream(from(select(EntityWithMoney.class).model()).model(), 2);
+        assertFalse("The stream should not be parallel", streamBy3.isParallel());
+    }
+
+    public void test_stream_should_not_be_accecible_once_traversed() {
+        final Stream<EntityWithMoney> stream = dao.stream(from(select(EntityWithMoney.class).model()).model(), 2);
+        
+        // consume the stream by traversing it
+        stream.forEach(e -> e.getMoney()/* basically do nothing*/);
+        
+        // try to consume the stream again by counting the number of elements in it
+        try {
+            stream.count();
+            fail("Should have failed due to illegal state exception of the stream");
+        } catch (final IllegalStateException ex) {
+        }
     }
 
     
