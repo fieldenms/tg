@@ -883,6 +883,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getSimpleName()).
                 replace("<!--@toolbar-->", dslDefaultConfig.getToolbarConfig().render().toString()).
+                replace("//toolbarGeneratedFunction", dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
+                replace("/*toolbarStyles*/", dslDefaultConfig.getToolbarConfig().styles().toString()).
                 replace("@full_mi_type", miType.getName()).
                 replace("@pageCapacity", Integer.toString(dslDefaultConfig.getPageCapacity())).
                 replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).

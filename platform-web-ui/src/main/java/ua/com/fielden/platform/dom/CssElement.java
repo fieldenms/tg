@@ -27,13 +27,13 @@ public class CssElement {
     public String toString() {
         final List<String> styleStrings = generateStylePairs(styles.entrySet());
         return selector + " {"
-                + (styleStrings.isEmpty() ? "" : "\n" + StringUtils.join(styleStrings, ";\n") + "\n}\n");
+                + (styleStrings.isEmpty() ? "" : ("\n" + StringUtils.join(styleStrings, "\n") + "\n")) + "}";
     }
 
     private List<String> generateStylePairs(final Set<Entry<String, String>> entrySet) {
         final List<String> cssPairs = new ArrayList<>();
         for (final Map.Entry<String, String> entry : entrySet) {
-            cssPairs.add(entry.getKey() + ": " + entry.getValue());
+            cssPairs.add(entry.getKey() + ": " + entry.getValue() + ";");
         }
         return cssPairs;
     }
