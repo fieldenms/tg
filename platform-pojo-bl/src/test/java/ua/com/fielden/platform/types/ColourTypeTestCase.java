@@ -1,4 +1,4 @@
-package ua.con.fielden.platform.types;
+package ua.com.fielden.platform.types;
 
 import static org.junit.Assert.*;
 import groovy.ui.Console;
