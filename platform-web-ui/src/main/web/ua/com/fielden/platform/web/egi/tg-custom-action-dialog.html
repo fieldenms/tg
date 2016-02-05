@@ -129,7 +129,9 @@
             },
 
             _handleCloseEvent: function (data, envelope) {
-                this._closeDialogAndIndicateActionCompletion(this._lastAction);
+                if (data.canClose === true) {
+                	this._closeDialogAndIndicateActionCompletion(this._lastAction);
+                }
             },
 
             /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */

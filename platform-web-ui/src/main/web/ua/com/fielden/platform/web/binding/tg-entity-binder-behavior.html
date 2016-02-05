@@ -308,6 +308,7 @@
                     		    e.detail.successful = true;
                     		    if (typeof deserialisedResult.instance.id !== 'undefined') {
                     		    	e.detail.entityId = deserialisedResult.instance.id;
+                    		    	e.detail.entityPersistent = deserialisedResult.instance.type().isPersistent();
                     		    }
                     		}
                     	}

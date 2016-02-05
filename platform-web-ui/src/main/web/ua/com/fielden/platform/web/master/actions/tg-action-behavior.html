@@ -44,7 +44,7 @@
             },
             
             /* Describes semantic role of this action. For example, save, cancel etc.
-             * It is used for composing message topics. */
+             * It is used for composing message topics and other role related logic. */
             role: {
                 type: String,
                 reflectToAttribute: true
@@ -114,10 +114,26 @@
                                 if (self.eventChannel && self.role) {
                                     console.log('AJAX PROMISE THEN', ironRequest.successful);
                                     if (ironRequest.xhr.status === 200 && ironRequest.successful === true) {
+                                        // the data to be published consists of an entityId
+                                        // and an indication whether an associated view containing this action can be closed
+                                        // how this data is actually used depends purely on the subscriber
+                                        var dataValue = {id: ironRequest.entityId, canClose: true}; 
+                                        
+                                        // action with role 'save' should only encourage closing in cases
+                                        // where the returned after save entity is persistent and isn't new
+                                        // this case pertains to entit editing
+                                        // such approach enables continuous creation of entities as per issue #285
+                                        // (https://github.com/fieldenms/tg/issues/285)
+                                        if (self.role === 'save' && 
+                                            ironRequest.entityPersistent === true &&
+                                            !ironRequest.entityId) {
+                                            dataValue.canClose = false;
+                                        }
+                                        
                                         postal.publish({
                                             channel: self.eventChannel,
                                             topic: self.role + '.post.success',
-                                            data: {id: ironRequest.entityId}
+                                            data: dataValue
                                         });
                                     } else {
                                         postal.publish({
