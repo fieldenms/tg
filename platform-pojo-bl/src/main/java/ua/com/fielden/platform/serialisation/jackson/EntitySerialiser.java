@@ -70,6 +70,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         entityTypeInfo.beginInitialising();
         entityTypeInfo.setKey(type.getName());
 
+        // let's inform the client of the type's persistence nature
+        entityTypeInfo.set_persistent(EntityUtils.isPersistedEntityType(type));
+        
         if (EntityUtils.isCompositeEntity(type)) {
             final List<String> compositeKeyNames = new ArrayList<>();
             final List<Field> keyMembers = Finder.getKeyMembers(type);
