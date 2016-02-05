@@ -151,8 +151,13 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         this.calculatedProperties.putAll(extractAll(this, true));
 
         for (final Class<?> rootType : rootTypes) {
-            if (!DynamicEntityClassLoader.isEnhanced(getManagedType(rootType))) {
-                throw new IllegalStateException("At this stage the type [" + rootType.getSimpleName() + "] should be enhanced.");
+            // check whether the type WITH calculated properties IS enhanced 
+            if (!hasNoAdditionalProperties(rootType) && !DynamicEntityClassLoader.isEnhanced(getManagedType(rootType))) {
+                throw new IllegalStateException(String.format("The type [%s] should be enhanced -- it has %s properties.", rootType.getSimpleName(), countAdditionalProperties(rootType)));
+            }
+            // check whether the type WITHOUT calculated properties IS NOT enhanced 
+            if (hasNoAdditionalProperties(rootType) && DynamicEntityClassLoader.isEnhanced(getManagedType(rootType))) {
+                throw new IllegalStateException(String.format("The type [%s] should be NOT enhanced -- it has no additional properties.", rootType.getSimpleName()));
             }
         }
     }
@@ -169,6 +174,21 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         this.originalAndEnhancedRootTypesAndArrays = originalAndEnhancedRootTypesAndArrays;
         this.calculatedProperties = calculatedProperties;
         this.customProperties = customProperties;
+    }
+    
+    private boolean hasNoAdditionalProperties(final Class<?> rootType) {
+        return this.calculatedProperties.get(rootType) == null && (this.customProperties.get(rootType) == null || this.customProperties.get(rootType).isEmpty());
+    }
+    
+    private String countAdditionalProperties(final Class<?> rootType) {
+        final StringBuilder sb = new StringBuilder();
+        if (this.calculatedProperties.get(rootType) != null) {
+            sb.append(this.calculatedProperties.get(rootType).size() + " calculated ");
+        }
+        if (this.customProperties.get(rootType) != null && !this.customProperties.get(rootType).isEmpty()) {
+            sb.append(this.customProperties.get(rootType).size() + " custom ");
+        }
+        return StringUtils.isEmpty(sb.toString()) ? " no " : sb.toString();
     }
 
     /**
@@ -321,21 +341,12 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             // generate predefined root type name for all calculated properties
             final String predefinedRootTypeName = new DynamicTypeNamingService().nextTypeName(originalRoot.getName());
             if (entry.getValue() == null) {
-                final NewProperty[] markerProp = new NewProperty[1];
-                markerProp[0] = new NewProperty("aMarkerPropertyJustToMakeTheTypeEnhanced", Integer.class, false, "Marker to make root type 'enhanced'.", "This is a marker property that just makes the type, that have no calc props, enhanced.", createIgnore());
-                try {
-                    final Class<?> rootEnhanced = classLoader.startModification(originalRoot.getName()).addProperties(markerProp).endModification();
-                    final ByteArray newByteArray = new ByteArray(classLoader.getCachedByteArray(rootEnhanced.getName()));
-                    originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(rootEnhanced, new LinkedHashMap<String, ByteArray>() {
-                        {
-                            put("", newByteArray);
-                        }
-                    }));
-                } catch (final ClassNotFoundException e) {
-                    e.printStackTrace();
-                    logger.error(e);
-                    throw new IllegalStateException(e);
-                }
+                final ByteArray newByteArray = new ByteArray(classLoader.getCachedByteArray(originalRoot.getName()));
+                originalAndEnhancedRootTypes.put(originalRoot, new Pair<Class<?>, Map<String, ByteArray>>(originalRoot, new LinkedHashMap<String, ByteArray>() {
+                    {
+                        put("", newByteArray);
+                    }
+                }));
             } else {
                 for (final Entry<String, Map<String, IProperty>> placeAndProps : entry.getValue().entrySet()) {
                     final Map<String, IProperty> props = placeAndProps.getValue();
@@ -383,13 +394,16 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             try {
                 // modify root type name with predefinedRootTypeName
                 final Pair<Class<?>, Map<String, ByteArray>> current = originalAndEnhancedRootTypes.get(originalRoot);
-                final Class<?> rootWithPredefinedName = classLoader.startModification(current.getKey().getName()).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
-                final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<String, ByteArray>();
+                final Class<?> enhancedRoot = current.getKey();
+                if (originalRoot != enhancedRoot) { // calculated properties exist -- root type should be enhanced
+                    final Class<?> rootWithPredefinedName = classLoader.startModification(enhancedRoot.getName()).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
+                    final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<String, ByteArray>();
 
-                byteArraysWithRenamedRoot.putAll(current.getValue());
-                byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(rootWithPredefinedName.getName())));
-                final Pair<Class<?>, Map<String, ByteArray>> neww = new Pair<Class<?>, Map<String, ByteArray>>(rootWithPredefinedName, byteArraysWithRenamedRoot);
-                originalAndEnhancedRootTypes.put(originalRoot, neww);
+                    byteArraysWithRenamedRoot.putAll(current.getValue());
+                    byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(rootWithPredefinedName.getName())));
+                    final Pair<Class<?>, Map<String, ByteArray>> neww = new Pair<Class<?>, Map<String, ByteArray>>(rootWithPredefinedName, byteArraysWithRenamedRoot);
+                    originalAndEnhancedRootTypes.put(originalRoot, neww);
+                }
             } catch (final ClassNotFoundException e) {
                 e.printStackTrace();
                 logger.error(e);
