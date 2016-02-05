@@ -494,6 +494,14 @@
             return typeof this._compositeKeySeparator === 'undefined' ? " " : this._compositeKeySeparator;
         }
 
+        /**
+         * Returns 'true' if the entity type represents a persistent entity.
+         *
+         */
+        EntityType.prototype.isPersistent = function () {
+            return this['_persistent'] === true;
+        }
+
         /** 
          * Returns entity title.
          */
