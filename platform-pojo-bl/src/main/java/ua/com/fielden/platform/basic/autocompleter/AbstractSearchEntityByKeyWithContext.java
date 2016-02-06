@@ -63,7 +63,7 @@ implements IValueMatcherWithContext<CONTEXT, T>, IValueMatcherWithFetch<T> {
         final ICompoundCondition0<T> incompleteEql =select(dao.getEntityType()).where().prop(KEY).iLike().val(searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();
-        return dao.getFirstEntities(from(queryModel).with(ordering).with(fetchModel).model(), pageSize);
+        return dao.getFirstEntities(from(queryModel).with(ordering).with(getFetch()).model(), pageSize);
     }
 
 
