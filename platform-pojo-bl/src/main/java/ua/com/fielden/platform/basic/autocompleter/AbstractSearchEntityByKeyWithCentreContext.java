@@ -27,9 +27,9 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  */
 public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends AbstractEntity<?>>
-implements IValueMatcherWithCentreContext<T>, IValueMatcherWithFetch<T> {
+                      implements IValueMatcherWithCentreContext<T>, IValueMatcherWithFetch<T> {
 
-    private final IEntityDao<T> dao;
+    private final IEntityDao<T> companion;
     private final fetch<T> defaultFetchModel;
     private fetch<T> fetchModel;
     private CentreContext<T, ?> context;
@@ -37,9 +37,9 @@ implements IValueMatcherWithCentreContext<T>, IValueMatcherWithFetch<T> {
     private int pageSize = 10;
 
 
-    public AbstractSearchEntityByKeyWithCentreContext(final IEntityDao<T> dao) {
-        this.dao = dao;
-        this.defaultFetchModel = fetchKeyAndDescOnly(dao.getEntityType());
+    public AbstractSearchEntityByKeyWithCentreContext(final IEntityDao<T> companion) {
+        this.companion = companion;
+        this.defaultFetchModel = fetchKeyAndDescOnly(companion.getEntityType());
     }
 
     /**
@@ -53,18 +53,18 @@ implements IValueMatcherWithCentreContext<T>, IValueMatcherWithFetch<T> {
 
     @Override
     public List<T> findMatches(final String searchString) {
-        final ICompoundCondition0<T> incompleteEql =select(dao.getEntityType()).where().prop(KEY).iLike().val(searchString);
+        final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();
-        return dao.getFirstEntities(from(queryModel).with(ordering).with(defaultFetchModel).model(), pageSize);
+        return companion.getFirstEntities(from(queryModel).with(ordering).with(defaultFetchModel).lightweight().model(), getPageSize());
     }
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
-        final ICompoundCondition0<T> incompleteEql =select(dao.getEntityType()).where().prop(KEY).iLike().val(searchString);
+        final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();
-        return dao.getFirstEntities(from(queryModel).with(ordering).with(getFetch()).model(), pageSize);
+        return companion.getFirstEntities(from(queryModel).with(ordering).with(getFetch()).lightweight().model(), getPageSize());
     }
 
 
@@ -90,7 +90,7 @@ implements IValueMatcherWithCentreContext<T>, IValueMatcherWithFetch<T> {
 
     @Override
     public Integer getPageSize() {
-        return 10;
+        return pageSize;
     }
 
 
