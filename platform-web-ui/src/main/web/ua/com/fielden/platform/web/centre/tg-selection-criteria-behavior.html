@@ -436,7 +436,9 @@
                     return self._refreshPromiseInProgress;
                 }
 
+                // let's capture the promise being created at the instance level so that it could be referenced later...
                 self._refreshPromiseInProgress = self._createPromise(isRunAction, entitiesToRefresh, assignmentFun);
+                // ... and return it
                 return self._refreshPromiseInProgress;
             },
             
@@ -444,7 +446,7 @@
                 var self = this;
             
                 return new Promise(function(resolve, reject) {
-                    if (isRunAction) {
+                    if (isRunAction || self._persistedModifiedPropertiesHolder === null) {
                         self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                     }
     
