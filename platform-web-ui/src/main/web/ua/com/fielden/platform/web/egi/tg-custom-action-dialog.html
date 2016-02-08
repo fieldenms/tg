@@ -243,6 +243,9 @@
                     // this ensures that the dialog is opened after its relocation to body and after all layouting is done
                     this.async(function () {
                         this.open();
+                        if (element.focusFirstInput) {
+                            element.focusFirstInput();
+                        }
                     }.bind(this), 100);
                 }
             },
