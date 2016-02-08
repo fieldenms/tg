@@ -387,6 +387,15 @@
             },
             
             /**
+             * Looks for the first input that is not hidden and not disabled to focus it.
+             */
+            focusFirstInput: function () {
+                this.async(function () {
+                    (this.querySelector('input:not([hidden]):not([disabled])') || this).focus();
+                }.bind(this), 100);
+            },
+            
+            /**
              * Creates default master actions.
              */
             _createActions: function () {
