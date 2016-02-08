@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Flex box spike for bugs</title>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+    <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+
+    <style>
+        html {
+            font-size: 10pt;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            background-color: grey;
+        }
+        paper-material {
+            border-radius: 2px;
+            background-color: white;
+        }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .scroll-container {
+            overflow: auto;
+        }
+        .table-data-row {
+            border-top: 1px solid #e3e3e3;
+            min-width: fit-content;
+        }
+    </style>
+
+</head>
+
+<body unresolved class="fullbleed">
+    <template is="dom-bind" id="app">
+        <paper-material>
+            <div class="layout vertical">
+                <div class="layout horizontal wrap">
+                    <div>Button1</div>
+                    <div style="margin-left:auto">Button2</div>
+                </div>
+                <div class="relative">
+                    <div class="scroll-container">
+                        <template is="dom-repeat" items="[[data]]" as="entity" index-as="entityIndex">
+                            <div class="table-data-row layout horizontal">
+                                <template is="dom-repeat" items="[[entity]]" as="column" index-as="columnIndex">
+                                    <div class="layout horizontal center flex" style="min-width: 100px; width: 100px;">
+                                        <div class="truncate" style="width: 100%">[[column]]</div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </paper-material>
+    </template>
+    <script>
+        (function () {
+            var app = document.querySelector('#app');
+            var rowIndex, colIndex, rowData;
+            app.data = [];
+            for (rowIndex = 0; rowIndex < 5; rowIndex++) {
+                rowData = [];
+                for (colIndex = 0; colIndex < 12; colIndex++) {
+                    rowData.push("This is a spike description to test ellipses");
+                }
+                app.data.push(rowData);
+            }
+        })();
+    </script>
+</body>
+
