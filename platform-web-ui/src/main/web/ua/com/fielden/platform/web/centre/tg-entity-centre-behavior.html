@@ -87,6 +87,14 @@
                     type: Boolean,
                     value: false
                 },
+                
+                /**
+                 * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
+                 */
+                enforcePostSaveRefresh: {
+                    type: Boolean,
+                    value: false
+                },
 
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
@@ -675,11 +683,14 @@
              * Starts the process of refreshing the specified 'entities'.
              *
              * IMPORTANT: this method supports appropriately only refreshing of those entities, that are present in the current
-             *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed
+             *     EGI grid (a subset of current page entities). Those matched entities get replaced with refreshed instances (or removed
              *     from the result-set if they became unmatchable to the selection criteria after modification).
              */
             refreshEntities: function (entities) {
-                if (this.$.egi.egiModel.length > 0) {
+                // if there is no data or refresh is enforeced then simply refresh the current page
+                if (this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0) {
+                    this.currentPage();
+                } else {
                     if (entities !== null && entities.length > 0) {
                         this.$.selection_criteria.refreshEntities(entities, (function (entities) {
                             this._entitiesThatShouldBeUpdated = entities;

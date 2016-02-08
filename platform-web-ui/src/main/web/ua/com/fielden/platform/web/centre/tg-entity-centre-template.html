@@ -210,6 +210,9 @@
             	console.warn("tg-@mi_type-centre: created");
             	console.time("created-to-ready");
                 console.warn("CREATED in TG-ENTITY-CENTRE-TAMPLATE");
+                
+                // bind SSE event handling method regardless of the fact whether this particulare
+                // centre is bound to some SSE url or not.
                 this.dataHandler = function(data) {
                     var self = this;
                     var msg = JSON.parse(data);

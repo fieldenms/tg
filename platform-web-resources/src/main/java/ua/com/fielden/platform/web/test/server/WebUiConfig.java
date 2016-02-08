@@ -891,7 +891,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String centreMrLast = "['flex']";
 
         final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
-        ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre).hasEventSourceAt("/entity-centre-events")
+        ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
+                .hasEventSourceAt("/entity-centre-events")
+                .enforcePostSaveRefresh()
                 .addTopAction(
                         action(NewEntityAction.class).
                                 withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality 
