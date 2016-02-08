@@ -153,7 +153,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         for (final Class<?> rootType : rootTypes) {
             // check whether the type WITH calculated properties IS enhanced 
             if (!hasNoAdditionalProperties(rootType) && !DynamicEntityClassLoader.isEnhanced(getManagedType(rootType))) {
-                throw new IllegalStateException(String.format("The type [%s] should be enhanced -- it has %s properties.", rootType.getSimpleName(), countAdditionalProperties(rootType)));
+                throw new IllegalStateException(String.format("The type [%s] should be enhanced -- it has %s properties.", rootType.getSimpleName(), additionalPropDefinitionsAsString(rootType)));
             }
             // check whether the type WITHOUT calculated properties IS NOT enhanced 
             if (hasNoAdditionalProperties(rootType) && DynamicEntityClassLoader.isEnhanced(getManagedType(rootType))) {
@@ -180,7 +180,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         return this.calculatedProperties.get(rootType) == null && (this.customProperties.get(rootType) == null || this.customProperties.get(rootType).isEmpty());
     }
     
-    private String countAdditionalProperties(final Class<?> rootType) {
+    private String additionalPropDefinitionsAsString(final Class<?> rootType) {
         final StringBuilder sb = new StringBuilder();
         if (this.calculatedProperties.get(rootType) != null) {
             sb.append(this.calculatedProperties.get(rootType).size() + " calculated ");
