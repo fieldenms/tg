@@ -1539,7 +1539,27 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         int count = authorDao.count(qry);
         assertEquals(count, authorDao.batchDelete(qry));
     }
-
+    
+    @Test
+    public void test_batch_deletion_by_entities() {
+        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
+        int count = authorDao.count(qry);
+        List<TgAuthor> authors = authorDao.getAllEntities(from(qry).model());
+        assertEquals(count, authorDao.batchDelete(authors));
+    }
+    
+    @Test
+    public void test_batch_deletion_by_entities_ids() {
+        final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).model();
+        int count = authorDao.count(qry);
+        List<TgAuthor> authors = authorDao.getAllEntities(from(qry).model());
+        Set<Long> ids = new HashSet<>();
+        for (TgAuthor author : authors) {
+            ids.add(author.getId());
+        }
+        assertEquals(count, authorDao.batchDelete(ids));
+    }
+    
     @Override
     protected void populateDomain() {
         

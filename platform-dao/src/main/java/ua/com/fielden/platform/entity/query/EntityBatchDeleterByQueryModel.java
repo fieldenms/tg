@@ -16,12 +16,12 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-public class EntityBatchDeleter {
+public class EntityBatchDeleterByQueryModel {
     private final QueryExecutionContext executionContext;
     private final String tableAlias = "TABLE-FOR-DELETION";
     private final Logger logger = Logger.getLogger(this.getClass());
 
-    public EntityBatchDeleter(final QueryExecutionContext executionContext) {
+    public EntityBatchDeleterByQueryModel(final QueryExecutionContext executionContext) {
         this.executionContext = executionContext;
     }
 

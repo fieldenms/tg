@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.dao;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Spliterator;
@@ -228,14 +230,27 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      *
      * @param entity
      */
-    void delete(final T entity);
+    default void delete(final T entity) {
+        throw new UnsupportedOperationException("By default deletion is not supported.");
+    }
 
     /**
      * Deletes entities returned by provided query model with provided param values.
      *
      * @param model
      */
-    void delete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
+    default void delete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
+        throw new UnsupportedOperationException("By default deletion is not supported.");
+    }
+
+    /**
+     * Deletes entities returned by provided query model
+     *
+     * @param model
+     */
+    default void delete(final EntityResultQueryModel<T> model) {
+        delete(model, Collections.<String, Object> emptyMap());
+    }
 
     /**
      * Performs batch deletion of entities returned by provided query model
@@ -256,12 +271,23 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     }
 
     /**
-     * Deletes entities returned by provided query model
+     * Performs batch deletion of entities, which ids are provided by collection.
      *
-     * @param model
+     * @param entitiesIds
      */
-    void delete(final EntityResultQueryModel<T> model);
+    default int batchDelete(final Collection<Long> entitiesIds) {
+        throw new UnsupportedOperationException("By default batch deletion is not supported.");
+    }
 
+    /**
+     * Performs batch deletion of entities from provided list.
+     *
+     * @param entitiesIds
+     */
+    default int batchDelete(final List<T> entities){
+        throw new UnsupportedOperationException("By default batch deletion is not supported.");
+    }
+    
     /**
      * Should return true if the passed entity exists in the persistent state.
      *
