@@ -104,24 +104,6 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     }
 
     @Override
-    public void delete(final SecondLevelEntity entity) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<SecondLevelEntity> model, final Map<String, Object> paramValues) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<SecondLevelEntity> model) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
     public boolean entityExists(final SecondLevelEntity entity) {
         // TODO Auto-generated method stub
         return false;
@@ -195,17 +177,5 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     public IFetchProvider<SecondLevelEntity> getFetchProvider() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public int batchDelete(EntityResultQueryModel<SecondLevelEntity> model) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public int batchDelete(EntityResultQueryModel<SecondLevelEntity> model, Map<String, Object> paramValues) {
-        // TODO Auto-generated method stub
-        return 0;
     }
 }

@@ -89,10 +89,6 @@ public class UserControllerForTestPurposes implements IUserController {
     }
 
     @Override
-    public void delete(final User user) {
-    }
-
-    @Override
     public boolean isStale(final Long entityId, final Long version) {
         return false;
     }
@@ -163,18 +159,6 @@ public class UserControllerForTestPurposes implements IUserController {
     }
 
     @Override
-    public void delete(final EntityResultQueryModel<User> model, final Map<String, Object> paramValues) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<User> model) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
     public User getEntity(final QueryExecutionModel<User, ?> model) {
         // TODO Auto-generated method stub
         return null;
@@ -236,17 +220,5 @@ public class UserControllerForTestPurposes implements IUserController {
     public IFetchProvider<User> getFetchProvider() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public int batchDelete(EntityResultQueryModel<User> model) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public int batchDelete(EntityResultQueryModel<User> model, Map<String, Object> paramValues) {
-        // TODO Auto-generated method stub
-        return 0;
     }
 }

@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -36,7 +37,8 @@ import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityBatchDeleter;
+import ua.com.fielden.platform.entity.query.EntityBatchDeleterByQueryModel;
+import ua.com.fielden.platform.entity.query.EntityBatchDeleterByIds;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
@@ -908,7 +910,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
 
-        return new EntityBatchDeleter(queryExecutionContext).deleteEntities(model, paramValues);
+        return new EntityBatchDeleterByQueryModel(queryExecutionContext).deleteEntities(model, paramValues);
     }
 
     @SessionRequired
@@ -916,6 +918,26 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return defaultBatchDelete(model, Collections.<String, Object> emptyMap());
     }
 
+    @SessionRequired
+    protected int defaultBatchDelete(List<? extends AbstractEntity<?>> entities) {
+        Set<Long> ids = new HashSet<>();
+        for (AbstractEntity<?> entity : entities) {
+            ids.add(entity.getId());
+        }
+        return batchDelete(ids);
+    }
+    
+    @SessionRequired
+    protected int defaultBatchDelete(Collection<Long> entitiesIds) {
+        if (entitiesIds.size() == 0) {
+            throw new Result(new IllegalArgumentException("No entities ids have been provided for deletion."));
+        }
+        
+        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
+
+        return new EntityBatchDeleterByIds(queryExecutionContext).deleteEntities(entitiesIds, getEntityType());
+    }
+    
     protected EntityFactory getEntityFactory() {
         return entityFactory;
     }
