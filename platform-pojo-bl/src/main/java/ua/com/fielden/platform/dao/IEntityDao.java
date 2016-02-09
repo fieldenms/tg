@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -224,6 +225,21 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @param model
      */
     int batchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
+
+
+    /**
+     * Performs batch deletion of entities, which ids are provided by collection.
+     *
+     * @param entitiesIds
+     */
+    int batchDelete(final Collection<Long> entitiesIds);
+
+    /**
+     * Performs batch deletion of entities from provided list.
+     *
+     * @param entitiesIds
+     */
+    int batchDelete(final List<? extends AbstractEntity<?>> entities);
 
     /**
      * Deletes entities returned by provided query model
