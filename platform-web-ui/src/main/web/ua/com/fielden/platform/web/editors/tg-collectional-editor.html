@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
 <link rel="import" href="/resources/polymer/iron-list/iron-list.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input.html">
 
 <dom-module id="tg-collectional-editor">
     <style>
@@ -59,6 +60,11 @@
             width: 24px;
             height: 24px;
         }
+        
+        span.key-value-highlighted {
+            background-color: #ffff46;
+        }
+        
     </style>
 
     <template>
@@ -77,12 +83,13 @@
             _on-keydown="[[_onKeydown]]"
             current-state="[[currentState]]">
             <!-- <content class=".property-action"></content> -->
+            <paper-input class="custom-input" bind-value="{{_phraseForSearching}}" on-input="_onInput" on-blur="_eventHandler" label="Search phrase"></paper-input>
             <iron-list id="input" class="custom-input" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]" >
                       <div tabindex="0" class$="[[_computedClass(selected)]]"> <!-- aria-label$="[[_getAriaLabel(item, selected)]]"  -->
                         <!-- <img class="avatar" src="[[item.image]]"> -->
-                        <div class="pad">
+                        <div id$="[[_makeId(index)]]" class="pad">
                           <div class="primary">
                             [[item.key]]
                           </div>
@@ -118,7 +125,29 @@
             
             _originalChosenIds: {
                 type: Array
-            }
+            },
+            
+            _phraseForSearching: {
+                type: String
+            },
+            _asyncSearchHandle: {
+            	type: Object,
+            	value: null
+            },
+            
+            _eventHandler: {
+            	type: Function
+            },
+            
+            _onInput: {
+            	type: Function,
+            	value: function () {
+            		return (function () {
+            		   this._cancelSearch();
+            		   this._asyncSearchHandle = this.async(this.scrollToFirstFoundElement(), 700);
+                	}).bind(this);
+            	}
+            },
         },
         
         observers: [
@@ -127,6 +156,10 @@
         
         ready: function () {
             this.$.editorDom._editorKind = "COLLECTIONAL";
+            this._eventHandler = (function(e) {
+            	// There is no need to proceed with search if user moved out of the search field
+            	this._cancelSearch();
+            }).bind(this);
         },
         
         /**
@@ -202,19 +235,139 @@
             return isSelected ? 'star' : 'star-border';
         },
         
+        _matchedParts: function (str) {
+            var parts = [];
+            // if all is matched then return a single value
+            if ("\\w*" == this._phraseForSearching) {
+                parts.push({
+                    part: str,
+                    matched: false
+                });
+                return parts;
+            } else if ('' == this._phraseForSearching) {
+                return parts;
+            }
+
+            // otherwise split 
+            var searchExp = new RegExp(this._phraseForSearching, 'gi');
+            var match;
+            var startIndex = 0;
+            while ((match = searchExp.exec(str)) !== null) {
+                if (match.index > startIndex) { // match is not from the start, so need to record thing before as not matched
+                    var part = {
+                        part: str.substring(startIndex, match.index),
+                        matched: false
+                    };
+                    parts.push(part);
+                }
+
+                // record the matched part
+                var part = {
+                    part: str.substring(match.index, searchExp.lastIndex),
+                    matched: true
+                };
+                parts.push(part);
+
+                startIndex = searchExp.lastIndex;
+
+            }
+            // check if there is an unmatched part at the end
+            if (startIndex < str.length) {
+                var part = {
+                    part: str.substring(startIndex, str.length),
+                    matched: false
+                };
+                parts.push(part);
+            }
+            // return the result
+            return parts;
+
+        },
+        
+        _makeId: function(id) {
+        	return "id" + id;
+        },
+        
+        _cancelSearch: function() {
+        	if (this._asyncSearchHandle) {
+        		this.cancelAsync(this._asyncSearchHandle);
+        		this._asyncSearchHandle = null;
+        	}
+        }, 
+        
         searchForPhrase: function (entities, phrase) {
             var entitiesWithPhrase = {};
+            var firstFoundElement = -1;
             for( var entityIndex = 0; entityIndex < entities.length; entityIndex++){
                 var currentEntity = entities[entityIndex];
                 var positionInKey = currentEntity.get('key').search(phrase);
                 var positionInDesc = currentEntity.get('desc').search(phrase);
-                
-                if(positionInKey > 0 || positionInDesc > 0){
-	                entitiesWithPhrase[entityIndex + ""] = [positionInKey, positionInDesc]; 
+                if(positionInKey >= 0 || positionInDesc >= 0){
+	                entitiesWithPhrase[entityIndex + ""] = [positionInKey, positionInDesc];
+	                if(firstFoundElement === -1){
+	                    firstFoundElement = entityIndex;
+	                }
                 }
+	            entitiesWithPhrase['first'] = firstFoundElement;
             }
             return entitiesWithPhrase;
         },
+        
+        scrollToFirstFoundElement: function () {
+            var entitiesWithPhrase = this.searchForPhrase(this._entities, this._phraseForSearching);
+            var firstElementWithPhrase = entitiesWithPhrase.first; 
+            this.$.input.scrollToIndex(firstElementWithPhrase);
+            this.highlightMatchedParts();
+        	console.log('entitiesWithPhrase=', entitiesWithPhrase);
+        	console.log('phrase=', this._phraseForSearching);
+        },
+        
+        highlightMatchedParts: function () {
+            this.highlightMatchedPartsKeyOrDesc('key', 0);
+            this.highlightMatchedPartsKeyOrDesc('desc', 1);
+			
+		},
+		 highlightMatchedPartsKeyOrDesc: function (keyOrDesc, indexOfChild) {
+				this.async(function() {
+					for (var index = 0; index < this._entities.length; index++) {
+							var html = '';                	
+							var v = this._entities[index];
+							
+							// add key and desc value with highlighting of matching parts
+							if (keyOrDesc === 'key'){
+								html = html + this._addHighlightedProp(v.key);
+							} else{
+							    html = html + this._addHighlightedProp(v.desc);
+							}
+							
+							// put the composed for the current item HTML into the content of paper-item
+							var id = this._makeId(index);
+							var paperItem = Polymer.dom(this.root).querySelector("#" + id);
+							(Polymer.dom(paperItem.children[indexOfChild])).innerHTML = html;
+					}
+					Polymer.dom.flush();
+				}.bind(this), 700);
+			},
+		
+		_addHighlightedProp : function(v) {
+			var html = '';
+			var matchedParts = this._matchedParts(v);
+			for (var index = 0; index < matchedParts.length; index++) {
+				var part = matchedParts[index];
+				if (part.matched) {
+					// addition style-scope and this.is (element name) styles is required to enformse custom style processing
+					html = html
+							+ '<span class="key-value-highlighted">'
+							+ part.part + '</span>';
+				} else {
+					html = html + part.part;
+				}
+			}
+			if(this._phraseForSearching === ''){
+			    html = v;
+			}
+			return html;
+		},
         
         _selectedEntitiesAddedOrRemoved: function (changeRecord) {
             var self = this;
