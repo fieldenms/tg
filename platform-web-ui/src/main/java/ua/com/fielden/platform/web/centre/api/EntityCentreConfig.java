@@ -155,6 +155,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     private final boolean runAutomatically;
 
+    /**
+     * Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).  
+     */
+    private final boolean enforcePostSaveRefresh;
+
     /** Identifies URI for the Server-Side Eventing. If <code>null</code> is set then no SSE is required. */
     private final String sseUri;
 
@@ -328,6 +333,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter,
 
             final boolean runAutomatically,
+            final boolean enforcePostSaveRefresh,
 
             final String sseUri,
 
@@ -392,6 +398,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.resultsetSummaryCardLayout = resultsetSummaryCardLayout;
 
         this.runAutomatically = runAutomatically;
+        this.enforcePostSaveRefresh = enforcePostSaveRefresh;
 
         this.sseUri = sseUri;
 
@@ -442,6 +449,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isRunAutomatically() {
         return runAutomatically;
+    }
+    
+    public boolean shouldEnforcePostSaveRefresh() {
+        return enforcePostSaveRefresh;
     }
 
     public Optional<Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {

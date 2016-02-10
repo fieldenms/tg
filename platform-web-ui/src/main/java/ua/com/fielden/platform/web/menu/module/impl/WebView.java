@@ -61,6 +61,9 @@ public class WebView implements IExecutable {
                 if (entityCentre.isRunAutomatically()) {
                     attrs.append("autoRun: true,");
                 }
+                if (entityCentre.shouldEnforcePostSaveRefresh()) {
+                    attrs.append("enforcePostSaveRefresh: true,");
+                }
                 if (entityCentre.eventSourceUri().isPresent()) {
                 	attrs.append(format("uri: \"%s\",", entityCentre.eventSourceUri().get()));
                 }

@@ -43,8 +43,8 @@
                  * arguments: entity, bindingEntity, customObject
                  */
                 postSaved: {
-                	type: Function                	
-                }, 
+                	type: Function
+                },
 
                 /**
                  * Custom callback that will be invoked in case saving resulted in error.
@@ -373,6 +373,26 @@
             detached: function() {
                 console.log("-------master detached: " + this.uuid + "------------");
                 this.saveListener.unsubscribe();
+            },
+            
+            /**
+             * A callback that should be bound to on-after-load event in case of this master having an embedded master.
+             * This is required in order to assign the postSaved and postSavedError handler calls to the embedded master, so
+             * that it would act like it is the master and the wrapping master is just that -- a mere wrapper for providing context.
+             */
+            _assignPostSavedHandlersForEmbeddedMaster: function(e) {
+	  	    	var embeddedMaster = e.detail;
+	  	    	embeddedMaster.postSaved = this.postSaved.bind(embeddedMaster);
+	  	    	embeddedMaster.postSavedError = this.postSavedError.bind(embeddedMaster);
+            },
+            
+            /**
+             * Looks for the first input that is not hidden and not disabled to focus it.
+             */
+            focusFirstInput: function () {
+                this.async(function () {
+                    (this.querySelector('input:not([hidden]):not([disabled])') || this).focus();
+                }.bind(this), 100);
             },
             
             /**

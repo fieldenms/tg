@@ -13,6 +13,7 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.IAlsoCentreTopLe
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup0;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithSse;
 
@@ -93,9 +94,9 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
         builder.runAutomatically = true;
         return this;
     }
-
+    
 	@Override
-	public ICentreTopLevelActions<T> hasEventSourceAt(final String uri) {
+	public ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> hasEventSourceAt(final String uri) {
 		if (StringUtils.isEmpty(uri)) {
 			throw new IllegalArgumentException("Server-Side Eventing URI should not be empty.");
 		}
@@ -103,4 +104,10 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> extends ResultSetBuild
         return this;
 	}
 
+    @Override
+    public ICentreTopLevelActions<T> enforcePostSaveRefresh() {
+        builder.enforcePostSaveRefresh = true;
+        return this;
+    }
+	
 }

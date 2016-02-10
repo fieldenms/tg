@@ -60,7 +60,11 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
         // if the entity was new and just successfully saved then let's return a new entity to mimic "continuous" entry
         // otherwise simply return the same entity
         if (wasNew && saved.isValid().isSuccessful()) {
-            return saved.getEntityFactory().newEntity(TgPersistentEntityWithProperties.class);
+            final TgPersistentEntityWithProperties newEntity = saved.getEntityFactory().newEntity(TgPersistentEntityWithProperties.class);
+            // the following two lines can be uncommented to simulate the situation of an invalid new entity returned from save 
+            //newEntity.setRequiredValidatedProp(1);
+            //newEntity.setRequiredValidatedProp(null);
+            return newEntity;
         } else {
             return saved;
         }

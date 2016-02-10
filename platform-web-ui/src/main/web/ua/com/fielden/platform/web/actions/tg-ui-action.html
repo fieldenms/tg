@@ -348,6 +348,8 @@
                 master.savingContext = self._createContextHolderForAction();
 
                 master.postSaved = function (potentiallySavedEntity, newBindingEntity) {
+                    master.focusFirstInput();
+                    
                     postal.publish({
                         channel: "centre_" + master.centreUuid,
                         topic: "detail.saved",
@@ -379,6 +381,8 @@
                 	if (master.noUI === true) {
                 		// action execution completed, althoug in error from saving
                     	self.isActionInProgress = false;
+                	} else {
+                        master.focusFirstInput();
                 	}
                 };
                 

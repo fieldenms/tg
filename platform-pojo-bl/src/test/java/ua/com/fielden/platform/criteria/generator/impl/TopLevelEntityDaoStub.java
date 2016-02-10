@@ -91,18 +91,6 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public void delete(final TopLevelEntity entity) {
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<TopLevelEntity> model, final Map<String, Object> paramValues) {
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<TopLevelEntity> model) {
-    }
-
-    @Override
     public boolean entityExists(final TopLevelEntity entity) {
         return false;
     }
@@ -167,17 +155,5 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     public IFetchProvider<TopLevelEntity> getFetchProvider() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public int batchDelete(EntityResultQueryModel<TopLevelEntity> model) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public int batchDelete(EntityResultQueryModel<TopLevelEntity> model, Map<String, Object> paramValues) {
-        // TODO Auto-generated method stub
-        return 0;
     }
 }

@@ -569,6 +569,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public boolean isRunAutomatically() {
         return dslDefaultConfig.isRunAutomatically();
     }
+    
+    /**
+     * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
+     * @return
+     */
+    public boolean shouldEnforcePostSaveRefresh() {
+        return dslDefaultConfig.shouldEnforcePostSaveRefresh();
+    }
 
     /**
      * Return an optional Event Source URI.
