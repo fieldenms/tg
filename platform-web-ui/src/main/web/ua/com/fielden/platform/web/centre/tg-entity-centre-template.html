@@ -20,6 +20,14 @@
 
 <dom-module id="tg-@mi_type-selection-criteria">
     <template>
+        <style>
+            tg-flex-layout * {
+                min-width: 96px;
+            }
+            tg-flex-layout * .criterion-editors {
+                min-width: 0;
+            }
+        </style>
     	<tg-selection-criteria
     		id="masterDom"
     		mi-type="[[miType]]" 

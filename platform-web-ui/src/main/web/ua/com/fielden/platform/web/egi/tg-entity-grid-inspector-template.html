@@ -643,39 +643,39 @@
 <script>
     (function () {
         var _checkCollapsiblePanelVisibility = function (layout) {
-                this.collapsePanelVisible = !!(this.cardLayout && layout);
-            },
-            _areEqual = function (a, b) {
-                return a.id === b.id;
-            },
-            _hasEntity = function (entity, entities) {
-                for (var i = 0; i < entities.length; i += 1) {
-                    if (_areEqual(entity, entities[i])) {
-                        return true;
-                    }
+            this.collapsePanelVisible = !!(this.cardLayout && layout);
+        },
+        _areEqual = function (a, b) {
+            return a.id === b.id;
+        },
+        _hasEntity = function (entity, entities) {
+            for (var i = 0; i < entities.length; i += 1) {
+                if (_areEqual(entity, entities[i])) {
+                    return true;
                 }
-                return false;
-            },
-            _findEntity = function (entity, entities) {
-                for (var i = 0; i < entities.length; i += 1) {
-                    if (_areEqual(entity, entities[i])) {
-                        return i;
-                    }
+            }
+            return false;
+        },
+        _findEntity = function (entity, entities) {
+            for (var i = 0; i < entities.length; i += 1) {
+                if (_areEqual(entity, entities[i])) {
+                    return i;
                 }
-                return -1;
-            },
-            _processEntitySelection = function (selectedEntities, entity, select) {
-                var selectedIndex = selectedEntities.indexOf(entity);
-                if (select) {
-                    if (selectedIndex < 0) {
-                        selectedEntities.push(entity);
-                    }
-                } else {
-                    if (selectedIndex >= 0) {
-                        selectedEntities.splice(selectedIndex, 1);
-                    }
+            }
+            return -1;
+        },
+        _processEntitySelection = function (selectedEntities, entity, select) {
+            var selectedIndex = selectedEntities.indexOf(entity);
+            if (select) {
+                if (selectedIndex < 0) {
+                    selectedEntities.push(entity);
                 }
-            };
+            } else {
+                if (selectedIndex >= 0) {
+                    selectedEntities.splice(selectedIndex, 1);
+                }
+            }
+        };
         Polymer({
             is: "tg-@miType-grid-inspector",
 
