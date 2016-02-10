@@ -81,6 +81,19 @@ public class ExpressionText2ModelConverter4ConditionsTest {
     }
 
     @Test
+    public void should_support_model_generation_for_CASE_without_ELSE() throws RecognitionException, SemanticException {
+        final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
+        "CASE WHEN intProperty > 2 THEN \"Over two\"\n END");
+        final AstNode root = ev.convert();
+        assertEquals("Incorrect expression type", String.class, root.getType());
+
+        final ExpressionModel prop = expr().prop("intProperty").model();
+        final ConditionModel cond = cond().expr(prop).gt().val(2).model();
+        final ExpressionModel model = expr().caseWhen().condition(cond).then().val("Over two").end().model();
+        assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
     public void model_generation_for_dashboard_case_when_failed() throws RecognitionException, SemanticException {
         final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
         "CASE\n" + "WHEN MONTHS(dateProperty, NOW) > 2m THEN \"Green\"\n" + "WHEN MONTHS(dateProperty, NOW) <= 2m && MONTHS(dateProperty, NOW) > 1m THEN \"Yellow\"\n"
@@ -100,7 +113,7 @@ public class ExpressionText2ModelConverter4ConditionsTest {
     }
 
     @Test
-    public void model_generation_for_simple_dashboard_case_when_ans_now_failed() throws RecognitionException, SemanticException {
+    public void model_generation_for_simple_dashboard_case_when_and_now_failed() throws RecognitionException, SemanticException {
         final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
         "CASE\n" + "WHEN dateProperty > NOW THEN \"Green\"\n" + "ELSE \"Red\" END");
         final AstNode root = ev.convert();

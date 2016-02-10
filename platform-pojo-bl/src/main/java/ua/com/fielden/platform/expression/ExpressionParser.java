@@ -116,9 +116,12 @@ public class ExpressionParser {
             caseNode.addChild(whenThenNode);
         } while (lookahead() == EgTokenCategory.WHEN);
 
-        // there should be exactly one ELSE clause
-        final AstNode elseNode = else_keyword();
-        caseNode.addChild(elseNode);
+        // there could be an optional ELSE
+        if (lookahead() == EgTokenCategory.ELSE) {
+            // there can only be exactly one ELSE clause
+            final AstNode elseNode = else_keyword();
+            caseNode.addChild(elseNode);
+        }
 
         // the expression must end with keyword END, which does not have to be represented in AST tree
         match(EgTokenCategory.END);
@@ -355,6 +358,8 @@ public class ExpressionParser {
     /** Matches keyword THEN. Returns an AST node with a string literal that suppose to follow THEN. */
     private AstNode then_keyword() throws RecognitionException {
         match(EgTokenCategory.THEN);
+        // TODO Need to enhance this part to allow for different possibilities
+        // such as a literal (as currently), name, null, arithmetic expression and nested CASE WHEN
         return match_literal(EgTokenCategory.STRING);
     }
 
