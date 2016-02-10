@@ -34,6 +34,10 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     }
 
     protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) throws Exception {
+        if (entities.size() == 0) {
+            return entities;
+        }
+
         if (fetchModel != null) {
             final Map<String, fetch<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getFetchModels();
 
