@@ -83,6 +83,10 @@
             position: relative;
         }
         
+        paper-input-container::shadow .label-and-input-container {
+            min-width: 0px;
+        }
+        
         paper-input-container {
             --paper-input-container-label: {
                 overflow: hidden;
@@ -296,7 +300,7 @@
          * Calculates the style for decorator inner parts, based on '_disabled' property.
          */
         _calcDecoratorPartStyle: function (_disabled) {
-            var style = "";
+            var style = "min-width: 0px;";
             if (_disabled === true) {
                 style += "opacity: 0.6;"
             }
