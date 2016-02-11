@@ -65,6 +65,10 @@
             background-color: #ffff46;
         }
         
+        iron-list {
+        	height: 300px;
+        }
+        
     </style>
 
     <template>
@@ -296,30 +300,27 @@
         }, 
         
         searchForPhrase: function (entities, phrase) {
-            var entitiesWithPhrase = {};
             var firstFoundElement = -1;
             for( var entityIndex = 0; entityIndex < entities.length; entityIndex++){
                 var currentEntity = entities[entityIndex];
-                var positionInKey = currentEntity.get('key').search(phrase);
-                var positionInDesc = currentEntity.get('desc').search(phrase);
+                var positionInKey = (currentEntity.get('key').toLowerCase()).search(phrase.toLowerCase());
+                var positionInDesc = (currentEntity.get('desc').toLowerCase()).search(phrase.toLowerCase());
                 if(positionInKey >= 0 || positionInDesc >= 0){
-	                entitiesWithPhrase[entityIndex + ""] = [positionInKey, positionInDesc];
 	                if(firstFoundElement === -1){
 	                    firstFoundElement = entityIndex;
+	                    return firstFoundElement;
 	                }
                 }
-	            entitiesWithPhrase['first'] = firstFoundElement;
             }
-            return entitiesWithPhrase;
         },
         
         scrollToFirstFoundElement: function () {
-            var entitiesWithPhrase = this.searchForPhrase(this._entities, this._phraseForSearching);
-            var firstElementWithPhrase = entitiesWithPhrase.first; 
-            this.$.input.scrollToIndex(firstElementWithPhrase);
-            this.highlightMatchedParts();
-        	console.log('entitiesWithPhrase=', entitiesWithPhrase);
-        	console.log('phrase=', this._phraseForSearching);
+            this.async(function() {
+	            var firstElementWithPhrase = this.searchForPhrase(this._entities, this._phraseForSearching); 
+	            this.$.input.scrollToIndex(firstElementWithPhrase);
+	            this.highlightMatchedParts();
+	        	console.log('phrase=', this._phraseForSearching);
+            }.bind(this), 700);
         },
         
         highlightMatchedParts: function () {
@@ -328,7 +329,6 @@
 			
 		},
 		 highlightMatchedPartsKeyOrDesc: function (keyOrDesc, indexOfChild) {
-				this.async(function() {
 					for (var index = 0; index < this._entities.length; index++) {
 							var html = '';                	
 							var v = this._entities[index];
@@ -346,7 +346,6 @@
 							(Polymer.dom(paperItem.children[indexOfChild])).innerHTML = html;
 					}
 					Polymer.dom.flush();
-				}.bind(this), 700);
 			},
 		
 		_addHighlightedProp : function(v) {
