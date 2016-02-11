@@ -44,6 +44,11 @@ public class WhenTokenAutomataTest {
         } catch (final SequenceRecognitionFailed e) {
         }
         try {
+            automata.recognisePartiallyFromStart(" WHENed ", 0);
+            fail("Should have failed");
+        } catch (final SequenceRecognitionFailed e) {
+        }
+        try {
             automata.recognisePartiallyFromStart("_WHEN", 0);
             fail("Should have failed");
         } catch (final SequenceRecognitionFailed e) {

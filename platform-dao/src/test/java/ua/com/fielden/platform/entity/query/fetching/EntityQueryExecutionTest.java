@@ -55,6 +55,7 @@ import ua.com.fielden.platform.sample.domain.ITgAuthor;
 import ua.com.fielden.platform.sample.domain.ITgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
+import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgMakeCount;
 import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
@@ -69,6 +70,7 @@ import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgMakeCount;
@@ -92,9 +94,7 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
-import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
@@ -119,6 +119,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgMakeCount makeCountDao = getInstance(ITgMakeCount.class);
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
+    private final ITgEntityWithComplexSummaries coEntityWithComplexSummaries = getInstance(ITgEntityWithComplexSummaries.class);
 
     /////////////////////////////////////// WITHOUT ASSERTIONS /////////////////////////////////////////
 
@@ -1560,6 +1561,20 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         assertEquals(count, authorDao.batchDelete(ids));
     }
     
+    @Test
+    public void test_case_when_expression_in_summary_property_when_condition_is_satisfied() {
+        final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).model();
+        TgEntityWithComplexSummaries summaryEntity = coEntityWithComplexSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummaries.class).with("costPerKm").without("id").without("version")).model());
+        assertEquals(new BigDecimal("1"), summaryEntity.getCostPerKm());
+    }
+    
+    @Test
+    public void test_case_when_expression_in_summary_property_when_condition_is_not_satisfied() {
+        final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).where().prop("kms").eq().val(0).model();
+        TgEntityWithComplexSummaries summaryEntity = coEntityWithComplexSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummaries.class).with("costPerKm").without("id").without("version")).model());
+        assertNull(summaryEntity.getCostPerKm());
+    }
+
     @Override
     protected void populateDomain() {
         
@@ -1651,6 +1666,11 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         final TgPersonName yurij = save(new_(TgPersonName.class, "Yurij", "Yurij"));
         save(new_composite(TgAuthor.class, yurij, "Shcherbyna", "Mykolajovych"));
 
+        save(new_(TgEntityWithComplexSummaries.class, "veh1").setKms(200).setCost(100));
+        save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
+        save(new_(TgEntityWithComplexSummaries.class, "veh3").setKms(300).setCost(100));
+        save(new_(TgEntityWithComplexSummaries.class, "veh4").setKms(0).setCost(200));
+        
         System.out.println("\n\n\n\n\n\n\n\n\n   =====  DATA POPULATED SUCCESSFULLY   =====\n\n\n\n\n\n\n\n\n");
     }
 

@@ -140,13 +140,31 @@ public class ModelGeneratingVisitor extends AbstractAstVisitor {
         // the case node should have n children where (n-1) represent WHEN clause, and the last n-th child is the ELSE result
         // there should be at least one WHERE clause
         final AstNode firstWhere = node.getChildren().get(0);
-        ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr = expr().caseWhen().condition(firstWhere.getChildren().get(0).getConditionModel()).then().val(firstWhere.getChildren().get(1).getValue());
+        // the second child was assumed to always be a value, but now it can also be an expression
+        // therefore, it is important to determine what it is and use either value or an expression model
+        ICaseWhenFunctionWhen<IStandAloneExprOperationAndClose, AbstractEntity<?>> expr =
+                firstWhere.getChildren().get(1).getModel() != null ?        
+                expr().caseWhen().condition(firstWhere.getChildren().get(0).getConditionModel()).then().expr(firstWhere.getChildren().get(1).getModel()) :
+                expr().caseWhen().condition(firstWhere.getChildren().get(0).getConditionModel()).then().val(firstWhere.getChildren().get(1).getValue());
         for (int index = 1 /* exclude the first node */; index < node.getChildren().size() - 1 /* exclude the last node */; index++) {
             final AstNode where = node.getChildren().get(index);
-            expr = expr.when().condition(where.getChildren().get(0).getConditionModel()).then().val(where.getChildren().get(1).getValue());
+            expr = where.getChildren().get(1).getModel() != null ?
+                   expr.when().condition(where.getChildren().get(0).getConditionModel()).then().expr(where.getChildren().get(1).getModel()) :
+                   expr.when().condition(where.getChildren().get(0).getConditionModel()).then().val(where.getChildren().get(1).getValue());
         }
-        final AstNode elseNode = node.getChildren().get(node.getChildren().size() - 1);
-        final ExpressionModel model = expr.otherwise().val(elseNode.getValue()).end().model();
+        
+        // there may or may not be an ELSE clause for the CASE expression
+        // therefore, need to get the last child of the CASE AST node and compare it with WHEN token
+        // if it is WHEN then there is no ELSE, otherwise the last child node represents the result of ELSE
+        final ExpressionModel model;
+        final AstNode lastNode = node.getChildren().get(node.getChildren().size() - 1);
+        if (EgTokenCategory.WHEN.index == lastNode.getToken().category.getIndex()) {
+            model = expr.end().model();
+        } else { // ELSE is in play
+            model = lastNode.getModel() != null ?
+                    expr.otherwise().expr(lastNode.getModel()).end().model() :
+                    expr.otherwise().val(lastNode.getValue()).end().model();
+        }
         return model;
     }
 
