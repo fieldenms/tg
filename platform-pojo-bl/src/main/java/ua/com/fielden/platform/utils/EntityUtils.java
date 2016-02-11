@@ -10,7 +10,6 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
@@ -834,7 +833,7 @@ public class EntityUtils {
      * @return
      */
     public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance, final Set<String> proxiedProps) {
-        boolean unionEntity = instance instanceof AbstractUnionEntity;
+        final boolean unionEntity = instance instanceof AbstractUnionEntity;
         if (!unionEntity && instance.getProperties().containsKey("key")) {
             final Object keyValue = instance.get("key");
             if (keyValue != null) {
@@ -844,15 +843,13 @@ public class EntityUtils {
         }
 
         for (final MetaProperty metaProp : instance.getProperties().values()) {
-            boolean notNull = metaProp != null;
-            boolean notCommonPropOfUnionEntity = notNull && !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
-            boolean notProxied = notNull && !(proxiedProps.contains(metaProp.getName()));
+            final boolean notNull = metaProp != null;
+            final boolean notCommonPropOfUnionEntity = notNull && !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
+            final boolean notProxied = notNull && !(proxiedProps.contains(metaProp.getName()));
             if (notNull && notCommonPropOfUnionEntity && notProxied) {
                 final Object newOriginalValue = instance.get(metaProp.getName());
                 metaProp.setOriginalValue(newOriginalValue);
-                if (!metaProp.isCollectional()) {
-                    metaProp.define(newOriginalValue);
-                }
+                metaProp.define(newOriginalValue);
             }
         }
         if (!unionEntity) {
