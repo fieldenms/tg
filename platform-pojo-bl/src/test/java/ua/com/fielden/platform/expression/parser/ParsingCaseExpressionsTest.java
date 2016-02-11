@@ -73,14 +73,12 @@ public class ParsingCaseExpressionsTest {
     }
 
     @Test
-    public void parsing_of_incorrectly_formed_CASE_expression_where_return_result_has_invalid_type() throws RecognitionException, SequenceRecognitionFailed {
-        final Token[] tokens = new ExpressionLexer("CASE WHEN 1 > 2 THEN 2 ELSE \"Green\" END").tokenize();
+    public void CASE_expression_with_non_string_literals_should_be_supported() throws RecognitionException, SequenceRecognitionFailed {
+        final Token[] tokens = new ExpressionLexer("CASE WHEN 1 > 2 THEN 19 ELSE 42 END").tokenize();
         final ExpressionParser parser = new ExpressionParser(tokens);
-        try {
-            parser.parse();
-            fail("Invalid CASE expression should not have been parsed.");
-        } catch (final Exception e) {
-        }
+        final AstNode ast = parser.parse();
+        assertEquals("Not all tokens have been parsed.", tokens.length, parser.getPosition());
+        assertEquals("Incorrectly formed AST", "(CASE (WHEN (> 1 2) 19) 42)", ast.treeToString());
     }
 
     @Test

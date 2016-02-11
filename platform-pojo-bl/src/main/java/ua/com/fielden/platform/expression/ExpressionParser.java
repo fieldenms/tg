@@ -358,15 +358,16 @@ public class ExpressionParser {
     /** Matches keyword THEN. Returns an AST node with a string literal that suppose to follow THEN. */
     private AstNode then_keyword() throws RecognitionException {
         match(EgTokenCategory.THEN);
-        // TODO Need to enhance this part to allow for different possibilities
-        // such as a literal (as currently), name, null, arithmetic expression and nested CASE WHEN
-        return match_literal(EgTokenCategory.STRING);
+        
+        // just matching the THEN operand as an arithmetic expression should recognizing most (if not all) required cases
+        return match_arithmetic_expression();
     }
 
     /** Matches keyword ELSE. Returns an AST node with a string literal that suppose to follow ELSE. */
     private AstNode else_keyword() throws RecognitionException {
         match(EgTokenCategory.ELSE);
-        return match_literal(EgTokenCategory.STRING);
+        // just matching the THEN operand as an arithmetic expression should recognizing most (if not all) required cases
+        return match_arithmetic_expression();
     }
 
     /**

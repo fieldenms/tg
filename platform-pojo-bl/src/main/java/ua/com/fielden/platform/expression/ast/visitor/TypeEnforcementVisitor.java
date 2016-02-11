@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.expression.ast.visitor;
 
+import static java.lang.String.format;
+
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Optional;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -235,13 +238,29 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
     }
 
     private void processCaseOperator(final AstNode node) throws SemanticException {
-        // simply ensure that all operands have type assigned
+        // ensure that all operands have type assigned
+        // and that all those types are the same
+        Class<?> resultantType = null;
         for (final AstNode child : node.getChildren()) {
             if (child.getType() == null) {
-                throw new TypeCompatibilityException("Operand " + child + " is missing type.", child.getToken());
+                throw new TypeCompatibilityException(format("Operand %s is missing type.", child), child.getToken());
+            }
+            
+            // if resultantType has not been assigned yet then the current child is the first one
+            // and its type should be used as the reference type
+            if (resultantType == null) {
+                resultantType = child.getType(); 
+            } else { // let's try to resolve type
+                final Optional<Class<?>> resolvedType = resolveExpressionTypes(resultantType, child.getType());
+                if (resolvedType.isPresent()) { // resolved?
+                    resultantType = resolvedType.get();
+                } else {  // otherwise compare the reference and the current child's type
+                    throw new TypeCompatibilityException(format("Operand %s has type %s that is different to type %s of preceeding operand(s).", child, child.getType(), resultantType), child.getToken());
+                    
+                }
             }
         }
-        node.setType(String.class);
+        node.setType(resultantType);
     }
 
     private void processWhenOperator(final AstNode node) throws SemanticException {
@@ -265,10 +284,9 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
         if (!boolean.class.isAssignableFrom(leftOperandType)) {
             throw new UnsupportedTypeException("First operand for operation " + cat + " should be of boolen type.", leftOperandType, node.getToken());
         }
-        if (!String.class.isAssignableFrom(rightOperandType)) {
-            throw new UnsupportedTypeException("Second operand for operation " + cat + " should be of string type.", leftOperandType, node.getToken());
-        }
-        node.setType(String.class);
+        
+        // the type of the CASE WHEN expression is determined by the type of its right operand
+        node.setType(rightOperandType);
     }
 
     private void processAvgSum(final AstNode node) throws SemanticException {
@@ -531,6 +549,62 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
     }
 
     /**
+     * A utility function that determines the best possible type out of the two provided from the perspective of type compatibility
+     * in the scope of the expression query language. 
+     * <p>
+     * In cases where the provided types are not compatible in any way, an empty result is returned.
+     * <p>
+     * It is important to understand that this type resolution does not take into account the operation.
+     * For example, division of two integers should resolve to BigDecimal based on the logic in {@link #operationType(AstNode, Class, Class, EgTokenCategory).
+     * However, applying type resolution to two <code>Integer.class</code> arguments would return <code>Integer.class</code>.
+     * Therefore, whenever an operation influences type resolution, this method should not be used.
+     * <p>
+     * Please refer test case <code>TypeEnforcementTypeCompatibilityTest</code> for more details to better understand type compatibility in this context.
+     * 
+     * @param type1
+     * @param type2
+     * @return
+     */
+    public static Optional<Class<?>> resolveExpressionTypes(final Class<?> type1, final Class<?> type2) {
+        
+        // first let's simply check subtyping rules with primitive boolean to overrule Boolean.
+        // this covers cases where both types are the same
+        // and cases where types are mutually incompatible such as Date, String and Numeric (includes Integer, BigDecimal and Money)
+        if (type1.isAssignableFrom(type2)) {
+            return Boolean.class.isAssignableFrom(type1) ? Optional.of(boolean.class) : Optional.of(type1);
+        } else if (type2.isAssignableFrom(type1)) {
+            return Boolean.class.isAssignableFrom(type2) ? Optional.of(boolean.class) : Optional.of(type2);
+        }
+        
+        // let's check booleans, which should always resolve to primitive type boolean
+        if (Boolean.class.isAssignableFrom(type1) && boolean.class.isAssignableFrom(type2) ||
+            boolean.class.isAssignableFrom(type1) && Boolean.class.isAssignableFrom(type2)) {
+            return Optional.of(boolean.class);
+        }
+        
+        // there could still be the case of numeric compatibility
+        if (BigDecimal.class.isAssignableFrom(type1)) {
+            if (Integer.class.isAssignableFrom(type2)) {
+                return Optional.of(BigDecimal.class); // BigDecimal wins over Integer
+            } else if (Money.class.isAssignableFrom(type2)) {
+                return Optional.of(Money.class); // Money winds over BigDecimal
+            }
+        } else if (Integer.class.isAssignableFrom(type1)) {
+            if (BigDecimal.class.isAssignableFrom(type2)) {
+                return Optional.of(BigDecimal.class); // BigDecimal wins over Integer
+            } else if (Money.class.isAssignableFrom(type2)) {
+                return Optional.of(Money.class); // Money winds over Integer
+            }
+        } else if (Money.class.isAssignableFrom(type1)) {
+            if (BigDecimal.class.isAssignableFrom(type2) || Integer.class.isAssignableFrom(type2)) {
+                return Optional.of(Money.class); // Money wins over BigDecimal and Integer
+            }
+        }
+        
+        return Optional.empty();
+    }
+    
+    /**
      * Provides the rules for identifying types of operation operands and the resultant operation type.
      * 
      * @param node
@@ -565,89 +639,12 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
 
         switch (cat) {
         case PLUS:
-            // is String?
-            if (String.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) {
-                return String.class;
-            }
-            // is BigDecimal or Money?
-            if (BigDecimal.class.isAssignableFrom(leftOperandType)) {
-                if (leftOperandType.isAssignableFrom(rightOperandType) || Integer.class.isAssignableFrom(rightOperandType)) {
-                    return BigDecimal.class;
-                } else if (Money.class.isAssignableFrom(rightOperandType)) {
-                    return Money.class;
-                }
-            }
-            // is Integer or Money?
-            if (Integer.class.isAssignableFrom(leftOperandType)) {
-                if (leftOperandType.isAssignableFrom(rightOperandType)) {
-                    return Integer.class;
-                } else if (BigDecimal.class.isAssignableFrom(rightOperandType)) {
-                    return BigDecimal.class;
-                } else if (Money.class.isAssignableFrom(rightOperandType)) {
-                    return Money.class;
-                }
-            }
-            // is Money or Integer or BigDecimal?
-            if (Money.class.isAssignableFrom(leftOperandType)) {
-                if (leftOperandType.isAssignableFrom(rightOperandType) || Integer.class.isAssignableFrom(rightOperandType) || BigDecimal.class.isAssignableFrom(rightOperandType)) {
-                    return Money.class;
-                }
-            }
-            // is Day?
-            if (Day.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) {
-                return Day.class;
-            }
-            // is Month?
-            if (Month.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) {
-                return Month.class;
-            }
-            // is Year?
-            if (Year.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) {
-                return Year.class;
-            }
-            break;
+            return resolveExpressionTypes(leftOperandType, rightOperandType).orElse(null);
         case MINUS:
             if (String.class.isAssignableFrom(leftOperandType) || String.class.isAssignableFrom(rightOperandType)) {
-                throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, String.class, node.getToken());
+                throw new UnsupportedTypeException(format("Operands of String type are not applicable to operation %s", cat), String.class, node.getToken());
             }
-            // is BigDecimal or Money?
-            if (BigDecimal.class.isAssignableFrom(leftOperandType)) {
-                if (leftOperandType.isAssignableFrom(rightOperandType) || Integer.class.isAssignableFrom(rightOperandType)) {
-                    return BigDecimal.class;
-                } else if (Money.class.isAssignableFrom(rightOperandType)) {
-                    return Money.class;
-                }
-            }
-            // is Integer or Money?
-            if (Integer.class.isAssignableFrom(leftOperandType)) {
-                if (leftOperandType.isAssignableFrom(rightOperandType)) {
-                    return Integer.class;
-                } else if (BigDecimal.class.isAssignableFrom(rightOperandType)) {
-                    return BigDecimal.class;
-                } else if (Money.class.isAssignableFrom(rightOperandType)) {
-                    return Money.class;
-                }
-                return Integer.class;
-            }
-            // is Money or Integer or BigDecimal?
-            if (Money.class.isAssignableFrom(leftOperandType)) {
-                if (leftOperandType.isAssignableFrom(rightOperandType) || Integer.class.isAssignableFrom(rightOperandType) || BigDecimal.class.isAssignableFrom(rightOperandType)) {
-                    return Money.class;
-                }
-            }
-            // is Day?
-            if (Day.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) {
-                return Day.class;
-            }
-            // is Month?
-            if (Month.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) {
-                return Month.class;
-            }
-            // is Year?
-            if (Year.class.isAssignableFrom(leftOperandType) && leftOperandType.isAssignableFrom(rightOperandType)) {
-                return Year.class;
-            }
-            break;
+            return resolveExpressionTypes(leftOperandType, rightOperandType).orElse(null);
         case MULT:
             if (String.class.isAssignableFrom(leftOperandType) || String.class.isAssignableFrom(rightOperandType)) {
                 throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, String.class, node.getToken());
@@ -656,35 +653,7 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
                 throw new UnsupportedTypeException("Operands of date literal type are not applicable to operation " + cat, AbstractDateLiteral.class, node.getToken());
             }
 
-            // is BigDecimal or Money?
-            if (BigDecimal.class.isAssignableFrom(leftOperandType)) {
-                if (leftOperandType.isAssignableFrom(rightOperandType) || Integer.class.isAssignableFrom(rightOperandType)) {
-                    return BigDecimal.class;
-                } else if (Money.class.isAssignableFrom(rightOperandType)) {
-                    return Money.class;
-                }
-            }
-            // is Integer or Money?
-            if (Integer.class.isAssignableFrom(leftOperandType)) {
-                if (leftOperandType.isAssignableFrom(rightOperandType)) {
-                    return Integer.class;
-                } else if (BigDecimal.class.isAssignableFrom(rightOperandType)) {
-                    return BigDecimal.class;
-                } else if (Money.class.isAssignableFrom(rightOperandType)) {
-                    return Money.class;
-                }
-                return Integer.class;
-            }
-            // is Money or Integer or BigDecimal?
-            if (Money.class.isAssignableFrom(leftOperandType)) {
-                if (leftOperandType.isAssignableFrom(rightOperandType)) {
-                    throw new TypeCompatibilityException("Operation " + cat + " is cannot be used when both operands are of monetary type.", node.getToken());
-                }
-                if (Integer.class.isAssignableFrom(rightOperandType) || BigDecimal.class.isAssignableFrom(rightOperandType)) {
-                    return Money.class;
-                }
-            }
-            break;
+            return resolveExpressionTypes(leftOperandType, rightOperandType).orElse(null);
         case DIV:
             if (String.class.isAssignableFrom(leftOperandType) || String.class.isAssignableFrom(rightOperandType)) {
                 throw new UnsupportedTypeException("Operands of string type are not applicable to operation " + cat, String.class, node.getToken());
@@ -693,6 +662,9 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
                 throw new UnsupportedTypeException("Operands of date literal type are not applicable to operation " + cat, AbstractDateLiteral.class, node.getToken());
             }
 
+            // in case of DIV operation resolveExpressionTypes cannot be used due to special rules
+            // so, let's proceed manually case by case
+            
             // is BigDecimal or Money?
             if (BigDecimal.class.isAssignableFrom(leftOperandType)) {
                 if (leftOperandType.isAssignableFrom(rightOperandType) || Integer.class.isAssignableFrom(rightOperandType)) {
@@ -719,6 +691,8 @@ public class TypeEnforcementVisitor extends AbstractAstVisitor {
                     return Money.class;
                 }
             }
+            break;
+        default:
             break;
         }
 
