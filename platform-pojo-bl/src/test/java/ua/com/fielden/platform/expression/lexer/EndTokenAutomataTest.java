@@ -21,6 +21,9 @@ public class EndTokenAutomataTest {
         assertEquals("Incorrect recognition result", "END", automata().recognisePartiallyFromStart("    eNd  ", 0));
         assertEquals("Incorrect recognition result", "END", automata().recognisePartiallyFromStart("\t\nEND\t", 0));
         assertEquals("Incorrect recognition result", "END", automata().recognisePartiallyFromStart(" END", 0));
+        assertEquals("Incorrect recognition result", "END", automata().recognisePartiallyFromStart(" END )", 0));
+        assertEquals("Incorrect recognition result", "END", automata().recognisePartiallyFromStart(" END)", 0));
+        assertEquals("Incorrect recognition result", "END", automata().recognisePartiallyFromStart(" END +", 0));
     }
 
     @Test

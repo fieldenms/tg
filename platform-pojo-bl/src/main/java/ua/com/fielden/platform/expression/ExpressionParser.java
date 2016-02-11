@@ -78,11 +78,19 @@ public class ExpressionParser {
      * @throws RecognitionException
      */
     private AstNode sentence() throws RecognitionException {
-        if (speculate_case_expression()) {
-            return match_case_expression();
-        } else if (speculate_logical_expression()) {
+        if (speculate_logical_expression()) {
             return match_logical_expression();
+        } else if (speculate_arithmetic_expression()) {
+            return match_arithmetic_expression();
+        } else if (speculate_case_expression()) {
+            return match_case_expression();
         } else {
+            // well... if we're here that means the expression cannot really be parsed
+            // however, it would be good it we could at least try to provide some meaningful error
+            // for now lets assume that arithmetic expressions are most common and try to parse the expression as if
+            // it is an arithmetic one....
+            // TODO at some stage the speculation algorithm needs to become more advanced in order to 
+            //      more accurately identify expression kind for invalid expressions 
             return match_arithmetic_expression();
         }
     }
@@ -126,6 +134,18 @@ public class ExpressionParser {
         // the expression must end with keyword END, which does not have to be represented in AST tree
         match(EgTokenCategory.END);
         return caseNode;
+    }
+
+    private boolean speculate_arithmetic_expression() {
+        mark();
+        try {
+            match_arithmetic_expression();
+            return true;
+        } catch (final Exception ex) {
+            return false;
+        } finally {
+            release();
+        }
     }
 
     private boolean speculate_logical_expression() {
@@ -469,6 +489,8 @@ public class ExpressionParser {
         case MINUTES:
         case SECONDS:
             return match_function_with_two_arguments(cat);
+        case CASE:
+            return match_case_expression();
         default:
             throw new NoViableAltException("Unexpected token " + tokens[position], tokens[position]);
         }

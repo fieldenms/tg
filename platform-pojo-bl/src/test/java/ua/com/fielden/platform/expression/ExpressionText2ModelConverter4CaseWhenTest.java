@@ -12,8 +12,10 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ast.AstNode;
 import ua.com.fielden.platform.expression.ast.visitor.entities.EntityLevel1;
+import ua.com.fielden.platform.expression.automata.SequenceRecognitionFailed;
 import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
+import ua.com.fielden.platform.types.Money;
 
 public class ExpressionText2ModelConverter4CaseWhenTest {
     
@@ -115,6 +117,45 @@ public class ExpressionText2ModelConverter4CaseWhenTest {
                 .then().expr(expr().val("Green").model())
                 .otherwise().expr(expr().val("Red").model())
                 .end().model();
+        assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void model_for_CASE_WHEN_over_SUM_divided_by_SUM_is_supported() throws RecognitionException, SemanticException {
+        final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
+                "CASE WHEN SUM(intProperty) <> 0 THEN SUM(moneyProperty) / SUM(intProperty) END");
+        final AstNode root = ev.convert();
+        assertEquals("Incorrect expression type", Money.class, root.getType());
+
+        final ExpressionModel SUM_of_intProperty = expr().sumOf().prop("intProperty").model();
+        final ExpressionModel SUM_of_moneyProperty = expr().sumOf().prop("moneyProperty").model();
+        final ConditionModel whenCond = cond().expr(SUM_of_intProperty).ne().val(0).model();
+        final ExpressionModel thenResult = expr().expr(SUM_of_moneyProperty).div().expr(SUM_of_intProperty).model();
+
+        final ExpressionModel model = expr()
+                .caseWhen().condition(whenCond)
+                .then().expr(thenResult)
+                .end().model();
+        assertEquals("Incorrect model.", model, root.getModel());
+    }
+
+    @Test
+    public void model_for_SUM_divided_by_SUM_under_CASE_WHEN_is_supported() throws RecognitionException, SemanticException {
+         final ExpressionText2ModelConverter ev = new ExpressionText2ModelConverter(EntityLevel1.class, //
+                 "SUM(intProperty) / CASE WHEN SUM(decimalProperty) > 0 THEN SUM(decimalProperty) END");
+        final AstNode root = ev.convert();
+        assertEquals("Incorrect expression type", BigDecimal.class, root.getType());
+
+        final ExpressionModel SUM_of_intProperty = expr().sumOf().prop("intProperty").model();
+        final ExpressionModel SUM_of_decimalProperty = expr().sumOf().prop("decimalProperty").model();
+        final ConditionModel whenCond = cond().expr(SUM_of_decimalProperty).gt().val(0).model();
+        final ExpressionModel thenResult = SUM_of_decimalProperty;
+        final ExpressionModel caseWhen = expr().caseWhen().condition(whenCond).then().expr(thenResult).end().model(); 
+
+        final ExpressionModel model = expr()
+                .expr(SUM_of_intProperty).div()
+                .expr(caseWhen)
+                .model();
         assertEquals("Incorrect model.", model, root.getModel());
     }
 
