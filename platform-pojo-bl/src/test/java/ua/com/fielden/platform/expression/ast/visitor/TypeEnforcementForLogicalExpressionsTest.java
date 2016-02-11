@@ -20,7 +20,7 @@ import ua.com.fielden.platform.expression.exception.RecognitionException;
 import ua.com.fielden.platform.expression.exception.semantic.SemanticException;
 import ua.com.fielden.platform.expression.exception.semantic.UnsupportedTypeException;
 
-public class TypeEnforcementForLogicalExpressionsAndCaseWhenWithDateFunctionsTest {
+public class TypeEnforcementForLogicalExpressionsTest {
 
     @Test
     public void test_type_determination_for_logical_expression_case1() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
@@ -121,29 +121,6 @@ public class TypeEnforcementForLogicalExpressionsAndCaseWhenWithDateFunctionsTes
         final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(MasterEntityWithOneToManyAssociation.class);
         new AstWalker(ast, visitor).walk();
         assertEquals("Incorrect type.", Integer.class, ast.getType());
-        assertNull("Incorrect value.", ast.getValue());
-    }
-
-    @Test
-    public void test_type_determination_for_logical_expression_case2() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-        final Token[] tokens = new ExpressionLexer("CASE WHEN AVG(decimalProperty) <> 100 THEN \"word\" ELSE \"word\" END").tokenize();
-        final ExpressionParser parser = new ExpressionParser(tokens);
-        final AstNode ast = parser.parse();
-        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(EntityLevel1.class);
-        new AstWalker(ast, visitor).walk();
-        assertEquals("Incorrect type.", String.class, ast.getType());
-        assertNull("Incorrect value.", ast.getValue());
-    }
-
-    @Test
-    public void test_type_determination_for_case_expression_with_date_functions() throws RecognitionException, SequenceRecognitionFailed, SemanticException {
-        final Token[] tokens = new ExpressionLexer("" + "CASE WHEN MONTHS(dateProp, NOW) > 3m THEN \"Green\" \n"
-                + "     WHEN MONTHS(dateProp, NOW) < 3m && MONTHS(dateProp, NOW) > 1m THEN \"Yellow\" \n" + "ELSE \"Red\" END").tokenize();
-        final ExpressionParser parser = new ExpressionParser(tokens);
-        final AstNode ast = parser.parse();
-        final TypeEnforcementVisitor visitor = new TypeEnforcementVisitor(MasterEntityWithOneToManyAssociation.class);
-        new AstWalker(ast, visitor).walk();
-        assertEquals("Incorrect type.", String.class, ast.getType());
         assertNull("Incorrect value.", ast.getValue());
     }
 
