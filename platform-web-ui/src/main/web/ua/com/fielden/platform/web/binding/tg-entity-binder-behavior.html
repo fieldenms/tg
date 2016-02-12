@@ -648,7 +648,11 @@
                 // New entity should be promoted to the local cache:
                 self._currEntity = entity;
                 // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
+                var oldCurrBindingEntity = self._currBindingEntity;
                 self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
+                if (self._currBindingEntity != null && oldCurrBindingEntity == null) {
+                    self.fire('binding-entity-appeared', self._currBindingEntity);
+                }
                 self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity);
 
                 console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
