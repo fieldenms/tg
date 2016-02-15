@@ -1,6 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
 <link rel="import" href="/resources/polymer/iron-list/iron-list.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
@@ -87,7 +88,7 @@
             _on-keydown="[[_onKeydown]]"
             current-state="[[currentState]]">
             <!-- <content class=".property-action"></content> -->
-            <input is="iron-input"  placeholder="Search..." bind-value="{{_phraseForSearching}}" class="custom-input" bind-value="{{_phraseForSearching}}" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
+            <input is="iron-input"  placeholder="Search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
             <iron-list id="input" class="custom-input" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]" >
@@ -112,7 +113,7 @@
 <script>
     Polymer({
         is: 'tg-collectional-editor',
-        behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+        behaviors: [ Polymer.TgBehaviors.TgEditorBehavior, Polymer.TgBehaviors.TgHighlightingBehavior ],
         
         properties: {
             _entities: {
@@ -148,7 +149,7 @@
             	value: function () {
             		return (function () {
             		   this._cancelSearch();
-            		   this._asyncSearchHandle = this.async(this.scrollToFirstFoundElement(), 700);
+            		   this._asyncSearchHandle = this.async(this.scrollToFirstFoundElement, 700);
                 	}).bind(this);
             	}
             },
@@ -239,55 +240,6 @@
             return isSelected ? 'star' : 'star-border';
         },
         
-        _matchedParts: function (str) {
-            var parts = [];
-            // if all is matched then return a single value
-            if ("\\w*" == this._phraseForSearching) {
-                parts.push({
-                    part: str,
-                    matched: false
-                });
-                return parts;
-            } else if ('' == this._phraseForSearching) {
-                return parts;
-            }
-
-            // otherwise split 
-            var searchExp = new RegExp(this._phraseForSearching, 'gi');
-            var match;
-            var startIndex = 0;
-            while ((match = searchExp.exec(str)) !== null) {
-                if (match.index > startIndex) { // match is not from the start, so need to record thing before as not matched
-                    var part = {
-                        part: str.substring(startIndex, match.index),
-                        matched: false
-                    };
-                    parts.push(part);
-                }
-
-                // record the matched part
-                var part = {
-                    part: str.substring(match.index, searchExp.lastIndex),
-                    matched: true
-                };
-                parts.push(part);
-
-                startIndex = searchExp.lastIndex;
-
-            }
-            // check if there is an unmatched part at the end
-            if (startIndex < str.length) {
-                var part = {
-                    part: str.substring(startIndex, str.length),
-                    matched: false
-                };
-                parts.push(part);
-            }
-            // return the result
-            return parts;
-
-        },
-        
         _makeId: function(id) {
         	return "id" + id;
         },
@@ -300,57 +252,50 @@
         }, 
         
         searchForPhrase: function (entities, phrase) {
-            var firstFoundElement = -1;
-            for( var entityIndex = 0; entityIndex < entities.length; entityIndex++){
+            for (var entityIndex = 0; entityIndex < entities.length; entityIndex++) {
                 var currentEntity = entities[entityIndex];
                 var positionInKey = (currentEntity.get('key').toLowerCase()).search(phrase.toLowerCase());
                 var positionInDesc = (currentEntity.get('desc').toLowerCase()).search(phrase.toLowerCase());
-                if(positionInKey >= 0 || positionInDesc >= 0){
-	                if(firstFoundElement === -1){
-	                    firstFoundElement = entityIndex;
-	                    return firstFoundElement;
-	                }
-                }
+                if (positionInKey >= 0 || positionInDesc >= 0){
+					return entityIndex; 
+				}
             }
         },
         
         scrollToFirstFoundElement: function () {
-            this.async(function() {
-	            var firstElementWithPhrase = this.searchForPhrase(this._entities, this._phraseForSearching); 
-	            this.$.input.scrollToIndex(firstElementWithPhrase);
-	            this.highlightMatchedParts();
-	        	console.log('phrase=', this._phraseForSearching);
-            }.bind(this), 700);
+            var indexOfFirstElementWithPhrase = this.searchForPhrase(this._entities, this._phraseForSearching); 
+            this.$.input.scrollToIndex(indexOfFirstElementWithPhrase);
+            this.highlightMatchedParts();
         },
         
         highlightMatchedParts: function () {
             this.highlightMatchedPartsKeyOrDesc('key', 0);
             this.highlightMatchedPartsKeyOrDesc('desc', 1);
-			
 		},
-		 highlightMatchedPartsKeyOrDesc: function (keyOrDesc, indexOfChild) {
-					for (var index = 0; index < this._entities.length; index++) {
-							var html = '';                	
-							var v = this._entities[index];
-							
-							// add key and desc value with highlighting of matching parts
-							if (keyOrDesc === 'key'){
-								html = html + this._addHighlightedProp(v.key);
-							} else{
-							    html = html + this._addHighlightedProp(v.desc);
-							}
-							
-							// put the composed for the current item HTML into the content of paper-item
-							var id = this._makeId(index);
-							var paperItem = Polymer.dom(this.root).querySelector("#" + id);
-							(Polymer.dom(paperItem.children[indexOfChild])).innerHTML = html;
-					}
-					Polymer.dom.flush();
-			},
+		
+		highlightMatchedPartsKeyOrDesc: function (keyOrDesc, indexOfChild) {
+			for (var index = 0; index < this._entities.length; index++) {
+				var html = '';
+				var v = this._entities[index];
+				
+				// add key and desc value with highlighting of matching parts
+				if (keyOrDesc === 'key') {
+					html = html + this._addHighlightedProp(v.key);
+				} else{
+				    html = html + this._addHighlightedProp(v.desc);
+				}
+				
+				// put the composed for the current item HTML into the content of paper-item
+				var id = this._makeId(index);
+				var paperItem = Polymer.dom(this.root).querySelector("#" + id);
+				(Polymer.dom(paperItem.children[indexOfChild])).innerHTML = html;
+			}
+			Polymer.dom.flush();
+		},
 		
 		_addHighlightedProp : function(v) {
 			var html = '';
-			var matchedParts = this._matchedParts(v);
+			var matchedParts = this._matchedParts(v, this._phraseForSearching);
 			for (var index = 0; index < matchedParts.length; index++) {
 				var part = matchedParts[index];
 				if (part.matched) {
@@ -362,7 +307,7 @@
 					html = html + part.part;
 				}
 			}
-			if(this._phraseForSearching === ''){
+			if (this._phraseForSearching === ''){
 			    html = v;
 			}
 			return html;

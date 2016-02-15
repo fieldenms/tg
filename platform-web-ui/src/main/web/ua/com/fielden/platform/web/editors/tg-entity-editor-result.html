@@ -9,6 +9,8 @@
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
 <link rel="import" href="/resources/components/lodash-lib.html">
 
+<link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
+
 <dom-module id="tg-entity-editor-result">
 
     <style>
@@ -110,7 +112,7 @@
         Polymer({
             is: 'tg-entity-editor-result',
             
-            behaviors: [Polymer.IronOverlayBehavior],
+            behaviors: [Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgHighlightingBehavior],
 
             properties: {
                 /* Indicates whether multiple (true) or a single (false, default) value is acceptable. */
@@ -191,60 +193,6 @@
                 this.push('_values', value);
             },
             
-            /* 
-             * Method that identifies matching parts in the str for the searchQuery.
-             * Returns an array of objects representing matched and non-matched parts of the str in sequential order.
-             * It is used to identify those parts that needs to be highlighted during rendering.
-             */
-            _matchedParts: function (str) {
-                var parts = [];
-                var text = str.toUpperCase();
-                // if all is matched then return a single value
-                if ("\\w*" == this.searchQuery) {
-                    parts.push({
-                        part: str,
-                        matched: false
-                    });
-                    return parts;
-                } else if ('' == this.searchQuery) {
-                    return parts;
-                }
-
-                // otherwise split 
-                var searchExp = new RegExp(this.searchQuery, 'gi');
-                var match;
-                var startIndex = 0;
-                while ((match = searchExp.exec(text)) !== null) {
-                    if (match.index > startIndex) { // match is not from the start, so need to record thing before as not matched
-                        var part = {
-                            part: str.substring(startIndex, match.index),
-                            matched: false
-                        };
-                        parts.push(part);
-                    }
-
-                    // record the matched part
-                    var part = {
-                        part: str.substring(match.index, searchExp.lastIndex),
-                        matched: true
-                    };
-                    parts.push(part);
-
-                    startIndex = searchExp.lastIndex;
-
-                }
-                // check if there is an unmatched part at the end
-                if (startIndex < str.length) {
-                    var part = {
-                        part: str.substring(startIndex, text.length),
-                        matched: false
-                    };
-                    parts.push(part);
-                }
-                // return the result
-                return parts;
-
-            },
             /*
              * Determines a title of the specified entity.propName.
              */
@@ -299,7 +247,7 @@
 			
 			_addHighlightedKeyProp : function(v) {
 				var html = '<div style="white-space: nowrap;">';
-				var matchedParts = this._matchedParts(v.key);
+				var matchedParts = this._matchedParts(v.key, this.searchQuery);
 				for (var index = 0; index < matchedParts.length; index++) {
 					var part = matchedParts[index];
 					if (part.matched) {
@@ -327,7 +275,7 @@
 				} else {
 					// matched parts should be in a separate div
 					html = html + '<div style="white-space: nowrap;">';
-					var matchedParts = this._matchedParts(propValueAsString);
+					var matchedParts = this._matchedParts(propValueAsString, this.searchQuery);
 					for (var index = 0; index < matchedParts.length; index++) {
 						var part = matchedParts[index];
 						if (part.matched) {
