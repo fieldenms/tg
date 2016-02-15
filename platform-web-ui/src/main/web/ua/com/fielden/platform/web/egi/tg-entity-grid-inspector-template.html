@@ -1252,13 +1252,13 @@
              * Calculates the column's header style.
              */
             _calcColumnHeaderStyle: function (item) {
-                return "min-width: " + item.width + "px; width: " + item.width + "px; flex-grow: " + item.growFactor + (item.width === 0 ? "; display: none;" : ";");
+                return "min-width: " + item.width + "px; width: " + item.width + "px; flex-grow: " + item.growFactor + (item.growFactor === 0 ? "; flex-shrink: 0;" : ";") + (item.width === 0 ? " display: none;" : "");
             },
             /**
              * Calculates the column's style.
              */
             _calcColumnStyle: function (column) {
-                var colStyle = "min-width: " + column.width + "px; width: " + column.width + "px; flex-grow: " + column.growFactor + (column.width === 0 ? "; display: none;" : ";");
+                var colStyle = "min-width: " + column.width + "px; width: " + column.width + "px; flex-grow: " + column.growFactor + (column.growFactor === 0 ? "; flex-shrink: 0;" : ";") + (column.width === 0 ? " display: none;" : "");
                 if (column.type === 'Integer' || column.type === 'BigDecimal' || column.type === 'Money') {
                     colStyle += "text-align: right;"
                 }
@@ -1307,7 +1307,7 @@
              */
             _calcEmptyTotalStyle: function (summaryIndex, columns) {
                 var item = columns[summaryIndex];
-                return "min-width: " + item.width + "px; width: " + item.width + "px; flex-grow: " + item.growFactor + (item.width === 0 ? "; display: none;" : ";");
+                return  this._calcColumnStyle(item);
             },
 
             /**

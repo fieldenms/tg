@@ -29,9 +29,10 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     private final Optional<FunctionalActionElement> action;
     private final List<SummaryElement> summary;
     private boolean debug = false;
-    private int growFactor;
+    private int growFactor = 0;
 
     public final int width;
+    public final boolean isFlexible;
 
     /**
      * Creates {@link PropertyColumnElement} from <code>entityType</code> type and <code>propertyName</code> and the name&path of widget.
@@ -39,13 +40,14 @@ public class PropertyColumnElement implements IRenderable, IImportable {
      * @param criteriaType
      * @param propertyName
      */
-    public PropertyColumnElement(final String propertyName, final String underlyingPropertyName, final String tooltipProp, final int width, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
+    public PropertyColumnElement(final String propertyName, final String underlyingPropertyName, final int width, final boolean isFlexible, final String tooltipProp, final Object propertyType, final Pair<String, String> titleDesc, final Optional<FunctionalActionElement> action) {
         this.widgetName = AbstractCriterionWidget.extractNameFrom("egi/tg-property-column");
         this.widgetPath = "egi/tg-property-column";
         this.propertyName = propertyName;
         this.underlyingPropertyName = Optional.ofNullable(underlyingPropertyName);
         this.tooltipProp = Optional.ofNullable(tooltipProp);
         this.width = width;
+        this.isFlexible = isFlexible;
         this.propertyType = propertyType;
         this.titleDesc = titleDesc;
         this.action = action;
@@ -122,7 +124,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
             attrs.put("underlying-property", this.underlyingPropertyName().get());
         }
         attrs.put("width", width);
-        attrs.put("grow-factor", growFactor);
+        attrs.put("grow-factor", isFlexible ? growFactor : 0);
         attrs.put("type", this.propertyType);
         attrs.put("column-title", this.titleDesc.getKey());
         attrs.put("column-desc", this.titleDesc.getValue());

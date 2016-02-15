@@ -33,6 +33,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cVisib
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4OrderingDirection;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7SecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
@@ -64,6 +65,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     protected Optional<PropDef<?>> propDef = Optional.empty();
     private EntityActionConfig entityActionConfig;
     private Integer orderSeq;
+    private int width = 80;
+    private boolean isFlexible = true;
 
     public ResultSetBuilder(final EntityCentreBuilder<T> builder) {
         this.builder = builder;
@@ -99,19 +102,33 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IWithTooltip<T> desc() {
+    public IResultSetBuilder4aWidth<T> desc() {
         this.builder.resultSetOrdering.put(orderSeq, new Pair<>(propName.get(), OrderDirection.DESC));
         return this;
     }
 
     @Override
-    public IWithTooltip<T> asc() {
+    public IResultSetBuilder4aWidth<T> asc() {
         this.builder.resultSetOrdering.put(orderSeq, new Pair<>(propName.get(), OrderDirection.ASC));
         return this;
     }
 
     @Override
-    public IWithTooltip<T> addProp(final PropDef<?> propDef) {
+    public IWithTooltip<T> rigidWidth(final int width) {
+        this.width = width;
+        this.isFlexible = false;
+        return this;
+    }
+
+    @Override
+    public IWithTooltip<T> flexibleWidth(final int minWidth) {
+        this.width = minWidth;
+        this.isFlexible = true;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder4aWidth<T> addProp(final PropDef<?> propDef) {
         if (propDef == null) {
             throw new IllegalArgumentException("Custom property should not be null.");
         }
@@ -282,10 +299,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private void completePropIfNeeded() {
         // construct and add property to the builder
         if (propName.isPresent()) {
-            final ResultSetProp prop = ResultSetProp.propByName(propName.get(), (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp prop = ResultSetProp.propByName(propName.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.resultSetProperties.add(prop);
         } else if (propDef.isPresent()) {
-            final ResultSetProp prop = ResultSetProp.propByDef(propDef.get(), (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
+            final ResultSetProp prop = ResultSetProp.propByDef(propDef.get(), width, isFlexible, (tooltipProp.isPresent() ? tooltipProp.get() : null), entityActionConfig);
             this.builder.resultSetProperties.add(prop);
         }
 
