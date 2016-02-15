@@ -38,6 +38,10 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
     @Override
     public final T newEntity() {
         final T entity = factory.newEntity(entityType);
+        if (getCentreContext() != null && entity instanceof AbstractFunctionalEntityWithCentreContext) {
+            ((AbstractFunctionalEntityWithCentreContext<?>) entity).setContext(getCentreContext());
+        }
+        
         if (companion != null) {
             provideProxies(entity, companion.getFetchProvider());
         }
