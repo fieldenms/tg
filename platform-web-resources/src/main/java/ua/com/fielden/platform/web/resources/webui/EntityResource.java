@@ -320,17 +320,22 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return
      */
     private T save(final T validatedEntity) {
-        // the next action validates the entity one more time, but with the check for 'required' properties
-        validatedEntity.isValid();
-
-        EntityResourceUtils.disregardCritOnlyRequiredProperties(validatedEntity);
-        for (final Map.Entry<String, MetaProperty<?>> entry : validatedEntity.getProperties().entrySet()) {
-            if (!entry.getValue().isValid()) {
+        T savedEntity;
+        try {
+            // try to save the entity with its companion 'save' method
+            savedEntity = utils.save(validatedEntity);
+        } catch (final Result result) {
+            // some result can be thrown inside 1) its companion 'save' method OR 2) CommonEntityDao 'save' during its internal validation
+            if (!validatedEntity.isValid().isSuccessful()) {
+                // if entity is invalid after its unsuccessful save -- return invalid entity back to the client
                 return validatedEntity;
+            } else {
+                // if entity is valid after its unsuccessful save -- just throw result further
+                throw result;
             }
         }
-
-        return utils.save(validatedEntity);
+        
+        return savedEntity;
     }
 
     /**

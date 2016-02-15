@@ -20,8 +20,16 @@
 
 <dom-module id="tg-@mi_type-selection-criteria">
     <template>
+        <style>
+            tg-flex-layout * {
+                min-width: 96px;
+            }
+            tg-flex-layout * .criterion-editors {
+                min-width: 0;
+            }
+        </style>
     	<tg-selection-criteria
-    		id="dom"
+    		id="masterDom"
     		mi-type="[[miType]]" 
             is-running="{{isRunning}}"
     		_post-validated-default="[[_postValidatedDefault]]"
@@ -51,7 +59,7 @@
         	},
             
             _dom: function () {
-            	return this.$.dom;
+            	return this.$.masterDom;
             },
             
             /**
@@ -100,41 +108,21 @@
 </script>
 
 <dom-module id="tg-@mi_type-centre">
-    <style>
-    	paper-icon-button.revers {
-            --paper-icon-button: {
-                transform: scale(-1, 1);
-            };
-        }
-        /* * /deep/ core-tooltip::shadow #tooltip {
-            white-space: normal;
-        }
-        * /deep/ core-tooltip .span-tooltip {
-            line-height: 15px;
-        }
-        core-tooltip.delayed:hover::shadow .core-tooltip,
-        core-tooltip.delayed:focus::shadow .core-tooltip {
-            opacity: 1;
-            -webkit-transition-delay: 1s;
-            transition-delay: 1s;
-            transform: translate3d(0px, 0px, 0px);
-        } */
-        .selection-criteria {
-            background-color: white;
-        }
-        .group {
-            margin-left: 30px;
-        }
-
-        /* core-icon-button,
-        tg-ui-action::shadow core-icon-button,
-        tg-page-action::shadow core-icon-button {
-            padding: 4px;
-            margin: 0px;
-        } */
-    </style>
-
     <template>
+        <style>
+    	   paper-icon-button.revers {
+                --paper-icon-button: {
+                    transform: scale(-1, 1);
+                };
+            }
+            .selection-criteria {
+                background-color: white;
+            }
+            .group {
+                margin-left: 30px;
+            }
+            /*toolbarStyles*/
+        </style>
         <tg-entity-centre
         	id="dom"
         	_selected-view="{{_selectedView}}"
@@ -176,50 +164,7 @@
                 <!-- EGI COLUMNS DOM (GENERATED) -->
                 <!--@egi_columns-->
 
-                <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1">
-                    <core-icon-button icon="add-circle-outline"></core-icon-button> -->
-                    <tg-page-action class="delayed entity-specific-action" tabIndex="-1" icon="add-circle-outline" action="[[_newAction]]" short-desc="Create new entity"></tg-page-action>
-                    <!-- <span class="span-tooltip" tip>Create new entity</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1"> -->
-                    <tg-page-action class="delayed entity-specific-action" tabIndex="-1" icon="editor:mode-edit" action="[[_editAction]]" short-desc="Edit selected entity"></tg-page-action>
-                    <!-- <span class="span-tooltip" tip>Edit selected entity</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed entity-specific-action" tabIndex="-1"> -->
-                    <tg-page-action class="delayed entity-specific-action" tabIndex="-1" icon="remove-circle-outline" action="[[_deleteAction]]" short-desc="Delete selected entities"></tg-page-action>
-                    <!-- <span class="span-tooltip" tip>Delete selected entities</span>
-                </core-tooltip> -->
-                <!-- GENERATED FUNCTIONAL ACTIONS: -->
-                <!--@functional_actions-->
-
-
-				<!-- standard actions -->
-				<paper-icon-button icon="icons:settings" class="standart-action" on-tap="_activateSelectionCriteriaView" disabled$="[[isRunning]]"></paper-icon-button>
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                	<!-- paper-icon-button icon="file-download" class="standart-action"></paper-icon-button-->
-                	<!-- <span class="span-tooltip" tip>Export to Excel</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-tab" on-tap="firstPage" disabled$="[[canNotFirst(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
-                    <!-- <span class="span-tooltip" tip>First page</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button icon="hardware:keyboard-backspace" class="standart-action" on-tap="prevPage" disabled$="[[canNotPrev(pageNumber, isRunning)]]"></paper-icon-button>
-                    <!-- <span class="span-tooltip" tip>Previous page</span>
-                </core-tooltip> -->
-                <span class="standart-action">[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]</span>
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="revers standart-action" icon="hardware:keyboard-backspace" on-tap="nextPage" disabled$="[[canNotNext(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
-                    <!-- <span class="span-tooltip" tip>Next page</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button icon="hardware:keyboard-tab" class="standart-action" on-tap="lastPage" disabled$="[[canNotLast(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
-                    <!-- <span class="span-tooltip" tip>Last page</span>
-                </core-tooltip> -->
-                <!-- <core-tooltip class="delayed standart-action" tabIndex="-1"> -->
-                    <paper-icon-button class="standart-action" icon="refresh" on-tap="currentPage" disabled$="[[canNotCurrent(pageNumber, pageCount, isRunning)]]"></paper-icon-button>
-                    <!-- <span class="span-tooltip" tip>Refresh</span>
-                </core-tooltip> -->
+                <!--@toolbar-->
                 
                 <!--@primary_action-->
                 <!--@secondary_actions-->
@@ -273,6 +218,9 @@
             	console.warn("tg-@mi_type-centre: created");
             	console.time("created-to-ready");
                 console.warn("CREATED in TG-ENTITY-CENTRE-TAMPLATE");
+                
+                // bind SSE event handling method regardless of the fact whether this particulare
+                // centre is bound to some SSE url or not.
                 this.dataHandler = function(data) {
                     var self = this;
                     var msg = JSON.parse(data);
@@ -302,9 +250,12 @@
             },
             
             ready: function () {
+                var self = this;
             	console.timeEnd("created-to-ready");
             	console.warn("tg-@mi_type-centre: ready");
             	console.time("ready-to-attached");
+                
+                //toolbarGeneratedFunction
             },
         	
             /**

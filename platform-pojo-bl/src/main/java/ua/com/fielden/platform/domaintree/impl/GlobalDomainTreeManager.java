@@ -850,7 +850,15 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
             final int count = entityCentreConfigController.count(model);
             if (count == 0) { // for current user or its base => there are no entity-centres, so persist a copy with a new title
-                final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, currentUser(), newTitle, mainMenuItemController.findByKey(menuItemTypeName));
+                final User user = currentUser();
+                final MainMenuItem menuItemToUse;
+                final MainMenuItem menuItem = mainMenuItemController.findByKey(menuItemTypeName);
+                if (menuItem != null) {
+                    menuItemToUse = menuItem;
+                } else {
+                    menuItemToUse = mainMenuItemController.save(factory.newByKey(MainMenuItem.class, menuItemTypeName));
+                }
+                final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, user, newTitle, menuItemToUse);
                 ecc.setConfigBody(getSerialiser().serialise(copyMgr));
                 saveCentre(copyMgr, ecc);
                 init(menuItemType, newName, copyMgr, true);

@@ -32,7 +32,9 @@ public class MasterWithMaster<T extends AbstractEntity<?>> implements IMaster<T>
         //// this suffix is used to remove the last comma, which prevents JSON conversion ////
         //////////////////////////////////////////////////////////////////////////////////////
         attrs.append("{");
-        attrs.append("\"entityType\":\"" + entityMaster.getEntityType().getName() + "\", \"currentState\":\"EDIT\", \"centreUuid\": this.centreUuid");
+        attrs.append("\"entityType\":\"" + entityMaster.getEntityType().getName() + "\","
+                   + "\"currentState\":\"EDIT\","
+                   + "\"centreUuid\": this.centreUuid");
         attrs.append("}");
 
         final String attributes = attrs.toString();
@@ -58,7 +60,8 @@ public class MasterWithMaster<T extends AbstractEntity<?>> implements IMaster<T>
                         + "    } else {\n"
                         + "        return undefined;\n"
                         + "    }\n"
-                        + "}.bind(this);\n",
+                        + "}.bind(this);\n"
+                        + "this.addEventListener('after-load', this._assignPostSavedHandlersForEmbeddedMaster.bind(this));\n",
                         attributes))
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");

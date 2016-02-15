@@ -123,7 +123,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 
     @Override
     public List<T> findMatchesWithModel(final String value) {
-        return dao.getFirstEntities(from(queryModel).with(defaultOrdering).with(propertyParamName, value).with(fetchModel).model(), pageSize);
+        return dao.getFirstEntities(from(queryModel).with(defaultOrdering).with(propertyParamName, value).with(getFetch()).model(), pageSize);
     }
 
     public EntityQueryValueMatcher<T> setPageSize(final int pageSize) {

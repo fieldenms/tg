@@ -20,6 +20,8 @@
 <link rel="import" href="/resources/polymer/neon-animation/neon-animations.html">
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-progress/paper-progress.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
 
 
 <style is="custom-style">
@@ -59,6 +61,19 @@
         }
         #lockContainer {
             pointer-events: none;
+        }
+        paper-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: auto;
+        }
+        paper-progress.uploading {
+            --paper-progress-active-color: var(--paper-light-green-500);
+        }
+        paper-progress.processing {
+            --paper-progress-active-color: var(--paper-orange-500);
         }
         /*Table related styles*/
         .data-table {
@@ -113,6 +128,7 @@
         .grid-toolbar {
             height: auto;
             min-height: 4rem;
+            position: relative;
             overflow: hidden;
         }
         paper-checkbox::shadow #checkboxLabel {
@@ -270,6 +286,7 @@
                 <div class="layout vertical data-table">
                     <!--Table toolbar-->
                     <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
+                        <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
                         <div class="layout horizontal center">
                             <content select=".entity-specific-action"></content>
                         </div>
@@ -626,39 +643,39 @@
 <script>
     (function () {
         var _checkCollapsiblePanelVisibility = function (layout) {
-                this.collapsePanelVisible = !!(this.cardLayout && layout);
-            },
-            _areEqual = function (a, b) {
-                return a.id === b.id;
-            },
-            _hasEntity = function (entity, entities) {
-                for (var i = 0; i < entities.length; i += 1) {
-                    if (_areEqual(entity, entities[i])) {
-                        return true;
-                    }
+            this.collapsePanelVisible = !!(this.cardLayout && layout);
+        },
+        _areEqual = function (a, b) {
+            return a.id === b.id;
+        },
+        _hasEntity = function (entity, entities) {
+            for (var i = 0; i < entities.length; i += 1) {
+                if (_areEqual(entity, entities[i])) {
+                    return true;
                 }
-                return false;
-            },
-            _findEntity = function (entity, entities) {
-                for (var i = 0; i < entities.length; i += 1) {
-                    if (_areEqual(entity, entities[i])) {
-                        return i;
-                    }
+            }
+            return false;
+        },
+        _findEntity = function (entity, entities) {
+            for (var i = 0; i < entities.length; i += 1) {
+                if (_areEqual(entity, entities[i])) {
+                    return i;
                 }
-                return -1;
-            },
-            _processEntitySelection = function (selectedEntities, entity, select) {
-                var selectedIndex = selectedEntities.indexOf(entity);
-                if (select) {
-                    if (selectedIndex < 0) {
-                        selectedEntities.push(entity);
-                    }
-                } else {
-                    if (selectedIndex >= 0) {
-                        selectedEntities.splice(selectedIndex, 1);
-                    }
+            }
+            return -1;
+        },
+        _processEntitySelection = function (selectedEntities, entity, select) {
+            var selectedIndex = selectedEntities.indexOf(entity);
+            if (select) {
+                if (selectedIndex < 0) {
+                    selectedEntities.push(entity);
                 }
-            };
+            } else {
+                if (selectedIndex >= 0) {
+                    selectedEntities.splice(selectedIndex, 1);
+                }
+            }
+        };
         Polymer({
             is: "tg-@miType-grid-inspector",
 
@@ -719,6 +736,13 @@
                     value: @summaryFixed
                 },
 
+                /**
+                 * The property that determines whether progress bar is visible or not.
+                 */
+                _showProgress: {
+                    type: Boolean
+                },
+
                 //Private properties that defines config object for totals.
                 _totalsRowCount: Number,
                 _totalsRows: Array,
@@ -753,6 +777,7 @@
             ready: function () {
                 var primaryActions = Polymer.dom(this.$.primary_action_selector).getDistributedNodes();
                 this._totalsRowCount = 0;
+                this._showProgress = false;
 
                 //Initialising shadows
                 this._showTopShadow = false;
@@ -799,6 +824,20 @@
 
             attached: function () {
                 this._updateTableSizeAsync();
+            },
+
+            updateProgress: function (percentage, clazz, isVisible) {
+                var progressBar = this.$$("#progressBar");
+                this._showProgress = isVisible;
+                progressBar.classList.remove("processing");
+                progressBar.classList.remove("uploading");
+                if (clazz !== "") {
+                    progressBar.classList.add(clazz);
+                }
+                if (percentage >= 0 && percentage <= 100) {
+                    progressBar.value = percentage;
+                }
+                progressBar.updateStyles();
             },
 
             _mouseRowEnter: function (event, detail) {
@@ -976,7 +1015,11 @@
             },
 
             _getTooltip: function (entity, column) {
-                if (column.tooltipProperty) {
+                var property = entity.prop(column.property);
+                var validationResult = property.validationResult();
+                if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
+                    return validationResult.message;
+                } else if (column.tooltipProperty) {
                     return this._getValue(entity, column.tooltipProperty, "String").toString()
                 } else if (this.$.reflector.findTypeByName(column.type)) {
                     return entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
@@ -1146,6 +1189,7 @@
                     this.selectedAll = false;
                 }
                 self.egiModel = tempEgiModel;
+                this.fire("egi-selection-changed", this.getSelectedEntities());
                 this._updateTableSizeAsync();
             },
 
@@ -1166,6 +1210,7 @@
                     }
                     this.selectedAll = e.srcElement.checked;
                     console.log("all ", this.getSelectedRows());
+                    this.fire("egi-selection-changed", this.getSelectedEntities());
                 }
             },
             /**
@@ -1184,6 +1229,7 @@
                     })) {
                         this.selectedAll = true;
                     }
+                    this.fire("egi-selection-changed", this.getSelectedEntities());
                 }
                 console.log("single checkbox: " + index, this.getSelectedRows());
             },
@@ -1396,7 +1442,7 @@
              * Returns icon that represents the boolean value.
              */
             _getBooleanIcon: function (entity, property) {
-                return "icons: " + (this._get(entity, property) ? "check" : "clear");
+                return "icons:" + (this._get(entity, property) ? "check" : "clear");
             },
             /**
              * Tap action on data column. TODO: implement this.
@@ -1478,6 +1524,7 @@
                 for (i = 0; i < this.egiModel.length; i++) {
                     this.set("egiModel." + i + ".selected", false);
                 }
+                this.fire("egi-selection-changed", this.getSelectedEntities());
                 this.selectedEntities = [];
             },
             /**

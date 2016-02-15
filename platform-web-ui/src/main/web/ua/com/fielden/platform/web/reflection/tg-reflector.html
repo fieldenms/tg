@@ -541,6 +541,14 @@
             return typeof this._compositeKeySeparator === 'undefined' ? " " : this._compositeKeySeparator;
         }
 
+        /**
+         * Returns 'true' if the entity type represents a persistent entity.
+         *
+         */
+        EntityType.prototype.isPersistent = function () {
+            return this['_persistent'] === true;
+        }
+
         /** 
          * Returns entity title.
          */
@@ -968,7 +976,7 @@
          *
          * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
          */
-        getPropertyValue: function(fullyFledgedEntity, dotNotatedName) {
+        getPropertyValue: function (fullyFledgedEntity, dotNotatedName) {
         	return this.convert(fullyFledgedEntity.get(dotNotatedName));
         },
         

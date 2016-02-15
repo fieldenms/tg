@@ -41,7 +41,10 @@ public class EntityFetcher {
             final List<EntityContainer<E>> containers = entityContainerFetcher.listAndEnhanceContainers(queryModel, pageNumber, pageCapacity);
             final List<E> result = instantiateFromContainers(containers, queryModel.isLightweight(), proxyMode);
             final Period pd = new Period(st, new DateTime());
-            logger.debug(format("Duration: %s m %s s %s ms. Entities count: %s", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), result.size()));
+            
+            String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
+            logger.debug(format("Duration: %s m %s s %s ms. Entities (%s) count: %s.", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), entityTypeName, result.size()));
+            
             return result;
         } catch (final Exception e) {
             logger.error(e);

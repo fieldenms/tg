@@ -94,8 +94,8 @@
                 
                 if (this.$.elementLoader.prefDim) {
                 	var prefDim = this.$.elementLoader.prefDim;
-                	this.$.pm.style.width = prefDim.width() + prefDim.unit;
-                	this.$.pm.style.height = prefDim.height() + prefDim.unit;
+                	this.$.pm.style.width = prefDim.width() + prefDim.widthUnit;
+                	this.$.pm.style.height = prefDim.height() + prefDim.heightUnit;
                 } else {
                     this.$.pm.width = "auto";
                     this.$.pm.height = "auto";

@@ -129,7 +129,9 @@
             },
 
             _handleCloseEvent: function (data, envelope) {
-                this._closeDialogAndIndicateActionCompletion(this._lastAction);
+                if (data.canClose === true) {
+                	this._closeDialogAndIndicateActionCompletion(this._lastAction);
+                }
             },
 
             /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
@@ -229,8 +231,8 @@
 
                     if (element.prefDim) {
                         var prefDim = element.prefDim;
-                        this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.unit;
-                        this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.unit;
+                        this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                        this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
                     } else {
                         this.style.width = "auto";
                         this.style.height = "auto";
@@ -241,6 +243,9 @@
                     // this ensures that the dialog is opened after its relocation to body and after all layouting is done
                     this.async(function () {
                         this.open();
+                        if (element.focusFirstInput) {
+                            element.focusFirstInput();
+                        }
                     }.bind(this), 100);
                 }
             },

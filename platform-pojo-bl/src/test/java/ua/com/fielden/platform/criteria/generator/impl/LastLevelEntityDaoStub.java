@@ -104,24 +104,6 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public void delete(final LastLevelEntity entity) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<LastLevelEntity> model, final Map<String, Object> paramValues) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<LastLevelEntity> model) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
     public boolean entityExists(final LastLevelEntity entity) {
         return "EntityKey".equals(entity.getKey());
     }
@@ -198,17 +180,5 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     public IFetchProvider<LastLevelEntity> getFetchProvider() {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public int batchDelete(EntityResultQueryModel<LastLevelEntity> model) {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public int batchDelete(EntityResultQueryModel<LastLevelEntity> model, Map<String, Object> paramValues) {
-        // TODO Auto-generated method stub
-        return 0;
     }
 }

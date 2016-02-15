@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity;
 
 import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -25,6 +26,21 @@ public abstract class AbstractFunctionalEntityWithCentreContext<K extends Compar
     @Title(value = "Context", desc = "Context")
     @Invisible
     private CentreContext<?, ?> context;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Chosen Property", desc = "Desc")
+    private String chosenProperty;
+
+    @Observable
+    public AbstractFunctionalEntityWithCentreContext<K> setChosenProperty(final String chosenProperty) {
+        this.chosenProperty = chosenProperty;
+        return this;
+    }
+
+    public String getChosenProperty() {
+        return chosenProperty;
+    }
 
     @Observable
     public AbstractFunctionalEntityWithCentreContext<K> setContext(final CentreContext<?, ?> context) {

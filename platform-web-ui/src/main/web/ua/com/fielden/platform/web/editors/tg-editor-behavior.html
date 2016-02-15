@@ -303,7 +303,25 @@
             	// var contentEl = Polymer.dom(this.decorator()).querySelector('content');            	
             	// return Polymer.dom(contentEl).getDistributedNodes()[0]; // Polymer.dom(this.$.editorDom)    // .$.input;
             	
-            	return this.$.editorDom.$.input;
+            	// currently there are multiple input fields
+            	// simply addressing this.$.editorDom.$.input would most likely return an invalid input
+            	// however, there should be only a single not hiddent input
+            	// so, let's try locating it by enumerating possible input field types
+            	
+            	// start with ordinary input
+            	var input = this.$.editorDom.querySelector('input:not([hidden])');
+            	if (input) {
+            	    return input;
+            	} 
+            	
+            	// if there was no matching input then maybe it is a checkbox...
+            	var input = this.$.editorDom.querySelector('paper-checkbox:not([hidden])');
+            	if (input) {
+            	    return input;
+            	}
+            	
+            	// if this is not a checkbox then return a textarea, which does not get marked as hidden, instead its parent control does
+            	return this.$.editorDom.querySelector('textarea');
             },
             
             /**
@@ -363,13 +381,22 @@
                 }
             },
             
-            assignValue: function (entity, propertyName, getPropertyValue) {
-            	var propValue = getPropertyValue(entity, propertyName); // this.reflector().getBindingValue(entity, propertyName);
+            _assignConvertedValue: function (propValue) {
                 var newEditingValue = this.convertToString(propValue);
                 if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
                 	this._refreshCycleStarted = false;
                 }
                 this._editingValue = newEditingValue;
+            },
+            
+            assignValue: function (entity, propertyName, getPropertyValue) {
+            	var convertedValue = getPropertyValue(entity, propertyName);
+            	this._assignConvertedValue(convertedValue);
+            },
+            
+            assignConcreteValue: function (value, converter) {
+            	var convertedValue = converter(value);
+            	this._assignConvertedValue(convertedValue);
             },
 
             /**

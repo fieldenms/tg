@@ -23,6 +23,7 @@ import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgBogieClass;
 import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
 import ua.com.fielden.platform.sample.domain.ITgCategory;
+import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.ITgFuelType;
 import ua.com.fielden.platform.sample.domain.ITgFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgMakeCount;
@@ -54,6 +55,7 @@ import ua.com.fielden.platform.sample.domain.TgBogieClassDao;
 import ua.com.fielden.platform.sample.domain.TgBogieDao;
 import ua.com.fielden.platform.sample.domain.TgBogieLocationDao;
 import ua.com.fielden.platform.sample.domain.TgCategoryDao;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesDao;
 import ua.com.fielden.platform.sample.domain.TgFuelTypeDao;
 import ua.com.fielden.platform.sample.domain.TgFuelUsageDao;
 import ua.com.fielden.platform.sample.domain.TgMakeCountDao;
@@ -183,6 +185,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
+        bind(ITgEntityWithComplexSummaries.class).to(TgEntityWithComplexSummariesDao.class);
 
         bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
         }).to(EntityWithMoneyDao.class);

@@ -30,6 +30,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -46,6 +47,7 @@ import com.google.common.collect.ListMultimap;
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     private final boolean hideCheckboxes;
+    private final IToolbarConfig toolbarConfig;
     private final boolean hideToolbar;
     private final IScrollConfig scrollConfig;
     private final int pageCapacity;
@@ -152,6 +154,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * Determines whether centre should run automatically or not.
      */
     private final boolean runAutomatically;
+
+    /**
+     * Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).  
+     */
+    private final boolean enforcePostSaveRefresh;
 
     /** Identifies URI for the Server-Side Eventing. If <code>null</code> is set then no SSE is required. */
     private final String sseUri;
@@ -285,6 +292,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////////////////////////////////
     public EntityCentreConfig(
             final boolean hideCheckboxes,
+            final IToolbarConfig toolbarConfig,
             final boolean hideToolbar,
             final IScrollConfig scrollConfig,
             final int pageCapacity,
@@ -325,6 +333,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter,
 
             final boolean runAutomatically,
+            final boolean enforcePostSaveRefresh,
 
             final String sseUri,
 
@@ -343,6 +352,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final IFetchProvider<T> fetchProvider) {
         this.hideCheckboxes = hideCheckboxes;
+        this.toolbarConfig = toolbarConfig;
         this.hideToolbar = hideToolbar;
         this.scrollConfig = scrollConfig;
         this.pageCapacity = pageCapacity;
@@ -388,6 +398,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.resultsetSummaryCardLayout = resultsetSummaryCardLayout;
 
         this.runAutomatically = runAutomatically;
+        this.enforcePostSaveRefresh = enforcePostSaveRefresh;
 
         this.sseUri = sseUri;
 
@@ -438,6 +449,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isRunAutomatically() {
         return runAutomatically;
+    }
+    
+    public boolean shouldEnforcePostSaveRefresh() {
+        return enforcePostSaveRefresh;
     }
 
     public Optional<Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {
@@ -685,6 +700,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean shouldHideCheckboxes() {
         return hideCheckboxes;
+    }
+
+    public IToolbarConfig getToolbarConfig() {
+        return toolbarConfig;
     }
 
     public boolean shouldHideToolbar() {

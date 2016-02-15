@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface ICentreTopLevelActionsWithSse<T extends AbstractEntity<?>> extends ICentreTopLevelActions<T> {
+public interface ICentreTopLevelActionsWithSse<T extends AbstractEntity<?>> extends ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> {
 
 	/**
 	 * Accepts URI that is used at the server side to connect to the associated with it event source.
@@ -18,6 +18,6 @@ public interface ICentreTopLevelActionsWithSse<T extends AbstractEntity<?>> exte
 	 * @param uri
 	 * @return
 	 */
-    ICentreTopLevelActions<T> hasEventSourceAt(final String uri);
+    ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> hasEventSourceAt(final String uri);
 
 }

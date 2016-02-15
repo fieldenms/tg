@@ -198,7 +198,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final Optional<Map<String, OrderDirection>> propOrdering = dslDefaultConfig.getResultSetOrdering();
         if (propOrdering.isPresent()) {
-            
+
             // by default ordering occurs by "this" that is why it needs to be switched off in the presence of alternative ordering configuration
             if (cdtmae.getSecondTick().isChecked(entityType, "")) {
                 cdtmae.getSecondTick().toggleOrdering(entityType, "");
@@ -569,6 +569,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public boolean isRunAutomatically() {
         return dslDefaultConfig.isRunAutomatically();
     }
+    
+    /**
+     * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
+     * @return
+     */
+    public boolean shouldEnforcePostSaveRefresh() {
+        return dslDefaultConfig.shouldEnforcePostSaveRefresh();
+    }
 
     /**
      * Return an optional Event Source URI.
@@ -738,7 +746,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, tooltipProp, centre.getSecondTick().getWidth(root, resultPropName), egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, null, tooltipProp, centre.getSecondTick().getWidth(root, resultPropName), egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
                     final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
@@ -848,6 +856,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             insertionPointActionsDom.add(el.render().clazz("insertion-point-action").attr("hidden", null));
             insertionPointActionsObjects.append(prefix + createActionObject(el));
         }
+        importPaths.add(dslDefaultConfig.getToolbarConfig().importPath());
 
         final DomContainer leftInsertionPointsDom = new DomContainer();
         final DomContainer rightInsertionPointsDom = new DomContainer();
@@ -881,6 +890,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@gridLayout", gridLayoutConfig.getKey()).
                 replace("@full_entity_type", entityType.getName()).
                 replace("@mi_type", miType.getSimpleName()).
+                replace("<!--@toolbar-->", dslDefaultConfig.getToolbarConfig().render().toString()).
+                replace("//toolbarGeneratedFunction", dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
+                replace("/*toolbarStyles*/", dslDefaultConfig.getToolbarConfig().styles().toString()).
                 replace("@full_mi_type", miType.getName()).
                 replace("@pageCapacity", Integer.toString(dslDefaultConfig.getPageCapacity())).
                 replace("@queryEnhancerContextConfig", queryEnhancerContextConfigString()).

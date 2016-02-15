@@ -16,6 +16,8 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -100,6 +102,8 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
+import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
+import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -107,8 +111,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
-
-import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -263,6 +265,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
         @SuppressWarnings("unchecked")
         final IMaster<TgPersistentEntityWithProperties> masterConfig = smb.forEntity(TgPersistentEntityWithProperties.class)
                 // PROPERTY EDITORS
+                .addProp("entityProp.entityProp").asAutocompleter().withProps(pair("desc", true))
+                    .withAction(
+                        action(TgDummyAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess(""
+                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                                ))
+                        .icon("accessibility")
+                        .shortDesc("Dummy")
+                        .longDesc("Dummy action, simply prints its result into console.")
+                        .build())
+                .also()
                 .addProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class)
                 .withProps(pair("desc", true),
                         pair("compositeProp", false),
@@ -278,18 +292,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .icon("trending-up")
                         .shortDesc("Export")
                         .longDesc("Export action")
-                        .build())
-                .also()
-                .addProp("entityProp.entityProp").asAutocompleter().withProps(pair("desc", true))
-                    .withAction(
-                        action(TgDummyAction.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                ))
-                        .icon("accessibility")
-                        .shortDesc("Dummy")
-                        .longDesc("Dummy action, simply prints its result into console.")
                         .build())
                 .also()
                 .addProp("key").asSinglelineText()
@@ -662,10 +664,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 TgPersistentEntityWithPropertiesProducer.class,
                 masterConfig,
                 injector());
+        
+        final EntityMaster<NewEntityAction> functionalMasterWithEmbeddedPersistentMaster =  NewEntityActionWebUiConfig.createMaster(injector(), entityMaster);
+        
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
+
         configApp().
             addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
+            addMaster(NewEntityAction.class, functionalMasterWithEmbeddedPersistentMaster).
             addMaster(TgEntityWithPropertyDependency.class, new EntityMaster<TgEntityWithPropertyDependency>(
                     TgEntityWithPropertyDependency.class,
                     TgEntityWithPropertyDependencyProducer.class,
@@ -1064,7 +1071,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String centreMrLast = "['flex']";
 
         final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
-        ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre).hasEventSourceAt("/entity-centre-events");
+        ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
+                .hasEventSourceAt("/entity-centre-events")
+                .enforcePostSaveRefresh()
+                .addTopAction(
+                        action(NewEntityAction.class).
+                                withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality 
+                                icon("add-circle").
+                                shortDesc("Add new").
+                                longDesc("Start coninuous creatio of entities").
+                                build()
+                ).also();
+                
 
         if (isComposite) {
             actionConf = actionConf.addTopAction(
@@ -1315,8 +1333,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
                 .addPrimaryAction(
-                        EntityActionConfig.createMasterInvocationActionConfig()
-                //       EntityActionConfig.createMasterInDialogInvocationActionConfig()
+                        //EntityActionConfig.createMasterInvocationActionConfig()
+                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 //                        action(TgFunctionalEntityWithCentreContext.class).
                 //                                withContext(context().withSelectedEntities().build()).
                 //                                icon("assignment-turned-in").

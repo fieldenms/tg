@@ -217,7 +217,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
         final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
         final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
-        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery)
         .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
         .with(createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider))//
         .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
@@ -250,12 +250,12 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
         final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
         final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
-        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery)
         .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
         .with(createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider))//
         .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
         if (!separatedFetch.getValue().isEmpty()) {
-            final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = from(notOrderedQuery)//
+            final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = adjustLightweightness(notOrderedQuery)
             .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue()))//
             .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
             return firstPage(resultQuery, totalQuery, pageSize);
@@ -363,11 +363,16 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
         final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
         final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
-        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery)
         .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
         .with(createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider))//
         .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
         export(fileName, resultQuery, propertyNames, propertyTitles);
+    }
+
+    private QueryExecutionModel.Builder<T, EntityResultQueryModel<T>> adjustLightweightness(final EntityResultQueryModel<T> notOrderedQuery) {
+        // all import row centre should be heavyweight to populate errors trough ACE handlers
+        return IImportRowMarker.class.isAssignableFrom(getEntityClass()) ? from(notOrderedQuery) : from(notOrderedQuery).lightweight();
     }
 
     /**
