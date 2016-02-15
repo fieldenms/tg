@@ -603,9 +603,10 @@
             /* This method is used to make sure the input is in focus */
             _focusInput: function() {
             	// at the end let's focus the input...
-            	this.async(function () {
-                    (this.querySelector('input:not([hidden]):not([disabled])') || this).focus();
-                }.bind(this), 100);
+            	var input = this.decoratedInput();
+            	this.async(function() {
+            		input.focus();
+            	}, 100);
             },
             
             get parent() {
