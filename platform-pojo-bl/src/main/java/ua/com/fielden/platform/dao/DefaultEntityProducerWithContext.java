@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.dao;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -38,8 +40,16 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
     @Override
     public final T newEntity() {
         final T entity = factory.newEntity(entityType);
-        if (getCentreContext() != null && entity instanceof AbstractFunctionalEntityWithCentreContext) {
-            ((AbstractFunctionalEntityWithCentreContext<?>) entity).setContext(getCentreContext());
+        if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
+            final AbstractFunctionalEntityWithCentreContext<?> funEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
+            
+            if (getCentreContext() != null) {
+                funEntity.setContext(getCentreContext());
+            }
+            
+            if (!StringUtils.isEmpty(getChosenProperty())) {
+                funEntity.setChosenProperty(getChosenProperty());
+            }
         }
         
         if (companion != null) {
