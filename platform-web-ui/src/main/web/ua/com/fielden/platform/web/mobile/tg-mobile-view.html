@@ -73,7 +73,7 @@
                             self.fire("menu-item-loaded", self.menuItem.title);
                         };
                         detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
-                        detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {};
+                        detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
                         if (!self.$.elementToLoad.auto) {
                             detail.entityId = 'new';
                             detail.retrieve();

@@ -127,9 +127,9 @@
                                 self.fire("menu-item-view-loaded", self.menuItem);
                             };
                             detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
-                            detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {
+                            detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                                 //Send postal message that save was completed if it was succefull
-                                if (potentiallySavedEntity.isValid()) {
+                                if (potentiallySavedOrNewEntity.isValid()) {
                                     postal.publish({
                                         channel: "master",
                                         topic: "save.start",
@@ -137,9 +137,9 @@
                                             centreUuid: detail.centreUuid,
                                             masterUuid: detail.uuid,
                                             moduleId: detail.moduleId,
-                                            entity: potentiallySavedEntity,
+                                            entity: potentiallySavedOrNewEntity,
                                             item: self.menuItem,
-                                            selectedEntitiesInContext: [potentiallySavedEntity]
+                                            selectedEntitiesInContext: [potentiallySavedOrNewEntity]
                                         }
                                     });
                                 }
