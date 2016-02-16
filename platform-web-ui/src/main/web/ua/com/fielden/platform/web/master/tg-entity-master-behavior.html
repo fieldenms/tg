@@ -251,50 +251,39 @@
                     //  1) fully fresh new entity from 'continuous creation' process (DAO object returns fully new entity after successful save of previous entity)
                     //    a) it has no id defined (id === null)
                     //    b) it can be valid (required properties can still be blue)
-                    //    c) it can be invalid (in case when the logic of 'continuous creation' creates new entity as invalid...)
+                    //    c) it can be invalid (in case when the logic of 'continuous creation' creates new entity as invalid)
                     //  2) saved or unsaved entity that was tryied to be saving
                     //    a) if valid == saving was successful and id should be defined (not 'null')
                     //    b) if invalid == id can be defined (when persisted entity was trying to be saved but with failure) or can be 'null' (when new entity was trying to be saved but with failure)
 
-                    // TODO there is currently no way to distinguish the cases 1) and 2) when entity with id === 'null' and invalid comes here...
-                    //      This means that only valid entities should be created inside DAOs to mimic 'continuous creation'...
+                    // 'isContinuouslyCreated' is calculated based on the fact that the newly created in DAO entity will be different from the entity that was bound previously
+                    // by means of the keys assigned.
                     var isContinuouslyCreated = potentiallySavedOrNewEntity.type().isPersistent()
-                        && !this._currBindingEntity.isPersisted() && !potentiallySavedOrNewEntity.isPersisted() 
-                        && potentiallySavedOrNewEntity.isValid();
-                    var msg = this._toastMsg("Saving", potentiallySavedOrNewEntity); 
-                    if (isContinuouslyCreated) {
-                        // this toast message will show 'Saving completed sucessfully' (potentiallySavedOrNewEntity will be valid)
-                        this._openToast(null, msg, false, '', false);
-                        
-                        // isRefreshingProcess should be 'true' to reset old binding information!
-                        var newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, true);
-                        
-                        // postSaved and 'contextCreator for embedded views' could not be used with fresh entity, created in DAO object...
-                        // TODO To make refreshing of the entity possible in parent centre we need to get somehow the id of previously saved entity...
-                        //   and then just invoke this.postSaved(potentiallySavedOrNewEntity, newBindingEntity); -- see tg-ui-action, line 359
-                        return true;
-                    } else {
-                        this._openToast(potentiallySavedOrNewEntity, msg, !potentiallySavedOrNewEntity.isValid() || potentiallySavedOrNewEntity.isValidWithWarning(), msg, false);
-                        
-                        var newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, false);
-                        
-                        // custom external action
-                        if (this.postSaved) {
-                            this.postSaved(potentiallySavedOrNewEntity, newBindingEntity);
-                        }
-                        
-                        // Context creator should assigned only after successful master entity saving.
-                        // In case of successful assignment it gets promoted to embedded views by means of binding.
-                        if (potentiallySavedOrNewEntity.isValid()) {
-                            this._createContextHolderForEmbeddedViews = (function () {
-                                var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-                                this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
-                                return this._reflector().createSavingInfoHolder(this._reset(holder), this.savingContext);
-                            }).bind(this);
-                        }
-                        
-                        return potentiallySavedOrNewEntity.isValid();
+                        /* TODO && !this._currEntity.isPersisted() */ && !potentiallySavedOrNewEntity.isPersisted() 
+                        && !this._reflector().equalsEx(this._currEntity, potentiallySavedOrNewEntity);
+                    
+                    var msg = this._toastMsg("Saving", potentiallySavedOrNewEntity);
+                    this._openToast(potentiallySavedOrNewEntity, msg, !potentiallySavedOrNewEntity.isValid() || potentiallySavedOrNewEntity.isValidWithWarning(), msg, false);
+                    
+                    // isRefreshingProcess should be 'true' to reset old binding information in case where 'continuously created' entity arrive
+                    var newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, isContinuouslyCreated);
+
+                    // custom external action
+                    if (this.postSaved) {
+                        this.postSaved(potentiallySavedOrNewEntity, newBindingEntity);
                     }
+                    
+                    // Context creator should assigned only after successful master entity saving.
+                    // In case of successful assignment it gets promoted to embedded views by means of binding.
+                    if (potentiallySavedOrNewEntity.isValid()) {
+                        this._createContextHolderForEmbeddedViews = (function () {
+                            var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
+                            this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
+                            return this._reflector().createSavingInfoHolder(this._reset(holder), this.savingContext);
+                        }).bind(this);
+                    }
+                    
+                    return potentiallySavedOrNewEntity.isValid();
 				}).bind(self);
 				
                 self._postSavedDefaultError = (function (errorResult) {
