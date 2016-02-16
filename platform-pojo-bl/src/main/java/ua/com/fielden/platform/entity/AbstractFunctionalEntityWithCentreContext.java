@@ -28,8 +28,8 @@ public abstract class AbstractFunctionalEntityWithCentreContext<K extends Compar
     private CentreContext<?, ?> context;
     
     @IsProperty
-    @MapTo
     @Title(value = "Chosen Property", desc = "Desc")
+    @Invisible
     private String chosenProperty;
 
     @Observable
