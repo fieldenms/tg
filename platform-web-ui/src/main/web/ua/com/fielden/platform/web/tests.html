@@ -8,20 +8,14 @@
   <body>
     <script>
       WCT.loadSuites([
+        'reflection/test/tg-reflector.html',
         'serialisation/test/tg-serialiser.html',
         'master/test/tg-entity-master.html',
         'master/test/tg-entity-master-editors-touching.html',
         'centre/test/tg-entity-centre.html'
       ]);
       
-      /* TODO mocha.setup({ui: 'tdd', slow: 1000, timeout: 5000, htmlbase: ''});
-
-      
-      htmlSuite('entity-centre-tests', function() {
-    	    htmlTest('/resources/centre/tg-entity-centre-test-custom-fetch-provider-usage-centres.html');
-    	    htmlTest('/resources/centre/tg-entity-centre-test-autocompletion-of-props-that-do-not-exist-in-fetch-provider.html');
-    	  });
-      */
+      /* TODO mocha.setup({ui: 'tdd', slow: 1000, timeout: 5000, htmlbase: ''}); */
     </script>
   </body>
 </html>

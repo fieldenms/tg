@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>tg-reflector basic tests</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	
+	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+	<script src="/resources/polymer/web-component-tester/browser.js"></script>
+	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+	
+	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+  
+    <link rel="import" href="/app/tg-reflector.html">
+</head>
+
+<body>
+	<tg-reflector id="reflector"></tg-reflector>
+
+    <script>
+        suite('reflector\'s', function() {
+            var reflector;
+            var typeName1 = 'ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
+            var typeName2 = 'ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity';
+            
+            setup(function() {
+                reflector = document.querySelector('#reflector');
+            });
+            
+            test('equalsEx method works for regular values', function (done) {
+                assert.strictEqual(reflector.equalsEx('ok', 'ok'), true, "Equal values should return 'true' from equalsEx method.");
+                assert.strictEqual(reflector.equalsEx('ok', 'not_ok'), false, "Not equal values should return 'false' from equalsEx method.");
+                
+                done();
+            });
+            
+            test('equalsEx method works for falsey values', function (done) {
+                assert.strictEqual(reflector.equalsEx(null, null), true, "Equal values should return 'true' from equalsEx method.");
+                assert.strictEqual(reflector.equalsEx(undefined, undefined), true, "Equal values should return 'true' from equalsEx method.");
+                assert.strictEqual(reflector.equalsEx(null, undefined), false, "Not equal values should return 'false' from equalsEx method.");
+                
+                done();
+            });
+            
+            test('equalsEx method works for entity values', function (done) {
+                var entity1 = reflector.newEntity(typeName1);
+                var entity2 = reflector.newEntity(typeName2);
+                var entity3 = reflector.newEntity(typeName1);
+                
+                assert.strictEqual(reflector.equalsEx(entity1, null), false, "The non-empty entity should be not equal to 'null'.");
+                assert.strictEqual(reflector.equalsEx(undefined, entity1), false, "'undefined' value should be not equal to non-empty entity.");
+                
+                assert.strictEqual(reflector.equalsEx(entity1, entity1), true, "The same entity references should be equal.");
+                
+                assert.strictEqual(reflector.equalsEx(entity1, entity2), false, "Entities with different types should be not-equal.");
+                
+                done();
+            });
+            
+            test('isEntity method works for falsey values', function (done) {
+                assert.strictEqual(reflector.isEntity(null), false, "'null' should not be 'is entity'.");
+                assert.strictEqual(reflector.isEntity(undefined), false, "'undefined' should not be 'is entity'.");
+                
+                done();
+            });
+            
+            test('equalsEx method works for entity values with regular keys', function (done) {
+                var entity1 = reflector.newEntity(typeName1);
+                entity1.key = 'DEMO01';
+                var entity2 = reflector.newEntity(typeName1);
+                entity2.key = 'DEMO02';
+                var entity1copy = reflector.newEntity(typeName1);
+                entity1copy.key = 'DEMO01';
+                var entityWithoutKey = reflector.newEntity(typeName1);
+                
+                assert.strictEqual(reflector.equalsEx(entity1, entity1copy), true, "Entities with same keys should be equal.");
+                assert.strictEqual(reflector.equalsEx(entity1, entity2), false, "Entities with different keys should be not equal.");
+                
+                try {
+                    reflector.equalsEx(entity1, entityWithoutKey);
+                    assert.fail('Second entity should cause failure during comparison, the \'key\' property is not defined.');
+                }
+                catch (msg) {
+                    console.log(msg);
+                }
+                try {
+                    reflector.equalsEx(entityWithoutKey, entity1);
+                    assert.fail('First entity should cause failure during comparison, the \'key\' property is not defined.');
+                }
+                catch (msg) {
+                    console.log(msg);
+                }
+                
+                done();
+            });
+            
+            test('equalsEx method works for entity values with composite keys', function (done) {
+                var e1 = reflector.newEntity(typeName1); e1.key = 'DEMO01';
+                var e1copy = reflector.newEntity(typeName1); e1copy.key = 'DEMO01';
+                
+                var entity1 = reflector.newEntity(typeName2);
+                entity1.key1 = e1;
+                entity1.key2 = 7;
+                var entity2 = reflector.newEntity(typeName2);
+                entity2.key1 = e1;
+                entity2.key2 = 9;
+                var entity1copy = reflector.newEntity(typeName2);
+                entity1copy.key1 = e1copy;
+                entity1copy.key2 = 7;
+                var entityWithoutKey = reflector.newEntity(typeName2);
+                entityWithoutKey.key2 = 7;
+                
+                assert.strictEqual(reflector.equalsEx(entity1, entity1copy), true, "Entities with same composite keys should be equal.");
+                assert.strictEqual(reflector.equalsEx(entity1, entity2), false, "Entities with different composite keys should be not equal.");
+                
+                try {
+                    reflector.equalsEx(entity1, entityWithoutKey);
+                    assert.fail('Second entity should cause failure during comparison, the \'key1\' property is not defined.');
+                }
+                catch (msg) {
+                    console.log(msg);
+                }
+                try {
+                    reflector.equalsEx(entityWithoutKey, entity1);
+                    assert.fail('First entity should cause failure during comparison, the \'key1\' property is not defined.');
+                }
+                catch (msg) {
+                    console.log(msg);
+                }
+                
+                done();
+            });
+        });
+    </script>
+</body>
+
+</html>
