@@ -17,7 +17,7 @@ public interface IResultSetBuilder4aWidth<T extends AbstractEntity<?>> extends I
      * @param width
      * @return
      */
-    IWithTooltip<T> rigidWidth(int width);
+    IWithTooltip<T> width(int width);
 
     /**
      * Specifies the flexible column width that will change when the width of grid changes.
@@ -25,5 +25,5 @@ public interface IResultSetBuilder4aWidth<T extends AbstractEntity<?>> extends I
      * @param minWidth
      * @return
      */
-    IWithTooltip<T> flexibleWidth(int minWidth);
+    IWithTooltip<T> minWidth(int minWidth);
 }

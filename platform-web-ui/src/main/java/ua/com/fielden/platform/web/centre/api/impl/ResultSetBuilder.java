@@ -114,14 +114,14 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IWithTooltip<T> rigidWidth(final int width) {
+    public IWithTooltip<T> width(final int width) {
         this.width = width;
         this.isFlexible = false;
         return this;
     }
 
     @Override
-    public IWithTooltip<T> flexibleWidth(final int minWidth) {
+    public IWithTooltip<T> minWidth(final int minWidth) {
         this.width = minWidth;
         this.isFlexible = true;
         return this;

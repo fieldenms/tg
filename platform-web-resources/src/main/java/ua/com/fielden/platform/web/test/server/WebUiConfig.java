@@ -1053,9 +1053,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(1).withFixedSecondaryActions().withFixedHeader().done())
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
-                .addProp("this").flexibleWidth(60).withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
+                .addProp("this").minWidth(60).withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
                 .also()
-                .addProp("desc").flexibleWidth(200).
+                .addProp("desc").minWidth(200).
                         withAction(action(TgFunctionalEntityWithCentreContext.class).
                         withContext(context().withSelectedEntities().build()).
                         icon("assignment-turned-in").
@@ -1064,7 +1064,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
 
                 .also()
-                .addProp(mkProp("DR", "Defect Radio", String.class)).rigidWidth(26).
+                .addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
                         withAction(action(TgStatusActivationFunctionalEntity.class).
                         withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
@@ -1072,7 +1072,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Change Status to DR").
                         build())
                 .also()
-                .addProp(mkProp("IS", "In Service", String.class)).rigidWidth(26).
+                .addProp(mkProp("IS", "In Service", String.class)).width(26).
                         withAction(action(TgISStatusActivationFunctionalEntity.class).
                         withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
@@ -1080,7 +1080,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Change Status to IS").
                         build())
                 .also()
-                .addProp(mkProp("IR", "In Repair", String.class)).rigidWidth(26).
+                .addProp(mkProp("IR", "In Repair", String.class)).width(26).
                         withAction(action(TgIRStatusActivationFunctionalEntity.class).
                         withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
@@ -1088,7 +1088,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Change Status to IR").
                         build())
                 .also()
-                .addProp(mkProp("ON", "On Road Defect Station", String.class)).rigidWidth(26).
+                .addProp(mkProp("ON", "On Road Defect Station", String.class)).width(26).
                         withAction(action(TgONStatusActivationFunctionalEntity.class).
                         withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
@@ -1096,7 +1096,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Change Status to ON").
                         build())
                 .also()
-                .addProp(mkProp("SR", "Defect Smash Repair", String.class)).rigidWidth(26).
+                .addProp(mkProp("SR", "Defect Smash Repair", String.class)).width(26).
                         withAction(action(TgSRStatusActivationFunctionalEntity.class).
                         withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
@@ -1105,21 +1105,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
 
                 .also()
-                .addProp("integerProp").flexibleWidth(42).withTooltip("desc").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
+                .addProp("integerProp").minWidth(42).withTooltip("desc").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
                 .also()
-                .addProp("bigDecimalProp").flexibleWidth(68).withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
+                .addProp("bigDecimalProp").minWidth(68).withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
                 .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
                 .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property")
                 .also()
-                .addProp("entityProp").flexibleWidth(40)
+                .addProp("entityProp").minWidth(40)
                 .also()
-                .addProp("booleanProp").flexibleWidth(49)
+                .addProp("booleanProp").minWidth(49)
                 .also()
-                .addProp("dateProp").flexibleWidth(130)
+                .addProp("dateProp").minWidth(130)
                 .also()
-                .addProp("compositeProp").flexibleWidth(110)
+                .addProp("compositeProp").minWidth(110)
                 .also()
-                .addProp("stringProp").flexibleWidth(50)
+                .addProp("stringProp").minWidth(50)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["
                 //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
