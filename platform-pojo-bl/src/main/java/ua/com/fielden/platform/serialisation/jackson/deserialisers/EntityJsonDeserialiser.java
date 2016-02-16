@@ -92,13 +92,21 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             // deserialise id
             final JsonNode idJsonNode = node.get(AbstractEntity.ID); // the node should not be null itself
             final Long id = idJsonNode.isNull() ? null : idJsonNode.asLong();
+            
+            final JsonNode instrumentedJsonNode = node.get("@instrumented"); // the node should not be null itself
+            final boolean instrumented = instrumentedJsonNode.asBoolean();
 
             final T entity;
             if (DynamicEntityClassLoader.isEnhanced(type)) {
                 entity = factory.newPlainEntity(type, id);
                 entity.setEntityFactory(factory);
             } else {
-                entity = factory.newEntity(type, id);
+                if (!instrumented) {
+                    entity = factory.newPlainEntity(type, id);
+                    entity.setEntityFactory(factory);
+                } else {
+                    entity = factory.newEntity(type, id);
+                }
             }
 
             final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_number());
@@ -149,10 +157,12 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                         }
                     }
                     if (!DynamicEntityClassLoader.isEnhanced(type)) {
-                        // this is very important -- original values for non-persistent entities should be left 'null'!
-                        final Object originalValue = entity.isPersisted() ? value : null;
-                        if (entity.isPersisted()) {
-                            entity.getProperty(propertyName).setOriginalValue(originalValue);
+                        if (instrumented) {
+                            // this is very important -- original values for non-persistent entities should be left 'null'!
+                            final Object originalValue = entity.isPersisted() ? value : null;
+                            if (entity.isPersisted()) {
+                                entity.getProperty(propertyName).setOriginalValue(originalValue);
+                            }
                         }
                     }
                 }

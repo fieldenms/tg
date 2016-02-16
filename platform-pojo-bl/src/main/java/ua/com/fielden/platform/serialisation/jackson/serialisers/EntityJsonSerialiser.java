@@ -77,6 +77,10 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeFieldName("@id");
             generator.writeObject(newReference);
+            
+            generator.writeFieldName("@instrumented");
+            final boolean isInstrumented = entity.isEnhanced();
+            generator.writeObject(isInstrumented);
 
             // serialise id
             generator.writeFieldName(AbstractEntity.ID);
@@ -107,7 +111,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
                 if (value != null || !excludeNulls) {
                     final MetaProperty<Object> metaProperty = entity.getProperty(name);
-                    if (metaProperty == null) {
+                    if (!isInstrumented) {
                         // write actual property
                         generator.writeFieldName(name);
                         generator.writeObject(value);

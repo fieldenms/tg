@@ -184,10 +184,13 @@ public class SerialisationTestResource extends ServerResource {
     }
 
     private static <M> Result deepEqualsForTesting(final MetaProperty<M> metaProp1, final MetaProperty<M> metaProp2, final DefaultValueContract dvc) {
+        if (metaProp1 == null && metaProp2 != null) {
+            return Result.failure(format("MetaProperty of originally created entity is null, but meta property of deserialised entity is not."));
+        }
         // dirty equality
         //        if (!metaProp1.isCollectional()) {
-        if (metaProp1.isChangedFromOriginal()) {
-            if (!EntityUtils.equalsEx(metaProp1.isChangedFromOriginal(), metaProp2.isDirty())) {
+        if (DefaultValueContract.getChangedFromOriginal(metaProp1)) {
+            if (!EntityUtils.equalsEx(DefaultValueContract.getChangedFromOriginal(metaProp1), metaProp2.isDirty())) {
                 return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
             }
         }
@@ -195,22 +198,22 @@ public class SerialisationTestResource extends ServerResource {
         //            // not supported -- dirtiness of the collectional properties for new entities differs from the regular properties
         //        }
         // editable equality
-        if (!EntityUtils.equalsEx(metaProp1.isEditable(), metaProp2.isEditable())) {
+        if (!EntityUtils.equalsEx(DefaultValueContract.getEditable(metaProp1), DefaultValueContract.getEditable(metaProp2))) {
             return Result.failure(format("e1 [%s] editability [%s] does not equal to e2 [%s] editability [%s].", metaProp1.getEntity(), metaProp1.isEditable(), metaProp2.getEntity(), metaProp2.isEditable()));
         }
         // required equality
-        if (!EntityUtils.equalsEx(metaProp1.isRequired(), metaProp2.isRequired())) {
+        if (!EntityUtils.equalsEx(DefaultValueContract.getRequired(metaProp1), DefaultValueContract.getRequired(metaProp2))) {
             return Result.failure(format("e1 [%s] requiredness [%s] does not equal to e2 [%s] requiredness [%s].", metaProp1.getEntity(), metaProp1.isRequired(), metaProp2.getEntity(), metaProp2.isRequired()));
         }
         // visible equality
-        if (!EntityUtils.equalsEx(metaProp1.isVisible(), metaProp2.isVisible())) {
+        if (!EntityUtils.equalsEx(DefaultValueContract.getVisible(metaProp1), DefaultValueContract.getVisible(metaProp2))) {
             return Result.failure(format("e1 [%s] Visible [%s] does not equal to e2 [%s] Visible [%s].", metaProp1.getEntity(), metaProp1.isVisible(), metaProp2.getEntity(), metaProp2.isVisible()));
         }
         // validationResult equality
-        if (!resultsAreExpected(dvc.getValidationResult((MetaProperty<Object>) metaProp1), dvc.getValidationResult((MetaProperty<Object>) metaProp2))) {
-            return Result.failure(format("e1 [%s] ValidationResult [%s] does not equal to e2 [%s] ValidationResult [%s].", metaProp1.getEntity(), dvc.getValidationResult((MetaProperty<Object>) metaProp1), metaProp2.getEntity(), dvc.getValidationResult((MetaProperty<Object>) metaProp2)));
+        if (!resultsAreExpected(DefaultValueContract.getValidationResult(metaProp1), DefaultValueContract.getValidationResult(metaProp2))) {
+            return Result.failure(format("e1 [%s] ValidationResult [%s] does not equal to e2 [%s] ValidationResult [%s].", metaProp1.getEntity(), DefaultValueContract.getValidationResult(metaProp1), metaProp2.getEntity(), DefaultValueContract.getValidationResult(metaProp2)));
         }
-        return Result.successful(metaProp1.getEntity());
+        return Result.successful("OK");
     }
 
     private static boolean resultsAreExpected(final Result validationResult, final Result validationResult2) {
@@ -277,7 +280,13 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithListOfSameEntities(),
                 factory.createEntityWithArraysAsListOfSameEntities(),
                 factory.createEntityWithMapOfSameEntities(),
-                factory.createEntityWithCompositeKey()
+                factory.createEntityWithCompositeKey(),
+                factory.createUninstrumentedEntity(),
+                factory.createUninstrumentedEntity(),
+                factory.createUninstrumentedEntity(),
+                factory.createUninstrumentedEntity(),
+                factory.createUninstrumentedEntity(),
+                factory.createUninstrumentedEntity()
                 );
     }
 }

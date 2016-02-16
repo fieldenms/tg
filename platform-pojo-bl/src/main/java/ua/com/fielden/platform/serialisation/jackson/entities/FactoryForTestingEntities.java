@@ -278,4 +278,14 @@ public class FactoryForTestingEntities {
         return finalise(entity);
     }
 
+    public EmptyEntity createUninstrumentedEntity() {
+        final EmptyEntity entity = factory.newPlainEntity(EmptyEntity.class, 159L);
+
+        entity.beginInitialising();
+        entity.setKey("UNINSTRUMENTED1");
+        entity.setDesc("UNINSTRUMENTED1 desc");
+        entity.endInitialising();
+        
+        return entity;
+    }
 }

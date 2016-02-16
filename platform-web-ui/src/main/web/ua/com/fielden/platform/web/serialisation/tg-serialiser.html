@@ -94,7 +94,7 @@
                     },
                     copyProperties = function(deserialisedObject, obj) {
                         for (property in obj) {
-                            if (property !== "@id" && property[0] === "@" && property !== "@instanceTypes" && property !== "@instanceType" && property !== "@resultType" && property !== "@id_ref") {
+                            if (property !== "@instrumented" && property !== "@id" && property[0] === "@" && property !== "@instanceTypes" && property !== "@instanceType" && property !== "@resultType" && property !== "@id_ref") {
                                 deserialisedObject[property] = deserialiseMetaProperty(obj[property]);
                             } else if (property === "@instanceTypes" && Array.isArray(obj[property])) {
                                 console.log("!!!New Types!!!", obj[property]);

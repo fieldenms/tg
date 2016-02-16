@@ -21,7 +21,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean getEditableDefault() {
+    public static boolean getEditableDefault() {
         return true;
     }
 
@@ -31,7 +31,7 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public boolean getEditable(final MetaProperty<Object> metaProperty) {
+    public static <M> boolean getEditable(final MetaProperty<M> metaProperty) {
         return metaProperty == null ? getEditableDefault() : metaProperty.isEditable();
     }
 
@@ -51,7 +51,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean getChangedFromOriginalDefault() {
+    public static boolean getChangedFromOriginalDefault() {
         return false;
     }
 
@@ -61,7 +61,7 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public boolean getChangedFromOriginal(final MetaProperty<Object> metaProperty) {
+    public static <M> boolean getChangedFromOriginal(final MetaProperty<M> metaProperty) {
         return metaProperty == null ? getChangedFromOriginalDefault() : metaProperty.isChangedFromOriginal();
     }
 
@@ -94,7 +94,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean getRequiredDefault() {
+    public static boolean getRequiredDefault() {
         return false;
     }
 
@@ -104,7 +104,7 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public boolean getRequired(final MetaProperty<Object> metaProperty) {
+    public static <M> boolean getRequired(final MetaProperty<M> metaProperty) {
         return metaProperty == null ? getRequiredDefault() : metaProperty.isRequired();
     }
 
@@ -124,7 +124,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean getVisibleDefault() {
+    public static boolean getVisibleDefault() {
         return true;
     }
 
@@ -134,7 +134,7 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public boolean getVisible(final MetaProperty<Object> metaProperty) {
+    public static <M> boolean getVisible(final MetaProperty<M> metaProperty) {
         return metaProperty == null ? getVisibleDefault() : metaProperty.isVisible();
     }
 
@@ -154,7 +154,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public Result getValidationResultDefault() {
+    public static Result getValidationResultDefault() {
         return null;
     }
 
@@ -164,11 +164,11 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public Result getValidationResult(final MetaProperty<Object> metaProperty) {
+    public static <M> Result getValidationResult(final MetaProperty<M> metaProperty) {
         return metaProperty == null ? getValidationResultDefault() : validationResult(metaProperty);
     }
 
-    private Result validationResult(final MetaProperty<Object> metaProperty) {
+    private static <M> Result validationResult(final MetaProperty<M> metaProperty) {
         return !metaProperty.isValid() ? metaProperty.getFirstFailure() : metaProperty.getFirstWarning();
     }
 
