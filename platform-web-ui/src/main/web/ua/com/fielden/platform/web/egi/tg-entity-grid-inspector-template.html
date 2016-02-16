@@ -299,7 +299,7 @@
                             <!-- Table header -->
                             <div class="layout horizontal table-header-row">
                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                                    <paper-checkbox class="blue header" hidden$="[[_isCheckboxesOrHeaderFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed)]]" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
+                                    <paper-checkbox class="blue header" hidden$="[[_isCheckboxesOrHeaderFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, numOfFixedCols)]]" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                 </div>
                                 <template is="dom-if" if="[[primaryAction]]">
                                     <div class="action-cell layout horizontal center no-flexible">
@@ -307,8 +307,8 @@
                                     </div>
                                 </template>
                                 <template is="dom-repeat" items="[[columns]]">
-                                    <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item)]]" tooltip-text$="[[item.columnDesc]]">
-                                        <div class="truncate" hidden$="[[_isHeaderFixed(headerFixed)]]" style="width:100%">[[item.columnTitle]]</div>
+                                    <div class="table-cell layout horizontal center-center" style$="[[_calcColumnHeaderStyle(item, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                        <div class="truncate" hidden$="[[_isHeaderColumnHidden(headerFixed, index, numOfFixedCols)]]" style="width:100%">[[item.columnTitle]]</div>
                                     </div>
                                 </template>
                                 <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
@@ -321,25 +321,27 @@
                             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                                 <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                     <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
-                                        <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
+                                        <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                                     </div>
                                     <template is="dom-if" if="[[primaryAction]]">
                                         <div class="action-cell layout horizontal center no-flexible">
-                                            <template is="dom-if" if="[[!_isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed)]]">
+                                            <template is="dom-if" if="[[!_isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                                 <tg-page-action class="action" icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
                                                 <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
                                             </template>
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]" as="column">
-                                        <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
-                                            <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
-                                            </div>
-                                            <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
-                                            </template>
-                                            <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                                <div class="truncate relative" style="width:100%">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
+                                        <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
+                                            <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
+                                                <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
+                                                </div>
+                                                <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
+                                                    <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                                </template>
+                                                <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
+                                                    <div class="truncate relative" style="width:100%">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
+                                                </template>
                                             </template>
                                         </div>
                                     </template>
@@ -372,17 +374,19 @@
                                         </template>
                                         <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
                                             <template is="dom-if" if="[[summary]]">
-                                                <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
-                                                    <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                                        <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
-                                                    </template>
-                                                    <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                                        <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
+                                                <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary, summaryIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
+                                                    <template is="dom-if" if="[[!_isColumnFixed(summaryIndex, numOfFixedCols)]]">
+                                                        <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
+                                                            <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
+                                                        </template>
+                                                        <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                                            <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
+                                                        </template>
                                                     </template>
                                                 </div>
                                             </template>
                                             <template is="dom-if" if="[[!summary]]">
-                                                <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns)]]">
+                                                <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns, numOfFixedCols)]]">
                                                 </div>
                                             </template>
                                         </template>
@@ -397,16 +401,21 @@
                         </div>
                         <!-- Fixed container -->
                         <div id="lockContainer" class="absolute fit" style="overflow:hidden">
-                            <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                            <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                 <div id="leftLockPanel" class="absolutelyWhite layout vertical" on-wheel="_handleWheel" style$="[[_calculateLeftLockPanelStyle(_showLeftShadow, _scrollTop, headerFixed)]]">
                                     <!--header-->
                                     <div class="layout horizontal table-header-row" hidden$="[[_isHeaderFixed(headerFixed)]]">
                                         <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                             <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                         </div>
-                                        <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                                        <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                             <div class="action-cell layout horizontal center no-flexible">
                                                 <!--Primary action stub header goes here-->
+                                            </div>
+                                        </template>
+                                        <template is="dom-repeat" items="[[columns]]">
+                                            <div class="table-cell layout horizontal center-center" hidden$= "[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                                <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                                             </div>
                                         </template>
                                     </div>
@@ -416,10 +425,21 @@
                                             <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
                                                 <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
                                             </div>
-                                            <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                                            <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                                 <div class="action-cell layout horizontal center no-flexible">
                                                     <tg-page-action class="action" icon="[[primaryAction.icon]]" action="[[primaryAction.action]]" current-entity="[[egiEntity.entity]]" hidden$="[[!primaryAction.action]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" component-uri="[[primaryAction.componentUri]]" view-type="[[primaryAction.viewType]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" pref-dim="[[primaryAction.prefDim]]"></tg-page-action>
                                                     <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" hidden$="[[primaryAction.action]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
+                                                </div>
+                                            </template>
+                                            <template is="dom-repeat" items="[[columns]]" as="column">
+                                                <div class="table-data-cell relative layout horizontal center" hidden$= "[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
+                                                    <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
+                                                    <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
+                                                        <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                                    </template>
+                                                    <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
+                                                        <div class="truncate relative" style="width:100%">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
+                                                    </template>
                                                 </div>
                                             </template>
                                         </div>
@@ -431,15 +451,35 @@
                                                 <div class="table-cell no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
                                                     <!-- checkbox stub for table footer -->
                                                 </div>
-                                                <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                                                <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                                     <div class="action-cell no-flexible">
                                                         <!--Primary action footer goes here-->
                                                     </div>
+                                                </template>
+                                                <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
+                                                    <template is="dom-if" if="[[_isColumnFixed(summaryIndex, numOfFixedCols)]]">
+                                                        <template is="dom-if" if="[[summary]]">
+                                                            <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary, summaryIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
+                                                                <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
+                                                                    <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
+                                                                </template>
+                                                                <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                                                    <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
+                                                                </template>
+                                                            </div>
+                                                        </template>
+                                                        <template is="dom-if" if="[[!summary]]">
+                                                            <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns, numOfFixedCols)]]"></div>
+                                                        </template>
+                                                    </template>
                                                 </template>
                                             </div>
                                         </template>
                                     </template>
                                 </div>
+                            </template>
+                            <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
+                                <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow)]]"></div>
                             </template>
                             <template is="dom-if" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
                                 <div id="rightLockPanel" class="absolutelyWhite layout vertical" on-wheel="_handleWheel" style$="[[_calculateRightLockPanelStyle(_showRightShadow, _scrollTop, headerFixed)]]">
@@ -473,24 +513,21 @@
                                     </template>
                                 </div>
                             </template>
-                            <template is="dom-if" if="[[_isLeftLockPanelVisble(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed)]]">
-                                <div id="leftShadow" class="absolute" style$="[[_calcLeftShadowStyle(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, _showLeftShadow)]]"></div>
-                            </template>
                             <template is="dom-if" if="[[_isSecondaryActionsPresentAndFixed(secondaryActions, secondaryActionsFixed)]]">
                                 <div id="topShadow" class="absolute" style$="[[_calcRightShadowStyle(secondaryActions, secondaryActionsFixed, _showRightShadow)]]"></div>
                             </template>
                             <template is="dom-if" if="[[_isHeaderFixed(headerFixed)]]">
-                                <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, _scrollLeft)]]">
-                                    <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                                <div id="topLockPanel" class="absolutelyWhite layout horizontal table-header-row" style$="[[_calculateTopLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
+                                    <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                         <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                     </div>
-                                    <template is="dom-if" if="[[_isPrimaryActionsNotFixedAndPresent(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                                    <template is="dom-if" if="[[_isPrimaryActionsNotFixedAndPresent(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                         <div class="action-cell layout horizontal center no-flexible">
                                             <!--Primary action stub header goes here-->
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]">
-                                        <div class="table-cell layout horizontal center" style$="[[_calcColumnHeaderStyle(item)]]" tooltip-text$="[[item.columnDesc]]">
+                                        <div class="table-cell layout horizontal center" hidden$="[[_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
                                             <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                                         </div>
                                     </template>
@@ -502,30 +539,32 @@
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
-                                <div id="bottomLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, _scrollLeft)]]">
+                                <div id="bottomLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
                                     <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                         <div class="layout horizontal table-footer-row">
-                                            <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
+                                            <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                             </div>
-                                            <template is="dom-if" if="[[_isPrimaryActionsNotFixedAndPresent(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                                            <template is="dom-if" if="[[_isPrimaryActionsNotFixedAndPresent(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                                 <div class="action-cell layout horizontal center no-flexible">
                                                     <!--Primary action stub header goes here-->
                                                 </div>
                                             </template>
                                             <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
-                                                <template is="dom-if" if="[[summary]]">
-                                                    <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
-                                                        <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                                            <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
-                                                        </template>
-                                                        <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                                            <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
-                                                        </template>
-                                                    </div>
-                                                </template>
-                                                <template is="dom-if" if="[[!summary]]">
-                                                    <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns)]]">
-                                                    </div>
+                                                <template is="dom-if" if="[[!_isColumnFixed(summaryIndex, numOfFixedCols)]]">
+                                                    <template is="dom-if" if="[[summary]]">
+                                                        <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary, summaryIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
+                                                            <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
+                                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
+                                                            </template>
+                                                            <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                                                <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                    <template is="dom-if" if="[[!summary]]">
+                                                        <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns, numOfFixedCols)]]">
+                                                        </div>
+                                                    </template>
                                                 </template>
                                             </template>
                                             <template is="dom-if" if="[[_isSecondaryActionsPresentAndNotFixed(secondaryActions, secondaryActionsFixed)]]">
@@ -537,14 +576,19 @@
                                     </template>
                                 </div>
                             </template>
-                            <template is="dom-if" if="[[_isTopLeftPanelVisible(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, headerFixed)]]">
+                            <template is="dom-if" if="[[_isTopLeftPanelVisible(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed)]]">
                                 <div id="topLeftLockPanel" class="absolutelyWhite layout horizontal center table-header-row" style="top:0;left:0">
                                     <div class="table-cell" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                         <paper-checkbox class="blue header" checked="[[selectedAll]]" on-change="_allSelectionChanged"></paper-checkbox>
                                     </div>
-                                    <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                                    <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                         <div class="action-cell no-flexible">
                                             <!--Primary action stub header goes here-->
+                                        </div>
+                                    </template>
+                                    <template is="dom-repeat" items="[[columns]]">
+                                        <div class="table-cell layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                            <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                                         </div>
                                     </template>
                                 </div>
@@ -554,17 +598,35 @@
                                     <!-- secondary action header column -->
                                 </div>
                             </template>
-                            <template is="dom-if" if="[[_isBottomLeftPanelVisible(totals, summaryFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed)]]">
+                            <template is="dom-if" if="[[_isBottomLeftPanelVisible(totals, summaryFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                 <div id="bottomLeftLockPanel" class="absolutelyWhite layout vertical" style="bottom:0;left:0">
                                     <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                         <div class="layout horizontal table-footer-row">
                                             <div class="table-cell no-flexible" style="width:18px" hidden$="[[!checkboxVisible]]">
                                                 <!-- checkbox stub for table footer -->
                                             </div>
-                                            <template is="dom-if" if="[[_isPrimaryActionSummaryVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, summaryFixed)]]">
+                                            <template is="dom-if" if="[[_isPrimaryActionSummaryVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, summaryFixed, numOfFixedCols)]]">
                                                 <div class="action-cell no-flexible">
                                                     <!--Primary action footer goes here-->
                                                 </div>
+                                            </template>
+                                            <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
+                                                <template is="dom-if" if="[[_isColumnFixed(summaryIndex, numOfFixedCols)]]">
+                                                    <template is="dom-if" if="[[summary]]">
+                                                        <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary, summaryIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
+                                                            <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
+                                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
+                                                            </template>
+                                                            <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                                                <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                    <template is="dom-if" if="[[!summary]]">
+                                                        <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns, numOfFixedCols)]]">
+                                                        </div>
+                                                    </template>
+                                                </template>
                                             </template>
                                         </div>
                                     </template>
@@ -643,39 +705,39 @@
 <script>
     (function () {
         var _checkCollapsiblePanelVisibility = function (layout) {
-            this.collapsePanelVisible = !!(this.cardLayout && layout);
-        },
-        _areEqual = function (a, b) {
-            return a.id === b.id;
-        },
-        _hasEntity = function (entity, entities) {
-            for (var i = 0; i < entities.length; i += 1) {
-                if (_areEqual(entity, entities[i])) {
-                    return true;
+                this.collapsePanelVisible = !!(this.cardLayout && layout);
+            },
+            _areEqual = function (a, b) {
+                return a.id === b.id;
+            },
+            _hasEntity = function (entity, entities) {
+                for (var i = 0; i < entities.length; i += 1) {
+                    if (_areEqual(entity, entities[i])) {
+                        return true;
+                    }
                 }
-            }
-            return false;
-        },
-        _findEntity = function (entity, entities) {
-            for (var i = 0; i < entities.length; i += 1) {
-                if (_areEqual(entity, entities[i])) {
-                    return i;
+                return false;
+            },
+            _findEntity = function (entity, entities) {
+                for (var i = 0; i < entities.length; i += 1) {
+                    if (_areEqual(entity, entities[i])) {
+                        return i;
+                    }
                 }
-            }
-            return -1;
-        },
-        _processEntitySelection = function (selectedEntities, entity, select) {
-            var selectedIndex = selectedEntities.indexOf(entity);
-            if (select) {
-                if (selectedIndex < 0) {
-                    selectedEntities.push(entity);
+                return -1;
+            },
+            _processEntitySelection = function (selectedEntities, entity, select) {
+                var selectedIndex = selectedEntities.indexOf(entity);
+                if (select) {
+                    if (selectedIndex < 0) {
+                        selectedEntities.push(entity);
+                    }
+                } else {
+                    if (selectedIndex >= 0) {
+                        selectedEntities.splice(selectedIndex, 1);
+                    }
                 }
-            } else {
-                if (selectedIndex >= 0) {
-                    selectedEntities.splice(selectedIndex, 1);
-                }
-            }
-        };
+            };
         Polymer({
             is: "tg-@miType-grid-inspector",
 
@@ -723,6 +785,10 @@
                     type: Boolean,
                     value: @checkboxesWithPrimaryActionsFixed
                 },
+                numOfFixedCols: {
+                    type: Number,
+                    value: @numOfFixedCols
+                },
                 secondaryActionsFixed: {
                     type: Boolean,
                     value: @secondaryActionsFixed
@@ -758,6 +824,10 @@
                 _actionWidth: {
                     type: String,
                     value: "20px"
+                },
+                _cellPadding: {
+                    type: String,
+                    value : "1.2rem"
                 }
             },
 
@@ -921,24 +991,24 @@
                 }
             },
 
-            _isCheckboxesOrHeaderFixed: function (checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed) {
-                return this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed) || headerFixed;
+            _isCheckboxesOrHeaderFixed: function (checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, numOfFixedCols) {
+                return this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) || headerFixed;
+            },
+            
+            _isCheckboxesFixed: function (checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return checkboxesFixed || checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0);
+            },
+            
+            _isCheckboxesNotFixedAndVisible: function (checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return checkboxVisible && !checkboxesFixed && !checkboxesWithPrimaryActionsFixed && (numOfFixedCols <= 0);
             },
 
-            _isCheckboxesFixed: function (checkboxesFixed, checkboxesWithPrimaryActionsFixed) {
-                return checkboxesFixed || checkboxesWithPrimaryActionsFixed;
+            _isPrimaryActionsFixed: function (checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0);
             },
 
-            _isCheckboxesNotFixedAndVisible: function (checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed) {
-                return checkboxVisible && !checkboxesFixed && !checkboxesWithPrimaryActionsFixed;
-            },
-
-            _isPrimaryActionsFixed: function (checkboxesWithPrimaryActionsFixed) {
-                return checkboxesWithPrimaryActionsFixed;
-            },
-
-            _isPrimaryActionsNotFixedAndPresent: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
-                return primaryAction && !checkboxesWithPrimaryActionsFixed;
+            _isPrimaryActionsNotFixedAndPresent: function (primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return primaryAction && !checkboxesWithPrimaryActionsFixed && (numOfFixedCols <= 0);
             },
 
             _isSecondaryActionsFixed: function (secondaryActionsFixed) {
@@ -956,6 +1026,18 @@
             _isHeaderFixed: function (headerFixed) {
                 return headerFixed;
             },
+            
+            _isHeaderColumnHidden: function (headerFixed, index, numOfFixedCols) {
+                return headerFixed || this._isColumnFixed(index, numOfFixedCols);
+            },
+            
+            _isColumnFixed: function (index, numOfFixedCols) {
+                return index < numOfFixedCols;
+            },
+            
+            _isSummaryFixed: function () {
+                console.log(arguments);
+            },
 
             _isSummaryPresentAndFixed: function (totals, summaryFixed) {
                 return totals && summaryFixed;
@@ -965,28 +1047,28 @@
                 return totals && !summaryFixed;
             },
 
-            _isLeftLockPanelVisble: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed) {
-                return (checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed);
+            _isLeftLockPanelVisble: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return (checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed) || (numOfFixedCols > 0);
             },
 
-            _isTopLeftPanelVisible: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, headerFixed) {
-                return ((checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed)) && headerFixed;
+            _isTopLeftPanelVisible: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed) {
+                return ((checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed) || numOfFixedCols > 0) && headerFixed;
             },
 
-            _isPrimaryActionVisibleAndFixed: function (primaryAction, checkboxesWithPrimaryActionsFixed) {
-                return primaryAction && checkboxesWithPrimaryActionsFixed;
+            _isPrimaryActionVisibleAndFixed: function (primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return primaryAction && (checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0);
             },
 
             _isTopRightPanelVisible: function (secondaryActions, secondaryActionsFixed, headerFixed) {
                 return this._isSecondaryActionsPresent(secondaryActions) && secondaryActionsFixed && headerFixed;
             },
 
-            _isBottomLeftPanelVisible: function (totals, summaryFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed) {
-                return totals && summaryFixed && ((checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed));
+            _isBottomLeftPanelVisible: function (totals, summaryFixed, checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
+                return totals && summaryFixed && ((checkboxVisible && (checkboxesFixed || checkboxesWithPrimaryActionsFixed)) || (primaryAction && checkboxesWithPrimaryActionsFixed) || numOfFixedCols > 0);
             },
 
-            _isPrimaryActionSummaryVisibleAndFixed: function (primaryAction, checkboxesWithPrimaryActionsFixed, summaryFixed) {
-                return primaryAction && (checkboxesWithPrimaryActionsFixed || summaryFixed);
+            _isPrimaryActionSummaryVisibleAndFixed: function (primaryAction, checkboxesWithPrimaryActionsFixed, summaryFixed, numOfFixedCols) {
+                return primaryAction && (checkboxesWithPrimaryActionsFixed || summaryFixed || numOfFixedCols > 0);
             },
 
             _isBottomRightPanelVisible: function (totals, summaryFixed, secondaryActions, secondaryActionsFixed) {
@@ -1251,15 +1333,24 @@
             /**
              * Calculates the column's header style.
              */
-            _calcColumnHeaderStyle: function (item) {
-                return "min-width: " + item.width + "px; width: " + item.width + "px; flex-grow: " + item.growFactor + (item.growFactor === 0 ? "; flex-shrink: 0;" : ";") + (item.width === 0 ? " display: none;" : "");
+            _calcColumnHeaderStyle: function (item, index, numOfFixedCols) {
+                var colStyle = "min-width: " + item.width + "px;" + "width: " + item.width + "px;"
+                if (item.growFactor === 0 || index < numOfFixedCols) {
+                    colStyle += "flex-grow: 0;flex-shrink:0;";
+                } else {
+                    colStyle += "flex-grow: " + item.growFactor + ";";
+                }
+                if (item.width === 0) {
+                    colStyle += "display: none;";
+                }
+                return colStyle;
             },
             /**
              * Calculates the column's style.
              */
-            _calcColumnStyle: function (column) {
-                var colStyle = "min-width: " + column.width + "px; width: " + column.width + "px; flex-grow: " + column.growFactor + (column.growFactor === 0 ? "; flex-shrink: 0;" : ";") + (column.width === 0 ? " display: none;" : "");
-                if (column.type === 'Integer' || column.type === 'BigDecimal' || column.type === 'Money') {
+            _calcColumnStyle: function (item, index, numOfFixedCols) {
+                var colStyle = this._calcColumnHeaderStyle(item, index, numOfFixedCols);
+                if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
                     colStyle += "text-align: right;"
                 }
                 return colStyle;
@@ -1305,9 +1396,9 @@
             /**
              * Calculates the style for empty total's cell.
              */
-            _calcEmptyTotalStyle: function (summaryIndex, columns) {
+            _calcEmptyTotalStyle: function (summaryIndex, columns, numOfFixedCols) {
                 var item = columns[summaryIndex];
-                return  this._calcColumnStyle(item);
+                return this._calcColumnHeaderStyle(item, summaryIndex, numOfFixedCols);
             },
 
             /**
@@ -1321,12 +1412,12 @@
                 return "right:0;top:calc(" + (headerFixed ? "3rem" : "0px") + " - " + _scrollTop + "px);";
             },
 
-            _calculateTopLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, _scrollLeft) {
-                return "top:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
+            _calculateTopLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft) {
+                return "top:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
             },
 
-            _calculateBottomLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, _scrollLeft) {
-                return "bottom:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
+            _calculateBottomLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft) {
+                return "bottom:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
             },
 
             _calculateCheckboxWidth: function (checkboxVisible, fixed) {
@@ -1335,6 +1426,14 @@
 
             _calculatePrimaryActionWidth: function (primaryAction, fixed) {
                 return (primaryAction && fixed) ? this._actionWidth + " + 0.6rem" : "0px";
+            },
+            
+            _calculateFixedColsWidth: function (numOfFixedCols) {
+                var colIndex, fixedColsWidth = 0;
+                for (colIndex = 0; colIndex < numOfFixedCols; colIndex++) {
+                    fixedColsWidth += this.columns[colIndex].width;
+                }
+                return fixedColsWidth + "px + " + this._cellPadding + " * " + numOfFixedCols;
             },
 
             _calculateSecondaryActionWidth: function (secondaryActions, fixed) {
@@ -1557,8 +1656,8 @@
                 return shadowStyle;
             },
 
-            _calcLeftShadowStyle: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, _showLeftShadow) {
-                var shadowStyle = "left:0;top:0;bottom:0;width:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed) + ");";
+            _calcLeftShadowStyle: function (checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, _showLeftShadow) {
+                var shadowStyle = "left:0;top:0;bottom:0;width:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0)) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0)) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + ");";
                 if (_showLeftShadow) {
                     shadowStyle += "box-shadow: 3px 0px 6px -2px rgba(0,0,0,0.7);";
                 }

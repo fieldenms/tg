@@ -1050,7 +1050,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 //.hideCheckboxes()
                 //.notScrollable()
-                .withScrollingConfig(ScrollConfig.configScroll().withFixedSecondaryActions().withFixedSummary().done())
+                .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(1).withFixedSecondaryActions().withFixedHeader().done())
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
                 .addProp("this").flexibleWidth(60).withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
@@ -1159,8 +1159,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
                 .addPrimaryAction(
-                        //EntityActionConfig.createMasterInvocationActionConfig()
-                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
+                        EntityActionConfig.createMasterInvocationActionConfig()
+                //EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 //                        action(TgFunctionalEntityWithCentreContext.class).
                 //                                withContext(context().withSelectedEntities().build()).
                 //                                icon("assignment-turned-in").

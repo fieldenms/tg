@@ -666,6 +666,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
                 replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() + "").
                 replace("@checkboxesWithPrimaryActionsFixed", dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed() + "").
+                replace("@numOfFixedCols", Integer.toString(dslDefaultConfig.getScrollConfig().getNumberOfFixedColumns())).
                 replace("@secondaryActionsFixed", dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed() + "").
                 replace("@headerFixed", dslDefaultConfig.getScrollConfig().isHeaderFixed() + "").
                 replace("@summaryFixed", dslDefaultConfig.getScrollConfig().isSummaryFixed() + "").
