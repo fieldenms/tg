@@ -42,7 +42,7 @@ public class EntityFetcher {
             final List<E> result = instantiateFromContainers(containers, queryModel.isLightweight(), proxyMode);
             final Period pd = new Period(st, new DateTime());
             
-            String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
+            final String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
             logger.debug(format("Duration: %s m %s s %s ms. Entities (%s) count: %s.", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), entityTypeName, result.size()));
             
             return result;
@@ -55,9 +55,9 @@ public class EntityFetcher {
     private <E extends AbstractEntity<?>> List<E> instantiateFromContainers(final List<EntityContainer<E>> containers, final boolean lightweight, final ProxyMode proxyMode) {
         final List<E> result = new ArrayList<E>();
         final ProxyCache cache = new ProxyCache();
-        final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory(), lightweight, proxyMode, cache, executionContext.getCoFinder());
+        final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory()/*, lightweight*/, proxyMode, cache, executionContext.getCoFinder());
         for (final EntityContainer<E> entityContainer : containers) {
-            result.add(instantiator.instantiate(entityContainer));
+            result.add(instantiator.instantiate(entityContainer, lightweight));
         }
         return result;
     }

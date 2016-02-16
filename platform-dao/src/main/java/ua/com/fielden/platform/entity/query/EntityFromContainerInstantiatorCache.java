@@ -18,9 +18,9 @@ public class EntityFromContainerInstantiatorCache {
         final AbstractEntity<?> existingEntity = (AbstractEntity<?>) map.get(entityContainer);
         
         if (existingEntity == null) {
-            final R justAddedEntity = instantiator.instantiateInitially(entityContainer); 
+            final R justAddedEntity = instantiator.instantiateInitially(entityContainer, true); 
             map.put(entityContainer, justAddedEntity);
-            return instantiator.instantiateFully(entityContainer, justAddedEntity);
+            return instantiator.instantiateFully(entityContainer, justAddedEntity, true);
         }
      
         return (R) existingEntity;
