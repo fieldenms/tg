@@ -15,6 +15,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     private final Map<String, CollectionContainer<? extends AbstractEntity<?>>> collections = new HashMap<String, CollectionContainer<? extends AbstractEntity<?>>>();
     private boolean proxy = false;
     private boolean strictProxy = false;
+    private boolean instrumentalised = false;
 
     public EntityContainer(final Class<R> resultType) {
         this.resultType = resultType;
@@ -60,6 +61,14 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
     public void setStrictProxy() {
         this.strictProxy = true;
+    }
+    
+    public void setInstrumentalised() {
+        this.instrumentalised = true;
+    }
+    
+    public boolean isInstrumentalised() {
+        return instrumentalised;
     }
 
     public Class<R> getResultType() {
