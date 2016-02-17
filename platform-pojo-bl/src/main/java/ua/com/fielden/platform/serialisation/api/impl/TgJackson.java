@@ -145,7 +145,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
 
             EntitySerialiser.getContext().reset();
             final T val = readValue(contentString, concreteType);
-            if (!DynamicEntityClassLoader.isEnhanced(concreteType.getRawClass())) {
+            if (!DynamicEntityClassLoader.isGenerated(concreteType.getRawClass())) {
                 executeDefiners();
             }
             return val;

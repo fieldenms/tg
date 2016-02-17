@@ -88,7 +88,7 @@ public class References {
 
         final Set<AbstractEntity<?>> refs = new HashSet<>();
         for (final AbstractEntity<?> entity : referenceToEntity.values()) {
-            if (entity != null && !DynamicEntityClassLoader.isEnhanced(entity.getClass())) {
+            if (entity != null && !DynamicEntityClassLoader.isGenerated(entity.getClass())) {
                 refs.add(entity);
             }
         }

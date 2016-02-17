@@ -442,7 +442,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public T refetchEntity(final T entity, final fetch<T> fetchModel) {
         if (entity.getType().equals(getEntityClass())) {
             return dao.findByEntityAndFetch(fetchModel, entity);
-        } else if (DynamicEntityClassLoader.isEnhanced(entity.getType()) && DynamicEntityClassLoader.getOriginalType(entity.getType()).equals(getEntityClass())) {
+        } else if (DynamicEntityClassLoader.isGenerated(entity.getType()) && DynamicEntityClassLoader.getOriginalType(entity.getType()).equals(getEntityClass())) {
             generatedEntityController.setEntityType(getManagedType());
             return generatedEntityController.findById(entity.getId(), fetchModel, getByteArrayForManagedType());
         }

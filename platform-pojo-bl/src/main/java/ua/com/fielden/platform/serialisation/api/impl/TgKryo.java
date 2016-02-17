@@ -586,7 +586,7 @@ class TgKryo extends Kryo implements ISerialiserEngine {
         try {
             final Class<?> serialisedType = readClass(readBuffer).getType();
             final T result = (T) readObject(readBuffer, serialisedType);
-            if (!DynamicEntityClassLoader.isEnhanced(type)) {
+            if (!DynamicEntityClassLoader.isGenerated(type)) {
                 executeDefiners();
             }
             return result;
@@ -616,7 +616,7 @@ class TgKryo extends Kryo implements ISerialiserEngine {
                 final Object obj = references.referenceToObject.get(index);
 
                 // let's try to identify whether we are loading generated types here
-                if (obj != null && DynamicEntityClassLoader.isEnhanced(obj.getClass())) {
+                if (obj != null && DynamicEntityClassLoader.isGenerated(obj.getClass())) {
                     return;
                 }
 

@@ -347,7 +347,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
      */
     private static List<CalculatedProperty> reload(final Class<?> type, final Class<?> root, final String path, final DomainTreeEnhancer0 dte, final boolean validateTitleContextOfExtractedProperties) {
         final List<CalculatedProperty> newCalcProperties = new ArrayList<CalculatedProperty>();
-        if (!DynamicEntityClassLoader.isEnhanced(type)) {
+        if (!DynamicEntityClassLoader.isGenerated(type)) {
             return newCalcProperties;
         } else {
             // add all first level calculated properties if any exist

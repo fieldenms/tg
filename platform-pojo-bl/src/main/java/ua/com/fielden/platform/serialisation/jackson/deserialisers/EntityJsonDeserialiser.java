@@ -95,7 +95,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final boolean uninstrumented = uninstrumentedJsonNode != null;
 
             final T entity;
-            if (DynamicEntityClassLoader.isEnhanced(type)) {
+            if (DynamicEntityClassLoader.isGenerated(type)) {
                 entity = factory.newPlainEntity(type, id);
                 entity.setEntityFactory(factory);
             } else {
@@ -154,7 +154,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                             throw e;
                         }
                     }
-                    if (!DynamicEntityClassLoader.isEnhanced(type)) {
+                    if (!DynamicEntityClassLoader.isGenerated(type)) {
                         if (!uninstrumented) {
                             // this is very important -- original values for non-persistent entities should be left 'null'!
                             final Object originalValue = entity.isPersisted() ? value : null;

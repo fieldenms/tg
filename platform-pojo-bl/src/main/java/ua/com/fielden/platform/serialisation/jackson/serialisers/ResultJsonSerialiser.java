@@ -63,7 +63,7 @@ public class ResultJsonSerialiser extends StdSerializer<Result> {
                 list.forEach(item -> {
                     if (item != null) {
                         final Class<?> itemClass = PropertyTypeDeterminator.stripIfNeeded(item.getClass());
-                        if (DynamicEntityClassLoader.isEnhanced(itemClass)) {
+                        if (DynamicEntityClassLoader.isGenerated(itemClass)) {
                             generatedTypes.add(itemClass);
                         }
                     }
