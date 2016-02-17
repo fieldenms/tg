@@ -40,6 +40,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
 public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDeserializer<T> {
+    private static final long serialVersionUID = 1L;
     private final EntityFactory factory;
     private final ObjectMapper mapper;
     private final Field versionField;
@@ -93,15 +94,15 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JsonNode idJsonNode = node.get(AbstractEntity.ID); // the node should not be null itself
             final Long id = idJsonNode.isNull() ? null : idJsonNode.asLong();
             
-            final JsonNode instrumentedJsonNode = node.get("@instrumented"); // the node should not be null itself
-            final boolean instrumented = instrumentedJsonNode.asBoolean();
+            final JsonNode uninstrumentedJsonNode = node.get("@uninstrumented");
+            final boolean uninstrumented = uninstrumentedJsonNode != null;
 
             final T entity;
             if (DynamicEntityClassLoader.isEnhanced(type)) {
                 entity = factory.newPlainEntity(type, id);
                 entity.setEntityFactory(factory);
             } else {
-                if (!instrumented) {
+                if (uninstrumented) {
                     entity = factory.newPlainEntity(type, id);
                     entity.setEntityFactory(factory);
                 } else {
@@ -157,7 +158,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                         }
                     }
                     if (!DynamicEntityClassLoader.isEnhanced(type)) {
-                        if (instrumented) {
+                        if (!uninstrumented) {
                             // this is very important -- original values for non-persistent entities should be left 'null'!
                             final Object originalValue = entity.isPersisted() ? value : null;
                             if (entity.isPersisted()) {

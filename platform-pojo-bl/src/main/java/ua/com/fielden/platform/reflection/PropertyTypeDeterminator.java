@@ -251,7 +251,17 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static boolean isEnhanced(final Class<?> klass) {
-        return klass.getName().contains("$$Enhancer") || klass.getName().contains("$$_javassist");
+        return isInstrumented(klass) || klass.getName().contains("$$_javassist");
+    }
+    
+    /**
+     * Returns <code>true</code> if the specified class is instrumented by Guice (and its metaProperties should exist), <code>false</code> otherwise.
+     *
+     * @param klass
+     * @return
+     */
+    public static boolean isInstrumented(final Class<?> klass) {
+        return klass.getName().contains("$$Enhancer");
     }
 
     public static boolean isDotNotation(final String exp) {
