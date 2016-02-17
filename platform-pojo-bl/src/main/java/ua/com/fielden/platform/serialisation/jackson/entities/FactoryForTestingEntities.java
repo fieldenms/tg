@@ -323,4 +323,34 @@ public class FactoryForTestingEntities {
         
         return entity;
     }
+    
+    public Entity1WithEntity2 createInstrumentedEntityWithUninstrumentedProperty() {
+        final Entity1WithEntity2 entity = factory.newEntity(Entity1WithEntity2.class, 159L);
+        
+        final Entity2WithEntity1 uninstrumentedPropValue = factory.newPlainEntity(Entity2WithEntity1.class, 162L);
+        uninstrumentedPropValue.setEntityFactory(factory);
+
+        entity.beginInitialising();
+        entity.setProp(uninstrumentedPropValue);
+        entity.setKey("INSTRUMENTED_WITH_UNINSTRUMENTED");
+        entity.setDesc("INSTRUMENTED_WITH_UNINSTRUMENTED desc");
+        entity.endInitialising();
+        
+        return entity;
+    }
+
+    public Entity1WithEntity2 createUninstrumentedEntityWithInstrumentedProperty() {
+        final Entity1WithEntity2 entity = factory.newPlainEntity(Entity1WithEntity2.class, 159L);
+        entity.setEntityFactory(factory);
+        
+        final Entity2WithEntity1 uninstrumentedPropValue = factory.newEntity(Entity2WithEntity1.class, 162L);
+
+        entity.beginInitialising();
+        entity.setProp(uninstrumentedPropValue);
+        entity.setKey("UNINSTRUMENTED_WITH_INSTRUMENTED");
+        entity.setDesc("UNINSTRUMENTED_WITH_INSTRUMENTED desc");
+        entity.endInitialising();
+        
+        return entity;
+    }
 }

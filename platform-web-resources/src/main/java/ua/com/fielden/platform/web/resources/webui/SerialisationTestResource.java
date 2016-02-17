@@ -296,7 +296,9 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithCompositeKey(),
                 factory.createUninstrumentedEntity(),
                 factory.createGeneratedEntity(restUtil.getSerialiser(), false), // uninstrumented
-                factory.createGeneratedEntity(restUtil.getSerialiser(), true) // instrumented
+                factory.createGeneratedEntity(restUtil.getSerialiser(), true), // instrumented
+                factory.createInstrumentedEntityWithUninstrumentedProperty(),
+                factory.createUninstrumentedEntityWithInstrumentedProperty()
                 );
     }
     
