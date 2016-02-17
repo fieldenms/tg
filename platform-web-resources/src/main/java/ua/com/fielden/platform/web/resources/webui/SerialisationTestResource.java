@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
@@ -93,6 +94,11 @@ public class SerialisationTestResource extends ServerResource {
                     while (iter1.hasNext()) {
                         final AbstractEntity<?> e1 = iter1.next();
                         final AbstractEntity<?> e2 = iter2.next();
+                        final boolean e1Instrumented = e1 == null ? false : PropertyTypeDeterminator.isInstrumented(e1.getClass());
+                        final boolean e2Instrumented = e2 == null ? false : PropertyTypeDeterminator.isInstrumented(e2.getClass());
+                        if (e1Instrumented != e2Instrumented) {
+                            return Result.failure(format("e1's [%s] instrumentation [%s] does not equal to e2's [%s] instrumentation [%s].", e1, e1Instrumented, e2, e2Instrumented));
+                        }
                         final Result deepEquals = deepEqualsForTesting(e1, e2, setOfCheckedEntities);
                         if (!deepEquals.isSuccessful()) {
                             return deepEquals;
