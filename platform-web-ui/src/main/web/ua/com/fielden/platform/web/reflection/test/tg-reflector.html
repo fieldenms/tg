@@ -81,15 +81,14 @@
                 try {
                     reflector.equalsEx(entity1, entityWithoutKey);
                     assert.fail('Second entity should cause failure during comparison, the \'key\' property is not defined.');
-                }
-                catch (msg) {
+                } catch (msg) {
                     console.log(msg);
                 }
+                
                 try {
                     reflector.equalsEx(entityWithoutKey, entity1);
                     assert.fail('First entity should cause failure during comparison, the \'key\' property is not defined.');
-                }
-                catch (msg) {
+                } catch (msg) {
                     console.log(msg);
                 }
                 
@@ -118,15 +117,14 @@
                 try {
                     reflector.equalsEx(entity1, entityWithoutKey);
                     assert.fail('Second entity should cause failure during comparison, the \'key1\' property is not defined.');
-                }
-                catch (msg) {
+                } catch (msg) {
                     console.log(msg);
                 }
+                
                 try {
                     reflector.equalsEx(entityWithoutKey, entity1);
                     assert.fail('First entity should cause failure during comparison, the \'key1\' property is not defined.');
-                }
-                catch (msg) {
+                } catch (msg) {
                     console.log(msg);
                 }
                 

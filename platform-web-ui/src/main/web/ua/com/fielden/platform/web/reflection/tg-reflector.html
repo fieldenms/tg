@@ -676,14 +676,12 @@
                 var compositePart1, compositePart2;
                 try {
                     compositePart1 = entity1.get(compositePartName);
-                }
-                catch (strictProxyEx1) {
+                } catch (strictProxyEx1) {
                     throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
                 }
                 try {
                     compositePart2 = entity2.get(compositePartName);
-                }
-                catch (strictProxyEx2) {
+                } catch (strictProxyEx2) {
                     throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in second entity, please check fetching strategy. ' + strictProxyEx2;
                 }
                 
@@ -694,16 +692,16 @@
             return true;
         } else {
             var key1, key2;
+            
             try {
                 key1 = entity1.get('key');
-            }
-            catch (strictProxyEx1) {
+            } catch (strictProxyEx1) {
                 throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
             }
+            
             try {
                 key2 = entity2.get('key');
-            }
-            catch (strictProxyEx2) {
+            } catch (strictProxyEx2) {
                 throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in second entity, please check fetching strategy.' + strictProxyEx2;
             }
             return _equalsEx(key1, key2);
