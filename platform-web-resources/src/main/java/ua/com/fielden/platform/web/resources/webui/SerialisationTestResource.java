@@ -44,7 +44,7 @@ public class SerialisationTestResource extends ServerResource {
     public SerialisationTestResource(final EntityFactory entityFactory, final RestServerUtil restUtil, final Context context, final Request request, final Response response, final Date testingDate) {
         init(context, request, response);
         this.restUtil = restUtil;
-        this.entities = createEntities(entityFactory, testingDate);
+        this.entities = createEntities(entityFactory, restUtil, testingDate);
     }
 
     /**
@@ -258,7 +258,7 @@ public class SerialisationTestResource extends ServerResource {
         return setOfCheckedEntities.containsKey(e1);
     }
 
-    private static List<AbstractEntity<?>> createEntities(final EntityFactory entityFactory, final Date testingDate) {
+    private static List<AbstractEntity<?>> createEntities(final EntityFactory entityFactory, final RestServerUtil restUtil, final Date testingDate) {
         final FactoryForTestingEntities factory = new FactoryForTestingEntities(entityFactory, testingDate);
         return Arrays.asList(factory.createNullEmptyEntity(),
                 factory.createSimpleEmptyEntity(),
@@ -287,11 +287,8 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithMapOfSameEntities(),
                 factory.createEntityWithCompositeKey(),
                 factory.createUninstrumentedEntity(),
-                factory.createUninstrumentedEntity(),
-                factory.createUninstrumentedEntity(),
-                factory.createUninstrumentedEntity(),
-                factory.createUninstrumentedEntity(),
-                factory.createUninstrumentedEntity()
+                factory.createGeneratedEntity(restUtil.getSerialiser(), false) // uninstrumented
+                // TODO factory.createGeneratedEntity(restUtil.getSerialiser(), true) // instrumented
                 );
     }
 }

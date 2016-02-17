@@ -13,10 +13,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 
@@ -282,8 +288,37 @@ public class FactoryForTestingEntities {
         final EmptyEntity entity = factory.newPlainEntity(EmptyEntity.class, 159L);
 
         entity.beginInitialising();
-        entity.setKey("UNINSTRUMENTED1");
-        entity.setDesc("UNINSTRUMENTED1 desc");
+        entity.setKey("UNINSTRUMENTED");
+        entity.setDesc("UNINSTRUMENTED desc");
+        entity.endInitialising();
+        
+        return entity;
+    }
+    
+    public AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final boolean instrumented) {
+        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+        
+        final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
+        try {
+            emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
+                    cl.startModification(EmptyEntity.class.getName()).modifyTypeName(EmptyEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_enhanced_" + UUID.randomUUID()).endModification();
+        } catch (final ClassNotFoundException e) {
+            throw Result.failure(e);
+        }
+        final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
+        tgJackson.registerNewEntityType(emptyEntityTypeEnhanced);
+        
+        final AbstractEntity<String> entity;
+        if (instrumented) {
+            entity = (AbstractEntity<String>) factory.newEntity(emptyEntityTypeEnhanced, 159L);
+        } else {
+            entity = (AbstractEntity<String>) factory.newPlainEntity(emptyEntityTypeEnhanced, 159L);
+            entity.setEntityFactory(factory);
+        }
+
+        entity.beginInitialising();
+        entity.setKey("GENERATED+UNINSTRUMENTED");
+        entity.setDesc("GENERATED+UNINSTRUMENTED desc");
         entity.endInitialising();
         
         return entity;
