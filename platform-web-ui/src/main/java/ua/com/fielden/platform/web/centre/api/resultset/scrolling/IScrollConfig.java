@@ -13,4 +13,6 @@ public interface IScrollConfig {
     boolean isHeaderFixed();
 
     boolean isSummaryFixed();
+
+    int getNumberOfFixedColumns();
 }

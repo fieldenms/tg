@@ -156,7 +156,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final boolean runAutomatically;
 
     /**
-     * Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).  
+     * Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).
      */
     private final boolean enforcePostSaveRefresh;
 
@@ -192,17 +192,21 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<String> tooltipProp;
         public final Optional<PropDef<?>> propDef;
         public final Optional<EntityActionConfig> propAction;
+        public final int width;
+        public final boolean isFlexible;
 
-        public static ResultSetProp propByName(final String propName, final String tooltipProp, final EntityActionConfig propAction) {
-            return new ResultSetProp(propName, tooltipProp, null, propAction);
+        public static ResultSetProp propByName(final String propName, final int width, final boolean isFlexible, final String tooltipProp, final EntityActionConfig propAction) {
+            return new ResultSetProp(propName, width, isFlexible, tooltipProp, null, propAction);
         }
 
-        public static ResultSetProp propByDef(final PropDef<?> propDef, final String tooltipProp, final EntityActionConfig propAction) {
-            return new ResultSetProp(null, tooltipProp, propDef, propAction);
+        public static ResultSetProp propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final EntityActionConfig propAction) {
+            return new ResultSetProp(null, width, isFlexible, tooltipProp, propDef, propAction);
         }
 
         private ResultSetProp(
                 final String propName,
+                final int width,
+                final boolean isFlexible,
                 final String tooltipProp,
                 final PropDef<?> propDef,
                 final EntityActionConfig propAction) {
@@ -216,6 +220,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             }
 
             this.propName = Optional.ofNullable(propName);
+            this.width = width;
+            this.isFlexible = isFlexible;
             this.tooltipProp = Optional.ofNullable(tooltipProp);
             this.propDef = Optional.ofNullable(propDef);
             this.propAction = Optional.ofNullable(propAction);
@@ -450,7 +456,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     public boolean isRunAutomatically() {
         return runAutomatically;
     }
-    
+
     public boolean shouldEnforcePostSaveRefresh() {
         return enforcePostSaveRefresh;
     }

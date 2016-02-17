@@ -11,4 +11,12 @@ public interface IScrollConfigForLeftPanel extends IScrollConfigSecondaryActions
     IScrollConfigSecondaryActions withFixedCheckboxes();
 
     IScrollConfigSecondaryActions withFixedCheckboxesAndPrimaryActions();
+
+    /**
+     * Set the number of fixed first columns
+     *
+     * @param numberOfProps
+     * @return
+     */
+    IScrollConfigSecondaryActions withFixedCheckboxesPrimaryActionsAndFirstProps(final int numberOfProps);
 }
