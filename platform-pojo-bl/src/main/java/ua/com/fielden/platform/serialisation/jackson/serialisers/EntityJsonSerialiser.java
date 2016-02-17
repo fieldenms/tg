@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
+import static javassist.util.proxy.ProxyFactory.isProxyClass;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -47,6 +48,10 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
     @Override
     public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
+        if (isProxyClass(entity.getClass())) {
+            throw new IllegalArgumentException(String.format("Entity with type [%s], which is Javassist proxy, should not be serialised at all.", entity.getClass().getSimpleName()));
+        }
+        
         ////////////////////////////////////////////////////
         ///////////////// handle references ////////////////
         ////////////////////////////////////////////////////
