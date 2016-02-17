@@ -45,6 +45,22 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
         this.defaultValueContract = defaultValueContract;
         this.excludeNulls = excludeNulls;
     }
+    
+        
+    /**
+     * Returns <code>true</code> if the specified value is proxied for a given entity instance.
+     * <p>
+     * TODO Reflector will contain similar method once the 'develop' branch will be merged into Issue-#109, please, use that method.
+     *  
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isValueProxied(final Object value) {
+        // TODO Implementation of this method relies on the current approach to proxing.
+        //      It should be modified when moving to ByteBuddy and implementing proxing of non-entity typed properties
+        return value == null ? false : isProxyClass(value.getClass());
+    }
 
     @Override
     public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
@@ -116,63 +132,53 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                     logger.error("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during serialisation process for entity [" + entity + "].", e);
                     throw e;
                 }
+                
+                if (!isValueProxied(value) && (value != null || !excludeNulls)) {
+                    // write actual property
+                    generator.writeFieldName(name);
+                    generator.writeObject(value);
 
-                if (value != null || !excludeNulls) {
-                    final MetaProperty<Object> metaProperty = entity.getProperty(name);
-                    if (uninstrumented) {
-                        // write actual property
-                        generator.writeFieldName(name);
-                        generator.writeObject(value);
-                    } else {
-                        if (value != null) {
-                            value.toString(); // try to blow proxy errors
-                        }
+                    if (!uninstrumented) {
+                        final MetaProperty<Object> metaProperty = entity.getProperty(name);
                         if (metaProperty == null) {
-                            throw new IllegalStateException(String.format("Meta property [%s] does not exist for instrumented entity instance with type [%s].", name, entity.getType().getSimpleName()));
+                            throw new IllegalStateException(String.format("Meta property [%s] does not exist for instrumented entity instance with type [%s].", name, entity.getClass().getSimpleName()));
                         }
-                        
-                        if (!metaProperty.isProxy()) {
-                            // write actual property
-                            generator.writeFieldName(name);
-                            generator.writeObject(value);
+                        final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
+                        if (!defaultValueContract.isEditableDefault(metaProperty)) {
+                            existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, defaultValueContract.getEditable(metaProperty));
+                        }
+                        if (!defaultValueContract.isChangedFromOriginalDefault(metaProperty)) {
+                            existingMetaProps.put("_cfo", defaultValueContract.getChangedFromOriginal(metaProperty));
+                            existingMetaProps.put("_originalVal", defaultValueContract.getOriginalValue(metaProperty));
+                        }
+                        if (!defaultValueContract.isRequiredDefault(metaProperty)) {
+                            existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, defaultValueContract.getRequired(metaProperty));
+                        }
+                        if (!defaultValueContract.isVisibleDefault(metaProperty)) {
+                            existingMetaProps.put("_visible", defaultValueContract.getVisible(metaProperty));
+                        }
+                        if (!defaultValueContract.isValidationResultDefault(metaProperty)) {
+                            existingMetaProps.put("_validationResult", defaultValueContract.getValidationResult(metaProperty));
+                        }
+                        final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
+                        final Integer min = minMax.getKey();
+                        final Integer max = minMax.getValue();
+                        if (!defaultValueContract.isMinDefault(min)) {
+                            existingMetaProps.put("_min", min);
+                        }
+                        if (!defaultValueContract.isMaxDefault(max)) {
+                            existingMetaProps.put("_max", max);
+                        }
 
-                            final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
-                            if (!defaultValueContract.isEditableDefault(metaProperty)) {
-                                existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, defaultValueContract.getEditable(metaProperty));
+                        // write actual meta-property
+                        if (!existingMetaProps.isEmpty()) {
+                            generator.writeFieldName("@" + name);
+                            generator.writeStartObject();
+                            for (final Map.Entry<String, Object> nameAndVal : existingMetaProps.entrySet()) {
+                                generator.writeFieldName(nameAndVal.getKey());
+                                generator.writeObject(nameAndVal.getValue());
                             }
-                            if (!defaultValueContract.isChangedFromOriginalDefault(metaProperty)) {
-                                existingMetaProps.put("_cfo", defaultValueContract.getChangedFromOriginal(metaProperty));
-                                existingMetaProps.put("_originalVal", defaultValueContract.getOriginalValue(metaProperty));
-                            }
-                            if (!defaultValueContract.isRequiredDefault(metaProperty)) {
-                                existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, defaultValueContract.getRequired(metaProperty));
-                            }
-                            if (!defaultValueContract.isVisibleDefault(metaProperty)) {
-                                existingMetaProps.put("_visible", defaultValueContract.getVisible(metaProperty));
-                            }
-                            if (!defaultValueContract.isValidationResultDefault(metaProperty)) {
-                                existingMetaProps.put("_validationResult", defaultValueContract.getValidationResult(metaProperty));
-                            }
-                            final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
-                            final Integer min = minMax.getKey();
-                            final Integer max = minMax.getValue();
-                            if (!defaultValueContract.isMinDefault(min)) {
-                                existingMetaProps.put("_min", min);
-                            }
-                            if (!defaultValueContract.isMaxDefault(max)) {
-                                existingMetaProps.put("_max", max);
-                            }
-
-                            // write actual meta-property
-                            if (!existingMetaProps.isEmpty()) {
-                                generator.writeFieldName("@" + name);
-                                generator.writeStartObject();
-                                for (final Map.Entry<String, Object> nameAndVal : existingMetaProps.entrySet()) {
-                                    generator.writeFieldName(nameAndVal.getKey());
-                                    generator.writeObject(nameAndVal.getValue());
-                                }
-                                generator.writeEndObject();
-                            }
+                            generator.writeEndObject();
                         }
                     }
                 }
