@@ -146,10 +146,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             EntitySerialiser.getContext().reset();
             final T val = readValue(contentString, concreteType);
             
-            // TODO IMPORTANT: consider executing definers for all entities, not only 'not generated'!
-            if (!DynamicEntityClassLoader.isGenerated(concreteType.getRawClass())) {
-                executeDefiners();
-            }
+            executeDefiners();
             return val;
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
@@ -224,8 +221,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             // references is thread local variable, which gets reset if a nested deserialisation happens
             // therefore need to make a local cache of the present in references entities
             
-            // TODO IMPORTANT: consider executing definers for all entities, not only 'not generated'!
-            final Set<AbstractEntity<?>> refs = references.getNotGeneratedEntities();
+            final Set<AbstractEntity<?>> refs = references.getAllEntities();
 
             // explicit reset in order to make the reason for the above snippet more explicit
             references.reset();
@@ -233,8 +229,10 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             // iterate through all locally cached entity instances and execute respective definers
             for (final AbstractEntity<?> entity : refs) {
                 entity.beginInitialising();
+                // the entity here could be instrumented or not -- it is still safe to iterate through metaProperties and execute definer (uninstrumented entity does not have any meta-properties)
                 for (final MetaProperty<?> prop : entity.getProperties().values()) {
                     if (prop != null) {
+                        // TODO IMPORTANT: do we need to check on .isCollectional() here?
                         if (!prop.isCollectional()) {
                             prop.defineForOriginalValue();
                         }

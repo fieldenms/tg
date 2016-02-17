@@ -71,24 +71,10 @@ public class References {
         return entityToReference.put(entity, reference);
     }
 
-    public Set<AbstractEntity<?>> getNotGeneratedEntities() {
-        //        for (int index = 2; index < 2 + references.referenceCount; index++) {
-        //            final Object obj = references.referenceToObject.get(index);
-        //
-        //            // let's try to identify whether we are loading generated types here
-        //            if (obj != null && DynamicEntityClassLoader.isEnhanced(obj.getClass())) {
-        //                return;
-        //            }
-        //
-        //            // interested only in instances of the enhanced AbstractEntity.
-        //            if (obj instanceof AbstractEntity) {
-        //                refs.add((AbstractEntity<?>) obj);
-        //            }
-        //        }
-
+    public Set<AbstractEntity<?>> getAllEntities() {
         final Set<AbstractEntity<?>> refs = new HashSet<>();
         for (final AbstractEntity<?> entity : referenceToEntity.values()) {
-            if (entity != null && !DynamicEntityClassLoader.isGenerated(entity.getClass())) {
+            if (entity != null) {
                 refs.add(entity);
             }
         }
