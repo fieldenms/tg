@@ -55,7 +55,7 @@ public class EntityFetcher {
     private <E extends AbstractEntity<?>> List<E> instantiateFromContainers(final List<EntityContainer<E>> containers, final boolean lightweight, final ProxyMode proxyMode) {
         final List<E> result = new ArrayList<E>();
         final ProxyCache cache = new ProxyCache();
-        final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory()/*, lightweight*/, proxyMode, cache, executionContext.getCoFinder());
+        final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory(), proxyMode, cache, executionContext.getCoFinder());
         for (final EntityContainer<E> entityContainer : containers) {
             result.add(instantiator.instantiate(entityContainer, lightweight));
         }
