@@ -84,7 +84,7 @@ public class FetchModelReconstructor {
         exploredFetchModels.put(identity, fetchModel);
 
         final List<Field> retrievableNotProxiedPropFields = Finder.streamRealProperties(entity.getType())
-                        .filter(field -> Reflector.isPropertyPersistent(entity, field) && !Reflector.isPropertyProxied(entity, field.getName()))
+                        .filter(field -> Reflector.isPropertyRetrievable(entity, field) && !Reflector.isPropertyProxied(entity, field.getName()))
                         .collect(Collectors.toList());
 
         

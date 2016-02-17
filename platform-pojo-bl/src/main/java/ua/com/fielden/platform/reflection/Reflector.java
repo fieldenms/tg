@@ -542,13 +542,14 @@ public final class Reflector {
     }
     
     /**
-     * Identifies whether the specified field represents a persistent property.
+     * Identifies whether the specified field represents a retrievable property.
+     * The notion retrievable is different to persistent as it also includes calculated properties, which do get retrieved from a database. 
      * 
      * @param entity
      * @param propName
      * @return
      */
-    public static boolean isPropertyPersistent(final AbstractEntity<?> entity, final Field field) {
+    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final Field field) {
         final String propName = field.getName();
         return entity.isPersistent() &&
                     (
@@ -560,13 +561,13 @@ public final class Reflector {
     }
     
     /**
-     * A convenient equivalent to method {@link #isPropertyPersistent(AbstractEntity, Field)} that accepts property name instead of the Field instance. 
+     * A convenient equivalent to method {@link #isPropertyRetrievable(AbstractEntity, Field)} that accepts property name instead of the Field instance. 
      * 
      * @param entity
      * @param propName
      * @return
      */
-    public static boolean isPropertyPersistent(final AbstractEntity<?> entity, final String propName) {
-        return isPropertyPersistent(entity, Finder.findFieldByName(entity.getClass(), propName)); 
+    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final String propName) {
+        return isPropertyRetrievable(entity, Finder.findFieldByName(entity.getClass(), propName)); 
     }
 }

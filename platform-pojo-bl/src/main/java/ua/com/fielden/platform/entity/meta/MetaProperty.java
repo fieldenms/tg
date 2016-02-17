@@ -178,7 +178,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.name = field.getName();
         this.type = type;
         this.isEntity = AbstractEntity.class.isAssignableFrom(type);
-        this.retrievable = Reflector.isPropertyPersistent(entity, field);
+        this.retrievable = Reflector.isPropertyRetrievable(entity, field);
         // let's identify whether property represents an activatable entity in the current context
         final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
         boolean skipActiveOnly;
