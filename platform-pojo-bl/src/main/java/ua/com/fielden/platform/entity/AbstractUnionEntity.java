@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -150,16 +151,14 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      * @return
      */
     public final AbstractEntity<?> activeEntity() {
-        final Map<String, MetaProperty<?>> properties = getProperties();
-        for (final MetaProperty<?> property : properties.values()) {
-            if (!COMMON_PROPS.contains(property.getName())) { // there should be no other properties of ordinary types
-                final AbstractEntity<?> value = (AbstractEntity<?>) get(property.getName());
-                if (value != null) {
-                    return value;
-                }
-            }
-        }
-        return null;
+        final Stream<String> propertyNames = !getProperties().isEmpty() ? getProperties().keySet().stream()
+                : Finder.findRealProperties(getType()).stream().map(field -> field.getName());
+
+        return propertyNames
+                .filter(propName -> !COMMON_PROPS.contains(propName) && get(propName) != null)
+                .findFirst() // returns Optional
+                .map(propName -> (AbstractEntity<?>) get(propName)) // map optional propName value to an actual property value
+                .orElseGet(null); // return the property value or null if there was no matching propName
     }
 
     /**
