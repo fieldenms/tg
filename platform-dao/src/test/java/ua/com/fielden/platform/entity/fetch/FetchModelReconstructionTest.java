@@ -56,9 +56,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void reconstructed_fetch_model_should_not_contain_submodels_for_proxied_properties() {
-        // FIXME At this stage fetch model do not work reliably, which makes it required to pass null fetch model at this stage.
-        // However, once this is fixed, a proper model should be provided.
-        final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(null, "CAR1");
+        final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch(TgVehicle.class), "CAR1");
 
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
 
