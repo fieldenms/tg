@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
+import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -521,5 +522,19 @@ public final class Reflector {
      */
     public static String getKeyMemberSeparator(final Class<? extends AbstractEntity<DynamicEntityKey>> type) {
         return AnnotationReflector.getAnnotation(type, KeyType.class).keyMemberSeparator();
+    }
+    
+    /**
+     * Returns <code>true</code> if the specified property is proxied for a given entity instance.
+     *  
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyProxied(final AbstractEntity<?> entity, final String propName) {
+        // TODO Implementation of this method relies on the current approach to proxing.
+        //      It should be modified when moving to ByteBuddy and implementing proxing of non-entity typed properties
+        final Object value = entity.get(propName);
+        return value == null ? false : ProxyFactory.isProxyClass(value.getClass());
     }
 }

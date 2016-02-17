@@ -745,8 +745,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      * @return
      */
     public boolean isProxy() {
-        final T value = getValue();
-        return value == null ? false : ProxyFactory.isProxyClass(value.getClass());
+        return Reflector.isPropertyProxied(getEntity(), getName());
     }
 
     /**
