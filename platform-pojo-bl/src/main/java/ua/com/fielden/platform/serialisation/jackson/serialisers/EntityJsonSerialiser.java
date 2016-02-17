@@ -17,7 +17,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
@@ -25,15 +24,16 @@ import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.utils.Pair;
 
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
+
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
     private final Class<T> type;
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
     private final EntityType entityType;
-    private final DefaultValueContract defaultValueContract;
     private final boolean excludeNulls;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final DefaultValueContract defaultValueContract, final boolean excludeNulls) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls) {
         super(type);
         if (entityType.get_number() == null) {
             throw new IllegalStateException("The number of the type [" + entityType + "] should be populated to be ready for serialisation.");
@@ -42,7 +42,6 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
         this.type = type;
         this.properties = properties;
         this.entityType = entityType;
-        this.defaultValueContract = defaultValueContract;
         this.excludeNulls = excludeNulls;
     }
     
@@ -144,29 +143,29 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             throw new IllegalStateException(String.format("Meta property [%s] does not exist for instrumented entity instance with type [%s].", name, entity.getClass().getSimpleName()));
                         }
                         final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
-                        if (!defaultValueContract.isEditableDefault(metaProperty)) {
-                            existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, defaultValueContract.getEditable(metaProperty));
+                        if (!isEditableDefault(metaProperty)) {
+                            existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, getEditable(metaProperty));
                         }
-                        if (!defaultValueContract.isChangedFromOriginalDefault(metaProperty)) {
-                            existingMetaProps.put("_cfo", defaultValueContract.getChangedFromOriginal(metaProperty));
-                            existingMetaProps.put("_originalVal", defaultValueContract.getOriginalValue(metaProperty));
+                        if (!isChangedFromOriginalDefault(metaProperty)) {
+                            existingMetaProps.put("_cfo", getChangedFromOriginal(metaProperty));
+                            existingMetaProps.put("_originalVal", getOriginalValue(metaProperty));
                         }
-                        if (!defaultValueContract.isRequiredDefault(metaProperty)) {
-                            existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, defaultValueContract.getRequired(metaProperty));
+                        if (!isRequiredDefault(metaProperty)) {
+                            existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, getRequired(metaProperty));
                         }
-                        if (!defaultValueContract.isVisibleDefault(metaProperty)) {
-                            existingMetaProps.put("_visible", defaultValueContract.getVisible(metaProperty));
+                        if (!isVisibleDefault(metaProperty)) {
+                            existingMetaProps.put("_visible", getVisible(metaProperty));
                         }
-                        if (!defaultValueContract.isValidationResultDefault(metaProperty)) {
-                            existingMetaProps.put("_validationResult", defaultValueContract.getValidationResult(metaProperty));
+                        if (!isValidationResultDefault(metaProperty)) {
+                            existingMetaProps.put("_validationResult", getValidationResult(metaProperty));
                         }
                         final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
                         final Integer min = minMax.getKey();
                         final Integer max = minMax.getValue();
-                        if (!defaultValueContract.isMinDefault(min)) {
+                        if (!isMinDefault(min)) {
                             existingMetaProps.put("_min", min);
                         }
-                        if (!defaultValueContract.isMaxDefault(max)) {
+                        if (!isMaxDefault(max)) {
                             existingMetaProps.put("_max", max);
                         }
 

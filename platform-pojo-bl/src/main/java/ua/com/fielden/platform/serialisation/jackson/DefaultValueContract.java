@@ -15,6 +15,9 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class DefaultValueContract {
+    private DefaultValueContract() {
+    }
+    
     ///////////////////////////////////////////////// EDITABLE /////////////////////////////////////////////////
     /**
      * Returns the default value of <code>editable</code> property.
@@ -41,7 +44,7 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public boolean isEditableDefault(final MetaProperty<Object> metaProperty) {
+    public static boolean isEditableDefault(final MetaProperty<Object> metaProperty) {
         return EntityUtils.equalsEx(getEditable(metaProperty), getEditableDefault());
     }
 
@@ -71,7 +74,7 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public Object getOriginalValue(final MetaProperty<Object> metaProperty) {
+    public static <M> M getOriginalValue(final MetaProperty<M> metaProperty) {
         if (metaProperty == null) {
             throw new IllegalStateException("If the meta property does not exist -- original value population is unsupported.");
         }
@@ -84,7 +87,7 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public boolean isChangedFromOriginalDefault(final MetaProperty<Object> metaProperty) {
+    public static <M> boolean isChangedFromOriginalDefault(final MetaProperty<M> metaProperty) {
         return EntityUtils.equalsEx(getChangedFromOriginal(metaProperty), getChangedFromOriginalDefault());
     }
 
@@ -114,7 +117,7 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public boolean isRequiredDefault(final MetaProperty<Object> metaProperty) {
+    public static <M> boolean isRequiredDefault(final MetaProperty<M> metaProperty) {
         return EntityUtils.equalsEx(getRequired(metaProperty), getRequiredDefault());
     }
 
@@ -144,7 +147,7 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public boolean isVisibleDefault(final MetaProperty<Object> metaProperty) {
+    public static <M> boolean isVisibleDefault(final MetaProperty<M> metaProperty) {
         return EntityUtils.equalsEx(getVisible(metaProperty), getVisibleDefault());
     }
 
@@ -178,7 +181,7 @@ public class DefaultValueContract {
      * @param metaProperty
      * @return
      */
-    public boolean isValidationResultDefault(final MetaProperty<Object> metaProperty) {
+    public static <M> boolean isValidationResultDefault(final MetaProperty<M> metaProperty) {
         return EntityUtils.equalsEx(getValidationResult(metaProperty), getValidationResultDefault());
     }
 
@@ -188,7 +191,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isCompositeKeySeparatorDefault(final String compositeKeySeparator) {
+    public static boolean isCompositeKeySeparatorDefault(final String compositeKeySeparator) {
         return EntityUtils.equalsEx(compositeKeySeparator, " ");
     }
 
@@ -198,7 +201,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isEntityTitleDefault(final Class<?> entityType, final String entityTitle) {
+    public static boolean isEntityTitleDefault(final Class<?> entityType, final String entityTitle) {
         return EntityUtils.equalsEx(entityTitle, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getKey());
     }
 
@@ -207,7 +210,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isEntityDescDefault(final Class<?> entityType, final String entityDesc) {
+    public static boolean isEntityDescDefault(final Class<?> entityType, final String entityDesc) {
         return EntityUtils.equalsEx(entityDesc, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getValue());
     }
 
@@ -217,7 +220,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isSecreteDefault(final Boolean secrete) {
+    public static boolean isSecreteDefault(final Boolean secrete) {
         return EntityUtils.equalsEx(secrete, false);
     }
 
@@ -226,7 +229,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isUpperCaseDefault(final Boolean upperCase) {
+    public static boolean isUpperCaseDefault(final Boolean upperCase) {
         return EntityUtils.equalsEx(upperCase, false);
     }
 
@@ -235,7 +238,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isCritOnlyDefault(final Boolean critOnly) {
+    public static boolean isCritOnlyDefault(final Boolean critOnly) {
         return EntityUtils.equalsEx(critOnly, false);
     }
 
@@ -244,7 +247,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isResultOnlyDefault(final Boolean resultOnly) {
+    public static boolean isResultOnlyDefault(final Boolean resultOnly) {
         return EntityUtils.equalsEx(resultOnly, false);
     }
 
@@ -253,7 +256,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isIgnoreDefault(final Boolean ignore) {
+    public static boolean isIgnoreDefault(final Boolean ignore) {
         return EntityUtils.equalsEx(ignore, false);
     }
 
@@ -262,7 +265,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isLengthDefault(final Long length) {
+    public static boolean isLengthDefault(final Long length) {
         return EntityUtils.equalsEx(length, 0L);
     }
 
@@ -271,7 +274,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isPrecisionDefault(final Long precision) {
+    public static boolean isPrecisionDefault(final Long precision) {
         return EntityUtils.equalsEx(precision, -1L);
     }
 
@@ -280,7 +283,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isScaleDefault(final Long scale) {
+    public static boolean isScaleDefault(final Long scale) {
         return EntityUtils.equalsEx(scale, -1L);
     }
 
@@ -289,7 +292,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isMinDefault(final Integer min) {
+    public static boolean isMinDefault(final Integer min) {
         return EntityUtils.equalsEx(min, null);
     }
 
@@ -298,7 +301,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isMaxDefault(final Integer max) {
+    public static boolean isMaxDefault(final Integer max) {
         return EntityUtils.equalsEx(max, null);
     }
 
@@ -307,7 +310,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isExclusiveDefault(final Boolean exclusive) {
+    public static boolean isExclusiveDefault(final Boolean exclusive) {
         return exclusive == null || Boolean.FALSE.equals(exclusive);
     }
 
@@ -316,7 +319,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isExclusive2Default(final Boolean exclusive2) {
+    public static boolean isExclusive2Default(final Boolean exclusive2) {
         return exclusive2 == null || Boolean.FALSE.equals(exclusive2);
     }
 
@@ -325,7 +328,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isOrNullDefault(final Boolean orNull) {
+    public static boolean isOrNullDefault(final Boolean orNull) {
         return orNull == null || Boolean.FALSE.equals(orNull);
     }
 
@@ -334,7 +337,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isNotDefault(final Boolean not) {
+    public static boolean isNotDefault(final Boolean not) {
         return not == null || Boolean.FALSE.equals(not);
     }
 
@@ -343,7 +346,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isDatePrefixDefault(final DateRangePrefixEnum datePrefix) {
+    public static boolean isDatePrefixDefault(final DateRangePrefixEnum datePrefix) {
         return datePrefix == null;
     }
 
@@ -352,7 +355,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isDateMnemonicDefault(final MnemonicEnum dateMnemonic) {
+    public static boolean isDateMnemonicDefault(final MnemonicEnum dateMnemonic) {
         return dateMnemonic == null;
     }
 
@@ -361,7 +364,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public boolean isAndBeforeDefault(final Boolean andBefore) {
+    public static boolean isAndBeforeDefault(final Boolean andBefore) {
         return andBefore == null; // three meaningful values: 'true', 'false' and null!
     }
 }

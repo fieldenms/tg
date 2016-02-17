@@ -11,22 +11,6 @@ import java.util.function.Supplier;
 
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
-import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
-import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
-import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
-import ua.com.fielden.platform.serialisation.jackson.EntityType;
-import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
-import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
-import ua.com.fielden.platform.serialisation.jackson.References;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,6 +23,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
+import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
+import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
+import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
+import ua.com.fielden.platform.serialisation.jackson.References;
+
 public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDeserializer<T> {
     private static final long serialVersionUID = 1L;
     private final EntityFactory factory;
@@ -48,16 +47,14 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
     private final EntityType entityType;
-    private final DefaultValueContract defaultValueContract;
     private final EntityTypeInfoGetter entityTypeInfoGetter;
 
-    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final DefaultValueContract defaultValueContract, final EntityTypeInfoGetter entityTypeInfoGetter) {
+    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final EntityTypeInfoGetter entityTypeInfoGetter) {
         super(type);
         this.factory = entityFactory;
         this.mapper = mapper;
         this.properties = properties;
         this.entityType = entityType;
-        this.defaultValueContract = defaultValueContract;
         this.entityTypeInfoGetter = entityTypeInfoGetter;
 
         this.type = type;

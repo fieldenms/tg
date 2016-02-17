@@ -19,13 +19,14 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
 
 /**
  * Resource for integration test of Java and JavaScript serialisation.
@@ -38,13 +39,11 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 public class SerialisationTestResource extends ServerResource {
     private final RestServerUtil restUtil;
     private final List<AbstractEntity<?>> entities;
-    private final DefaultValueContract dvc;
 
     public SerialisationTestResource(final EntityFactory entityFactory, final RestServerUtil restUtil, final Context context, final Request request, final Response response, final Date testingDate) {
         init(context, request, response);
         this.restUtil = restUtil;
         this.entities = createEntities(entityFactory, testingDate);
-        this.dvc = new DefaultValueContract();
     }
 
     /**
@@ -56,7 +55,7 @@ public class SerialisationTestResource extends ServerResource {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) EntityResourceUtils.restoreJSONResult(envelope, restUtil).getInstance();
 
-            final Result result = deepEqualsForTesting(this.entities, entities, this.dvc);
+            final Result result = deepEqualsForTesting(this.entities, entities);
             if (!result.isSuccessful()) {
                 throw result;
             }
@@ -74,7 +73,7 @@ public class SerialisationTestResource extends ServerResource {
         }, restUtil);
     }
 
-    private static Result deepEqualsForTesting(final List<AbstractEntity<?>> entities1, final List<AbstractEntity<?>> entities2, final DefaultValueContract dvc) {
+    private static Result deepEqualsForTesting(final List<AbstractEntity<?>> entities1, final List<AbstractEntity<?>> entities2) {
         final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities = new IdentityHashMap<>();
         if (entities1 == null) {
             if (entities2 == null) {
@@ -94,7 +93,7 @@ public class SerialisationTestResource extends ServerResource {
                     while (iter1.hasNext()) {
                         final AbstractEntity<?> e1 = iter1.next();
                         final AbstractEntity<?> e2 = iter2.next();
-                        final Result deepEquals = deepEqualsForTesting(e1, e2, setOfCheckedEntities, dvc);
+                        final Result deepEquals = deepEqualsForTesting(e1, e2, setOfCheckedEntities);
                         if (!deepEquals.isSuccessful()) {
                             return deepEquals;
                         }
@@ -105,7 +104,7 @@ public class SerialisationTestResource extends ServerResource {
         }
     }
 
-    private static Result deepEqualsForTesting(final AbstractEntity<?> e1, final AbstractEntity<?> e2, final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities, final DefaultValueContract dvc) {
+    private static Result deepEqualsForTesting(final AbstractEntity<?> e1, final AbstractEntity<?> e2, final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities) {
         if (e1 == null) {
             if (e2 == null) {
                 return Result.successful(e1);
@@ -142,13 +141,13 @@ public class SerialisationTestResource extends ServerResource {
                     final String propName = prop.field().getName();
                     if (prop.getPropertyType() != null) {
                         // check property meta-info equality
-                        final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName), dvc);
+                        final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName));
                         if (!metaPropEq.isSuccessful()) {
                             return metaPropEq;
                         }
                         // check property value equality
                         if (EntityUtils.isEntityType(prop.getPropertyType())) {
-                            final Result eq = deepEqualsForTesting((AbstractEntity<?>) e1.get(propName), (AbstractEntity<?>) e2.get(propName), setOfCheckedEntities, dvc);
+                            final Result eq = deepEqualsForTesting((AbstractEntity<?>) e1.get(propName), (AbstractEntity<?>) e2.get(propName), setOfCheckedEntities);
                             if (!eq.isSuccessful()) {
                                 return eq;
                             }
@@ -183,14 +182,14 @@ public class SerialisationTestResource extends ServerResource {
         return e1.get(propName);
     }
 
-    private static <M> Result deepEqualsForTesting(final MetaProperty<M> metaProp1, final MetaProperty<M> metaProp2, final DefaultValueContract dvc) {
+    private static <M> Result deepEqualsForTesting(final MetaProperty<M> metaProp1, final MetaProperty<M> metaProp2) {
         if (metaProp1 == null && metaProp2 != null) {
             return Result.failure(format("MetaProperty of originally created entity is null, but meta property of deserialised entity is not."));
         }
         // dirty equality
         //        if (!metaProp1.isCollectional()) {
-        if (DefaultValueContract.getChangedFromOriginal(metaProp1)) {
-            if (!EntityUtils.equalsEx(DefaultValueContract.getChangedFromOriginal(metaProp1), metaProp2.isDirty())) {
+        if (getChangedFromOriginal(metaProp1)) {
+            if (!EntityUtils.equalsEx(getChangedFromOriginal(metaProp1), metaProp2.isDirty())) {
                 return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
             }
         }
@@ -198,20 +197,20 @@ public class SerialisationTestResource extends ServerResource {
         //            // not supported -- dirtiness of the collectional properties for new entities differs from the regular properties
         //        }
         // editable equality
-        if (!EntityUtils.equalsEx(DefaultValueContract.getEditable(metaProp1), DefaultValueContract.getEditable(metaProp2))) {
+        if (!EntityUtils.equalsEx(getEditable(metaProp1), getEditable(metaProp2))) {
             return Result.failure(format("e1 [%s] editability [%s] does not equal to e2 [%s] editability [%s].", metaProp1.getEntity(), metaProp1.isEditable(), metaProp2.getEntity(), metaProp2.isEditable()));
         }
         // required equality
-        if (!EntityUtils.equalsEx(DefaultValueContract.getRequired(metaProp1), DefaultValueContract.getRequired(metaProp2))) {
+        if (!EntityUtils.equalsEx(getRequired(metaProp1), getRequired(metaProp2))) {
             return Result.failure(format("e1 [%s] requiredness [%s] does not equal to e2 [%s] requiredness [%s].", metaProp1.getEntity(), metaProp1.isRequired(), metaProp2.getEntity(), metaProp2.isRequired()));
         }
         // visible equality
-        if (!EntityUtils.equalsEx(DefaultValueContract.getVisible(metaProp1), DefaultValueContract.getVisible(metaProp2))) {
+        if (!EntityUtils.equalsEx(getVisible(metaProp1), getVisible(metaProp2))) {
             return Result.failure(format("e1 [%s] Visible [%s] does not equal to e2 [%s] Visible [%s].", metaProp1.getEntity(), metaProp1.isVisible(), metaProp2.getEntity(), metaProp2.isVisible()));
         }
         // validationResult equality
-        if (!resultsAreExpected(DefaultValueContract.getValidationResult(metaProp1), DefaultValueContract.getValidationResult(metaProp2))) {
-            return Result.failure(format("e1 [%s] ValidationResult [%s] does not equal to e2 [%s] ValidationResult [%s].", metaProp1.getEntity(), DefaultValueContract.getValidationResult(metaProp1), metaProp2.getEntity(), DefaultValueContract.getValidationResult(metaProp2)));
+        if (!resultsAreExpected(getValidationResult(metaProp1), getValidationResult(metaProp2))) {
+            return Result.failure(format("e1 [%s] ValidationResult [%s] does not equal to e2 [%s] ValidationResult [%s].", metaProp1.getEntity(), getValidationResult(metaProp1), metaProp2.getEntity(), getValidationResult(metaProp2)));
         }
         return Result.successful("OK");
     }
