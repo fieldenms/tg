@@ -17,7 +17,10 @@ import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -536,5 +539,34 @@ public final class Reflector {
         //      It should be modified when moving to ByteBuddy and implementing proxing of non-entity typed properties
         final Object value = entity.get(propName);
         return value == null ? false : ProxyFactory.isProxyClass(value.getClass());
+    }
+    
+    /**
+     * Identifies whether the specified field represents a persistent property.
+     * 
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyPersistent(final AbstractEntity<?> entity, final Field field) {
+        final String propName = field.getName();
+        return entity.isPersistent() &&
+                    (
+                        field.isAnnotationPresent(Calculated.class) ||
+                        (!propName.equals(AbstractEntity.KEY) && !propName.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
+                        (propName.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
+                        (propName.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class))
+                    );
+    }
+    
+    /**
+     * A convenient equivalent to method {@link #isPropertyPersistent(AbstractEntity, Field)} that accepts property name instead of the Field instance. 
+     * 
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyPersistent(final AbstractEntity<?> entity, final String propName) {
+        return isPropertyPersistent(entity, Finder.findFieldByName(entity.getClass(), propName)); 
     }
 }
