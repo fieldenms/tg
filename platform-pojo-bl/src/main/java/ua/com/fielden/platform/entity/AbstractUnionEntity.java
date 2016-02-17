@@ -4,7 +4,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
@@ -12,7 +11,6 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 
@@ -152,7 +150,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      */
     public final AbstractEntity<?> activeEntity() {
         final Stream<String> propertyNames = !getProperties().isEmpty() ? getProperties().keySet().stream()
-                : Finder.findRealProperties(getType()).stream().map(field -> field.getName());
+                : Finder.streamRealProperties(getType()).map(field -> field.getName());
 
         return propertyNames
                 .filter(propName -> !COMMON_PROPS.contains(propName) && get(propName) != null)
