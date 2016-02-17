@@ -1,8 +1,15 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getChangedFromOriginal;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditable;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequired;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisible;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -12,6 +19,7 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
+import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 
@@ -27,8 +35,6 @@ import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
-
 /**
  * Resource for integration test of Java and JavaScript serialisation.
  *
@@ -39,20 +45,23 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
  */
 public class SerialisationTestResource extends ServerResource {
     private final RestServerUtil restUtil;
-    private final List<AbstractEntity<?>> entities;
+    private final List<AbstractEntity<?>> entities = new ArrayList<>();
 
-    public SerialisationTestResource(final EntityFactory entityFactory, final RestServerUtil restUtil, final Context context, final Request request, final Response response, final Date testingDate) {
+    public SerialisationTestResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
         init(context, request, response);
         this.restUtil = restUtil;
-        this.entities = createEntities(entityFactory, restUtil, testingDate);
+        this.entities.addAll(entities);
+    }
+    
+    public SerialisationTestResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
+        this(restUtil, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
     }
 
     /**
      * Handles receiving back serialised testing entities from the Web UI client and checking whether they are 'deep equal' to the send ones.
      */
     @Post
-    @Override
-    public Representation post(final Representation envelope) {
+    public Representation checkEntitiesOnEqualityAndSendResult(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) EntityResourceUtils.restoreJSONResult(envelope, restUtil).getInstance();
 
@@ -67,8 +76,8 @@ public class SerialisationTestResource extends ServerResource {
     /**
      * Handles sending of the serialised testing entities to the Web UI client (GET method).
      */
-    @Override
-    protected Representation get() {
+    @Get
+    public Representation sendSerialisedEntities() {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
             return restUtil.listJSONRepresentation(this.entities);
         }, restUtil);
@@ -258,8 +267,7 @@ public class SerialisationTestResource extends ServerResource {
         return setOfCheckedEntities.containsKey(e1);
     }
 
-    private static List<AbstractEntity<?>> createEntities(final EntityFactory entityFactory, final RestServerUtil restUtil, final Date testingDate) {
-        final FactoryForTestingEntities factory = new FactoryForTestingEntities(entityFactory, testingDate);
+    private static List<AbstractEntity<?>> createEntities(final RestServerUtil restUtil, final FactoryForTestingEntities factory) {
         return Arrays.asList(factory.createNullEmptyEntity(),
                 factory.createSimpleEmptyEntity(),
                 factory.createEmptyEntityWithNoId(),
@@ -290,5 +298,9 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createGeneratedEntity(restUtil.getSerialiser(), false) // uninstrumented
                 // TODO factory.createGeneratedEntity(restUtil.getSerialiser(), true) // instrumented
                 );
+    }
+    
+    public List<AbstractEntity<?>> getEntities() {
+        return Collections.unmodifiableList(entities);
     }
 }
