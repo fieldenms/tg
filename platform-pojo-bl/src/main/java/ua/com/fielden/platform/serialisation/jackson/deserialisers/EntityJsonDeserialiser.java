@@ -95,16 +95,11 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final boolean uninstrumented = uninstrumentedJsonNode != null;
 
             final T entity;
-            if (DynamicEntityClassLoader.isGenerated(type)) {
+            if (uninstrumented) {
                 entity = factory.newPlainEntity(type, id);
                 entity.setEntityFactory(factory);
             } else {
-                if (uninstrumented) {
-                    entity = factory.newPlainEntity(type, id);
-                    entity.setEntityFactory(factory);
-                } else {
-                    entity = factory.newEntity(type, id);
-                }
+                entity = factory.newEntity(type, id);
             }
 
             final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_number());
