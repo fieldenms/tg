@@ -71,7 +71,7 @@ public class References {
         return entityToReference.put(entity, reference);
     }
 
-    public Set<AbstractEntity<?>> getNotEnhancedEntities() {
+    public Set<AbstractEntity<?>> getNotGeneratedEntities() {
         //        for (int index = 2; index < 2 + references.referenceCount; index++) {
         //            final Object obj = references.referenceToObject.get(index);
         //

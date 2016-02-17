@@ -145,6 +145,8 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
 
             EntitySerialiser.getContext().reset();
             final T val = readValue(contentString, concreteType);
+            
+            // TODO IMPORTANT: consider executing definers for all entities, not only 'not generated'!
             if (!DynamicEntityClassLoader.isGenerated(concreteType.getRawClass())) {
                 executeDefiners();
             }
@@ -221,7 +223,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         if (references != null) {
             // references is thread local variable, which gets reset if a nested deserialisation happens
             // therefore need to make a local cache of the present in references entities
-            final Set<AbstractEntity<?>> refs = references.getNotEnhancedEntities();
+            
+            // TODO IMPORTANT: consider executing definers for all entities, not only 'not generated'!
+            final Set<AbstractEntity<?>> refs = references.getNotGeneratedEntities();
 
             // explicit reset in order to make the reason for the above snippet more explicit
             references.reset();
