@@ -3,7 +3,6 @@ package ua.com.fielden.platform.dao;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -24,6 +23,9 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import org.joda.time.DateTime;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -59,9 +61,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Validators;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
@@ -306,6 +305,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final Result res = persistedEntity.isValid();
         if (res.isSuccessful()) {
             getSession().update(persistedEntity);
+            persistedEntity.resetMetaState();
             getSession().flush();
             getSession().clear();
         } else {
@@ -530,6 +530,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final Result result = entity.isValid();
         if (result.isSuccessful()) {
             getSession().save(entity);
+            entity.resetMetaState();
             getSession().flush();
             getSession().clear();
         } else {
