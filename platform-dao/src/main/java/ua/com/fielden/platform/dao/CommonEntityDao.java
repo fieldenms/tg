@@ -29,6 +29,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.handlers.IAfterSave;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -101,16 +102,24 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     private IUserProvider up;
 
+    /** A marker to skip re-fetching an entity during save. */
     private boolean skipRefetching = false;
+    
+    /** A guard against an accidental use of quick save as per issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a>. */
+    private final boolean withQuickSaveSupport;
 
     /**
      * A principle constructor.
      *
      * @param entityType
      */
-    @Inject
     protected CommonEntityDao(final IFilter filter) {
+        this(filter, false);
+    }
+    
+    protected CommonEntityDao(final IFilter filter, final boolean withQuickSaveSupport) {
         this.filter = filter;
+        this.withQuickSaveSupport = withQuickSaveSupport;
     }
 
     /**
@@ -196,6 +205,21 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public final long quickSave(final T entity) {
+        if (!withQuickSaveSupport) {
+            throw new EntityCompanionException(format("Quick save is not supported for entity [%s].", getEntityType().getName()));
+        }
+        
+        return safeQuickSave(entity);
+    }
+    
+    /**
+     * This method is an implementation detail.
+     * It is considered to be safe by the fact of intended (internal) usage.
+     * 
+     * @param entity
+     * @return
+     */
+    private long safeQuickSave(final T entity) {
         try {
             skipRefetching = true;
             return save(entity).getId();
@@ -213,7 +237,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     public T save(final T entity) {
         if (entity == null) {
-            throw new IllegalArgumentException(format("Null reference to entity of type %s cannot be saved.", getEntityType()));
+            throw new EntityCompanionException(format("Null reference to entity of type %s cannot be saved.", getEntityType()));
         } else if (!entity.isPersistent()) {
             return entity;
         } else if (!entity.isDirty() && entity.isValid().isSuccessful()) {
@@ -266,9 +290,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).model());
         final int count = ids.size();
         if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
-            throw Result.failure(
-                    entity,
-                    new IllegalArgumentException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey())));
+            throw new EntityCompanionException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()));
         }
 
         // load the entity directly from the session
@@ -276,7 +298,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         persistedEntity.setIgnoreEditableState(true);
         // check for data staleness and try to resolve the conflict is possible (refer #83)
         if (persistedEntity.getVersion() != null && persistedEntity.getVersion() > entity.getVersion() && !canResolveConflict(entity, persistedEntity)) {
-            throw Result.failure(entity, new IllegalStateException(format("Could not resolve conflicting changes. Entity %s (%s) could not be saved.", entity.getKey(), TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey())));
+            throw new EntityCompanionException(format("Could not resolve conflicting changes. Entity %s (%s) could not be saved.", entity.getKey(), TitlesDescsGetter.getEntityTitleAndDesc(getEntityType()).getKey()));
         }
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
@@ -393,7 +415,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (!entity.equals(persistedValue)) {
                         if (activeProp.getValue()) { // is entity being activated?
                             if (!persistedValue.isActive()) { // if activatable is not active then this is an error
-                                throw Result.failure(format("Entity %s has a reference to already inactive entity %s (type %s)", entity, persistedValue, prop.getType()));
+                                throw new EntityCompanionException(format("Entity %s has a reference to already inactive entity %s (type %s)", entity, persistedValue, prop.getType()));
                             } else { // otherwise, increment refCount
                                 getSession().update(persistedValue.incRefCount());
                             }
@@ -413,8 +435,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (result.isSuccessful()) {
                         // persisting of deactivatables should go through the logic of companion save
                         // and cannot be persisted by just using a call to Hibernate Session
-                        final IEntityDao co = getCoFinder().find(deactivatable.getType());
-                        co.quickSave(deactivatable);
+                        final CommonEntityDao co = getCoFinder().find(deactivatable.getType());
+                        co.safeQuickSave(deactivatable);
                     } else {
                         throw result;
                     }
@@ -480,9 +502,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // let's make sure that entity is not a duplicate
         final Integer count = count(createQueryByKey(entity.getKey()), Collections.<String, Object> emptyMap());
         if (count > 0) {
-            throw Result.failure(
-                    entity,
-                    new IllegalArgumentException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey())));
+            throw new EntityCompanionException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()));
         }
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
@@ -508,7 +528,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 if (prop.getValue() != null) {
                     // need to update refCount for the activatable entity
                     final ActivatableAbstractEntity<?> value = prop.getValue();
-                    final IEntityDao co = getCoFinder().find(value.getType());
+                    final CommonEntityDao co = getCoFinder().find(value.getType());
 
                     // get the latest value from the database, reassign it and update its ref count
                     final fetch fetch = FetchModelReconstructor.reconstruct(value);
@@ -521,7 +541,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (!assignmentResult.isSuccessful()) {
                         throw assignmentResult;
                     }
-                    co.quickSave(persistedValue.incRefCount());
+                    co.safeQuickSave(persistedValue.incRefCount());
                 }
             }
         }
@@ -633,7 +653,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         if (!props.isEmpty()) {
             final DateTime now = universalConstants.now();
             if (now == null) {
-                throw new IllegalArgumentException("The now() constant has not been assigned!");
+                throw new EntityCompanionException("The now() constant has not been assigned!");
             }
 
             for (final MetaProperty<?> prop : props) {
@@ -642,7 +662,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (User.class.isAssignableFrom(prop.getType())) {
                         final User user = getUser();
                         if (user == null) {
-                            throw new IllegalArgumentException("The user could not be determined!");
+                            throw new EntityCompanionException("The user could not be determined!");
                         }
                         prop.setValue(user);
                     } else if (Date.class.isAssignableFrom(prop.getType())) {
@@ -654,7 +674,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     }
 
                     if (prop.getValue() == null) {
-                        throw new IllegalArgumentException(format("Property %s@%s is marked as assignable before save, but no value could be determined.", prop.getName(), entity.getType().getName()));
+                        throw new EntityCompanionException(format("Property %s@%s is marked as assignable before save, but no value could be determined.", prop.getName(), entity.getType().getName()));
                     }
                 }
             }
@@ -674,7 +694,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         if (!props.isEmpty()) {
             for (final MetaProperty<?> prop : props) {
                 if (prop.getValue() == null) {
-                    throw new IllegalArgumentException(format("Property %s@%s is marked as assignable before save, but had its value removed.", prop.getName(), entity.getType().getName()));
+                    throw new EntityCompanionException(format("Property %s@%s is marked as assignable before save, but had its value removed.", prop.getName(), entity.getType().getName()));
                 }
             }
         }
@@ -804,7 +824,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public T getEntity(final QueryExecutionModel<T, ?> model) {
         final List<T> data = getFirstEntities(model, 2);
         if (data.size() > 1) {
-            throw new IllegalArgumentException("The provided query model leads to retrieval of more than one entity (" + data.size() + ").");
+            throw new EntityCompanionException(format("The provided query model leads to retrieval of more than one entity (%s).", data.size()));
         }
         return data.size() == 1 ? data.get(0) : null;
     }
@@ -820,7 +840,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     public Session getSession() {
         if (session == null) {
-            throw new RuntimeException("Someone forgot to annotate some method with SessionRequired!");
+            throw new EntityCompanionException("Session is missing, most likely, due to missing @SessionRequired annotation.");
         }
         return session;
     }
@@ -885,15 +905,15 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     protected void defaultDelete(final T entity) {
         if (entity == null) {
-            throw new Result(new IllegalArgumentException("Null is not an acceptable value for an entity instance."));
+            throw new EntityCompanionException("Null is not an acceptable value for an entity instance.");
         }
         if (!entity.isPersisted()) {
-            throw new Result(new IllegalArgumentException("Only persisted entity instances can be deleted."));
+            throw new EntityCompanionException("Only persisted entity instances can be deleted.");
         }
         try {
             getSession().createQuery("delete " + getEntityType().getName() + " where id = " + entity.getId()).executeUpdate();
         } catch (final ConstraintViolationException e) {
-            throw new Result(new IllegalStateException("This entity could not be deleted due to existing dependencies."));
+            throw new EntityCompanionException("This entity could not be deleted due to existing dependencies.");
         }
     }
 
@@ -905,7 +925,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     protected void defaultDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         if (model == null) {
-            throw new Result(new IllegalArgumentException("Null is not an acceptable value for eQuery model."));
+            throw new EntityCompanionException("Null is not an acceptable value for eQuery model.");
         }
 
         final List<T> toBeDeleted = getAllEntities(from(model).with(paramValues).lightweight().model());
@@ -928,7 +948,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     protected int defaultBatchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
         if (model == null) {
-            throw new Result(new IllegalArgumentException("Null is not an acceptable value for eQuery model."));
+            throw new EntityCompanionException("Null is not an acceptable value for eQuery model.");
         }
         
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
@@ -953,7 +973,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     protected int defaultBatchDelete(Collection<Long> entitiesIds) {
         if (entitiesIds.size() == 0) {
-            throw new Result(new IllegalArgumentException("No entities ids have been provided for deletion."));
+            throw new EntityCompanionException("No entities ids have been provided for deletion.");
         }
         
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
@@ -1053,7 +1073,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, pageNumber + 1, pageCapacity, numberOfPagesAndCount);
                 } else {
-                    throw new IllegalStateException("There was no query provided to retrieve the data.");
+                    throw new EntityCompanionException("There was no query provided to retrieve the data.");
                 }
             }
             return null;
@@ -1067,7 +1087,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, pageNumber - 1, pageCapacity, numberOfPagesAndCount);
                 } else {
-                    throw new IllegalStateException("There was no query provided to retrieve the data.");
+                    throw new EntityCompanionException("There was no query provided to retrieve the data.");
                 }
             }
             return null;
@@ -1081,7 +1101,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, 0, pageCapacity, numberOfPagesAndCount);
                 } else {
-                    throw new IllegalStateException("There was no query provided to retrieve the data.");
+                    throw new EntityCompanionException("There was no query provided to retrieve the data.");
                 }
             }
             return null;
@@ -1095,7 +1115,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 } else if (queryModel != null) {
                     return new EntityQueryPage(queryModel, numberOfPages - 1, pageCapacity, numberOfPagesAndCount);
                 } else {
-                    throw new IllegalStateException("There was no query provided to retrieve the data.");
+                    throw new EntityCompanionException("There was no query provided to retrieve the data.");
                 }
             }
             return null;

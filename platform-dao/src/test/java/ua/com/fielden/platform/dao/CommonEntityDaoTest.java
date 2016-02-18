@@ -1,5 +1,13 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -13,7 +21,11 @@ import java.util.stream.Stream;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -543,6 +555,21 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 
         assertTrue("save() should not be faster than quickSave()", saveTime > quickSaveTime);
     }
+
+    @Test
+    public void test_quick_save_guard_prevents_accidental_use_of_method_quickSave() {
+        final EntityWithDynamicCompositeKey entity = daoComposite.findById(1L, fetchAll(EntityWithDynamicCompositeKey.class));
+        assertNotNull(entity);
+        
+        entity.setKeyPartOne("updated part one value");
+        
+        try {
+            daoComposite.quickSave(entity);
+            fail("Quick save guard failed.");
+        } catch (final EntityCompanionException ex) {
+        }
+    }
+
     
     @Override
     protected String[] getDataSetPathsForInsert() {

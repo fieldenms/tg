@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -67,7 +68,7 @@ public class AssignPropertiesBeforeTestTest extends AbstractDomainDrivenTestCase
         try {
             save(ss1);
             fail();
-        } catch (final IllegalArgumentException ex) {
+        } catch (final EntityCompanionException ex) {
             assertEquals("Property user@ua.com.fielden.platform.sample.domain.TgSubSystem is marked as assignable before save, but had its value removed.", ex.getMessage());
         }
 
