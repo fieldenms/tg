@@ -24,28 +24,27 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public class EntityFromContainerInstantiator {
     private final EntityFactory entFactory;
     private final ProxyMode proxyMode;
-    private final ProxyCache cache;
+    private final ProxyCache cache  = new ProxyCache();
     private final ICompanionObjectFinder coFinder;
     private final EntityFromContainerInstantiatorCache containerInstantiatorCache;
     
-    public EntityFromContainerInstantiator(final EntityFactory entFactory,  final ProxyMode proxyMode, final ProxyCache cache, final ICompanionObjectFinder coFinder) {
+    public EntityFromContainerInstantiator(final EntityFactory entFactory,  final ProxyMode proxyMode, final ICompanionObjectFinder coFinder) {
         super();
         this.entFactory = entFactory;
         this.proxyMode = proxyMode;
-        this.cache = cache;
         this.coFinder = coFinder;
         this.containerInstantiatorCache = new EntityFromContainerInstantiatorCache(this);
     }
 
-    public <R extends AbstractEntity<?>> R instantiate(final EntityContainer<R> entContainer, final boolean lightweight) {
-        return instantiateFully(entContainer, instantiateInitially(entContainer, lightweight), lightweight);
+    public <R extends AbstractEntity<?>> R instantiate(final EntityContainer<R> entContainer) {
+        return instantiateFully(entContainer, instantiateInitially(entContainer));
     }
 
-    public <R extends AbstractEntity<?>> R instantiateInitially(final EntityContainer<R> entContainer, final boolean lightweight) {
-        return lightweight ? entFactory.newPlainEntity(entContainer.getResultType(), entContainer.getId()) : entFactory.newEntity(entContainer.getResultType(), entContainer.getId());
+    public <R extends AbstractEntity<?>> R instantiateInitially(final EntityContainer<R> entContainer) {
+        return entContainer.isInstrumentalised() ? entFactory.newEntity(entContainer.getResultType(), entContainer.getId()) : entFactory.newPlainEntity(entContainer.getResultType(), entContainer.getId());
     }
     
-    public <R extends AbstractEntity<?>> R instantiateFully(final EntityContainer<R> entityContainer, final R justAddedEntity, final boolean lightweight) {
+    public <R extends AbstractEntity<?>> R instantiateFully(final EntityContainer<R> entityContainer, final R justAddedEntity) {
         justAddedEntity.beginInitialising();
 
         final Set<String> proxiedProps = new HashSet<>();
@@ -75,7 +74,7 @@ public class EntityFromContainerInstantiator {
             setPropertyValue(justAddedEntity, entityEntry.getKey(), instantiate(entityEntry.getValue().getContainers()), entityContainer.getResultType());
         }
 
-        if (!lightweight) {
+        if (entityContainer.isInstrumentalised()) {
             EntityUtils.handleMetaProperties(justAddedEntity, proxiedProps);
         }
 
@@ -92,7 +91,7 @@ public class EntityFromContainerInstantiator {
         final SortedSet<R> result = new TreeSet<>(); 
         for (final EntityContainer<R> container : containers) {
             if (!container.notYetInitialised()) {
-                result.add(instantiate(container, true));
+                result.add(instantiate(container));
             }
         }
 

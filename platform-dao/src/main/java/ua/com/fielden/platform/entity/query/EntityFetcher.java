@@ -39,12 +39,17 @@ public class EntityFetcher {
             final DateTime st = new DateTime();
             final EntityContainerFetcher entityContainerFetcher = new EntityContainerFetcher(executionContext);
             final List<EntityContainer<E>> containers = entityContainerFetcher.listAndEnhanceContainers(queryModel, pageNumber, pageCapacity);
-            final List<E> result = instantiateFromContainers(containers, queryModel.isLightweight(), proxyMode);
+
+            if (!queryModel.isLightweight()) {
+                setContainersToBeInstrumentalised(containers);
+            }
+
+            final List<E> result = instantiateFromContainers(containers, proxyMode);
             final Period pd = new Period(st, new DateTime());
-            
+
             final String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
             logger.debug(format("Duration: %s m %s s %s ms. Entities (%s) count: %s.", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), entityTypeName, result.size()));
-            
+
             return result;
         } catch (final Exception e) {
             logger.error(e);
@@ -52,12 +57,18 @@ public class EntityFetcher {
         }
     }
 
-    private <E extends AbstractEntity<?>> List<E> instantiateFromContainers(final List<EntityContainer<E>> containers, final boolean lightweight, final ProxyMode proxyMode) {
-        final List<E> result = new ArrayList<E>();
-        final ProxyCache cache = new ProxyCache();
-        final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory(), proxyMode, cache, executionContext.getCoFinder());
+    private <E extends AbstractEntity<?>> List<EntityContainer<E>> setContainersToBeInstrumentalised(final List<EntityContainer<E>> containers) {
         for (final EntityContainer<E> entityContainer : containers) {
-            result.add(instantiator.instantiate(entityContainer, lightweight));
+            entityContainer.setInstrumentalised();
+        }
+        return containers;
+    }
+
+    private <E extends AbstractEntity<?>> List<E> instantiateFromContainers(final List<EntityContainer<E>> containers, final ProxyMode proxyMode) {
+        final List<E> result = new ArrayList<E>();
+        final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory(), proxyMode, executionContext.getCoFinder());
+        for (final EntityContainer<E> entityContainer : containers) {
+            result.add(instantiator.instantiate(entityContainer));
         }
         return result;
     }
