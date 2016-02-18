@@ -117,6 +117,10 @@ public class fetch<T extends AbstractEntity<?>> {
         return entityType;
     }
 
+    public boolean isInstrumented() {
+        return instrumented;
+    }
+
     public Map<String, fetch<? extends AbstractEntity<?>>> getIncludedPropsWithModels() {
         return Collections.unmodifiableMap(includedPropsWithModels);
     }
