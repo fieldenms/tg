@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -62,7 +63,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
         try {
             ao(TgCategory.class).save(cat4);
             fail("Should have failed");
-        } catch (final Result ex) {
+        } catch (final EntityCompanionException ex) {
             final TgCategory cat4Full = ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
             assertEquals(format("Entity %s has a reference to already inactive entity %s (type %s)", cat4Full, cat4Full.getParent(), cat4Full.getParent().getType()),
                     ex.getMessage());
