@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,9 @@ import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import org.joda.time.DateTime;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -37,8 +41,8 @@ import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.EntityBatchDeleterByQueryModel;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleterByIds;
+import ua.com.fielden.platform.entity.query.EntityBatchDeleterByQueryModel;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
@@ -57,9 +61,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Validators;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 /**
  * This is a most common Hibernate-based implementation of the {@link IEntityDao}.
@@ -98,6 +99,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private IUniversalConstants universalConstants;
     @Inject
     private IUserProvider up;
+
+    private boolean skipRefetching = false;
 
     /**
      * A principle constructor.
@@ -186,11 +189,25 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
         return !result.isEmpty() ? result.get(0) : null;
     }
+    
+    /**
+     * {@inheritDoc} 
+     */
+    @Override
+    @SessionRequired
+    public final long quickSave(final T entity) {
+        try {
+            skipRefetching = true;
+            return save(entity).getId();
+        } finally {
+            skipRefetching = false;
+        }
+    }
 
     /**
      * Saves the provided entity. This method checks entity version and throws StaleObjectStateException if the provided entity is stale. There is no in-memory referential
      * integrity guarantee -- the returned instance is always a different instance. However, from the perspective of data loading, it is guaranteed that the object graph of the
-     * returned instance contains the object graph of the passed in entity as its subgraph.
+     * returned instance contains the object graph of the passed in entity as its subgraph (i.e. it can be wider, but not narrower).
      */
     @Override
     @SessionRequired
@@ -201,7 +218,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             return entity;
         } else if (!entity.isDirty() && entity.isValid().isSuccessful()) {
             logger.debug(format("Entity %s is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
-            return findById(entity.getId(), FetchModelReconstructor.reconstruct(entity));
+            return skipRefetching ? entity : findById(entity.getId(), FetchModelReconstructor.reconstruct(entity));
         }
         logger.debug(format("Start saving entity %s (ID = %s)", entity, entity.getId()));
 
@@ -263,7 +280,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
-        final fetch<T> entityFetch = FetchModelReconstructor.reconstruct(entity);
+        final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
 
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
@@ -288,13 +305,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final Result res = persistedEntity.isValid();
         if (res.isSuccessful()) {
             getSession().update(persistedEntity);
+            persistedEntity.resetMetaState();
             getSession().flush();
             getSession().clear();
         } else {
             throw res;
         }
 
-        return findById(persistedEntity.getId(), entityFetch);
+        return entityFetchOption.isPresent() ? findById(persistedEntity.getId(), entityFetchOption.get()) : persistedEntity;
     }
 
     /**
@@ -396,7 +414,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                         // persisting of deactivatables should go through the logic of companion save
                         // and cannot be persisted by just using a call to Hibernate Session
                         final IEntityDao co = getCoFinder().find(deactivatable.getType());
-                        co.save(deactivatable);
+                        co.quickSave(deactivatable);
                     } else {
                         throw result;
                     }
@@ -468,7 +486,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
-        final fetch<T> entityFetch = FetchModelReconstructor.reconstruct(entity);
+        final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
         // process transactional assignments
         assignPropertiesBeforeSave(entity);
 
@@ -503,7 +521,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (!assignmentResult.isSuccessful()) {
                         throw assignmentResult;
                     }
-                    co.save(persistedValue.incRefCount());
+                    co.quickSave(persistedValue.incRefCount());
                 }
             }
         }
@@ -512,13 +530,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final Result result = entity.isValid();
         if (result.isSuccessful()) {
             getSession().save(entity);
+            entity.resetMetaState();
             getSession().flush();
             getSession().clear();
         } else {
             throw result;
         }
 
-        return findById(entity.getId(), entityFetch);
+        return entityFetchOption.isPresent() ? findById(entity.getId(), entityFetchOption.get()) : entity;
     }
 
     /**
@@ -1099,4 +1118,5 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public IUniversalConstants getUniversalConstants() {
         return universalConstants;
     }
+
 }
