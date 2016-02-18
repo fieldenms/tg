@@ -192,13 +192,28 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
 
     /**
-     * Persists (saves/updates) the entity.
-     *
+     * Persists (saves/updates) the entity and returns the updated entity back.
+     * For safety consideration the passed in and the returned entity instances should NOT be considered reference equivalent.
+     * The returned entity should be thought of as a newer equivalent of the passed in instance and used everywhere in the downstream logic of the callee.
+     * 
      * @param entity
      * @return
      */
     T save(final T entity);
 
+    
+    /**
+     * Similar to method {@link #save(AbstractEntity)}, but returns an <code>id</code> of the saved entity.
+     * The implication is that this method should execute faster by skipping the steps that are required to instantiate a resultant entity.
+     * 
+     * @param entity
+     * @return
+     */
+    default long quickSave(final T entity) {
+        throw new UnsupportedOperationException(); 
+    }
+
+    
     /**
      * Deletes entity instance by its id. Currently, in most cases it is not supported since deletion is not a trivial operation.
      *
@@ -348,4 +363,5 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     IFetchProvider<T> getFetchProvider();
+    
 }
