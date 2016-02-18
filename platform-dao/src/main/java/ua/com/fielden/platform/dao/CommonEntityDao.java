@@ -191,9 +191,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return !result.isEmpty() ? result.get(0) : null;
     }
     
+    /**
+     * {@inheritDoc} 
+     */
     @Override
     @SessionRequired
-    public long quickSave(final T entity) {
+    public final long quickSave(final T entity) {
         try {
             skipRefetching = true;
             return save(entity).getId();
