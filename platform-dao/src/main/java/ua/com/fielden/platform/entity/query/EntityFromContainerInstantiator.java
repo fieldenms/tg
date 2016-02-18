@@ -41,7 +41,7 @@ public class EntityFromContainerInstantiator {
     }
 
     public <R extends AbstractEntity<?>> R instantiateInitially(final EntityContainer<R> entContainer) {
-        return entContainer.isInstrumentalised() ? entFactory.newEntity(entContainer.getResultType(), entContainer.getId()) : entFactory.newPlainEntity(entContainer.getResultType(), entContainer.getId());
+        return entContainer.isInstrumented() ? entFactory.newEntity(entContainer.getResultType(), entContainer.getId()) : entFactory.newPlainEntity(entContainer.getResultType(), entContainer.getId());
     }
     
     public <R extends AbstractEntity<?>> R instantiateFully(final EntityContainer<R> entityContainer, final R justAddedEntity) {
@@ -74,7 +74,7 @@ public class EntityFromContainerInstantiator {
             setPropertyValue(justAddedEntity, entityEntry.getKey(), instantiate(entityEntry.getValue().getContainers()), entityContainer.getResultType());
         }
 
-        if (entityContainer.isInstrumentalised()) {
+        if (entityContainer.isInstrumented()) {
             EntityUtils.handleMetaProperties(justAddedEntity, proxiedProps);
         }
 

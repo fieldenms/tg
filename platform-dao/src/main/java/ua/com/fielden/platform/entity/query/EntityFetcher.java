@@ -41,7 +41,7 @@ public class EntityFetcher {
             final List<EntityContainer<E>> containers = entityContainerFetcher.listAndEnhanceContainers(queryModel, pageNumber, pageCapacity);
 
             if (!queryModel.isLightweight()) {
-                setContainersToBeInstrumentalised(containers);
+                setContainersToBeInstrumented(containers);
             }
 
             final List<E> result = instantiateFromContainers(containers, proxyMode);
@@ -57,9 +57,9 @@ public class EntityFetcher {
         }
     }
 
-    private <E extends AbstractEntity<?>> List<EntityContainer<E>> setContainersToBeInstrumentalised(final List<EntityContainer<E>> containers) {
+    private <E extends AbstractEntity<?>> List<EntityContainer<E>> setContainersToBeInstrumented(final List<EntityContainer<E>> containers) {
         for (final EntityContainer<E> entityContainer : containers) {
-            entityContainer.setInstrumentalised();
+            entityContainer.setInstrumented();
         }
         return containers;
     }
