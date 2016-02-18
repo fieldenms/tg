@@ -21,6 +21,7 @@ import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.EntityManipulationAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
@@ -89,6 +90,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollCon
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
+import ua.com.fielden.platform.web.config.EntityManipulationWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -503,10 +505,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 injector());
 
         final EntityMaster<NewEntityAction> functionalMasterWithEmbeddedPersistentMaster =  NewEntityActionWebUiConfig.createMaster(injector(), entityMaster);
+        final EntityMaster<EntityManipulationAction> entityManipulationActionMaster = EntityManipulationWebUiConfig.createMaster(injector());
 
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
 
         configApp().
+            addMaster(EntityManipulationAction.class, entityManipulationActionMaster).
             addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
             addMaster(NewEntityAction.class, functionalMasterWithEmbeddedPersistentMaster).
@@ -895,12 +899,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .hasEventSourceAt("/entity-centre-events")
                 .enforcePostSaveRefresh()
                 .addTopAction(
-                        action(NewEntityAction.class).
-                                withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
-                                icon("add-circle").
+                        action(EntityManipulationAction.class).
+                                withContext(context().withSelectionCrit().build()).
+                                icon("add-circle-outline").
                                 shortDesc("Add new").
                                 longDesc("Start coninuous creatio of entities").
                                 build()
+                //                        action(NewEntityAction.class).
+                //                                withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
+                //                                icon("add-circle").
+                //                                shortDesc("Add new").
+                //                                longDesc("Start coninuous creatio of entities").
+                //                                build()
                 ).also();
 
 
@@ -1158,8 +1168,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
-                .addPrimaryAction(
-                        EntityActionConfig.createMasterInvocationActionConfig()
+                .addPrimaryAction(action(EntityManipulationAction.class).
+                        withContext(context().withCurrentEntity().withSelectionCrit().build()).
+                        icon("editor:mode-edit").
+                        shortDesc("Edit entity").
+                        longDesc("Opens master for editing this entity").
+                        build())
+                //                .addPrimaryAction(
+                //                        EntityActionConfig.createMasterInvocationActionConfig()
                 //EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 //                        action(TgFunctionalEntityWithCentreContext.class).
                 //                                withContext(context().withSelectedEntities().build()).
@@ -1168,7 +1184,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                                longDesc("Functional context-dependent action 2.5").
                 //                                build()
 
-                ) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
+                //) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
                 .also()
                 /*.addSecondaryAction(
                         EntityActionConfig.createMasterInDialogInvocationActionConfig()

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.*;
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.FIND_OR_NEW;
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.ID;
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
 
 import java.util.Map;
 
@@ -14,8 +16,6 @@ import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import org.restlet.resource.ServerResource;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -26,15 +26,14 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * The web resource for entity serves as a back-end mechanism of entity retrieval, saving and deletion. It provides a base implementation for handling the following methods:
@@ -64,32 +63,32 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
 
     public enum EntityIdKind {
         NEW("new"), ID("id"), FIND_OR_NEW("find_or_new");
-        
+
         private final String value;
 
         private EntityIdKind(final String value) {
             this.value = value;
         }
-        
+
         boolean matches(final String value) {
             return this.value.equalsIgnoreCase(value);
         }
     }
-    
+
     public EntityResource(
-            final Class<T> entityType, 
-            final IEntityProducer<T> entityProducer, 
-            final EntityFactory entityFactory, 
-            final RestServerUtil restUtil, 
-            final ICriteriaGenerator critGenerator, 
-            final ICompanionObjectFinder companionFinder, 
+            final Class<T> entityType,
+            final IEntityProducer<T> entityProducer,
+            final EntityFactory entityFactory,
+            final RestServerUtil restUtil,
+            final ICriteriaGenerator critGenerator,
+            final ICompanionObjectFinder companionFinder,
 
             final IWebUiConfig webUiConfig,
             final IServerGlobalDomainTreeManager serverGdtm,
             final IUserProvider userProvider,
-            
-            final Context context, 
-            final Request request, 
+
+            final Context context,
+            final Request request,
             final Response response) {
         init(context, request, response);
 
@@ -102,7 +101,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         this.userProvider = userProvider;
 
         final String entityIdString = request.getAttributes().get("entity-id").toString();
-        
+
         if (NEW.matches(entityIdString)) {
             this.entityIdKind = NEW;
             this.entityId = null;
@@ -132,7 +131,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             if (envelope != null) {
                 if (FIND_OR_NEW == entityIdKind) {
                     final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
-                    
+
                     final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcEntityType;
                     try {
                         funcEntityType = (Class<? extends AbstractFunctionalEntityWithCentreContext<?>>) Class.forName((String) savingInfoHolder.getCentreContextHolder().getCustomObject().get("@@funcEntityType"));
@@ -141,23 +140,32 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     }
                     final AbstractEntity<?> funcEntity = EntityResource.restoreEntityFrom(savingInfoHolder, funcEntityType, utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
 
-                    final T entity = utils.createValidationPrototypeWithContext(null, null, null, null, funcEntity);
+                    //TODO this is temporal experimental code
+                    final Long intendedId;
+                    if (funcEntity.getProperty("entityId") != null) {
+                        final String idStr = (String) funcEntity.get("entityId");
+                        intendedId = "new".equals(idStr) ? null : Long.valueOf(idStr);
+                    } else {
+                        intendedId = null;
+                    }
+                    //////////////////////////////////////
+                    final T entity = utils.createValidationPrototypeWithContext(intendedId, null, null, null, intendedId == null ? funcEntity : null);
                     return restUtil.rawListJSONRepresentation(entity);
                 } else {
                     final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
-                    
+
                     final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, utils.entityFactory(), centreContextHolder);
 
-                    
+
                     final T entity = utils.createValidationPrototypeWithContext(
                             null,
                             CentreResourceUtils.createCentreContext(
-                                    webUiConfig, 
-                                    companionFinder, 
-                                    serverGdtm, 
-                                    userProvider, 
-                                    critGenerator, 
-                                    utils.entityFactory(), 
+                                    webUiConfig,
+                                    companionFinder,
+                                    serverGdtm,
+                                    userProvider,
+                                    critGenerator,
+                                    utils.entityFactory(),
                                     centreContextHolder,
                                     CentreResourceUtils.createCriteriaEntity(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator)//
                             ),
@@ -198,7 +206,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
         final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
 
-        
+
         final T potentiallySaved = applied.isDirty() ? save(applied) : applied;
         if (savingInfoHolder.getCentreContextHolder() != null && potentiallySaved instanceof AbstractFunctionalEntityWithCentreContext) {
             ((AbstractFunctionalEntityWithCentreContext) potentiallySaved).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
@@ -222,13 +230,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return
      */
     public static <T extends AbstractEntity<?>> T restoreEntityFrom(
-            final SavingInfoHolder savingInfoHolder, 
-            final Class<T> functionalEntityType, 
-            final EntityFactory entityFactory, 
-            final IWebUiConfig webUiConfig, 
-            final ICompanionObjectFinder companionFinder, 
-            final IServerGlobalDomainTreeManager serverGdtm, 
-            final IUserProvider userProvider, 
+            final SavingInfoHolder savingInfoHolder,
+            final Class<T> functionalEntityType,
+            final EntityFactory entityFactory,
+            final IWebUiConfig webUiConfig,
+            final ICompanionObjectFinder companionFinder,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
             final ICriteriaGenerator critGenerator) {
         final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
         final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(functionalEntityType);
@@ -238,20 +246,20 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         final Object arrivedIdVal = modifHolder.get(AbstractEntity.ID);
         final Long longId = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
-        
+
         final CentreContextHolder centreContextHolder = savingInfoHolder.getCentreContextHolder();
         final AbstractEntity<?> funcEntity = restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, utils.entityFactory(), centreContextHolder);
-        
+
         return restoreEntityFrom(webUiConfig, serverGdtm, userProvider, savingInfoHolder, utils, longId, companionFinder, gdtm, critGenerator, funcEntity /* master context */);
     }
 
     public static AbstractEntity<?> restoreMasterFunctionalEntity(
-            final IWebUiConfig webUiConfig, 
-            final ICompanionObjectFinder companionFinder, 
-            final IServerGlobalDomainTreeManager serverGdtm, 
-            final IUserProvider userProvider, 
-            final ICriteriaGenerator critGenerator, 
-            final EntityFactory entityFactory, 
+            final IWebUiConfig webUiConfig,
+            final ICompanionObjectFinder companionFinder,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            final ICriteriaGenerator critGenerator,
+            final EntityFactory entityFactory,
             final CentreContextHolder centreContextHolder) {
         AbstractEntity<?> entity = null;
         if (centreContextHolder != null && centreContextHolder.getMasterEntity() instanceof SavingInfoHolder) {
@@ -267,7 +275,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             } catch (final ClassNotFoundException e) {
                 throw new IllegalStateException(e);
             }
-    
+
             if (entityType != null) {
                 entity = EntityResource.restoreEntityFrom(outerContext, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
             }
@@ -276,14 +284,14 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     }
 
     private static <T extends AbstractEntity<?>> T restoreEntityFrom(
-            final IWebUiConfig webUiConfig, 
-            final IServerGlobalDomainTreeManager serverGdtm, 
-            final IUserProvider userProvider, 
-            final SavingInfoHolder savingInfoHolder, 
-            final EntityResourceUtils<T> utils, 
-            final Long entityId, 
-            final ICompanionObjectFinder companionFinder, 
-            final IGlobalDomainTreeManager gdtm, 
+            final IWebUiConfig webUiConfig,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            final SavingInfoHolder savingInfoHolder,
+            final EntityResourceUtils<T> utils,
+            final Long entityId,
+            final ICompanionObjectFinder companionFinder,
+            final IGlobalDomainTreeManager gdtm,
             final ICriteriaGenerator critGenerator,
             final AbstractEntity<?> masterContext) {
         final Map<String, Object> modifiedPropertiesHolder = savingInfoHolder.getModifHolder();
@@ -297,12 +305,12 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             applied = utils.constructEntity(
                     modifiedPropertiesHolder,
                     CentreResourceUtils.createCentreContext(
-                            webUiConfig, 
-                            companionFinder, 
-                            serverGdtm, 
-                            userProvider, 
-                            critGenerator, 
-                            utils.entityFactory(), 
+                            webUiConfig,
+                            companionFinder,
+                            serverGdtm,
+                            userProvider,
+                            critGenerator,
+                            utils.entityFactory(),
                             savingInfoHolder.getCentreContextHolder(),
                             CentreResourceUtils.createCriteriaEntity(savingInfoHolder.getCentreContextHolder(), companionFinder, gdtm, critGenerator)),
                     savingInfoHolder.getCentreContextHolder().getChosenProperty(),
@@ -334,7 +342,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                 throw result;
             }
         }
-        
+
         return savedEntity;
     }
 
