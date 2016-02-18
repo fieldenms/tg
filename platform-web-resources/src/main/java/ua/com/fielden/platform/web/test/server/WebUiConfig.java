@@ -911,7 +911,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                                shortDesc("Add new").
                 //                                longDesc("Start coninuous creatio of entities").
                 //                                build()
-                ).also();
+                ).also()
+                .addTopAction(action(NewEntityAction.class).
+                        withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
+                        icon("add-circle").
+                        shortDesc("Add new").
+                        longDesc("Start coninuous creatio of entities").
+                        build())
+                .also();
 
 
         if (isComposite) {
