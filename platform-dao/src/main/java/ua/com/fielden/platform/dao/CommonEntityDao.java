@@ -29,6 +29,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.handlers.IAfterSave;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -100,16 +101,24 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     private IUserProvider up;
 
+    /** A marker to skip re-fetching an entity during save. */
     private boolean skipRefetching = false;
+    
+    /** A guard against an accidental use of quick save as per issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a>. */
+    private final boolean withQuickSaveSupport;
 
     /**
      * A principle constructor.
      *
      * @param entityType
      */
-    @Inject
     protected CommonEntityDao(final IFilter filter) {
+        this(filter, false);
+    }
+    
+    protected CommonEntityDao(final IFilter filter, final boolean withQuickSaveSupport) {
         this.filter = filter;
+        this.withQuickSaveSupport = withQuickSaveSupport;
     }
 
     /**
@@ -196,6 +205,21 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public final long quickSave(final T entity) {
+        if (!withQuickSaveSupport) {
+            throw new EntityCompanionException(format("Quick save is not supported for entity [%s].", getEntityType().getName()));
+        }
+        
+        return safeQuickSave(entity);
+    }
+    
+    /**
+     * This method is an implementation detail.
+     * It is considered to be safe by the fact of intended (internal) usage.
+     * 
+     * @param entity
+     * @return
+     */
+    private long safeQuickSave(final T entity) {
         try {
             skipRefetching = true;
             return save(entity).getId();
@@ -413,8 +437,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (result.isSuccessful()) {
                         // persisting of deactivatables should go through the logic of companion save
                         // and cannot be persisted by just using a call to Hibernate Session
-                        final IEntityDao co = getCoFinder().find(deactivatable.getType());
-                        co.quickSave(deactivatable);
+                        final CommonEntityDao co = getCoFinder().find(deactivatable.getType());
+                        co.safeQuickSave(deactivatable);
                     } else {
                         throw result;
                     }
@@ -508,7 +532,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 if (prop.getValue() != null) {
                     // need to update refCount for the activatable entity
                     final ActivatableAbstractEntity<?> value = prop.getValue();
-                    final IEntityDao co = getCoFinder().find(value.getType());
+                    final CommonEntityDao co = getCoFinder().find(value.getType());
 
                     // get the latest value from the database, reassign it and update its ref count
                     final fetch fetch = FetchModelReconstructor.reconstruct(value);
@@ -521,7 +545,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (!assignmentResult.isSuccessful()) {
                         throw assignmentResult;
                     }
-                    co.quickSave(persistedValue.incRefCount());
+                    co.safeQuickSave(persistedValue.incRefCount());
                 }
             }
         }
