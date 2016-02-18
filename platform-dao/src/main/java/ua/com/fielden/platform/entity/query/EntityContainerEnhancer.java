@@ -79,6 +79,12 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             }
         }
 
+        if (fetchModel != null && fetchModel.isInstrumented()) {
+            for (EntityContainer<E> entityContainer : entities) {
+                entityContainer.setInstrumented();
+            }
+        }
+        
         return enhanceWithProxies(entities, fetchModel);
     }
 
