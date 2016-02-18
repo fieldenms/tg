@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
-import static javassist.util.proxy.ProxyFactory.isProxyClass;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,7 +43,6 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
         this.entityType = entityType;
         this.excludeNulls = excludeNulls;
     }
-    
         
     /**
      * Returns <code>true</code> if the specified value is proxied for a given entity instance.
@@ -58,12 +56,12 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     public static boolean isValueProxied(final Object value) {
         // TODO Implementation of this method relies on the current approach to proxing.
         //      It should be modified when moving to ByteBuddy and implementing proxing of non-entity typed properties
-        return value == null ? false : isProxyClass(value.getClass());
+        return value == null ? false : PropertyTypeDeterminator.isProxied(value.getClass());
     }
 
     @Override
     public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
-        if (isProxyClass(entity.getClass())) {
+        if (PropertyTypeDeterminator.isProxied(entity.getClass())) {
             throw new IllegalArgumentException(String.format("Entity with type [%s], which is Javassist proxy, should not be serialised at all.", entity.getClass().getSimpleName()));
         }
         

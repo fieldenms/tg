@@ -384,12 +384,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	public Class<? extends AbstractEntity<?>> getDerivedFromType() {
         Class<? extends AbstractEntity<?>> tmpDerivedFromType = getType();
         final String name = getType().getName();
-        int index = name.indexOf("$$");
+        final int index = name.indexOf("$$");
         if (index > 0) {
         	final String cleanName = name.substring(0, index);
         	try {
 				tmpDerivedFromType = (Class<? extends AbstractEntity<?>>) Class.forName(cleanName);
-			} catch (ClassNotFoundException e) {
+			} catch (final ClassNotFoundException e) {
 				e.printStackTrace();
 			} 
         }
@@ -1167,15 +1167,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     public final boolean isPersisted() {
         return getId() != null;
-    }
-
-    /**
-     * Checks whether this is an enhanced entity instance.
-     *
-     * @return
-     */
-    public final boolean isEnhanced() {
-        return !getType().getName().equals(getClass().getName());
     }
 
     public final boolean isInitialising() {

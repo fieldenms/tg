@@ -239,23 +239,23 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
-        return clazz != null && PropertyTypeDeterminator.isEnhanced(clazz) ? clazz.getSuperclass() : clazz;
+        return clazz != null && (isInstrumented(clazz) || isProxied(clazz)) ? clazz.getSuperclass() : clazz;
     }
-
+    
     /**
-     * Returns if specified class is enhanced by Guice/Hibernate.
-     *
-     * Enhancer.isEnhanced does not recognise classes enhanced directly with CGLIB (Hibernate), therefore need to provide an alternative way.
+     * Returns <code>true</code> if the specified class is Javassist proxy class, <code>false</code> otherwise.
      *
      * @param klass
      * @return
      */
-    public static boolean isEnhanced(final Class<?> klass) {
-        return isInstrumented(klass) || klass.getName().contains("$$_javassist");
+    public static boolean isProxied(final Class<?> klass) {
+        return klass.getName().contains("$$_javassist");
     }
     
     /**
      * Returns <code>true</code> if the specified class is instrumented by Guice (and its metaProperties should exist), <code>false</code> otherwise.
+     * 
+     * Enhancer.isEnhanced does not recognise classes enhanced directly with CGLIB (Hibernate), therefore need to provide an alternative way.
      *
      * @param klass
      * @return
