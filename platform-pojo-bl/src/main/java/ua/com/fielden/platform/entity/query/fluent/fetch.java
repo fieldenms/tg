@@ -21,6 +21,7 @@ public class fetch<T extends AbstractEntity<?>> {
     private final Set<String> includedProps = new HashSet<String>();
     private final Set<String> excludedProps = new HashSet<String>();
     private final FetchCategory fetchCategory;
+    private final boolean instrumented;
 
     /**
      * Used mainly for serialisation.
@@ -29,11 +30,16 @@ public class fetch<T extends AbstractEntity<?>> {
         this(null, FetchCategory.NONE);
     }
 
-    public fetch(final Class<T> entityType, final FetchCategory fetchCategory) {
+    public fetch(final Class<T> entityType, final FetchCategory fetchCategory, final boolean instrumented) {
         this.entityType = entityType;
         this.fetchCategory = fetchCategory;
+        this.instrumented = instrumented;
     }
 
+    public fetch(final Class<T> entityType, final FetchCategory fetchCategory) {
+        this(entityType, fetchCategory, false);
+    }
+    
     private void validate(final String propName) {
         checkForExistence(propName);
         checkForDuplicate(propName);
@@ -134,13 +140,14 @@ public class fetch<T extends AbstractEntity<?>> {
         result = prime * result + ((entityType == null) ? 0 : entityType.hashCode());
         result = prime * result + ((excludedProps == null) ? 0 : excludedProps.hashCode());
         result = prime * result + ((fetchCategory == null) ? 0 : fetchCategory.hashCode());
-        result = prime * result + ((includedPropsWithModels == null) ? 0 : includedPropsWithModels.hashCode());
         result = prime * result + ((includedProps == null) ? 0 : includedProps.hashCode());
+        result = prime * result + ((includedPropsWithModels == null) ? 0 : includedPropsWithModels.hashCode());
+        result = prime * result + (instrumented ? 1231 : 1237);
         return result;
     }
 
     @Override
-    public boolean equals(final Object obj) {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
@@ -150,7 +157,7 @@ public class fetch<T extends AbstractEntity<?>> {
         if (!(obj instanceof fetch)) {
             return false;
         }
-        final fetch<?> other = (fetch<?>) obj;
+        fetch other = (fetch) obj;
         if (entityType == null) {
             if (other.entityType != null) {
                 return false;
@@ -168,6 +175,13 @@ public class fetch<T extends AbstractEntity<?>> {
         if (fetchCategory != other.fetchCategory) {
             return false;
         }
+        if (includedProps == null) {
+            if (other.includedProps != null) {
+                return false;
+            }
+        } else if (!includedProps.equals(other.includedProps)) {
+            return false;
+        }
         if (includedPropsWithModels == null) {
             if (other.includedPropsWithModels != null) {
                 return false;
@@ -175,11 +189,7 @@ public class fetch<T extends AbstractEntity<?>> {
         } else if (!includedPropsWithModels.equals(other.includedPropsWithModels)) {
             return false;
         }
-        if (includedProps == null) {
-            if (other.includedProps != null) {
-                return false;
-            }
-        } else if (!includedProps.equals(other.includedProps)) {
+        if (instrumented != other.instrumented) {
             return false;
         }
         return true;
