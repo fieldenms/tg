@@ -15,7 +15,6 @@ public class EntityManipulationMaster implements IMaster<EntityManipulationActio
     private final IRenderable renderable;
 
     public EntityManipulationMaster() {
-        final StringBuilder attrs = new StringBuilder();
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", "<link rel='import' href='/app/tg-element-loader.html'>\n")
@@ -29,12 +28,14 @@ public class EntityManipulationMaster implements IMaster<EntityManipulationActio
                                 + "</tg-element-loader>")
                 .replace("//@ready-callback",
                         "this._calcAttrs = (function(bindingEntity){\n" +
-                                "   return {\n" +
-                                "   currentState: 'EDIT',\n" +
-                                "   centreUuid: this.centreUuid,\n" +
-                                "   entityId: bindingEntity.entityId,\n" +
-                                "   entityType: bindingEntity.entityType\n" +
-                                "};\n" +
+                                "   if (bindingEntity !== null) {\n" +
+                                "       return {\n" +
+                                "           currentState: 'EDIT',\n" +
+                                "           centreUuid: this.centreUuid,\n" +
+                                "           entityId: bindingEntity.entityId,\n" +
+                                "           entityType: bindingEntity.entityType\n" +
+                                "       };\n" +
+                                "   };\n" +
                                 "}).bind(this);\n")
                 .replace("//@attached-callback", "this.canLeave = function () {"
                         + "    var embeddedMaster = this.$.loader.loadedElement;\n"
