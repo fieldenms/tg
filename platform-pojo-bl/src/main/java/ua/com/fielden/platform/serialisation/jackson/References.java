@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 /**
  * Class representing references to instances already serialised or deserialised.
@@ -19,7 +22,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
  */
 public class References {
     private final IdentityHashMap<AbstractEntity<?>, String> entityToReference = new IdentityHashMap<>();
-    private final Map<String, AbstractEntity<?>> referenceToEntity = new HashMap<>();
+    private final Map<String, AbstractEntity<?>> referenceToEntity = new LinkedHashMap<>();
     private final Map<String, Long> typeToRefCount = new HashMap<>();
 
     public void reset() {
@@ -71,14 +74,22 @@ public class References {
         return entityToReference.put(entity, reference);
     }
 
-    public Set<AbstractEntity<?>> getAllEntities() {
-        final Set<AbstractEntity<?>> refs = new HashSet<>();
+    public Set<AbstractEntity<?>> getAllEntitiesInReversedOrder() {
+        // final Set<AbstractEntity<?>> refs = new HashSet<>();
+        final List<AbstractEntity<?>> refs = new ArrayList<>();
+        
         for (final AbstractEntity<?> entity : referenceToEntity.values()) {
             if (entity != null) {
                 refs.add(entity);
             }
         }
+        
+        Collections.reverse(refs);
+        final Set<AbstractEntity<?>> result = new LinkedHashSet<>();
+        for (final AbstractEntity<?> ref : refs) {
+            result.add(ref);
+        }
 
-        return refs;
+        return result;
     }
 }

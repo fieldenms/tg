@@ -221,7 +221,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             // references is thread local variable, which gets reset if a nested deserialisation happens
             // therefore need to make a local cache of the present in references entities
             
-            final Set<AbstractEntity<?>> refs = references.getAllEntities();
+            final Set<AbstractEntity<?>> refs = references.getAllEntitiesInReversedOrder();
 
             // explicit reset in order to make the reason for the above snippet more explicit
             references.reset();
@@ -233,9 +233,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
                 for (final MetaProperty<?> prop : entity.getProperties().values()) {
                     if (prop != null) {
                         // TODO IMPORTANT: do we need to check on .isCollectional() here?
-                        if (!prop.isCollectional()) {
-                            prop.defineForOriginalValue();
-                        }
+                        // if (!prop.isCollectional()) {
+                        ((MetaProperty<Object>) prop).define(prop.getValue());
+                        // }
                     }
                 }
                 entity.endInitialising();

@@ -151,9 +151,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     }
                     if (!uninstrumented) {
                         // this is very important -- original values for non-persistent entities should be left 'null'!
-                        final Object originalValue = entity.isPersisted() ? value : null;
                         if (entity.isPersisted()) {
-                            entity.getProperty(propertyName).setOriginalValue(originalValue);
+                            entity.getProperty(propertyName).setOriginalValue(value);
                         }
                     }
                 }
