@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.dao;
 
-import static java.lang.String.format;
-import static org.junit.Assert.*;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Date;
 import java.util.List;
@@ -138,7 +140,6 @@ public class CommonEntityQuckSaveTest extends AbstractDomainDrivenTestCase {
         save(new_ (EntityWithMoney.class, "KEY2", "desc").setMoney(new Money("30.00")).setDateTimeProperty(date("2009-03-01 00:00:00")));
         save(new_ (EntityWithMoney.class, "KEY3", "desc").setMoney(new Money("40.00")));
         save(new_ (EntityWithMoney.class, "KEY4", "desc").setMoney(new Money("50.00")).setDateTimeProperty(date("2009-03-01 10:00:00")));
-
     }
 
     @Override
