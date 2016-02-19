@@ -96,6 +96,8 @@ public class DefinersExecutor {
             return;
         }
 
+        // TODO beginInitialising() and endInitialising() calls have been arrived from TgJackson
+        // TODO needs to be investigated whether applicable in EQL instantiation process
         entity.beginInitialising();
         explored.add(identity);
 
@@ -124,10 +126,6 @@ public class DefinersExecutor {
                                     explore(frontier, explored);
                                 }
                             });
-                            
-                            handleOriginalValueAndACE(metaProp, propertyValue);
-                        } else {
-                            handleOriginalValueAndACE(metaProp, propertyValue);
                         }
                     } else if (metaProp.isEntity()) { // handle entity type properties
                         if (propertyValue != null) {
@@ -136,21 +134,25 @@ public class DefinersExecutor {
                             frontier.push(value);
                             explore(frontier, explored);
                         }
-                        handleOriginalValueAndACE(metaProp, propertyValue);
                     } else { // handle ordinary type properties
-                        handleOriginalValueAndACE(metaProp, propertyValue);
                     }
+                    handleOriginalValueAndACE(metaProp, propertyValue);
                 }
             }
         }
         if (!unionEntity) {
             entity.setDirty(false);
         }
+        
+        // TODO beginInitialising() and endInitialising() calls have been arrived from TgJackson
+        // TODO needs to be investigated whether applicable in EQL instantiation process
         entity.endInitialising();
     }
 
     private static void handleOriginalValueAndACE(final MetaProperty metaProp, final Object propertyValue) {
-        if (metaProp.getEntity().isPersisted()) { // TODO the check for persistance is arrived from EntityJsonDeserialiser
+        // TODO the check for 'persisted' has been arrived from EntityJsonDeserialiser
+        // TODO needs to be investigated whether applicable in EQL instantiation process
+        if (metaProp.getEntity().isPersisted()) {
             metaProp.setOriginalValue(propertyValue);
         }
         metaProp.define(propertyValue);
@@ -163,6 +165,8 @@ public class DefinersExecutor {
 //     * @return
 //     */
 //    public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance) {
+// TODO please, consider adding the following block into main logic!
+//------------------------------------------------------------------
 //        final boolean unionEntity = instance instanceof AbstractUnionEntity;
 //        if (!unionEntity && instance.getProperties().containsKey("key")) {
 //            final Object keyValue = instance.get("key");
@@ -171,6 +175,7 @@ public class DefinersExecutor {
 //                instance.set("key", keyValue);
 //            }
 //        }
+//------------------------------------------------------------------
 //
 //        for (final MetaProperty metaProp : instance.getProperties().values()) {
 //            final boolean notNull = metaProp != null;
