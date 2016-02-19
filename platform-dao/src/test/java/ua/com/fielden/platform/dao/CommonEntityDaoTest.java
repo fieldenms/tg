@@ -322,7 +322,8 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 
     }
 
-    public void test_that_version_is_updated() {
+    @Test
+    public void test_entity_version_is_updated_after_save() {
         EntityWithMoney entity = dao.findByKey("key1");
 
         hibernateUtil.getSessionFactory().getCurrentSession().close();
@@ -338,6 +339,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertEquals("Incorrect prev version", Long.valueOf(1), updatedEntity.getVersion());
     }
 
+    @Test
     public void test_entity_staleness_check() {
         final EntityWithMoney entity = dao.findByKey("key1");
         // update entity to simulate staleness
@@ -352,7 +354,9 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertFalse("This version should have been recognised as current.", dao.isStale(entity.getId(), 1L));
     }
 
-    public void test_that_optimistic_locking_with_versioning_worx() {
+    
+    @Test
+    public void test_optimistic_locking_based_on_versioning_works_for_save() {
         // get entity, which will be modified but not saved
         final EntityWithMoney entity = dao.findByKey("key1");
         assertEquals("Incorrect prev version", Long.valueOf(0), entity.getVersion());
@@ -419,7 +423,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     //    }
 
     @Test
-    public void test_non_population_of_transaction_date_property_for_persistent_entity() {
+    public void test_transaction_date_property_for_previously_persisted_entity_is_not_reassigned_with_save() {
         final EntityWithMoney entity = dao.findByKey("key1");
         assertNull("Test pre-condition is invalid -- transDate should be null.", dao.findByKey("key1").getTransDate());
         dao.save(entity);
@@ -427,16 +431,16 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     }
 
     @Test
-    public void test_population_of_transaction_date_property_for_new_entity() {
+    public void test_transaction_date_property_for_new_entity_gets_auto_assigned_with_save() {
         final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "new entity");
         assertNull("Test pre-condition is invalid -- transDate should be null.", newEntity.getTransDate());
         newEntity.setMoney(new Money("12")); // required property -- has to be set
         dao.save(newEntity);
         assertNotNull("transDate should have been assigned.", dao.findByKey("new entity").getTransDate());
     }
-
+ 
     @Test
-    public void test_non_population_of_already_assigned_transaction_date_property_for_new_entity() {
+    public void test_already_assigned_transaction_date_property_for_new_entity_does_not_get_repopulated_with_save() {
         final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "new entity");
         final Date date = new DateTime(2009, 01, 01, 0, 0, 0, 0).toDate();
         newEntity.setTransDate(date);

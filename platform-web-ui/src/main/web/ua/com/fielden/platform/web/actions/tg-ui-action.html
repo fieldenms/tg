@@ -347,7 +347,7 @@
                 // NOTE: the savingContext for 'tg-entity-master' at this stage is immutable, i.e. it will never change during lifecycle of action's master 
                 master.savingContext = self._createContextHolderForAction();
 
-                master.postSaved = function (potentiallySavedEntity, newBindingEntity) {
+                master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                     master.focusFirstInput();
                     
                     postal.publish({
@@ -355,19 +355,19 @@
                         topic: "detail.saved",
                         data: {
                         	shouldRefreshParentCentreAfterSave: self.shouldRefreshParentCentreAfterSave,
-                            entity: potentiallySavedEntity,
+                            entity: potentiallySavedOrNewEntity,
                             // send selectedEntitiesInContext further to be able to update only them on EGI
                             selectedEntitiesInContext: master.savingContext.selectedEntities
                         }
                     });
                     
-                    if (potentiallySavedEntity.isValid()) {
+                    if (potentiallySavedOrNewEntity.isValid()) {
                     	if (self.postActionSuccess) {
-	                        self.postActionSuccess(potentiallySavedEntity);
+	                        self.postActionSuccess(potentiallySavedOrNewEntity);
                     	}
                     } else {
                     	if (self.postActionError) {
-	                        self.postActionError(potentiallySavedEntity);
+	                        self.postActionError(potentiallySavedOrNewEntity);
                     	}
                     }
                     

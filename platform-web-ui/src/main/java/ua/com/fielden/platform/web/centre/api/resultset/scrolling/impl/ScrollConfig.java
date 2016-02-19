@@ -14,6 +14,7 @@ public class ScrollConfig implements IScrollConfig, IScrollConfigForLeftPanel {
     private boolean fixedSecondaryActions = false;
     private boolean fixedHeader = false;
     private boolean fixedSummary = false;
+    private int numOfFixedProps = 0;
 
     public static IScrollConfigForLeftPanel configScroll() {
         return new ScrollConfig();
@@ -53,6 +54,7 @@ public class ScrollConfig implements IScrollConfig, IScrollConfigForLeftPanel {
 
     @Override
     public IScrollConfigSecondaryActions withFixedCheckboxesAndPrimaryActions() {
+        this.fixedCheckboxes = true;
         this.fixedCheckboxesWithPrimaryActions = true;
         return this;
     }
@@ -80,6 +82,19 @@ public class ScrollConfig implements IScrollConfig, IScrollConfigForLeftPanel {
     @Override
     public boolean isSummaryFixed() {
         return fixedSummary;
+    }
+
+    @Override
+    public IScrollConfigSecondaryActions withFixedCheckboxesPrimaryActionsAndFirstProps(final int numberOfProps) {
+        this.fixedCheckboxes = true;
+        this.fixedCheckboxesWithPrimaryActions = true;
+        this.numOfFixedProps = numberOfProps;
+        return this;
+    }
+
+    @Override
+    public int getNumberOfFixedColumns() {
+        return numOfFixedProps;
     }
 
 }

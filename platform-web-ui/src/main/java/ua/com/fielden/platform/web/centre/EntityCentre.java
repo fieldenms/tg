@@ -166,13 +166,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp property : resultSetProps.get()) {
                 if (property.propName.isPresent()) {
-                    cdtmae.getSecondTick().check(entityType, treeName(property.propName.get()), true);
+                    final String propertyName = treeName(property.propName.get());
+                    cdtmae.getSecondTick().check(entityType, propertyName, true);
+                    cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
                 } else {
                     if (property.propDef.isPresent()) { // represents the 'custom' property
                         final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
                         enhanceCentreManagerWithCustomProperty(cdtmae, entityType, customPropName, property.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
-
-                        cdtmae.getSecondTick().check(entityType, treeName(customPropName), true);
+                        final String propertyName = treeName(customPropName);
+                        cdtmae.getSecondTick().check(entityType, propertyName, true);
+                        cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
                     } else {
                         throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
                     }
@@ -569,9 +572,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public boolean isRunAutomatically() {
         return dslDefaultConfig.isRunAutomatically();
     }
-    
+
     /**
      * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
+     *
      * @return
      */
     public boolean shouldEnforcePostSaveRefresh() {
@@ -662,6 +666,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
                 replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() + "").
                 replace("@checkboxesWithPrimaryActionsFixed", dslDefaultConfig.getScrollConfig().isCheckboxesWithPrimaryActionsFixed() + "").
+                replace("@numOfFixedCols", Integer.toString(dslDefaultConfig.getScrollConfig().getNumberOfFixedColumns())).
                 replace("@secondaryActionsFixed", dslDefaultConfig.getScrollConfig().isSecondaryActionsFixed() + "").
                 replace("@headerFixed", dslDefaultConfig.getScrollConfig().isHeaderFixed() + "").
                 replace("@summaryFixed", dslDefaultConfig.getScrollConfig().isSummaryFixed() + "").
@@ -746,7 +751,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, null, tooltipProp, centre.getSecondTick().getWidth(root, resultPropName), egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, null, centre.getSecondTick().getWidth(root, resultPropName), resultProp.isFlexible, tooltipProp, egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
                     final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
@@ -931,15 +936,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      */
     private void calculteGrowFactor(final List<PropertyColumnElement> propertyColumns) {
         int minWidth = 0;
-        for (final PropertyColumnElement column: propertyColumns) {
-            if (minWidth == 0 && column.width > 0) {
+        for (final PropertyColumnElement column : propertyColumns) {
+            if (minWidth == 0 && column.width > 0 && column.isFlexible) {
                 minWidth = column.width;
-            } else if (minWidth > 0 && column.width > 0 && column.width < minWidth) {
+            } else if (minWidth > 0 && column.width > 0 && column.isFlexible && column.width < minWidth) {
                 minWidth = column.width;
             }
         }
         for (final PropertyColumnElement column : propertyColumns) {
-            column.setGrowFactor(minWidth > 0 ? Math.round((float) column.width / minWidth) : 0);
+            if (column.isFlexible) {
+                column.setGrowFactor(minWidth > 0 ? Math.round((float) column.width / minWidth) : 0);
+            }
         }
     }
 

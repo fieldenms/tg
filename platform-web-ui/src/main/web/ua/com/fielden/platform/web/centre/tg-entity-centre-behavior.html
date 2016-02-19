@@ -463,8 +463,8 @@
                     return null;
                 }).bind(self);
 
-                self._postFunctionalEntitySaved = (function (potentiallySavedEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
-                    if (potentiallySavedEntity.isValid() && shouldRefreshParentCentreAfterSave === true) {
+                self._postFunctionalEntitySaved = (function (potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
+                    if (potentiallySavedOrNewEntity.isValid() && shouldRefreshParentCentreAfterSave === true) {
                         // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
                         this.refreshEntities(selectedEntitiesInContext);
                     }

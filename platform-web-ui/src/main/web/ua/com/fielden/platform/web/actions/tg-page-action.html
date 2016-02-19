@@ -160,15 +160,15 @@
                         console.log("postValidated");
                     };
 
-                    detail.postSaved = function (potentiallySavedEntity, newBindingEntity) {
+                    detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                         postal.publish({
                             channel: "centre_" + detail.centreUuid,
                             topic: "detail.saved",
                             data: {
                                 shouldRefreshParentCentreAfterSave: self.shouldRefreshParentCentreAfterSave,
-                                entity: potentiallySavedEntity,
+                                entity: potentiallySavedOrNewEntity,
                                 // send selectedEntitiesInContext further to be able to update only them on EGI
-                                selectedEntitiesInContext: [potentiallySavedEntity]
+                                selectedEntitiesInContext: [potentiallySavedOrNewEntity]
                             }
                         });
 
