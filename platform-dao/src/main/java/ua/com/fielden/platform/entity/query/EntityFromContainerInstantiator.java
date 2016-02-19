@@ -41,7 +41,9 @@ public class EntityFromContainerInstantiator {
     }
 
     public <R extends AbstractEntity<?>> R instantiate(final EntityContainer<R> entContainer) {
-        return instantiateFully(entContainer, instantiateInitially(entContainer));
+      //return instantiateFully(entContainer, instantiateInitially(entContainer));
+        // TODO this change will arrive from #415 branch. This is temporal fix on #392 development branch.
+        return containerInstantiatorCache.getEntity(entContainer);
     }
 
     public <R extends AbstractEntity<?>> R instantiateInitially(final EntityContainer<R> entContainer) {
