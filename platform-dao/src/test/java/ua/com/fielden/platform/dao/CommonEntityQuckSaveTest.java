@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.dao;
 
+import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
@@ -13,6 +14,7 @@ import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
@@ -114,21 +116,16 @@ public class CommonEntityQuckSaveTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    public void quick_save_guard_prevents_accidental_use_of_method_quickSave() {
-        final IEntityDao<EntityWithDynamicCompositeKey> co = ao(EntityWithDynamicCompositeKey.class);
-        final EntityWithDynamicCompositeKey entity = co.findById(1L, fetchAll(EntityWithDynamicCompositeKey.class));
-        assertNotNull(entity);
-        
-        entity.setKeyPartOne("updated part one value");
-        
+    public void quickSave_invocation_on_companions_with_overriden_save_throws_exception_to_prevent_invalid_execution() {
+        final IEntityDao<EntityWithSimpleMoney> co = ao(EntityWithSimpleMoney.class);
         try {
-            co.quickSave(entity);
-            fail("Quick save guard failed.");
-        } catch (final EntityCompanionException ex) {
+            co.quickSave(new_(EntityWithSimpleMoney.class, "SOME KEY"));
+            fail();
+        } catch (EntityCompanionException ex) {
+            assertEquals("Quick save is not supported for entity [ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney] due to an overridden method save (refer companion [ua.com.fielden.platform.dao.EntityWithSimpleMoneyDao]).", 
+                         ex.getMessage());
         }
     }
-
-
 
 
     @Override

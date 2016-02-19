@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,6 +35,7 @@ import ua.com.fielden.platform.dao.handlers.IAfterSave;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -104,8 +106,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     /** A marker to skip re-fetching an entity during save. */
     private boolean skipRefetching = false;
     
-    /** A guard against an accidental use of quick save as per issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a>. */
-    private final boolean withQuickSaveSupport;
+    /** A guard against an accidental use of quick save to prevent its use for companions with overridden method <code>save</code>.
+     *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
+    private final boolean hasSaveOverridden;
 
     /**
      * A principle constructor.
@@ -113,12 +116,21 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param entityType
      */
     protected CommonEntityDao(final IFilter filter) {
-        this(filter, false);
+        this.filter = filter;
+        this.hasSaveOverridden = isSaveOverridden();
     }
     
-    protected CommonEntityDao(final IFilter filter, final boolean withQuickSaveSupport) {
-        this.filter = filter;
-        this.withQuickSaveSupport = withQuickSaveSupport;
+    private boolean isSaveOverridden() {
+        // let's check if method save was overridden
+        try {
+            final Method methodSave = getClass().getMethod("save", getEntityType());
+            if (methodSave != null && methodSave.getDeclaringClass() != CommonEntityDao.class) {
+                return true;
+            }
+        } catch (NoSuchMethodException | SecurityException e) {
+        }
+        
+        return false;
     }
 
     /**
@@ -199,27 +211,22 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return !result.isEmpty() ? result.get(0) : null;
     }
     
+    
+    
     /**
      * {@inheritDoc} 
      */
     @Override
     @SessionRequired
     public final long quickSave(final T entity) {
-        if (!withQuickSaveSupport) {
-            throw new EntityCompanionException(format("Quick save is not supported for entity [%s].", getEntityType().getName()));
+        if (hasSaveOverridden) {
+            throw new EntityCompanionException(
+                    format("Quick save is not supported for entity [%s] due to an overridden method save (refer companion [%s]).", 
+                            getEntityType().getName(), 
+                            getEntityType().getAnnotation(CompanionObject.class).value().getName()));
         }
         
-        return safeQuickSave(entity);
-    }
-    
-    /**
-     * This method is an implementation detail.
-     * It is considered to be safe by the fact of intended (internal) usage.
-     * 
-     * @param entity
-     * @return
-     */
-    private long safeQuickSave(final T entity) {
+        
         try {
             skipRefetching = true;
             return save(entity).getId();
@@ -227,7 +234,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             skipRefetching = false;
         }
     }
-
+    
     /**
      * Saves the provided entity. This method checks entity version and throws StaleObjectStateException if the provided entity is stale. There is no in-memory referential
      * integrity guarantee -- the returned instance is always a different instance. However, from the perspective of data loading, it is guaranteed that the object graph of the
@@ -436,7 +443,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                         // persisting of deactivatables should go through the logic of companion save
                         // and cannot be persisted by just using a call to Hibernate Session
                         final CommonEntityDao co = getCoFinder().find(deactivatable.getType());
-                        co.safeQuickSave(deactivatable);
+                        co.save(deactivatable);
                     } else {
                         throw result;
                     }
@@ -541,7 +548,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                     if (!assignmentResult.isSuccessful()) {
                         throw assignmentResult;
                     }
-                    co.safeQuickSave(persistedValue.incRefCount());
+                    co.save(persistedValue.incRefCount());
                 }
             }
         }
