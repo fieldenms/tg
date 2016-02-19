@@ -74,22 +74,32 @@ public class References {
         return entityToReference.put(entity, reference);
     }
 
-    public Set<AbstractEntity<?>> getAllEntitiesInReversedOrder() {
-        // final Set<AbstractEntity<?>> refs = new HashSet<>();
-        final List<AbstractEntity<?>> refs = new ArrayList<>();
-        
+//    public Set<AbstractEntity<?>> getAllEntitiesInReversedOrder() {
+//        // final Set<AbstractEntity<?>> refs = new HashSet<>();
+//        final List<AbstractEntity<?>> refs = new ArrayList<>();
+//        
+//        for (final AbstractEntity<?> entity : referenceToEntity.values()) {
+//            if (entity != null) {
+//                refs.add(entity);
+//            }
+//        }
+//        
+//        Collections.reverse(refs);
+//        final Set<AbstractEntity<?>> result = new LinkedHashSet<>();
+//        for (final AbstractEntity<?> ref : refs) {
+//            result.add(ref);
+//        }
+//
+//        return result;
+//    }
+    
+    public LinkedHashSet<AbstractEntity<?>> getAllEntities() {
+        final LinkedHashSet<AbstractEntity<?>> result = new LinkedHashSet<>();
         for (final AbstractEntity<?> entity : referenceToEntity.values()) {
             if (entity != null) {
-                refs.add(entity);
+                result.add(entity);
             }
         }
-        
-        Collections.reverse(refs);
-        final Set<AbstractEntity<?>> result = new LinkedHashSet<>();
-        for (final AbstractEntity<?> ref : refs) {
-            result.add(ref);
-        }
-
         return result;
     }
 }

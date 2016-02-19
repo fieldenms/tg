@@ -149,12 +149,12 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                             throw e;
                         }
                     }
-                    if (!uninstrumented) {
-                        // this is very important -- original values for non-persistent entities should be left 'null'!
-                        if (entity.isPersisted()) {
-                            entity.getProperty(propertyName).setOriginalValue(value);
-                        }
-                    }
+//                    if (!uninstrumented) {
+//                        // this is very important -- original values for non-persistent entities should be left 'null'!
+//                        if (entity.isPersisted()) {
+//                            entity.getProperty(propertyName).setOriginalValue(value);
+//                        }
+//                    }
                 }
                 final JsonNode metaPropNode = node.get("@" + propertyName);
                 if (metaPropNode != null) {

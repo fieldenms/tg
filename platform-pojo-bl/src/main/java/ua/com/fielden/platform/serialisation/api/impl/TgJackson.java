@@ -6,8 +6,8 @@ import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
@@ -28,7 +28,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
@@ -48,6 +47,7 @@ import ua.com.fielden.platform.serialisation.jackson.serialisers.MoneyJsonSerial
 import ua.com.fielden.platform.serialisation.jackson.serialisers.ResultJsonSerialiser;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -221,25 +221,29 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             // references is thread local variable, which gets reset if a nested deserialisation happens
             // therefore need to make a local cache of the present in references entities
             
-            final Set<AbstractEntity<?>> refs = references.getAllEntitiesInReversedOrder();
+            final LinkedHashSet<AbstractEntity<?>> refs = references.getAllEntities();
 
             // explicit reset in order to make the reason for the above snippet more explicit
             references.reset();
-
-            // iterate through all locally cached entity instances and execute respective definers
-            for (final AbstractEntity<?> entity : refs) {
-                entity.beginInitialising();
-                // the entity here could be instrumented or not -- it is still safe to iterate through metaProperties and execute definer (uninstrumented entity does not have any meta-properties)
-                for (final MetaProperty<?> prop : entity.getProperties().values()) {
-                    if (prop != null) {
-                        // TODO IMPORTANT: do we need to check on .isCollectional() here?
-                        // if (!prop.isCollectional()) {
-                        ((MetaProperty<Object>) prop).define(prop.getValue());
-                        // }
-                    }
-                }
-                entity.endInitialising();
+            
+            if (!refs.isEmpty()) {
+                DefinersExecutor.execute(refs);
             }
+
+//            // iterate through all locally cached entity instances and execute respective definers
+//            for (final AbstractEntity<?> entity : refs) {
+//                entity.beginInitialising();
+//                // the entity here could be instrumented or not -- it is still safe to iterate through metaProperties and execute definer (uninstrumented entity does not have any meta-properties)
+//                for (final MetaProperty<?> prop : entity.getProperties().values()) {
+//                    if (prop != null) {
+//                        // TODO IMPORTANT: do we need to check on .isCollectional() here?
+//                        // if (!prop.isCollectional()) {
+//                        ((MetaProperty<Object>) prop).define(prop.getValue());
+//                        // }
+//                    }
+//                }
+//                entity.endInitialising();
+//            }
         }
     }
 
