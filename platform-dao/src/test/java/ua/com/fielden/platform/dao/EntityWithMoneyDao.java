@@ -18,7 +18,7 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> {
 
     @Inject
     protected EntityWithMoneyDao(final IFilter filter) {
-        super(filter, true);
+        super(filter);
     }
 
     @SessionRequired

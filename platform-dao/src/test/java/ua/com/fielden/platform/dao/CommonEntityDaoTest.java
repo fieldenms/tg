@@ -1,15 +1,7 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
@@ -23,11 +15,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -352,23 +340,6 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     }
 
     @Test
-    public void test_entity_version_is_updated_after_quickSave() {
-        EntityWithMoney entity = dao.findByKey("key1");
-
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-
-        assertEquals("Incorrect prev version", Long.valueOf(0), entity.getVersion());
-        entity.setDesc("new desc");
-        entity = dao.findById(dao.quickSave(entity));
-        assertEquals("Incorrect curr version", Long.valueOf(1), entity.getVersion());
-
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-
-        final EntityWithMoney updatedEntity = dao.findByKey("key1");
-        assertEquals("Incorrect prev version", Long.valueOf(1), updatedEntity.getVersion());
-    }
-
-    @Test
     public void test_entity_staleness_check() {
         final EntityWithMoney entity = dao.findByKey("key1");
         // update entity to simulate staleness
@@ -410,34 +381,6 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         } catch (final Exception e) {
         }
     }
-
-    @Test
-    public void test_optimistic_locking_based_on_versioning_works_for_quickSave() {
-        // get entity, which will be modified but not saved
-        final EntityWithMoney entity = dao.findByKey("key1");
-        assertEquals("Incorrect prev version", Long.valueOf(0), entity.getVersion());
-        entity.setDesc("new desc");
-
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-
-        // retrieve another instance of the same entity, modify and save -- this should emulate concurrent modification
-        final EntityWithMoney anotherEntityInstance = dao.findByKey("key1");
-        anotherEntityInstance.setDesc("another desc");
-
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-
-        dao.quickSave(anotherEntityInstance);
-
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-
-        // try to save previously retrieved entity, which should fail due to concurrent modification
-        try {
-            dao.quickSave(entity);
-            fail("Should have failed due to optimistic locking.");
-        } catch (final Exception e) {
-        }
-    }
-
 
     // FIXME
     //    /**
@@ -488,13 +431,6 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     }
 
     @Test
-    public void test_transaction_date_property_for_previously_persisted_entity_is_not_reassigned_with_quickSave() {
-        final EntityWithMoney entity = dao.findByKey("key1");
-        assertNull("Test pre-condition is invalid -- transDate should be null.", dao.findByKey("key1").getTransDate());
-        assertNull("Transaction property should not have been updated for an existing property.", dao.findById(dao.quickSave(entity)).getTransDate());
-    }
-
-    @Test
     public void test_transaction_date_property_for_new_entity_gets_auto_assigned_with_save() {
         final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "new entity");
         assertNull("Test pre-condition is invalid -- transDate should be null.", newEntity.getTransDate());
@@ -502,16 +438,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         dao.save(newEntity);
         assertNotNull("transDate should have been assigned.", dao.findByKey("new entity").getTransDate());
     }
-
-    @Test
-    public void test_transaction_date_property_for_new_entity_gets_auto_assigned_with_quickSave() {
-        final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "new entity");
-        assertNull("Test pre-condition is invalid -- transDate should be null.", newEntity.getTransDate());
-        newEntity.setMoney(new Money("12")); // required property -- has to be set
-        assertNotNull("transDate should have been assigned.", dao.findById(dao.quickSave(newEntity)).getTransDate());
-    }
-
-    
+ 
     @Test
     public void test_already_assigned_transaction_date_property_for_new_entity_does_not_get_repopulated_with_save() {
         final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "new entity");
@@ -522,55 +449,6 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertEquals("transDate should not have been re-assigned.", date, dao.findByKey("new entity").getTransDate());
     }
 
-    @Test
-    public void test_already_assigned_transaction_date_property_for_new_entity_does_not_get_repopulated_with_quickSave() {
-        final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "new entity");
-        final Date date = new DateTime(2009, 01, 01, 0, 0, 0, 0).toDate();
-        newEntity.setTransDate(date);
-        newEntity.setMoney(new Money("12")); // required property -- has to be set
-        assertEquals("transDate should not have been re-assigned.", date, dao.findById(dao.quickSave(newEntity)).getTransDate());
-    }
-
-    @Test
-    public void test_quickSave_is_more_performant_than_save() {
-        int times = 10;
-        
-        long quickSaveTime = 0;
-        for (int index = 0; index < times; index++) {
-            final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "quick entity " + index);
-            
-            final long start = System.nanoTime();
-            dao.quickSave(newEntity);
-            quickSaveTime += (System.nanoTime() - start);
-        }
-
-        long saveTime = 0;
-        for (int index = 0; index < times; index++) {
-            final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "slow entity " + index);
-            
-            final long start = System.nanoTime();
-            dao.save(newEntity);
-            saveTime += (System.nanoTime() - start);
-        }
-
-        assertTrue("save() should not be faster than quickSave()", saveTime > quickSaveTime);
-    }
-
-    @Test
-    public void test_quick_save_guard_prevents_accidental_use_of_method_quickSave() {
-        final EntityWithDynamicCompositeKey entity = daoComposite.findById(1L, fetchAll(EntityWithDynamicCompositeKey.class));
-        assertNotNull(entity);
-        
-        entity.setKeyPartOne("updated part one value");
-        
-        try {
-            daoComposite.quickSave(entity);
-            fail("Quick save guard failed.");
-        } catch (final EntityCompanionException ex) {
-        }
-    }
-
-    
     @Override
     protected String[] getDataSetPathsForInsert() {
         return new String[] {//
