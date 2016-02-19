@@ -3,8 +3,18 @@ package ua.com.fielden.platform.entity.fetch;
 import static java.lang.String.format;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,8 +22,13 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
@@ -64,8 +79,19 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
         assertFalse(reconFetch.getIncudedProps().contains("replacedBy"));
     }
 
+    @Test
+    public void reconstruct_fetch_model_with_second_level_property_instrumented() {
+        final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class));
+
+        final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
+
+        final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
+
+        assertSuperSet(fetch, reconFetch);
+    }
+    
     public void assertSuperSet(final fetch<?> origModel, final fetch<?> superModel) {
-        assertTrue(format("Incomplete fetch model %s comparing to model %s.", superModel, origModel), superModel.getIncudedProps().containsAll(origModel.getIncudedProps()));
+        assertTrue(format("Incomplete fetch model %s comparing to model %s.", superModel, origModel), superModel.getIncudedProps().containsAll(origModel.getIncudedProps()) && superModel.isInstrumented() == origModel.isInstrumented());
 
         for (final Entry<String, fetch<? extends AbstractEntity<?>>> pair : origModel.getIncludedPropsWithModels().entrySet()) {
             assertSuperSet(pair.getValue(), superModel.getIncludedPropsWithModels().get(pair.getKey()));
