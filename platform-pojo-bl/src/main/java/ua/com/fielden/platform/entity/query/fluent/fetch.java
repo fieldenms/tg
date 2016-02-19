@@ -208,7 +208,7 @@ public class fetch<T extends AbstractEntity<?>> {
 
     private String getString(final String currOffset) {
         final StringBuffer sb = new StringBuffer();
-        sb.append("\n" + currOffset + entityType.getSimpleName() + " [" + fetchCategory + "]");
+        sb.append("\n" + currOffset + entityType.getSimpleName() + " [" + fetchCategory + "]" + (isInstrumented() ? " instrumented" : ""));
         if (includedProps.size() > 0) {
             sb.append("\n" + currOffset + "+ " + includedProps);
         }
