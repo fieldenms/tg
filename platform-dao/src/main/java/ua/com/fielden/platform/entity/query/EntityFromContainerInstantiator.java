@@ -37,7 +37,7 @@ public class EntityFromContainerInstantiator {
     }
 
     public <R extends AbstractEntity<?>> R instantiate(final EntityContainer<R> entContainer) {
-        return instantiateFully(entContainer, instantiateInitially(entContainer));
+        return containerInstantiatorCache.getEntity(entContainer);
     }
 
     public <R extends AbstractEntity<?>> R instantiateInitially(final EntityContainer<R> entContainer) {
