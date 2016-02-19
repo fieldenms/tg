@@ -37,7 +37,7 @@ public class EntityFetcher {
     private <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity, final ProxyMode proxyMode) {
         try {
             final DateTime st = new DateTime();
-            final EntityContainerFetcher entityContainerFetcher = new EntityContainerFetcher(executionContext);
+            final EntityContainerFetcher<E> entityContainerFetcher = new EntityContainerFetcher<E>(executionContext);
             final List<EntityContainer<E>> containers = entityContainerFetcher.listAndEnhanceContainers(queryModel, pageNumber, pageCapacity);
 
             if (!queryModel.isLightweight()) {
