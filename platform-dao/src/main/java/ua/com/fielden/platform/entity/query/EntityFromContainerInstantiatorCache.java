@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.DefinersExecutor;
 
 
 public class EntityFromContainerInstantiatorCache {
@@ -20,7 +21,9 @@ public class EntityFromContainerInstantiatorCache {
         if (existingEntity == null) {
             final R justAddedEntity = instantiator.instantiateInitially(entityContainer); 
             map.put(entityContainer, justAddedEntity);
-            return instantiator.instantiateFully(entityContainer, justAddedEntity);
+            final R instatiatedFully = instantiator.instantiateFully(entityContainer, justAddedEntity);
+            DefinersExecutor.execute(instatiatedFully);
+            return instatiatedFully;
         }
      
         return (R) existingEntity;
