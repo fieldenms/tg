@@ -2,6 +2,7 @@ package ua.com.fielden.platform.utils;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
@@ -67,13 +68,30 @@ public class DefinersExecutor {
         final Set<Integer> explored = new HashSet<>();
 
         // initialize data structures
-        for (final T entity : entities) {
+        execute(new ArrayList<>(entities), frontier, explored);
+    }
+    
+    private static <T extends AbstractEntity<?>> void execute(
+            final List<T> restOfEntities, 
+            final Deque<AbstractEntity<?>> frontier,
+            final Set<Integer> explored) {
+        
+        final List<T> list = new ArrayList<>(restOfEntities);
+        for (int index = 0; index < list.size(); index++) {
+            final T entity = list.get(index);
             if (entity != null) {
-                frontier.push(entity);
+                final int identity = System.identityHashCode(entity);
+                if (!explored.contains(identity)) {
+                    frontier.push(entity);
+                    explore(frontier, explored);
+                    
+                    if (index + 1 <= list.size()) {
+                        final List<T> restList = new ArrayList<>(list.subList(index + 1, list.size()));
+                        execute(restList, frontier, explored);
+                    }
+                }
             }
         }
-
-        explore(frontier, explored);
     }
 
     /**
