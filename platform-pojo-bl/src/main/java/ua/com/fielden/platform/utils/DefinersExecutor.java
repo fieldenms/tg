@@ -158,9 +158,11 @@ public class DefinersExecutor {
                 }
             }
         }
-        if (!unionEntity) {
-            entity.setDirty(false);
-        }
+        // TODO entity.setDirty(false) call has been arrived from EntityUtils.handleMetaProperties
+        // TODO JSON deserialisation does include information for dirtiness, that is why, most likely we should have a switch 'shouldResetDirtiness'
+        // if (!unionEntity) {
+        //    entity.setDirty(false);
+        // }
         
         // TODO beginInitialising() and endInitialising() calls have been arrived from TgJackson
         // TODO needs to be investigated whether applicable in EQL instantiation process
