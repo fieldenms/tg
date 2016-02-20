@@ -12,6 +12,7 @@ import org.joda.time.Period;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.ProxyMode;
+import ua.com.fielden.platform.utils.DefinersExecutor;
 
 public class EntityFetcher {
     private final QueryExecutionContext executionContext;
@@ -42,7 +43,7 @@ public class EntityFetcher {
             final List<E> result = instantiateFromContainers(containers, queryModel.isLightweight(), proxyMode);
             final Period pd = new Period(st, new DateTime());
             
-            String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
+            final String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
             logger.debug(format("Duration: %s m %s s %s ms. Entities (%s) count: %s.", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), entityTypeName, result.size()));
             
             return result;
@@ -57,7 +58,7 @@ public class EntityFetcher {
         final ProxyCache cache = new ProxyCache();
         final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory(), lightweight, proxyMode, cache, executionContext.getCoFinder());
         for (final EntityContainer<E> entityContainer : containers) {
-            result.add(instantiator.instantiate(entityContainer));
+            result.add(DefinersExecutor.execute(instantiator.instantiate(entityContainer)));
         }
         return result;
     }
