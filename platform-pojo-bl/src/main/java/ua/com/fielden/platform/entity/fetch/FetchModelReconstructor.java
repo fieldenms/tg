@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.fetch;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 
 import java.lang.reflect.Field;
 import java.util.Deque;
@@ -79,7 +80,7 @@ public class FetchModelReconstructor {
             return exploredFetchModels.get(identity);
         }
 
-        fetch<?> fetchModel = fetch(entity.getType()).with(AbstractEntity.ID);
+        fetch<?> fetchModel = (entity.getClass().getName().contains("$$Enhancer")) ? fetchAndInstrument(entity.getType()).with(AbstractEntity.ID) : fetch(entity.getType()).with(AbstractEntity.ID);
         explored.add(identity);
         exploredFetchModels.put(identity, fetchModel);
 

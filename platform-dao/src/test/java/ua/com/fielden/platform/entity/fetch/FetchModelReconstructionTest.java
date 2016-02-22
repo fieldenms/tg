@@ -73,15 +73,19 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
         final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
 
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
-
         assertSuperSet(fetch, reconFetch);
     }
-    
+
     public void assertSuperSet(final fetch<?> origModel, final fetch<?> superModel) {
-        assertTrue(format("Incomplete fetch model %s comparing to model %s.", superModel, origModel), superModel.getIncudedProps().containsAll(origModel.getIncudedProps()) && superModel.isInstrumented() == origModel.isInstrumented());
+        assertSuperSet(origModel, superModel, true);
+    }
+
+    private void assertSuperSet(final fetch<?> origModel, final fetch<?> superModel, boolean rootLevel) {
+        assertTrue(format("Incomplete fetch model %s comparing to model %s.", superModel, origModel), superModel.getIncudedProps().containsAll(origModel.getIncudedProps())
+                && (!rootLevel && superModel.isInstrumented() == origModel.isInstrumented() || rootLevel));
 
         for (final Entry<String, fetch<? extends AbstractEntity<?>>> pair : origModel.getIncludedPropsWithModels().entrySet()) {
-            assertSuperSet(pair.getValue(), superModel.getIncludedPropsWithModels().get(pair.getKey()));
+            assertSuperSet(pair.getValue(), superModel.getIncludedPropsWithModels().get(pair.getKey()), false);
         }
     }
 
