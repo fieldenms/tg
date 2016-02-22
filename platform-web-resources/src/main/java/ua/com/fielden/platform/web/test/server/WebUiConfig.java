@@ -157,6 +157,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityCentre<TgEntityWithPropertyDependency> propDependencyCentre = new EntityCentre<>(MiTgEntityWithPropertyDependency.class, "Property Dependency Example",
                 EntityCentreBuilder.centreFor(TgEntityWithPropertyDependency.class)
                 .runAutomatically()
+                .addTopAction(action(EntityManipulationAction.class).
+                        withContext(context().withSelectionCrit().build()).
+                        icon("add-circle-outline").
+                        shortDesc("Add new").
+                        longDesc("Start continuous creation of entities").
+                        build())
                 .addCrit("property").asMulti().text().also()
                 .addCrit("dependentProp").asMulti().text()
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
@@ -164,7 +170,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addProp("this").also()
                 .addProp("property").also()
                 .addProp("dependentProp")
-                .addPrimaryAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
+                .addPrimaryAction(action(EntityManipulationAction.class).
+                        withContext(context().withCurrentEntity().withSelectionCrit().build()).
+                        icon("editor:mode-edit").
+                        shortDesc("Edit entity").
+                        longDesc("Opens master for editing this entity").
+                        build())
                 .build(), injector(), (centre) -> {
                     // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
                     centre.getSecondTick().setWidth(TgEntityWithPropertyDependency.class, "", 60);
