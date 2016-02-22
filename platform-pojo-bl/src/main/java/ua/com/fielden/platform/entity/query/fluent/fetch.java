@@ -61,7 +61,7 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     private fetch<T> copy() {
-        final fetch<T> result = new fetch<T>(entityType, fetchCategory);
+        final fetch<T> result = new fetch<T>(entityType, fetchCategory, isInstrumented());
         result.includedPropsWithModels.putAll(includedPropsWithModels);
         result.includedProps.addAll(includedProps);
         result.excludedProps.addAll(excludedProps);
