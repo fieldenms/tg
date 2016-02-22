@@ -18,9 +18,12 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 
 /**
- *
- * Produces an EQL fetch model based on the specified entity instance. Effectively it reconstructs the fetch model that could be used to re-fetch that entity instance with exactly
- * the same sub-graph.
+ * Executes finalising of specified entity instances.
+ * <p>
+ * Finalising process consists of:<br>
+ * 1. definers (ACEs) execution<br>
+ * 2. resetting of original values<br>
+ * 3. resetting of dirtiness
  *
  * @author TG Team
  *
@@ -28,10 +31,11 @@ import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSeria
 public class DefinersExecutor {
 
     /**
-     * Uses the DFS algorithm for reconstruction of a fetch model based on the provided entity instance. Graph traversal stops at <code>proxy</code> or <code>null</code> property
+     * Uses the DFS algorithm for <code>entity</code> finalising process. Graph traversal stops at <code>proxy</code> or <code>non-entity typed</code> property
      * values.
      *
-     * @param entity
+     * @param entity -- the entity to be finalised
+     * 
      * @return
      */
     public static <T extends AbstractEntity<?>> T execute(final T entity) {
@@ -52,10 +56,13 @@ public class DefinersExecutor {
     }
     
     /**
-     * Uses the DFS algorithm for reconstruction of a fetch model based on the provided entity instance. Graph traversal stops at <code>proxy</code> or <code>null</code> property
+     * Uses the DFS algorithm for <code>entities</code> finalising process. Graph traversal stops at <code>proxy</code> or <code>non-entity typed</code> property
      * values.
      *
-     * @param entity
+     * @param entities -- entities to be finalised. The order of entities is important, this means that the entities set could contain those entities that are the part of graph
+     * for previously appeared entity, but first entity, that is passed into method {@link #execute(List, Deque, Set)} inside <code>restOfEntities</code>, should be <code>top-level</code> 
+     * to guarantee correct order of meta-properties handling.
+     * 
      * @return
      */
     public static <T extends AbstractEntity<?>> void execute(final LinkedHashSet<T> entities) {
@@ -71,6 +78,14 @@ public class DefinersExecutor {
         execute(new ArrayList<>(entities), frontier, explored);
     }
     
+    /**
+     * Takes the first unexplored entity from <code>restOfEntities</code> list and explores its graph. Then executes the same 
+     * logic for the rest entities without first one.
+     * 
+     * @param restOfEntities
+     * @param frontier
+     * @param explored
+     */
     private static <T extends AbstractEntity<?>> void execute(
             final List<T> restOfEntities, 
             final Deque<AbstractEntity<?>> frontier,
