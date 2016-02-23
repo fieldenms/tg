@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query;
 import static java.lang.String.format;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -58,8 +59,9 @@ public class EntityFetcher {
         final ProxyCache cache = new ProxyCache();
         final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory(), lightweight, proxyMode, cache, executionContext.getCoFinder());
         for (final EntityContainer<E> entityContainer : containers) {
-            result.add(DefinersExecutor.execute(instantiator.instantiate(entityContainer)));
+            result.add(instantiator.instantiate(entityContainer));
         }
+        DefinersExecutor.execute(new LinkedHashSet<E>(result));
         return result;
     }
 }
