@@ -18,6 +18,15 @@ import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.Reflector;
 
+/**
+ * 
+ * A class that represents runtime type information for a proxied entity type. 
+ * Factory method {@link #proxy(Class, String...)} should be used to create proxied entity type.
+ * 
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public class EntityProxyContainer<T extends AbstractEntity<?>> {
     
     public final Class<? extends T> entityType;
@@ -35,7 +44,13 @@ public class EntityProxyContainer<T extends AbstractEntity<?>> {
     }
     
     
-    
+    /**
+     * Factory method for creating entity type proxies.
+     * 
+     * @param entityType -- entity that is the owner of the properties to be proxied
+     * @param propNames -- the names of properties to be proxied
+     * @return
+     */
     public static <T extends AbstractEntity<?>> EntityProxyContainer<T> proxy(final Class<T> entityType, final String... propNames) {
         // if there is nothing to proxy then we can simply return the same type
         if (propNames.length == 0) {
