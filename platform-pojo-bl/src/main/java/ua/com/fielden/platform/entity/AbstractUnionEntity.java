@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
  * A base class for implementing synthetic entities to be used for modelling situations where a property of some entity can be of multiple types, but any individual instance of a
@@ -240,7 +241,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
             try {
                 commonMethods.add(Reflector.obtainPropertyAccessor(propertyType, property));
                 commonMethods.add(Reflector.obtainPropertySetter(propertyType, property));
-            } catch (final NoSuchMethodException e) {
+            } catch (final ReflectionException e) {
                 throw new RuntimeException("Common property [" + property + "] inside [" + propertyType + "] does not have accessor or setter.");
             }
         }

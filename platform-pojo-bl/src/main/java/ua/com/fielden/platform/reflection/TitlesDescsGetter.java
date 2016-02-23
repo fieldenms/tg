@@ -16,6 +16,7 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -234,7 +235,7 @@ public class TitlesDescsGetter {
                 errorMsg = errorMsg.replace("{{prop-value}}", errouneousValue + "");
                 errorMsg = errorMsg.replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey());
             }
-        } catch (final NoSuchMethodException e) {
+        } catch (final ReflectionException e) {
             e.printStackTrace();
         }
 

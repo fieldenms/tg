@@ -25,6 +25,8 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
@@ -66,11 +68,10 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
-
-import com.google.inject.Inject;
 
 /**
  * <h3>General Info</h3>
@@ -562,12 +563,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             final Class<?> type = getType();
             final Method setter = Reflector.obtainPropertySetter(type, propertyName);
             return AnnotationReflector.isAnnotationPresent(setter, Observable.class);
-        } catch (final NoSuchMethodException e) {
+        } catch (final ReflectionException e) {
             try {
                 final Method setter = Reflector.obtainPropertySetter(getType(), propertyName);//
                 return AnnotationReflector.isAnnotationPresent(setter, Observable.class);
 
-            } catch (final NoSuchMethodException ex) {
+            } catch (final ReflectionException ex) {
             }
         }
         return false;
@@ -1009,7 +1010,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * Processed BCE and ACE declarations in order to instantiate event handlers.
      *
      * @param field
-     * @param type
+     * @param entityType
      * @return
      */
     private List<Annotation> extractFieldBeforeChangeAnnotations(final Field field) {
