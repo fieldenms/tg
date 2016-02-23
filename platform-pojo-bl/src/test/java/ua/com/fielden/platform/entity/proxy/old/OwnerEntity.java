@@ -1,7 +1,6 @@
-package ua.com.fielden.platform.entity.proxy;
+package ua.com.fielden.platform.entity.proxy.old;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -10,8 +9,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 @KeyType(String.class)
-@CompanionObject(IEntityForProxy.class)
-public class EntityForProxy extends AbstractEntity<String> {
+public class OwnerEntity extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
@@ -20,7 +18,7 @@ public class EntityForProxy extends AbstractEntity<String> {
 
     @Observable
     @EntityExists(EntityForProxy.class)
-    public EntityForProxy setProp1(final EntityForProxy prop1) {
+    public OwnerEntity setProp1(final EntityForProxy prop1) {
         this.prop1 = prop1;
         return this;
     }
@@ -28,6 +26,8 @@ public class EntityForProxy extends AbstractEntity<String> {
     public EntityForProxy getProp1() {
         return prop1;
     }
+
+    
 
     
 }

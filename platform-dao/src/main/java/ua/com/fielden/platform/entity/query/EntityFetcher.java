@@ -11,7 +11,7 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.proxy.ProxyMode;
+import ua.com.fielden.platform.entity.proxy.old.ProxyMode;
 
 public class EntityFetcher {
     private final QueryExecutionContext executionContext;

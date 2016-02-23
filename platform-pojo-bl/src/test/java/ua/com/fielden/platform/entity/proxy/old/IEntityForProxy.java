@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.proxy;
+package ua.com.fielden.platform.entity.proxy.old;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 

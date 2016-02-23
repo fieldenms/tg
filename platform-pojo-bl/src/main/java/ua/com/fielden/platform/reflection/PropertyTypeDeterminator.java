@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.format;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
@@ -11,6 +13,7 @@ import java.lang.reflect.WildcardType;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -219,8 +222,8 @@ public class PropertyTypeDeterminator {
             ////////////////// Property class determination using property accessor. //////////////////
             try {
                 return Reflector.obtainPropertyAccessor(clazz, propertyOrFunction).getGenericReturnType();
-            } catch (final NoSuchMethodException e) {
-                throw new IllegalArgumentException("No " + propertyOrFunction + " property in " + clazz.getSimpleName() + " class.");
+            } catch (final ReflectionException e) {
+                throw new ReflectionException(format("No [%s] property in type [%s].", propertyOrFunction, clazz.getName()), e);
             }
         }
     }
