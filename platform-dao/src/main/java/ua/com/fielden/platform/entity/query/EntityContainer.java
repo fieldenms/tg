@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 public final class EntityContainer<R extends AbstractEntity<?>> {
     private final Class<R> resultType;
+    private Class<? extends R> proxiedResultType;
     private final Map<String, Object> primitives = new HashMap<String, Object>();
     private final Map<String, ValueContainer> composites = new HashMap<String, ValueContainer>();
     private final Map<String, EntityContainer<? extends AbstractEntity<?>>> entities = new HashMap<String, EntityContainer<? extends AbstractEntity<?>>>();
@@ -75,6 +76,14 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         return resultType;
     }
 
+    public Class<? extends R> getProxiedResultType() {
+        return proxiedResultType;
+    }
+
+    public void setProxiedResultType(Class<? extends R> proxiedResultType) {
+        this.proxiedResultType = proxiedResultType;
+    }
+    
     public Map<String, Object> getPrimitives() {
         return primitives;
     }

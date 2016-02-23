@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -18,6 +19,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
@@ -77,8 +79,9 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             }
         }
 
+        assignProxiedResultTypeToContainers(entities, fetchModel);
         assignInstrumentationSetting(entities, fetchModel);
-        assignProxySetting(entities, fetchModel);
+        //assignProxySetting(entities, fetchModel);
 
         return entities;
     }
@@ -91,11 +94,24 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         }
     }
 
+    private void assignProxiedResultTypeToContainers(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
+        if (fetchModel.getEntityType() != EntityAggregates.class) {
+            Set<String> proxiedProps = new HashSet<>();
+            proxiedProps.addAll(fetchModel.getProxiedProps());
+            proxiedProps.addAll(fetchModel.getProxiedPropsWithoutId().keySet());
+            final Class<? extends E> proxiedResultType = EntityProxyContainer.proxy(fetchModel.getEntityType(), proxiedProps.toArray(new String[] {})).entityType;
+    
+            for (final EntityContainer<E> entContainer : entities) {
+                entContainer.setProxiedResultType(proxiedResultType);
+            }
+        }
+    }
+
     private void assignProxySetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) throws Exception {
         if (fetchModel.getEntityType() != EntityAggregates.class) {
-
             for (final EntityContainer<E> entContainer : entities) {
                 for (final String proxiedProp : fetchModel.getProxiedProps()) {
+
                     if (entContainer.getEntities().get(proxiedProp) != null) {
                         entContainer.getEntities().get(proxiedProp).setProxy();
                     } else {
