@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.entity.proxy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import javassist.util.proxy.ProxyFactory;
@@ -103,5 +101,23 @@ public class ProxyTestCase {
         assertEquals("REAL!", owner.getProp1().getKey());
         assertFalse(ProxyFactory.isProxyClass(owner.getProp1().getClass()));
     }
+    
+    @Test
+    public void attempts_to_set_value_into_proxied_property_succees_even_in_strict_mode() {
+        final EntityProxyFactory<EntityForProxy> epf = new EntityProxyFactory<>(EntityForProxy.class);
+
+        final OwnerEntity owner = factory.newByKey(OwnerEntity.class, "OWN1");
+
+        final EntityForProxy prop1Proxy = epf.create(10L, owner, "prop1", null, ProxyMode.STRICT);
+
+        owner.beginInitialising();
+        owner.setProp1(prop1Proxy);
+        owner.endInitialising();
+
+        // setting proxied property should lead the following line should result in proxy strict mode exception
+        owner.setProp1(null);
+        assertNull(owner.getProp1());
+    }
+
 
 }
