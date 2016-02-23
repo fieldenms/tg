@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.proxy.bytebuddy;
+package ua.com.fielden.platform.entity.proxy;
 
 import java.util.Collections;
 import java.util.HashSet;

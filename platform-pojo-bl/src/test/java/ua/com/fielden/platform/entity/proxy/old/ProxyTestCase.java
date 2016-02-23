@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.proxy;
+package ua.com.fielden.platform.entity.proxy.old;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -8,6 +8,7 @@ import javassist.util.proxy.ProxyFactory;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.proxy.old.EntityProxyFactory;
 import ua.com.fielden.platform.entity.proxy.old.ProxyMode;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;

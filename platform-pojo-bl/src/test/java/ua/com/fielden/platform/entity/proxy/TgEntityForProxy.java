@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.proxy.bytebuddy;
+package ua.com.fielden.platform.entity.proxy;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
