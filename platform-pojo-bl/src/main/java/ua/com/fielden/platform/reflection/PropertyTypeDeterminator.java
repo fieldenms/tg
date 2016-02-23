@@ -247,7 +247,7 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static boolean isEnhanced(final Class<?> klass) {
-        return klass.getName().contains("$$Enhancer") || klass.getName().contains("$$_javassist");
+        return klass.getName().contains("$$Enhancer") || klass.getName().contains("$$_javassist") || klass.getName().contains("$ByteBuddy$");
     }
 
     public static boolean isDotNotation(final String exp) {
