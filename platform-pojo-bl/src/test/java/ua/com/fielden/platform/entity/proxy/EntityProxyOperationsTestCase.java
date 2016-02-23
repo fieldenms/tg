@@ -44,7 +44,7 @@ public class EntityProxyOperationsTestCase {
             owner.getEntityProp();
             fail("Accessing proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [getEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [getEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
@@ -52,7 +52,7 @@ public class EntityProxyOperationsTestCase {
             owner.setEntityProp(value);
             fail("Setting proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
         
         try {
@@ -62,7 +62,7 @@ public class EntityProxyOperationsTestCase {
             owner.endInitialising();
             fail("Setting proxied property in the initialisation mode should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
 
@@ -80,7 +80,7 @@ public class EntityProxyOperationsTestCase {
             owner.getEntityProp();
             fail("Accessing proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [getEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [getEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
@@ -88,7 +88,7 @@ public class EntityProxyOperationsTestCase {
             owner.setEntityProp(value);
             fail("Setting proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
@@ -98,7 +98,7 @@ public class EntityProxyOperationsTestCase {
             owner.endInitialising();
             fail("Setting proxied property in the initialisation mode should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setEntityProp] is restricted due to unfetched property [entityProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
     }
@@ -115,14 +115,14 @@ public class EntityProxyOperationsTestCase {
             owner.getChildren();
             fail("Accessing proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [getChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [getChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
             owner.setChildren(new HashSet<>());
             fail("Setting proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
@@ -131,7 +131,7 @@ public class EntityProxyOperationsTestCase {
             owner.endInitialising();
             fail("Setting proxied property in the initialisation mode should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
     }
@@ -149,14 +149,14 @@ public class EntityProxyOperationsTestCase {
             owner.getChildren();
             fail("Accessing proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [getChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [getChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
             owner.setChildren(new HashSet<>());
             fail("Setting proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
@@ -165,7 +165,7 @@ public class EntityProxyOperationsTestCase {
             owner.endInitialising();
             fail("Setting proxied property in the initialisation mode should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setChildren] is restricted due to unfetched property [children] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
     }
@@ -181,14 +181,14 @@ public class EntityProxyOperationsTestCase {
             owner.getIntProp();
             fail("Accessing proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [getIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [getIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
             owner.setIntProp(42);
             fail("Setting proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
         
         try {
@@ -197,7 +197,7 @@ public class EntityProxyOperationsTestCase {
             owner.endInitialising();
             fail("Setting proxied property in the initialisation mode should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
     }
 
@@ -213,14 +213,14 @@ public class EntityProxyOperationsTestCase {
             owner.getIntProp();
             fail("Accessing proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [getIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [getIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
             owner.setIntProp(42);
             fail("Setting proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
         
         try {
@@ -229,7 +229,7 @@ public class EntityProxyOperationsTestCase {
             owner.endInitialising();
             fail("Setting proxied property in the initialisation mode should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
     }
 
@@ -244,14 +244,14 @@ public class EntityProxyOperationsTestCase {
             owner.isBooleanProp();
             fail("Accessing proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [isBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [isBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
             owner.setBooleanProp(true);
             fail("Setting proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
         
         try {
@@ -260,7 +260,7 @@ public class EntityProxyOperationsTestCase {
             owner.endInitialising();
             fail("Setting proxied property in the initialisation mode should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
     }
 
@@ -276,14 +276,14 @@ public class EntityProxyOperationsTestCase {
             owner.isBooleanProp();
             fail("Accessing proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [isBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [isBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
             owner.setBooleanProp(true);
             fail("Setting proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
         
         try {
@@ -292,7 +292,7 @@ public class EntityProxyOperationsTestCase {
             owner.endInitialising();
             fail("Setting proxied property in the initialisation mode should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
     }
 
@@ -308,14 +308,14 @@ public class EntityProxyOperationsTestCase {
             owner.isBooleanProp();
             fail("Accessing proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [isBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [isBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
             owner.getIntProp();
             fail("Accessing proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [getIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [getIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
 
@@ -323,14 +323,14 @@ public class EntityProxyOperationsTestCase {
             owner.setBooleanProp(true);
             fail("Setting proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         try {
             owner.setIntProp(42);
             fail("Setting proxied property should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
         
@@ -340,7 +340,7 @@ public class EntityProxyOperationsTestCase {
             owner.endInitialising();
             fail("Setting proxied property in the initialisation mode should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setBooleanProp] is restricted due to unfetched property [booleanProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
         
         try {
@@ -349,7 +349,7 @@ public class EntityProxyOperationsTestCase {
             owner.endInitialising();
             fail("Setting proxied property in the initialisation mode should result in exception.");
         } catch (final StrictProxyException ex) {
-            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.bytebuddy.TgOwnerEntity].", ex.getMessage());
+            assertEquals("Invocation of method [setIntProp] is restricted due to unfetched property [intProp] in type [ua.com.fielden.platform.entity.proxy.TgOwnerEntity].", ex.getMessage());
         }
 
     }
