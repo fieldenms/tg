@@ -60,7 +60,6 @@ public class EntityFetcher {
         for (final EntityContainer<E> entityContainer : containers) {
             result.add(instantiator.instantiate(entityContainer));
         }
-        DefinersExecutor.execute(result);
-        return result;
+        return DefinersExecutor.execute(result);
     }
 }

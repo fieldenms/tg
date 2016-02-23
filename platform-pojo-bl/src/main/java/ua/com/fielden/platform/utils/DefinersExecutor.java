@@ -3,6 +3,7 @@ package ua.com.fielden.platform.utils;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 
 /**
  * Executes finalising of specified entity instance and its graph of properties. Finalising of multiple dependent entities is also supported,
@@ -40,19 +40,9 @@ public class DefinersExecutor {
      * @return
      */
     public static <T extends AbstractEntity<?>> T execute(final T entity) {
-        if (entity == null) {
-            return null;
+        if (entity != null) {
+            execute(Arrays.asList(entity));
         }
-        // declare data structures for DFS
-        final Deque<AbstractEntity<?>> frontier = new LinkedList<>(); // to be used on LIFO mode
-        // the set of explored entities utilises object identities in memory to differentiate equal entities represented by different objects
-        final Set<Integer> explored = new HashSet<>();
-
-        // initialize data structures
-        frontier.push(entity);
-
-        explore(frontier, explored);
-        
         return entity;
     }
     
@@ -66,9 +56,9 @@ public class DefinersExecutor {
      * 
      * @return
      */
-    public static <T extends AbstractEntity<?>> void execute(final List<T> entities) {
-        if (entities == null) {
-            return;
+    public static <T extends AbstractEntity<?>> List<T> execute(final List<T> entities) {
+        if (entities == null || entities.isEmpty()) {
+            return entities;
         }
         // declare data structures for DFS
         final Deque<AbstractEntity<?>> frontier = new LinkedList<>(); // to be used on LIFO mode
@@ -77,6 +67,7 @@ public class DefinersExecutor {
 
         // initialize data structures
         execute(new ArrayList<>(entities), frontier, explored);
+        return entities;
     }
     
     /**
@@ -160,7 +151,7 @@ public class DefinersExecutor {
                 final Object propertyValue = entity.get(metaProp.getName());
                 
                 if (notCommonPropOfUnionEntity) {
-                    if (metaProp.isCollectional()) { // handle entity type properties
+                    if (metaProp.isCollectional()) { // handle collectional properties
                         if (propertyValue != null) {
                             final Collection collection = (Collection) propertyValue;
                             collection.forEach(item -> {
@@ -172,7 +163,7 @@ public class DefinersExecutor {
                                 }
                             });
                         }
-                    } else if (metaProp.isEntity()) { // handle entity type properties
+                    } else if (metaProp.isEntity()) { // handle entity-typed properties
                         if (propertyValue != null) {
                             final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
                             // produce fetch
@@ -185,17 +176,13 @@ public class DefinersExecutor {
                 }
             }
         }
-        // TODO entity.setDirty(false) call has been arrived from EntityUtils.handleMetaProperties
-        // TODO JSON deserialisation does include information for dirtiness, that is why, most likely we should have a switch 'shouldResetDirtiness'
-//        if (!unionEntity) {
-//            entity.setDirty(false);
-//        }
         
         entity.endInitialising();
     }
 
     private static void handleOriginalValueAndACE(final MetaProperty metaProp, final Object propertyValue, final boolean isEntityPersisted) {
         if (isEntityPersisted) {
+            // this is very important -- original values for non-persistent entities should be left unchanged
             metaProp.setOriginalValue(propertyValue);
         }
         metaProp.define(propertyValue);
