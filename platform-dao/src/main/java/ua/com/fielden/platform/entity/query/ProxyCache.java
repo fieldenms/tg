@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.proxy.EntityProxyFactory;
-import ua.com.fielden.platform.entity.proxy.ProxyMode;
+import ua.com.fielden.platform.entity.proxy.old.EntityProxyFactory;
+import ua.com.fielden.platform.entity.proxy.old.ProxyMode;
 
 
 public class ProxyCache {

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.proxy;
+package ua.com.fielden.platform.entity.proxy.old;
 
 /**
  * Enumerates possible values for entity proxy mode, which governs the behavior of proxy instances.

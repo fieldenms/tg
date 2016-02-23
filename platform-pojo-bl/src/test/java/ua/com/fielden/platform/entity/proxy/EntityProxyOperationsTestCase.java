@@ -1,19 +1,21 @@
 package ua.com.fielden.platform.entity.proxy.bytebuddy;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.HashSet;
 
-import org.dom4j.Entity;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.ProxyTestCase;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
-import ua.com.fielden.platform.entity.proxy.buddy_spike.EntityProxyContainer;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;

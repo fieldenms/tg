@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.proxy;
+package ua.com.fielden.platform.entity.proxy.old;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.proxy.buddy_spike;
+package ua.com.fielden.platform.entity.proxy;
 
 import java.lang.reflect.Method;
 
@@ -6,7 +6,6 @@ import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 
 /**
  * A proxy interceptor that restricts invocation of the specified property getter and setter.

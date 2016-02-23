@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.proxy.buddy_spike;
+package ua.com.fielden.platform.entity.proxy;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

@@ -8,6 +8,8 @@ import javassist.util.proxy.ProxyFactory;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.proxy.old.EntityProxyFactory;
+import ua.com.fielden.platform.entity.proxy.old.ProxyMode;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
