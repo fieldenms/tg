@@ -14,8 +14,6 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
     private final Map<String, ValueContainer> composites = new HashMap<String, ValueContainer>();
     private final Map<String, EntityContainer<? extends AbstractEntity<?>>> entities = new HashMap<String, EntityContainer<? extends AbstractEntity<?>>>();
     private final Map<String, CollectionContainer<? extends AbstractEntity<?>>> collections = new HashMap<String, CollectionContainer<? extends AbstractEntity<?>>>();
-    private boolean proxy = false;
-    private boolean strictProxy = false;
     private boolean instrumented = false;
 
     public EntityContainer(final Class<R> resultType) {
@@ -48,22 +46,6 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
                 : (isUnionEntityType(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
     }
 
-    public boolean isProxy() {
-        return proxy;
-    }
-
-    public void setProxy() {
-        this.proxy = true;
-    }
-
-    public boolean isStrictProxy() {
-        return strictProxy;
-    }
-
-    public void setStrictProxy() {
-        this.strictProxy = true;
-    }
-    
     public void setInstrumented() {
         this.instrumented = true;
     }

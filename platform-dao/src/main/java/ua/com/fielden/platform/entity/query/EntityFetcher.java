@@ -11,7 +11,6 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.proxy.old.ProxyMode;
 
 public class EntityFetcher {
     private final QueryExecutionContext executionContext;
@@ -22,19 +21,11 @@ public class EntityFetcher {
         this.executionContext = executionContext;
     }
 
-    public <E extends AbstractEntity<?>> List<E> getLazyEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        return getEntitiesOnPage(queryModel, pageNumber, pageCapacity, ProxyMode.LAZY);
-    }
-
-    public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        return getEntitiesOnPage(queryModel, pageNumber, pageCapacity, ProxyMode.STRICT);
-    }
-
     public <E extends AbstractEntity<?>> List<E> getEntities(final QueryExecutionModel<E, ?> queryModel) {
         return getEntitiesOnPage(queryModel, null, null);
     }
 
-    private <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity, final ProxyMode proxyMode) {
+    public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
         try {
             final DateTime st = new DateTime();
             final EntityContainerFetcher<E> entityContainerFetcher = new EntityContainerFetcher<E>(executionContext);
@@ -44,7 +35,7 @@ public class EntityFetcher {
                 setContainersToBeInstrumented(containers);
             }
 
-            final List<E> result = instantiateFromContainers(containers, proxyMode);
+            final List<E> result = instantiateFromContainers(containers);
             final Period pd = new Period(st, new DateTime());
 
             final String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
@@ -64,9 +55,9 @@ public class EntityFetcher {
         return containers;
     }
 
-    private <E extends AbstractEntity<?>> List<E> instantiateFromContainers(final List<EntityContainer<E>> containers, final ProxyMode proxyMode) {
+    private <E extends AbstractEntity<?>> List<E> instantiateFromContainers(final List<EntityContainer<E>> containers) {
         final List<E> result = new ArrayList<E>();
-        final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory(), proxyMode, executionContext.getCoFinder());
+        final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory());
         for (final EntityContainer<E> entityContainer : containers) {
             result.add(instantiator.instantiate(entityContainer));
         }

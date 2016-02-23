@@ -107,36 +107,6 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         }
     }
 
-    private void assignProxySetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) throws Exception {
-        if (fetchModel.getEntityType() != EntityAggregates.class) {
-            for (final EntityContainer<E> entContainer : entities) {
-                for (final String proxiedProp : fetchModel.getProxiedProps()) {
-
-                    if (entContainer.getEntities().get(proxiedProp) != null) {
-                        entContainer.getEntities().get(proxiedProp).setProxy();
-                    } else {
-                        //TODO this situation should disappear once possibility of explicit per-property yielding of persisted entities is removed in upcoming version of EQL 
-                        logger.debug("Property [" + proxiedProp + "] is outside the list of entity props containers of entity container for type [" + fetchModel.getEntityType()
-                                + "]");
-
-                        final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), proxiedProp);
-                        final EntityContainer<AbstractEntity<?>> idlessPropContainer = new EntityContainer<AbstractEntity<?>>(ppi.getJavaType());
-                        idlessPropContainer.setStrictProxy();
-                        entContainer.getEntities().put(proxiedProp, idlessPropContainer);
-                    }
-                }
-
-                for (final Entry<String, Class<? extends AbstractEntity<?>>> proxiedProp : fetchModel.getProxiedPropsWithoutId().entrySet()) {
-                    if (entContainer.getEntities().get(proxiedProp) == null) {
-                        final EntityContainer<AbstractEntity<?>> calcPropContainer = new EntityContainer<AbstractEntity<?>>((Class<AbstractEntity<?>>) proxiedProp.getValue());
-                        calcPropContainer.setStrictProxy();
-                        entContainer.getEntities().put(proxiedProp.getKey(), calcPropContainer);
-                    }
-                }
-            }
-        }
-    }
-
     private Map<Long, List<EntityContainer<E>>> getEntityPropertyIds(final List<EntityContainer<E>> entities, final String propertyName) {
         final Map<Long, List<EntityContainer<E>>> propValuesMap = new HashMap<Long, List<EntityContainer<E>>>();
         for (final EntityContainer<E> entity : entities) {

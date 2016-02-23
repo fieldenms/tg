@@ -19,8 +19,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import javassist.util.proxy.ProxyFactory;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -28,12 +26,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Mutator;
-import ua.com.fielden.platform.entity.annotation.Calculated;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
-import ua.com.fielden.platform.entity.proxy.old.ProxyMode;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -1172,25 +1166,6 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      */
     public IAfterChangeEventHandler<T> getAceHandler() {
         return aceHandler;
-    }
-
-    /**
-     * Creates a dynamic proxy with the specified <code>mode</code> if argument <code>id</code> is not null. The created proxy is returned as the value for convenience.
-     *
-     * In case of <code>id == null</code> value <code>null</code> is returned and property would also become <code>null</code>.
-     *
-     * @param id
-     * @param mode
-     * @return
-     */
-    public AbstractEntity<?> setProxy(final Long id, final ProxyMode mode) {
-        if (id == null) {
-
-            return null;
-        } else {
-
-        }
-        return null;
     }
 
     public Number getCollectionOrigSize() {

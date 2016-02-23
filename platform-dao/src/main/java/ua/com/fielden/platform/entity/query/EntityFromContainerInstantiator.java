@@ -14,23 +14,15 @@ import java.util.TreeSet;
 import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.proxy.old.ProxyMode;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityFromContainerInstantiator {
     private final EntityFactory entFactory;
-    private final ProxyMode proxyMode;
-    private final ProxyCache cache = new ProxyCache();
-    private final ICompanionObjectFinder coFinder;
     private final EntityFromContainerInstantiatorCache containerInstantiatorCache;
 
-    public EntityFromContainerInstantiator(final EntityFactory entFactory, final ProxyMode proxyMode, final ICompanionObjectFinder coFinder) {
-        super();
+    public EntityFromContainerInstantiator(final EntityFactory entFactory) {
         this.entFactory = entFactory;
-        this.proxyMode = proxyMode;
-        this.coFinder = coFinder;
         this.containerInstantiatorCache = new EntityFromContainerInstantiatorCache(this);
     }
 
@@ -111,23 +103,8 @@ public class EntityFromContainerInstantiator {
         return result;
     }
 
-    private <E extends AbstractEntity<?>> Object instantiateStrictProxy(final Class<E> entityType, final Long id, final ProxyCache cache) {
-        return cache.getProxy(entityType, id);
-    }
-
     private <R extends AbstractEntity<?>> Object determinePropValue(final R owningEntity, final String propName, final EntityContainer<? extends AbstractEntity<?>> entityContainer) {
-        if (entityContainer.isProxy()) {
-            switch (proxyMode) {
-            case STRICT:
-                throw new UnsupportedOperationException("Deprecated.");
-            case LAZY:
-                throw new UnsupportedOperationException("Deprecated.");
-            default:
-                throw new IllegalStateException("Unknown proxy mode [" + proxyMode + "]");
-            }
-        } else if (entityContainer.isStrictProxy()) {
-            return instantiateStrictProxy(entityContainer.getResultType(), entityContainer.getId(), cache);
-        } else if (entityContainer.isEmpty()) {
+        if (entityContainer.isEmpty()) {
             return null;
         } else {
             return containerInstantiatorCache.getEntity(entityContainer);
