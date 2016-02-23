@@ -6,7 +6,8 @@ import java.util.List;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.EntityManipulationAction;
+import ua.com.fielden.platform.entity.EntityEditAction;
+import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.keygen.KeyNumber;
@@ -54,6 +55,7 @@ public class PlatformDomainTypes {
         types.add(SavingInfoHolder.class);
         types.add(MasterInvocationFunctionalEntity.class);
         types.add(MasterInDialogInvocationFunctionalEntity.class);
-        types.add(EntityManipulationAction.class);
+        types.add(EntityNewAction.class);
+        types.add(EntityEditAction.class);
     }
 }

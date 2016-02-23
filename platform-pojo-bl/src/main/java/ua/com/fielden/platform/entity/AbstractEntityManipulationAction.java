@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -16,8 +15,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
-@CompanionObject(IEntityManipulationAction.class)
-public class EntityManipulationAction extends AbstractFunctionalEntityWithCentreContext<String> {
+public abstract class AbstractEntityManipulationAction extends AbstractFunctionalEntityWithCentreContext<String> {
 
     private static final long serialVersionUID = 1L;
 
@@ -41,7 +39,7 @@ public class EntityManipulationAction extends AbstractFunctionalEntityWithCentre
     private String elementName;
 
     @Observable
-    public EntityManipulationAction setElementName(final String elementName) {
+    public AbstractEntityManipulationAction setElementName(final String elementName) {
         this.elementName = elementName;
         return this;
     }
@@ -51,7 +49,7 @@ public class EntityManipulationAction extends AbstractFunctionalEntityWithCentre
     }
 
     @Observable
-    public EntityManipulationAction setImportUri(final String importUri) {
+    public AbstractEntityManipulationAction setImportUri(final String importUri) {
         this.importUri = importUri;
         return this;
     }
@@ -61,7 +59,7 @@ public class EntityManipulationAction extends AbstractFunctionalEntityWithCentre
     }
 
     @Observable
-    public EntityManipulationAction setEntityType(final String entityType) {
+    public AbstractEntityManipulationAction setEntityType(final String entityType) {
         this.entityType = entityType;
         return this;
     }
@@ -71,7 +69,7 @@ public class EntityManipulationAction extends AbstractFunctionalEntityWithCentre
     }
 
     @Observable
-    public EntityManipulationAction setEntityId(final String entityId) {
+    public AbstractEntityManipulationAction setEntityId(final String entityId) {
         this.entityId = entityId;
         return this;
     }

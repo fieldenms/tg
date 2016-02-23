@@ -5,20 +5,20 @@ import java.util.Optional;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
-import ua.com.fielden.platform.entity.EntityManipulationAction;
+import ua.com.fielden.platform.entity.AbstractEntityManipulationAction;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
-public class EntityManipulationMaster implements IMaster<EntityManipulationAction> {
+public class EntityManipulationMaster<T extends AbstractEntityManipulationAction> implements IMaster<T> {
 
     private final IRenderable renderable;
 
-    public EntityManipulationMaster() {
+    public EntityManipulationMaster(final Class<T> entityType) {
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", "<link rel='import' href='/app/tg-element-loader.html'>\n")
-                .replace("@entity_type", EntityManipulationAction.class.getSimpleName())
+                .replace("@entity_type", entityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->",
                         "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
                                 + "    import='[[_currBindingEntity.importUri]]' "
@@ -58,7 +58,7 @@ public class EntityManipulationMaster implements IMaster<EntityManipulationActio
     }
 
     @Override
-    public Optional<Class<? extends IValueMatcherWithContext<EntityManipulationAction, ?>>> matcherTypeFor(final String propName) {
+    public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
         return Optional.empty();
     }
 

@@ -22,6 +22,7 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -140,16 +141,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     }
                     final AbstractEntity<?> funcEntity = EntityResource.restoreEntityFrom(savingInfoHolder, funcEntityType, utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
 
-                    //TODO this is temporal experimental code
                     final Long intendedId;
-                    if (funcEntity.getProperty("entityId") != null) {
-                        final String idStr = (String) funcEntity.get("entityId");
-                        intendedId = "new".equals(idStr) ? null : Long.valueOf(idStr);
+                    if (EntityEditAction.class.isAssignableFrom(funcEntity.getClass())) {
+                        intendedId = Long.valueOf(((EntityEditAction) funcEntity).getEntityId());
                     } else {
                         intendedId = null;
                     }
-                    //////////////////////////////////////
-                    final T entity = utils.createValidationPrototypeWithContext(intendedId, null, null, null, intendedId == null ? funcEntity : null);
+                    final T entity = utils.createValidationPrototypeWithContext(intendedId, null, null, null, funcEntity);
                     return restUtil.rawListJSONRepresentation(entity);
                 } else {
                     final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);

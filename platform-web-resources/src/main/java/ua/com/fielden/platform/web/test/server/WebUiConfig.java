@@ -21,7 +21,8 @@ import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.EntityManipulationAction;
+import ua.com.fielden.platform.entity.EntityEditAction;
+import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
@@ -157,7 +158,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityCentre<TgEntityWithPropertyDependency> propDependencyCentre = new EntityCentre<>(MiTgEntityWithPropertyDependency.class, "Property Dependency Example",
                 EntityCentreBuilder.centreFor(TgEntityWithPropertyDependency.class)
                 .runAutomatically()
-                .addTopAction(action(EntityManipulationAction.class).
+                .addTopAction(action(EntityNewAction.class).
                         withContext(context().withSelectionCrit().build()).
                         icon("add-circle-outline").
                         shortDesc("Add new").
@@ -170,7 +171,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addProp("this").also()
                 .addProp("property").also()
                 .addProp("dependentProp")
-                .addPrimaryAction(action(EntityManipulationAction.class).
+                .addPrimaryAction(action(EntityEditAction.class).
                         withContext(context().withCurrentEntity().withSelectionCrit().build()).
                         icon("editor:mode-edit").
                         shortDesc("Edit entity").
@@ -516,12 +517,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 injector());
 
         final EntityMaster<NewEntityAction> functionalMasterWithEmbeddedPersistentMaster =  NewEntityActionWebUiConfig.createMaster(injector(), entityMaster);
-        final EntityMaster<EntityManipulationAction> entityManipulationActionMaster = EntityManipulationWebUiConfig.createMaster(injector());
+        final EntityMaster<EntityNewAction> entityNewActionMaster = EntityManipulationWebUiConfig.createEntityNewMaster(injector());
+        final EntityMaster<EntityEditAction> entityEditActionMaster = EntityManipulationWebUiConfig.createEntityEditMaster(injector());
+
 
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
 
         configApp().
-            addMaster(EntityManipulationAction.class, entityManipulationActionMaster).
+            addMaster(EntityNewAction.class, entityNewActionMaster).
+            addMaster(EntityEditAction.class, entityEditActionMaster).
             addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
             addMaster(NewEntityAction.class, functionalMasterWithEmbeddedPersistentMaster).
@@ -909,8 +913,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
                 .hasEventSourceAt("/entity-centre-events")
                 .enforcePostSaveRefresh()
-                .addTopAction(
-                        action(EntityManipulationAction.class).
+                .addTopAction(action(EntityNewAction.class).
                                 withContext(context().withSelectionCrit().build()).
                                 icon("add-circle-outline").
                                 shortDesc("Add new").
@@ -1186,7 +1189,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
-                .addPrimaryAction(action(EntityManipulationAction.class).
+                .addPrimaryAction(action(EntityEditAction.class).
                         withContext(context().withCurrentEntity().withSelectionCrit().build()).
                         icon("editor:mode-edit").
                         shortDesc("Edit entity").
