@@ -545,8 +545,15 @@ public final class Reflector {
      * @return
      */
     public static boolean isPropertyProxied(final AbstractEntity<?> entity, final String propName) {
-        // TODO Implementation of this method relies on the current approach to proxing.
-        //      It should be modified when moving to ByteBuddy and implementing proxing of non-entity typed properties
+        // the following definition of "proxied" property is based on a new ByteBuddy based implementation to proxing
+        // TODO once everything is adjusted to the new approach, this method should simply
+        // return entity.proxiedPropertyNames().contains(propName);
+        final boolean newResult = entity.proxiedPropertyNames().contains(propName);
+        if (newResult) {
+            return newResult;
+        }
+        
+        // FIXME remove the following code once everything is adjusted to the new proxing approach
         final Object value = entity.get(propName);
         return value == null ? false : ProxyFactory.isProxyClass(value.getClass());
     }
