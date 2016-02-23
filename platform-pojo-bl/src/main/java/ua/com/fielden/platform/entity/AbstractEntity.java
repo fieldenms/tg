@@ -1320,7 +1320,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         // In such cases there would be no meta-properties, and copying would not happen.
         // Therefore, it is important to perform ad-hoc property retrieval via reflection.
         final Stream<String> propertyNames = !getProperties().isEmpty() ? getProperties().keySet().stream()
-                : Finder.findRealProperties(getType()).stream().map(field -> field.getName());
+                : Finder.streamRealProperties(getType()).map(field -> field.getName());
 
         // Copy each identified property into a new instance.
         propertyNames.forEach(propName -> {
@@ -1416,4 +1416,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         this.ignoreEditableState = ignoreEditableStateDuringSave;
     }
 
+    /**
+     * Returns a list of proxied properties. Could return an empty set.
+     * This method should not be final due to the need for interception.
+     * 
+     * @return
+     */
+    public Set<String> proxiedPropertyNames() {
+        return Collections.emptySet();
+    }
 }

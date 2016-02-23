@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
@@ -31,6 +32,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  * @author TG Team
  * 
  */
+@Deprecated
 public class WebResourceTestCase extends WebBasedTestCase {
     private final IInspectedEntityDao rao = new InspectedEntityRao(config.restClientUtil());
     private final IInspectedEntityDao dao = DbDrivenTestCase.injector.getInstance(IInspectedEntityDao.class);
@@ -51,6 +53,7 @@ public class WebResourceTestCase extends WebBasedTestCase {
     }
 
     @Test
+    @Ignore("Due to RAO pahsing out and Kryo related serialisation errors due to introduction of entity proxies")
     public void test_pagination() {
         final IPage<InspectedEntity> page = rao.getPage(1, 10);
         assertEquals("Incorrect page number", 1, page.no());

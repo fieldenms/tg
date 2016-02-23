@@ -10,6 +10,7 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
@@ -23,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javassist.util.proxy.ProxyFactory;
 
 import org.joda.time.DateTime;
 import org.junit.Ignore;
@@ -1527,6 +1530,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         assertEquals("Incorrect key", new BigDecimal("120.00"), item.get("lq"));
     }
  
+    ///////////////////////////////////////////////////// BATCH DELETION  ////////////////////////////////////////////////
+
     @Test
     public void test_batch_deletion() {
         final EntityResultQueryModel<TgAuthor> qry = select(TgAuthor.class).where().prop("surname").eq().val("Date").model();
@@ -1560,6 +1565,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         assertEquals(count, authorDao.batchDelete(ids));
     }
     
+    ///////////////////////////////////////////////////// CASE EXPRESSION IN SUMMARY PROPS  ////////////////////////////////////////////////
     @Test
     public void test_case_when_expression_in_summary_property_when_condition_is_satisfied() {
         final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).model();
@@ -1572,6 +1578,54 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).where().prop("kms").eq().val(0).model();
         TgEntityWithComplexSummaries summaryEntity = coEntityWithComplexSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummaries.class).with("costPerKm").without("id").without("version")).model());
         assertNull(summaryEntity.getCostPerKm());
+    }
+
+    ///////////////////////////////////////////////////// ENTITY INSTRUMENTATION WHILE RETRIEVING WITH EQL ///////////////////////////////////////
+    @Test
+    public void vehicle_retrieved_with_default_query_is_instrumented() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        TgVehicle vehicle = vehicleDao.getEntity(from(qry).model());
+        assertTrue(isEntityInstrumented(vehicle));
+    }
+    
+    @Test
+    public void vehicle_retrieved_with_lightweight_query_is_not_instrumented() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        TgVehicle vehicle = vehicleDao.getEntity(from(qry).lightweight().model());
+        assertFalse(isEntityInstrumented(vehicle));
+    }
+
+    @Test
+    public void vehicle_model_property_retrieved_with_default_fetch_is_not_instrumented() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model");
+        TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetch).model());
+        assertFalse(isEntityInstrumented(vehicle.getModel()));
+    }
+
+    @Test
+    public void vehicle_model_property_retrieved_with_instrumented_fetch_is_instrumented() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class));
+        TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetch).model());
+        assertTrue(isEntityInstrumented(vehicle.getModel()));
+    }
+    
+    @Test
+    public void vehicle_model_property_retrieved_with_instrumented_fetch_with_make_subproperty_is_instrumented() {
+        final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
+        fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class).with("make"));
+        TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetch).model());
+        assertTrue(isEntityInstrumented(vehicle.getModel()));
+    }
+
+    public static boolean isPropertyInstrumented(final AbstractEntity<?> entity, final String propName) {
+        final Object value = entity.get(propName);
+        return isEntityInstrumented(value);
+    }
+    
+    public static boolean isEntityInstrumented(final Object entity) {
+        return entity == null ? false : entity.getClass().getName().contains("$$Enhancer");
     }
 
     @Override

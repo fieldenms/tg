@@ -14,10 +14,14 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
+import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
@@ -531,5 +535,46 @@ public final class Reflector {
      */
     public static String getKeyMemberSeparator(final Class<? extends AbstractEntity<DynamicEntityKey>> type) {
         return AnnotationReflector.getAnnotation(type, KeyType.class).keyMemberSeparator();
+    }
+    
+    /**
+     * Returns <code>true</code> if the specified property is proxied for a given entity instance.
+     *  
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyProxied(final AbstractEntity<?> entity, final String propName) {
+        return entity.proxiedPropertyNames().contains(propName);
+    }
+    
+    /**
+     * Identifies whether the specified field represents a retrievable property.
+     * The notion retrievable is different to persistent as it also includes calculated properties, which do get retrieved from a database. 
+     * 
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final Field field) {
+        final String propName = field.getName();
+        return entity.isPersistent() &&
+                    (
+                        field.isAnnotationPresent(Calculated.class) ||
+                        (!propName.equals(AbstractEntity.KEY) && !propName.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
+                        (propName.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
+                        (propName.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class))
+                    );
+    }
+    
+    /**
+     * A convenient equivalent to method {@link #isPropertyRetrievable(AbstractEntity, Field)} that accepts property name instead of the Field instance. 
+     * 
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final String propName) {
+        return isPropertyRetrievable(entity, Finder.findFieldByName(entity.getClass(), propName)); 
     }
 }

@@ -118,19 +118,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     T findByEntityAndFetch(final fetch<T> fetchModel, final T entity);
 
     /**
-     * Load entity by id in lazy mode -- all its entity properties will be proxied in LAZY mode.
-     * <p>
-     * PLEASE REFRAIN YOURSELF AND OTHERS FROM USING THIS METHOD!!!
-     * </p>
-     *
-     * @param id
-     * @return
-     */
-    default T lazyLoad(final Long id) {
-        throw new org.apache.commons.lang.NotImplementedException("Should be overridden by subclasses");
-    }
-
-    /**
      * Should return a reference to the first page of the specified size containing entity instances.
      *
      * @param pageCapacity

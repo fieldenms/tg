@@ -235,7 +235,7 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
-        return clazz != null && PropertyTypeDeterminator.isEnhanced(clazz) ? clazz.getSuperclass() : clazz;
+        return clazz != null && PropertyTypeDeterminator.isEnhanced(clazz) ? stripIfNeeded(clazz.getSuperclass()) : clazz;
     }
 
     /**
@@ -247,7 +247,7 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static boolean isEnhanced(final Class<?> klass) {
-        return klass.getName().contains("$$Enhancer") || klass.getName().contains("$$_javassist");
+        return klass.getName().contains("$$Enhancer") || klass.getName().contains("$$_javassist") || klass.getName().contains("$ByteBuddy$");
     }
 
     public static boolean isDotNotation(final String exp) {
