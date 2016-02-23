@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.proxy.old.EntityProxyFactory;
 import ua.com.fielden.platform.entity.proxy.old.ProxyMode;
 
 
@@ -32,8 +31,7 @@ public class ProxyCache {
         return existingProxy;
     }
     
-    private <E extends AbstractEntity<?>> Object instantiateProxy(final Class<E> entityType, final Long id  ) {
-        final EntityProxyFactory<?> epf = new EntityProxyFactory<>(entityType);
-        return epf.create(id, null, null, null, ProxyMode.STRICT);
+    private <E extends AbstractEntity<?>> Object instantiateProxy(final Class<E> entityType, final Long id) {
+        throw new UnsupportedOperationException("Deprecated.");
     }
 }

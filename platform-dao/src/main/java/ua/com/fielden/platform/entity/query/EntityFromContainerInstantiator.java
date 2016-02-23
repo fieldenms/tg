@@ -12,11 +12,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import javassist.util.proxy.ProxyFactory;
-import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.proxy.old.EntityProxyFactory;
 import ua.com.fielden.platform.entity.proxy.old.ProxyMode;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -117,19 +115,13 @@ public class EntityFromContainerInstantiator {
         return cache.getProxy(entityType, id);
     }
 
-    private <R extends AbstractEntity<?>, E extends AbstractEntity<?>> Object instantiateLazyProxy(final Class<E> entityType, final R owningEntity, final Long id, final String propName) {
-        final EntityProxyFactory<?> epf = new EntityProxyFactory<>(entityType);
-        final IEntityDao<E> coForProxy = coFinder.find(entityType);
-        return epf.create(id, owningEntity, propName, coForProxy, ProxyMode.LAZY);
-    }
-
     private <R extends AbstractEntity<?>> Object determinePropValue(final R owningEntity, final String propName, final EntityContainer<? extends AbstractEntity<?>> entityContainer) {
         if (entityContainer.isProxy()) {
             switch (proxyMode) {
             case STRICT:
-                return instantiateStrictProxy(entityContainer.getResultType(), entityContainer.getId(), cache);
+                throw new UnsupportedOperationException("Deprecated.");
             case LAZY:
-                return instantiateLazyProxy(entityContainer.getResultType(), owningEntity, entityContainer.getId(), propName);
+                throw new UnsupportedOperationException("Deprecated.");
             default:
                 throw new IllegalStateException("Unknown proxy mode [" + proxyMode + "]");
             }
