@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity.proxy;
+package ua.com.fielden.platform.entity.proxy.old;
 
 import static java.lang.String.format;
 
@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import javassist.util.proxy.MethodHandler;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 
 /**
  * This is a method handler intercepts calls to proxied entities, but at the same time it also acts as a mixin to the proxy itself by providing additional functionality

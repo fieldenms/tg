@@ -58,16 +58,22 @@
 
 		<!-- End of jackson dependencies -->
 
-		<!-- Hibernate 3.2.6.ga conflicts with ASM 3.3.1, thus Guice packaged version 
-			of ASM is used. -->
 		<!-- kryo depends on asm only for managing public fields -->
-		<!-- dependency> <groupId>asm</groupId> <artifactId>asm-all</artifactId> 
-			<version>3.3.1</version> </dependency -->
+		<!-- ASM is used for generating new entity types with ad-hoc calculated properties -->
 		<dependency>
 			<groupId>org.kohsuke</groupId>
 			<artifactId>asm5</artifactId>
 			<version>5.0.1</version>
 		</dependency>
+		<!-- ByteBuddy is high level Java API that has a potential to replace the direct use of ASM in TG.
+		     But its current role to replace Javassist for creation of proxied entity instances. -->
+		<dependency>
+			<groupId>net.bytebuddy</groupId>
+			<artifactId>byte-buddy</artifactId>
+			<version>1.2.3</version>
+		</dependency>
+
+
 		<!-- This is the same dependency as for Hibernate 3.6.10 -->
 		<dependency>
 			<groupId>javassist</groupId>

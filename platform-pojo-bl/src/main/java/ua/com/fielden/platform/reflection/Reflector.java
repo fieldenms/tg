@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -249,12 +251,16 @@ public final class Reflector {
      * @return
      * @throws Exception
      */
-    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) throws NoSuchMethodException {
+    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) {
         final String propertyNameInGetter = propertyName.toUpperCase().charAt(0) + propertyName.substring(1);
         try {
             return Reflector.getMethod(entityClass, "get" + propertyNameInGetter);
-        } catch (final Exception e) {
-            return Reflector.getMethod(entityClass, "is" + propertyNameInGetter);
+        } catch (final Exception e1) {
+            try {
+                return Reflector.getMethod(entityClass, "is" + propertyNameInGetter);
+            } catch (NoSuchMethodException e2) {
+                throw new ReflectionException(format("Could not obtain accessor for property [%s] in type [%s].", propertyName, entityClass.getName()), e1);
+            }
         }
     }
 
@@ -268,12 +274,16 @@ public final class Reflector {
      * @throws NoSuchMethodException
      * @throws Exception
      */
-    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) throws NoSuchMethodException {
+    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) {
         if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.contains("()")) {
             throw new IllegalArgumentException("DotNotationExp could not be empty or could not define construction with methods.");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);
-        return Reflector.getMethod(transformed.getKey(), "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1), PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false));
+        try {
+            return Reflector.getMethod(transformed.getKey(), "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1), PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false));
+        } catch (final Exception ex) {
+            throw new ReflectionException(format("Could not obtain setter for property [%s] in type [%s].", dotNotationExp, entityClass.getName()), ex);
+        }
     }
 
     // ========================================================================================================
