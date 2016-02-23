@@ -274,12 +274,16 @@ public final class Reflector {
      * @throws NoSuchMethodException
      * @throws Exception
      */
-    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) throws NoSuchMethodException {
+    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) {
         if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.contains("()")) {
             throw new IllegalArgumentException("DotNotationExp could not be empty or could not define construction with methods.");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);
-        return Reflector.getMethod(transformed.getKey(), "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1), PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false));
+        try {
+            return Reflector.getMethod(transformed.getKey(), "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1), PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false));
+        } catch (final Exception ex) {
+            throw new ReflectionException(format("Could not obtain setter for property [%s] in type [%s].", dotNotationExp, entityClass.getName()), ex);
+        }
     }
 
     // ========================================================================================================
