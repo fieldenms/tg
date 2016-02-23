@@ -227,23 +227,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             references.reset();
             
             if (!refs.isEmpty()) {
+                // iterate through all locally cached entity instances and execute respective definers
                 DefinersExecutor.execute(refs);
             }
-
-//            // iterate through all locally cached entity instances and execute respective definers
-//            for (final AbstractEntity<?> entity : refs) {
-//                entity.beginInitialising();
-//                // the entity here could be instrumented or not -- it is still safe to iterate through metaProperties and execute definer (uninstrumented entity does not have any meta-properties)
-//                for (final MetaProperty<?> prop : entity.getProperties().values()) {
-//                    if (prop != null) {
-//                        // TODO IMPORTANT: do we need to check on .isCollectional() here?
-//                        // if (!prop.isCollectional()) {
-//                        ((MetaProperty<Object>) prop).define(prop.getValue());
-//                        // }
-//                    }
-//                }
-//                entity.endInitialising();
-//            }
         }
     }
 
