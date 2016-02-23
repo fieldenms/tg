@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
@@ -28,6 +29,7 @@ import ua.com.fielden.web.entities.InspectedEntity;
  * @author TG Team
  * 
  */
+@Deprecated
 public class WebResourceDynamicRaoTestCase extends WebBasedTestCase {
     final DynamicEntityRao rao = new DynamicEntityRao(config.restClientUtil());
     {
@@ -41,6 +43,7 @@ public class WebResourceDynamicRaoTestCase extends WebBasedTestCase {
     }
 
     @Test
+    @Ignore("Due to RAO pahsing out and Kryo related serialisation errors due to introduction of entity proxies")
     public void test_pagination() {
         final IPage<InspectedEntity> page = rao.getPage(1, 10);
         assertEquals("Incorrect page number", 1, page.no());
