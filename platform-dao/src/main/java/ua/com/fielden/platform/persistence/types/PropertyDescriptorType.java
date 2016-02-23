@@ -40,7 +40,7 @@ public class PropertyDescriptorType implements UserType, IPropertyDescriptorType
         if (!resultSet.wasNull()) {
             try {
                 final EntityFactory factory = ((AbstractEntity<?>) owner).getEntityFactory();
-                result = PropertyDescriptor.fromString(propertyDescriptor, factory);
+                result = PropertyDescriptor.fromString(propertyDescriptor, factory).beginInitialising();
             } catch (final Exception e) {
                 e.printStackTrace();
                 throw new HibernateException("Could not restore '" + propertyDescriptor + "' due to: " + e.getMessage());
@@ -56,7 +56,7 @@ public class PropertyDescriptorType implements UserType, IPropertyDescriptorType
         }
 
         try {
-            return PropertyDescriptor.fromString((String) argument, factory);
+            return PropertyDescriptor.fromString((String) argument, factory).beginInitialising();
         } catch (final Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Could not instantiate instance of '" + PropertyDescriptor.class.getName() + " with value [" + argument + "] due to: " + e.getMessage());
