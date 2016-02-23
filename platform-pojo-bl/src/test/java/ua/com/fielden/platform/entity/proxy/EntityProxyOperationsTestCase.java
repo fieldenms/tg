@@ -6,6 +6,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.junit.Test;
@@ -13,8 +16,6 @@ import org.junit.Test;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
-import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.proxy.old.ProxyTestCase;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -374,6 +375,50 @@ public class EntityProxyOperationsTestCase {
         assertNotNull(entityProxy.propertyInterceptors.get("entityProp"));
         assertNotNull(entityProxy.propertyInterceptors.get("intProp"));
     }
+
+    @Test
+    public void method_proxiedPropertyNames_contains_names_of_proxied_properties() throws Exception {
+        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class, "entityProp", "intProp").entityType;
+        
+        // creation via factory
+        final TgOwnerEntity owner = factory.newByKey(ownerType, "OWN1");
+        
+        assertEquals(2, owner.proxiedPropertyNames().size());
+        assertTrue(owner.proxiedPropertyNames().contains("entityProp"));
+        assertTrue(owner.proxiedPropertyNames().contains("intProp"));
+    }
+
+    @Test
+    public void method_proxiedPropertyNames_returns_empty_set_for_caes_of_no_proxied_properties() throws Exception {
+        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class).entityType;
+        
+        // creation via factory
+        final TgOwnerEntity owner = factory.newByKey(ownerType, "OWN1");
+        
+        assertEquals(0, owner.proxiedPropertyNames().size());
+    }
+
+    @Test
+    public void mutation_of_proxiedPropertyNames_is_not_permitted() throws Exception {
+        final Class<? extends TgOwnerEntity> ownerTypeWithProxiedProps = EntityProxyContainer.proxy(TgOwnerEntity.class, "entityProp", "intProp").entityType;
+        final TgOwnerEntity ownerWithProxiedProps = factory.newByKey(ownerTypeWithProxiedProps, "OWN1");
     
+        try {
+            ownerWithProxiedProps.proxiedPropertyNames().add("value");
+            fail("Mutation of proxied property names set should not be permitted.");
+        } catch (Exception ex) {
+            
+        }
+        
+        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class).entityType;
+        final TgOwnerEntity owner = factory.newByKey(ownerType, "OWN1");
     
+        try {
+            owner.proxiedPropertyNames().add("value");
+            fail("Mutation of proxied property names set should not be permitted.");
+        } catch (Exception ex) {
+        }
+
+    }
+
 }

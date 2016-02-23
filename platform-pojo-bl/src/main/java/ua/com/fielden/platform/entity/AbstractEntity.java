@@ -1416,4 +1416,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         this.ignoreEditableState = ignoreEditableStateDuringSave;
     }
 
+    /**
+     * Returns a list of proxied properties. Could return an empty set.
+     * This method should not be final due to the need for interception.
+     * 
+     * @return
+     */
+    public Set<String> proxiedPropertyNames() {
+        return Collections.emptySet();
+    }
 }
