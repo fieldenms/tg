@@ -8,12 +8,15 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 
 /**
+ * THIS SHOULD BE REMOVED -- initialisation of TG collections does not use Hibernate loading
+ * <p> 
  * This Hibernate listener executes meta-information updating while the instance's collection initializes (when the proxy becomes initialized collection). It executes meta-definers
  * and updates "original-value".
  * 
- * @author Jhou
+ * @author TG Team
  * 
  */
+@Deprecated
 public class MetaInitializeCollectionListener extends DefaultInitializeCollectionEventListener {
     private static final long serialVersionUID = -8089450033770556813L;
 
