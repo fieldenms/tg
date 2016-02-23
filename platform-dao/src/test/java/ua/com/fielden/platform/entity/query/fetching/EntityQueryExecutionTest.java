@@ -1598,7 +1598,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void vehicle_model_property_retrieved_with_default_fetch_is_not_instrumented() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
-        fetch<TgVehicle> fetch = fetch(TgVehicle.class);
+        fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model");
         TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetch).model());
         assertFalse(isEntityInstrumented(vehicle.getModel()));
     }

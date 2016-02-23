@@ -53,10 +53,6 @@ public class EntityProxyLoadingTest extends AbstractDomainDrivenTestCase {
     private final ITgBogie coBogie = getInstance(ITgBogie.class);
     private final ITgVehicle coVehicle = getInstance(ITgVehicle.class);
 
-    private static void shouldBeProxy(Class<? extends AbstractEntity<?>> entityClass) {
-        assertTrue("Should be proxy", isProxyClass(entityClass));
-    }
-
     private static void shouldNotBeProxy(Class<? extends AbstractEntity<?>> entityClass) {
         assertFalse("Should not be proxy", isProxyClass(entityClass));
     }
@@ -74,7 +70,6 @@ public class EntityProxyLoadingTest extends AbstractDomainDrivenTestCase {
     public void not_null_entity_property_outside_fetch_model_should_be_proxied() {
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
         final TgVehicle vehicle = coVehicle.getEntity(from(model).model());
-        shouldBeProxy(vehicle.getReplacedBy().getClass());
         shouldBeProxy(vehicle, "replacedBy");
     }
 
@@ -104,11 +99,10 @@ public class EntityProxyLoadingTest extends AbstractDomainDrivenTestCase {
 
     ///////////////////////////// 1-2-1 entity prop (implicitly calculated prop) //////////////////////////////
     @Test
-    public void not_null_121_property_outside_fetch_model_should_be_strictly_proxied_but_not_loaded() {
+    public void not_null_121_property_outside_fetch_model_should_be_proxied() {
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
         final TgVehicle vehicle = coVehicle.getEntity(from(model).model());
         shouldBeProxy(vehicle, "finDetails");
-        assertNull(vehicle.getFinDetails().getId());
     }
 
     @Test
@@ -137,11 +131,10 @@ public class EntityProxyLoadingTest extends AbstractDomainDrivenTestCase {
     
     ///////////////////////////// calculated entity prop (explicitly calculated prop) //////////////////////////////
     @Test
-    public void not_null_calculated_property_outside_fetch_model_should_be_strictly_proxied_but_not_loaded() {
+    public void not_null_calculated_property_outside_fetch_model_should_be_proxied() {
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
         final TgVehicle vehicle = coVehicle.getEntity(from(model).with(fetch(TgVehicle.class).with("finDetails")).model());
         shouldBeProxy(vehicle, "lastFuelUsage");
-        assertNull(vehicle.getLastFuelUsage().getId());
     }
     
     @Test
@@ -209,7 +202,6 @@ public class EntityProxyLoadingTest extends AbstractDomainDrivenTestCase {
                                 with("key")))).model());
         assertNotNull(vehicle1.getModel().getMake().getKey());
         assertTrue(vehicle1.getProperty("replacedBy").isProxy());
-        assertNull(vehicle1.getReplacedBy().getId());
     }
 
     @Override
