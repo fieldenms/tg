@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.reflection;
 
-import static org.junit.Assert.*;
-
-import java.util.UUID;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     private final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
     
     public PropertyTypeDeterminatorCheckingEnhancementsTest() throws ClassNotFoundException {
-        emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) cl.startModification(EmptyEntity.class.getName()).modifyTypeName(EmptyEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_enhanced_" + (UUID.randomUUID().toString().replace("-", ""))).endModification();
+        emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) cl.startModification(EmptyEntity.class.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(EmptyEntity.class.getName())).endModification();
     }
 
     //////////////////////////////////// isInstrumented ////////////////////////////////////

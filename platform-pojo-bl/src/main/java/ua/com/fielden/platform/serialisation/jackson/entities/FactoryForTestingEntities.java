@@ -301,7 +301,7 @@ public class FactoryForTestingEntities {
         final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
         try {
             emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
-                    cl.startModification(EmptyEntity.class.getName()).modifyTypeName(EmptyEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_enhanced_" + UUID.randomUUID()).endModification();
+                    cl.startModification(EmptyEntity.class.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(EmptyEntity.class.getName())).endModification();
         } catch (final ClassNotFoundException e) {
             throw Result.failure(e);
         }
