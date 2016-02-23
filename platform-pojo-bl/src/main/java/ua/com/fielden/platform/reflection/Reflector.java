@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -249,12 +251,16 @@ public final class Reflector {
      * @return
      * @throws Exception
      */
-    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) throws NoSuchMethodException {
+    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) {
         final String propertyNameInGetter = propertyName.toUpperCase().charAt(0) + propertyName.substring(1);
         try {
             return Reflector.getMethod(entityClass, "get" + propertyNameInGetter);
-        } catch (final Exception e) {
-            return Reflector.getMethod(entityClass, "is" + propertyNameInGetter);
+        } catch (final Exception e1) {
+            try {
+                return Reflector.getMethod(entityClass, "is" + propertyNameInGetter);
+            } catch (NoSuchMethodException e2) {
+                throw new ReflectionException(format("Could not obtain accessor for property [%s] in type [%s].", propertyName, entityClass.getName()), e1);
+            }
         }
     }
 

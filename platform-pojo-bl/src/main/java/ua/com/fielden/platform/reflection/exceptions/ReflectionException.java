@@ -13,5 +13,9 @@ public class ReflectionException extends RuntimeException {
     public ReflectionException(final String msg) {
         super(msg);
     }
+    
+    public ReflectionException(final String msg, final Throwable cause) {
+        super(msg, cause);
+    }
 
 }
