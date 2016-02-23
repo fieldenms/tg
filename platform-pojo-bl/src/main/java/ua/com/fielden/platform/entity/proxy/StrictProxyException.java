@@ -11,7 +11,6 @@ public class StrictProxyException extends RuntimeException {
     
     private final Object owner;
     private final Object entity;
-    private final String msg;
 
     /**
      * Creates exception indication strict mode violation for proxies entity instances.
@@ -20,13 +19,9 @@ public class StrictProxyException extends RuntimeException {
      * @param msg -- A custom message providing more information on the nature of the problem
      */
     public StrictProxyException(final Object owner, final Object entity, final String msg) {
+        super(msg);
         this.owner = owner;
         this.entity = entity;
-        this.msg = msg;
-    }
-
-    public String getMsg() {
-        return msg;
     }
 
     public Object getOwner() {
