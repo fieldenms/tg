@@ -384,12 +384,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 	public Class<? extends AbstractEntity<?>> getDerivedFromType() {
         Class<? extends AbstractEntity<?>> tmpDerivedFromType = getType();
         final String name = getType().getName();
-        final int index = name.indexOf("$$");
+        int index = name.indexOf("$$");
         if (index > 0) {
         	final String cleanName = name.substring(0, index);
         	try {
 				tmpDerivedFromType = (Class<? extends AbstractEntity<?>>) Class.forName(cleanName);
-			} catch (final ClassNotFoundException e) {
+			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			} 
         }

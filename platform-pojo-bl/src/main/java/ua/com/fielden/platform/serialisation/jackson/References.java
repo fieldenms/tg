@@ -1,14 +1,11 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
@@ -22,6 +19,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  */
 public class References {
     private final IdentityHashMap<AbstractEntity<?>, String> entityToReference = new IdentityHashMap<>();
+    /**
+     * Returns an <b>ordered by insertion</b> map of deserialised entities to their string references.
+     */
     private final Map<String, AbstractEntity<?>> referenceToEntity = new LinkedHashMap<>();
     private final Map<String, Long> typeToRefCount = new HashMap<>();
 
@@ -74,7 +74,15 @@ public class References {
         return entityToReference.put(entity, reference);
     }
     
-    public List<AbstractEntity<?>> getAllEntities() {
+    /**
+     * Returns <b>ordered</b> list of deserialised entities.
+     * <p>
+     * The order is defined by traversing order of JSON tree during deserialisation -- this order is the same as if Javascript entities, that were serialised into that JSON,
+     * were traversed with DFS algorithm.
+     *  
+     * @return
+     */
+    public List<AbstractEntity<?>> getDeserialisedEntities() {
         final List<AbstractEntity<?>> result = new ArrayList<>();
         for (final AbstractEntity<?> entity : referenceToEntity.values()) {
             if (entity != null) {

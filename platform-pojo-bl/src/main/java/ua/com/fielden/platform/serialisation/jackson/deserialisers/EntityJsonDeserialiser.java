@@ -129,7 +129,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 }
             }
 
-            //      entity.setInitialising(true);
             for (final CachedProperty prop : properties) {
                 final String propertyName = prop.field().getName();
                 final JsonNode propNode = node.get(propertyName);
@@ -150,12 +149,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                             throw e;
                         }
                     }
-//                    if (!uninstrumented) {
-//                        // this is very important -- original values for non-persistent entities should be left 'null'!
-//                        if (entity.isPersisted()) {
-//                            entity.getProperty(propertyName).setOriginalValue(value);
-//                        }
-//                    }
                 }
                 final JsonNode metaPropNode = node.get("@" + propertyName);
                 if (metaPropNode != null) {
@@ -169,7 +162,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     provideVisible(metaProperty, metaPropNode);
                 }
             }
-            //      entity.setInitialising(false);
 
             return entity;
         }

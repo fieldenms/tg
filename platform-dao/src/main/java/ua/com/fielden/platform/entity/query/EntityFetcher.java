@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.query;
 import static java.lang.String.format;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -44,7 +43,7 @@ public class EntityFetcher {
             final List<E> result = instantiateFromContainers(containers, queryModel.isLightweight(), proxyMode);
             final Period pd = new Period(st, new DateTime());
             
-            final String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
+            String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
             logger.debug(format("Duration: %s m %s s %s ms. Entities (%s) count: %s.", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), entityTypeName, result.size()));
             
             return result;

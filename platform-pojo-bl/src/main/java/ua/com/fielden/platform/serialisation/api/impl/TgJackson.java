@@ -221,14 +221,14 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             // references is thread local variable, which gets reset if a nested deserialisation happens
             // therefore need to make a local cache of the present in references entities
             
-            final List<AbstractEntity<?>> refs = references.getAllEntities();
+            final List<AbstractEntity<?>> deserialisedEntities = references.getDeserialisedEntities();
 
             // explicit reset in order to make the reason for the above snippet more explicit
             references.reset();
             
-            if (!refs.isEmpty()) {
+            if (!deserialisedEntities.isEmpty()) {
                 // iterate through all locally cached entity instances and execute respective definers
-                DefinersExecutor.execute(refs);
+                DefinersExecutor.execute(deserialisedEntities);
             }
         }
     }
