@@ -658,9 +658,10 @@ public class EntitySerialisationWithJacksonTest {
         assertNull("Restored result should not have exception.", restoredResult.getEx());
         assertNotNull("Restored result should have message.", restoredResult.getMessage());
         assertNotNull("Restored result should have instance.", restoredResult.getInstance());
-        assertTrue("Entity should stay dirty after marshaling.", ((EntityWithInteger) restoredResult.getInstance()).isDirty());
+        
         assertFalse("Property should not be dirty.", ((EntityWithInteger) restoredResult.getInstance()).getProperty("desc").isDirty()); // has default value
         assertTrue("Property should be dirty.", ((EntityWithInteger) restoredResult.getInstance()).getProperty("prop").isDirty());
+        assertTrue("Entity should stay dirty after marshaling.", ((EntityWithInteger) restoredResult.getInstance()).isDirty());
     }
 
     @Test
@@ -688,9 +689,10 @@ public class EntitySerialisationWithJacksonTest {
         assertFalse("Restored warning could not be null", restoredWarning.isSuccessfulWithoutWarning());
         assertNotNull("Restored warning should have message", restoredWarning.getMessage());
         assertNotNull("Restored warning should have instance", restoredWarning.getInstance());
-        assertTrue("Entity should stay dirty after marshaling.", ((EntityWithInteger) restoredWarning.getInstance()).isDirty());
+
         assertFalse("Property should not be dirty.", ((EntityWithInteger) restoredWarning.getInstance()).getProperty("desc").isDirty());
         assertTrue("Property should be dirty.", ((EntityWithInteger) restoredWarning.getInstance()).getProperty("prop").isDirty());
+        assertTrue("Entity should stay dirty after marshaling.", ((EntityWithInteger) restoredWarning.getInstance()).isDirty());
     }
 
     @Test
