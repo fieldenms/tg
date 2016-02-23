@@ -471,7 +471,7 @@
 	                // value ok?
 	                assert.ok(validatedEntity.get("moneyProp"), "Property value should be initialised.");
 	                assert.strictEqual(validatedEntity.get("moneyProp").amount, 46.0, "Property value amount should be correct.");
-	                assert.strictEqual(validatedEntity.get("moneyProp").currency, "USD", "Property value currency should be correct.");
+	                assert.strictEqual(validatedEntity.get("moneyProp").currency, "AUD", "Property value currency should be correct.");
 	                assert.strictEqual(validatedEntity.get("moneyProp").taxPercent, 20, "Property value taxPercent should be correct.");
 
 	                // value is changed?
@@ -483,7 +483,7 @@
 	                // binding value ok?
 	                assert.ok(bindingEntity.get("moneyProp"), "Binding property should be initialised.");
 	                assert.strictEqual(bindingEntity.get("moneyProp").amount, 46.0, "Property value amount should be correct.");
-	                assert.strictEqual(bindingEntity.get("moneyProp").currency, "USD", "Property value currency should be correct.");
+	                assert.strictEqual(bindingEntity.get("moneyProp").currency, "AUD", "Property value currency should be correct.");
 	                assert.strictEqual(bindingEntity.get("moneyProp").taxPercent, 20, "Property value taxPercent should be correct.");
 
 	                done();
@@ -493,7 +493,7 @@
 	                // value ok?
 	                assert.ok(entity.get("moneyProp"), "Property value should be initialised.");
 	                assert.strictEqual(entity.get("moneyProp").amount, 23.0, "Property value amount should be correct.");
-	                assert.strictEqual(entity.get("moneyProp").currency, "USD", "Property value currency should be correct.");
+	                assert.strictEqual(entity.get("moneyProp").currency, "AUD", "Property value currency should be correct.");
 	                assert.strictEqual(entity.get("moneyProp").taxPercent, null, "Property value taxPercent should be correct.");
 
 	                // value is changed?
@@ -505,11 +505,11 @@
 	                // binding value ok?
 	                assert.ok(bindingEntity.get("moneyProp"), "Binding property should be initialised.");
 	                assert.strictEqual(bindingEntity.get("moneyProp").amount, 23.0, "Property value amount should be correct.");
-	                assert.strictEqual(bindingEntity.get("moneyProp").currency, "USD", "Property value currency should be correct.");
+	                assert.strictEqual(bindingEntity.get("moneyProp").currency, "AUD", "Property value currency should be correct.");
 	                assert.strictEqual(bindingEntity.get("moneyProp").taxPercent, null, "Property value taxPercent should be correct.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("moneyProp", { "amount" : 46.0, "currency" : "USD", "taxPercent" : 20 });
+	                bindingEntity.set("moneyProp", { "amount" : 46.0, "currency" : "AUD", "taxPercent" : 20 });
 
 	                master.validate();
 	            };
