@@ -61,7 +61,7 @@ public class EntityFetcher {
         for (final EntityContainer<E> entityContainer : containers) {
             result.add(instantiator.instantiate(entityContainer));
         }
-        DefinersExecutor.execute(new LinkedHashSet<E>(result));
+        DefinersExecutor.execute(result);
         return result;
     }
 }

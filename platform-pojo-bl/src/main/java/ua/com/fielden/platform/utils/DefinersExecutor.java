@@ -18,13 +18,14 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 
 /**
- * Executes finalising of specified entity instances.
+ * Executes finalising of specified entity instance and its graph of properties. Finalising of multiple dependent entities is also supported,
+ * use {@link #execute(LinkedHashSet)} method instead of {@link #execute(AbstractEntity)}.
  * <p>
  * Finalising process consists of:<br>
  * 1. definers (ACEs) execution<br>
  * 2. resetting of original values<br>
- * 3. resetting of dirtiness
- *
+ * 3. ending of 'initialising' phase
+ * 
  * @author TG Team
  *
  */
@@ -59,13 +60,13 @@ public class DefinersExecutor {
      * Uses the DFS algorithm for <code>entities</code> finalising process. Graph traversal stops at <code>proxy</code> or <code>non-entity typed</code> property
      * values.
      *
-     * @param entities -- entities to be finalised. The order of entities is important, this means that the entities set could contain those entities that are the part of graph
+     * @param entities -- different entities to be finalised. The order of entities is important, this means that the entities set could contain those entities that are the part of graph
      * for previously appeared entity, but first entity, that is passed into method {@link #execute(List, Deque, Set)} inside <code>restOfEntities</code>, should be <code>top-level</code> 
      * to guarantee correct order of meta-properties handling.
      * 
      * @return
      */
-    public static <T extends AbstractEntity<?>> void execute(final LinkedHashSet<T> entities) {
+    public static <T extends AbstractEntity<?>> void execute(final List<T> entities) {
         if (entities == null) {
             return;
         }
