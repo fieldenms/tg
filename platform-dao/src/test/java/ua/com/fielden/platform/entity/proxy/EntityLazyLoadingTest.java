@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -75,6 +76,7 @@ public class EntityLazyLoadingTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    @Ignore
     public void accessing_lazily_loaded_property_model_should_initialise_it_with_lazy_proxy_properties() {
         final TgVehicle vehicle = lazyLoad("CAR1");
 
@@ -87,6 +89,7 @@ public class EntityLazyLoadingTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    @Ignore
     public void accessing_lazily_loaded_property_station_with_composite_key_should_be_initialised_with_non_proxied_key_members() {
         final TgVehicle vehicle = lazyLoad("CAR2");
 
@@ -100,6 +103,7 @@ public class EntityLazyLoadingTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    @Ignore
     public void accessing_lazily_loaded_property_station_should_be_initialised_with_lazy_proxies_for_non_key_entity_props() {
         final TgVehicle vehicle = lazyLoad("CAR2");
 
@@ -112,6 +116,7 @@ public class EntityLazyLoadingTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
+    @Ignore
     public void deep_nested_access_to_lazily_loaded_property_should_work() {
         final TgVehicle vehicle = lazyLoad("CAR2");
 
@@ -124,6 +129,7 @@ public class EntityLazyLoadingTest extends AbstractDomainDrivenTestCase {
 
 
     @Test
+    @Ignore
     public void not_fetched_calculated_property_should_be_proxied_and_but_currently_not_loaded_on_demand() {
         final TgVehicle vehicle = lazyLoad("CAR2");
 
