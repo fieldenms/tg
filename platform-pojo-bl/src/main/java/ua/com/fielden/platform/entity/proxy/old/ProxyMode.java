@@ -6,6 +6,7 @@ package ua.com.fielden.platform.entity.proxy.old;
  * @author TG Team
  *
  */
+@Deprecated
 public enum ProxyMode {
     LAZY, // lazily loads proxied entity instances
     STRICT; // throws StrictProxy exception upon accessing proxy properties except ID

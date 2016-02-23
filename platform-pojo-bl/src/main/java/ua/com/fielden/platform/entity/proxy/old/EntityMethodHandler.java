@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.proxy.StrictProxyException;
  * @author TG Team
  *
  */
+@Deprecated
 public class EntityMethodHandler implements MethodHandler {
 
     private final ProxyMode mode;

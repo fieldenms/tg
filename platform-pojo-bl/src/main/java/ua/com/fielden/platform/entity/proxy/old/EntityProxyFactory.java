@@ -17,6 +17,7 @@ import ua.com.fielden.platform.reflection.Finder;
  * @author TG Team
  *
  */
+@Deprecated
 public class EntityProxyFactory<T extends AbstractEntity<?>> extends ProxyFactory {
 
     private final Set<String> skipMethods = new HashSet<>();

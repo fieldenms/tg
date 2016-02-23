@@ -1,22 +1,24 @@
 package ua.com.fielden.platform.entity.proxy.old;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import javassist.util.proxy.ProxyFactory;
 
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
+import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
-import ua.com.fielden.platform.entity.proxy.old.EntityProxyFactory;
-import ua.com.fielden.platform.entity.proxy.old.ProxyMode;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
-import com.google.inject.Injector;
-
+@Deprecated
 public class ProxyTestCase {
 
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
