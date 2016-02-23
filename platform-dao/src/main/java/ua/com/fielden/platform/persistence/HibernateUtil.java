@@ -131,7 +131,6 @@ public class HibernateUtil {
         cfg.setInterceptor(interceptor);
         // The listeners for updating meta-information while the instance loads.
         cfg.setListener("post-load", new MetaPostLoadListener());
-        cfg.setListener("load-collection", new MetaInitializeCollectionListener());
 
         log.debug("Rebuilding the SessionFactory from given Configuration");
         if (sessionFactory != null && !sessionFactory.isClosed()) {

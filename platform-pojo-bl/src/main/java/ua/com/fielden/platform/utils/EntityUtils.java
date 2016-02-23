@@ -827,39 +827,6 @@ public class EntityUtils {
     }
 
     /**
-     * Performs {@link AbstractEntity} instance's post-creation actions such as original values setting, definers invoking, dirtiness resetting etc.
-     *
-     * @param instance
-     * @return
-     */
-    public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance, final Set<String> proxiedProps) {
-        final boolean unionEntity = instance instanceof AbstractUnionEntity;
-        if (!unionEntity && instance.getProperties().containsKey("key")) {
-            final Object keyValue = instance.get("key");
-            if (keyValue != null) {
-                // handle property "key" assignment
-                instance.set("key", keyValue);
-            }
-        }
-
-        for (final MetaProperty metaProp : instance.getProperties().values()) {
-            final boolean notNull = metaProp != null;
-            final boolean notCommonPropOfUnionEntity = notNull && !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
-            final boolean notProxied = notNull && !(proxiedProps.contains(metaProp.getName()));
-            if (notNull && notCommonPropOfUnionEntity && notProxied) {
-                final Object newOriginalValue = instance.get(metaProp.getName());
-                metaProp.setOriginalValue(newOriginalValue);
-                metaProp.define(newOriginalValue);
-            }
-        }
-        if (!unionEntity) {
-            instance.setDirty(false);
-        }
-
-        return instance;
-    }
-
-    /**
      * Splits dot.notated property in two parts: first level property and the rest of subproperties.
      *
      * @param dotNotatedPropName
