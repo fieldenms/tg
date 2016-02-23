@@ -350,8 +350,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     @SuppressWarnings("unchecked")
     protected AbstractEntity() {
-        //TODO replace repetitive call of stripIfNeeded with more appropriate solution
-        actualEntityType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.stripIfNeeded(PropertyTypeDeterminator.stripIfNeeded(getClass()));
+        actualEntityType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.stripIfNeeded(getClass());
         changeSupport = new PropertyChangeSupportEx(this);
         properties = new LinkedHashMap<>();
         lock = new ReentrantLock();

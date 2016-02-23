@@ -235,7 +235,7 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
-        return clazz != null && PropertyTypeDeterminator.isEnhanced(clazz) ? clazz.getSuperclass() : clazz;
+        return clazz != null && PropertyTypeDeterminator.isEnhanced(clazz) ? stripIfNeeded(clazz.getSuperclass()) : clazz;
     }
 
     /**
