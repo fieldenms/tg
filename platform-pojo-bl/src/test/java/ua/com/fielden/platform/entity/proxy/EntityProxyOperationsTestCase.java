@@ -6,16 +6,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.proxy.old.ProxyTestCase;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -418,6 +418,20 @@ public class EntityProxyOperationsTestCase {
             fail("Mutation of proxied property names set should not be permitted.");
         } catch (Exception ex) {
         }
+    }
+
+    @Test
+    public void meta_property_instances_are_identified_as_proxied_only_for_effectively_proxied_properties() {
+        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class, "entityProp", "intProp").entityType;
+        final TgOwnerEntity owner = factory.newByKey(ownerType, "OWN1");
+        
+        final List<MetaProperty<?>> proxiedMetaProps = owner.getProperties().values().stream()
+                .filter(mp -> mp.isProxy())
+                .collect(Collectors.toList());
+        
+        assertEquals(2, proxiedMetaProps.size());
+        assertTrue(owner.getProperty("entityProp").isProxy());
+        assertTrue(owner.getProperty("intProp").isProxy());
 
     }
 
