@@ -129,25 +129,36 @@ public class DefinersExecutor {
             return;
         }
 
-        // TODO beginInitialising() and endInitialising() calls have been arrived from TgJackson
-        // TODO needs to be investigated whether applicable in EQL instantiation process
-        entity.beginInitialising();
+        if (!entity.isInitialising()) {
+            throw new IllegalArgumentException(String.format("The entity [%s] of type [%s] is not in 'initialising' state, but is trying to be finalised by DefinersExecutor. Please, ensure that the entity is in 'initialising' state before starting graph traversal by DefinersExecutor.", entity, entity.getClass()));
+        }
         explored.add(identity);
 
-        // TODO review: keys should be first and the all other properties in order of property definition
+        // TODO the following logic should reviewed after Issue-#415 branch will be merged into this branch (Issue-#392) 
         final List<MetaProperty<?>> notProxiedProperties = entity.getProperties().values().stream().
                 filter(p -> !p.isProxy()).
                 collect(Collectors.toList());
 
         final boolean unionEntity = entity instanceof AbstractUnionEntity;
+        final boolean isEntityPersisted = entity.isPersisted();
+        
+        // FIXME please, consider applicability of the following logic (legacy code from EntityUtils.handleMetaProperties method):
+        //------------------------------------------------------------------
+        //              if (!unionEntity && instance.getProperties().containsKey("key")) {
+        //                  final Object keyValue = instance.get("key");
+        //                  if (keyValue != null) {
+        //                      // handle property "key" assignment
+        //                      instance.set("key", keyValue);
+        //                  }
+        //              }
+        //------------------------------------------------------------------
         
         for (final MetaProperty metaProp : notProxiedProperties) {
             if (metaProp != null) {
                 final boolean notCommonPropOfUnionEntity = !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
                 final Object propertyValue = entity.get(metaProp.getName());
                 
-                final boolean notProxied = !EntityJsonSerialiser.isValueProxied(propertyValue);
-                if (notCommonPropOfUnionEntity && notProxied) {
+                if (notCommonPropOfUnionEntity) {
                     if (metaProp.isCollectional()) { // handle entity type properties
                         if (propertyValue != null) {
                             final Collection collection = (Collection) propertyValue;
@@ -169,63 +180,23 @@ public class DefinersExecutor {
                         }
                     } else { // handle ordinary type properties
                     }
-                    handleOriginalValueAndACE(metaProp, propertyValue);
+                    handleOriginalValueAndACE(metaProp, propertyValue, isEntityPersisted);
                 }
             }
         }
         // TODO entity.setDirty(false) call has been arrived from EntityUtils.handleMetaProperties
         // TODO JSON deserialisation does include information for dirtiness, that is why, most likely we should have a switch 'shouldResetDirtiness'
-        // if (!unionEntity) {
-        //    entity.setDirty(false);
-        // }
+//        if (!unionEntity) {
+//            entity.setDirty(false);
+//        }
         
-        // TODO beginInitialising() and endInitialising() calls have been arrived from TgJackson
-        // TODO needs to be investigated whether applicable in EQL instantiation process
         entity.endInitialising();
     }
 
-    private static void handleOriginalValueAndACE(final MetaProperty metaProp, final Object propertyValue) {
-        // TODO the check for 'persisted' has been arrived from EntityJsonDeserialiser
-        // TODO needs to be investigated whether applicable in EQL instantiation process
-        if (metaProp.getEntity().isPersisted()) {
+    private static void handleOriginalValueAndACE(final MetaProperty metaProp, final Object propertyValue, final boolean isEntityPersisted) {
+        if (isEntityPersisted) {
             metaProp.setOriginalValue(propertyValue);
         }
         metaProp.define(propertyValue);
     }
-    
-//    /**
-//     * Performs {@link AbstractEntity} instance's post-creation actions such as original values setting, definers invoking, dirtiness resetting etc.
-//     *
-//     * @param instance
-//     * @return
-//     */
-//    public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance) {
-// TODO please, consider adding the following block into main logic!
-//------------------------------------------------------------------
-//        final boolean unionEntity = instance instanceof AbstractUnionEntity;
-//        if (!unionEntity && instance.getProperties().containsKey("key")) {
-//            final Object keyValue = instance.get("key");
-//            if (keyValue != null) {
-//                // handle property "key" assignment
-//                instance.set("key", keyValue);
-//            }
-//        }
-//------------------------------------------------------------------
-//
-//        for (final MetaProperty metaProp : instance.getProperties().values()) {
-//            final boolean notNull = metaProp != null;
-//            final boolean notCommonPropOfUnionEntity = notNull && !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
-//            final boolean notProxied = notNull && !(proxiedProps.contains(metaProp.getName()));
-//            if (notNull && notCommonPropOfUnionEntity && notProxied) {
-//                final Object newOriginalValue = instance.get(metaProp.getName());
-//                metaProp.setOriginalValue(newOriginalValue);
-//                metaProp.define(newOriginalValue);
-//            }
-//        }
-//        if (!unionEntity) {
-//            instance.setDirty(false);
-//        }
-//
-//        return instance;
-//    }
 }

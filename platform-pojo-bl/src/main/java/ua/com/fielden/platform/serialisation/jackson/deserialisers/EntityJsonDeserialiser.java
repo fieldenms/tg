@@ -101,6 +101,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             } else {
                 entity = factory.newEntity(type, id);
             }
+            entity.beginInitialising();
 
             final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_number());
             references.putEntity(newReference, entity);

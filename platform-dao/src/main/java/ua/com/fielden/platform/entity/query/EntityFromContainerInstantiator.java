@@ -80,12 +80,6 @@ public class EntityFromContainerInstantiator {
             setPropertyValue(justAddedEntity, entityEntry.getKey(), instantiate(entityEntry.getValue().getContainers()), entityContainer.getResultType());
         }
 
-//        if (!lightweight) {
-//            EntityUtils.handleMetaProperties(justAddedEntity, proxiedProps);
-//        }
-
-        justAddedEntity.endInitialising();
-
         return justAddedEntity;
     }
 
