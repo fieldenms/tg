@@ -448,4 +448,10 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 + propertyProviders.toString()
                 + "}/n";
     }
+    
+    @Override
+    public boolean instrumented() {
+        // TODO implement
+        return false;
+    }
 }
