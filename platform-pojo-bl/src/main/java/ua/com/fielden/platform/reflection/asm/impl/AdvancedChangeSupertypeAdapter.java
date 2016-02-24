@@ -46,7 +46,7 @@ public class AdvancedChangeSupertypeAdapter extends ClassVisitor implements Opco
             mv = cv.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
             mv.visitCode();
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitMethodInsn(INVOKESPECIAL, supertype, "<init>", "()V");
+            mv.visitMethodInsn(INVOKESPECIAL, supertype, "<init>", "()V", false);
             mv.visitInsn(RETURN);
             mv.visitMaxs(1, 1);
             mv.visitEnd();
