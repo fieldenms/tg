@@ -29,6 +29,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -520,7 +521,13 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         if (result) {
             // if valid check whether it's requiredness sound
             final Object value = ((AbstractEntity<?>) getEntity()).get(getName());
-            if (isRequired() && (value == null || isEmpty(value))) {
+            // this is a potential alternative approach to validating requiredness for proxied properties
+            // leaving it here for future reference
+//            if (isRequired() && isProxy()) {
+//                throw new StrictProxyException(format("Required property [%s] in entity [%s] is proxied and thus cannot be checked.", getName(), getEntity().getType().getName()));
+//            }
+            
+            if (isRequired() && !isProxy() && (value == null || isEmpty(value))) {
                 if (!getValidators().containsKey(ValidationAnnotation.REQUIRED)) {
                     throw new IllegalArgumentException("There are no REQUIRED validation annotation pair for required property!");
                 }
