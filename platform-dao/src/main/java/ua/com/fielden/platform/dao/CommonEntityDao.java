@@ -202,17 +202,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return super.findByKey(keyValues);
     }
 
-    @Override
-    @SessionRequired
-    public T lazyLoad(final Long id) {
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants);
-        final List<T> result = new EntityFetcher(queryExecutionContext).getLazyEntitiesOnPage(from(select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model()).model(), 0, 1);
-
-        return !result.isEmpty() ? result.get(0) : null;
-    }
-    
-    
-    
     /**
      * {@inheritDoc} 
      */

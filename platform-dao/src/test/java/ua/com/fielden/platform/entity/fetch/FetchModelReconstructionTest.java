@@ -4,12 +4,14 @@ import static java.lang.String.format;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -56,9 +58,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void reconstructed_fetch_model_should_not_contain_submodels_for_proxied_properties() {
-        // FIXME At this stage fetch model do not work reliably, which makes it required to pass null fetch model at this stage.
-        // However, once this is fixed, a proper model should be provided.
-        final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(null, "CAR1");
+        final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch(TgVehicle.class), "CAR1");
 
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
 
@@ -66,11 +66,26 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
         assertFalse(reconFetch.getIncudedProps().contains("replacedBy"));
     }
 
+    @Test
+    public void reconstruct_fetch_model_with_second_level_property_instrumented() {
+        final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class));
+
+        final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
+
+        final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
+        assertSuperSet(fetch, reconFetch);
+    }
+
     public void assertSuperSet(final fetch<?> origModel, final fetch<?> superModel) {
-        assertTrue(format("Incomplete fetch model %s comparing to model %s.", superModel, origModel), superModel.getIncudedProps().containsAll(origModel.getIncudedProps()));
+        assertSuperSet(origModel, superModel, true);
+    }
+
+    private void assertSuperSet(final fetch<?> origModel, final fetch<?> superModel, boolean rootLevel) {
+        assertTrue(format("Incomplete fetch model %s comparing to model %s.", superModel, origModel), superModel.getIncudedProps().containsAll(origModel.getIncudedProps())
+                && (!rootLevel && superModel.isInstrumented() == origModel.isInstrumented() || rootLevel));
 
         for (final Entry<String, fetch<? extends AbstractEntity<?>>> pair : origModel.getIncludedPropsWithModels().entrySet()) {
-            assertSuperSet(pair.getValue(), superModel.getIncludedPropsWithModels().get(pair.getKey()));
+            assertSuperSet(pair.getValue(), superModel.getIncludedPropsWithModels().get(pair.getKey()), false);
         }
     }
 

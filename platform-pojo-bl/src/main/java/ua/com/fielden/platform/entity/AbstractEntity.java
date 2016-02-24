@@ -25,6 +25,8 @@ import java.util.stream.Stream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
@@ -66,11 +68,10 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
-
-import com.google.inject.Inject;
 
 /**
  * <h3>General Info</h3>
@@ -572,12 +573,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             final Class<?> type = getType();
             final Method setter = Reflector.obtainPropertySetter(type, propertyName);
             return AnnotationReflector.isAnnotationPresent(setter, Observable.class);
-        } catch (final NoSuchMethodException e) {
+        } catch (final ReflectionException e) {
             try {
                 final Method setter = Reflector.obtainPropertySetter(getType(), propertyName);//
                 return AnnotationReflector.isAnnotationPresent(setter, Observable.class);
 
-            } catch (final NoSuchMethodException ex) {
+            } catch (final ReflectionException ex) {
             }
         }
         return false;
@@ -1019,7 +1020,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * Processed BCE and ACE declarations in order to instantiate event handlers.
      *
      * @param field
-     * @param type
+     * @param entityType
      * @return
      */
     private List<Annotation> extractFieldBeforeChangeAnnotations(final Field field) {
@@ -1320,7 +1321,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         // In such cases there would be no meta-properties, and copying would not happen.
         // Therefore, it is important to perform ad-hoc property retrieval via reflection.
         final Stream<String> propertyNames = !getProperties().isEmpty() ? getProperties().keySet().stream()
-                : Finder.findRealProperties(getType()).stream().map(field -> field.getName());
+                : Finder.streamRealProperties(getType()).map(field -> field.getName());
 
         // Copy each identified property into a new instance.
         propertyNames.forEach(propName -> {
@@ -1416,4 +1417,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         this.ignoreEditableState = ignoreEditableStateDuringSave;
     }
 
+    /**
+     * Returns a list of proxied properties. Could return an empty set.
+     * This method should not be final due to the need for interception.
+     * 
+     * @return
+     */
+    public Set<String> proxiedPropertyNames() {
+        return Collections.emptySet();
+    }
 }

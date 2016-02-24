@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.ui.config.controller;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -45,7 +46,8 @@ public class MainMenuItemControllerDao extends CommonEntityDao<MainMenuItem> imp
             // IMPORTANT : THIS IS DANGEROUS, ALL ITEMS IS TRYING TO BE DELETED!
 
             // perform deletion more effectively (not one by one, as defaultDelete() does, but in one bunch)
-            final List<MainMenuItem> withParents = getAllEntities(from(select(MainMenuItem.class).where().prop("parent").isNotNull().model()).lightweight().model());
+            final List<MainMenuItem> withParents = getAllEntities(from(select(MainMenuItem.class).where().prop("parent").isNotNull().model()).lightweight().with(fetch(MainMenuItem.class).with("parent")).model());
+
             for (final MainMenuItem mmi : withParents) {
                 mmi.setParent(null); // delete dependency
                 save(mmi);

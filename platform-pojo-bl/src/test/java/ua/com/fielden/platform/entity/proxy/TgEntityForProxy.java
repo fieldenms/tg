@@ -10,22 +10,24 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 
 @KeyType(String.class)
-@CompanionObject(IEntityForProxy.class)
-public class EntityForProxy extends AbstractEntity<String> {
+@CompanionObject(ITgEntityForProxy.class)
+public class TgEntityForProxy extends AbstractEntity<String> {
+
+    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo
     @Title(value = "Entity", desc = "A property of an entity type")
-    private EntityForProxy prop1;
+    private TgEntityForProxy prop1;
 
     @Observable
-    @EntityExists(EntityForProxy.class)
-    public EntityForProxy setProp1(final EntityForProxy prop1) {
+    @EntityExists(TgEntityForProxy.class)
+    public TgEntityForProxy setProp1(final TgEntityForProxy prop1) {
         this.prop1 = prop1;
         return this;
     }
 
-    public EntityForProxy getProp1() {
+    public TgEntityForProxy getProp1() {
         return prop1;
     }
 

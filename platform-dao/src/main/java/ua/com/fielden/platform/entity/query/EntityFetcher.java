@@ -11,7 +11,6 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.proxy.ProxyMode;
 import ua.com.fielden.platform.utils.DefinersExecutor;
 
 public class EntityFetcher {
@@ -23,29 +22,26 @@ public class EntityFetcher {
         this.executionContext = executionContext;
     }
 
-    public <E extends AbstractEntity<?>> List<E> getLazyEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        return getEntitiesOnPage(queryModel, pageNumber, pageCapacity, ProxyMode.LAZY);
-    }
-
-    public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        return getEntitiesOnPage(queryModel, pageNumber, pageCapacity, ProxyMode.STRICT);
-    }
-
     public <E extends AbstractEntity<?>> List<E> getEntities(final QueryExecutionModel<E, ?> queryModel) {
         return getEntitiesOnPage(queryModel, null, null);
     }
 
-    private <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity, final ProxyMode proxyMode) {
+    public <E extends AbstractEntity<?>> List<E> getEntitiesOnPage(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
         try {
             final DateTime st = new DateTime();
-            final EntityContainerFetcher entityContainerFetcher = new EntityContainerFetcher(executionContext);
+            final EntityContainerFetcher<E> entityContainerFetcher = new EntityContainerFetcher<E>(executionContext);
             final List<EntityContainer<E>> containers = entityContainerFetcher.listAndEnhanceContainers(queryModel, pageNumber, pageCapacity);
-            final List<E> result = instantiateFromContainers(containers, queryModel.isLightweight(), proxyMode);
+
+            if (!queryModel.isLightweight()) {
+                setContainersToBeInstrumented(containers);
+            }
+
+            final List<E> result = instantiateFromContainers(containers);
             final Period pd = new Period(st, new DateTime());
-            
-            String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
+
+            final String entityTypeName = queryModel.getQueryModel().getResultType() != null ? queryModel.getQueryModel().getResultType().getSimpleName() : "?";
             logger.debug(format("Duration: %s m %s s %s ms. Entities (%s) count: %s.", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), entityTypeName, result.size()));
-            
+
             return result;
         } catch (final Exception e) {
             logger.error(e);
@@ -53,10 +49,16 @@ public class EntityFetcher {
         }
     }
 
-    private <E extends AbstractEntity<?>> List<E> instantiateFromContainers(final List<EntityContainer<E>> containers, final boolean lightweight, final ProxyMode proxyMode) {
+    private <E extends AbstractEntity<?>> List<EntityContainer<E>> setContainersToBeInstrumented(final List<EntityContainer<E>> containers) {
+        for (final EntityContainer<E> entityContainer : containers) {
+            entityContainer.setInstrumented();
+        }
+        return containers;
+    }
+
+    private <E extends AbstractEntity<?>> List<E> instantiateFromContainers(final List<EntityContainer<E>> containers) {
         final List<E> result = new ArrayList<E>();
-        final ProxyCache cache = new ProxyCache();
-        final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory(), lightweight, proxyMode, cache, executionContext.getCoFinder());
+        final EntityFromContainerInstantiator instantiator = new EntityFromContainerInstantiator(executionContext.getEntityFactory());
         for (final EntityContainer<E> entityContainer : containers) {
             result.add(instantiator.instantiate(entityContainer));
         }

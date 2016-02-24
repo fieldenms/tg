@@ -2,7 +2,9 @@ package ua.com.fielden.platform.entity.fetch;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 
+import java.lang.reflect.Field;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,8 +15,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
 
 /**
  *
@@ -77,27 +81,30 @@ public class FetchModelReconstructor {
             return exploredFetchModels.get(identity);
         }
 
-        fetch<?> fetchModel = fetch(entity.getType()).with(AbstractEntity.ID);
+        fetch<?> fetchModel = PropertyTypeDeterminator.isInstrumented(entity.getClass()) ? fetchAndInstrument(entity.getType()).with(AbstractEntity.ID) : fetch(entity.getType()).with(AbstractEntity.ID);
         explored.add(identity);
         exploredFetchModels.put(identity, fetchModel);
 
-        final List<MetaProperty<?>> retrievableNotProxiedProperties = entity.getProperties().values().stream().
-                filter(p -> p.isRetrievable() && !p.isProxy()).
-                collect(Collectors.toList());
-
-        for (final MetaProperty<?> prop : retrievableNotProxiedProperties) {
-            if (prop.isEntity()) { // handle entity type properties
-                final AbstractEntity<?> value = (AbstractEntity<?>) prop.getValue();
+        final List<Field> retrievableNotProxiedPropFields = Finder.streamRealProperties(entity.getType())
+                        .filter(field -> Reflector.isPropertyRetrievable(entity, field) && !Reflector.isPropertyProxied(entity, field.getName()))
+                        .collect(Collectors.toList());
+        
+        for (final Field propField : retrievableNotProxiedPropFields) {
+            final String propName = propField.getName();
+            final boolean isEntity = AbstractEntity.class.isAssignableFrom(propField.getType());
+            
+            if (isEntity) { // handle entity type properties
+                final AbstractEntity<?> value = (AbstractEntity<?>) entity.get(propName);
                 if (value != null) {
                     // produce fetch
                     frontier.push(value);
-                    fetchModel = fetchModel.with(prop.getName(), explore(frontier, explored, exploredFetchModels));
+                    fetchModel = fetchModel.with(propName, explore(frontier, explored, exploredFetchModels));
                 } else {
                     // fetch cannot be identified from null, so the default fetch is used
-                    fetchModel = fetchModel.with(prop.getName());
+                    fetchModel = fetchModel.with(propName);
                 }
             } else { // handle ordinary type properties
-                fetchModel = fetchModel.with(prop.getName());
+                fetchModel = fetchModel.with(propName);
             }
         }
 

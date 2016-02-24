@@ -10,10 +10,8 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.proxy.EntityForProxy;
-import ua.com.fielden.platform.entity.proxy.EntityProxyFactory;
-import ua.com.fielden.platform.entity.proxy.OwnerEntity;
-import ua.com.fielden.platform.entity.proxy.ProxyMode;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.entity.proxy.TgOwnerEntity;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
@@ -65,12 +63,9 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void isIntrumented_is_false_for_proxied_entity() {
-        final EntityProxyFactory<EntityForProxy> epf = new EntityProxyFactory<>(EntityForProxy.class);
-        final OwnerEntity owner = factory.newPlainEntity(OwnerEntity.class, 1L);
-        owner.setProp1(epf.create(10L, owner, "prop1", null, ProxyMode.STRICT));
-    
-        final AbstractEntity<?> entity = (AbstractEntity<?>) owner.get("prop1");
-        assertFalse(PropertyTypeDeterminator.isInstrumented(entity.getClass()));
+        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class, "entityProp").entityType;
+        final TgOwnerEntity owner = factory.newPlainEntity(ownerType, 1L);
+        assertFalse(PropertyTypeDeterminator.isInstrumented(owner.getClass()));
     }
     
     //////////////////////////////////// isProxied ////////////////////////////////////
@@ -100,12 +95,9 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void isProxied_is_true_for_proxied_entity() {
-        final EntityProxyFactory<EntityForProxy> epf = new EntityProxyFactory<>(EntityForProxy.class);
-        final OwnerEntity owner = factory.newPlainEntity(OwnerEntity.class, 1L);
-        owner.setProp1(epf.create(10L, owner, "prop1", null, ProxyMode.STRICT));
-    
-        final AbstractEntity<?> entity = (AbstractEntity<?>) owner.get("prop1");
-        assertTrue(PropertyTypeDeterminator.isProxied(entity.getClass()));
+        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class, "entityProp").entityType;
+        final TgOwnerEntity owner = factory.newPlainEntity(ownerType, 1L);
+        assertTrue(PropertyTypeDeterminator.isProxied(owner.getClass()));
     }
 
     //////////////////////////////////// stripIfNeeded ////////////////////////////////////
@@ -135,11 +127,8 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     @Test
     public void stripIfNeeded_returns_original_type_for_proxied_entity() {
-        final EntityProxyFactory<EntityForProxy> epf = new EntityProxyFactory<>(EntityForProxy.class);
-        final OwnerEntity owner = factory.newPlainEntity(OwnerEntity.class, 1L);
-        owner.setProp1(epf.create(10L, owner, "prop1", null, ProxyMode.STRICT));
-    
-        final AbstractEntity<?> entity = (AbstractEntity<?>) owner.get("prop1");
-        assertEquals(EntityForProxy.class, PropertyTypeDeterminator.stripIfNeeded(entity.getClass()));
+        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class, "entityProp").entityType;
+        final TgOwnerEntity owner = factory.newPlainEntity(ownerType, 1L);
+        assertEquals(TgOwnerEntity.class, PropertyTypeDeterminator.stripIfNeeded(owner.getClass()));
     }
 }

@@ -23,6 +23,8 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -203,6 +205,18 @@ public class Finder {
      */
     @SafeVarargs
     public static List<Field> findProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
+        return streamProperties(entityType, annotations).collect(Collectors.toList());
+    }
+
+    /**
+     * A stream equivalent to method {@link #findProperties(Class, Class...)}.
+     * 
+     * @param entityType
+     * @param annotations
+     * @return
+     */
+    @SafeVarargs
+    public static Stream<Field> streamProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
         return getFieldsAnnotatedWith(entityType, true, IsProperty.class, annotations);
     }
 
@@ -218,6 +232,18 @@ public class Finder {
      */
     @SafeVarargs
     public static List<Field> findRealProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
+        return streamRealProperties(entityType, annotations).collect(Collectors.toList());
+    }
+
+    /**
+     * A stream equivalent to method {@link #findRealProperties(Class, Class...)}.
+     * 
+     * @param entityType
+     * @param annotations
+     * @return
+     */
+    @SafeVarargs
+    public static Stream<Field> streamRealProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
         return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations);
     }
 
@@ -494,26 +520,22 @@ public class Finder {
     }
 
     /**
-     * Traces through specified list of fields and returns those annotated with allAnnotations.
-     *
+     * Traces through specified list of fields and returns a stream of those annotated with allAnnotations.
+     * 
      * @param fields
      * @param allAnnotations
      * @return
      */
-    private static List<Field> getFieldsAnnotatedWith(final List<Field> fields, final Collection<Class<? extends Annotation>> allAnnotations) {
-        final List<Field> properties = new ArrayList<Field>();
-        for (final Field field : fields) {
+    private static Stream<Field> streamFieldsAnnotatedWith(final List<Field> fields, final Collection<Class<? extends Annotation>> allAnnotations) {
+        return fields.stream().filter(field -> {
             int count = 0;
             for (final Class<? extends Annotation> annotation : allAnnotations) {
                 if (AnnotationReflector.isAnnotationPresent(field, annotation)) {
                     count++;
                 }
             }
-            if (count == allAnnotations.size()) {
-                properties.add(field);
-            }
-        }
-        return properties;
+            return count == allAnnotations.size();
+        });
     }
 
     /**
@@ -575,7 +597,7 @@ public class Finder {
     }
 
     /**
-     * Returns a list of fields (including private, protected and public) annotated with the specified annotation. This method processes the whole class hierarchy.
+     * Returns a stream of fields (including private, protected and public) annotated with the specified annotation. This method processes the whole class hierarchy.
      *
      * @param type
      * @param annotation
@@ -584,30 +606,11 @@ public class Finder {
      *
      * @return
      */
-    private static List<Field> getFieldsAnnotatedWith(final Class<?> type, final boolean withUnion, final Class<? extends Annotation> annot, final Class<? extends Annotation>... annotations) {
+    private static Stream<Field> getFieldsAnnotatedWith(final Class<?> type, final boolean withUnion, final Class<? extends Annotation> annot, final Class<? extends Annotation>... annotations) {
         final Set<Class<? extends Annotation>> allAnnotations = new HashSet<Class<? extends Annotation>>();
         allAnnotations.add(annot);
         allAnnotations.addAll(Arrays.asList(annotations));
-        return getFieldsAnnotatedWith(getFields(type, withUnion), allAnnotations);
-        //        final List<Field> properties = new ArrayList<Field>();
-        //        Class<?> klass = type;
-        //        if (AbstractUnionEntity.class.isAssignableFrom(klass) && withUnion) {
-        //            properties.addAll(getFieldsAnnotatedWith(getUnionEntityFields((Class<AbstractUnionEntity>) type), allAnnotations));
-        //        } else {
-        //            while (klass != Object.class) { // need to iterated thought
-        //        	// hierarchy in order to retrieve
-        //        	// fields from above the current
-        //        	// instance
-        //        	// iterate though the list of fields declared in the class
-        //        	// represented by klass variable, and add those annotated with
-        //        	// the specified annotation
-        //        	properties.addAll(getFieldsAnnotatedWith(Arrays.asList(klass.getDeclaredFields()), allAnnotations));
-        //        	// move to the upper class in the hierarchy in search for more
-        //        	// fields
-        //        	klass = klass.getSuperclass();
-        //            }
-        //        }
-        //        return properties;
+        return streamFieldsAnnotatedWith(getFields(type, withUnion), allAnnotations);
     }
 
     /**
