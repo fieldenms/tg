@@ -955,6 +955,10 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      * @param required
      */
     public final void setRequired(final boolean required) {
+        if (required && !getEntity().isInitialising() && isProxy()) {
+            throw new StrictProxyException(format("Property [%s] in entity [%s] is proxied and should not be made required.", getName(), getEntity().getType().getName())); 
+        }
+        
         final boolean oldRequired = this.required;
         this.required = required;
 
