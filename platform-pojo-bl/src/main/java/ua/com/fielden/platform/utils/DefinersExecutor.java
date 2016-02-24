@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.utils;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,15 +18,20 @@ import java.util.stream.Collectors;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
 
 /**
- * Executes finalising of specified entity instance and its graph of properties. Finalising of multiple dependent entities is also supported,
- * use {@link #execute(LinkedHashSet)} method instead of {@link #execute(AbstractEntity)}.
+ * Finalises initialisation of the specified entity instance by traversing an object graph to execute ACE handlers and assign original property values. 
+ * Method {@link #execute(LinkedHashSet)} can be conveniently used to finalise initialisation of multiple dependent entities.
  * <p>
- * Finalising process consists of:<br>
- * 1. definers (ACEs) execution<br>
- * 2. resetting of original values<br>
- * 3. ending of 'initialising' phase
+ * The process of finalising entity initialisation consists of:<br>
+ * <ul>
+ *  <li>Execution of ACE handlers.
+ *  <li>(re)Setting of property original values.
+ *  <li>Completion of the entity initialisation phase by invoking {@link AbstractEntity#endInitialising()}.
+ * </ul>
  * 
  * @author TG Team
  *
@@ -32,10 +39,10 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 public class DefinersExecutor {
 
     /**
-     * Uses the DFS algorithm for <code>entity</code> finalising process. Graph traversal stops at <code>proxy</code> or <code>non-entity typed</code> property
-     * values.
+     * Employs the DFS algorithm to travers the object graph starting with a node represented by <code>entity</code>. 
+     * The boundary of an object graph is outlined by <code>proxied</code> properties and <code>non-entity typed</code> properties.
      *
-     * @param entity -- the entity to be finalised
+     * @param entity -- an instance to finalise the initialisation for.
      * 
      * @return
      */
@@ -45,14 +52,9 @@ public class DefinersExecutor {
         }
         return entity;
     }
-    
+
     /**
-     * Uses the DFS algorithm for <code>entities</code> finalising process. Graph traversal stops at <code>proxy</code> or <code>non-entity typed</code> property
-     * values.
-     *
-     * @param entities -- different entities to be finalised. The order of entities is important, this means that the entities set could contain those entities that are the part of graph
-     * for previously appeared entity, but first entity, that is passed into method {@link #execute(List, Deque, Set)} inside <code>restOfEntities</code>, should be <code>top-level</code> 
-     * to guarantee correct order of meta-properties handling.
+     * The same as {@link #execute(AbstractEntity)}, but for a list of entities.
      * 
      * @return
      */
@@ -69,10 +71,10 @@ public class DefinersExecutor {
         execute(new ArrayList<>(entities), frontier, explored);
         return entities;
     }
-    
+
     /**
-     * Takes the first unexplored entity from <code>restOfEntities</code> list and explores its graph. Then executes the same 
-     * logic for the rest entities without first one.
+     * Takes the first unexplored entity from list <code>restOfEntities</code> and explores its sub-graph. 
+     * Then executes the same logic for the rest entities without the first one.
      * 
      * @param restOfEntities
      * @param frontier
@@ -80,9 +82,9 @@ public class DefinersExecutor {
      */
     private static <T extends AbstractEntity<?>> void execute(
             final List<T> restOfEntities, 
-            final Deque<AbstractEntity<?>> frontier,
+            final Deque<AbstractEntity<?>> frontier, 
             final Set<Integer> explored) {
-        
+
         final List<T> list = new ArrayList<>(restOfEntities);
         for (int index = 0; index < list.size(); index++) {
             final T entity = list.get(index);
@@ -91,7 +93,7 @@ public class DefinersExecutor {
                 if (!explored.contains(identity)) {
                     frontier.push(entity);
                     explore(frontier, explored);
-                    
+
                     if (index + 1 <= list.size()) {
                         final List<T> restList = new ArrayList<>(list.subList(index + 1, list.size()));
                         execute(restList, frontier, explored);
@@ -109,8 +111,9 @@ public class DefinersExecutor {
      * @return
      */
     private static void explore(
-            final Deque<AbstractEntity<?>> frontier,
+            final Deque<AbstractEntity<?>> frontier, 
             final Set<Integer> explored) {
+        
         if (frontier.isEmpty()) {
             throw new IllegalStateException("There is nothing to process.");
         }
@@ -122,18 +125,20 @@ public class DefinersExecutor {
         }
 
         if (!entity.isInitialising()) {
-            throw new IllegalArgumentException(String.format("The entity [%s] of type [%s] is not in 'initialising' state, but is trying to be finalised by DefinersExecutor. Please, ensure that the entity is in 'initialising' state before starting graph traversal by DefinersExecutor.", entity, entity.getClass()));
+            throw new IllegalArgumentException(format("Entity [%s] of type [%s] is not in the 'initialising' phase.", entity, entity.getClass()));
         }
+        
         explored.add(identity);
 
-        // TODO the following logic should reviewed after Issue-#415 branch will be merged into this branch (Issue-#392) 
-        final List<MetaProperty<?>> notProxiedProperties = entity.getProperties().values().stream().
-                filter(p -> !p.isProxy()).
-                collect(Collectors.toList());
+        // collect properties to process
+        final List<Field> notProxiedPropFields = Finder.streamRealProperties(entity.getType())
+                .filter(field -> !Reflector.isPropertyProxied(entity, field.getName())) 
+                .collect(Collectors.toList());
 
         final boolean unionEntity = entity instanceof AbstractUnionEntity;
-        final boolean isEntityPersisted = entity.isPersisted();
-        
+        final boolean isInstrumented = PropertyTypeDeterminator.isInstrumented(entity.getClass());
+        final boolean isEntityPersisted = isInstrumented ? entity.isPersisted() : false;
+
         // FIXME please, consider applicability of the following logic (legacy code from EntityUtils.handleMetaProperties method):
         //------------------------------------------------------------------
         //              if (!unionEntity && instance.getProperties().containsKey("key")) {
@@ -144,39 +149,43 @@ public class DefinersExecutor {
         //                  }
         //              }
         //------------------------------------------------------------------
-        
-        for (final MetaProperty metaProp : notProxiedProperties) {
-            if (metaProp != null) {
-                final boolean notCommonPropOfUnionEntity = !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
-                final Object propertyValue = entity.get(metaProp.getName());
-                
-                if (notCommonPropOfUnionEntity) {
-                    if (metaProp.isCollectional()) { // handle collectional properties
-                        if (propertyValue != null) {
-                            final Collection collection = (Collection) propertyValue;
-                            collection.forEach(item -> {
-                                if (item != null && item instanceof AbstractEntity) {
-                                    final AbstractEntity<?> value = (AbstractEntity<?>) item;
-                                    // produce fetch
-                                    frontier.push(value);
-                                    explore(frontier, explored);
-                                }
-                            });
+
+        for (final Field propField : notProxiedPropFields) {
+            final String propName = propField.getName();
+            final boolean isEntity = AbstractEntity.class.isAssignableFrom(propField.getType());
+            final boolean isCollectional = Collection.class.isAssignableFrom(propField.getType());
+
+            final boolean notCommonPropOfUnionEntity = !(COMMON_PROPS.contains(propName) && unionEntity);
+            final Object propertyValue = entity.get(propName);
+
+            if (notCommonPropOfUnionEntity) {
+                if (isCollectional) { // handle collectional properties
+                    if (propertyValue != null) {
+                        final Collection<?> collection = (Collection<?>) propertyValue;
+                        for (final Object item: collection) {
+                            if (item != null && item instanceof AbstractEntity) {
+                                final AbstractEntity<?> value = (AbstractEntity<?>) item;
+                                frontier.push(value);
+                                explore(frontier, explored);
+                            }
                         }
-                    } else if (metaProp.isEntity()) { // handle entity-typed properties
-                        if (propertyValue != null) {
-                            final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
-                            // produce fetch
-                            frontier.push(value);
-                            explore(frontier, explored);
-                        }
-                    } else { // handle ordinary type properties
                     }
-                    handleOriginalValueAndACE(metaProp, propertyValue, isEntityPersisted);
+                } else if (isEntity) { // handle entity-typed properties
+                    if (propertyValue != null) {
+                        final AbstractEntity<?> value = (AbstractEntity<?>) propertyValue;
+                        // produce fetch
+                        frontier.push(value);
+                        explore(frontier, explored);
+                    }
+                }
+                
+                // original values and execution of ACE handlers is relevant only for instrumented entities
+                if (isInstrumented) {
+                    handleOriginalValueAndACE(entity.getProperty(propName), propertyValue, isEntityPersisted);
                 }
             }
         }
-        
+
         entity.endInitialising();
     }
 
