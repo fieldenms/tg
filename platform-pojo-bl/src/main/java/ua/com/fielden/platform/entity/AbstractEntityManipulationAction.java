@@ -20,10 +20,6 @@ public abstract class AbstractEntityManipulationAction extends AbstractFunctiona
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @Title(value = "Entity Id", desc = "Entity id")
-    private String entityId;
-
-    @IsProperty
     @MapTo
     @Title(value = "Entity Type", desc = "Entity type")
     private String entityType;
@@ -67,15 +63,4 @@ public abstract class AbstractEntityManipulationAction extends AbstractFunctiona
     public String getEntityType() {
         return entityType;
     }
-
-    @Observable
-    public AbstractEntityManipulationAction setEntityId(final String entityId) {
-        this.entityId = entityId;
-        return this;
-    }
-
-    public String getEntityId() {
-        return entityId;
-    }
-
 }

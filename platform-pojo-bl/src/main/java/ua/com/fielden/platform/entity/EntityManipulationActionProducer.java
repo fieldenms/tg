@@ -4,6 +4,7 @@ import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -21,14 +22,19 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
         entity.setKey("ANY");
         if (getCentreContext() != null) {
             final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = getCentreContext();
-            //final AbstractEntity<?> currEntity = context.getSelectedEntities().size() == 0 ? null : context.getCurrEntity();
+            final AbstractEntity<?> currEntity = context.getSelectedEntities().size() == 0 ? null : context.getCurrEntity();
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> selCrit = context.getSelectionCrit();
-            final Class<AbstractEntity<?>> entityType = selCrit.getEntityClass();
-            entity.setContext(context);
-            //entity.setEntityId(currEntity == null ? null : currEntity.getId());
-            entity.setEntityType(entityType.getName());
-            entity.setImportUri("/master_ui/" + entityType.getName());
-            entity.setElementName("tg-" + entityType.getSimpleName() + "-master");
+            final Class<AbstractEntity<?>> entityType = selCrit == null ?
+                    (currEntity == null ? null : DynamicEntityClassLoader.getOriginalType(currEntity.getType()))
+                    : selCrit.getEntityClass();
+            if (entityType == null) {
+                throw new IllegalStateException("Please add selection criteria or current entity to the context of the functional entity with type: " + entity.getType().getName());
+            } else {
+                entity.setContext(context);
+                entity.setEntityType(entityType.getName());
+                entity.setImportUri("/master_ui/" + entityType.getName());
+                entity.setElementName("tg-" + entityType.getSimpleName() + "-master");
+            }
         }
         return entity;
     }
