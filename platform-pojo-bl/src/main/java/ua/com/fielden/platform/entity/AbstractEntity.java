@@ -649,6 +649,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     @Inject
     protected void setMetaPropertyFactory(final IMetaPropertyFactory metaPropertyFactory) {
+        beginInitialising();
         ///logger.debug("Starting meta construction with factory " + metaPropertyFactory + " for type " + getType());
         // if meta-property factory has already been assigned it should not change
         if (this.metaPropertyFactory != null) {
@@ -742,6 +743,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 throw new IllegalStateException(e); // entity without properly generated met-properties is considered to be in illegal state
             }
         }
+        endInitialising();
         //logger.debug("Finished meta construction for type " + getType());
     }
 
