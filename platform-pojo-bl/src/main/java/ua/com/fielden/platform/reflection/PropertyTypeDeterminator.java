@@ -242,29 +242,32 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
-        return clazz != null && (isInstrumented(clazz) || isProxied(clazz)) ? stripIfNeeded(clazz.getSuperclass()) : clazz;
+        return clazz != null && (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz)) ? stripIfNeeded(clazz.getSuperclass()) : clazz;
     }
     
+    private static boolean isLoadedByHibernate(final Class<?> clazz) {
+        return clazz.getName().contains("$$_javassist");
+    }
+
     /**
-     * Returns <code>true</code> if the specified class is Javassist proxy class, <code>false</code> otherwise.
+     * Returns <code>true</code> if the specified class is proxied, <code>false</code> otherwise.
      *
-     * @param klass
+     * @param clazz
      * @return
      */
-    public static boolean isProxied(final Class<?> klass) {
-        return klass.getName().contains("$ByteBuddy$");
+    public static boolean isProxied(final Class<?> clazz) {
+        return clazz.getName().contains("$ByteBuddy$");
     }
     
     /**
-     * Returns <code>true</code> if the specified class is instrumented by Guice (and its metaProperties should exist), <code>false</code> otherwise.
+     * Returns <code>true</code> if the specified class is instrumented by Guice, and thus instances of this type should be fully initialised
+     * from TG perspective (having meta-properties, fitted with ACE/BCE interceptors etc.).
      * 
-     * Enhancer.isEnhanced does not recognise classes enhanced directly with CGLIB (Hibernate), therefore need to provide an alternative way.
-     *
      * @param klass
      * @return
      */
-    public static boolean isInstrumented(final Class<?> klass) {
-        return klass.getName().contains("$$Enhancer");
+    public static boolean isInstrumented(final Class<?> clazz) {
+        return clazz.getName().contains("$$EnhancerByGuice");
     }
 
     public static boolean isDotNotation(final String exp) {
