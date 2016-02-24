@@ -13,9 +13,9 @@ import java.util.TreeSet;
 
 import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityFromContainerInstantiator {
     private final EntityFactory entFactory;
@@ -60,13 +60,14 @@ public class EntityFromContainerInstantiator {
         }
 
         for (final Map.Entry<String, EntityContainer<? extends AbstractEntity<?>>> entityEntry : entityContainer.getEntities().entrySet()) {
-            if (!justAddedEntity.proxiedPropertyNames().contains(entityEntry.getKey())) {
+            final String key = entityEntry.getKey();
+            if (!justAddedEntity.proxiedPropertyNames().contains(key)) {
 
-                final Object propValue = determinePropValue(justAddedEntity, entityEntry.getKey(), entityEntry.getValue());
+                final Object propValue = determinePropValue(justAddedEntity, key, entityEntry.getValue());
                 if (propValue != null && ProxyFactory.isProxyClass(propValue.getClass())) {
-                    proxiedProps.add(entityEntry.getKey());
+                    proxiedProps.add(key);
                 }
-                setPropertyValue(justAddedEntity, entityEntry.getKey(), propValue, entityContainer.getResultType());
+                setPropertyValue(justAddedEntity, key, propValue, entityContainer.getResultType());
                 if (unionEntity && propValue != null /*&& lightweight*/) {
                     // FIXME ((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey());
                 }
