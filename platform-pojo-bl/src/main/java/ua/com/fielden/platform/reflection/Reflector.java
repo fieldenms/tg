@@ -24,6 +24,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -284,7 +285,18 @@ public final class Reflector {
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);
         try {
-            return Reflector.getMethod(transformed.getKey(), "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1), PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false));
+            final String methodName = "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1);
+            final Class<?> argumentType = PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false);
+            
+            if (DynamicEntityClassLoader.isGenerated(entityClass) && DynamicEntityClassLoader.getOriginalType(entityClass) == argumentType) {
+                return Reflector.getMethod(transformed.getKey(), 
+                        methodName, 
+                        entityClass);
+            } else {
+                return Reflector.getMethod(transformed.getKey(), 
+                        methodName, 
+                        argumentType);
+            }
         } catch (final Exception ex) {
             throw new ReflectionException(format("Could not obtain setter for property [%s] in type [%s].", dotNotationExp, entityClass.getName()), ex);
         }
