@@ -72,9 +72,9 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         logger.debug(format("Property name is \"%s\".", fullPropertyName));
         final Optional<MetaProperty<?>> op = entity.getPropertyOptionally(propertyName);
         // check if entity is not in the initialisation mode during which no property validation should be performed
-        if (entity.isInitialising()) {
-            logger.debug(format("Skip further logic: Initialisation of entity is in progress.", AbstractUnionEntity.class.isAssignableFrom(entity.getClass()) ? entity.getClass()
-                    : entity));
+        if (entity.isInitialising() || !op.isPresent()) {
+            logger.debug(format("Property change observation logic is skipped. Initialisation or instantiation of entity [%s] is in progress.", AbstractUnionEntity.class.isAssignableFrom(entity.getClass()) ? entity.getClass()
+                    : entity.getType().getName()));
             return proceed(invocation, op);
         }
         final MetaProperty property = op.get();
@@ -88,12 +88,6 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         synchronized (entity) {
             entity.lock(); // this locking is required to prevent entity validation until all individual properties complete their modification (either successfully or not)
             try { // unlocking try-finally block
-                // TODO Most likely the following branch is dead and should be trimmed.
-                if (property == null) { // this is possible only if key is set to dynamic composite key and the meta-property factory is not yet assigned... thus no observation is
-                    // required at this stage
-                    logger.debug(format("Skip further logic: Property \"%s\" for intercepted mutator has no meta-property.", fullPropertyName));
-                    return proceed(invocation, op);
-                }
                 final boolean wasValid = property.isValid(); // this flag is needed for correct change event firing
                 logger.debug(format("Property \"%s\" was valid: %s", fullPropertyName, wasValid));
                 final Pair<Object, Object> newAndOldValues = determineNewAndOldValues(entity, propertyName, invocation.getArguments()[0], method);

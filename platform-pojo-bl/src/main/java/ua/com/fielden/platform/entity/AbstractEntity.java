@@ -354,7 +354,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     @SuppressWarnings("unchecked")
     protected AbstractEntity() {
-        beginInitialising();
         actualEntityType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.stripIfNeeded(getClass());
         
         changeSupport = new PropertyChangeSupportEx(this);
@@ -640,9 +639,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     @Inject
     protected void setMetaPropertyFactory(final IMetaPropertyFactory metaPropertyFactory) {
-        if (!isInitialising()) {
-            throw new EntityException("Instantiation of entity [%s] has started without declaring initialisation phase. ");
-        }
+        // mark the start of the initialisation phase as part of entity creation
+        beginInitialising();
         ///logger.debug("Starting meta construction with factory " + metaPropertyFactory + " for type " + getType());
         // if meta-property factory has already been assigned it should not change
         if (this.metaPropertyFactory.isPresent()) {
