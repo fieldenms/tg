@@ -1620,6 +1620,14 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         assertTrue(isEntityInstrumented(vehicle.getModel()));
     }
 
+    @Test
+    public void vehicle_property_retrieved_with_instrumented_fetch_and_being_part_of_fuel_usage_composite_key_is_instrumented() {
+        final EntityResultQueryModel<TgFuelUsage> qry = select(TgFuelUsage.class).where().prop("vehicle.key").eq().val("CAR2").and().prop("fuelType.key").eq().val("P").model();
+        fetch<TgFuelUsage> fetch = fetch(TgFuelUsage.class).with("vehicle", fetchAndInstrument(TgVehicle.class));
+        TgFuelUsage fuelUsage = fuelUsageDao.getEntity(from(qry).with(fetch).model());
+        assertTrue(isEntityInstrumented(fuelUsage.getVehicle()));
+    }
+
     public static boolean isPropertyInstrumented(final AbstractEntity<?> entity, final String propName) {
         final Object value = entity.get(propName);
         return isEntityInstrumented(value);
