@@ -12,11 +12,12 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
@@ -94,9 +95,10 @@ public class FactoryForTestingEntities {
         assertFalse("Incorrect key ChangedFromOriginal.", entity.getProperty(AbstractEntity.KEY).isChangedFromOriginal());
         assertFalse("Incorrect desc ChangedFromOriginal.", entity.getProperty(AbstractEntity.DESC).isChangedFromOriginal());
 
-        if (entity.getProperty("prop") != null && !entity.getProperty("prop").isCollectional()) {
-            assertFalse("Incorrect key ChangedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
-            assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
+        final Optional<MetaProperty<?>> op = entity.getPropertyOptionally("prop");
+        if (op.isPresent() && !op.get().isCollectional()) {
+            assertFalse("Incorrect key ChangedFromOriginal.", op.get().isChangedFromOriginal());
+            assertFalse("Incorrect prop dirtiness.", op.get().isDirty());
         }
 
         return entity;
