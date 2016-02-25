@@ -354,6 +354,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     @SuppressWarnings("unchecked")
     protected AbstractEntity() {
+        beginInitialising();
         actualEntityType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.stripIfNeeded(getClass());
         
         changeSupport = new PropertyChangeSupportEx(this);
@@ -613,7 +614,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     public AbstractEntity<K> set(final String propertyName, final Object value) {
         try {
             final Class<?> propertyType = Finder.findFieldByName(getType(), propertyName).getType();
-            final Method setter = Reflector.getMethod(/* getType() */this, "set" + propertyName.toUpperCase().charAt(0) + propertyName.substring(1), propertyType);
+            final String setterName = "set" + propertyName.toUpperCase().charAt(0) + propertyName.substring(1);
+            final Method setter = Reflector.getMethod(this, setterName, propertyType);
             Object valueToInvokeOn = this;
             if (!setter.getDeclaringClass().isAssignableFrom(getType()) && AbstractUnionEntity.class.isAssignableFrom(getType())) {
                 valueToInvokeOn = ((AbstractUnionEntity) this).activeEntity();
@@ -631,17 +633,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
-     * Returns property by name.
-     *
-     * @param name
-     * @return
-     */
-    @Override
-    public final <T> MetaProperty<T> getProperty(final String name) {
-        return (MetaProperty<T>) getProperties().get(name);
-    }
-
-    /**
      * This setter is responsible for meta-property creation. It is envisaged that {@link IMetaPropertyFactory} is be provided as an injection. An thus, meta-property instantiation
      * should happen immediately after entity creation when being created via IoC mechanism.
      *
@@ -649,7 +640,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     @Inject
     protected void setMetaPropertyFactory(final IMetaPropertyFactory metaPropertyFactory) {
-        beginInitialising();
+        if (!isInitialising()) {
+            throw new EntityException("Instantiation of entity [%s] has started without declaring initialisation phase. ");
+        }
         ///logger.debug("Starting meta construction with factory " + metaPropertyFactory + " for type " + getType());
         // if meta-property factory has already been assigned it should not change
         if (this.metaPropertyFactory.isPresent()) {
@@ -1040,14 +1033,55 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         assertInstrumented();
         return Collections.unmodifiableMap(properties);
     }
+    
+    /**
+     * Guarantees to return an instance of {@link MetaProperty} for the specified property name if it exists.
+     * Otherwise, throws an exception.
+     *
+     * @param name
+     * @return
+     */
+    @Override
+    public final <T> MetaProperty<T> getProperty(final String name) {
+        final MetaProperty<T> mp = (MetaProperty<T>) getProperties().get(name);
+        if (mp != null) {
+            return mp;
+        }
+        
+        throw new EntityException(format("Meta-data for property [%s] in entity [%s] could not be located.", name, getType().getName()));
+    }
+
+    /**
+     * A convenient alternative to {@link #getProperty(String)} that returns an optional value with either an instance of {@link MetaProperty} or without.
+     * An empty optional value indicates that either this entity instance was not instrumented or the specified property does not belong to this entity.
+     *
+     * @param name
+     * @return
+     */
+    public final java.util.Optional<MetaProperty<?>> getPropertyOptionally(final String name) {
+        if (metaPropertyFactory.isPresent()) {
+            final MetaProperty<?> mp = getProperties().get(name);
+            return mp != null ? of(mp) : empty(); 
+        }
+        return empty();
+    }
 
     /**
      * Throws {@link EntityException} if this instance is not instrumented.
      */
     public final void assertInstrumented() {
-        if (!metaPropertyFactory.isPresent()) {
+        if (!isInstrumented()) {
             throw new EntityException(format("Meta-properties for this instance of entity [%s] do not exist as it was not instrumented.", getType().getName()));
         }
+    }
+    
+    /**
+     * A convenient method to check if this instance is instrumented.
+     * 
+     * @return
+     */
+    public final boolean isInstrumented() {
+        return PropertyTypeDeterminator.isInstrumented(this.getClass());
     }
     
     /**
@@ -1198,13 +1232,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
-     * This is an experimental support for checking whether an entity instance is dirty -- was modified, but changes has not been yet persisted. The envisage scenario is this: any
-     * change to a property leads to isDirty; once entity is persisted the dirty state is reset to false.
-     *
+     * Any change to a property on an instrumented entity instance leads to its dirtiness.
+     * Once a dirty entity is persisted, the dirty state gets reset to <code>false</code>.
+     * 
      * @return
      */
     public final boolean isDirty() {
-        return !getDirtyProperties().isEmpty() || !isPersisted();
+        return (isInstrumented() && !getDirtyProperties().isEmpty()) || !isPersisted();
     }
 
     public final AbstractEntity<K> setDirty(final boolean dirty) {
@@ -1326,11 +1360,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     public final <COPY extends AbstractEntity> COPY copyTo(final COPY copy) {
         copy.beginInitialising();
-        // Under certain circumstances copying happens for a non-instrumented entity instance
-        // In such cases there would be no meta-properties, and copying would not happen.
+        // Under certain circumstances copying happens for an uninstrumented entity instance
+        // In such cases there would be no meta-properties, and copying would fail.
         // Therefore, it is important to perform ad-hoc property retrieval via reflection.
-        final Stream<String> propertyNames = !getProperties().isEmpty() ? getProperties().keySet().stream()
-                : Finder.streamRealProperties(getType()).map(field -> field.getName());
+        final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(field -> field.getName());
 
         // Copy each identified property into a new instance.
         propertyNames.forEach(propName -> {
