@@ -17,8 +17,10 @@ import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
 import ua.com.fielden.platform.entity.EntityNewActionDao;
+import ua.com.fielden.platform.entity.IEntityDeleteAction;
 import ua.com.fielden.platform.entity.IEntityEditAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
@@ -163,6 +165,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind entity manipulation controller
         bind(IEntityNewAction.class).to(EntityNewActionDao.class).in(Scopes.SINGLETON);
         bind(IEntityEditAction.class).to(EntityEditActionDao.class).in(Scopes.SINGLETON);
+        bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class).in(Scopes.SINGLETON);
 
         // user security related bindings
         bind(IUserRoleDao.class).to(UserRoleDao.class);
