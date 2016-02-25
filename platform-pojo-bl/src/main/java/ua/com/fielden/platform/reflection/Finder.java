@@ -114,22 +114,21 @@ public class Finder {
         final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
         final List<MetaProperty> metaProperties = new ArrayList<MetaProperty>();
         Object owner = entity;
-        MetaProperty result = null;
         for (final String propertyName : properties) {
-            // if the owner is null then there is no way it is possible to determine the meta-property.
+            // if the owner is null or not an entity then there is no way to determine meta-properties at the next level.
             if (!(owner instanceof AbstractEntity)) {
-                // throw new RuntimeException("The property " + propertyName + " owner is null.");
                 break;
             }
             // get the meta-property instance, which can but should not be null
-            result = ((AbstractEntity<?>) owner).getProperty(propertyName);
-            if (result != null) {
-                metaProperties.add(result);
+            final Optional<MetaProperty<?>> op = ((AbstractEntity<?>) owner).getPropertyOptionally(propertyName);
+            if (op.isPresent()) {
+                metaProperties.add(op.get());
             } else {
                 throw new IllegalArgumentException("Failed to locate meta-property " + dotNotationExp + " starting with entity " + entity.getType() + ": " + entity);
             }
-            // obtain the value for the current propertyName, which becomes the owner for the next property
-            owner = ((AbstractEntity<?>) owner).get(propertyName);
+            // obtain the value for the current property, which might be an entity instance
+            // and needs to be recognized as an owner for the property at the next level
+            owner = op.get().getValue();
         }
 
         return metaProperties;
