@@ -14,10 +14,9 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
-import ua.com.fielden.platform.utils.DefinersExecutorTest;
 
 /**
- * Parent entity for {@link DefinersExecutorTest}.
+ * Parent entity for Definers Executor Test.
  *
  * @author TG Team
  *
