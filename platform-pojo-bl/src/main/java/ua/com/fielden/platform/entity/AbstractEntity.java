@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -50,6 +52,8 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.annotation.factory.EntityExistsAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
@@ -336,12 +340,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Property factory is responsible for meta-property instantiation. The actual instantiation happens in the setter.
      */
-    private transient IMetaPropertyFactory metaPropertyFactory;
+    private transient java.util.Optional<IMetaPropertyFactory> metaPropertyFactory = empty();
 
     /**
-     * Preferred property should be used by custom logic to set what property is from certain perspective is preferred. The original requirement for this was due to custom logic
-     * driven determination as to what property should be focused by default on an entity master. So, depending where in the business process an entity was instantiated would
-     * determine what of its properties should be facused by default.
+     * Preferred property should be used by custom logic to set what property is from certain perspective is preferred. 
+     * The original requirement for this was due to custom logic driven determination as to what property should be focused by default on an entity master. 
+     * So, the place where in the application logic an entity was instantiated can determine which of its properties should be focused by default.
      */
     private transient String preferredProperty;
 
@@ -360,17 +364,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
         keyType = (Class<K>) AnnotationReflector.getKeyType(this.getClass());
         if (keyType == null) {
-            throw new IllegalStateException("Type " + this.getClass().getName() + " is not fully defined.");
+            throw new EntityDefinitionException(format("Entity [%s] is not fully defined -- key type is missing.", actualEntityType.getName()));
         }
 
         if(!(this instanceof ActivatableAbstractEntity) && getType().isAnnotationPresent(DeactivatableDependencies.class)) {
-            throw new IllegalStateException("Non-activatable entity cannot have deactivatable dependencies.");
+            throw new EntityDefinitionException(format("Non-activatable entity [%s] cannot have deactivatable dependencies.", actualEntityType.getName()));
         }
 
 
         logger = Logger.getLogger(this.getType());
 
-        compositeKey = DynamicEntityKey.class.equals(keyType); //Finder.getKeyMembers(getType()).size() > 1;
+        compositeKey = DynamicEntityKey.class.equals(keyType);
         if (hasCompositeKey()) {
             setKey((K) new DynamicEntityKey((AbstractEntity<DynamicEntityKey>) this));
         }
@@ -518,10 +522,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @Override
     public final synchronized void addPropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
         if (listener == null) {
-            throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
+            throw new EntityException(format("Property change listener for property [%s] in entity [%s] cannot be null.", propertyName, getType().getName()));
         }
         if (!isObservable(propertyName)) {
-            throw new IllegalArgumentException("Cannot register PropertyChangeListener with non-observable property '" + propertyName + "'.");
+            throw new EntityException(format("Cannot register a property change listener for a non-observable property [%s] in entity [%s].",  propertyName, getType().getName()));
         }
         changeSupport.addPropertyChangeListener(propertyName, listener);
     }
@@ -595,7 +599,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         try {
             return Finder.findFieldValueByName(this, propertyName);
         } catch (final Exception e) {
-            throw new IllegalArgumentException("Could not get the value for property " + propertyName + " for instance " + this + "@" + getType().getName(), e);
+            throw new EntityException(format("Could not get the value for property [%s] in instance [%s]@[%s].", propertyName , this, getType().getName()), e);
         }
     }
 
@@ -622,7 +626,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             setter.setAccessible(isAccessible);
             return this;
         } catch (final Exception e) {
-            throw new IllegalStateException(format("Error setting value '%s' into property '%s' for entity `%s'.", value, propertyName, this), e);
+            throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e);
         }
     }
 
@@ -634,11 +638,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     @Override
     public final <T> MetaProperty<T> getProperty(final String name) {
-        return (MetaProperty<T>) properties.get(name);
-    }
-
-    public final IMetaPropertyFactory getPropertyFactory() {
-        return metaPropertyFactory;
+        return (MetaProperty<T>) getProperties().get(name);
     }
 
     /**
@@ -652,12 +652,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         beginInitialising();
         ///logger.debug("Starting meta construction with factory " + metaPropertyFactory + " for type " + getType());
         // if meta-property factory has already been assigned it should not change
-        if (this.metaPropertyFactory != null) {
+        if (this.metaPropertyFactory.isPresent()) {
             logger.error("Property factory can be assigned only once.");
-            throw new IllegalStateException("Property factory can be assigned only once.");
+            throw new EntityException("Property factory can be assigned only once.");
         }
 
-        this.metaPropertyFactory = metaPropertyFactory;
+        this.metaPropertyFactory = of(metaPropertyFactory);
         final List<Field> keyMembers = Finder.getKeyMembers(getType());
 
         // obtain field annotated as properties
@@ -683,29 +683,26 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 // perform some early runtime validation whether property was defined correctly
                 // TODO this kind of validation should really be implemented as part of the compilation process
                 if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
-                    final String error = "Property " + field.getName() + " in " + getType()
-                            + " is collectional (or property descriptor), but has missing type argument, which should be specified as part of annotation IsProperty.";
+                    final String error = format("Property [%s] in [%s] is collectional (or a property descriptor), but has missing type argument, which should be specified as part of annotation @IsProperty.",
+                            field.getName(), getType().getName());
                     logger.error(error);
-                    throw new IllegalStateException(error);
+                    throw new EntityDefinitionException(error);
                 }
 
                 final Class<? extends AbstractEntity<?>> entityType = getType();
                 if (isCollectional && EntityUtils.isPersistedEntityType(entityType) && !Finder.hasLinkProperty(entityType, field.getName())) {
-                    final String error = "Property "
-                            + field.getName()
-                            + " in "
-                            + getType()
-                            + " is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.";
+                    final String error = format("Property [%s] in entity [%s] is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.",
+                            field.getName(), getType().getName());
                     logger.error(error);
-                    throw new IllegalStateException(error);
+                    throw new EntityDefinitionException(error);
                 }
 
                 if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY))
                         && !Finder.isOne2One_association(entityType, field.getName())) {
-                    final String error = "Property " + field.getName() + " in " + getType()
-                            + " has AE key type, but it does not form correct one2one association due to non-parent type of property key.";
+                    final String error = format("Property [%s] in entity [%s] has AE key type, but it does not form correct one2one association due to non-parent type of property key.",
+                            field.getName(), getType().getName());
                     logger.error(error);
-                    throw new IllegalStateException(error);
+                    throw new EntityDefinitionException(error);
                 }
 
                 // if setter is annotated then try to instantiate specified validator
@@ -740,7 +737,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 properties.put(field.getName(), metaProperty);
             } catch (final Exception e) {
                 logger.error("Entity instantiation failed.", e);
-                throw new IllegalStateException(e); // entity without properly generated met-properties is considered to be in illegal state
+                throw new EntityException(format("Instantiation of entity [%s] has failed (see cause for more details).", getType().getName()), e);
             }
         }
         endInitialising();
@@ -803,7 +800,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
 
                 if (annotationValidators.length != 1) {
-                    throw new IllegalStateException(format("Unexpexted number of EntityExists validators (expected 1, but actual %s) during entity \"%s\" instantiation.", annotationValidators.length, getType().getName()));
+                    throw new EntityDefinitionException(format("Unexpexted number of @EntityExists annotations (expected 1, but actual %s) for property [%s] in entity [%s].", annotationValidators.length, field.getType(), getType().getName()));
                 }
 
                 propertyValidationAnotations.add(eeAnnotation);
@@ -911,9 +908,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             final String[] dependentPropertyNames = AnnotationReflector.getAnnotation(field, Dependent.class).value();
             for (final String propName : dependentPropertyNames) {
                 if (!allFieldsNames.contains(propName)) {
-                    throw new IllegalArgumentException("There is no dependent property [" + propName + "].");
+                    throw new EntityDefinitionException(format("There is no dependent property [%s] in entity [%s].", propName, getType().getName()));
                 } else if (propName.equals(field.getName())) {
-                    throw new IllegalArgumentException("The property [" + propName + "] cannot be dependent to itself.");
+                    throw new EntityDefinitionException(format("Self-dependency is discovered for property [%s] in entity [%s].", propName, getType().getName()));
                 }
             }
             return dependentPropertyNames;
@@ -939,9 +936,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         // if field represents a collectional property then it may have other mutators
         if (isCollectional) {
             // try to obtain incrementor
-            propertyValidationAnotations.addAll(extractIncrementorAnnotations(field, type));
+            propertyValidationAnotations.addAll(extractCollectionalPropIncrementorAnnotations(field, type));
             // try to obtain decrementor
-            propertyValidationAnotations.addAll(extractDecrementorAnnotations(field, type));
+            propertyValidationAnotations.addAll(extractCollectionalPropDecrementorAnnotations(field, type));
         }
         return propertyValidationAnotations;
     }
@@ -954,13 +951,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private Set<Annotation> extractDecrementorAnnotations(final Field field, final Class<?> type) {
+    private Set<Annotation> extractCollectionalPropDecrementorAnnotations(final Field field, final Class<?> type) {
         try {
-            final Method decrementor = Reflector.getMethod(/* getType() */this, "removeFrom" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
+            final Method decrementor = Reflector.getMethod(this, "removeFrom" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
             final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
             if (annotations.size() > 0 && AnnotationReflector.getAnnotation(decrementor, Observable.class) == null) {
-                throw new IllegalStateException("Property " + field.getName() + " in " + getType()
-                        + " requires validation, but corresponding decrementor is not observable (no Observable annotation).");
+                throw new EntityDefinitionException(format("Collectional property [%s] in entity [%s] requires validation, but its decrementor [%s] is not observable (missing @Observable).",
+                        field.getName(), getType().getName(), decrementor.getName()));
             }
             return annotations;
         } catch (final NoSuchMethodException e) {
@@ -977,13 +974,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private Set<Annotation> extractIncrementorAnnotations(final Field field, final Class<?> type) {
+    private Set<Annotation> extractCollectionalPropIncrementorAnnotations(final Field field, final Class<?> type) {
         try {
             final Method incremetor = Reflector.getMethod(/* getType() */this, "addTo" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
             final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
             if (annotations.size() > 0 && AnnotationReflector.getAnnotation(incremetor, Observable.class) == null) {
-                throw new IllegalStateException("Property " + field.getName() + " in " + getType()
-                        + " requires validation, but corresponding incremetor is not observable (no Observable annotation).");
+                throw new EntityDefinitionException(format("Collectional property [%s] in entity [%s] requires validation, but its incremetor [%s] is not observable (missing @Observable).",
+                        field.getName(), getType().getName(), incremetor.getName()));
             }
             return annotations;
         } catch (final NoSuchMethodException e1) {
@@ -1004,16 +1001,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         try {
             final Method setter = Reflector.getMethod(this, "set" + Character.toUpperCase(field.getName().charAt(0)) + field.getName().substring(1), type);
             if (AnnotationReflector.getAnnotation(setter, Observable.class) == null) {
-                final String errorMsg = "Setter " + setter.getName() + " for property " + field.getName() + " is not observable (no Observable annotation).";
+                final String errorMsg = format("Setter [%s] for property [%s] in entity [%s] is not observable (missing @Observable).", setter.getName(), field.getName(), getType().getName());
                 logger.error(errorMsg);
-                throw new IllegalStateException(errorMsg);
+                throw new EntityDefinitionException(errorMsg);
             }
             final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(setter);
             //logger.debug("Number of validation annotations for property " + field.getName() + ": " + annotations.size());
             return annotations;
-        } catch (final NoSuchMethodException e1) {
+        } catch (final NoSuchMethodException e) {
             // do nothing if setter does not exist
-            logger.debug(format("There is no setter for property [%s].", field.getName()));
+            logger.debug(format("There is no setter for property [%s] in entity [%s].", field.getName(), getType().getName()));
         }
         return new HashSet<>();
     }
@@ -1040,9 +1037,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     public final Map<String, MetaProperty<?>> getProperties() {
+        assertInstrumented();
         return Collections.unmodifiableMap(properties);
     }
 
+    /**
+     * Throws {@link EntityException} if this instance is not instrumented.
+     */
+    public final void assertInstrumented() {
+        if (!metaPropertyFactory.isPresent()) {
+            throw new EntityException(format("Meta-properties for this instance of entity [%s] do not exist as it was not instrumented.", getType().getName()));
+        }
+    }
+    
     /**
      * Increases <code>lockCount</code> by one in a thread safe manner.
      */
@@ -1370,7 +1377,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     public void setPreferredProperty(final String preferredProperty) {
         if (!EntityUtils.isProperty(getType(), preferredProperty)) {
-            throw new IllegalArgumentException("Value \"" + preferredProperty + "\" is not a valid property for type " + getType().getName() + ".");
+            throw new EntityException(format("The specified property name [%s] does not represent a valid property for type [%s].", preferredProperty, getType().getName()));
         }
         this.preferredProperty = preferredProperty;
     }
