@@ -145,7 +145,7 @@ public final class EntitySerialiser extends Serializer {
                 final String name = prop.field.getName();
                 lastProperty = name;
                 final Object value = prop.field.get(entity);
-                final boolean dirty = entity.getProperty(name) == null ? false : entity.getProperty(name).isDirty();
+                final boolean dirty = !entity.getPropertyOptionally(name).isPresent() ? false : entity.getProperty(name).isDirty();
 
                 if (prop.propertyType != null) {
                     if (prop.serialiser == null) {
