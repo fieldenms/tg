@@ -28,9 +28,35 @@ public class DefinersExecutorTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
+    
+    @Test
+    public void definers_execute_firstly_for_key_member_entity_of_root_and_then_for_root_properties_in_order_of_their_definition() {
+        final TgDefinersExecutorCompositeKeyMember grandParent = factory.newEntity(TgDefinersExecutorCompositeKeyMember.class, 1L);
+        grandParent.beginInitialising();
+        grandParent.setKey("grand1");
+        grandParent.setPropWithHandler("PropWithHandler value");
+        
+        final TgDefinersExecutorParent parent = factory.newEntity(TgDefinersExecutorParent.class, 1L);
+        parent.beginInitialising();
+        parent.setKeyMember1(grandParent);
+        parent.setKeyMember2("parent1");
+        
+        DefinersExecutor.execute(parent);
+        
+        System.out.println(grandParent.getHandledProperties());
+        assertEquals(
+                    Arrays.asList(
+                        pair("", "propWithHandler"),
+                        pair("keyMember1", "collectionWithHandler"),
+                        pair("keyMember1", "propWithHandler")
+                    ),
+                    grandParent.getHandledProperties()
+                );
+    }
+    
 
     @Test
-    public void reconstruction_of_fetch_model_without_sub_models_should_succeed() {
+    public void definers_execute_firstly_for_key_member_entity_of_root_and_then_for_collection_items_of_collection_property_and_then_for_collection_itself_and_for_next_property_defined_after_collection() {
         final TgDefinersExecutorCompositeKeyMember grandParent = factory.newEntity(TgDefinersExecutorCompositeKeyMember.class, 1L);
         grandParent.beginInitialising();
         grandParent.setKey("grand1");
@@ -65,9 +91,55 @@ public class DefinersExecutorTest {
                         pair("member1.keyMember1", "member2[grand1 parent1 2]"),
                         pair("keyMember1", "collectionWithHandler"),
                         pair("keyMember1", "propWithHandler")
-                    ).toString(),
-                    grandParent.getHandledProperties().toString()
+                    ),
+                    grandParent.getHandledProperties()
                 );
     }
     
+    @Test
+    public void definers_execute_firstly_for_key_member_entity_of_root_and_then_no_definers_execute_if_root_is_not_instrumented() {
+        final TgDefinersExecutorCompositeKeyMember grandParent = factory.newEntity(TgDefinersExecutorCompositeKeyMember.class, 1L);
+        grandParent.beginInitialising();
+        grandParent.setKey("grand1");
+        grandParent.setPropWithHandler("PropWithHandler value");
+        
+        final TgDefinersExecutorParent parent = factory.newPlainEntity(TgDefinersExecutorParent.class, 1L);
+        parent.beginInitialising();
+        parent.setKeyMember1(grandParent);
+        parent.setKeyMember2("parent1");
+        
+        DefinersExecutor.execute(parent);
+        
+        System.out.println(grandParent.getHandledProperties());
+        assertEquals(
+                    Arrays.asList(
+                        pair("", "propWithHandler")
+                    ),
+                    grandParent.getHandledProperties()
+                );
+    }
+    
+    @Test
+    public void definers_execute_for_root_properties_in_order_of_their_definition_and_no_composite_member_definers_execute_if_it_is_not_instrumented() {
+        final TgDefinersExecutorCompositeKeyMember grandParent = factory.newPlainEntity(TgDefinersExecutorCompositeKeyMember.class, 1L);
+        grandParent.beginInitialising();
+        grandParent.setKey("grand1");
+        grandParent.setPropWithHandler("PropWithHandler value");
+        
+        final TgDefinersExecutorParent parent = factory.newEntity(TgDefinersExecutorParent.class, 1L);
+        parent.beginInitialising();
+        parent.setKeyMember1(grandParent);
+        parent.setKeyMember2("parent1");
+        
+        DefinersExecutor.execute(parent);
+        
+        System.out.println(grandParent.getHandledProperties());
+        assertEquals(
+                    Arrays.asList(
+                        pair("keyMember1", "collectionWithHandler"),
+                        pair("keyMember1", "propWithHandler")
+                    ),
+                    grandParent.getHandledProperties()
+                );
+    }
 }
