@@ -21,6 +21,8 @@ import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.EntityDeleteAction;
+import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -163,6 +165,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         icon("add-circle-outline").
                         shortDesc("Add new").
                         longDesc("Start continuous creation of entities").
+                        build())
+                .also()
+                .addTopAction(action(EntityDeleteAction.class).
+                        withContext(context().withSelectedEntities().build()).
+                        icon("remove-circle-outline").
+                        shortDesc("Delete selected").
+                        longDesc("Deletes the selected entities").
                         build())
                 .addCrit("property").asMulti().text().also()
                 .addCrit("dependentProp").asMulti().text()
@@ -519,6 +528,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityMaster<NewEntityAction> functionalMasterWithEmbeddedPersistentMaster =  NewEntityActionWebUiConfig.createMaster(injector(), entityMaster);
         final EntityMaster<EntityNewAction> entityNewActionMaster = EntityManipulationWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> entityEditActionMaster = EntityManipulationWebUiConfig.createEntityEditMaster(injector());
+        final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
 
 
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
@@ -526,6 +536,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().
             addMaster(EntityNewAction.class, entityNewActionMaster).
             addMaster(EntityEditAction.class, entityEditActionMaster).
+            addMaster(EntityDeleteAction.class, entityDeleteActionMaster).
             addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
             addMaster(NewEntityAction.class, functionalMasterWithEmbeddedPersistentMaster).
@@ -918,14 +929,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 icon("add-circle-outline").
                                 shortDesc("Add new").
                                 longDesc("Start coninuous creatio of entities").
-                                build()
-                //                        action(NewEntityAction.class).
-                //                                withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
-                //                                icon("add-circle").
-                //                                shortDesc("Add new").
-                //                                longDesc("Start coninuous creatio of entities").
-                //                                build()
-                ).also()
+                                build())
+                .also()
+                .addTopAction(action(EntityDeleteAction.class).
+                        withContext(context().withSelectedEntities().build()).
+                        icon("remove-circle-outline").
+                        shortDesc("Delete selected").
+                        longDesc("Deletes the selected entities").
+                        build())
+                .also()
                 .addTopAction(action(NewEntityAction.class).
                         withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
                         icon("add-circle").

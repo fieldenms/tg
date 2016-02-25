@@ -6,6 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -57,5 +58,6 @@ public class PlatformDomainTypes {
         types.add(MasterInDialogInvocationFunctionalEntity.class);
         types.add(EntityNewAction.class);
         types.add(EntityEditAction.class);
+        types.add(EntityDeleteAction.class);
     }
 }
