@@ -30,16 +30,16 @@ import ua.com.fielden.platform.utils.EntityUtils;
 @KeyType(DynamicEntityKey.class)
 public class TgDefinersExecutorParent extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = -5945674491809287858L;
+
+    @IsProperty(TgDefinersExecutorCollectionalChild.class)
+    @AfterChange(TgDefinersExecutorParentHandlerForCollection.class)
+    private Set<TgDefinersExecutorCollectionalChild> collectionWithHandler = new HashSet<TgDefinersExecutorCollectionalChild>();
     
     @IsProperty
     @MapTo
     @Title(value = "Prop with handler", desc = "Desc")
     @AfterChange(TgDefinersExecutorParentHandler.class)
     private String propWithHandler;
-    
-    @IsProperty(TgDefinersExecutorCollectionalChild.class)
-    @AfterChange(TgDefinersExecutorParentHandlerForCollection.class)
-    private Set<TgDefinersExecutorCollectionalChild> collectionWithHandler = new HashSet<TgDefinersExecutorCollectionalChild>();
 
     @IsProperty
     @MapTo
@@ -62,7 +62,7 @@ public class TgDefinersExecutorParent extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    protected TgDefinersExecutorParent setCollectionWithHandler(final Set<TgDefinersExecutorCollectionalChild> collectionWithHandler) {
+    public TgDefinersExecutorParent setCollectionWithHandler(final Set<TgDefinersExecutorCollectionalChild> collectionWithHandler) {
         this.collectionWithHandler.clear();
         this.collectionWithHandler.addAll(collectionWithHandler);
         return this;
