@@ -100,7 +100,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
         final TgBogie bogie = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
         assertEquals(workshop, bogie.getLocation().activeEntity());
 
-        final fetch<TgBogie> expectedFetch = fetchAll(TgBogie.class).with("location", fetchAll(TgBogieLocation.class));
+        final fetch<TgBogie> expectedFetch = fetchAndInstrument(TgBogie.class).with("location", fetchAndInstrument(TgBogieLocation.class));
         final fetch<TgBogie> reconFetch = FetchModelReconstructor.reconstruct(bogie);
         
         assertSuperSet(expectedFetch, reconFetch);
