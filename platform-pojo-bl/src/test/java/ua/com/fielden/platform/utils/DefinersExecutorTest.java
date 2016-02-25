@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -14,6 +15,8 @@ import ua.com.fielden.platform.sample.domain.TgDefinersExecutorCompositeKeyMembe
 import ua.com.fielden.platform.sample.domain.TgDefinersExecutorParent;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import static ua.com.fielden.platform.utils.Pair.pair;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test case for {@link DefinersExecutor}.
@@ -55,6 +58,16 @@ public class DefinersExecutorTest {
         DefinersExecutor.execute(parent);
         
         System.out.println(grandParent.getHandledProperties());
+        assertEquals(
+                    Arrays.asList(
+                        pair("", "propWithHandler"),
+                        pair("member1.keyMember1", "member2[grand1 parent1 1]"),
+                        pair("member1.keyMember1", "member2[grand1 parent1 2]"),
+                        pair("keyMember1", "collectionWithHandler"),
+                        pair("keyMember1", "propWithHandler")
+                    ).toString(),
+                    grandParent.getHandledProperties().toString()
+                );
     }
     
 }

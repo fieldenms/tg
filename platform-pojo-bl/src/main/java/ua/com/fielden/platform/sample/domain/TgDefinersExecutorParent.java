@@ -1,13 +1,11 @@
 package ua.com.fielden.platform.sample.domain;
 
 import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -17,7 +15,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.utils.DefinersExecutorTest;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Parent entity for {@link DefinersExecutorTest}.
@@ -33,7 +30,7 @@ public class TgDefinersExecutorParent extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty(TgDefinersExecutorCollectionalChild.class)
     @AfterChange(TgDefinersExecutorParentHandlerForCollection.class)
-    private Set<TgDefinersExecutorCollectionalChild> collectionWithHandler = new HashSet<TgDefinersExecutorCollectionalChild>();
+    private Set<TgDefinersExecutorCollectionalChild> collectionWithHandler = new LinkedHashSet<TgDefinersExecutorCollectionalChild>();
     
     @IsProperty
     @MapTo
