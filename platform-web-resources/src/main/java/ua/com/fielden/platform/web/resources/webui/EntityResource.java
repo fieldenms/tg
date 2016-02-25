@@ -140,7 +140,16 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     }
                     final AbstractEntity<?> funcEntity = EntityResource.restoreEntityFrom(savingInfoHolder, funcEntityType, utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
 
-                    final T entity = utils.createValidationPrototypeWithContext(null, null, null, null, funcEntity);
+                    //TODO this is temporal experimental code
+                    final Long intendedId;
+                    if (funcEntity.getProperty("entityId") != null) {
+                        final String idStr = (String) funcEntity.get("entityId");
+                        intendedId = "new".equals(idStr) ? null : Long.valueOf(idStr);
+                    } else {
+                        intendedId = null;
+                    }
+                    //////////////////////////////////////
+                    final T entity = utils.createValidationPrototypeWithContext(intendedId, null, null, null, intendedId == null ? funcEntity : null);
                     return restUtil.rawListJSONRepresentation(entity);
                 } else {
                     final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);

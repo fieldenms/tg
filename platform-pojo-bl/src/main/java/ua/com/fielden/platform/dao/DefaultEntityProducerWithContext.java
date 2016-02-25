@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.dao;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -42,16 +45,16 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
         //      Currently it is not know as to why this is the case.
 //        if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
 //            final AbstractFunctionalEntityWithCentreContext<?> funEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
-//
+//            
 //            if (getCentreContext() != null) {
 //                funEntity.setContext(getCentreContext());
 //            }
-//
+//            
 //            if (!StringUtils.isEmpty(getChosenProperty())) {
 //                funEntity.setChosenProperty(getChosenProperty());
 //            }
 //        }
-
+        
         if (companion != null) {
             provideProxies(entity, companion.getFetchProvider());
         }
@@ -97,7 +100,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
         return masterEntity;
     }
 
-    public void setMasterEntity(final AbstractEntity<?> masterEntity) {
+    public void setMasterEntity(AbstractEntity<?> masterEntity) {
         this.masterEntity = masterEntity;
     }
 
@@ -131,7 +134,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
         return compoundMasterEntityId;
     }
 
-    public void setCompoundMasterEntityId(final Long compoundMasterEntityId) {
+    public void setCompoundMasterEntityId(Long compoundMasterEntityId) {
         this.compoundMasterEntityId = compoundMasterEntityId;
     }
 }
