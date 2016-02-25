@@ -8,6 +8,9 @@ public class TgDefinersExecutorCompositeKeyMemberHandler implements IAfterChange
     @Override
     public void handle(final MetaProperty<String> property, final String entityPropertyValue) {
         System.out.println("handle [" + property + "] in type [" + property.getEntity().getClass().getSimpleName() + "] for value " + entityPropertyValue);
+        
+        final TgDefinersExecutorCompositeKeyMember grandParent = (TgDefinersExecutorCompositeKeyMember) property.getEntity();
+        grandParent.addHandledProperty("", property.getName());
     }
 
 }

@@ -10,6 +10,10 @@ public class TgDefinersExecutorParentHandlerForCollection implements IAfterChang
     @Override
     public void handle(final MetaProperty<Set<TgDefinersExecutorCollectionalChild>> property, final Set<TgDefinersExecutorCollectionalChild> entityPropertyValue) {
         System.out.println("handle [" + property + "] in type [" + property.getEntity().getClass().getSimpleName() + "] for value " + entityPropertyValue);
+        
+        final TgDefinersExecutorParent parent = (TgDefinersExecutorParent) property.getEntity();
+        final TgDefinersExecutorCompositeKeyMember grandParent = parent.getKeyMember1();
+        grandParent.addHandledProperty("keyMember1", property.getName());
     }
 
 }

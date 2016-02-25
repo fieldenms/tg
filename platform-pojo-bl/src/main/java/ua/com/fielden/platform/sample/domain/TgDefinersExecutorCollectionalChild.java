@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 
 // @CompanionObject(IDriverImportRowError.class)
 @KeyType(DynamicEntityKey.class)
@@ -26,6 +27,7 @@ public class TgDefinersExecutorCollectionalChild extends AbstractEntity<DynamicE
     @MapTo
     @Title(value = "Second member", desc = "Desc")
     @CompositeKeyMember(2)
+    @AfterChange(TgDefinersExecutorCollectionalChildHandler.class)
     private String member2;
 
     @Observable

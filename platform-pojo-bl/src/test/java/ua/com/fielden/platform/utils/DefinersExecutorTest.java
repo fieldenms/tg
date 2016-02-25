@@ -30,6 +30,7 @@ public class DefinersExecutorTest {
     public void reconstruction_of_fetch_model_without_sub_models_should_succeed() {
         final TgDefinersExecutorCompositeKeyMember grandParent = factory.newEntity(TgDefinersExecutorCompositeKeyMember.class, 1L);
         grandParent.beginInitialising();
+        grandParent.setKey("grand1");
         grandParent.setPropWithHandler("PropWithHandler value");
         
         final TgDefinersExecutorParent parent = factory.newEntity(TgDefinersExecutorParent.class, 1L);
@@ -52,6 +53,8 @@ public class DefinersExecutorTest {
         parent.setCollectionWithHandler(collectionWithHandler);
         
         DefinersExecutor.execute(parent);
+        
+        System.out.println(grandParent.getHandledProperties());
     }
     
 }
