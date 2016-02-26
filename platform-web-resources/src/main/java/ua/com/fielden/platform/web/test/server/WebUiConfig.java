@@ -974,7 +974,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 }).
                                 icon("assignment-ind").
                                 shortDesc("Function 1").
-                                longDesc("Functional context-dependent action 1").
+                                //longDesc("Functional context-dependent action 1").
                                 prefDimForView(mkDim(300, 200)).
                                 build()
                 )

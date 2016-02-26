@@ -1,10 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<!-- <link rel="import" href="/app/tg-reflector.html">
-<link rel="import" href="/resources/serialisation/tg-serialiser.html"> -->
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
-<!-- <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
-<link rel="import" href="/resources/components/postal-lib.html"> -->
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <dom-module id="tg-page-action">
     <template>
@@ -15,7 +12,7 @@
                 padding: var(--tg-page-action-icon-button-padding);
             }
         </style>
-        <paper-icon-button id="actionButton" icon="[[icon]]" on-tap="_run"></paper-icon-buton>
+        <paper-icon-button id="actionButton" icon="[[icon]]" on-tap="_run" tooltip-text$="[[shortDesc]]"></paper-icon-buton>
     </template>
 </dom-module>
 
@@ -126,6 +123,8 @@
             }
 
         },
+        
+        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
 
         /**
          * Initialisation block.

@@ -2,8 +2,9 @@
 
 <link rel="import" href="/app/tg-reflector.html">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
-<!-- <link rel="import" href="/resources/polymer/paper-button/paper-button.html">  -->
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">  
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 
@@ -76,8 +77,8 @@
         <tg-reflector id="reflector"></tg-reflector>
         <tg-serialiser id="serialiser"></tg-serialiser>
         
-        <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[isActionInProgress]]"></paper-icon-button>
-        <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[isActionInProgress]]">
+        <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[isActionInProgress]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
+        <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[isActionInProgress]]" tooltip-text$="[[longDesc]]">
         	<span>[[shortDesc]]</span>
         </paper-button>
 	    <paper-spinner id="spinner" active="[[isActionInProgress]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
@@ -303,6 +304,8 @@
             	value: false
             }
         },
+        
+        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
         
         /**
          * Initialisation block.

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.sample.domain;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -19,6 +20,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(ITgFunctionalEntityWithCentreContext.class)
 @DescTitle(value = "Desc", desc = "Some desc description")
+@EntityTitle(value = "Func ent title", desc = "Func entity description")
 public class TgFunctionalEntityWithCentreContext extends AbstractFunctionalEntityWithCentreContext<String> {
     private static final long serialVersionUID = 4194736013542795762L;
 

@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/actions/tg-page-action.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <dom-module id="tg-secondary-action-button">
     <style>
@@ -36,7 +37,7 @@
         }
     </style>
     <template>
-        <paper-icon-button icon="more-vert" on-tap="_showDropdown"></paper-icon-button>
+        <paper-icon-button icon="more-vert" on-tap="_showDropdown" tooltip-text="Opens list of available actions"></paper-icon-button>
         <iron-dropdown id="dropdown" style="color:black" on-tap="_closeDropdown" on-iron-overlay-opened="_dropdownOpened">
             <div class="dropdown-content">
                 <div class="layout vertical">
@@ -64,6 +65,8 @@
                  */
                 currentEntity: Object
             },
+            
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
 
             _showDropdown: function (e, detail) {
                 this.$.dropdown.open();

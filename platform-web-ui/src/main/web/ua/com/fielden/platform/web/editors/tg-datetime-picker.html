@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/moment-component.html">
 <link rel="import" href="/resources/components/tg-calendar.html">
 
@@ -82,7 +83,7 @@
         	_on-keydown="[[_onKeydown]]" 
         	current-state="[[currentState]]">
             <content class=".property-action"></content>
-            <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]"></paper-icon-buton>
+            <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
         </tg-editor>
     </template>
 </dom-module>
@@ -91,7 +92,7 @@
     (function () {
         Polymer({
             is: 'tg-datetime-picker',
-            behaviors: [Polymer.TgBehaviors.TgEditorBehavior, Polymer.IronResizableBehavior],
+            behaviors: [Polymer.TgBehaviors.TgEditorBehavior, Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
             ready: function () {
                 this.$.editorDom._editorKind = 'DATE';

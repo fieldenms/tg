@@ -5,6 +5,7 @@
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
 
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
 
@@ -53,12 +54,12 @@
                         </div>
                         <div class="layout horizontal justified" style="margin-top:24px;">
                             <div class="layout horizontal">
-                                <paper-button id="saver" raised roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]">Save</paper-button>
-                                <paper-button id="discarder" raised roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]">Discard</paper-button>
+                                <paper-button id="saver" raised roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]" tooltip-text="Save configuration">Save</paper-button>
+                                <paper-button id="discarder" raised roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard configuration">Discard</paper-button>
                             </div>
                             <div class="layout horizontal">
-                                <paper-button id="view" raised roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]">View</paper-button>
-                                <paper-button id="runner" raised roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]">Run</paper-button>
+                                <paper-button id="view" raised roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]"  tooltip-text="Show result view">View</paper-button>
+                                <paper-button id="runner" raised roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result">Run</paper-button>
                             </div>
                         </div>
                     </div>
@@ -116,6 +117,8 @@
             run: Function,
             _activateResultSetView: Function
         },
+        
+        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
 
         /**
          * The core-ajax component for centre discarding.
