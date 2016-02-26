@@ -24,8 +24,8 @@ import ua.com.fielden.platform.security.SecurityTokenControllerRao;
 import ua.com.fielden.platform.security.UserControllerRao;
 import ua.com.fielden.platform.security.UserRoleRao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
-import ua.com.fielden.platform.security.provider.IUserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -62,7 +62,7 @@ import com.google.inject.name.Names;
  * <ul>
  * <li>Applications settings (refer {@link IApplicatonSettings});
  * <li>Serialisation mechanism;
- * <li>All essential RAO interfaces such as {@link IUserProvider}, {@link IReferenceDependancyController}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUserDao},
+ * <li>All essential RAO interfaces such as {@link IUserProvider}, {@link IReferenceDependancyController}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUser},
  * {@link IAuthorisationModel} and more;
  * <li>Provides workflow sensitive application main menu configuration related bindings.
  * </ul>
@@ -112,9 +112,9 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
         // bind value matcher factory to support autocompleters and entity master factory
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
         // security and user management
-        bind(IUserDao.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
+        bind(IUser.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
         bind(IUserRoleDao.class).to(UserRoleRao.class).in(Scopes.SINGLETON);
-        bind(IUserController.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
+        bind(IUserEx.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
         bind(ISecurityTokenController.class).to(SecurityTokenControllerRao.class).in(Scopes.SINGLETON);
         bind(IAuthorisationModel.class).to(RestAuthorisationModel.class).in(Scopes.SINGLETON);
 
@@ -141,12 +141,12 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
     /**
      * {@inheritDoc}
      *
-     * Additionally, initialises the REST utility instance with {@link ISerialiser} and {@link IUserController}.
+     * Additionally, initialises the REST utility instance with {@link ISerialiser} and {@link IUserEx}.
      */
     @Override
     public void setInjector(final Injector injector) {
         super.setInjector(injector);
         restUtil.initSerialiser(injector.getInstance(ISerialiser.class));
-        restUtil.setUserController(injector.getInstance(IUserController.class));
+        restUtil.setUserController(injector.getInstance(IUserEx.class));
     }
 }

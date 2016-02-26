@@ -38,13 +38,19 @@ public class ResourceLoader {
         }
     }
 
+    /**
+     * Loads the text file content and returns it as UTF-8 string.
+     *
+     * @param pathAndFileName
+     * @return
+     */
     public static String getText(final String pathAndFileName) {
-	try {
-	    return IOUtils.toString(getURL(pathAndFileName).openStream(), "UTF-8");
-	} catch (final Exception e) {
-	    logger.error(e.getMessage() + " for path: " + pathAndFileName);
-	    return null;
-	}
+        try {
+            return IOUtils.toString(getURL(pathAndFileName).openStream(), "UTF-8");
+        } catch (final Exception e) {
+            logger.error(e.getMessage() + " for path: " + pathAndFileName);
+            return null;
+        }
     }
 
     /**
@@ -54,7 +60,7 @@ public class ResourceLoader {
      * @return
      */
     public static boolean exist(final String pathAndFileName) {
-	return getURL(pathAndFileName) != null;
+        return getURL(pathAndFileName) != null;
     }
 
     /**
@@ -64,12 +70,12 @@ public class ResourceLoader {
      * @return
      */
     public static InputStream getStream(final String pathAndFileName) {
-	try {
-	   return getURL(pathAndFileName).openStream();
-	} catch (final Exception e) {
-	    logger.error(e.getMessage() + " for path: " + pathAndFileName);
-	    return null;
-	}
+        try {
+            return getURL(pathAndFileName).openStream();
+        } catch (final Exception e) {
+            logger.error(e.getMessage() + " for path: " + pathAndFileName);
+            return null;
+        }
     }
 
     public static URL getURL(final String pathAndFileName) {

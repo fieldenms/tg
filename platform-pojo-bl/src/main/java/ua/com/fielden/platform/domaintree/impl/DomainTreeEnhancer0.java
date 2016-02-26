@@ -83,7 +83,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         this.originalAndEnhancedRootTypesAndArrays.putAll(createOriginalAndEnhancedRootTypesAndArraysFromRootTypes(rootTypes));
 
         // complement a map with enhanced types. A new instance of classLoader is needed for loading enhanced "byte arrays".
-        final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         for (final Entry<Class<?>, Map<String, ByteArray>> entry : originalTypesAndEnhancedArrays.entrySet()) {
             final Map<String, ByteArray> arrays = Collections.unmodifiableMap(entry.getValue());
             if (arrays.isEmpty()) {
@@ -155,7 +155,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
      */
     protected static Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> generateHierarchy(final Set<Class<?>> rootTypes, final Map<Class<?>, List<CalculatedProperty>> calculatedProperties) {
         // single classLoader instance is needed for single "apply" transaction
-        final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         final Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypes = createOriginalAndEnhancedRootTypesAndArraysFromRootTypes(rootTypes);
         final Map<Class<?>, Map<String, Map<String, CalculatedProperty>>> groupedCalculatedProperties = groupByPaths(calculatedProperties, rootTypes);
 
@@ -347,7 +347,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
      */
     private static List<CalculatedProperty> reload(final Class<?> type, final Class<?> root, final String path, final DomainTreeEnhancer0 dte, final boolean validateTitleContextOfExtractedProperties) {
         final List<CalculatedProperty> newCalcProperties = new ArrayList<CalculatedProperty>();
-        if (!DynamicEntityClassLoader.isEnhanced(type)) {
+        if (!DynamicEntityClassLoader.isGenerated(type)) {
             return newCalcProperties;
         } else {
             // add all first level calculated properties if any exist
@@ -448,6 +448,11 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     @Override
     public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
         return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, contextualExpression, title, desc, attribute, originationProperty, this));
+    }
+
+    @Override
+    public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
+        return addCalculatedProperty(CalculatedProperty.createCorrect(getFactory(), root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, this));
     }
 
     @Override
@@ -607,5 +612,15 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
     @Override
     public EntityFactory getFactory() {
         return super.getFactory();
+    }
+
+    @Override
+    public IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type) {
+        throw new UnsupportedOperationException("Need not to be supported in deprecated enhancer0.");
+    }
+
+    @Override
+    public Map<Class<?>, List<CustomProperty>> customProperties() {
+        throw new UnsupportedOperationException("Need not to be supported in deprecated enhancer0.");
     }
 }

@@ -22,8 +22,8 @@ import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionRao;
 import ua.com.fielden.platform.security.UserControllerRao;
 import ua.com.fielden.platform.security.UserRoleRao;
-import ua.com.fielden.platform.security.provider.IUserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -34,7 +34,7 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
 
     private final IUserRoleDao userRoleRao = new UserRoleRao(config.restClientUtil());
-    private final IUserController userControllerRao = new UserControllerRao(userRoleRao, config.restClientUtil());
+    private final IUserEx userControllerRao = new UserControllerRao(userRoleRao, config.restClientUtil());
     private final IUserAndRoleAssociationBatchAction associationRao = new UserAndRoleAssociationBatchActionRao(config.restClientUtil());
 
     @Test
@@ -110,7 +110,7 @@ public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
 
         final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
         helper.register(router, IUserRoleDao.class);
-        helper.register(router, IUserDao.class);
+        helper.register(router, IUser.class);
         helper.register(router, IUserAndRoleAssociationBatchAction.class);
 
         return router;

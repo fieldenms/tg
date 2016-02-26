@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -201,11 +202,13 @@ public final class AnnotationReflector {
      * Important : overridden methods resolves as different. (e.g.: both overridden "getKey()" from {@link AbstractUnionEntity} and original "getKey()" from {@link AbstractEntity}
      * will be returned for {@link AbstractUnionEntity} descendant)
      *
+     *
+     *
      * @param type
-     * @param annotation
+     * @param annotation -- optional annotation argument; if empty arugment is provided then all methods of the specified type are returned
      * @return
      */
-    public static List<Method> getMethodsAnnotatedWith(final Class<?> type, final Class<? extends Annotation> annotation) {
+    public static List<Method> getMethodsAnnotatedWith(final Class<?> type, final Optional<Class<? extends Annotation>> annotation) {
         final List<Method> methods = new ArrayList<Method>();
         Class<?> klass = type;
         while (klass != Object.class) { // need to iterated thought hierarchy in order to retrieve methods from above the current instance
@@ -215,7 +218,7 @@ public final class AnnotationReflector {
                 allMethods.addAll(AbstractUnionEntity.commonMethods((Class<? extends AbstractUnionEntity>) klass));
             }
             for (final Method method : allMethods) {
-                if (!method.isBridge() && (annotation == null || AnnotationReflector.isAnnotationPresent(method, annotation))) {
+                if (!method.isBridge() && (!annotation.isPresent() || AnnotationReflector.isAnnotationPresent(method, annotation.get()))) {
                     methods.add(method);
                 }
             }
@@ -233,7 +236,7 @@ public final class AnnotationReflector {
      * @return
      */
     public static boolean isClassHasMethodAnnotatedWith(final Class<?> type, final Class<? extends Annotation> annotation) {
-        return getMethodsAnnotatedWith(type, annotation).size() != 0;
+        return getMethodsAnnotatedWith(type, Optional.of(annotation)).size() != 0;
     }
 
     /**
@@ -248,7 +251,7 @@ public final class AnnotationReflector {
      * @return
      */
     public static List<Method> getMethods(final Class<?> type) {
-        return getMethodsAnnotatedWith(type, null);
+        return getMethodsAnnotatedWith(type, Optional.empty());
     }
 
     /**

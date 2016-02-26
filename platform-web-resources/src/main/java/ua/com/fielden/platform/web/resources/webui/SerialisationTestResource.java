@@ -1,31 +1,37 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getChangedFromOriginal;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditable;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequired;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisible;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Status;
 import org.restlet.representation.Representation;
+import org.restlet.resource.Get;
 import org.restlet.resource.Post;
-import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
+import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -39,48 +45,45 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class SerialisationTestResource extends ServerResource {
     private final RestServerUtil restUtil;
-    private final List<AbstractEntity<?>> entities;
-    private final DefaultValueContract dvc;
+    private final List<AbstractEntity<?>> entities = new ArrayList<>();
 
-    public SerialisationTestResource(final EntityFactory entityFactory, final RestServerUtil restUtil, final Context context, final Request request, final Response response, final Date testingDate) {
+    public SerialisationTestResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory, final List<AbstractEntity<?>> entities) {
         init(context, request, response);
         this.restUtil = restUtil;
-        this.entities = createEntities(entityFactory, testingDate);
-        this.dvc = new DefaultValueContract();
+        this.entities.addAll(entities);
+    }
+    
+    public SerialisationTestResource(final RestServerUtil restUtil, final Context context, final Request request, final Response response, final FactoryForTestingEntities testingEntitiesFactory) {
+        this(restUtil, context, request, response, testingEntitiesFactory, createEntities(restUtil, testingEntitiesFactory));
     }
 
     /**
      * Handles receiving back serialised testing entities from the Web UI client and checking whether they are 'deep equal' to the send ones.
      */
     @Post
-    @Override
-    public Representation post(final Representation envelope) throws ResourceException {
-        try {
-            final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) restUtil.restoreJSONResult(envelope).getInstance();
+    public Representation checkEntitiesOnEqualityAndSendResult(final Representation envelope) {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+            final List<AbstractEntity<?>> entities = (List<AbstractEntity<?>>) EntityResourceUtils.restoreJSONResult(envelope, restUtil).getInstance();
 
-            final Result result = deepEqualsForTesting(this.entities, entities, this.dvc);
+            final Result result = deepEqualsForTesting(this.entities, entities);
             if (!result.isSuccessful()) {
                 throw result;
             }
             return restUtil.resultJSONRepresentation(result);
-        } catch (final Exception ex) {
-            ex.printStackTrace();
-            getResponse().setStatus(Status.CLIENT_ERROR_CONFLICT);
-            final String msg = !StringUtils.isEmpty(ex.getMessage()) ? ex.getMessage() : "Exception does not contain any specific message.";
-            //getResponse().setEntity(restUtil.errorRepresentation(msg));
-            return restUtil.errorJSONRepresentation(msg);
-        }
+        }, restUtil);
     }
 
     /**
      * Handles sending of the serialised testing entities to the Web UI client (GET method).
      */
-    @Override
-    protected Representation get() throws ResourceException {
-        return restUtil.listJSONRepresentation(this.entities);
+    @Get
+    public Representation sendSerialisedEntities() {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+            return restUtil.listJSONRepresentation(this.entities);
+        }, restUtil);
     }
 
-    private static Result deepEqualsForTesting(final List<AbstractEntity<?>> entities1, final List<AbstractEntity<?>> entities2, final DefaultValueContract dvc) {
+    private static Result deepEqualsForTesting(final List<AbstractEntity<?>> entities1, final List<AbstractEntity<?>> entities2) {
         final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities = new IdentityHashMap<>();
         if (entities1 == null) {
             if (entities2 == null) {
@@ -100,7 +103,12 @@ public class SerialisationTestResource extends ServerResource {
                     while (iter1.hasNext()) {
                         final AbstractEntity<?> e1 = iter1.next();
                         final AbstractEntity<?> e2 = iter2.next();
-                        final Result deepEquals = deepEqualsForTesting(e1, e2, setOfCheckedEntities, dvc);
+                        final boolean e1Instrumented = e1 == null ? false : PropertyTypeDeterminator.isInstrumented(e1.getClass());
+                        final boolean e2Instrumented = e2 == null ? false : PropertyTypeDeterminator.isInstrumented(e2.getClass());
+                        if (e1Instrumented != e2Instrumented) {
+                            return Result.failure(format("e1's [%s] instrumentation [%s] does not equal to e2's [%s] instrumentation [%s].", e1, e1Instrumented, e2, e2Instrumented));
+                        }
+                        final Result deepEquals = deepEqualsForTesting(e1, e2, setOfCheckedEntities);
                         if (!deepEquals.isSuccessful()) {
                             return deepEquals;
                         }
@@ -111,7 +119,7 @@ public class SerialisationTestResource extends ServerResource {
         }
     }
 
-    private static Result deepEqualsForTesting(final AbstractEntity<?> e1, final AbstractEntity<?> e2, final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities, final DefaultValueContract dvc) {
+    private static Result deepEqualsForTesting(final AbstractEntity<?> e1, final AbstractEntity<?> e2, final IdentityHashMap<AbstractEntity<?>, String> setOfCheckedEntities) {
         if (e1 == null) {
             if (e2 == null) {
                 return Result.successful(e1);
@@ -148,26 +156,27 @@ public class SerialisationTestResource extends ServerResource {
                     final String propName = prop.field().getName();
                     if (prop.getPropertyType() != null) {
                         // check property meta-info equality
-                        final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName), dvc);
+                        final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName));
                         if (!metaPropEq.isSuccessful()) {
                             return metaPropEq;
                         }
                         // check property value equality
                         if (EntityUtils.isEntityType(prop.getPropertyType())) {
-                            final Result eq = deepEqualsForTesting((AbstractEntity<?>) e1.get(propName), (AbstractEntity<?>) e2.get(propName), setOfCheckedEntities, dvc);
+                            final Result eq = deepEqualsForTesting((AbstractEntity<?>) e1.get(propName), (AbstractEntity<?>) e2.get(propName), setOfCheckedEntities);
                             if (!eq.isSuccessful()) {
                                 return eq;
                             }
                         } else {
                             if (e1.getType().getSimpleName().equals("EntityWithDefiner") && propName.equals("prop2")) { // special check for the entity which has definer artifacts (the props do not equal)
-                                if (e1.get(propName) != null || !e2.get(propName).equals("okay_defined")) {
+                                if (e1.get(propName) != null || !"okay_defined".equals(e2.get(propName))) {
                                     return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to null OR e2 [%s] (type = %s) prop [%s] value [%s] not equal to 'okay_defined'.", e1, e1.getType().getSimpleName(), propName, e1.get(propName), e2, e2.getType().getSimpleName(), propName, e2.get(propName)));
                                 }
                             } else if (!EntityUtils.equalsEx(e1.get(propName), e2.get(propName))) { // prop equality
-                                final String value1 = e1.get(propName) != null && e1.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e1.get(propName)).getTime()) + "" : e1.get(propName);
-                                final String value2 = e2.get(propName) != null && e2.get(propName).getClass().isAssignableFrom(Date.class) ? (((Date) e2.get(propName)).getTime()) + "" : e2.get(propName);
+                                final String value1 = getValue(e1, propName);
+                                final String value2 = getValue(e2, propName);
                                 return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to e2 [%s] (type = %s) prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, value1, e2, e2.getType().getSimpleName(), propName, value2));
                             }
+
                         }
                     }
                 }
@@ -176,11 +185,26 @@ public class SerialisationTestResource extends ServerResource {
         }
     }
 
-    private static <M> Result deepEqualsForTesting(final MetaProperty<M> metaProp1, final MetaProperty<M> metaProp2, final DefaultValueContract dvc) {
+    private static String getValue(final AbstractEntity<?> e1, final String propName) {
+        if (e1.get(propName) != null) {
+            final Object tempValue1 = e1.get(propName);
+            if (tempValue1.getClass().isAssignableFrom(Colour.class)) {
+                return ((Colour) e1.get(propName)).getColourValue();
+            } else if (tempValue1.getClass().isAssignableFrom(Date.class)) {
+                return Long.toString(((Date) e1.get(propName)).getTime());
+            }
+        }
+        return e1.get(propName);
+    }
+
+    private static <M> Result deepEqualsForTesting(final MetaProperty<M> metaProp1, final MetaProperty<M> metaProp2) {
+        if (metaProp1 == null && metaProp2 != null) {
+            return Result.failure(format("MetaProperty of originally created entity is null, but meta property of deserialised entity is not."));
+        }
         // dirty equality
         //        if (!metaProp1.isCollectional()) {
-        if (metaProp1.isChangedFromOriginal()) {
-            if (!EntityUtils.equalsEx(metaProp1.isChangedFromOriginal(), metaProp2.isDirty())) {
+        if (getChangedFromOriginal(metaProp1)) {
+            if (!EntityUtils.equalsEx(getChangedFromOriginal(metaProp1), metaProp2.isDirty())) {
                 return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
             }
         }
@@ -188,22 +212,22 @@ public class SerialisationTestResource extends ServerResource {
         //            // not supported -- dirtiness of the collectional properties for new entities differs from the regular properties
         //        }
         // editable equality
-        if (!EntityUtils.equalsEx(metaProp1.isEditable(), metaProp2.isEditable())) {
+        if (!EntityUtils.equalsEx(getEditable(metaProp1), getEditable(metaProp2))) {
             return Result.failure(format("e1 [%s] editability [%s] does not equal to e2 [%s] editability [%s].", metaProp1.getEntity(), metaProp1.isEditable(), metaProp2.getEntity(), metaProp2.isEditable()));
         }
         // required equality
-        if (!EntityUtils.equalsEx(metaProp1.isRequired(), metaProp2.isRequired())) {
+        if (!EntityUtils.equalsEx(getRequired(metaProp1), getRequired(metaProp2))) {
             return Result.failure(format("e1 [%s] requiredness [%s] does not equal to e2 [%s] requiredness [%s].", metaProp1.getEntity(), metaProp1.isRequired(), metaProp2.getEntity(), metaProp2.isRequired()));
         }
         // visible equality
-        if (!EntityUtils.equalsEx(metaProp1.isVisible(), metaProp2.isVisible())) {
+        if (!EntityUtils.equalsEx(getVisible(metaProp1), getVisible(metaProp2))) {
             return Result.failure(format("e1 [%s] Visible [%s] does not equal to e2 [%s] Visible [%s].", metaProp1.getEntity(), metaProp1.isVisible(), metaProp2.getEntity(), metaProp2.isVisible()));
         }
         // validationResult equality
-        if (!resultsAreExpected(dvc.getValidationResult((MetaProperty<Object>) metaProp1), dvc.getValidationResult((MetaProperty<Object>) metaProp2))) {
-            return Result.failure(format("e1 [%s] ValidationResult [%s] does not equal to e2 [%s] ValidationResult [%s].", metaProp1.getEntity(), dvc.getValidationResult((MetaProperty<Object>) metaProp1), metaProp2.getEntity(), dvc.getValidationResult((MetaProperty<Object>) metaProp2)));
+        if (!resultsAreExpected(getValidationResult(metaProp1), getValidationResult(metaProp2))) {
+            return Result.failure(format("e1 [%s] ValidationResult [%s] does not equal to e2 [%s] ValidationResult [%s].", metaProp1.getEntity(), getValidationResult(metaProp1), metaProp2.getEntity(), getValidationResult(metaProp2)));
         }
-        return Result.successful(metaProp1.getEntity());
+        return Result.successful("OK");
     }
 
     private static boolean resultsAreExpected(final Result validationResult, final Result validationResult2) {
@@ -243,8 +267,7 @@ public class SerialisationTestResource extends ServerResource {
         return setOfCheckedEntities.containsKey(e1);
     }
 
-    private static List<AbstractEntity<?>> createEntities(final EntityFactory entityFactory, final Date testingDate) {
-        final FactoryForTestingEntities factory = new FactoryForTestingEntities(entityFactory, testingDate);
+    private static List<AbstractEntity<?>> createEntities(final RestServerUtil restUtil, final FactoryForTestingEntities factory) {
         return Arrays.asList(factory.createNullEmptyEntity(),
                 factory.createSimpleEmptyEntity(),
                 factory.createEmptyEntityWithNoId(),
@@ -261,6 +284,7 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithBoolean(),
                 factory.createEntityWithDate(),
                 factory.createEntityWithMoney(),
+                factory.createEntityWithColour(),
                 factory.createEntityWithOtherEntity(),
                 factory.createEntityWithSameEntity(),
                 factory.createEntityWithSameEntityCircularlyReferencingItself(),
@@ -269,7 +293,16 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithListOfSameEntities(),
                 factory.createEntityWithArraysAsListOfSameEntities(),
                 factory.createEntityWithMapOfSameEntities(),
-                factory.createEntityWithCompositeKey()
+                factory.createEntityWithCompositeKey(),
+                factory.createUninstrumentedEntity(),
+                factory.createGeneratedEntity(restUtil.getSerialiser(), false), // uninstrumented
+                factory.createGeneratedEntity(restUtil.getSerialiser(), true), // instrumented
+                factory.createInstrumentedEntityWithUninstrumentedProperty(),
+                factory.createUninstrumentedEntityWithInstrumentedProperty()
                 );
+    }
+    
+    public List<AbstractEntity<?>> getEntities() {
+        return Collections.unmodifiableList(entities);
     }
 }

@@ -22,9 +22,9 @@ public class MoneyJsonDeserialiser extends StdDeserializer<Money> {
     public Money deserialize(final JsonParser jp, final DeserializationContext ctxt) throws IOException, JsonProcessingException {
         final JsonNode node = jp.readValueAsTree();
 
-        final BigDecimal amount = node.get("amount").decimalValue();
-        final String currencyStr = node.get("currency").textValue();
-        final Integer taxPercentage = node.get("taxPercent").intValue();
+        final BigDecimal amount = node.get("amount").isNull() ? null : node.get("amount").decimalValue();
+        final String currencyStr = node.get("currency").isNull() ? null : node.get("currency").textValue();
+        final Integer taxPercentage = node.get("taxPercent").isNull() ? null : node.get("taxPercent").intValue();
 
         return taxPercentage == null ? new Money(amount, Currency.getInstance(currencyStr)) : new Money(amount, taxPercentage, Currency.getInstance(currencyStr));
     }

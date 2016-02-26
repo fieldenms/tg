@@ -1,0 +1,49 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<!--<link rel="import" href="/resources/actions/tg-ui-action.html">-->
+
+<dom-module id="tg-property-column">
+    <template>
+        <content id="action_selector" select="tg-ui-action,tg-page-action" hidden></content>
+        <content id="summary_selection" select="tg-summary-property" hidden></content>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-property-column",
+
+            properties: {
+                property: String,
+                underlyingProperty: String,
+                tooltipProperty: String,
+                type: String,
+                width: Number,
+                growFactor: Number,
+                columnTitle: String,
+                columnDesc: String,
+            },
+
+            hostAttributes: {
+                hidden: true
+            },
+
+            ready: function () {
+                Array.prototype.forEach.call(Polymer.dom(this.$.summary_selection).getDistributedNodes(), function (item) {
+                    if (!this.summary) {
+                        this.summary = [];
+                    }
+                    this.summary.push(item);
+                }.bind(this));
+                this.customAction = Polymer.dom(this.$.action_selector).getDistributedNodes().length > 0 ? Polymer.dom(this.$.action_selector).getDistributedNodes()[0] : null;
+            },
+
+            runAction: function (entity) {
+                if (this.customAction) {
+                    this.customAction.currentEntity = entity;
+                    this.customAction._run();
+                }
+            }
+        });
+    })();
+</script>

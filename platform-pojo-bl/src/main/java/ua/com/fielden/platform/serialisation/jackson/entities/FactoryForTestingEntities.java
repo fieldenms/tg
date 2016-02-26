@@ -12,11 +12,19 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
+import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -87,9 +95,10 @@ public class FactoryForTestingEntities {
         assertFalse("Incorrect key ChangedFromOriginal.", entity.getProperty(AbstractEntity.KEY).isChangedFromOriginal());
         assertFalse("Incorrect desc ChangedFromOriginal.", entity.getProperty(AbstractEntity.DESC).isChangedFromOriginal());
 
-        if (entity.getProperty("prop") != null && !entity.getProperty("prop").isCollectional()) {
-            assertFalse("Incorrect key ChangedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
-            assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
+        final Optional<MetaProperty<?>> op = entity.getPropertyOptionally("prop");
+        if (op.isPresent() && !op.get().isCollectional()) {
+            assertFalse("Incorrect key ChangedFromOriginal.", op.get().isChangedFromOriginal());
+            assertFalse("Incorrect prop dirtiness.", op.get().isDirty());
         }
 
         return entity;
@@ -171,7 +180,7 @@ public class FactoryForTestingEntities {
     public EntityWithString createEntityWithStringAndResult() {
         final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
         entity.setProp("okay");
-        entity.getProperty("prop").setRequiredValidationResult(new Result(entity, "Ex.", new Exception("Exception.")));
+        entity.getProperty("prop").setRequiredValidationResult(new Result(entity, new Exception("Exception.")));
         return finalise(entity);
     }
 
@@ -190,6 +199,12 @@ public class FactoryForTestingEntities {
     public EntityWithDate createEntityWithDate() {
         final EntityWithDate entity = createPersistedEntity(EntityWithDate.class, 1L, "key", "description");
         entity.setProp(testingDate);
+        return finalise(entity);
+    }
+
+    public EntityWithColour createEntityWithColour() {
+        final EntityWithColour entity = createPersistedEntity(EntityWithColour.class, 1L, "key", "description");
+        entity.setProp(Colour.WHITE);
         return finalise(entity);
     }
 
@@ -269,5 +284,75 @@ public class FactoryForTestingEntities {
         entity.setKey1(key1);
         entity.setKey2(key2);
         return finalise(entity);
+    }
+
+    public EmptyEntity createUninstrumentedEntity() {
+        final EmptyEntity entity = factory.newPlainEntity(EmptyEntity.class, 159L);
+
+        entity.beginInitialising();
+        entity.setKey("UNINSTRUMENTED");
+        entity.setDesc("UNINSTRUMENTED desc");
+        entity.endInitialising();
+        
+        return entity;
+    }
+    
+    public AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final boolean instrumented) {
+        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+        
+        final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
+        try {
+            emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
+                    cl.startModification(EmptyEntity.class.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(EmptyEntity.class.getName())).endModification();
+        } catch (final ClassNotFoundException e) {
+            throw Result.failure(e);
+        }
+        final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
+        tgJackson.registerNewEntityType(emptyEntityTypeEnhanced);
+        
+        final AbstractEntity<String> entity;
+        if (instrumented) {
+            entity = (AbstractEntity<String>) factory.newEntity(emptyEntityTypeEnhanced, 159L);
+        } else {
+            entity = (AbstractEntity<String>) factory.newPlainEntity(emptyEntityTypeEnhanced, 159L);
+            entity.setEntityFactory(factory);
+        }
+
+        entity.beginInitialising();
+        entity.setKey("GENERATED+UNINSTRUMENTED");
+        entity.setDesc("GENERATED+UNINSTRUMENTED desc");
+        entity.endInitialising();
+        
+        return entity;
+    }
+    
+    public Entity1WithEntity2 createInstrumentedEntityWithUninstrumentedProperty() {
+        final Entity1WithEntity2 entity = factory.newEntity(Entity1WithEntity2.class, 159L);
+        
+        final Entity2WithEntity1 uninstrumentedPropValue = factory.newPlainEntity(Entity2WithEntity1.class, 162L);
+        uninstrumentedPropValue.setEntityFactory(factory);
+
+        entity.beginInitialising();
+        entity.setProp(uninstrumentedPropValue);
+        entity.setKey("INSTRUMENTED_WITH_UNINSTRUMENTED");
+        entity.setDesc("INSTRUMENTED_WITH_UNINSTRUMENTED desc");
+        entity.endInitialising();
+        
+        return entity;
+    }
+
+    public Entity1WithEntity2 createUninstrumentedEntityWithInstrumentedProperty() {
+        final Entity1WithEntity2 entity = factory.newPlainEntity(Entity1WithEntity2.class, 159L);
+        entity.setEntityFactory(factory);
+        
+        final Entity2WithEntity1 uninstrumentedPropValue = factory.newEntity(Entity2WithEntity1.class, 162L);
+
+        entity.beginInitialising();
+        entity.setProp(uninstrumentedPropValue);
+        entity.setKey("UNINSTRUMENTED_WITH_INSTRUMENTED");
+        entity.setDesc("UNINSTRUMENTED_WITH_INSTRUMENTED desc");
+        entity.endInitialising();
+        
+        return entity;
     }
 }

@@ -6,15 +6,18 @@ import java.util.List;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.functional.centre.CritProp;
-import ua.com.fielden.platform.entity.functional.centre.FetchProp;
-import ua.com.fielden.platform.entity.functional.centre.QueryEntity;
-import ua.com.fielden.platform.entity.functional.centre.QueryRunner;
-import ua.com.fielden.platform.entity.functional.paginator.Page;
+import ua.com.fielden.platform.entity.EntityDeleteAction;
+import ua.com.fielden.platform.entity.EntityEditAction;
+import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.migration.MigrationError;
 import ua.com.fielden.platform.migration.MigrationHistory;
 import ua.com.fielden.platform.migration.MigrationRun;
+import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
+import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
+import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -35,6 +38,7 @@ public class PlatformDomainTypes {
         types.add(MainMenuItemInvisibility.class);
         types.add(MainMenu.class);
         types.add(User.class);
+        types.add(UserSession.class);
         types.add(UserRole.class);
         types.add(UserAndRoleAssociation.class);
         types.add(SecurityRoleAssociation.class);
@@ -48,11 +52,12 @@ public class PlatformDomainTypes {
         types.add(MigrationRun.class);
         types.add(MigrationHistory.class);
         types.add(MigrationError.class);
-        // The below is a functional entities provided for web UI. This might cause some problems when deserialising saved entity centres.
-        types.add(QueryRunner.class);
-        types.add(QueryEntity.class);
-        types.add(CritProp.class);
-        types.add(FetchProp.class);
-        types.add(Page.class);
+        types.add(CentreContextHolder.class);
+        types.add(SavingInfoHolder.class);
+        types.add(MasterInvocationFunctionalEntity.class);
+        types.add(MasterInDialogInvocationFunctionalEntity.class);
+        types.add(EntityNewAction.class);
+        types.add(EntityEditAction.class);
+        types.add(EntityDeleteAction.class);
     }
 }

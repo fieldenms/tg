@@ -63,6 +63,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.Validators;
 
 /**
@@ -232,11 +233,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     public T save(final T entity) {
         if (entity == null) {
-            throw new EntityCompanionException(format("Null reference to entity of type %s cannot be saved.", getEntityType()));
+            throw new EntityCompanionException(format("Null entity of type [%s] cannot be saved.", getEntityType().getName()));
         } else if (!entity.isPersistent()) {
             return entity;
+        } else if (!entity.isInstrumented()) {
+            throw new EntityCompanionException(format("Uninstrumented entity of type [%s] cannot be saved.", getEntityType().getName()));
         } else if (!entity.isDirty() && entity.isValid().isSuccessful()) {
-            logger.debug(format("Entity %s is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
+            logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
             return skipRefetching ? entity : findById(entity.getId(), FetchModelReconstructor.reconstruct(entity));
         }
         logger.debug(format("Start saving entity %s (ID = %s)", entity, entity.getId()));
@@ -736,7 +739,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        return evalNumOfPages(model, paramValues, 1);
+        return evalNumOfPages(model, paramValues, 1).getKey();
     }
 
     @Override
@@ -808,9 +811,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
-        final int numberOfPages = pageCount > 0 ? pageCount : evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity);
-        final int pageNumber = pageNo < 0 ? numberOfPages - 1 : pageNo;
-        return new EntityQueryPage(model, pageNumber, pageCapacity, numberOfPages);
+        final Pair<Integer, Integer> numberOfPagesAndCount = pageCount > 0 ? Pair.pair(pageCount, pageCount * pageCapacity) : evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity);
+
+        final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
+        return new EntityQueryPage(model, pageNumber, pageCapacity, numberOfPagesAndCount);
     }
 
     @Override
@@ -826,9 +830,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public IPage<T> getPage(final int pageNo, final int pageCapacity) {
-        final int numberOfPages = evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity);
-        final int pageNumber = pageNo < 0 ? numberOfPages - 1 : pageNo;
-        return new EntityQueryPage(getDefaultQueryExecutionModel(), pageNumber, pageCapacity, numberOfPages);
+        final Pair<Integer, Integer> numberOfPagesAndCount = evalNumOfPages(getDefaultQueryExecutionModel().getQueryModel(), Collections.<String, Object> emptyMap(), pageCapacity);
+        final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
+        return new EntityQueryPage(getDefaultQueryExecutionModel(), pageNumber, pageCapacity, numberOfPagesAndCount);
     }
 
     @Override
@@ -853,16 +857,19 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     @SessionRequired
-    protected int evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
+    protected Pair<Integer, Integer> evalNumOfPages(final QueryModel<T> model, final Map<String, Object> paramValues, final int pageCapacity) {
         final AggregatedResultQueryModel countQuery = model instanceof EntityResultQueryModel ? select((EntityResultQueryModel<T>) model).yield().countAll().as("count").modelAsAggregate()
                 : select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
         final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetchAggregates().with("count")).lightweight().model();
+
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
         final List<EntityAggregates> counts = new EntityFetcher(queryExecutionContext).getEntities(countModel);
 
         final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 
-        return resultSize % pageCapacity == 0 ? resultSize / pageCapacity : resultSize / pageCapacity + 1;
+        final Integer pageSize = resultSize % pageCapacity == 0 ? resultSize / pageCapacity : resultSize / pageCapacity + 1;
+
+        return Pair.pair(pageSize, resultSize);
     }
 
     /**
@@ -1005,26 +1012,28 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     public class EntityQueryPage implements IPage<T> {
         private final int pageNumber; // zero-based
+        private final Pair<Integer, Integer> numberOfPagesAndCount;
         private final int numberOfPages;
         private final int pageCapacity;
         private final List<T> data;
         private final QueryExecutionModel<T, ?> queryModel;
         private final T summary;
 
-        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final int pageNumber, final int pageCapacity, final int numberOfPages) {
-            this(queryModel, (QueryExecutionModel<T, ?>) null, pageNumber, pageCapacity, numberOfPages);
+        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final int pageNumber, final int pageCapacity, final Pair<Integer, Integer> numberOfPagesAndCount) {
+            this(queryModel, (QueryExecutionModel<T, ?>) null, pageNumber, pageCapacity, numberOfPagesAndCount);
         }
 
-        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final QueryExecutionModel<T, ?> summaryModel, final int pageNumber, final int pageCapacity, final int numberOfPages) {
-            this(queryModel, summaryModel != null ? calcSummary(summaryModel) : null, pageNumber, pageCapacity, numberOfPages);
+        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final QueryExecutionModel<T, ?> summaryModel, final int pageNumber, final int pageCapacity, final Pair<Integer, Integer> numberOfPagesAndCount) {
+            this(queryModel, summaryModel != null && numberOfPagesAndCount.getValue() > 0 ? calcSummary(summaryModel) : null, pageNumber, pageCapacity, numberOfPagesAndCount);
         }
 
-        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final T summary, final int pageNumber, final int pageCapacity, final int numberOfPages) {
+        public EntityQueryPage(final QueryExecutionModel<T, ?> queryModel, final T summary, final int pageNumber, final int pageCapacity, final Pair<Integer, Integer> numberOfPagesAndCount) {
+            this.numberOfPagesAndCount = numberOfPagesAndCount;
             this.pageNumber = pageNumber;
             this.pageCapacity = pageCapacity;
-            this.numberOfPages = numberOfPages == 0 ? 1 : numberOfPages;
+            this.numberOfPages = numberOfPagesAndCount.getKey() == 0 ? 1 : numberOfPagesAndCount.getKey();
             this.queryModel = queryModel;
-            data = getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+            this.data = numberOfPagesAndCount.getValue() > 0 ? getEntitiesOnPage(queryModel, pageNumber, pageCapacity) : new ArrayList<>();
 
             this.summary = summary;
         }
@@ -1058,9 +1067,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         public IPage<T> next() {
             if (hasNext()) {
                 if (queryModel != null && summary != null) {
-                    return new EntityQueryPage(queryModel, summary, pageNumber + 1, pageCapacity, numberOfPages);
+                    return new EntityQueryPage(queryModel, summary, pageNumber + 1, pageCapacity, numberOfPagesAndCount);
                 } else if (queryModel != null) {
-                    return new EntityQueryPage(queryModel, pageNumber + 1, pageCapacity, numberOfPages);
+                    return new EntityQueryPage(queryModel, pageNumber + 1, pageCapacity, numberOfPagesAndCount);
                 } else {
                     throw new EntityCompanionException("There was no query provided to retrieve the data.");
                 }
@@ -1072,9 +1081,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         public IPage<T> prev() {
             if (hasPrev()) {
                 if (queryModel != null && summary != null) {
-                    return new EntityQueryPage(queryModel, summary, pageNumber - 1, pageCapacity, numberOfPages);
+                    return new EntityQueryPage(queryModel, summary, pageNumber - 1, pageCapacity, numberOfPagesAndCount);
                 } else if (queryModel != null) {
-                    return new EntityQueryPage(queryModel, pageNumber - 1, pageCapacity, numberOfPages);
+                    return new EntityQueryPage(queryModel, pageNumber - 1, pageCapacity, numberOfPagesAndCount);
                 } else {
                     throw new EntityCompanionException("There was no query provided to retrieve the data.");
                 }
@@ -1086,9 +1095,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         public IPage<T> first() {
             if (hasPrev()) {
                 if (queryModel != null && summary != null) {
-                    return new EntityQueryPage(queryModel, summary, 0, pageCapacity, numberOfPages);
+                    return new EntityQueryPage(queryModel, summary, 0, pageCapacity, numberOfPagesAndCount);
                 } else if (queryModel != null) {
-                    return new EntityQueryPage(queryModel, 0, pageCapacity, numberOfPages);
+                    return new EntityQueryPage(queryModel, 0, pageCapacity, numberOfPagesAndCount);
                 } else {
                     throw new EntityCompanionException("There was no query provided to retrieve the data.");
                 }
@@ -1100,9 +1109,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         public IPage<T> last() {
             if (hasNext()) {
                 if (queryModel != null && summary != null) {
-                    return new EntityQueryPage(queryModel, summary, numberOfPages - 1, pageCapacity, numberOfPages);
+                    return new EntityQueryPage(queryModel, summary, numberOfPages - 1, pageCapacity, numberOfPagesAndCount);
                 } else if (queryModel != null) {
-                    return new EntityQueryPage(queryModel, numberOfPages - 1, pageCapacity, numberOfPages);
+                    return new EntityQueryPage(queryModel, numberOfPages - 1, pageCapacity, numberOfPagesAndCount);
                 } else {
                     throw new EntityCompanionException("There was no query provided to retrieve the data.");
                 }

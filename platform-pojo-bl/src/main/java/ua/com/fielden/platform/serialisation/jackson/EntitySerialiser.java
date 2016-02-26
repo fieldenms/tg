@@ -25,6 +25,7 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDes
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
 
 import com.esotericsoftware.kryo.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,57 +39,57 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class EntitySerialiser<T extends AbstractEntity<?>> {
     public static final String ENTITY_JACKSON_REFERENCES = "entity-references";
     private final Class<T> type;
-    private final EntityJsonSerialiser<T> serialiser;
-    private final EntityJsonDeserialiser<T> deserialiser;
     private final List<CachedProperty> properties;
-    private final TgJacksonModule module;
     private final EntityFactory factory;
-    private final EntityType entityType;
-    private final DefaultValueContract defaultValueContract;
+    private final EntityType entityTypeInfo;
 
-    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory) {
-        this(type, module, mapper, factory, false);
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter) {
+        this(type, module, mapper, factory, entityTypeInfoGetter, false);
     }
 
-    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final boolean excludeNulls) {
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls) {
         this.type = type;
         this.factory = factory;
+
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
-        entityType = this.factory.newEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
-        entityType.beginInitialising();
-        entityType.setKey(type.getName());
+        this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter);
 
-        defaultValueContract = new DefaultValueContract();
-        serialiser = new EntityJsonSerialiser<T>(type, properties, entityType, defaultValueContract, excludeNulls);
-        deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityType, defaultValueContract);
-        this.module = module;
-    }
+        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, excludeNulls);
+        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, entityTypeInfoGetter);
 
-    public EntityType register() {
         // register serialiser and deserialiser
         module.addSerializer(type, serialiser);
         module.addDeserializer(type, deserialiser);
+    }
 
+    private EntityType createEntityTypeInfo(final EntityTypeInfoGetter entityTypeInfoGetter) {
+        final EntityType entityTypeInfo = this.factory.newEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
+        entityTypeInfo.beginInitialising();
+        entityTypeInfo.setKey(type.getName());
+
+        // let's inform the client of the type's persistence nature
+        entityTypeInfo.set_persistent(EntityUtils.isPersistedEntityType(type));
+        
         if (EntityUtils.isCompositeEntity(type)) {
             final List<String> compositeKeyNames = new ArrayList<>();
             final List<Field> keyMembers = Finder.getKeyMembers(type);
             for (final Field keyMember : keyMembers) {
                 compositeKeyNames.add(keyMember.getName());
             }
-            entityType.set_compositeKeyNames(compositeKeyNames);
+            entityTypeInfo.set_compositeKeyNames(compositeKeyNames);
 
             final String compositeKeySeparator = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) type);
-            if (!defaultValueContract.isCompositeKeySeparatorDefault(compositeKeySeparator)) {
-                entityType.set_compositeKeySeparator(compositeKeySeparator);
+            if (!isCompositeKeySeparatorDefault(compositeKeySeparator)) {
+                entityTypeInfo.set_compositeKeySeparator(compositeKeySeparator);
             }
         }
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
-        if (!defaultValueContract.isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
-            entityType.set_entityTitle(entityTitleAndDesc.getKey());
+        if (!isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
+            entityTypeInfo.set_entityTitle(entityTitleAndDesc.getKey());
         }
-        if (!defaultValueContract.isEntityDescDefault(type, entityTitleAndDesc.getValue())) {
-            entityType.set_entityDesc(entityTitleAndDesc.getValue());
+        if (!isEntityDescDefault(type, entityTitleAndDesc.getValue())) {
+            entityTypeInfo.set_entityDesc(entityTitleAndDesc.getValue());
         }
 
         if (!properties.isEmpty()) {
@@ -104,40 +105,40 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 //                }
 
                 final Boolean secrete = AnnotationReflector.isSecreteProperty(type, name);
-                if (!defaultValueContract.isSecreteDefault(secrete)) {
+                if (!isSecreteDefault(secrete)) {
                     entityTypeProp.set_secrete(secrete);
                 }
                 final Boolean upperCase = AnnotationReflector.isAnnotationPresentInHierarchy(UpperCase.class, type, name);
-                if (!defaultValueContract.isUpperCaseDefault(upperCase)) {
+                if (!isUpperCaseDefault(upperCase)) {
                     entityTypeProp.set_upperCase(upperCase);
                 }
                 final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(name, type);
                 entityTypeProp.set_title(titleAndDesc.getKey());
                 entityTypeProp.set_desc(titleAndDesc.getValue());
                 final Boolean critOnly = AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, type, name);
-                if (!defaultValueContract.isCritOnlyDefault(critOnly)) {
+                if (!isCritOnlyDefault(critOnly)) {
                     entityTypeProp.set_critOnly(critOnly);
                 }
                 final Boolean resultOnly = AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, type, name);
-                if (!defaultValueContract.isResultOnlyDefault(resultOnly)) {
+                if (!isResultOnlyDefault(resultOnly)) {
                     entityTypeProp.set_resultOnly(resultOnly);
                 }
                 final Boolean ignore = AnnotationReflector.isAnnotationPresentInHierarchy(Ignore.class, type, name);
-                if (!defaultValueContract.isIgnoreDefault(ignore)) {
+                if (!isIgnoreDefault(ignore)) {
                     entityTypeProp.set_ignore(ignore);
                 }
                 final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, name);
                 if (mapTo != null) {
                     final Long length = mapTo.length();
-                    if (!defaultValueContract.isLengthDefault(length)) {
+                    if (!isLengthDefault(length)) {
                         entityTypeProp.set_length(length);
                     }
                     final Long precision = mapTo.precision();
-                    if (!defaultValueContract.isPrecisionDefault(precision)) {
+                    if (!isPrecisionDefault(precision)) {
                         entityTypeProp.set_precision(precision);
                     }
                     final Long scale = mapTo.scale();
-                    if (!defaultValueContract.isScaleDefault(scale)) {
+                    if (!isScaleDefault(scale)) {
                         entityTypeProp.set_scale(scale);
                     }
                 }
@@ -146,10 +147,13 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
                 props.put(name, entityTypeProp);
             }
-            entityType.set_props(props);
+            entityTypeInfo.set_props(props);
         }
+        return entityTypeInfoGetter.register(entityTypeInfo); // the number will be populated here!
+    }
 
-        return entityType;
+    public EntityType getEntityTypeInfo() {
+        return entityTypeInfo;
     }
 
     public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references, final Long typeNumber) {

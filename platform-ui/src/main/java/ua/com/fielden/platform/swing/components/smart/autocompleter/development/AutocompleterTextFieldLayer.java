@@ -11,20 +11,21 @@ import org.apache.commons.lang.StringUtils;
 import org.jdesktop.jxlayer.JXLayer;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.swing.components.smart.autocompleter.renderer.development.MultiplePropertiesListCellRenderer;
 
 /**
  * This an autocompleter component, which is a JTextField wrapped into JXLayer. It utilises an instance of ValueMatcher to search for matching values.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
     /**
      * Enumeration that defines autocompletion parameters.
-     * 
+     *
      * @author 01es
-     * 
+     *
      */
     public static enum Settings {
         CASE_SENSISTIVE {
@@ -52,7 +53,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 
     /**
      * Instantiates case sensitive autocompleter with wild card support. Please note that case sensitivity should be take into account by the valueMatcher.
-     * 
+     *
      */
     public AutocompleterTextFieldLayer(//
     final JTextField textComponent,//
@@ -67,7 +68,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 
     /**
      * The most comprehensive constructor, which accepts the widest range of autocompleter parameters.
-     * 
+     *
      * @param textComponent
      *            -- used as a holder for selected values
      * @param valueMatcher
@@ -132,7 +133,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
     /**
      * Retrieves actual values based on the typed/selected text using the provided value matcher. The logic is as follows: if autocompleter supports wildcards then replace all
      * <code>*</code> with <code>%</code>; if there was no <code>*</code> then use value as is regardless of the whildcard support.
-     * 
+     *
      * @return
      */
     public List<T> values() {
@@ -141,7 +142,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 
     /**
      * Returns a list of values for the given matching value.
-     * 
+     *
      * @return
      */
     public List<T> values(final String forValue) {
@@ -150,7 +151,10 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
         final boolean hasWildcardSupport = autocompleter.hasWhildcardSupport();
         for (final String value : values) {
             final String searchFor = hasWildcardSupport && value.contains("*") ? value.replaceAll("\\*", "%") : value;
-            final List<T> matches = getValueMatcher().findMatchesWithModel(searchFor);
+
+            final List<T> matches = getValueMatcher() instanceof IValueMatcherWithFetch ? ((IValueMatcherWithFetch) getValueMatcher()).findMatchesWithModel(searchFor) :
+                getValueMatcher().findMatches(searchFor);
+
             result.addAll(matches);
         }
         return result;
@@ -158,7 +162,7 @@ public class AutocompleterTextFieldLayer<T> extends JXLayer<JTextField> {
 
     /**
      * Returns <code>true</code> if autocompleter supports entry of multiple values.
-     * 
+     *
      * @return
      */
     public boolean isMulti() {

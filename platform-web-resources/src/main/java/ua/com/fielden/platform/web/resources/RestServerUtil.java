@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.resources;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,9 +16,9 @@ import org.restlet.Message;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Encoding;
+import org.restlet.data.Header;
 import org.restlet.data.MediaType;
 import org.restlet.engine.application.EncodeRepresentation;
-import org.restlet.engine.header.Header;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.util.Series;
@@ -143,9 +144,9 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public Representation errorJSONRepresentation(final Exception ex) throws JsonProcessingException {
+    public Representation errorJSONRepresentation(final Exception ex) {
         logger.debug("Start building error JSON representation:" + new DateTime());
-        final byte[] bytes = serialiser.serialise(new Result(ex), SerialiserEngines.JACKSON);
+        final byte[] bytes = serialiser.serialise(ex instanceof Result ? ex : new Result(ex), SerialiserEngines.JACKSON);
         logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }
@@ -222,16 +223,31 @@ public class RestServerUtil {
      */
     public <T extends AbstractEntity> Representation listJSONRepresentation(final List<T> entities) {
         logger.debug("Start building JSON entities representation.");
-        try {
-            // create a Result enclosing entity list
-            final Result result = new Result(new ArrayList<T>(entities), "All is cool");
-            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-            logger.debug("SIZE: " + bytes.length);
-            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
-        } catch (final Exception ex) {
-            logger.error(ex.getMessage(), ex);
-            return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
+        if (entities == null) {
+            throw new IllegalArgumentException("The provided list of entities is null.");
         }
+        // create a Result enclosing entity list
+        final Result result = new Result(new ArrayList<T>(entities), "All is cool");
+        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+        logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
+    }
+
+    /**
+     * Composes representation of a list of entities.
+     *
+     * @return
+     */
+    public Representation rawListJSONRepresentation(final Object... objects) {
+        logger.debug("Start building JSON list representation.");
+        if (objects.length <= 0) {
+            throw new IllegalArgumentException("Empty objects.");
+        }
+        // create a Result enclosing entity list
+        final Result result = new Result(new ArrayList<>(Arrays.asList(objects)), "All is cool");
+        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+        logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }
 
     /**
@@ -314,16 +330,18 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public <T extends AbstractEntity> Representation singleJSONRepresentation(final T entity) {
-        try {
-            // create a Result enclosing entity list
-            final Result result = entity != null ? new Result(entity, "OK") : new Result(null, new Exception("Could not find entity."));
-            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
-        } catch (final Exception ex) {
-            logger.error(ex);
-            return errorJSONRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
+    public <T extends AbstractEntity<?>> Representation singleJSONRepresentation(final T entity) {
+        // create a Result enclosing entity list
+        final Result result;
+        if (entity != null) {
+            // valid and invalid entities: both kinds are represented using successful result. Use client-side isValid() method
+            //   in 'tg-reflector' to differentiate them
+            result = new Result(entity, "OK");
+        } else {
+            result = new Result(null, new Exception("Could not find entity."));
         }
+        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
     }
 
     /**

@@ -11,8 +11,7 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.master.EntityMaster;
-import ua.com.fielden.platform.web.view.AbstractWebView;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
  * The web application configurator. Allows one to specify which entity centre, entity master and other custom parameters for the application.
@@ -40,7 +39,6 @@ public class WebAppConfig {
      * The properties below represent essential tg views: entity centres, entity masters. Also it is possible to specify custom view.
      */
     private final List<EntityMaster<? extends AbstractEntity<?>>> masters = new ArrayList<>();
-    private final Map<String, AbstractWebView<?>> customViews = new LinkedHashMap<>();
     private String defaultRoute = null;
 
     /**
@@ -160,26 +158,6 @@ public class WebAppConfig {
         return "centre/" + centre.getMenuItemType().getName();
     }
 
-    public void addCustomView(final AbstractWebView<?> webView) {
-        addCustomView(webView, false);
-    }
-
-    /**
-     * Adds new custom {@link AbstractWebView} to this web application configuration.
-     *
-     * @param webView
-     */
-    public void addCustomView(final AbstractWebView<?> webView, final boolean isDefault) {
-        customViews.put(WebUtils.polymerTagName(webView), webView);
-        if (isDefault) {
-            defaultRoute = generateCustomViewHash(webView);
-        }
-    }
-
-    private String generateCustomViewHash(final AbstractWebView<?> webView) {
-        return "webview/" + WebUtils.polymerTagName(webView);
-    }
-
     /**
      * Returns registered entity masters.
      *
@@ -199,15 +177,6 @@ public class WebAppConfig {
     }
 
     /**
-     * Returns registered custom views.
-     *
-     * @return
-     */
-    public Map<String, AbstractWebView<?>> getCustomViews() {
-        return Collections.unmodifiableMap(customViews);
-    }
-
-    /**
      * Runs the web application by sending the html file for this application.
      *
      * @return
@@ -223,12 +192,6 @@ public class WebAppConfig {
     private String generatePages() {
         final List<String> pagesBuilder = new ArrayList<>();
 
-        customViews.forEach((key, value) -> {
-            pagesBuilder.add("{ name: '" + value.getName() + "'," +
-                    "hash: '" + generateCustomViewHash(value) + "'," +
-                    "url: '/webview/" + key + "'," +
-                    "lazyLoad: false}");
-        });
         centres.forEach((key, value) -> {
             pagesBuilder.add("{ name: '" + value.getName() + "'," +
                     "hash: '" + generateCentreHash(value) + "'," +

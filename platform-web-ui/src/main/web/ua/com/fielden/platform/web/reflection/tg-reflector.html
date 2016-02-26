@@ -1,462 +1,1170 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<polymer-element name="tg-reflector" hidden>
-    <script>
-        (function() {
-            ////////////////////////////////////////// THE PROTOTYPE FOR EntityType ////////////////////////////////////////// 
-            var EntityType = function(rawObject) { 
-                Object.call(this);
-                // copy all properties from rawObject after deserialisation
-                for (var prop in rawObject) {
-                    if (prop === "_props") {
-                        var _props = rawObject[prop];
+<script>
+(function() {
+    /**
+     * Determines whether the result represents the error.
+     */
+    var _isError0 = function (result) {
+        return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Result" && (typeof result.ex !== 'undefined');
+    };
 
-                        for (var p in _props) {
-                            if (_props.hasOwnProperty(p)) {
-                                var val = _props[p];
-                                _props[p] = new EntityTypeProp(val);
-                            }
-                        }
+    /**
+     * Determines whether the result represents the warning.
+     */
+    var _isWarning0 = function (result) {
+        return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Warning";
+    };
+    
+	/**
+	 * 'EntityTypeProp' creator. Dependencies: none.
+	 */
+	var _createEntityTypePropPrototype = function() {
+        ////////////////////////////////////////// THE PROTOTYPE FOR EntityTypeProp ////////////////////////////////////////// 
+        var EntityTypeProp = function (rawObject) {
+            Object.call(this);
 
-                        this[prop] = _props;
-                    } else {
-                        this[prop] = rawObject[prop];
-                    }
-                }
-            };
-            EntityType.prototype = Object.create(Object.prototype);
-            EntityType.prototype.constructor = EntityType;
+            // copy all properties from rawObject after deserialisation
+            for (var prop in rawObject) {
+                this[prop] = rawObject[prop];
+            }
+        };
+        EntityTypeProp.prototype = Object.create(Object.prototype);
+        EntityTypeProp.prototype.constructor = EntityTypeProp;
 
-            /**
-             * Returns the number for the entity type inside the type table.
-             * 
-            */
-            EntityType.prototype.number = function() {
-                return this._number;
+        /**
+         * Returns 'true' when the type property is secrete, false otherwise.
+         *
+         * IMPORTANT: do not use '_secrete' field directly!
+         */
+        EntityTypeProp.prototype.isSecrete = function () {
+            return typeof this._secrete === 'undefined' ? false : this._secrete;
+        }
+
+        /**
+         * Returns 'true' when the type property is upperCase, false otherwise.
+         *
+         * IMPORTANT: do not use '_upperCase' field directly!
+         */
+        EntityTypeProp.prototype.isUpperCase = function () {
+            return typeof this._upperCase === 'undefined' ? false : this._upperCase;
+        }
+
+        /** 
+         * Returns entity type prop title.
+         */
+        EntityTypeProp.prototype.title = function () {
+            return this._title;
+        }
+
+        /** 
+         * Returns entity type prop description.
+         */
+        EntityTypeProp.prototype.desc = function () {
+            return this._desc;
+        }
+
+        /**
+         * Returns 'true' when the type property is critOnly, false otherwise.
+         *
+         * IMPORTANT: do not use '_critOnly' field directly!
+         */
+        EntityTypeProp.prototype.isCritOnly = function () {
+            return typeof this._critOnly === 'undefined' ? false : this._critOnly;
+        }
+
+        /**
+         * Returns 'true' when the type property is resultOnly, false otherwise.
+         *
+         * IMPORTANT: do not use '_resultOnly' field directly!
+         */
+        EntityTypeProp.prototype.isResultOnly = function () {
+            return typeof this._resultOnly === 'undefined' ? false : this._resultOnly;
+        }
+
+        /**
+         * Returns 'true' when the type property is 'ignore', false otherwise.
+         *
+         * IMPORTANT: do not use '_ignore' field directly!
+         */
+        EntityTypeProp.prototype.isIgnore = function () {
+            return typeof this._ignore === 'undefined' ? false : this._ignore;
+        }
+
+        /** 
+         * Returns entity type prop length.
+         */
+        EntityTypeProp.prototype.length = function () {
+            return typeof this._length === 'undefined' ? 0 : this._length;
+        }
+
+        /** 
+         * Returns entity type prop precision.
+         */
+        EntityTypeProp.prototype.precision = function () {
+            return typeof this._precision === 'undefined' ? -1 : this._precision;
+        }
+
+        /** 
+         * Returns entity type prop scale.
+         */
+        EntityTypeProp.prototype.scale = function () {
+            return typeof this._scale === 'undefined' ? -1 : this._scale;
+        }
+		
+		return EntityTypeProp;
+	};
+	
+	/**
+	 * 'EntityInstanceProp' creator. Dependencies: none.
+	 */
+	var _createEntityInstancePropPrototype = function () {
+        ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
+        var EntityInstanceProp = function () {
+            Object.call(this);
+        };
+        EntityInstanceProp.prototype = Object.create(Object.prototype);
+        EntityInstanceProp.prototype.constructor = EntityInstanceProp;
+
+        /**
+         * Returns 'true' when the instance property is editable, false otherwise.
+         *
+         * IMPORTANT: do not use '_editable' field directly!
+         */
+        EntityInstanceProp.prototype.isEditable = function () {
+            return typeof this._editable === 'undefined' ? true : this._editable;
+        }
+
+        /**
+         * Returns 'true' when the instance property is changed from original, false otherwise.
+         *
+         * IMPORTANT: do not use '_cfo' field directly!
+         */
+        EntityInstanceProp.prototype.isChangedFromOriginal = function () {
+            return typeof this._cfo === 'undefined' ? false : this._cfo;
+        }
+
+        /**
+         * Returns original value in case when the property is changed from original and the entity is persisted.
+         *
+         * IMPORTANT: do not use '_originalVal' field directly!
+         */
+        EntityInstanceProp.prototype.originalValue = function () {
+            if (!this.isChangedFromOriginal()) {
+                throw "No one should access originalValue for not changed from original property.";
+            }
+            
+            if (typeof this['_originalVal'] === 'undefined') {
+                throw "instanceMetaProperty has no _originalVal when it is crucial!";
             }
 
-            /**
-             * Returns full Java class name for the entity type.
-             * 
-            */
-            EntityType.prototype.fullClassName = function() {
-                return this.key;
-            }
+            return this._originalVal;
+        }
 
-            /**
-             * Returns full Java class name for the entity type.
-             * 
-            */
-            EntityType.prototype._simpleClassName = function() {
-                var ind = this.fullClassName().lastIndexOf(".") + 1;
-                return this.fullClassName().substring(ind);
-            }
+        /**
+         * Returns 'true' when the instance property is required, false otherwise.
+         *
+         * IMPORTANT: do not use '_required' field directly!
+         */
+        EntityInstanceProp.prototype.isRequired = function () {
+            return typeof this._required === 'undefined' ? false : this._required;
+        }
 
-            /**
-             * Returns 'true' when the entity type represents composite entity, 'false' otherwise. 
-             * 
-             * Use compositeKeyNames() function to determine property names for the key members.
-            */
-            EntityType.prototype.isCompositeEntity = function() {
-                return typeof this._compositeKeyNames !== 'undefined' && this._compositeKeyNames && this._compositeKeyNames.length > 0;
-            }
+        /**
+         * Returns 'true' when the instance property is visible, false otherwise.
+         *
+         * IMPORTANT: do not use '_visible' field directly!
+         */
+        EntityInstanceProp.prototype.isVisible = function () {
+            return typeof this._visible === 'undefined' ? true : this._visible;
+        }
 
-            /** 
-             * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
-            */
-            EntityType.prototype.compositeKeyNames = function() {
-                return this._compositeKeyNames;
-            }
+        /**
+         * Returns validation result (failure or warning) for the instance property or 'null' if successful without warnings.
+         *
+         * IMPORTANT: do not use '_validationResult' field directly!
+         */
+        EntityInstanceProp.prototype.validationResult = function () {
+            return typeof this._validationResult === 'undefined' ? null : this._validationResult;
+        }
 
-            /** 
-             * Returns the key member separator in case of composite entity, 'undefined' otherwise.
-            */
-            EntityType.prototype.compositeKeySeparator = function() {
-                return typeof this._compositeKeySeparator === 'undefined' ? " " : this._compositeKeySeparator;
-            }
+        /**
+         * Returns the max possible length in case of string property, 'undefined' otherwise.
+         *
+         * IMPORTANT: do not use '_max' field directly!
+         */
+        EntityInstanceProp.prototype.stringLength = function () {
+            // if (this._isString()) { 
+            return typeof this._max === 'undefined' ? 0 : this._max;
+            // }
+            // return undefined;
+        }
 
-            /** 
-             * Returns entity title.
-            */
-            EntityType.prototype.entityTitle = function() {
-                return typeof this._entityTitle === 'undefined' ? this._entityTitleDefault() : this._entityTitle;
-            }
+        /**
+         * Returns the max possible integer value in case of integer property (null means unlimited), 'undefined' otherwise.
+         *
+         * IMPORTANT: do not use '_max' field directly!
+         */
+        EntityInstanceProp.prototype.integerMax = function () {
+            // if (!this._isString()) {
+            return typeof this._max === 'undefined' ? null : this._max;
+            // }
+            // return undefined;
+        }
 
-            /** 
-             * Returns entity type property with the specified name.
-            */
-            EntityType.prototype.prop = function(name) {
-                return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
-            }
+        /**
+         * Returns the min possible integer value in case of integer property (null means unlimited), 'undefined' otherwise.
+         *
+         * IMPORTANT: do not use '_min' field directly!
+         */
+        EntityInstanceProp.prototype.integerMin = function () {
+            // if (!this._isString()) {
+            return typeof this._min === 'undefined' ? null : this._min;
+            // }
+            // return undefined;
+        }            				
+		
+		return EntityInstanceProp;
+	};
+	
+	/**
+	 * 'Entity' creator. Dependencies: 'EntityInstanceProp'.
+	 */
+	var _createEntityPrototype = function (EntityInstanceProp, StrictProxyException, _isError0, _isWarning0) {
+        ////////////////////////////////////////// THE PROTOTYPE FOR Entity ////////////////////////////////////////// 
+        var Entity = function (rawObject) { // rawObject
+            Object.call(this);
 
-            /** 
-             * Returns entity description.
-            */
-            EntityType.prototype.entityDesc = function() {
-                return typeof this._entityDesc === 'undefined' ? this._entityDescDefault() : this._entityDesc;
-            }
-
-            /** 
-             * Returns default entity title.
-            */
-            EntityType.prototype._entityTitleDefault = function() {
-                var title = this._breakToWords(this._simpleClassName());
-                return title;
-            }
-
-            /** 
-             * Returns default entity desc.
-            */
-            EntityType.prototype._entityDescDefault = function() {
-                var title = this._breakToWords(this._simpleClassName());
-                return title + " entity";
-            }
-
-            /** 
-             * Breaks camelCased string onto words and separates it with ' '.
-            */
-            EntityType.prototype._breakToWords = function(str) { // see http://stackoverflow.com/questions/10425287/convert-string-to-camelcase-with-regular-expression
-                return str.replace(/([A-Z])/g, function(match, group) {
-                    return " " + group;
-                }).trim();
-            }
-
-            ////////////////////////////////////////// THE PROTOTYPE FOR EntityTypeProp ////////////////////////////////////////// 
-            var EntityTypeProp = function(rawObject) {
-                Object.call(this);
-
-                // copy all properties from rawObject after deserialisation
+            if (rawObject) {
+                // copy all properties from rawObject if it is not empty
                 for (var prop in rawObject) {
                     this[prop] = rawObject[prop];
                 }
-            };
-            EntityTypeProp.prototype = Object.create(Object.prototype);
-            EntityTypeProp.prototype.constructor = EntityTypeProp;
-
-            /**
-             * Returns 'true' when the type property is secrete, false otherwise.
-             * 
-             * IMPORTANT: do not use '_secrete' field directly!
-            */
-            EntityTypeProp.prototype.isSecrete = function() {
-                return typeof this._secrete === 'undefined' ? false : this._secrete;
             }
+        };
+        Entity.prototype = Object.create(Object.prototype);
+        Entity.prototype.constructor = Entity;
 
-            /**
-             * Returns 'true' when the type property is upperCase, false otherwise.
-             * 
-             * IMPORTANT: do not use '_upperCase' field directly!
-            */
-            EntityTypeProp.prototype.isUpperCase = function() {
-                return typeof this._upperCase === 'undefined' ? false : this._upperCase;
+        /**
+         * Returns the type for the entity.
+         *
+         * IMPORTANT: do not use '_type' field directly!
+         */
+        Entity.prototype.type = function () {
+            return this._type;
+        }
+
+        /**
+         * Returns the instance prop for the entity.
+         *
+         * IMPORTANT: do not use '@prop' field directly!
+         */
+        Entity.prototype.prop = function (name) {
+            this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
+            if (this._isObjectUndefined("@" + name)) {
+                this["@" + name] = new EntityInstanceProp(); // lazily initialise entity instance prop in case when it was not JSON-serialised (all information was 'default')
             }
+            return this["@" + name];
+        }
 
-            /** 
-             * Returns entity type prop title.
-            */
-            EntityTypeProp.prototype.title = function() {
-                return this._title;
+        /**
+         * Returns the property value for the entity.
+         *
+         * IMPORTANT: do not use property field directly!
+         */
+        Entity.prototype.get = function (name) {
+            if (name === '') { // empty property name means 'entity itself'
+                return this;
             }
-
-            /** 
-             * Returns entity type prop description.
-            */
-            EntityTypeProp.prototype.desc = function() {
-                return this._desc;
-            }
-
-            /**
-             * Returns 'true' when the type property is critOnly, false otherwise.
-             * 
-             * IMPORTANT: do not use '_critOnly' field directly!
-            */
-            EntityTypeProp.prototype.isCritOnly = function() {
-                return typeof this._critOnly === 'undefined' ? false : this._critOnly;
-            }
-
-            /**
-             * Returns 'true' when the type property is resultOnly, false otherwise.
-             * 
-             * IMPORTANT: do not use '_resultOnly' field directly!
-            */
-            EntityTypeProp.prototype.isResultOnly = function() {
-                return typeof this._resultOnly === 'undefined' ? false : this._resultOnly;
-            }
-
-            /**
-             * Returns 'true' when the type property is 'ignore', false otherwise.
-             * 
-             * IMPORTANT: do not use '_ignore' field directly!
-            */
-            EntityTypeProp.prototype.isIgnore = function() {
-                return typeof this._ignore === 'undefined' ? false : this._ignore;
-            }
-
-            /** 
-             * Returns entity type prop length.
-            */
-            EntityTypeProp.prototype.length = function() {
-                return typeof this._length === 'undefined' ? 0 : this._length;
-            }
-
-            /** 
-             * Returns entity type prop precision.
-            */
-            EntityTypeProp.prototype.precision = function() {
-                return typeof this._precision === 'undefined' ? -1 : this._precision;
-            }
-
-            /** 
-             * Returns entity type prop scale.
-            */
-            EntityTypeProp.prototype.scale = function() {
-                return typeof this._scale === 'undefined' ? -1 : this._scale;
-            }
-            ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
-            var EntityInstanceProp = function() {
-                Object.call(this);
-            };
-            EntityInstanceProp.prototype = Object.create(Object.prototype);
-            EntityInstanceProp.prototype.constructor = EntityInstanceProp;
-
-            /**
-             * Returns 'true' when the instance property is editable, false otherwise.
-             * 
-             * IMPORTANT: do not use '_editable' field directly!
-            */
-            EntityInstanceProp.prototype.isEditable = function() {
-                return typeof this._editable === 'undefined' ? true : this._editable;
-            }
-
-            /**
-             * Returns 'true' when the instance property is changed from original, false otherwise.
-             * 
-             * IMPORTANT: do not use '_cfo' field directly!
-            */
-            EntityInstanceProp.prototype.isChangedFromOriginal = function() {
-                return typeof this._cfo === 'undefined' ? false : this._cfo;
-            }
-
-            /**
-             * Returns 'true' when the instance property is required, false otherwise.
-             * 
-             * IMPORTANT: do not use '_required' field directly!
-            */
-            EntityInstanceProp.prototype.isRequired = function() {
-                return typeof this._required === 'undefined' ? false : this._required;
-            }
-
-            /**
-             * Returns 'true' when the instance property is visible, false otherwise.
-             * 
-             * IMPORTANT: do not use '_visible' field directly!
-            */
-            EntityInstanceProp.prototype.isVisible = function() {
-                return typeof this._visible === 'undefined' ? true : this._visible;
-            }
-
-            /**
-             * Returns validation result (failure or warning) for the instance property or 'null' if successful without warnings.
-             * 
-             * IMPORTANT: do not use '_validationResult' field directly!
-            */
-            EntityInstanceProp.prototype.validationResult = function() {
-                return typeof this._validationResult === 'undefined' ? null : this._validationResult;
-            }
-
-            /**
-             * Returns the max possible length in case of string property, 'undefined' otherwise.
-             * 
-             * IMPORTANT: do not use '_max' field directly!
-            */
-            EntityInstanceProp.prototype.stringLength = function() {
-                // if (this._isString()) { 
-                return typeof this._max === 'undefined' ? 0 : this._max;
-                // }
-                // return undefined;
-            }
-
-            /**
-             * Returns the max possible integer value in case of integer property (null means unlimited), 'undefined' otherwise.
-             * 
-             * IMPORTANT: do not use '_max' field directly!
-            */
-            EntityInstanceProp.prototype.integerMax = function() {
-                // if (!this._isString()) {
-                return typeof this._max === 'undefined' ? null : this._max;
-                // }
-                // return undefined;
-            }
-
-            /**
-             * Returns the min possible integer value in case of integer property (null means unlimited), 'undefined' otherwise.
-             * 
-             * IMPORTANT: do not use '_min' field directly!
-            */
-            EntityInstanceProp.prototype.integerMin = function() {
-                // if (!this._isString()) {
-                return typeof this._min === 'undefined' ? null : this._min;
-                // }
-                // return undefined;
-            }
-
-            ////////////////////////////////////////// THE PROTOTYPE FOR Entity ////////////////////////////////////////// 
-            var Entity = function(rawObject) { // rawObject
-                Object.call(this);
-
-                if (rawObject) {
-                    // copy all properties from rawObject if it is not empty
-                    for (var prop in rawObject) { 
-                        this[prop] = rawObject[prop];
-                    }
-                }
-            };
-            Entity.prototype = Object.create(Object.prototype);
-            Entity.prototype.constructor = Entity;
-
-            /**
-             * Returns the type for the entity.
-             * 
-             * IMPORTANT: do not use '_type' field directly!
-            */
-            Entity.prototype.type = function() {
-                return this._type;
-            }
-
-            /**
-             * Returns the instance prop for the entity.
-             * 
-             * IMPORTANT: do not use '@prop' field directly!
-            */
-            Entity.prototype.prop = function(name) {
-                this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
-                if (this._isObjectUndefined("@" + name)) {
-                    this["@" + name] = new EntityInstanceProp(); // lazily initialise entity instance prop in case when it was not JSON-serialised (all information was 'default')
-                }                
-                return this["@" + name];
-            }
-
-            /**
-             * Returns the property value for the entity.
-             * 
-             * IMPORTANT: do not use property field directly!
-            */
-            Entity.prototype.get = function(name) {
+            var dotIndex = name.indexOf(".");
+            if (dotIndex > -1) {
+                var first = name.slice(0, dotIndex);
+                var rest = name.slice(dotIndex + 1);
+                var firstVal = this.get(first);
+                return firstVal === null ? null : firstVal.get(rest);
+            } else {
                 if (this._isObjectUndefined(name)) {
                     throw new StrictProxyException(name, this.type()._simpleClassName());
                 }
                 return this[name];
             }
+        }
 
-            /**
-             * Returns 'true' if there is an object member defined (not a function!) with a specified name, 'false' otherwise.
-             * 
-            */
-            Entity.prototype._isObjectUndefined = function(name) {
-                return (typeof this[name] === 'undefined') || (typeof this[name] === 'function');
+        /**
+         * Returns the original property value for the entity.
+         *
+         */
+        Entity.prototype.getOriginal = function (propName) {
+            var value = this.get(propName);
+            var instanceMetaProperty = this.constructor.prototype.prop.call(this, propName);
+            if (instanceMetaProperty.isChangedFromOriginal()) {
+                return instanceMetaProperty.originalValue();
+            } else {
+                return value;
             }
+        }
 
-            /**
-             * Sets the property value for the entity.
-             * 
-             * IMPORTANT: do not use property field directly!
-            */
-            Entity.prototype.set = function(name, value) {
-                this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
-                return this[name] = value;
-            }
+        /**
+         * Returns 'true' if there is an object member defined (not a function!) with a specified name, 'false' otherwise.
+         *
+         */
+        Entity.prototype._isObjectUndefined = function (name) {
+            return (typeof this[name] === 'undefined') || (typeof this[name] === 'function');
+        }
 
-            /**
-             * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and '@prop' instance meta-props.
-             * 
-             * @param propertyCallback -- function(propertyName) to be called on each property
-            */
-            Entity.prototype.traverseProperties = function(propertyCallback) {
-                var entity = this;
-                for (var membName in entity) {
-                    if (entity.hasOwnProperty(membName) && membName[0] !== "@" && membName !== "_type" && membName !== "id" && membName !== "version") {
-                        propertyCallback(membName);
-                    }
+        /**
+         * Sets the property value for the entity.
+         *
+         * IMPORTANT: do not use property field directly!
+         */
+        Entity.prototype.set = function (name, value) {
+            this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
+            return this[name] = value;
+        }
+
+        /**
+         * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and '@prop' instance meta-props.
+         *
+         * @param propertyCallback -- function(propertyName) to be called on each property
+         */
+        Entity.prototype.traverseProperties = function (propertyCallback) {
+            var entity = this;
+            for (var membName in entity) {
+                if (entity.hasOwnProperty(membName) && membName[0] !== "@" && membName !== "_type" && membName !== "id" && membName !== "version") {
+                    propertyCallback(membName);
                 }
             }
+        }
 
-            var StrictProxyException = function(propName, simpleClassName) { // rawObject
-                Object.call(this);
+        /**
+         * Determines whether the entity is valid, which means that there are no invalid properties.
+         *
+         */
+        Entity.prototype.isValid = function () {
+            return this.firstFailure() === null;
+        }
 
-                this.message = "Strict proxy exception: the property [" + propName + "] does not exist in the entity of type [" + simpleClassName + "]. Please, check the fetch strategy or construction strategy of the entity object.";
-            };
-            StrictProxyException.prototype = Object.create(Object.prototype);
-            StrictProxyException.prototype.constructor = StrictProxyException;     
-
-            /**
-             * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
-             * 
-            */
-            StrictProxyException.prototype.toString = function() {
-                return this.message;
-            }
-
-            ////////////////////////////////////////// THE PROTOTYPE FOR EntityInstanceProp ////////////////////////////////////////// 
-            var providePrototypes = function(typeTable) {
-                    for (var key in typeTable) {
-                        if (typeTable.hasOwnProperty(key)) {
-                            var entityType = typeTable[key];
-                            typeTable[key] = new EntityType(entityType);
-                            // entityType.prototype = EntityType.prototype;
-                            // entityType.__proto__ = EntityType.prototype;
-                        }
-                    }
-                    return typeTable;
-                },
-                typeTable = providePrototypes(@typeTable);
-
-            // console.log("typeTable = ", typeTable);
-
-            Polymer({
-                getType: function(number) {
-                    return typeTable[number];
-                },
-
-                findTypeByName: function(typeName) {
-                    for (var key in typeTable) {
-                        if (typeTable.hasOwnProperty(key)) {
-                            var entityType = typeTable[key];
-                            if (entityType.fullClassName() === typeName) {
-                                return entityType;
-                            }
-                        }
-                    }
-                    return null;
-                },
-
-                getEntityInstancePropType: function() {
-                    return EntityInstanceProp;
-                },
-
-                getEntityType: function() {
-                    return Entity;
-                },
-
-                getStrictProxyExceptionType: function() {
-                    return StrictProxyException;
-                },
-
-                /**
-                 * Returns 'true' if the regular values are equal, 'false' otherwise.
-                 */
-                equalsEx: function(value1, value2) {
-                    // if (value1) {
-                    //     if (!value2) {
-                    //         return false;
-                    //     } else {
-                    //         return ...
-                    //     }
-                    // }
-
-                    // TODO rectify whether this implementation is good:
-                    return value1 === value2;
+        /**
+         * Finds the first failure for the properties of this entity, if any.
+         *
+         */
+        Entity.prototype.firstFailure = function () {
+            var self = this;
+            var first = null;
+            self.traverseProperties(function (propName) {
+                if (_isError0(self.prop(propName).validationResult())) {
+                    first = self.prop(propName).validationResult();
+                    return;
                 }
             });
-        })();
-    </script>
-</polymer-element>
+            return first;
+        }
+
+        /**
+         * Determines whether the entity is valid with warning, which means that there are no invalid properties but the properties with warnings exist.
+         *
+         */
+        Entity.prototype.isValidWithWarning = function () {
+            return this.firstFailure() === null && this.firstWarning() !== null;
+        }
+
+        /**
+         * Finds the first warning for the properties of this entity, if any.
+         *
+         */
+        Entity.prototype.firstWarning = function () {
+            var self = this;
+            var first = null;
+            self.traverseProperties(function (propName) {
+                if (_isWarning0(self.prop(propName).validationResult())) {
+                    first = self.prop(propName).validationResult();
+                    return;
+                }
+            });
+            return first;
+        }
+
+        /**
+         * Returns 'true' if the entity was persisted before and 'false' otherwise.
+         */
+        Entity.prototype.isPersisted = function () {
+            return this.id !== null;
+        }
+        return Entity;
+	};
+	
+	/**
+	 * 'EntityType' creator. Dependencies: 'EntityTypeProp'.
+	 */
+	var _createEntityTypePrototype = function (EntityTypeProp) {
+        ////////////////////////////////////////// THE PROTOTYPE FOR EntityType ////////////////////////////////////////// 
+        var EntityType = function (rawObject) {
+            Object.call(this);
+            // copy all properties from rawObject after deserialisation
+            for (var prop in rawObject) {
+                if (prop === "_props") {
+                    var _props = rawObject[prop];
+
+                    for (var p in _props) {
+                        if (_props.hasOwnProperty(p)) {
+                            var val = _props[p];
+                            _props[p] = new EntityTypeProp(val);
+                        }
+                    }
+
+                    this[prop] = _props;
+                } else {
+                    this[prop] = rawObject[prop];
+                }
+            }
+        };
+        EntityType.prototype = Object.create(Object.prototype);
+        EntityType.prototype.constructor = EntityType;
+
+        /**
+         * Returns the number for the entity type inside the type table.
+         *
+         */
+        EntityType.prototype.number = function () {
+            return this._number;
+        }
+
+        /**
+         * Returns full Java class name for the entity type.
+         *
+         */
+        EntityType.prototype.fullClassName = function () {
+            return this.key;
+        }
+
+        /**
+         * Returns full not enhanced Java class name for the entity type.
+         */
+        EntityType.prototype.notEnhancedFullClassName = function () {
+            var enhancedIndex = this.key.indexOf("$$TgEntity");
+            if (enhancedIndex >= 0) {
+                return this.key.substring(0, enhancedIndex);
+            }
+            return this.key;
+        }
+
+        /**
+         * Returns simple Java class name for the entity type.
+         *
+         */
+        EntityType.prototype._simpleClassName = function () {
+            var ind = this.fullClassName().lastIndexOf(".") + 1;
+            return this.fullClassName().substring(ind);
+        }
+
+        /**
+         * Returns not enhanced simple Java class name for the entity type.
+         *
+         */
+        EntityType.prototype._notEnhancedSimpleClassName = function () {
+            var ind = this.fullClassName().lastIndexOf(".") + 1,
+                simpleClassName = this.fullClassName().substring(ind),
+                enhancedIndex = simpleClassName.indexOf("$$TgEntity");
+            if (enhancedIndex >= 0) {
+                return simpleClassName.substring(0, enhancedIndex);
+            }
+            return simpleClassName;
+        }
+
+        /**
+         * Returns 'true' when the entity type represents composite entity, 'false' otherwise.
+         *
+         * Use compositeKeyNames() function to determine property names for the key members.
+         */
+        EntityType.prototype.isCompositeEntity = function () {
+            return typeof this._compositeKeyNames !== 'undefined' && this._compositeKeyNames && this._compositeKeyNames.length > 0;
+        }
+
+        /** 
+         * Returns the property names for the key members in case of composite entity, 'undefined' otherwise.
+         */
+        EntityType.prototype.compositeKeyNames = function () {
+            return this._compositeKeyNames;
+        }
+
+        /** 
+         * Returns the key member separator in case of composite entity, 'undefined' otherwise.
+         */
+        EntityType.prototype.compositeKeySeparator = function () {
+            return typeof this._compositeKeySeparator === 'undefined' ? " " : this._compositeKeySeparator;
+        }
+
+        /**
+         * Returns 'true' if the entity type represents a persistent entity.
+         *
+         */
+        EntityType.prototype.isPersistent = function () {
+            return this['_persistent'] === true;
+        }
+
+        /** 
+         * Returns entity title.
+         */
+        EntityType.prototype.entityTitle = function () {
+            return typeof this._entityTitle === 'undefined' ? this._entityTitleDefault() : this._entityTitle;
+        }
+
+        /** 
+         * Returns entity type property with the specified name.
+         */
+        EntityType.prototype.prop = function (name) {
+            return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
+        }
+
+        /** 
+         * Returns entity description.
+         */
+        EntityType.prototype.entityDesc = function () {
+            return typeof this._entityDesc === 'undefined' ? this._entityDescDefault() : this._entityDesc;
+        }
+
+        /** 
+         * Returns default entity title.
+         */
+        EntityType.prototype._entityTitleDefault = function () {
+            var title = this._breakToWords(this._simpleClassName());
+            return title;
+        }
+
+        /** 
+         * Returns default entity desc.
+         */
+        EntityType.prototype._entityDescDefault = function () {
+            var title = this._breakToWords(this._simpleClassName());
+            return title + " entity";
+        }
+
+        /** 
+         * Breaks camelCased string onto words and separates it with ' '.
+         */
+        EntityType.prototype._breakToWords = function (str) { // see http://stackoverflow.com/questions/10425287/convert-string-to-camelcase-with-regular-expression
+            return str.replace(/([A-Z])/g, function (match, group) {
+                return " " + group;
+            }).trim();
+        }
+		
+		return EntityType;
+	};
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////// EXCEPTIONS /////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * 'StrictProxyException' creator.
+	 */
+	var _createStrictProxyExceptionPrototype = function () {
+	   	/**
+	  	 * Exception prototype for strict proxy exceptions.
+	  	 */
+		var StrictProxyException = function (propName, simpleClassName) { // rawObject
+	        Object.call(this);
+	
+	        this.message = "Strict proxy exception: the property [" + propName + "] does not exist in the entity of type [" + simpleClassName + "]. Please, check the fetch strategy or construction strategy of the entity object.";
+	    };
+	    StrictProxyException.prototype = Object.create(Object.prototype);
+	    StrictProxyException.prototype.constructor = StrictProxyException;
+	
+	    /**
+	     * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
+	     *
+	     */
+	    StrictProxyException.prototype.toString = function () {
+	        return this.message;
+	    }
+	    return StrictProxyException;
+	}
+	
+	/**
+	 * 'UnsupportedConversionException' creator.
+	 */
+	var _createUnsupportedConversionExceptionPrototype = function () {
+		/**
+		 * Exception prototype for unsupported conversions.
+		 */
+	    var UnsupportedConversionException = function (value) {
+	        Object.call(this);
+	
+	        this.message = "Unsupported conversion exception: the conversion for value [" + value + "] is unsupported at this stage. Value typeof === " + (typeof value) + ".";
+	    };
+	    UnsupportedConversionException.prototype = Object.create(Object.prototype);
+	    UnsupportedConversionException.prototype.constructor = UnsupportedConversionException;
+	
+	    /**
+	     * Overridden toString method to represent this exception more meaningfully than '[Object object]'.
+	     *
+	     */
+	    UnsupportedConversionException.prototype.toString = function () {
+	        return this.message;
+	    }
+	    return UnsupportedConversionException;
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////// EXCEPTIONS [END] /////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////
+
+	var _SPEPrototype = _createStrictProxyExceptionPrototype();
+	var _UCEPrototype = _createUnsupportedConversionExceptionPrototype();
+	
+	var _ETPPrototype = _createEntityTypePropPrototype();
+	var _ETPrototype = _createEntityTypePrototype(_ETPPrototype);
+	
+	/**
+	 * The prototype for entity's instance-scoped property. Can be reached by 'entity.prop("name")' call.
+	 */
+	var _EIPPrototype = _createEntityInstancePropPrototype();
+	/**
+	 * The prototype for entities.
+	 */
+	var _EPrototype = _createEntityPrototype(_EIPPrototype, _SPEPrototype, _isError0, _isWarning0);
+	
+    /**
+     * Determines whether the specified object represents the entity.
+     */
+    var _isEntity = function (obj) {
+        return obj !== null && (obj instanceof _EPrototype);
+    };
+    
+    /**
+     * Returns 'true' if the regular values are equal, 'false' otherwise.
+     */
+    var _equalsEx = function (value1, value2) {
+        // if (value1) {
+        //     if (!value2) {
+        //         return false;
+        //     } else {
+        //         return ...
+        //     }
+        // }
+
+        // TODO 1: rectify whether this implementation is good
+        // TODO 2: potentially, extend implementation to support composite types: arrays and objects?
+        if (_isEntity(value1)) {
+            return _entitiesEqualsEx(value1, value2);
+        }
+        return value1 === value2;
+    };
+    
+    /**
+     * Returns 'true' if the entities are equal, 'false' otherwise.
+     *
+     * IMPORTANT: this is the mirror of the java methods AbstractEntity.equals() and DynamicEntityKey.compareTo(). So, please be carefull and maintain it
+     * in accordance with java counterparts.
+     */
+    var _entitiesEqualsEx = function (entity1, entity2) {
+        if (entity1 === entity2) {
+            return true;
+        }
+        if (!_isEntity(entity2)) {
+            return false;
+        }
+        // let's ensure that types match
+        if (entity1.type() !== entity2.type()) {
+            return false;
+        }
+        // now can compare key values
+        if (entity1.type().isCompositeEntity()) {
+            var compositeKeyNames = entity1.type().compositeKeyNames();
+            for (var i = 0; i < compositeKeyNames.length; i++) {
+                var compositePartName = compositeKeyNames[i];
+                var compositePart1, compositePart2;
+                try {
+                    compositePart1 = entity1.get(compositePartName);
+                } catch (strictProxyEx1) {
+                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
+                }
+                try {
+                    compositePart2 = entity2.get(compositePartName);
+                } catch (strictProxyEx2) {
+                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in second entity, please check fetching strategy. ' + strictProxyEx2;
+                }
+                
+                if (!_equalsEx(compositePart1, compositePart2)) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            var key1, key2;
+            
+            try {
+                key1 = entity1.get('key');
+            } catch (strictProxyEx1) {
+                throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
+            }
+            
+            try {
+                key2 = entity2.get('key');
+            } catch (strictProxyEx2) {
+                throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in second entity, please check fetching strategy.' + strictProxyEx2;
+            }
+            return _equalsEx(key1, key2);
+        }
+    };
+	
+	/**
+	 * Completes the process of type table preparation -- creates instances of EntityType objects for each entity type in type table.
+	 */
+    var _providePrototypes = function (typeTable, EntityType) {
+        for (var key in typeTable) {
+            if (typeTable.hasOwnProperty(key)) {
+                var entityType = typeTable[key];
+                typeTable[key] = new EntityType(entityType);
+                // entityType.prototype = EntityType.prototype;
+                // entityType.__proto__ = EntityType.prototype;
+            }
+        }
+        console.log("typeTable =", typeTable);
+        return typeTable;
+    };
+	
+	/**
+	 * The table for entity types.
+	 *
+	 * NOTE: 'typeTable' part will be generated by server to provide current state for the entity types table.
+	 */
+	var _typeTable = _providePrototypes(@typeTable, _ETPrototype);
+	
+    Polymer({
+    	is: 'tg-reflector',
+    	
+        /**
+         * Generates the unique identifier.
+         */
+        generateUUID: function () {
+            var d = new Date().getTime();
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = (d + Math.random() * 16) % 16 | 0;
+                d = Math.floor(d / 16);
+                return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+            return uuid;
+        },
+
+        getType: function (number) {
+            return _typeTable[number];
+        },
+
+        /**
+         * Registers new entity type inside the type table.
+         */
+        registerEntityType: function (newType) {
+        	var EntityType = this._getEntityTypePrototype();
+            var registeredType = new EntityType(newType);
+            _typeTable[newType['_number']] = registeredType;
+            console.log("Registering new type with number ", newType['_number'], registeredType);
+            return registeredType;
+        },
+
+        /**
+         * Finds the entity type by its full class name. Returns 'null' if no registered entity type for such 'typeName' exists.
+         */
+        findTypeByName: function (typeName) {
+            for (var key in _typeTable) {
+                if (_typeTable.hasOwnProperty(key)) {
+                    var entityType = _typeTable[key];
+                    if (entityType.fullClassName() === typeName) {
+                        return entityType;
+                    }
+                }
+            }
+            return null;
+        },
+
+        /**
+         * Returns the prototype for 'EntityInstanceProp'.
+         *
+         * Please, do not use it directly, only, perhaps, in tests.
+         */
+        getEntityInstancePropPrototype: function () {
+            return _EIPPrototype;
+        },
+
+        /**
+         * Returns the prototype for 'Entity'.
+         *
+         * Please, do not use it directly, only, perhaps, in tests.
+         */
+        getEntityPrototype: function () {
+            return _EPrototype;
+        },
+        
+        /**
+         * Returns the prototype for 'EntityType'.
+         *
+         * Please, do not use it directly, only, perhaps, in tests.
+         */
+        _getEntityTypePrototype: function () {
+            return _ETPrototype;
+        },
+
+        /**
+         * Returns the prototype for 'StrictProxyException'.
+         *
+         * Please, do not use it directly, only, perhaps, in tests.
+         */
+        getStrictProxyExceptionPrototype: function () {
+            return _SPEPrototype;
+        },
+
+        /**
+         * Returns 'true' if the regular values are equal, 'false' otherwise.
+         */
+        equalsEx: function (value1, value2) {
+            return _equalsEx(value1, value2);
+        },
+        
+        /**
+         * Determines whether result represents the error.
+         */
+        isError: function (result) {
+            return _isError0(result);
+        },
+
+        /**
+         * Determines whether result represents the warning.
+         */
+        isWarning: function (result) {
+            return _isWarning0(result);
+        },
+        
+        //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
+        /**
+         * Returns a meaninful representation for exception message (including user-friendly version for NPE, not just 'null').
+         */
+        exceptionMessage: function (exception) {
+        	return exception.message === null ? "Null pointer exception" : exception.message;
+        },
+
+        /**
+         * Returns a meaninful representation for errorObject message.
+         */
+        exceptionMessageForErrorObject: function (errorObject) {
+        	return errorObject.message;
+        },
+        
+        /**
+         * Returns html representation for the specified exception trace (including 'cause' expanded, if any).
+         */
+        stackTrace: function (ex) {
+        	// collects error cause by traversing the stack into an ordered list
+        	var causeCollector = function (ex, causes) {
+        		if (ex) {
+        			causes = causes + "<li>" + this.exceptionMessage(ex) + "</li>";
+        			printStackTrace(ex);
+        			if (ex.cause !== null) {
+        				causes = causeCollector(ex.cause, causes);
+    	        	}
+        		}
+        		return causes + "</ol>";
+        	}.bind(this);
+
+        	// ouputs the exception stack trace into the console as warning
+        	var printStackTrace = function (ex) {
+        		var msg = "No cause and stack trace."; 
+            	if (ex) {
+    	        	msg = this.exceptionMessage(ex) + '\n';
+    	        	if (Array.isArray(ex.stackTrace)) {
+    	            	for (var i = 0; i < ex.stackTrace.length; i += 1) {
+    	            		var st = ex.stackTrace[i];
+    	            		msg = msg + st.className + '.java:' + st.lineNumber + ':' + st.methodName + ';\n';
+    	            	}
+    	        	}
+            	}
+            	console.warn(msg);
+        	}.bind(this);
+        	
+        	if (ex) {
+        		var causes = "<b>" + this.exceptionMessage(ex) + "</b>";
+        		printStackTrace(ex);
+            	if (ex.cause !== null) {
+            		causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")
+            	}
+            	
+            	return causes;
+        	}
+        	
+        },
+        
+        /**
+         * Returns html representation for the specified errorObject stack.
+         */
+        stackTraceForErrorObjectStack: function (stack) {
+        	console.log("STACK", stack);
+        	// TODO still "NOT IMPLEMENTED!";
+        	return stack.toString();
+        },        
+        
+        //////////////////// SERVER EXCEPTIONS UTILS [END] //////////////
+        
+        /**
+         * Determines whether the specified object represents the entity.
+         */
+        isEntity: function (obj) {
+            return _isEntity(obj);
+        },
+
+        /**
+         * Creates the 'entity' without concrete type specified.
+         */
+        newEntityEmpty: function () {
+            var Entity = this.getEntityPrototype();
+            return new Entity();
+        },
+        
+        /**
+         * Creates the 'entity instance prop'.
+         */
+        newEntityInstancePropEmpty: function () {
+            var EntityInstanceProp = this.getEntityInstancePropPrototype();
+            return new EntityInstanceProp();
+        },
+                
+        /**
+         * Creates the 'entity' with concrete type, specified as 'typeName' string.
+         */
+        newEntity: function (typeName) {
+            var newOne = this.newEntityEmpty();
+
+            newOne["_type"] = this.findTypeByName(typeName);
+            newOne["id"] = null;
+            newOne["version"] = 0;
+            return newOne;
+        },
+
+        /**
+         * Converts the property value, that has got from deserialised entity instance, to the form, that is suitable for editors binding.
+         */
+        convert: function (value) {
+            if (value === null) { // 'null' is the missing value representation for TG web editors
+                return null;
+            } else if (value instanceof this.getEntityPrototype()) {
+                return (value.type().isCompositeEntity()) ? this.convertCompositeEntity(value) : this.convertSimpleEntity(value);
+            } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
+                return value;
+            } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors
+                return value;
+            } else if (typeof value === "object" && value.hasOwnProperty("amount") && value.hasOwnProperty("currency") && value.hasOwnProperty("taxPercent")) { // for money related value -- return the same value for editors
+                return value;
+            } else if (typeof value === "string") { // for string value -- return the same value for editors
+                return value;
+            } else if (value.constructor === Array) { // for Array value -- return the same value for tg-entity-search-criteria editor
+                return value;
+            } else if ( typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 
+                return value;
+            } else {
+                throw new _UCEPrototype(value);
+            }
+        },
+
+        /**
+         * The method to convert entity to String.
+         *
+         */
+        convertSimpleEntity: function (entity) {
+            return this.convert(entity.get("key"));
+        },
+
+        /**
+         * The method to convert composite entity to String.
+         *
+         * IMPORTANT: this is the mirror of the java method DynamicEntityKey.toString(). So, please be carefull and maintain it
+         * in accordance with java counterpart.
+         */
+        convertCompositeEntity: function (compositeEntity) {
+            var compositeKeyNames = compositeEntity.type().compositeKeyNames();
+            var compositeKeySeparator = compositeEntity.type().compositeKeySeparator();
+
+            var str = "";
+            var first = true;
+            for (var i = 0; i < compositeKeyNames.length; i++) {
+                var compositePartName = compositeKeyNames[i];
+                var compositePart = compositeEntity.get(compositePartName);
+                if (compositePart !== null) {
+                    if (first) {
+                        str = str + this.convert(compositePart);
+                        first = false;
+                    } else {
+                        str = str + compositeKeySeparator + this.convert(compositePart);
+                    }
+                }
+            }
+            return str;
+        },
+
+        /**
+         * Returns the binding value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
+         *
+         * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
+         */
+        getBindingValue: function(bindingEntity, dotNotatedName) {
+        	return this.isDotNotated(dotNotatedName) ? this.convert(this._getValueFor(bindingEntity, dotNotatedName)) : bindingEntity.get(dotNotatedName);
+        },
+        
+        /**
+         * Returns the binding value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
+         *
+         * This supports the retrieval of binding value for dot-notation properties with the use of bindingEntity's '@@origin'.
+         */
+        getPropertyValue: function (fullyFledgedEntity, dotNotatedName) {
+        	return this.convert(fullyFledgedEntity.get(dotNotatedName));
+        },
+        
+        /**
+         * Returns the full value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
+         *
+         * This method does no conversion of the value to 'binding' representation.
+         */
+        _getValueFor: function(bindingEntity, dotNotatedName) {
+      		return bindingEntity["@@origin"].get(dotNotatedName);
+        },
+
+        /**
+         * Convenient method for retrieving of 'customObject' from deserialised array.
+         */
+        customObject: function (arrayOfEntityAndCustomObject) {
+            if (arrayOfEntityAndCustomObject.length >= 2) {
+                return arrayOfEntityAndCustomObject[1];
+            } else {
+                return null;
+            }
+        },
+        
+        /**
+         * Fills in the centre context holder with 'master entity' based on whether should 'requireMasterEntity'.
+         */
+        provideMasterEntity: function(requireMasterEntity, centreContextHolder, getMasterEntity) {
+			if (requireMasterEntity === "true") {
+				centreContextHolder["masterEntity"] = getMasterEntity();
+            } else if (requireMasterEntity === "false") {
+            	centreContextHolder["masterEntity"] = null;
+            } else {
+            	throw "Unknown value for attribute 'requireMasterEntity': " + requireMasterEntity;
+            }
+        },
+        
+        /**
+         * Fills in the centre context holder with 'selected entities' based on whether should 'requireSelectedEntities' (ALL, ONE or NONE).
+         */
+        provideSelectedEntities: function(requireSelectedEntities, centreContextHolder, getSelectedEntities) {
+			if (requireSelectedEntities === "ALL") {
+				centreContextHolder["selectedEntities"] = getSelectedEntities();
+            } else if (requireSelectedEntities === "ONE") {
+            	centreContextHolder["selectedEntities"] = getSelectedEntities().length > 0 ? [getSelectedEntities()[0]] : [];
+            } else if (requireSelectedEntities === "NONE") {
+            	centreContextHolder["selectedEntities"] = null;
+            } else {
+            	throw "Unknown value for attribute 'requireSelectedEntities': " + requireSelectedEntities;
+            }
+        },
+
+        /**
+         * Returns 'true' if the propertyName is specified in 'dot-notation' syntax, otherwise 'false'.
+         */
+        isDotNotated: function(propertyName) {
+            return propertyName.indexOf(".") > -1;
+        },
+        
+        /**
+         * Creates the context holder to be transferred with actions, centre autocompletion process, query enhancing process etc.
+         *
+         * 
+         */
+        createContextHolder: function (
+        		requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
+        		createModifiedPropertiesHolder, getSelectedEntities, getMasterEntity
+        ) {
+            var centreContextHolder = this.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
+            centreContextHolder.id = null;
+            centreContextHolder["customObject"] = {}; // should always exist, potentially empty
+            
+            if (requireSelectionCriteria !== null) {
+            	this.provideSelectionCriteria(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder);
+            }
+            if (requireSelectedEntities !== null) {
+            	this.provideSelectedEntities(requireSelectedEntities, centreContextHolder, getSelectedEntities);
+            }
+            if (requireMasterEntity !== null) {
+                this.provideMasterEntity(requireMasterEntity, centreContextHolder, getMasterEntity);
+            }
+            return centreContextHolder;
+        },
+        
+        /**
+         * Fills in the centre context holder with 'selection criteria modified props holder' based on whether should 'requireSelectionCriteria'.
+         */
+        provideSelectionCriteria: function(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder) {
+			if (requireSelectionCriteria === "true") {
+				centreContextHolder["modifHolder"] = createModifiedPropertiesHolder();
+            } else if (requireSelectionCriteria === "false") {
+            	centreContextHolder["modifHolder"] = null;
+            } else {
+            	throw "Unknown value for attribute 'requireSelectionCriteria': " + requireSelectionCriteria;
+            }
+        },
+        
+        /**
+         * Creates the holder of modified properties and some savingContext.
+         */
+        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext) {
+        	var reflector = this;
+            var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
+            savingInfoHolder.id = null;
+            savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
+        	
+        	if (savingContext) { // if saving context was defined (not 'undefined'):
+                savingInfoHolder["centreContextHolder"] = savingContext;
+        	}
+            return savingInfoHolder;
+        },
+        
+        /**
+         * Provides custom property into 'centreContextHolder' internals.
+         */
+        setCustomProperty: function(centreContextHolder, name, value) {
+        	centreContextHolder["customObject"][name] = value;
+        }, 
+        
+        /**
+         * Removes custom property from 'centreContextHolder' internals, if exists.
+         */
+        removeCustomProperty: function(centreContextHolder, name) {
+            if (typeof (centreContextHolder["customObject"])[name] !== 'undefined') {
+                delete(centreContextHolder["customObject"])[name];
+            }
+        },
+        
+        /**
+         * Discards all requests of 'ajaxElement' if any.
+         *
+         * Returns the number of aborted requests
+         */
+        discardAllRequests: function (ajaxElement) {
+        	var number = 0;
+        	if (ajaxElement.loading && ajaxElement.activeRequests.length > 0) { // need to ensure that activeRequests are not empty; if they are empty, 'loading' property of 'ajaxElement' can still be true. 
+        		// get oldest request and discard it
+        		var oldestRequest = ajaxElement.activeRequests[0];
+        		// there is a need to explicitly abort iron-request instance since _discardRequest() does not perform that action:
+        		oldestRequest.abort();
+        		number = number + 1;
+        		
+        		// discards oldest request in terms of 'iron-ajax' element -- after that the request is not 'active' 
+        		//   and is removed from consideration (for e.g., 'loading' property could be recalculated) -- but this
+        		//   request is not aborted!
+        		// TODO maybe, the private API usage should be removed, and 'debouncing' should be used instead -- please, consider
+        		ajaxElement._discardRequest(oldestRequest);
+        		
+        		// discard all other requests if there are any:
+        		number = number + this.discardAllRequests(ajaxElement);
+        	}
+        	return number;
+        }
+    });
+})();    
+</script>

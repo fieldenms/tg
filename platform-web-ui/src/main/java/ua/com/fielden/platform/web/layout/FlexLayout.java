@@ -1,37 +1,49 @@
 package ua.com.fielden.platform.web.layout;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.web.component.AbstractWebComponent;
-import ua.com.fielden.platform.web.interfaces.ILayout;
+import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.interfaces.IExecutable;
+import ua.com.fielden.platform.web.interfaces.IImportable;
+import ua.com.fielden.platform.web.minijs.JsCode;
 
 /**
- * Represents the flex layout manager in html5.
+ * The layout that is sensitive to device size. And provides ability to specify layout for each device and device orientation.
  *
  * @author TG Team
  *
  */
-public class FlexLayout implements ILayout<String> {
-
-    public FlexLayout(final String layoutConstraints, final String rowConstraints, final String colConstraints) {
-
-    }
+public class FlexLayout extends AbstractLayout<AbstractLayoutSetter<FlexLayout>> implements IImportable, IExecutable {
+    private final String flexLayoutPath = "layout/tg-flex-layout";
 
     @Override
     public DomElement render() {
-        // TODO Auto-generated method stub
-        return null;
+        final DomElement flexElement = new DomElement("tg-flex-layout");
+        for (final Pair<Device, Orientation> layout : layouts.keySet()) {
+            if (layout.getValue() == null) {
+                flexElement.attr("when-" + layout.getKey().toString(), "[[_" + layout.getKey().toString() + "Layout]]");
+            }
+        }
+        return flexElement;
     }
 
     @Override
-    public FlexLayout add(final AbstractWebComponent component) {
-        // TODO Auto-generated method stub
-        return null;
+    public String importPath() {
+        return flexLayoutPath;
     }
 
     @Override
-    public FlexLayout add(final AbstractWebComponent component, final String constraints) {
-        // TODO Auto-generated method stub
-        return null;
+    protected AbstractLayoutSetter<FlexLayout> createLayoutSetter() {
+        return new AbstractLayoutSetter<FlexLayout>(this);
     }
 
+    @Override
+    public JsCode code() {
+        final StringBuilder code = new StringBuilder();
+        for (final Pair<Device, Orientation> layout : layouts.keySet()) {
+            if (layout.getValue() == null) {
+                code.append("this._" +layout.getKey().toString() + "Layout = " + layouts.get(layout).get() + ";\n");
+            }
+        }
+        return new JsCode(code.toString());
+    }
 }

@@ -1,0 +1,330 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input-error.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input-char-counter.html">
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html">
+
+<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+
+<!-- link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html" -->
+<link rel="import" href="/app/tg-reflector.html">
+
+ <dom-module id="tg-editor">
+    <style>
+        /*Styles for tooltip*/
+        /*:host::shadow * /deep/ core-tooltip::shadow #tooltip {
+            white-space: normal;
+        }
+        :host::shadow * /deep/ core-tooltip .span-tooltip {
+            line-height: 15px;
+        }
+        :host::shadow core-tooltip.delayed:hover::shadow .core-tooltip,
+        :host::shadow core-tooltip.delayed:focus::shadow .core-tooltip {
+            opacity: 1;
+            -webkit-transition-delay: 1s;
+            transition-delay: 1s;
+            transform: translate3d(0px, 0px, 0px);
+        }*/
+        
+        #input.upper-case {
+            text-transform: uppercase;
+        }
+        
+        .main-container {
+            @apply(--layout-horizontal);
+            @apply(--layout-center);
+        }
+        
+        #input-container {
+            @apply(--layout-flex);
+        }
+        /* Styles for boolean property editors. */
+        paper-checkbox {
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -o-user-select: none;
+            font-family: 'Roboto', 'Noto', sans-serif;
+            --paper-checkbox-checked-color: #0288D1;
+            --paper-checkbox-checked-ink-color: #0288D1;
+            height: 1.8rem;
+        }
+        
+        /* Styles for integer and decimal property editors. */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        paper-checkbox::shadow #checkboxContainer {
+            flex-shrink: 0;
+        }
+        paper-checkbox::shadow #checkboxLabel {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.9rem;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            color: #757575 !important;
+        }
+        
+        paper-input-container::shadow .add-on-content {
+            position: relative;
+        }
+        
+        paper-input-container::shadow .label-and-input-container {
+            min-width: 0px;
+        }
+        
+        paper-input-container {
+            --paper-input-container-label: {
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                font-size: 0.9rem;
+                transform: translate3d(0, -75%, 0);
+                width: auto;
+            };
+            --paper-input-container-input: {
+                font-size: 1rem;
+                line-height: 1.8rem;
+            }
+        }
+            
+        paper-input-error {
+            width: 100%;
+            position: absolute;
+        }
+            
+        paper-char-counter {
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+        
+        /* style requiredness */
+        paper-input-container.required {
+            --paper-input-container-color: #03A9F4;
+            --paper-input-container-focus-color: #03A9F4;
+        }
+        
+        paper-input-container.decorator-disabled.required::shadow :not(.is-invalid) .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: #03A9F4;
+        }
+        
+        /* style warning */
+        paper-input-container.warning {
+            --paper-input-container-invalid-color: #FFA000;
+        }
+        
+        paper-input-container.decorator-disabled.warning::shadow .is-invalid .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: #FFA000;
+        }
+        
+        paper-input-container.decorator-disabled.warning::shadow .is-invalid .focused-line {
+      		background: transparent !important;
+        	border-color: transparent !important;
+        }
+        
+        /* style error */
+        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: var(--google-red-500);
+        }
+        
+        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .focused-line {
+      		background: transparent !important;
+        	border-color: transparent !important;
+        }
+        
+        /* style not required, not warning and not error -- regular one */
+        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow :not(.is-invalid) .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: var(--secondary-text-color);
+        }
+        
+        /* The next style chunk is applied on all 'add-on content', for e.g. char-counter, error message etc. */
+        paper-input-container.decorator-disabled::shadow .add-on-content ::content {
+      		opacity: 0.6;
+        }
+    </style>
+
+    <template>
+        <paper-input-container id="decorator" attr-for-value="editing-value" always-float-label>
+            <!-- flex auto  for textarea! -->
+            <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]">[[propTitle]]</label>
+            <div class="main-container">
+            	<content select=".prefix-custom-attributes"></content>
+                <div id="input-container" style$="[[_calcDecoratorPartStyle(_disabled)]]">
+                    <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
+
+                    <input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
+
+                    <input id="input" is="iron-input" hidden$="[[!_isDecimal(_editorKind)]]" type="number" step="any" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled}}"/>
+
+                    <input id="input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
+
+                    <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
+                        <!--  flex -->
+                        <textarea id="input" disabled$="[[_disabled]]"></textarea>
+                    </iron-autogrow-textarea>
+
+                    <paper-checkbox id="input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanCheckedIfExists(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal center">[[propTitle]]</paper-checkbox>
+
+                    <input id="input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
+                    
+                    <input id="input" is="iron-input" hidden$="[[!_isColourEditor(_editorKind)]]" bind-value="{{_editingValue}}" style$="[[_calcColourTextStyleIfExists(_editingValue)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
+                </div>
+                <!-- CONTENT HERE: -->
+                <content select=".custom-icon-buttons"></content>
+				<content select=".property-action"></content>
+            </div>
+
+            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]">[[_error]]</paper-input-error>
+
+            <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]"></paper-input-char-counter>
+        </paper-input-container>
+        
+        <tg-reflector id="reflector"></tg-reflector>
+
+        <template is="dom-if" if="[[debug]]">
+            <p>_editingValue: <i>[[_editingValue]]</i>
+            </p>
+            <p>_commValue: <i>[[_commValue]]</i>
+            </p>
+            <p>_acceptedValue: <i>[[_acceptedValue]]</i>
+            </p>
+        </template>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+        is: 'tg-editor',
+
+        properties: {
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
+            // No default values are allowed in this case.														   //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            propTitle: String,
+            _disabled: {
+            	type: Boolean,
+            	observer: '_disabledChanged'
+            },
+            _editingValue: {
+                type: String,
+                notify: true
+            },
+            _error: String,
+            _commValue: String,
+            _acceptedValue: String,
+            debug: Boolean,
+            _editorKind: String,
+            _onChange: Function,
+            _onKeydown: Function,
+            _onInput: Function,
+            _maxLength: Number,
+            _autocompleterBlurEventHandler: Function,
+            _calcColourTextStyle: Function,
+            currentState: String,
+            _isBooleanChecked: Function
+        },
+
+        _isDecimal: function (editorKind) {
+            return 'DECIMAL' === editorKind;
+        },
+
+        _isInteger: function (editorKind) {
+            return 'INTEGER' === editorKind;
+        },
+
+        _isSinglelineTextOrDate: function (editorKind) {
+            return 'SINGLELINE_TEXT' === editorKind || 'DATE' === editorKind;
+        },
+
+        _isMultilineText: function (editorKind) {
+            return 'MULTILINE_TEXT' === editorKind;
+        },
+
+        _isBooleanEditor: function (editorKind) {
+            return "BOOLEAN" === editorKind;
+        },
+
+        _isAutocompleter: function (editorKind) {
+            return "AUTOCOMPLETER" === editorKind;
+        },
+        
+        _isColourEditor : function(editorKind) {
+            return "COLOUR" === editorKind;
+        },
+
+        /**
+         * Calculates the style for container's label.
+         */
+        _calcLabelStyle: function (editorKind, _disabled) {
+            var style = "";
+            if ("BOOLEAN" === editorKind) {
+                style += "visibility: hidden;"
+            }
+            if (_disabled === true) {
+                style += "opacity: 0.6;"
+            }
+            return style;
+        },
+        
+        /**
+         * Calculates the style for decorator inner parts, based on '_disabled' property.
+         */
+        _calcDecoratorPartStyle: function (_disabled) {
+            var style = "min-width: 0px;";
+            if (_disabled === true) {
+                style += "opacity: 0.6;"
+            }
+            return style;
+        },
+        
+        _isBooleanCheckedIfExists: function (editingValue) {
+            return this._isBooleanChecked ? this._isBooleanChecked(editingValue) : false;
+        },
+        
+        _calcColourTextStyleIfExists: function (editingValue) {
+            return this._calcColourTextStyle ? this._calcColourTextStyle(editingValue) : "margin-left: 1px; color: #DD2C00";
+        },
+        
+        /**
+         * The observer to the '_disabled' property, which maintains appropriately the class list of the decorator (regarding the class 'decorator-disabled').
+         */
+        _disabledChanged: function (newValue, oldValue) {
+        	if (newValue === true) {
+            	this.$.decorator.classList.add("decorator-disabled");
+        	} else {
+        		this.$.decorator.classList.remove("decorator-disabled");
+        	}
+            this.updateStyles();
+        }
+    });
+</script>

@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer0;
@@ -87,12 +88,14 @@ public class DomainTreeVersionMaintainerTest extends AbstractDomainTreeTest {
     }
 
     @Test
+    @Ignore
     public void testMaintainCentreVersion() throws Exception {
         final CentreDomainTreeManagerAndEnhancer0 centre0 = new CentreDomainTreeManagerAndEnhancer0(serialiser0, createRootTypes());
         final byte[] array0 = serialiser0.serialise(centre0);
         DomainTreeVersionMaintainer.retrieveCentre("ecc key", array0, serialiser, serialiser0);
     }
 
+    @Ignore
     @Test
     public void testMaintainCentreVersion_for_centre_with_locators() throws Exception {
         // final GlobalDomainTreeManager mgr = createManagerForBaseUser();
@@ -109,6 +112,7 @@ public class DomainTreeVersionMaintainerTest extends AbstractDomainTreeTest {
         DomainTreeVersionMaintainer.retrieveCentre("ecc key", array0, serialiser, serialiser0);
     }
 
+    @Ignore
     @Test
     public void testMaintainLocatorVersion() throws Exception {
         final LocatorDomainTreeManagerAndEnhancer0 locator0 = new LocatorDomainTreeManagerAndEnhancer0(serialiser0, createRootTypes());

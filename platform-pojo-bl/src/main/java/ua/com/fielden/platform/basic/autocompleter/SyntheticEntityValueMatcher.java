@@ -19,9 +19,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
- * 
+ *
  * @author oleh
- * 
+ *
  */
 public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregates> {
 
@@ -77,20 +77,6 @@ public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregat
         return entityAggregatesDao.getFirstEntities(from(defaultModel).with(propertyParamName, value).model(), pageSize);
     }
 
-    @Override
-    public List<EntityAggregates> findMatchesWithModel(final String value) {
-        throw new UnsupportedOperationException("findMatchesWithModel for the SyntheticEntityValueMatcher is unsupported");
-    }
-
-    @Override
-    public void setFetchModel(final fetch fetchModel) {
-        throw new UnsupportedOperationException("setQueryModel for the SyntheticEntityValueMatcher is unsupported");
-    }
-
-    @Override
-    public fetch<?> getFetchModel() {
-        throw new UnsupportedOperationException("getQueryModel for the SyntheticEntityValueMatcher is unsupported");
-    }
 
     public void setPageSize(final int pageSize) {
         this.pageSize = pageSize;

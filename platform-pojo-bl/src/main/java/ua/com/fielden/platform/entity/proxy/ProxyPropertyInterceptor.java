@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.proxy;
 
+import static java.lang.String.format;
+
 import java.lang.reflect.Method;
 
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
@@ -31,6 +33,6 @@ public class ProxyPropertyInterceptor {
 
     @RuntimeType
     public Object accessInterceptor(@AllArguments Object[] allArguments, @Origin Method method) throws Exception {
-        throw new StrictProxyException(null, null, String.format("Invocation of method [%s] is restricted due to unfetched property [%s] in type [%s].", method.getName(), proxiedPropName, ownerType.getName()));
+        throw new StrictProxyException(format("Invocation of method [%s] is restricted due to unfetched property [%s] in type [%s].", method.getName(), proxiedPropName, ownerType.getName()));
     }
 }

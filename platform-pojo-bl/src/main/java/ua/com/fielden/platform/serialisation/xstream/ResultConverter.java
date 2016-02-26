@@ -15,9 +15,9 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
  * This an XStream converter for marshaling and unmarshaling instances of {@link Result}.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class ResultConverter implements Converter {
 
@@ -77,7 +77,7 @@ public class ResultConverter implements Converter {
     @Override
     public Object unmarshal(final HierarchicalStreamReader reader, final UnmarshallingContext context) {
         Object instancePropety = null;
-        final String messagePropety = reader.getAttribute("msg");
+        final String messageProperty = reader.getAttribute("msg");
         final Exception exProperty = reader.getAttribute("ex") != null ? new Exception(reader.getAttribute("ex")) : null;
 
         while (reader.hasMoreChildren()) {
@@ -95,7 +95,7 @@ public class ResultConverter implements Converter {
             reader.moveUp();
         }
 
-        return Warning.class.equals(context.getRequiredType()) ? new Warning(instancePropety, messagePropety) : new Result(instancePropety, messagePropety, exProperty);
+        return Warning.class.equals(context.getRequiredType()) ? new Warning(instancePropety, messageProperty) : (exProperty != null ? new Result(instancePropety, exProperty) :new Result(instancePropety, messageProperty));
     }
 
     @Override

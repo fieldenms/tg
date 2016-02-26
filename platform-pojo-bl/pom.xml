@@ -17,6 +17,11 @@
         </description>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>18.0</version>
+		</dependency>
 
 		<!-- start of Kryo specific libs -->
 		<dependency>
@@ -57,6 +62,13 @@
 		</dependency>
 
 		<!-- End of jackson dependencies -->
+
+		<!-- Reactive X dependency to provide observable sequences -->
+		<dependency>
+			<groupId>io.reactivex</groupId>
+			<artifactId>rxjava</artifactId>
+			<version>1.1.0</version>
+		</dependency>
 
 		<!-- kryo depends on asm only for managing public fields -->
 		<!-- ASM is used for generating new entity types with ad-hoc calculated properties -->

@@ -1,20 +1,21 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import java.util.Map;
-
-import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -26,31 +27,55 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class EntityValidationResource<T extends AbstractEntity<?>> extends ServerResource {
-    private final EntityResourceMixin<T> mixin;
+    private final Class<T> entityType;
+    private final EntityFactory entityFactory;
     private final RestServerUtil restUtil;
-    private final Logger logger = Logger.getLogger(getClass());
+    private final ICriteriaGenerator critGenerator;
+    private final ICompanionObjectFinder companionFinder;
+    private final IWebUiConfig webUiConfig;
+    private final IServerGlobalDomainTreeManager serverGdtm;
+    private final IUserProvider userProvider;
 
-    public EntityValidationResource(final Class<T> entityType, final IEntityProducer<T> entityProducer, final EntityFactory entityFactory, final RestServerUtil restUtil, final ICompanionObjectFinder companionFinder, final Context context, final Request request, final Response response) {
+    public EntityValidationResource(
+            final Class<T> entityType,
+            final EntityFactory entityFactory,
+            final RestServerUtil restUtil,
+            final ICriteriaGenerator critGenerator,
+            final ICompanionObjectFinder companionFinder,
+            final IWebUiConfig webUiConfig,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IUserProvider userProvider,
+            final Context context,
+            final Request request,
+            final Response response) {
         init(context, request, response);
 
-        mixin = new EntityResourceMixin<T>(entityType, entityProducer, entityFactory, restUtil, companionFinder);
+        this.entityType = entityType;
+        this.entityFactory = entityFactory;
         this.restUtil = restUtil;
+        this.critGenerator = critGenerator;
+        this.companionFinder = companionFinder;
+        this.webUiConfig = webUiConfig;
+        this.serverGdtm = serverGdtm;
+        this.userProvider = userProvider;
     }
 
     /**
      * Handles POST request resulting from RAO call to method save.
      */
     @Post
-    @Override
-    public Representation post(final Representation envelope) throws ResourceException {
-        final Map<String, Object> modifiedPropertiesHolder = mixin.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
+    public Representation validate(final Representation envelope) {
+        return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+            // NOTE: the following line can be the example how 'entity validation' server errors manifest to the client application
+            // throw new IllegalStateException("Illegal state during entity validation.");
+            final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
 
-        final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
-        final Long id = arrivedIdVal == null ? null : ((Integer) arrivedIdVal).longValue();
+            final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
 
-        // Initialises the "validation prototype" entity, which modification will be made upon:
-        final T validationPrototype = mixin.createEntityForRetrieval(id);
-        return restUtil.singleJSONRepresentation(mixin.apply(modifiedPropertiesHolder, validationPrototype));
+            if (savingInfoHolder.getCentreContextHolder() != null && applied instanceof AbstractFunctionalEntityWithCentreContext) {
+                ((AbstractFunctionalEntityWithCentreContext) applied).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
+            }
+            return restUtil.rawListJSONRepresentation(applied);
+        }, restUtil);
     }
-
 }

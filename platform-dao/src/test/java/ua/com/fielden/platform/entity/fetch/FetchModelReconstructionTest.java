@@ -1,11 +1,19 @@
 package ua.com.fielden.platform.entity.fetch;
 
 import static java.lang.String.format;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -14,9 +22,16 @@ import java.util.Map.Entry;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
+import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
@@ -28,6 +43,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
@@ -67,13 +83,27 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    public void reconstruct_fetch_model_with_second_level_property_instrumented() {
+    public void fetch_model_reconstruction_recognizes_instrumented_properties_to_produce_fetch_with_instrumentation() {
         final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class));
-
         final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
 
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
         assertSuperSet(fetch, reconFetch);
+    }
+    
+    @Test
+    public void fetch_model_reconstruction_recognizes_properties_of_type_AbstractUnionEntity() {
+        final TgWorkshop workshop = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
+        final TgBogieLocation location = config.getEntityFactory()
+                .newEntity(TgBogieLocation.class)
+                .setWorkshop(workshop);
+        final TgBogie bogie = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
+        assertEquals(workshop, bogie.getLocation().activeEntity());
+
+        final fetch<TgBogie> expectedFetch = fetchAndInstrument(TgBogie.class).with("location", fetchAndInstrument(TgBogieLocation.class));
+        final fetch<TgBogie> reconFetch = FetchModelReconstructor.reconstruct(bogie);
+        
+        assertSuperSet(expectedFetch, reconFetch);
     }
 
     public void assertSuperSet(final fetch<?> origModel, final fetch<?> superModel) {
@@ -103,15 +133,15 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
         final TgVehicleMake merc = save(new_(TgVehicleMake.class, "MERC", "Mercedes"));
         final TgVehicleMake audi = save(new_(TgVehicleMake.class, "AUDI", "Audi"));
         final TgVehicleMake bmw = save(new_(TgVehicleMake.class, "BMW", "BMW"));
-        final TgVehicleMake subaro = save(new_(TgVehicleMake.class, "SUBARO", "Subaro"));
+        save(new_(TgVehicleMake.class, "SUBARO", "Subaro"));
 
         final TgVehicleModel m316 = save(new_(TgVehicleModel.class, "316", "316").setMake(merc));
-        final TgVehicleModel m317 = save(new_(TgVehicleModel.class, "317", "317").setMake(audi));
+        save(new_(TgVehicleModel.class, "317", "317").setMake(audi));
         final TgVehicleModel m318 = save(new_(TgVehicleModel.class, "318", "318").setMake(audi));
-        final TgVehicleModel m319 = save(new_(TgVehicleModel.class, "319", "319").setMake(bmw));
-        final TgVehicleModel m320 = save(new_(TgVehicleModel.class, "320", "320").setMake(bmw));
-        final TgVehicleModel m321 = save(new_(TgVehicleModel.class, "321", "321").setMake(bmw));
-        final TgVehicleModel m322 = save(new_(TgVehicleModel.class, "322", "322").setMake(bmw));
+        save(new_(TgVehicleModel.class, "319", "319").setMake(bmw));
+        save(new_(TgVehicleModel.class, "320", "320").setMake(bmw));
+        save(new_(TgVehicleModel.class, "321", "321").setMake(bmw));
+        save(new_(TgVehicleModel.class, "322", "322").setMake(bmw));
 
         final TgVehicle car2 = save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").
                 setInitDate(date("2007-01-01 00:00:00")).

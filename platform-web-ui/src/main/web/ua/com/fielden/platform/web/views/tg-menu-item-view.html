@@ -1,0 +1,168 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/app/tg-element-loader.html">
+<link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+
+<dom-module id="tg-menu-item-view">
+    <style>
+        /* :host {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        } */
+        .view {
+            background-color: white;
+        }
+        paper-material {
+            margin: 10px 30px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+    </style>
+    <template>
+        <template is="dom-if" if="[[menuItem.view]]">
+            <template is="dom-if" if="[[!_isCentre(menuItem)]]">
+                <paper-material>
+                    <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                </paper-material>
+            </template>
+            <template is="dom-if" if="[[_isCentre(menuItem)]]">
+                <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+            </template>
+        </template>
+        <template is="dom-if" if="[[!menuItem.view]]">
+            <div class="view">
+                Please specify view for <span>[[menuItem.title]]</span>.
+            </div>
+        </template>
+    </template>
+    </dom-modules>
+    <script>
+        (function () {
+            var isPropertyDefined = function (obj, property) {
+                var dotIndex = property.indexOf(".");
+                var firstProp;
+                if (!obj) {
+                    return false;
+                } else if (dotIndex < 0) {
+                    return !!obj[property]
+                } else {
+                    firstProp = property.substr(0, dotIndex);
+                    return isPropertyDefined(obj[firstProp], property.slice(dotIndex + 1))
+                }
+            };
+
+            Polymer({
+
+                is: "tg-menu-item-view",
+
+                properties: {
+                    menuItem: Object,
+                    autoLoad: {
+                        type: Boolean,
+                        value: false,
+                        reflectToAttribute: true
+                    },
+                    uuid: String,
+                    moduleId: String
+                },
+
+                behaviors: [Polymer.IronResizableBehavior],
+
+                hostAttributes: {
+                    "class": "layout vertical"
+                },
+
+                attached: function () {
+                    var self = this;
+                    self.async(function () {
+                        if (isPropertyDefined(self, "menuItem.view.attrs")) {
+                            self.menuItem.view.attrs.uuid = self.uuid;
+                            self.menuItem.view.attrs.moduleId = self.moduleId;
+                        }
+                    }, 1);
+                },
+
+                _getMenuItemAttributes: function () {
+                    return this.menuItem.view.attrs;
+                },
+
+                _isCentre: function (menuItem) {
+                    return menuItem.view.type === 'centre';
+                },
+
+                _afterLoadListener: function (e, detail, view) {
+                    var self = this;
+                    if (e.target === this.$$("#elementToLoad")) {
+                        if (this.menuItem.view.type === 'centre') {
+                            detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                                if (detail.autoRun) {
+                                    detail.run();
+                                }
+                                self.fire("menu-item-view-loaded", self.menuItem);
+                            };
+                            detail.retrieve();
+                        } else if (this.menuItem.view.type === 'master') {
+                            detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                                if (entity.id === null) {
+                                    postal.publish({
+                                        channel: "view",
+                                        topic: "master.new.created",
+                                        data: {
+                                            centreUuid: detail.centreUuid,
+                                            item: self.menuItem
+                                        }
+                                    });
+                                } else {
+                                    postal.publish({
+                                        channel: "view",
+                                        topic: "master.edit.created",
+                                        data: {
+                                            entityId: entity.id,
+                                            centreUuid: detail.centreUuid,
+                                            item: self.menuItem
+                                        }
+                                    });
+                                }
+                                self.fire("menu-item-view-loaded", self.menuItem);
+                            };
+                            detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
+                            detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
+                                //Send postal message that save was completed if it was succefull
+                                if (potentiallySavedOrNewEntity.isValid()) {
+                                    postal.publish({
+                                        channel: "master",
+                                        topic: "save.start",
+                                        data: {
+                                            centreUuid: detail.centreUuid,
+                                            masterUuid: detail.uuid,
+                                            moduleId: detail.moduleId,
+                                            entity: potentiallySavedOrNewEntity,
+                                            item: self.menuItem,
+                                            selectedEntitiesInContext: [potentiallySavedOrNewEntity]
+                                        }
+                                    });
+                                }
+                            };
+                            detail.retrieve();
+                        } else {
+                            self.fire("menu-item-view-loaded", self.menuItem);
+                        }
+                    }
+                },
+                load: function () {
+                    var elementToLoad = this.$$("#elementToLoad");
+                    if (elementToLoad && !elementToLoad.wasLoaded) {
+                        elementToLoad.load();
+                    }
+                },
+                wasLoaded: function () {
+                    var elementToLoad = this.$$("#elementToLoad");
+                    if (elementToLoad) {
+                        return elementToLoad.wasLoaded;
+                    }
+                    return true;
+                }
+            });
+        })();
+    </script>

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity;
 
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -10,6 +11,15 @@ import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.ActivePropertyValidator;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 
+/**
+ * A base type to derive from when an activatable entity needs to be created.
+ * The platform automatically tracks active references to instance of activatable entities, and provides the logic related to their deactivation
+ * (e.g. referenced active entities should not be deactivated, also refer ot {@link DeactivatableDependencies}).
+ *
+ * @author TG Team
+ *
+ * @param <K>
+ */
 public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends AbstractEntity<K> {
     private static final long serialVersionUID = 1L;
 

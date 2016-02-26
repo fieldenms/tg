@@ -150,14 +150,13 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      * @return
      */
     public final AbstractEntity<?> activeEntity() {
-        final Stream<String> propertyNames = !getProperties().isEmpty() ? getProperties().keySet().stream()
-                : Finder.streamRealProperties(getType()).map(field -> field.getName());
+        final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(field -> field.getName());
 
         return propertyNames
                 .filter(propName -> !COMMON_PROPS.contains(propName) && get(propName) != null)
                 .findFirst() // returns Optional
                 .map(propName -> (AbstractEntity<?>) get(propName)) // map optional propName value to an actual property value
-                .orElseGet(null); // return the property value or null if there was no matching propName
+                .orElse(null); // return the property value or null if there was no matching propName
     }
 
     /**

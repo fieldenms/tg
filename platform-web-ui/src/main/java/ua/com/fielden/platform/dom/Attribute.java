@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.dom;
 
-import org.apache.commons.lang.StringUtils;
-
 /**
  * Represents html5 tag's attribute name and value.
  *
@@ -35,7 +33,7 @@ public class Attribute<T> {
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("The attribute name can not be null or emptty.");
         }
-        if (nameValueSeparator == null || nameValueSeparator.isEmpty()) {
+        if (value != null && (nameValueSeparator == null || nameValueSeparator.isEmpty())) {
             throw new IllegalArgumentException("The name-value attribute separotr can not be null");
         }
         this.name = name;
@@ -45,7 +43,7 @@ public class Attribute<T> {
 
     @Override
     public String toString() {
-        return (value == null || StringUtils.isEmpty(value.toString())) ? name : (name + nameValueSeparator + "\"" + value + "\"");
+        return value == null ? name : (name + nameValueSeparator + "'" + value + "'");
     }
 
     @Override

@@ -32,7 +32,8 @@ public class ResultJsonDeserialiser<T extends Result> extends StdDeserializer<T>
         if (node.get("instance") == null) {
             instance = null;
         } else {
-            final Class<?> instanceType = ClassesRetriever.findClass(node.get("@instanceType").asText());
+            final JsonNode typeNameObj = node.get("@instanceType");
+            final Class<?> instanceType = ClassesRetriever.findClass(typeNameObj.asText());
 
             instance = mapper.readValue(node.get("instance").traverse(mapper), instanceType);
         }
@@ -44,10 +45,8 @@ public class ResultJsonDeserialiser<T extends Result> extends StdDeserializer<T>
         }
 
         // instantiate the result; warning type checking is required only when instance and message are not null
-        if (ex != null && message == null) {
+        if (ex != null) {
             return (T) new Result(instance, ex);
-        } else if (ex != null && message != null) {
-            return (T) new Result(instance, message, ex);
         } else {
             return Warning.class.equals(resultType) ? (T) new Warning(instance, message) : (T) new Result(instance, message);
         }

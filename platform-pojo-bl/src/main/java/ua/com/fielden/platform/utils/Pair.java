@@ -5,9 +5,9 @@ import java.util.Map;
 
 /**
  * Represents a pair of instances logically tied together.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class Pair<K, V> implements Map.Entry<K, V>, Serializable {
     private static final long serialVersionUID = 5789592731906172911L;
@@ -25,6 +25,11 @@ public class Pair<K, V> implements Map.Entry<K, V>, Serializable {
     public Pair(final K key, final V value) {
         this.key = key;
         this.value = value;
+    }
+
+    /** A convenient factory method. */
+    public static <K, V> Pair<K,V> pair(final K key, final V value) {
+        return new Pair<K,V>(key, value);
     }
 
     @Override

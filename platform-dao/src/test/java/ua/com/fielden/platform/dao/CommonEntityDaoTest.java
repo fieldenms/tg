@@ -1,19 +1,21 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -108,6 +110,63 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertEquals("Incorrect number of instances on the last page.", 1, lastPage.data().size());
     }
 
+    public void test_unconditional_streaming_should_contain_all_matching_entities() {
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(query).model();
+
+        final Stream<EntityWithMoney> streamBy3 = dao.stream(qem, 3);
+        assertEquals("Incorrect number of entities in the stream", dao.count(query), streamBy3.count());
+        
+        final Stream<EntityWithMoney> streamBy1 = dao.stream(qem, 1);
+        assertFalse("The stream should not be parallel", streamBy1.isParallel());
+        assertEquals("Incorrect number of entities in the stream", dao.count(query), streamBy1.count());
+    }
+
+    public void test_that_there_is_API_for_streaming_with_default_page_capacity() {
+        final Stream<EntityWithMoney> stream = dao.stream(from(select(EntityWithMoney.class).model()).model());
+        assertEquals("Incorrect number of entities in the stream", 4, stream.count());
+    }
+
+    public void test_streaming_based_on_ordered_qem_should_have_the_same_traversal_order() {
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final OrderingModel orderBy = orderBy().prop("key").asc().model();
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(query).with(orderBy).model();
+
+        final Iterator<EntityWithMoney> iterator = dao.getAllEntities(qem).iterator();
+        final Stream<EntityWithMoney> stream = dao.stream(qem, 2);
+        stream.forEach(entity -> assertEquals(iterator.next(), entity));
+    }
+
+    public void test_streaming_based_on_conditional_qem_should_contain_only_matching_entities() {
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class)
+                .where().prop("money.amount").ge().val(new BigDecimal("30.00"))//
+                .model();
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(query).model();
+
+        final Stream<EntityWithMoney> stream = dao.stream(qem, 2);
+        assertEquals("Incorrect number of entities in the stream", dao.count(query), stream.count());
+    }
+
+    public void test_stream_should_not_be_parallel() {
+        final Stream<EntityWithMoney> streamBy3 = dao.stream(from(select(EntityWithMoney.class).model()).model(), 2);
+        assertFalse("The stream should not be parallel", streamBy3.isParallel());
+    }
+
+    public void test_stream_should_not_be_accecible_once_traversed() {
+        final Stream<EntityWithMoney> stream = dao.stream(from(select(EntityWithMoney.class).model()).model(), 2);
+        
+        // consume the stream by traversing it
+        stream.forEach(e -> e.getMoney()/* basically do nothing*/);
+        
+        // try to consume the stream again by counting the number of elements in it
+        try {
+            stream.count();
+            fail("Should have failed due to illegal state exception of the stream");
+        } catch (final IllegalStateException ex) {
+        }
+    }
+
+    
     public void test_entity_exists_using_entity() {
         final EntityWithMoney entity = dao.findByKey("key1");
         assertTrue(dao.entityExists(entity));

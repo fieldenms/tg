@@ -121,6 +121,6 @@ public class StyleAttribute extends Attribute<Map<String, StylePropertyAttribute
     @Override
     public String toString() {
         final String styleStr = StringUtils.join(value.values(), ";");
-        return StringUtils.isEmpty(styleStr) ? "" : (name + nameValueSeparator + "\"" + styleStr + "\"");
+        return StringUtils.isEmpty(styleStr) ? "" : (name + nameValueSeparator + "'" + styleStr + "'");
     }
 }

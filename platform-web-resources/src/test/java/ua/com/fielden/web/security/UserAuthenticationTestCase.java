@@ -12,7 +12,7 @@ import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.ClientAuthenticationModel;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
@@ -83,7 +83,7 @@ public class UserAuthenticationTestCase extends WebBasedTestCase {
         config.restServerUtil().setAppWidePublicKey(appWidePublicKey);
         router.attach(authenticationUri, new UserAuthResourceFactory(DbDrivenTestCase.injector, config.restServerUtil()) {
             @Override
-            protected IUserController getController() {
+            protected IUserEx getController() {
                 return controller;
             }
         });

@@ -9,7 +9,7 @@ import org.restlet.routing.Router;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.EntityQueryResource;
 import ua.com.fielden.platform.web.resources.EntityTypeResource;
@@ -49,7 +49,7 @@ public class EntityTypeResourceFactory<T extends AbstractEntity<?>, DAO extends 
         final DAO dao = injector.getInstance(daoType);
 
         final String username = (String) request.getAttributes().get("username");
-        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
 
         if (Method.GET.equals(request.getMethod()) || Method.HEAD.equals(request.getMethod()) || Method.PUT.equals(request.getMethod())) {
             new EntityTypeResource<T>(dao, factory, restUtil, getContext(), request, response).handle();

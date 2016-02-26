@@ -11,6 +11,7 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.DefinersExecutor;
 
 public class EntityFetcher {
     private final QueryExecutionContext executionContext;
@@ -61,6 +62,6 @@ public class EntityFetcher {
         for (final EntityContainer<E> entityContainer : containers) {
             result.add(instantiator.instantiate(entityContainer));
         }
-        return result;
+        return DefinersExecutor.execute(result);
     }
 }

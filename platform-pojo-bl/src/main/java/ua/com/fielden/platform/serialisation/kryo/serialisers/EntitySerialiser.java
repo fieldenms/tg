@@ -145,7 +145,7 @@ public final class EntitySerialiser extends Serializer {
                 final String name = prop.field.getName();
                 lastProperty = name;
                 final Object value = prop.field.get(entity);
-                final boolean dirty = entity.getProperty(name) == null ? false : entity.getProperty(name).isDirty();
+                final boolean dirty = !entity.getPropertyOptionally(name).isPresent() ? false : entity.getProperty(name).isDirty();
 
                 if (prop.propertyType != null) {
                     if (prop.serialiser == null) {
@@ -215,7 +215,7 @@ public final class EntitySerialiser extends Serializer {
             final Long id = NOT_NULL_NOT_DIRTY == buffer.get() ? LongSerializer.get(buffer, false) : null;
             final AbstractEntity<?> entity;
 
-            if (DynamicEntityClassLoader.isEnhanced(type)) {
+            if (DynamicEntityClassLoader.isGenerated(type)) {
                 entity = factory.newPlainEntity(type, id);
                 entity.setEntityFactory(factory);
             } else {
@@ -242,7 +242,7 @@ public final class EntitySerialiser extends Serializer {
                     }
                     break;
                 case NULL_DIRTY:
-                    if (!DynamicEntityClassLoader.isEnhanced(type)) {
+                    if (!DynamicEntityClassLoader.isGenerated(type)) {
                         entity.getProperty(prop.field.getName()).setOriginalValue(null).setDirty(true);
                     }
                     break;
@@ -250,7 +250,7 @@ public final class EntitySerialiser extends Serializer {
                     readProperty(buffer, entity, prop);
                     break;
                 case NULL_NOT_DIRTY:
-                    if (!DynamicEntityClassLoader.isEnhanced(type)) {
+                    if (!DynamicEntityClassLoader.isGenerated(type)) {
                         entity.getProperty(prop.field.getName()).setOriginalValue(null);
                     }
                     break;
@@ -295,7 +295,7 @@ public final class EntitySerialiser extends Serializer {
         final Object value = serializer.readObjectData(buffer, concreteType);
         prop.field.set(entity, value);
 
-        return !DynamicEntityClassLoader.isEnhanced(type) ? entity.getProperty(prop.field.getName()).setOriginalValue(value) : null;
+        return !DynamicEntityClassLoader.isGenerated(type) ? entity.getProperty(prop.field.getName()).setOriginalValue(value) : null;
     }
 
     /**

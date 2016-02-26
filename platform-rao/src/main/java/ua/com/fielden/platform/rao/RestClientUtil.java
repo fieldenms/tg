@@ -18,11 +18,11 @@ import org.restlet.Message;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Form;
+import org.restlet.data.Header;
 import org.restlet.data.MediaType;
 import org.restlet.data.Method;
 import org.restlet.data.Protocol;
 import org.restlet.data.Status;
-import org.restlet.engine.header.Header;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.util.Series;
@@ -38,7 +38,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -56,9 +56,9 @@ import ua.com.fielden.platform.utils.Pair;
  * <li>Root URI (getRootUri()) -- http(s)://{hostname}:{port}/{version}
  * <li>Base URI (getBaseUri()) -- http(s)://{hostname}:{port}/{version}/users/{user}
  * </ul>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class RestClientUtil implements IUserProvider {
 
@@ -77,7 +77,7 @@ public final class RestClientUtil implements IUserProvider {
     private String privateKey;
 
     /** User controller is required to be able to retrieve user by it name to ensure correct user association upon username change. */
-    private IUserController userController;
+    private IUserEx userController;
     private User user;
 
     public RestClientUtil(final Protocol protocol, final String host, final int port, final String version, final String user) {
@@ -135,7 +135,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Composes a complete URI based on the provided entity type.
-     * 
+     *
      * @param type
      * @return
      */
@@ -148,7 +148,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Composes a complete URI for entity aggregate request.
-     * 
+     *
      * @return
      */
     public String getUriForAggregates(final WebResourceType rt) {
@@ -157,7 +157,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Constructs a URI for EQL requests. A distinction is made when constructing URI for coded entity types and generated ones.
-     * 
+     *
      * @param type
      *            -- could be a type of either coded or generated entity type
      * @param rt
@@ -173,7 +173,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Constructs a URI for data export requests. A distinction is made when constructing URI for coded entity types and generated ones.
-     * 
+     *
      * @param type
      * @return
      */
@@ -203,7 +203,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Composes a complete URI based on the provided entity type and id.
-     * 
+     *
      * @param type
      * @return
      */
@@ -213,7 +213,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Composes a complete URI based on the provided entity instance.
-     * 
+     *
      * @param type
      * @return
      */
@@ -223,7 +223,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Composes a complete URI based on the property for provided entity instance.
-     * 
+     *
      * @param type
      * @return
      */
@@ -249,7 +249,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Send the provided request and return a response.
-     * 
+     *
      * @param request
      * @return
      * @throws Exception
@@ -269,7 +269,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Sends a request with a challenge based on the provided token.
-     * 
+     *
      * @param request
      * @param token
      * @return
@@ -282,7 +282,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Creates a security token as {username}::{URI}, where {URI} part is encoded with the provided private key. The URI is obtained from the passed in request.
-     * 
+     *
      * @param request
      * @param privateKey
      * @return
@@ -295,7 +295,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Sets a provide security token for the request.
-     * 
+     *
      * @param request
      * @param token
      * @throws Exception
@@ -306,10 +306,10 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Executes the provided request using {@link #send(Request)} and interprets an envelope returned by response.
-     * 
+     *
      * Response envelope is always a serialised instance of {@link Result} bearing all necessary information such as an entity instance or list of entities and/or error
      * information.
-     * 
+     *
      * @param request
      * @return
      * @throws Exception
@@ -336,7 +336,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * De-serialises response to an instance of Result.
-     * 
+     *
      * @param response
      * @return
      */
@@ -363,7 +363,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Processing an input stream expecting a zipped application octet stream carrying an instance of {@link Result}.
-     * 
+     *
      * @param stream
      * @return
      */
@@ -377,7 +377,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Save content of the input stream into the specified file.
-     * 
+     *
      * @param content
      * @param path
      * @throws Exception
@@ -401,7 +401,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Produces {@link EntityQuery} representation, which can be used as a request envelope.
-     * 
+     *
      * @param <T>
      * @param <K>
      * @param query
@@ -419,7 +419,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Produces {@link DynamicallyTypedQueryContainer} representation, which can be used as a request envelope.
-     * 
+     *
      * @param query
      * @param dynamicTypes
      * @return
@@ -435,7 +435,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Produces {@link LifecycleQueryContainer} representation, which can be used as a request envelop.
-     * 
+     *
      * @param model
      * @param binaryTypes
      * @param propertyName
@@ -453,7 +453,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Produces {@link SnappyQuery} representation, which can be used as a request envelope.
-     * 
+     *
      * @param <T>
      * @param <K>
      * @param query
@@ -466,7 +466,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * A convenient method for preparing a representation of a specialised map to be included as part of a request envelope.
-     * 
+     *
      * @param map
      * @return
      */
@@ -477,7 +477,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * A convenient method for preparing a representation of a list of arbitrary instances.
-     * 
+     *
      * @param list
      * @return
      */
@@ -495,7 +495,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Produces entity representation. Takes care of stripping off the instance prior to serialisation.
-     * 
+     *
      * @param <T>
      * @param entity
      * @return
@@ -507,7 +507,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Method to check if {@link Response} header contains an entry with the given name and value.
-     * 
+     *
      * @param response
      * @param headerEntry
      * @param value
@@ -535,7 +535,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Creates a response header entry.
-     * 
+     *
      * @param response
      * @param headerEntry
      * @param value
@@ -546,7 +546,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Returns a header entry value if present. Otherwise, null.
-     * 
+     *
      * @param response
      * @param headerEntry
      * @return
@@ -570,7 +570,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Assigns private key to be used for authentication of HTTP communication. Null value is not assigned and silently ignored.
-     * 
+     *
      * @param privateKey
      */
     public void setPrivateKey(final String privateKey) {
@@ -579,7 +579,7 @@ public final class RestClientUtil implements IUserProvider {
 
     /**
      * Assigns username to be used in HTTP communication. Null value is not assigned and silently ignored.
-     * 
+     *
      * @param username
      */
     public void setUsername(final String username) {
@@ -602,7 +602,7 @@ public final class RestClientUtil implements IUserProvider {
         user = null;
     }
 
-    public void setUserController(final IUserController controller) {
+    public void setUserController(final IUserEx controller) {
         if (userController != null) {
             throw new IllegalStateException("User controller should be assigned only once.");
         }
@@ -625,7 +625,7 @@ public final class RestClientUtil implements IUserProvider {
     }
 
     @Override
-    public void setUsername(final String username, final IUserController controller) {
+    public void setUsername(final String username, final IUserEx controller) {
         setUserController(controller);
         setUsername(username);
     }

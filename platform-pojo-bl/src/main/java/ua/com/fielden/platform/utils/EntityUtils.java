@@ -10,7 +10,6 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
@@ -33,6 +32,7 @@ import ua.com.fielden.platform.entity.fetch.FetchProviderFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -616,6 +616,24 @@ public class EntityUtils {
         return AbstractEntity.class.isAssignableFrom(type);
     }
 
+    /**
+     * Indicates whether type represents {@link Integer}-typed values.
+     *
+     * @return
+     */
+    public static boolean isInteger(final Class<?> type) {
+        return Integer.class.isAssignableFrom(type);
+    }
+
+    /**
+     * Indicates whether type represents either {@link BigDecimal} or {@link Money}-typed values.
+     *
+     * @return
+     */
+    public static boolean isDecimal(final Class<?> type) {
+        return BigDecimal.class.isAssignableFrom(type) || Money.class.isAssignableFrom(type);
+    }
+
     public static boolean isDynamicEntityKey(final Class<?> type) {
         return DynamicEntityKey.class.isAssignableFrom(type);
     }
@@ -636,9 +654,6 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> boolean isCompositeEntity(final Class<T> entityType) {
-        // this was the old implementation:
-        // return Finder.getKeyMembers(entityType).size() > 1;
-
         final KeyType keyAnnotation = AnnotationReflector.getAnnotation(entityType, KeyType.class);
 
         if (keyAnnotation != null) {
@@ -810,38 +825,41 @@ public class EntityUtils {
         }
         return result;
     }
-
+    
     /**
      * Performs {@link AbstractEntity} instance's post-creation actions such as original values setting, definers invoking, dirtiness resetting etc.
+     * <p>
+     * FIXME this method should be removed as soon as MetaPostLoadListener will be removed 
+     * together with Hibernate loading of entity instances inside CommonEntityDao saving logic.
      *
      * @param instance
      * @return
      */
     public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance, final Set<String> proxiedProps) {
-        boolean unionEntity = instance instanceof AbstractUnionEntity;
-        if (!unionEntity && instance.getProperties().containsKey("key")) {
-            final Object keyValue = instance.get("key");
-            if (keyValue != null) {
-                // handle property "key" assignment
-                instance.set("key", keyValue);
-            }
-        }
+        final boolean unionEntity = instance instanceof AbstractUnionEntity;
+//        if (!unionEntity && instance.getProperties().containsKey("key")) {
+//            final Object keyValue = instance.get("key");
+//            if (keyValue != null) {
+//                // handle property "key" assignment
+//                instance.set("key", keyValue);
+//            }
+//        }
 
         for (final MetaProperty metaProp : instance.getProperties().values()) {
-            boolean notNull = metaProp != null;
-            boolean notCommonPropOfUnionEntity = notNull && !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
-            boolean notProxied = notNull && !(proxiedProps.contains(metaProp.getName()));
+            final boolean notNull = metaProp != null;
+            final boolean notCommonPropOfUnionEntity = notNull && !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
+            final boolean notProxied = notNull && !(proxiedProps.contains(metaProp.getName()));
             if (notNull && notCommonPropOfUnionEntity && notProxied) {
                 final Object newOriginalValue = instance.get(metaProp.getName());
-                metaProp.setOriginalValue(newOriginalValue);
-                if (!metaProp.isCollectional()) {
-                    metaProp.define(newOriginalValue);
+                if (instance.isPersisted()) {
+                    metaProp.setOriginalValue(newOriginalValue);
                 }
+                metaProp.define(newOriginalValue);
             }
         }
-        if (!unionEntity) {
-            instance.setDirty(false);
-        }
+//        if (!unionEntity) {
+//            instance.setDirty(false);
+//        }
 
         return instance;
     }
@@ -1019,12 +1037,42 @@ public class EntityUtils {
     }
 
     /**
-     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code>.
+     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> with instrumentation.
      *
      * @param entityType
      * @return
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {
-        return FetchProviderFactory.createDefaultFetchProvider(entityType);
+        return FetchProviderFactory.createDefaultFetchProvider(entityType, true);
+    }
+
+    /**
+     * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) with instrumentation.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType) {
+        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, true);
+    }
+    
+    /**
+     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> <b>without</b> instrumentation.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumented(final Class<T> entityType) {
+        return FetchProviderFactory.createDefaultFetchProvider(entityType, false);
+    }
+
+    /**
+     * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) <b>without</b> instrumentation.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumentedWithKeyAndDesc(final Class<T> entityType) {
+        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
     }
 }

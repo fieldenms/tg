@@ -22,16 +22,19 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 
 /**
@@ -107,8 +110,9 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     private T lastInvalidValue;
     private int valueChangeCount = 0;
     /**
-     * Indicates whether this property has an assigned value. This flag is requited due to the fact that the value of null could be assigned making it impossible to identify the
-     * fact of value assignment.
+     * Indicates whether this property has an assigned value.
+     * This flag is requited due to the fact that the value of null could be assigned making it impossible to identify the
+     * fact of value assignment in light of the fact that the original property value could, and in most cases is, be <code>null</code>.
      */
     private boolean assigned = false;
     ///////////////////////////////////////////////////////
@@ -135,6 +139,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     private final Logger logger = Logger.getLogger(this.getClass());
 
+    /** Enforced mutation happens as part of the error recovery to indicate processing of dependent properties. */
     private boolean enforceMutator = false;
 
     /**
@@ -173,6 +178,7 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.type = type;
         this.isEntity = AbstractEntity.class.isAssignableFrom(type);
         this.retrievable = Reflector.isPropertyRetrievable(entity, field);
+
         // let's identify whether property represents an activatable entity in the current context
         final SkipEntityExistsValidation seevAnnotation = field.getAnnotation(SkipEntityExistsValidation.class);
         boolean skipActiveOnly;
@@ -515,11 +521,16 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         if (result) {
             // if valid check whether it's requiredness sound
             final Object value = ((AbstractEntity<?>) getEntity()).get(getName());
-            if (isRequired() && (value == null || isEmpty(value))) {
+            // this is a potential alternative approach to validating requiredness for proxied properties
+            // leaving it here for future reference
+//            if (isRequired() && isProxy()) {
+//                throw new StrictProxyException(format("Required property [%s] in entity [%s] is proxied and thus cannot be checked.", getName(), getEntity().getType().getName()));
+//            }
+            
+            if (isRequired() && !isProxy() && (value == null || isEmpty(value))) {
                 if (!getValidators().containsKey(ValidationAnnotation.REQUIRED)) {
                     throw new IllegalArgumentException("There are no REQUIRED validation annotation pair for required property!");
                 }
-
 
                 final Result result1 = mkRequiredError();
 
@@ -667,9 +678,8 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      */
     public final MetaProperty<T> setOriginalValue(final T value) {
         if (value != null) {
-            if (isCollectional() && value instanceof Collection) {
-                // possibly at this stage the "value" is the Hibernate proxy.
-                collectionOrigSize = MetaProperty.ORIGINAL_VALUE_NOT_INIT_COLL;
+            if (isCollectional()) {
+                collectionOrigSize = ((Collection<?>) value).size();
             } else { // The single property (proxied or not!!!)
                 originalValue = value;
             }
@@ -773,11 +783,18 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
                     return currValue == null || !currValue.equals(getOriginalValue());
                 }
             } else {
-                final Integer currentSize = ((Collection<?>) getter.invoke(entity)).size();
-                return !currentSize.equals(getCollectionPrevSize());
+                if (getCollectionPrevSize() == null){
+                    // if getCollectionPrevSize() == null this means that the property value was not assigned via setter
+                    // this in turn means that if the property has a non-null value then it is a default one, assigned in class definition
+                    // and should be ignored in determining "changed from original" condition
+                    return false;
+                } else {
+                    final Integer currentSize = ((Collection<?>) getter.invoke(entity)).size();
+                    return !currentSize.equals(getCollectionPrevSize());
+                }
             }
         } catch (final Exception e) {
-            // TODO change to logging
+            logger.debug(e.getMessage(), e);
         }
         return false;
     }
@@ -938,6 +955,10 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
      * @param required
      */
     public final void setRequired(final boolean required) {
+        if (required && !getEntity().isInitialising() && isProxy()) {
+            throw new StrictProxyException(format("Property [%s] in entity [%s] is proxied and should not be made required.", getName(), getEntity().getType().getName())); 
+        }
+        
         final boolean oldRequired = this.required;
         this.required = required;
 
@@ -948,7 +969,17 @@ public final class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         // if requirement changed from true to false, then update REQUIRED validation result to be successful
         if (!required && oldRequired) {
             if (containsRequiredValidator()) {
-                setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
+                final Result result = getValidationResult(ValidationAnnotation.REQUIRED);
+                if (result != null && !result.isSuccessful()) {
+                    setEnforceMutator(true);
+                    try {
+                        setValue(getLastAttemptedValue());
+                    } finally {
+                        setEnforceMutator(false);
+                    }
+                } else { // associated a successful result with requiredness validator
+                    setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton, new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
+                }
             } else {
                 throw new IllegalStateException("The metaProperty was required but RequiredValidator didn't exist.");
             }

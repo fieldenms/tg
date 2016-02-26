@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.*;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -18,6 +19,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -37,6 +39,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -111,22 +114,21 @@ public class Finder {
         final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
         final List<MetaProperty> metaProperties = new ArrayList<MetaProperty>();
         Object owner = entity;
-        MetaProperty result = null;
         for (final String propertyName : properties) {
-            // if the owner is null then there is no way it is possible to determine the meta-property.
+            // if the owner is null or not an entity then there is no way to determine meta-properties at the next level.
             if (!(owner instanceof AbstractEntity)) {
-                // throw new RuntimeException("The property " + propertyName + " owner is null.");
                 break;
             }
             // get the meta-property instance, which can but should not be null
-            result = ((AbstractEntity<?>) owner).getProperty(propertyName);
-            if (result != null) {
-                metaProperties.add(result);
+            final Optional<MetaProperty<?>> op = ((AbstractEntity<?>) owner).getPropertyOptionally(propertyName);
+            if (op.isPresent()) {
+                metaProperties.add(op.get());
             } else {
                 throw new IllegalArgumentException("Failed to locate meta-property " + dotNotationExp + " starting with entity " + entity.getType() + ": " + entity);
             }
-            // obtain the value for the current propertyName, which becomes the owner for the next property
-            owner = ((AbstractEntity<?>) owner).get(propertyName);
+            // obtain the value for the current property, which might be an entity instance
+            // and needs to be recognized as an owner for the property at the next level
+            owner = op.get().getValue();
         }
 
         return metaProperties;
@@ -622,23 +624,23 @@ public class Finder {
      * @throws IllegalAccessException
      */
     private static Object getAbstractUnionEntityFieldValue(final AbstractUnionEntity value, final String property) throws IllegalAccessException {
-        Field field = null;
-        Object valueToRetrieveFrom = null;
+        final Optional<Field> field;
+        final Object valueToRetrieveFrom;
         final List<String> unionProperties = getFieldNames(AbstractUnionEntity.unionProperties(value.getClass()));
         final List<String> commonProperties = AbstractUnionEntity.commonProperties(value.getClass());
 
         try {
             if (unionProperties.contains(property)) { // union properties:
-                field = getFieldByName(value.getClass(), property);
+                field = Optional.ofNullable(getFieldByName(value.getClass(), property));
                 valueToRetrieveFrom = value;
             } else if (commonProperties.contains(property) || COMMON_PROPS.contains(property) || ID.equals(property)) { // common property:
                 final AbstractEntity<?> activeEntity = value.activeEntity();
-                field = getFieldByName(activeEntity.getClass(), property);
+                field = Optional.ofNullable(activeEntity != null ? getFieldByName(activeEntity.getClass(), property) : null);
                 valueToRetrieveFrom = activeEntity;
             } else { // not-properly specified property:
-                throw new RuntimeException("Property [" + property + "] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.");
+                throw new ReflectionException(format("Property [%s] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.", property));
             }
-            return getFieldValue(field, valueToRetrieveFrom);
+            return field.isPresent() ? getFieldValue(field.get(), valueToRetrieveFrom) : null;
         } catch (final Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Property [" + property + "] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.");

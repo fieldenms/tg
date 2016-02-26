@@ -28,9 +28,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Test case for {@link PropertyTypeDeterminator}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class PropertyTypeDeterminatorTest {
 
@@ -131,6 +131,11 @@ public class PropertyTypeDeterminatorTest {
         assertEquals(String.class, PropertyTypeDeterminator.determinePropertyType(ComplexKeyEntity.class, "getKey().getKey()"));
         assertEquals(SimpleEntity.class, PropertyTypeDeterminator.determinePropertyType(ComplexKeyEntity.class, "getKey().getSimpleEntity()"));
         assertEquals(String.class, PropertyTypeDeterminator.determinePropertyType(ComplexKeyEntity.class, "getKey().getSimpleEntity().getKey()"));
+    }
+
+    @Test
+    public void should_be_able_to_determine_type_for_property_specified_as_this_keyword() {
+        assertEquals(SecondLevelEntity.class, PropertyTypeDeterminator.determinePropertyType(SecondLevelEntity.class, "this"));
     }
 
     @Test

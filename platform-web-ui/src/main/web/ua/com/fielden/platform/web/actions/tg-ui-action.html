@@ -1,0 +1,485 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<!-- <link rel="import" href="/resources/polymer/paper-button/paper-button.html">  -->
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+
+<link rel="import" href="/resources/components/postal-lib.html">
+
+<dom-module id="tg-ui-action">
+    <template>
+	    <style>
+	        /* :host::shadow * /deep/ core-tooltip::shadow #tooltip {
+	            white-space: normal;
+	        }
+	        :host::shadow * /deep/ core-tooltip .span-tooltip {
+	            line-height: 15px;
+	        }
+	        :host::shadow core-tooltip.delayed:hover::shadow .core-tooltip,
+	        :host::shadow core-tooltip.delayed:focus::shadow .core-tooltip {
+	            opacity: 1;
+	            -webkit-transition-delay: 1s;
+	            transition-delay: 1s;
+	            transform: translate3d(0px, 0px, 0px);
+	        } */
+	        
+	        :host {
+		      display: inline-block;
+		      position: relative;
+		      box-sizing: border-box;
+		      text-align: center;
+		      font: inherit;
+		      outline: none;
+		      -moz-user-select: none;
+		      -ms-user-select: none;
+		      -webkit-user-select: none;
+		      user-select: none;
+		      cursor: pointer;
+		      z-index: 0;
+		    }
+		    
+	        paper-spinner {
+	        	position: absolute;
+	            width: var(--tg-ui-action-spinner-width);
+	            height: var(--tg-ui-action-spinner-height); 
+	            min-width: var(--tg-ui-action-spinner-min-width); 
+	            min-height: var(--tg-ui-action-spinner-min-height); 
+	            max-width: var(--tg-ui-action-spinner-max-width); 
+	            max-height: var(--tg-ui-action-spinner-max-height); 
+	            padding: var(--tg-ui-action-spinner-padding);
+	            margin-left: var(--tg-ui-action-spinner-margin-left);
+	            --paper-spinner-layer-1-color: var(--paper-blue-500);
+	            --paper-spinner-layer-2-color: var(--paper-blue-500);
+	            --paper-spinner-layer-3-color: var(--paper-blue-500);
+	            --paper-spinner-layer-4-color: var(--paper-blue-500);
+	        }
+
+	        paper-icon-button::shadow #ink {
+            	width: var(--tg-ui-action-width);
+            	height: var(--tg-ui-action-height);
+            	top: var(--tg-ui-action-top);
+            	left: var(--tg-ui-action-left);
+        	}
+        
+        	paper-icon-button {
+            	--iron-icon-height: var(--tg-ui-action-icon-height);
+            	--iron-icon-width: var(--tg-ui-action-icon-width);
+            	height: var(--tg-ui-action-icon-button-height);
+            	width: var(--tg-ui-action-icon-button-width);
+            	padding: var(--tg-ui-action-icon-button-padding);
+        	}
+	    </style>
+	    
+        <tg-reflector id="reflector"></tg-reflector>
+        <tg-serialiser id="serialiser"></tg-serialiser>
+        
+        <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[isActionInProgress]]"></paper-icon-button>
+        <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[isActionInProgress]]">
+        	<span>[[shortDesc]]</span>
+        </paper-button>
+	    <paper-spinner id="spinner" active="[[isActionInProgress]]" class="blue" style="display: none;" alt="in progress"></paper-spinner>
+    </template>
+</polymer-element>
+
+<script>
+    Polymer({
+    	is: 'tg-ui-action',
+    	
+        properties: {
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These mandatory properties must be specified in attributes, when constructing descendant elements.  //
+        	// No default values are allowed in this case.														   //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	/* Indicates what entity property this action is associated with. */
+        	chosenProperty: {
+        	    type: String,
+        	    value: null
+        	},
+            /**
+             * Custom action to be invoked before 'tg-ui-action' will be run.
+             */
+            preAction: {
+            	type: Function
+            },
+            /**
+             * Custom action to be invoked after 'tg-ui-action' has retrieved its functional entity and bound it to the UI (in case of successful retrieval).
+             */
+            postActionSuccess: {
+            	type: Function
+            },
+            /**
+             * Custom action to be invoked after 'tg-ui-action' has unsuccessfully retrieved its functional entity.
+             */
+            postActionError: {
+            	type: Function
+            },
+
+            /**
+             * Determines whether the 'selection criteria entity' are required to be send inside the centre context.
+             *
+             * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectionCrit' as relevant for context.
+             */
+            requireSelectionCriteria: {
+            	type: String
+            },
+            /**
+             * Determines whether the selected entities are required to be send inside the centre context.
+             *
+             * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context.
+             */
+            requireSelectedEntities: {
+            	type: String
+            },
+            /**
+             * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context.
+             *
+             * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
+             */
+            requireMasterEntity: {
+            	type: String
+            },
+
+            /**
+             * The name of the entity master element associated with this action.
+             */
+            elementName: {
+            	type: String
+            },
+            /**
+             * The functional entity master element gets cached in tg-custom-action-dialog, which is responsible for its loading and instantiation.
+             * However, in cases where the same functional is used for different action (such as insertion points used for centres) there is a need 
+             * for several instances for the same entity master element. In order to facilitate caching of such instances they need to be provided 
+             * with different aliases.
+             */
+            elementAlias: {
+            	type: String
+            },
+            
+            attrs: {
+            	type: Object
+            },
+            /**
+             * The function that creates the context for this action. This function originates from the outside of this component.
+             */
+            createContextHolder: {
+            	type: Function
+            },
+
+            /**
+             * The URI of custom UI component to be loaded on run() action.
+             */
+            componentUri: {
+            	type: String
+            },
+
+            /**
+             * Short description for the action (for e.g. it can be used as button title).
+             */
+            shortDesc: {
+            	type: String
+            },
+
+            /**
+             * Long description for the action.
+             */
+            longDesc: {
+            	type: String
+            },
+
+            /**
+             * The icon specificator (string id).
+             */
+            icon: {
+            	type: String
+            },
+            
+            /** 
+             * Property of this value gets passed into the data parameter for the details.saved topic of the event that is published after the functional entity has been saved.
+             * There are cases where it is desired to prevent unnecesary centre refreshes such as in case of some insertion points.
+             */
+            shouldRefreshParentCentreAfterSave: {
+				type: Boolean,
+				value: false /* should never be defaulted to true! */
+            },
+
+            /**
+             * Shows the dialog relative to this 'tg-ui-action'.
+             */
+            showDialog: {
+            	type: Function
+            },
+            
+            
+            /** Sequential action number as provided by Java API. */
+            numberOfAction: {
+            	type: Number
+            },
+            
+            ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
+			/**
+			 * The 'currentEntity' should contain the entity that was clicked (result-set actions)
+			 * or the entity on which primary/secondary action was chosen. 
+			 * Otherwise, as in case of a Top Level action, the 'currentEntity' should be empty.
+			*/
+            currentEntity: {
+            	type: Object
+            },
+            
+            /** Indicates of the action is currently in progress.
+             * The action becomes in progress on before retrieval and stops being in progress on post save (successful or otherwise).
+             */
+            isActionInProgress: {
+            	type: Boolean,
+            	value: false,
+            	observer: '_actionProgressStatusChanged'
+            },
+            
+            /**
+             * Callback that allows one to modify binding entity after it was retrieved.
+             *
+             * @param bindingFunctionEntity - the functional master entity that is to be modified with this callback.
+             */
+            modifyFunctionalEntity: {
+                type: Function
+            },
+            
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+        	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+        	//   prefix. 																				           //
+        	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+        	//   populate their default values in ready callback (to have these values populated in children)!     //
+        	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /**
+             * Executes the action in context of 'currentEntity'. 
+             *
+             * Please override this method in descendands to implement specific execution logic.
+             */
+            _run: {
+            	type: Function
+            },
+            
+            /**
+             * Analyzes and processes the result of executor response.
+             */
+            _onExecuted: {
+            	type: Function
+            },
+            
+            
+            ////////////////////////////////////////////////////////////
+            ////////////////////// UI Related  /////////////////////////
+            ////////////////////////////////////////////////////////////
+                    	
+        	/** Speficies the visual representaion of the action, where 
+        	 * ICON corresponds to paper-icon-button, 
+        	 * BUTTON -- to paper-button.
+        	 */
+        	uiRole: {
+        		type: String,
+        		value: 'ICON'
+        	},
+
+        	/** A helper function to facilitate dom-if tamplating for the UI role. */
+        	isIconButton: {
+        		type: Boolean,
+        		computed: '_computeIsIconButton(uiRole)'
+        	},
+
+            /* Timer to prevent spinner from activating for quick actions. */
+            _startSpinnerTimer: {
+            	type: Object,
+            	value: null
+            },
+            
+            _isSpinnerRequired: {
+            	type: Boolean,
+            	value: false
+            }
+        },
+        
+        /**
+         * Initialisation block.
+         */
+        ready: function () {
+            var self = this;
+            
+            self._run = (function () {
+                console.log(this.shortDesc + ": execute");
+
+                if (this.preAction) {
+                    if (this.preAction(this)) { // returns 'true' in case whether the action should proceed
+                        this.showDialog(this);
+                    }
+                } else {
+                	this.showDialog(this);
+                }
+            }).bind(self);
+            
+            self._onExecuted = (function (e, master, source) {
+                var self = this;
+				
+                // spinner requiredness assignment should be before action's progress changes as it is used in its observer
+                // the spinner is required only if the action has no UI part
+                self._isSpinnerRequired = master.noUI;
+                // action execution started
+                self.isActionInProgress = true;
+				
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    console.log("postRetrieved");
+                };
+                
+                master.postRetrievedError = function (errorResult) {
+                	// actions completes even if the retrieval fails, i.e. it never gets to the saving stage
+                	self.isActionInProgress = false;
+                };
+
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    console.log("postValidated");
+                };
+                
+                // NOTE: the savingContext for 'tg-entity-master' at this stage is immutable, i.e. it will never change during lifecycle of action's master 
+                master.savingContext = self._createContextHolderForAction();
+
+                master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
+                    master.focusFirstInput();
+                    
+                    postal.publish({
+                        channel: "centre_" + master.centreUuid,
+                        topic: "detail.saved",
+                        data: {
+                        	shouldRefreshParentCentreAfterSave: self.shouldRefreshParentCentreAfterSave,
+                            entity: potentiallySavedOrNewEntity,
+                            // send selectedEntitiesInContext further to be able to update only them on EGI
+                            selectedEntitiesInContext: master.savingContext.selectedEntities
+                        }
+                    });
+                    
+                    if (potentiallySavedOrNewEntity.isValid()) {
+                    	if (self.postActionSuccess) {
+	                        self.postActionSuccess(potentiallySavedOrNewEntity);
+                    	}
+                    } else {
+                    	if (self.postActionError) {
+	                        self.postActionError(potentiallySavedOrNewEntity);
+                    	}
+                    }
+                    
+                    // action execution completes
+                    self.isActionInProgress = false;
+                };
+
+                master.postSavedError = function (errorResult) {
+                	// if action has no UI part then even failed saving indicates the completion of action's execution
+                	// otherwise, the UI would still remain open and user can apply some changes and attempt to save again (i.e. the action is still in progress)
+                	if (master.noUI === true) {
+                		// action execution completed, althoug in error from saving
+                    	self.isActionInProgress = false;
+                	} else {
+                        master.focusFirstInput();
+                	}
+                };
+                
+                master.entityId = master.savingContext.id === null ? "new" : (+(master.savingContext.id));
+                // context-dependent retrieval of entity (this is necessary for centre-related functional entities, which creation is dependent on centre context!)
+                return master.retrieve(master.savingContext)
+                .then(function(value) {
+                	// the following IF block handles conditional displaying of the associated entity master
+                	if (master.shouldSkipUi()) {
+                	    master.noUI = true; // instructs the tg-custom-action-dialog not to be diplayed
+                	    master.saveOnActivation = true; // and of course the entity needs to be executed immediately
+                	    self._isSpinnerRequired = true; // instructs this action's UI representation to use the spinner for progress indication 
+                	    self._actionProgressStatusChanged(true, self.isActionInProgress); // restart the spinner related logic
+                	}
+                	
+                    if (self.modifyFunctionalEntity) {
+                        self.modifyFunctionalEntity(master._currBindingEntity);
+                    }
+                    if (master.saveOnActivation === true) {
+             			return master.save();
+                    }
+                    return Promise.resolve(value);
+                });
+            }).bind(self);
+        },
+        
+        /**
+         * Modifies the value of the currentBindingEntity's property.
+         *
+         * Warning: the method has no impact to the corresponding editor -- this method should be used
+         * only in case where no editor exists.
+         */
+        modifyValue4Property: function (propNameToBeAssigned, bindingEntity, value) {
+            if (typeof bindingEntity[propNameToBeAssigned] === 'undefined') {
+                throw 'modifyValue4Property: no property [' + propNameToBeAssigned + '] exists.';
+            }
+            bindingEntity[propNameToBeAssigned] = value;
+        },
+        
+        _createContextHolderForAction: function () {
+        	var self = this;
+            // creates the context and
+            var context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity);
+            // enhances it with the information of 'currentEntity' (primary / secondary actions) and
+            if (self.currentEntity) {
+            	self._enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
+            }
+            // enhances it with information of what 'property' was chosen (property result-set actions)
+            if (self.chosenProperty !== null) {
+            	self._enhanceContextWithChosenProperty(context, self.chosenProperty);
+            }
+			return context;
+        },
+
+        _enhanceContextWithChosenProperty: function(context, chosenProperty) {
+        	context["chosenProperty"] = chosenProperty;
+        },
+        
+        _enhanceContextWithCurrentEntity: function(context, currentEntity, requireSelectedEntities) {
+            if (requireSelectedEntities !== null) {
+            	this.$.reflector.provideSelectedEntities(requireSelectedEntities, context, function() {
+            		return [ currentEntity ];
+            	});
+            }
+        },
+        
+        /**
+         * Should be invoked after the parent of action has become visible
+         */
+        _updateSpinnerIfNeeded: function() {
+            if (this.$.spinner.style.display !== 'none') {
+                this.$.spinner.style.left = (this.offsetWidth / 2 - this.$.spinner.offsetWidth / 2) + 'px';
+                this.$.spinner.style.top = (this.offsetHeight / 2 - this.$.spinner.offsetHeight / 2) + 'px';
+            }
+        },
+        
+        /* Timer callback that performs spinner activation. */
+        _startSpinnerCallback: function () {
+            // Position and make spinner visible
+            this.$.spinner.style.removeProperty('display');
+            this._updateSpinnerIfNeeded();
+        },
+        
+        _actionProgressStatusChanged: function (newValue, oldValue) {
+        	if (this._startSpinnerTimer) {
+                clearTimeout(this._startSpinnerTimer);
+            }
+
+        	if (newValue === true && this._isSpinnerRequired === true) {
+            	this._startSpinnerTimer = setTimeout(this._startSpinnerCallback.bind(this), 700);
+            } else {
+            	this.$.spinner.style.display = 'none';
+            }
+        },
+        
+        _computeIsIconButton: function (uiRole) {
+        	return uiRole === 'ICON';
+        }
+    });
+</script>

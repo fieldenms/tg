@@ -91,7 +91,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagon;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -113,7 +113,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgVehicleMake vehicleMakeDao = getInstance(ITgVehicleMake.class);
     private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
     private final ITgFuelUsage fuelUsageDao = getInstance(ITgFuelUsage.class);
-    private final IUserDao userDao = getInstance(IUserDao.class);
+    private final IUser userDao = getInstance(IUser.class);
     private final IUserRoleDao userRoleDao = getInstance(IUserRoleDao.class);
     private final IUserAndRoleAssociationDao userAndRoleAssociationDao = getInstance(IUserAndRoleAssociationDao.class);
     private final IEntityAggregatesDao aggregateDao = getInstance(IEntityAggregatesDao.class);
@@ -978,7 +978,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     public void test_all_quantified_condition() {
         final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().val(100).lt().all(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").yield().prop("qty").modelAsPrimitive()).model();
         final List<TgVehicle> values = vehicleDao.getAllEntities(from(model).model());
-        assertEquals("Incorrect count", 0, values.size());
+        assertEquals("Incorrect count", 1, values.size());
     }
 
     @Test
@@ -1146,7 +1146,8 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         assertEquals("Incorrect value", "0", values.get(0).get("zero-days").toString());
         assertEquals("Incorrect value", "0", values.get(0).get("zero-months").toString());
         assertEquals("Incorrect value", "0", values.get(0).get("zero-years").toString());
-        assertEquals("Incorrect value", "150", values.get(0).get("avgPrice").toString());
+        assertEquals(BigDecimal.class, values.get(0).get("avgPrice").getClass());
+        assertEquals("Incorrect value", 0, ((BigDecimal) values.get(0).get("avgPrice")).compareTo(new BigDecimal("150")));
         assertEquals("Incorrect value", "66.7", values.get(0).get("third-of-price").toString());
     }
 
@@ -1617,6 +1618,14 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class).with("make"));
         TgVehicle vehicle = vehicleDao.getEntity(from(qry).with(fetch).model());
         assertTrue(isEntityInstrumented(vehicle.getModel()));
+    }
+
+    @Test
+    public void vehicle_property_retrieved_with_instrumented_fetch_and_being_part_of_fuel_usage_composite_key_is_instrumented() {
+        final EntityResultQueryModel<TgFuelUsage> qry = select(TgFuelUsage.class).where().prop("vehicle.key").eq().val("CAR2").and().prop("fuelType.key").eq().val("P").model();
+        fetch<TgFuelUsage> fetch = fetch(TgFuelUsage.class).with("vehicle", fetchAndInstrument(TgVehicle.class));
+        TgFuelUsage fuelUsage = fuelUsageDao.getEntity(from(qry).with(fetch).model());
+        assertTrue(isEntityInstrumented(fuelUsage.getVehicle()));
     }
 
     public static boolean isPropertyInstrumented(final AbstractEntity<?> entity, final String propName) {

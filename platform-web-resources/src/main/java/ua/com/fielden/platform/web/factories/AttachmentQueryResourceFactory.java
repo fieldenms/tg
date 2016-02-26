@@ -8,7 +8,7 @@ import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.EntityQueryResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -40,7 +40,7 @@ public class AttachmentQueryResourceFactory extends Restlet {
         super.handle(request, response);
         if (Method.POST.equals(request.getMethod())) {
             final String username = (String) request.getAttributes().get("username");
-            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
 
             new EntityQueryResource<Attachment>(router, injector, injector.getInstance(IAttachment.class), restUtil, getContext(), request, response).handle();
         }

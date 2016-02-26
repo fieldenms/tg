@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.error.Result;
@@ -32,7 +31,7 @@ import ua.com.fielden.platform.error.Result;
 @KeyTitle("Application User")
 @KeyType(String.class)
 @MapEntityTo(value = "CRAFT", keyColumn = "USER_NAME")
-@CompanionObject(IUserDao.class)
+@CompanionObject(IUser.class)
 public class User extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
@@ -67,8 +66,8 @@ public class User extends AbstractEntity<String> {
 
     @IsProperty
     @Invisible
-    @MapTo("USER_PASSWORD")
-    // TODO most likely password should be @Required
+    @MapTo(value = "USER_PASSWORD", length = 255)
+    @Title(desc = "A hash code of the actual password that only the user should know")
     private String password;
 
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")

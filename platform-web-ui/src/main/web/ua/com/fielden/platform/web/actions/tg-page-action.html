@@ -1,0 +1,185 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<!-- <link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html"> -->
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<!-- <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/components/postal-lib.html"> -->
+
+<dom-module id="tg-page-action">
+    <template>
+        <style>
+            paper-icon-button {
+                height: var(--tg-page-action-icon-button-height);
+                width: var(--tg-page-action-icon-button-width);
+                padding: var(--tg-page-action-icon-button-padding);
+            }
+        </style>
+        <paper-icon-button id="actionButton" icon="[[icon]]" on-tap="_run"></paper-icon-buton>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+        is: 'tg-page-action',
+
+        properties: {
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These mandatory properties must be specified in attributes, when constructing the element instance. //
+            // No default values are allowed in this case.														   //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /**
+             * Shows the dialog relative to this 'tg-ui-action'.
+             */
+            action: {
+                type: Function
+            },
+
+            /**
+             * The context of this action.
+             */
+            currentEntity: {
+                type: Object
+            },
+
+            /**
+             * The icon specificator (string id).
+             */
+            icon: {
+                type: String
+            },
+
+            /**
+             * Short description.
+             */
+            shortDesc: {
+                type: Function
+            },
+
+            elementName: {
+                type: String
+            },
+            attrs: {
+                type: Object
+            },
+            /**
+             * The URI of custom UI component to be loaded on run() action.
+             */
+            componentUri: {
+                type: String
+            },
+            /**
+             * The type of view to be opened.
+             */
+            viewType: {
+                type: String
+            },
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+            //   prefix. 																				           //
+            // Also, these properties are designed to be bound to children element properties -- it is necessary to//
+            //   populate their default values in ready callback (to have these values populated in children)!     //
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /**
+             * The reference to component that was opened.
+             */
+            _masterComponent: {
+                type: Object,
+                value: null
+            },
+            /**
+             * Executes the action.
+             *
+             * Please override this method in descendands to implement specific execution logic.
+             */
+            _run: {
+                type: Function
+            },
+
+            /**
+             * Analyzes and processes the result of executor response.
+             */
+            _onExecuted: {
+                type: Function
+            },
+
+            /** 
+             * Property of this value gets passed into the data parameter for the details.saved topic of the event that is published after the functional entity has been saved.
+             * There are cases where it is desired to prevent unnecesary centre refreshes such as in case of some insertion points.
+             */
+            shouldRefreshParentCentreAfterSave: {
+                type: Boolean,
+                value: false /* should never be defaulted to true! */
+            },
+
+            /**
+             * Preferred dimensions for the master that is invoked by this action.
+             * The value is of type String as it is passed by attribute bindings.
+             */
+            prefDim: {
+                type: String
+            }
+
+        },
+
+        /**
+         * Initialisation block.
+         */
+        ready: function () {
+            var self = this;
+
+            self._run = (function () {
+                // this.enabled = false;
+                console.log(this.shortDesc + ": execute");
+
+                // TODO var context = ...;
+                // var ser = this.$.serialiser.serialise(context);
+                // this.$.actionExecutor.body = JSON.stringify(ser);
+                this.async(function () {
+                    this.action(this, this.currentEntity);
+                }.bind(self), 100);
+
+            }).bind(self);
+
+            self._onExecuted = (function (e, detail, source) {
+                var self = this;
+                // console.log("_onExecuted: e", e, "egi", e.srcElement);
+                self._masterComponent = detail;
+
+                if (self.viewType === 'master') {
+
+                    detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                        console.log("postRetrieved");
+                    };
+                    detail.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                        console.log("postValidated");
+                    };
+
+                    detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
+                        postal.publish({
+                            channel: "centre_" + detail.centreUuid,
+                            topic: "detail.saved",
+                            data: {
+                                shouldRefreshParentCentreAfterSave: self.shouldRefreshParentCentreAfterSave,
+                                entity: potentiallySavedOrNewEntity,
+                                // send selectedEntitiesInContext further to be able to update only them on EGI
+                                selectedEntitiesInContext: [potentiallySavedOrNewEntity]
+                            }
+                        });
+
+                        console.log("postSaved");
+                    };
+
+                    return detail.retrieve();
+                } else {
+                    throw "The view types other than 'master' is unsupported in 'tg-page-action'.";
+                }
+            }).bind(self);
+        }
+    });
+</script>

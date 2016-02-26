@@ -151,7 +151,7 @@ public class fetch<T extends AbstractEntity<?>> {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
@@ -161,7 +161,7 @@ public class fetch<T extends AbstractEntity<?>> {
         if (!(obj instanceof fetch)) {
             return false;
         }
-        fetch other = (fetch) obj;
+        final fetch other = (fetch) obj;
         if (entityType == null) {
             if (other.entityType != null) {
                 return false;
@@ -245,7 +245,7 @@ public class fetch<T extends AbstractEntity<?>> {
         }
 
         final FetchCategory resultCategory = getMergedFetchCategory(second);
-        final fetch<T> result = new fetch<>(getEntityType(), resultCategory);
+        final fetch<T> result = new fetch<>(getEntityType(), resultCategory, (isInstrumented() || second.isInstrumented()));
         result.includedProps.addAll(includedProps);
         result.includedProps.addAll(second.includedProps);
         result.excludedProps.addAll(excludedProps);

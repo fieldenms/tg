@@ -222,25 +222,20 @@ public class AbstractEntityTest {
         final Entity key3 = entity;
 
         // testing if entity is created correctly
-        try {
-            final EntityWithDynamicEntityKey entityWithDynamicEntityKey = factory.newByKey(EntityWithDynamicEntityKey.class, key1, key2, key3);
+        final EntityWithDynamicEntityKey entityWithDynamicEntityKey = factory.newByKey(EntityWithDynamicEntityKey.class, key1, key2, key3);
 
-            assertNotNull(entityWithDynamicEntityKey);
-            assertNotNull(entityWithDynamicEntityKey.getKey());
-            assertEquals(key1, entityWithDynamicEntityKey.getKey1());
-            assertEquals(key2, entityWithDynamicEntityKey.getKey2());
-            assertEquals(key3, entityWithDynamicEntityKey.getKey3());
+        assertNotNull(entityWithDynamicEntityKey);
+        assertNotNull(entityWithDynamicEntityKey.getKey());
+        assertEquals(key1, entityWithDynamicEntityKey.getKey1());
+        assertEquals(key2, entityWithDynamicEntityKey.getKey2());
+        assertEquals(key3, entityWithDynamicEntityKey.getKey3());
 
-            assertEquals(factory, entityWithDynamicEntityKey.getEntityFactory());
-        } catch (final Exception e) {
-            fail();
-        }
+        assertEquals(factory, entityWithDynamicEntityKey.getEntityFactory());
 
         // testing if exception is thrown in case of wrong number of parameters
         boolean exceptionWasThrown = false;
         try {
-            @SuppressWarnings("unused")
-            final EntityWithDynamicEntityKey entityWithDynamicEntityKey = factory.newByKey(EntityWithDynamicEntityKey.class, key1, key2);
+            factory.newByKey(EntityWithDynamicEntityKey.class, key1, key2);
         } catch (final Exception e) {
             exceptionWasThrown = true;
         }

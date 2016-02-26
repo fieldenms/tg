@@ -229,8 +229,8 @@ public class CriteriaGeneratorTest {
             add(Integer.class);
             add(Money.class);
             add(Money.class);
-            add(Boolean.class);
-            add(Boolean.class);
+            add(boolean.class);
+            add(boolean.class);
             add(String.class);
             add(List.class);
             add(List.class);
@@ -246,9 +246,9 @@ public class CriteriaGeneratorTest {
             add(Integer.class);
             add(String.class);
             add(String.class);
-            add(Boolean.class);
-            add(Boolean.class);
-            add(Boolean.class);
+            add(boolean.class);
+            add(boolean.class);
+            add(boolean.class);
         }
     };
 

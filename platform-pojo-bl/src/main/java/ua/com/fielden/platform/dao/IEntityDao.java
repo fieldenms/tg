@@ -5,7 +5,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Spliterator;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
+import ua.com.fielden.platform.dao.streaming.SequentialPageSpliterator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -179,10 +183,32 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
 
     /**
+     * Returns a non-parallel stream with the data based on the provided query.
+     * 
+     * @param qem -- EQL model
+     * @param pageCapacity -- a batch size for retrieve the next lot of data to feed the stream
+     * @return
+     */
+    default Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int pageCapacity) {
+        final Spliterator<T> spliterator = new SequentialPageSpliterator<>(this, qem, pageCapacity);
+        return StreamSupport.stream(spliterator, false);
+    }
+    
+    /**
+     * A convenience method based on {@link #stream(QueryExecutionModel, int), but with a default page capacity. 
+     * 
+     * @param qem
+     * @return
+     */
+    default Stream<T> stream(final QueryExecutionModel<T, ?> qem) {
+        return stream(qem, DEFAULT_PAGE_CAPACITY);
+    }
+    
+    /**
      * Persists (saves/updates) the entity and returns the updated entity back.
      * For safety consideration the passed in and the returned entity instances should NOT be considered reference equivalent.
      * The returned entity should be thought of as a newer equivalent of the passed in instance and used everywhere in the downstream logic of the callee.
-     * 
+     *
      * @param entity
      * @return
      */
@@ -234,7 +260,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @param model
      */
     default int batchDelete(final EntityResultQueryModel<T> model) {
-        throw new UnsupportedOperationException("By default batch deletion is not supported.");
+        throw new UnsupportedOperationException("Batch deletion should be implemented in descendants.");
     }
 
     /**
@@ -243,7 +269,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @param model
      */
     default int batchDelete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        throw new UnsupportedOperationException("By default batch deletion is not supported.");
+        throw new UnsupportedOperationException("Batch deletion should be implemented in descendants.");
     }
 
     /**

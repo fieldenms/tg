@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -49,6 +50,20 @@ public class EntityType extends AbstractEntity<String> {
     @IsProperty(EntityTypeProp.class)
     @Title(value = "Entity Type Properties", desc = "A map of entity type properties by their names")
     private Map<String, EntityTypeProp> _props;
+
+    @IsProperty
+    @Title(value = "Is Persistent?", desc = "Indicated whether the associated entity type represents a persistent entity.")
+    private boolean _persistent;
+
+    @Observable
+    public EntityType set_persistent(final boolean _persistent) {
+        this._persistent = _persistent;
+        return this;
+    }
+
+    public boolean is_persistent() {
+        return _persistent;
+    }
 
     @Observable
     protected EntityType set_props(final Map<String, EntityTypeProp> _props) {

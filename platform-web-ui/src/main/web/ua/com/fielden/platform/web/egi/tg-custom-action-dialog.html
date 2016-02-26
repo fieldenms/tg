@@ -1,0 +1,267 @@
+<link rel="import" href="/app/tg-element-loader.html">
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/components/tg-toast.html">
+
+<dom-module id="tg-custom-action-dialog">
+    <template>
+        <style>
+            :host {
+                display: block;
+                background: white;
+                color: black;
+                padding: 0px;
+                overflow: auto;
+                /* this is to make host scorable when needed */
+                box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+            }
+            paper-icon-button {
+                color: var(--paper-deep-orange-300);
+                --paper-icon-button: {
+                    position: absolute;
+                    top: 0;
+                    right: 0;
+                    width: 34px;
+                    height: 34px;
+                };
+            }
+            paper-icon-button:hover {
+                color: var(--paper-deep-orange-600);
+            }
+        </style>
+        <tg-element-loader id="elementLoader"></tg-element-loader>
+        <tg-toast id="toaster"></tg-toast>
+        <paper-icon-button icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-custom-action-dialog",
+
+            behaviors: [Polymer.IronOverlayBehavior],
+
+            listeners: {
+                'iron-overlay-opened': '_dialogOpened',
+                'iron-overlay-closed': '_dialogClosed'
+            },
+
+            properties: {
+                isRunning: {
+                    type: Boolean,
+                    readOnly: true
+                },
+
+                /* Postal subscription to events that trigger dialog closing.
+                 * It gets populated in _showDialog and unsubscrived on dialog closed.
+                 */
+                _subscriptions: {
+                    type: Array,
+                    value: function () {
+                        return [];
+                    }
+                },
+
+                /** 
+                 * An object that caches already loaded, created and already represented by this dialog elements.
+                 * It is used as an optimisation technique to prevent repeated instantiation of elements.
+                 * Properties represent element names and their values -- element instances.
+                 */
+                _cachedElements: {
+                    type: Object,
+                    value: function () {
+                        return {};
+                    }
+                },
+
+                /** Captures the last action that has been executed by this dialog or is currently in progress. */
+                _lastAction: {
+                    type: Object
+                },
+
+                /** A master element that corresponds to the _lastAction. */
+                _lastElement: {
+                    type: Object
+                }
+            },
+
+            ready: function () {
+                this.noAutoFocus = false;
+                this.noCancelOnOutsideClick = true;
+                this.noCancelOnEscKey = true;
+
+                this._setIsRunning(false);
+            },
+
+            closeDialog: function () {
+                var canClose = true;
+                if (this._lastElement.classList.contains('canLeave')) {
+                    var reason = this._lastElement.canLeave();
+                    if (reason !== undefined) {
+                        canClose = false;
+                        // the reason from .canLeave is not used as it is not always appropriate in the context of dialog closing
+                        // for example, when closing a master for a functional entity, the reason states the need to save changes,
+                        // while it is also possible and safe to simple cancel them
+                        // so, the message below is a good compromise
+                        this.$.toaster.text = "Please save or cancel changes.";
+                        this.$.toaster.hasMore = false;
+                        this.$.toaster.msgText = "";
+                        this.$.toaster.showProgress = false;
+                        this.$.toaster.show();
+                    }
+                }
+
+                if (canClose === true) {
+                    this._closeDialogAndIndicateActionCompletion(this._lastAction);
+                }
+            },
+
+            _closeDialogAndIndicateActionCompletion: function (action) {
+                if (this._lastAction) {
+                    this._lastAction.isActionInProgress = false;
+                }
+                this.close();
+            },
+
+            _handleCloseEvent: function (data, envelope) {
+                if (data.canClose === true) {
+                	this._closeDialogAndIndicateActionCompletion(this._lastAction);
+                }
+            },
+
+            /** A convenient method that return a Promise that resolves to an element instaces from cache or from the element loader. */
+            _getElement: function (customAction) {
+                var self = this;
+                var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+                if (self._cachedElements.hasOwnProperty(key)) {
+                    console.log("Reusing cached element:", key);
+                    var element = self._cachedElements[key];
+                    self.$.elementLoader.insert(element);
+                    return Promise.resolve(element);
+                } else {
+                    self.$.elementLoader.import = customAction.componentUri;
+                    self.$.elementLoader.elementName = customAction.elementName;
+                    self.$.elementLoader.attrs = customAction.attrs;
+                    return self.$.elementLoader.reload();
+                }
+            },
+
+            /*
+             * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
+             * closeEventChannel -- a channel that is provided from the outside and is used to publish for listening to event that should leade to closing of this dialog.
+             * closeEventTopics -- event topics that should be listened to on the channel to close this dialog.
+             */
+            showDialog: function (customAction, closeEventChannel, closeEventTopics) {
+                if (this.opened === true) {
+                    this.$.toaster.text = 'Please close the currently open dialog.';
+                    this.$.toaster.hasMore = true;
+                    this.$.toaster.msgText = 'Any operation on the currently open dialog should be completed and the dialog closed before opening anyother dialog.';
+                    this.$.toaster.showProgress = false;
+                    this.$.toaster.show();
+                    console.log("The dialog is already opened and should be closed be being used again.");
+                } else {
+                    var self = this;
+                    if (self.isRunning === false) {
+                        self._lastAction = customAction;
+                        self._setIsRunning(true);
+
+                        self._getElement(customAction)
+                            .then(function (element) {
+                                var promise = customAction._onExecuted(null, element, null);
+                                if (promise) {
+                                    return promise
+                                        .then(function () {
+                                            var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
+                                            if (!self._cachedElements.hasOwnProperty(key)) {
+                                                if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
+            	                                    console.log("caching:", key);
+                                                	self._cachedElements[key] = element;
+                                                }
+                                            }
+                                            self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
+                                        })
+                                        .catch(function () {
+                                            self._setIsRunning(false);
+                                        });
+                                } else {
+                                    return Promise.resolve()
+                                        .then(function () {
+                                            self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
+                                        })
+                                        .catch(function () {
+                                            self._setIsRunning(false);
+                                        });
+                                }
+                            })
+                            .catch(function (error) {
+                                self.$.toaster.text = 'There was an error displaying the dialog.';
+                                self.$.toaster.hasMore = true;
+                                self.$.toaster.msgText = 'There was an error displaying the dialog.<br><br> \
+	                                                      <b>Error cause:</b><br>' + error.message;
+                                self.$.toaster.showProgress = false;
+                                self.$.toaster.show();
+                            });
+                    }
+                }
+            },
+
+            _showMaster: function (action, element, closeEventChannel, closeEventTopics) {
+                this._lastElement = element;
+                if (element.noUI === true) { // is this is the end of action execution?
+                    self._setIsRunning(false);
+                } else { // otherwise show master in dialog
+                    var self = this;
+                    // if there would be a master UI then need to subscribe for this dialog closing messages
+                    if (closeEventChannel && closeEventTopics && closeEventTopics.length > 0) {
+                        self._subscriptions = [];
+                        for (var index = 0; index < closeEventTopics.length; index++) {
+                            self._subscriptions.push(
+                                postal.subscribe({
+                                    channel: closeEventChannel,
+                                    topic: closeEventTopics[index],
+                                    callback: self._handleCloseEvent.bind(self)
+                                }));
+                        }
+                    }
+
+                    if (element.prefDim) {
+                        var prefDim = element.prefDim;
+                        this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                        this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                    } else {
+                        this.style.width = "auto";
+                        this.style.height = "auto";
+                    }
+                    this.updateStyles();
+                    this.refit();
+                    // let's open the dialog with magical async...
+                    // this ensures that the dialog is opened after its relocation to body and after all layouting is done
+                    this.async(function () {
+                        this.open();
+                        if (element.focusFirstInput) {
+                            element.focusFirstInput();
+                        }
+                    }.bind(this), 200);
+                }
+            },
+
+            _dialogOpened: function (e, detail, source) {
+                this._setIsRunning(false);
+            },
+
+            _dialogClosed: function () {
+                // if there are current subscriptions they need to be unsubscribed
+                // due to dialog being closed
+                for (var index = 0; index < this._subscriptions.length; index++) {
+                    postal.unsubscribe(this._subscriptions[index]);
+                }
+                this._subscriptions.length = 0;
+            }
+        });
+    })();
+</script>

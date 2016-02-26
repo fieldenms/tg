@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
+import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -48,9 +49,9 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
     public void test_matcher_usage_with_model() {
         final IValueMatcherFactory vmFactory = new ValueMatcherFactory(coFinder, entityFactory);
 
-        final IValueMatcher<TgWagonClass> matcher = (IValueMatcher<TgWagonClass>) vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
+        final IValueMatcherWithFetch<TgWagonClass> matcher = (IValueMatcherWithFetch<TgWagonClass>) vmFactory.getValueMatcher(TgWagon.class, "wagonClass");
         //matcher.setQueryModel(select(WagonClass.class).with("compatibles", select(WagonClassCompatibility.class).model()));
-        matcher.setFetchModel(fetch(TgWagonClass.class).with("compatibles", fetch(TgWagonClassCompatibility.class)));
+        matcher.setFetch(fetch(TgWagonClass.class).with("compatibles", fetch(TgWagonClassCompatibility.class)));
         assertNotNull("Should have constructed a value matcher.", matcher);
         List<TgWagonClass> result = matcher.findMatches("W%");
         assertEquals("Incorrect number of matching values.", 2, result.size());
@@ -85,7 +86,7 @@ public class DaoValueMatcherFactoryTest extends AbstractDomainDrivenTestCase {
         final IValueMatcherFactory vmFactory = new ValueMatcherFactory(coFinder, entityFactory);
         final IValueMatcher<PropertyDescriptor<TgWorkOrder>> matcher = (IValueMatcher<PropertyDescriptor<TgWorkOrder>>) vmFactory.getValueMatcher(TgWoStatusRequiredField.class, "requiredProperty");
         assertNotNull("Value matcher for property descriptor should have been created.", matcher);
-        assertEquals("Incorrect number of matches for '*'.", 7, matcher.findMatches("*").size());
+        assertEquals("Incorrect number of matches for '*'.", 17, matcher.findMatches("*").size());
         assertEquals("Incorrect number of matches containing 'Co'.", 3, matcher.findMatches("%Co%").size());
         assertEquals("Incorrect number of matches ending with 'Cost'.", 3, matcher.findMatches("%Cost").size());
 

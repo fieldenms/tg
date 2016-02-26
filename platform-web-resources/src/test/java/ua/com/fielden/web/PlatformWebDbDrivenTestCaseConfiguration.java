@@ -8,6 +8,9 @@ import java.util.Map;
 
 import org.hibernate.cfg.Configuration;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
@@ -36,9 +39,6 @@ import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.web.entities.InspectedEntity;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
 /**
  * Provides a test specific implementation of {@link IDbDrivenTestCaseConfiguration}.
  *
@@ -59,7 +59,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
         hibTypeDefaults.put(Money.class, MoneyUserType.class);
     }
 
-    private ISerialisationClassProvider serialisationClassProvider = new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class });
+    private final ISerialisationClassProvider serialisationClassProvider = new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class });
 
     /**
      * Required for dynamic instantiation by {@link DbDrivenTestCase}
@@ -84,7 +84,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             cfg.setProperty("hibernate.current_session_context_class", "thread");
             cfg.setProperty("hibernate.show_sql", "false");
             cfg.setProperty("hibernate.format_sql", "true");
-            cfg.setProperty("hibernate.connection.url", "jdbc:h2:src/test/resources/db/testdb");
+            cfg.setProperty("hibernate.connection.url", "jdbc:h2:./src/test/resources/db/testdb");
             cfg.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
             cfg.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
             cfg.setProperty("hibernate.connection.username", "sa");

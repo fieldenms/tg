@@ -1,0 +1,101 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/app/tg-element-loader.html">
+
+<dom-module id="tg-mobile-view">
+    <style>
+        :host {
+            background-color: #f1f1f1;
+        }
+        .toolbar {
+            padding: 10px;
+            color: white;
+            height: 35px;
+            background-color: var(--paper-light-blue-700);
+        }
+        tg-element-loader {
+            position: absolute;
+            top: 35px;
+            bottom: 0;
+            right: 0;
+            left: 0;
+        }
+    </style>
+    <template>
+        <div class="toolbar">[[menuItem.title]]</div>
+        <template is="dom-if" if="[[menuItem.view]]">
+            <tg-element-loader id="elementToLoad" auto import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+        </template>
+        <template is="dom-if" if="[[!menuItem.view]]">
+            <div class="view">
+                Please specify view for <span>[[menuItem.title]]</span>.
+            </div>
+        </template>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-mobile-view",
+
+            properties: {
+                menuItem: Object,
+                loadedView: Object
+            },
+
+            hostAttributes: {
+                "class": "layout vertical"
+            },
+
+            reload: function () {
+                var elementToLoad = this.$$("#elementToLoad");
+                if (!elementToLoad) {
+                    alert("Please specify view for " + this.menuItem.title + " menu item!");
+                } else {
+                    if (elementToLoad.wasLoaded) {
+                        if (this.menuItem.view.type === 'master' && this.loadedView) {
+                            this.loadedView.entityId = 'new';
+                            this.loadedView.retrieve();
+                        } else if (this.menuItem.view.type === 'centre') {
+                            this.fire("menu-item-loaded", this.menuItem.title);
+                        } else {
+                            // Nothing to do.
+                        }
+                    } else {
+                        elementToLoad.load();
+                    }
+                }
+            },
+
+            _afterLoadListener: function (e, detail) {
+                var self = this;
+                var elementToLoad = this.$$("#elementToLoad");
+                this.loadedView = detail;
+                if (e.target === elementToLoad) {
+                    if (this.menuItem.view.type === 'centre') {
+                        console.warn("TG-MOBILE-VIEW: this.menuItem.view.type === centre");
+                        detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                            if (!elementToLoad.auto) {
+                                self.fire("menu-item-loaded", self.menuItem.title);
+                            }
+                        };
+                        detail.retrieve();
+                    } else if (this.menuItem.view.type === 'master') {
+                        detail.postRetrieved = function (entity, bindingEntity, customObject) {
+                            self.fire("menu-item-loaded", self.menuItem.title);
+                        };
+                        detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
+                        detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
+                        if (!elementToLoad.auto) {
+                            detail.entityId = 'new';
+                            detail.retrieve();
+                        }
+                    } else {
+                        // TODO unknown view
+                    }
+                }
+            }
+        });
+    })();
+</script>

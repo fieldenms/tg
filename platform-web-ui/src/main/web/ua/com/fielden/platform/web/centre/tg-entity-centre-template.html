@@ -1,0 +1,323 @@
+<!--@imports-->
+
+<!-- <link rel="import" href="/resources/polymer/core-tooltip/core-tooltip.html"> -->
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/editor-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/hardware-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/image-icons.html">
+
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="/centre_ui/egi/@full_mi_type">
+<link rel="import" href="/resources/actions/tg-page-action.html">
+<link rel="import" href="/resources/centre/tg-selection-criteria.html">
+<link rel="import" href="/resources/centre/tg-selection-criteria-behavior.html">
+<link rel="import" href="/resources/centre/tg-entity-centre.html">
+<link rel="import" href="/resources/centre/tg-entity-centre-behavior.html">
+<link rel="import" href="/resources/centre/tg-entity-centre-insertion-point.html">
+<link rel="import" href="/resources/sse/tg-sse-behavior.html">
+
+<dom-module id="tg-@mi_type-selection-criteria">
+    <template>
+        <style>
+            tg-flex-layout * {
+                min-width: 96px;
+            }
+            tg-flex-layout * .criterion-editors {
+                min-width: 0;
+            }
+        </style>
+    	<tg-selection-criteria
+    		id="masterDom"
+    		mi-type="[[miType]]" 
+            is-running="{{isRunning}}"
+    		_post-validated-default="[[_postValidatedDefault]]"
+    		_post-validated-default-error="[[_postValidatedDefaultError]]"
+    		_process-response="[[_processResponse]]"
+    		_process-error="[[_processError]]"
+    		_process-retriever-response="[[_processRetrieverResponse]]"
+    		_process-retriever-error="[[_processRetrieverError]]"
+    		_process-runner-response="[[_processRunnerResponse]]"
+    		_process-runner-error="[[_processRunnerError]]">
+   	        <!--CRITERIA EDITORS DOM (GENERATED)-->
+        	<!--@criteria_editors-->
+    	</tg-selection-criteria>
+    </template>
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+        	is: 'tg-@mi_type-selection-criteria',
+        	
+        	behaviors: [ Polymer.TgBehaviors.TgSelectionCriteriaBehavior ],
+        	
+        	ready: function () {
+                // LAYOUT CONFIG (GENERATED)
+                //@layoutConfig
+        	},
+            
+            _dom: function () {
+            	return this.$.masterDom;
+            },
+            
+            /**
+             * The iron-ajax component for entity retrieval.
+             */
+            _ajaxRetriever: function () {
+                return this._dom()._ajaxRetriever();
+            },
+            
+            /**
+             * The iron-ajax component for query running.
+             */
+            _ajaxRunner: function () {
+                return this._dom()._ajaxRunner();
+            },
+            
+            /**
+             * The validator component.
+             */
+            _validator: function () {
+                return this._dom()._validator();
+            },
+            
+            /**
+             * The component for entity serialisation.
+             */
+            _serialiser: function () {
+            	return this._dom()._serialiser();
+            },
+            
+            /**
+             * The reflector component.
+             */
+            _reflector: function () {
+            	return this._dom()._reflector();
+            },
+            
+            /**
+             * The toast component.
+             */
+            _toastGreeting: function () {
+            	return this._dom()._toastGreeting();
+            }
+        });
+    })();
+</script>
+
+<dom-module id="tg-@mi_type-centre">
+    <template>
+        <style>
+    	   paper-icon-button.revers {
+                --paper-icon-button: {
+                    transform: scale(-1, 1);
+                };
+            }
+            .selection-criteria {
+                background-color: white;
+            }
+            .group:not(:first-child) {
+                margin-left: 30px;
+            }
+            /*toolbarStyles*/
+        </style>
+        <tg-entity-centre
+        	id="dom"
+        	_selected-view="{{_selectedView}}"
+        	_url="[[_url]]"
+        	_process-saver-response="[[_processSaverResponse]]"
+        	_process-saver-error="[[_processSaverError]]"
+        	_process-discarder-response="[[_processDiscarderResponse]]"
+        	_process-discarder-error="[[_processDiscarderError]]"
+        	_handle-scroll="[[_handleScroll]]"
+        	_saver-disabled="[[_saverDisabled]]"
+        	_discarder-disabled="[[_discarderDisabled]]"
+        	_runner-disabled="[[_runnerDisabled]]"
+        	_viewer-disabled="[[_viewerDisabled]]"
+        	save="[[save]]"
+        	discard="[[discard]]"
+        	run="[[run]]"
+        	_activate-result-set-view="[[_activateResultSetView]]"
+        	>
+            <tg-@mi_type-selection-criteria
+            	id="selection_criteria"
+            	class="custom-selection-criteria"
+            	_centre-changed="{{_centreChanged}}"
+            	_criteria-loaded="{{_criteriaLoaded}}"
+            	uuid="[[uuid]]"
+            	mi-type="@full_mi_type"
+                page-capacity="[[pageCapacity]]"
+            	post-run="[[_postRun]]"
+            	get-selected-entities="[[_getSelectedEntities]]"
+            	get-master-entity="[[getMasterEntity]]"
+            	post-retrieved="[[postRetrieved]]"
+            	page-number="{{pageNumber}}"
+            	page-count="{{pageCount}}"
+            	page-number-updated="{{pageNumberUpdated}}"
+            	page-count-updated="{{pageCountUpdated}}"
+                is-running="{{isRunning}}"
+            	@queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
+
+            <tg-@mi_type-grid-inspector id="egi" class="entity-grid-inspector custom-egi" @gridLayout>
+                <!-- EGI COLUMNS DOM (GENERATED) -->
+                <!--@egi_columns-->
+
+                <!--@toolbar-->
+                
+                <!--@primary_action-->
+                <!--@secondary_actions-->
+                <!--@insertion_point_actions-->
+            </tg-@mi_type-grid-inspector>
+            
+            <div class="left-insertion-point">
+            	<!--@left_insertion_points-->
+            </div>
+            <div class="right-insertion-point">
+            	<!--@right_insertion_points-->
+            </div>
+            <div class="bottom-insertion-point">
+            	<!--@bottom_insertion_points-->
+            </div>
+        </tg-entity-centre>
+    </template>
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+        	is: 'tg-@mi_type-centre',
+        	
+        	behaviors: [ Polymer.TgBehaviors.TgEntityCentreBehavior, Polymer.TgBehaviors.TgSseBehavior],
+        	
+            hostAttributes: {
+                "class": "layout vertical",
+               	"entity-type": "@full_entity_type",
+               	"mi-type": "@full_mi_type"
+            },
+            
+            properties: {
+                isRunning: {
+                    type: Boolean
+                },
+            	_handleScroll: {
+            		type: Function
+            	},
+                pageCapacity: {
+                    type: Number,
+                    value: @pageCapacity
+                },
+            	pageNumber: Number,
+            	pageCount: Number,
+            	pageNumberUpdated: Number,
+            	pageCountUpdated: Number,
+            },
+            
+            created: function () {
+            	console.warn("tg-@mi_type-centre: created");
+            	console.time("created-to-ready");
+                console.warn("CREATED in TG-ENTITY-CENTRE-TAMPLATE");
+                
+                // bind SSE event handling method regardless of the fact whether this particulare
+                // centre is bound to some SSE url or not.
+                this.dataHandler = function(data) {
+                    var self = this;
+                    var msg = JSON.parse(data);
+                    // let's search for an item to update... 
+                    // if the current EGI model does not contain an updated entity then there is no need for a refresh...
+                    // TODO such update strategy might need to be revisited in future...
+                    var needsFullRefresh = true;
+                    for (var index = 0; index < this.$.egi.egiModel.length; index++) {
+                        var entity = this.$.egi.egiModel[index].entity;
+                        if (entity.id === msg.id) {
+                        	needsFullRefresh = false;
+                            // let's give the browser a breathing chance...
+                            this.async(function () {
+                                try {
+                                    self.refreshEntities([entity]);
+                                } catch (e) {
+                                    console.warn(e);
+                                }
+                            }, 1);
+                            break;
+                        }
+                    } // endfor
+                    if (needsFullRefresh === true) {
+                    	self.refreshEntities([]);
+                    }
+                }.bind(this);
+            },
+            
+            ready: function () {
+                var self = this;
+            	console.timeEnd("created-to-ready");
+            	console.warn("tg-@mi_type-centre: ready");
+            	console.time("ready-to-attached");
+                
+                //toolbarGeneratedFunction
+            },
+        	
+            /**
+             * Initialisation block. It has all children web components already initialised.
+             */
+            attached: function () {
+            	console.timeEnd("ready-to-attached");
+            	console.warn("attached-to-attached-async");
+            	console.time("attached-to-attached-async");
+                var self = this;
+                self.async(function() {
+                    console.warn("tg-@mi_type-centre: attached async");
+                    console.timeEnd("attached-to-attached-async");
+                    
+                	self.postRetrieved = self.postRetrieved || function (entity, bindingEntity, customObject) {
+                        console.log("postRetrieved");
+                    }.bind(self);
+                    
+                    self._handleScroll = self._handleScroll || (function (e) {
+                        this.fire("scroll-container", e.target);
+                    }).bind(self);
+                    
+                    // TODO smth. like this should be generated here:
+                    self.topLevelActions = [
+                        //generatedActionObjects
+                    ];
+                    // TODO do we need to notify paths?
+               		// TODO do we need to notify paths?
+                    self.secondaryActions = [
+                        //generatedSecondaryActions
+                    ];
+               		
+                    self.insertionPointActions = [
+                  		//generatedInsertionPointActions
+	                ];
+                    self.primaryAction = [
+                        //generatedPrimaryAction
+                    ];
+                    self.propActions = [
+                        //generatedPropActions
+                    ];
+                    //gridLayoutConfig
+                }, 1);
+            },
+            
+            _dom: function () {
+            	return this.$.dom;
+            },
+            
+            /**
+             * The iron-ajax component for centre discarding.
+             */
+            _ajaxDiscarder: function () {
+            	return this._dom()._ajaxDiscarder();
+            },
+            
+            /**
+             * The iron-ajax component for centre saving.
+             */
+            _ajaxSaver: function () {
+            	return this._dom()._ajaxSaver();
+            }
+        });
+    })();
+</script>

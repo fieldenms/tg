@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.test;
 
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 
@@ -21,7 +21,7 @@ public class UserProviderForTesting implements IUserProvider {
     }
 
     @Override
-    public void setUsername(final String username, final IUserController controller) {
+    public void setUsername(final String username, final IUserEx controller) {
         user = new User(username, "test user") {
         };
     }

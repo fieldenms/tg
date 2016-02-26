@@ -1,0 +1,96 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/tg-tooltip.html">
+<!--
+Provides tooltip support for component that uses this behaviour. In order to set tooltip for specific element in the component, one should
+mark element with tooltip-text attribute.
+-->
+<script>
+    (function () {
+        var toolTipElement = document.createElement("tg-tooltip");
+        /**
+         * Returns the element in hierarchy that has tooltip-id attribute set otherwise returns null.
+         */
+        var extractActiveElement = function (currentElement, thisElement) {
+            if (currentElement !== thisElement.parentElement) {
+                if (currentElement.hasAttribute("tooltip-text")) {
+                    return currentElement;
+                } else {
+                    return extractActiveElement(currentElement.parentElement, thisElement);
+                }
+            }
+            return null;
+        };
+        //Adds tooltip element to document's body so that it only one for all tooltips.
+        Polymer.dom(document.body).appendChild(toolTipElement);
+        Polymer.dom.flush();
+
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+        Polymer.TgBehaviors.TgTooltipBehavior = {
+            properties: {
+                /**
+                 * The handle for tooltip timer can be used to cancel tooltip timer. (Tooltip timer - the timer for tooltip to be shown).
+                 */
+                _tooltipTimer: {
+                    type: Number
+                },
+                /**
+                 * Element under mouse pointer, for which tooltip should be shown. Also this element should be marked with tooltip-id attribute.
+                 */
+                _activeComponent: {
+                    type: Object
+                }
+            },
+
+            ready: function () {
+                this._handleTooltipAtMousePos = this._handleTooltipAtMousePos.bind(this);
+                this._hideTooltip = this._hideTooltip.bind(this);
+            },
+
+            attached: function () {
+                this.addEventListener('mousemove', this._handleTooltipAtMousePos);
+                this.addEventListener('mouseleave', this._hideTooltip);
+            },
+
+            detached: function () {
+                this.removeEventListener('mousemove', this._handleTooltipAtMousePos);
+                this.removeEventListener('mouseleave', this._hideTooltip);
+            },
+
+            /**
+             * Handler that determines when to show tooltip on mouse move event amd when to hide it.
+             */
+            _handleTooltipAtMousePos: function (event) {
+                var currentActiveElement = extractActiveElement(event.target, this);
+
+                if (currentActiveElement !== this._activeComponent) {
+                    this._hideTooltip();
+                    this._activeComponent = currentActiveElement;
+                }
+                var tooltipText = this._activeComponent && this._activeComponent.getAttribute("tooltip-text");
+                if (tooltipText !== null && tooltipText.length > 0) {
+                    if (this._tooltipTimer) {
+                        this.cancelAsync(this._tooltipTimer);
+                        this._tooltipTimer = null;
+                    }
+                    this._tooltipTimer = this.async(function () {
+                        Polymer.dom(toolTipElement).innerHTML = tooltipText;
+                        toolTipElement.showAt(event.pageX, event.pageY);
+                    }, 1000);
+                }
+            },
+
+            /**
+             * Hides the tooltip.
+             */
+            _hideTooltip: function () {
+                if (toolTipElement._showing) {
+                    toolTipElement.hide();
+                }
+                if (this._tooltipTimer) {
+                    this.cancelAsync(this._tooltipTimer);
+                    this._tooltipTimer = null;
+                }
+            }
+        };
+    })();
+</script>

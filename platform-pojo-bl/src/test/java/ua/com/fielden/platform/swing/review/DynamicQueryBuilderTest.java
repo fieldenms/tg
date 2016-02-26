@@ -23,9 +23,9 @@ import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DynamicQueryBuilderTest {
 
@@ -169,7 +169,7 @@ public class DynamicQueryBuilderTest {
         qp.setValue("some");
         assertFalse(qp.getType().getSimpleName() + " property with non-empty String value should not 'have empty value'.", qp.hasEmptyValue());
         qp.setValue(null);
-        assertFalse(qp.getType().getSimpleName() + " property with null value should not 'have empty value'.", qp.hasEmptyValue());
+        assertTrue(qp.getType().getSimpleName() + " property with null value should be recognised as having an empty value.", qp.hasEmptyValue());
     }
 
     @SuppressWarnings("serial")
@@ -285,7 +285,7 @@ public class DynamicQueryBuilderTest {
         qp.setValue("some");
         assertFalse(qp.getType().getSimpleName() + " property with non-empty String value should not 'be empty'.", qp.isEmpty());
         qp.setValue(null);
-        assertFalse(qp.getType().getSimpleName() + " property with null value should not 'be empty'.", qp.isEmpty());
+        assertTrue(qp.getType().getSimpleName() + " property with null value should recognised be empty.", qp.isEmpty());
     }
 
     @SuppressWarnings("serial")
@@ -436,7 +436,7 @@ public class DynamicQueryBuilderTest {
         qp.setValue("some");
         assertFalse(qp.getType().getSimpleName() + " property with non-empty String value should not 'be ignored'.", qp.shouldBeIgnored());
         qp.setValue(null);
-        assertFalse(qp.getType().getSimpleName() + " property with null value should not 'be ignored'.", qp.shouldBeIgnored());
+        assertTrue(qp.getType().getSimpleName() + " property with null value should be ignored.", qp.shouldBeIgnored());
     }
 
     @Test

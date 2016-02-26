@@ -16,6 +16,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity2WithEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBigDecimal;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithBoolean;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithColour;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithCompositeKey;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDate;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDefiner;
@@ -24,6 +25,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEn
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMoney;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorphicAEProp;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithPolymorphicProp;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSameEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithSetOfEntities;
@@ -207,7 +209,10 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
                 SubBaseEntity1.class,
                 SubBaseEntity2.class,
                 EntityWithCompositeKey.class,
-                EntityWithMoney.class
+                EntityWithMoney.class,
+                EntityWithPolymorphicAEProp.class,
+                EntityWithColour.class
+                               
                 );
     }
 

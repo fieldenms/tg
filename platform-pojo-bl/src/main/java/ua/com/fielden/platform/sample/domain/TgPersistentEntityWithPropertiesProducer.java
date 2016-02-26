@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.dao.DefaultEntityProducer;
+import ua.com.fielden.platform.dao.EntityProducerWithNewEditActions;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -14,7 +14,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProducer<TgPersistentEntityWithProperties> implements IEntityProducer<TgPersistentEntityWithProperties> {
+public class TgPersistentEntityWithPropertiesProducer extends EntityProducerWithNewEditActions<TgPersistentEntityWithProperties, TgPersistentEntityWithProperties> implements IEntityProducer<TgPersistentEntityWithProperties> {
     private final ITgPersistentEntityWithProperties coTgPersistentEntityWithProperties;
 
     @Inject
@@ -24,7 +24,7 @@ public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProdu
     }
 
     @Override
-    protected TgPersistentEntityWithProperties provideDefaultValues(final TgPersistentEntityWithProperties entity) {
+    public TgPersistentEntityWithProperties provideDefaultValuesForNewEntity(final TgPersistentEntityWithProperties entity) {
         final IFetchProvider<TgPersistentEntityWithProperties> fetchStrategy = coTgPersistentEntityWithProperties.getFetchProvider();
         final TgPersistentEntityWithProperties defValue =
                 //                coTgPersistentEntityWithProperties.getEntity(from(
@@ -32,8 +32,6 @@ public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProdu
                 //                ).with(fetchOnly(TgPersistentEntityWithProperties.class).with("key")).model());
                 //                coTgPersistentEntityWithProperties.findById(12L, fetchOnly(TgPersistentEntityWithProperties.class).with("key"));
                 coTgPersistentEntityWithProperties.findByKeyAndFetch(fetchStrategy.<TgPersistentEntityWithProperties> fetchFor("producerInitProp").fetchModel(), "DEFAULT_KEY");
-
-        System.out.println("defValue.getProperty(producerInitProp).isProxy() == " + defValue.getProperty("producerInitProp").isProxy());
 
         entity.setProducerInitProp(defValue);
         return entity;

@@ -1,8 +1,18 @@
 package ua.com.fielden.platform.entity.fetch;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
 import java.util.Deque;
@@ -14,9 +24,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 
 /**
@@ -80,15 +98,13 @@ public class FetchModelReconstructor {
             return exploredFetchModels.get(identity);
         }
 
-        fetch<?> fetchModel = (entity.getClass().getName().contains("$$Enhancer")) ? fetchAndInstrument(entity.getType()).with(AbstractEntity.ID) : fetch(entity.getType()).with(AbstractEntity.ID);
+        fetch<?> fetchModel = PropertyTypeDeterminator.isInstrumented(entity.getClass()) ? fetchAndInstrument(entity.getType()).with(AbstractEntity.ID) : fetch(entity.getType()).with(AbstractEntity.ID);
         explored.add(identity);
         exploredFetchModels.put(identity, fetchModel);
 
         final List<Field> retrievableNotProxiedPropFields = Finder.streamRealProperties(entity.getType())
-                        .filter(field -> Reflector.isPropertyRetrievable(entity, field) && !Reflector.isPropertyProxied(entity, field.getName()))
+                        .filter(field -> (entity instanceof AbstractUnionEntity) || Reflector.isPropertyRetrievable(entity, field) && !Reflector.isPropertyProxied(entity, field.getName()))
                         .collect(Collectors.toList());
-
-        
         
         for (final Field propField : retrievableNotProxiedPropFields) {
             final String propName = propField.getName();
