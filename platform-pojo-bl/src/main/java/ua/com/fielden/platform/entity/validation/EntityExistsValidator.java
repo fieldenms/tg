@@ -54,7 +54,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         try {
             if (newValue == null) {
                 return Result.successful(entity);
-            } else if (newValue.isDirty()) {
+            } else if (newValue.isInstrumented() && newValue.isDirty()) { // if entity uninstrumented its dirty state is irrelevant and cannot be checked
                 return Result.failure(entity, format("EntityExists validator: dirty entity %s (%s) is not acceptable.", newValue, newValue.getType().getName()));
             }
 
