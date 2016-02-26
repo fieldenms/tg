@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -119,7 +119,7 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
     private static <MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE, ?>> T retrieveActionFor(final MASTER_TYPE masterEntity, final IEntityDao<T> companion, final Class<T> actionType) {
         return companion.getEntity(
                 from(select(actionType).where().prop(AbstractEntity.KEY).eq().val(masterEntity).model())
-                .with(fetch(actionType).with(AbstractEntity.KEY)).model()
+                .with(fetchAndInstrument(actionType).with(AbstractEntity.KEY)).model()
         );
     }
     
@@ -174,7 +174,7 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
             entityToSave = persistedEntity;
             entityToSave.setSurrogateVersion(persistedEntity.getVersion() + 1L);
         } else {
-            entityToSave = factory.newPlainEntity(actionType, null);
+            entityToSave = factory.newEntity(actionType, null);
             entityToSave.setKey(masterEntityBeingUpdated);
         }
         return entityToSave;

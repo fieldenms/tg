@@ -17,6 +17,7 @@ import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionRao;
@@ -41,12 +42,15 @@ public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
     public void test_whether_user_and_role_batch_action_works() {
         final Map<Long, User> users = (Map<Long, User>) mapById(userControllerRao.findAllUsers());
         final Map<Long, UserRole> roles = (Map<Long, UserRole>) mapById(userRoleRao.findAll());
+        
 
         final Set<UserAndRoleAssociation> saveAssociations = new HashSet<>();
-        saveAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(3))));
+        final User user1 = users.get(Long.valueOf(1));
+        final EntityFactory factory = user1.getEntityFactory();
+        saveAssociations.add(factory.newByKey(UserAndRoleAssociation.class, user1, roles.get(Long.valueOf(3))));
 
         final Set<UserAndRoleAssociation> removeAssociations = new HashSet<>();
-        removeAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(1))));
+        removeAssociations.add(factory.newByKey(UserAndRoleAssociation.class, user1, roles.get(Long.valueOf(1))));
 
         final UserAndRoleAssociationBatchAction action = new UserAndRoleAssociationBatchAction();
         action.setSaveEntities(saveAssociations);
@@ -66,11 +70,14 @@ public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
         final Map<Long, User> users = (Map<Long, User>) mapById(userControllerRao.findAllUsers());
         final Map<Long, UserRole> roles = (Map<Long, UserRole>) mapById(userRoleRao.findAll());
 
+        final User user1 = users.get(Long.valueOf(1));
+        final EntityFactory factory = user1.getEntityFactory();
+
         final Set<UserAndRoleAssociation> saveAssociations = new LinkedHashSet<>();
-        saveAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(3))));
+        saveAssociations.add(factory.newByKey(UserAndRoleAssociation.class, users.get(Long.valueOf(1)), roles.get(Long.valueOf(3))));
 
         final Set<UserAndRoleAssociation> removeAssociations = new HashSet<>();
-        removeAssociations.add(new UserAndRoleAssociation(null, roles.get(Long.valueOf(1))));
+        removeAssociations.add(factory.newByKey(UserAndRoleAssociation.class, null, roles.get(Long.valueOf(1))));
 
         final UserAndRoleAssociationBatchAction action = new UserAndRoleAssociationBatchAction();
         action.setSaveEntities(saveAssociations);

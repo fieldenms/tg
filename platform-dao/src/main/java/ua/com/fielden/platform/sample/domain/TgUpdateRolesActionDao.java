@@ -50,12 +50,14 @@ public class TgUpdateRolesActionDao extends CommonEntityDao<TgUpdateRolesAction>
         
         final Set<UserAndRoleAssociation> addedAssociations = new LinkedHashSet<>();
         for (final Long addedId : action.getAddedIds()) {
-            addedAssociations.add(new UserAndRoleAssociation(userBeingUpdated, availableRoles.get(addedId)));
+            final UserAndRoleAssociation assoc = factory.newByKey(UserAndRoleAssociation.class, userBeingUpdated, availableRoles.get(addedId));
+            addedAssociations.add(assoc);
         }
 
         final Set<UserAndRoleAssociation> removedAssociations = new LinkedHashSet<>();
         for (final Long removedId : action.getRemovedIds()) {
-            removedAssociations.add(new UserAndRoleAssociation(userBeingUpdated, availableRoles.get(removedId)));
+            final UserAndRoleAssociation assoc = factory.newByKey(UserAndRoleAssociation.class, userBeingUpdated, availableRoles.get(removedId));
+            removedAssociations.add(assoc);
         }
 
         final UserAndRoleAssociationBatchAction batchAction = new UserAndRoleAssociationBatchAction();
