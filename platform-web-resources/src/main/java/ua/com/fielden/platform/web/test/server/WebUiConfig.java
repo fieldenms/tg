@@ -16,13 +16,15 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.EntityDeleteAction;
+import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
+import ua.com.fielden.platform.entity.EntityEditAction;
+import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
@@ -99,6 +101,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollCon
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
+import ua.com.fielden.platform.web.config.EntityManipulationWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -111,6 +114,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
+
+import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -163,6 +168,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityCentre<TgEntityWithPropertyDependency> propDependencyCentre = new EntityCentre<>(MiTgEntityWithPropertyDependency.class, "Property Dependency Example",
                 EntityCentreBuilder.centreFor(TgEntityWithPropertyDependency.class)
                 .runAutomatically()
+                .addTopAction(action(EntityNewAction.class).
+                        withContext(context().withSelectionCrit().build()).
+                        icon("add-circle-outline").
+                        shortDesc("Add new").
+                        longDesc("Start continuous creation of entities").
+                        build())
+                .also()
+                .addTopAction(action(EntityDeleteAction.class).
+                        withContext(context().withSelectedEntities().build()).
+                        icon("remove-circle-outline").
+                        shortDesc("Delete selected").
+                        longDesc("Deletes the selected entities").
+                        build())
                 .addCrit("property").asMulti().text().also()
                 .addCrit("dependentProp").asMulti().text()
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
@@ -170,7 +188,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addProp("this").also()
                 .addProp("property").also()
                 .addProp("dependentProp")
-                .addPrimaryAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
+                .addPrimaryAction(action(EntityEditAction.class).
+                        withContext(context().withCurrentEntity().withSelectionCrit().build()).
+                        icon("editor:mode-edit").
+                        shortDesc("Edit entity").
+                        longDesc("Opens master for editing this entity").
+                        build())
                 .build(), injector(), (centre) -> {
                     // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
                     centre.getSecondTick().setWidth(TgEntityWithPropertyDependency.class, "", 60);
@@ -664,12 +687,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 TgPersistentEntityWithPropertiesProducer.class,
                 masterConfig,
                 injector());
-        
+
         final EntityMaster<NewEntityAction> functionalMasterWithEmbeddedPersistentMaster =  NewEntityActionWebUiConfig.createMaster(injector(), entityMaster);
-        
+        final EntityMaster<EntityNewAction> entityNewActionMaster = EntityManipulationWebUiConfig.createEntityNewMaster(injector());
+        final EntityMaster<EntityEditAction> entityEditActionMaster = EntityManipulationWebUiConfig.createEntityEditMaster(injector());
+        final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
+
+
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
 
         configApp().
+            addMaster(EntityNewAction.class, entityNewActionMaster).
+            addMaster(EntityEditAction.class, entityEditActionMaster).
+            addMaster(EntityDeleteAction.class, entityDeleteActionMaster).
             addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
             addMaster(NewEntityAction.class, functionalMasterWithEmbeddedPersistentMaster).
@@ -1074,15 +1104,28 @@ public class WebUiConfig extends AbstractWebUiConfig {
         ICentreTopLevelActions<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
                 .hasEventSourceAt("/entity-centre-events")
                 .enforcePostSaveRefresh()
-                .addTopAction(
-                        action(NewEntityAction.class).
-                                withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality 
-                                icon("add-circle").
+                .addTopAction(action(EntityNewAction.class).
+                                withContext(context().withSelectionCrit().build()).
+                                icon("add-circle-outline").
                                 shortDesc("Add new").
                                 longDesc("Start coninuous creatio of entities").
-                                build()
-                ).also();
-                
+                                build())
+                .also()
+                .addTopAction(action(EntityDeleteAction.class).
+                        withContext(context().withSelectedEntities().build()).
+                        icon("remove-circle-outline").
+                        shortDesc("Delete selected").
+                        longDesc("Deletes the selected entities").
+                        build())
+                .also()
+                .addTopAction(action(NewEntityAction.class).
+                        withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
+                        icon("add-circle").
+                        shortDesc("Add new").
+                        longDesc("Start coninuous creatio of entities").
+                        build())
+                .also();
+
 
         if (isComposite) {
             actionConf = actionConf.addTopAction(
@@ -1230,12 +1273,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 //.hideCheckboxes()
                 //.notScrollable()
-                .withScrollingConfig(ScrollConfig.configScroll().withFixedSecondaryActions().withFixedSummary().done())
+                .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(1).withFixedSecondaryActions().withFixedHeader().done())
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
-                .addProp("this").withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
+                .addProp("this").minWidth(60).withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
                 .also()
-                .addProp("desc").withAction(action(TgFunctionalEntityWithCentreContext.class).
+                .addProp("desc").minWidth(200).
+                        withAction(action(TgFunctionalEntityWithCentreContext.class).
                         withContext(context().withSelectedEntities().build()).
                         icon("assignment-turned-in").
                         shortDesc("Function 5").
@@ -1243,35 +1287,40 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
 
                 .also()
-                .addProp(mkProp("DR", "Defect Radio", String.class)).withAction(action(TgStatusActivationFunctionalEntity.class).
+                .addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
+                        withAction(action(TgStatusActivationFunctionalEntity.class).
                         withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
                         shortDesc("Change Status to DR").
                         longDesc("Change Status to DR").
                         build())
                 .also()
-                .addProp(mkProp("IS", "In Service", String.class)).withAction(action(TgISStatusActivationFunctionalEntity.class).
+                .addProp(mkProp("IS", "In Service", String.class)).width(26).
+                        withAction(action(TgISStatusActivationFunctionalEntity.class).
                         withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
                         shortDesc("Change Status to IS").
                         longDesc("Change Status to IS").
                         build())
                 .also()
-                .addProp(mkProp("IR", "In Repair", String.class)).withAction(action(TgIRStatusActivationFunctionalEntity.class).
+                .addProp(mkProp("IR", "In Repair", String.class)).width(26).
+                        withAction(action(TgIRStatusActivationFunctionalEntity.class).
                         withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
                         shortDesc("Change Status to IR").
                         longDesc("Change Status to IR").
                         build())
                 .also()
-                .addProp(mkProp("ON", "On Road Defect Station", String.class)).withAction(action(TgONStatusActivationFunctionalEntity.class).
+                .addProp(mkProp("ON", "On Road Defect Station", String.class)).width(26).
+                        withAction(action(TgONStatusActivationFunctionalEntity.class).
                         withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
                         shortDesc("Change Status to ON").
                         longDesc("Change Status to ON").
                         build())
                 .also()
-                .addProp(mkProp("SR", "Defect Smash Repair", String.class)).withAction(action(TgSRStatusActivationFunctionalEntity.class).
+                .addProp(mkProp("SR", "Defect Smash Repair", String.class)).width(26).
+                        withAction(action(TgSRStatusActivationFunctionalEntity.class).
                         withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
                         shortDesc("Change Status to SR").
@@ -1279,21 +1328,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
 
                 .also()
-                .addProp("integerProp").withTooltip("desc").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
+                .addProp("integerProp").minWidth(42).withTooltip("desc").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
                 .also()
-                .addProp("bigDecimalProp").withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
+                .addProp("bigDecimalProp").minWidth(68).withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
                 .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
                 .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property")
                 .also()
-                .addProp("entityProp")
+                .addProp("entityProp").minWidth(40)
                 .also()
-                .addProp("booleanProp")
+                .addProp("booleanProp").minWidth(49)
                 .also()
-                .addProp("dateProp")
+                .addProp("dateProp").minWidth(130)
                 .also()
-                .addProp("compositeProp")
+                .addProp("compositeProp").minWidth(110)
                 .also()
-                .addProp("stringProp")
+                .addProp("stringProp").minWidth(50)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["
                 //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
@@ -1332,9 +1381,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                .also()
                 //                .addProp(mkProp("Custom Prop 2", "Custom property 2 with concrete value", "OK2"))
 
-                .addPrimaryAction(
-                        //EntityActionConfig.createMasterInvocationActionConfig()
-                        EntityActionConfig.createMasterInDialogInvocationActionConfig()
+                .addPrimaryAction(action(EntityEditAction.class).
+                        withContext(context().withCurrentEntity().withSelectionCrit().build()).
+                        icon("editor:mode-edit").
+                        shortDesc("Edit entity").
+                        longDesc("Opens master for editing this entity").
+                        build())
+                //                .addPrimaryAction(
+                //                        EntityActionConfig.createMasterInvocationActionConfig()
+                //EntityActionConfig.createMasterInDialogInvocationActionConfig()
                 //                        action(TgFunctionalEntityWithCentreContext.class).
                 //                                withContext(context().withSelectedEntities().build()).
                 //                                icon("assignment-turned-in").
@@ -1342,7 +1397,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                                longDesc("Functional context-dependent action 2.5").
                 //                                build()
 
-                ) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
+                //) // EntityActionConfig.createMasterInvocationActionConfig() |||||||||||| actionOff().build()
                 .also()
                 /*.addSecondaryAction(
                         EntityActionConfig.createMasterInDialogInvocationActionConfig()
@@ -1421,24 +1476,24 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre = new EntityCentre<>(miType, name, entityCentreConfig, injector(), (centre) -> {
             // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
 
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "", 60);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "desc", 200);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "integerProp", 42);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "bigDecimalProp", 68);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "entityProp", 40);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "booleanProp", 49);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 130);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 110);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "", 60);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "desc", 200);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "integerProp", 42);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "bigDecimalProp", 68);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "entityProp", 40);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "booleanProp", 49);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dateProp", 130);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "compositeProp", 110);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "stringProp", 50);
             // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "status", 30);
             // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp", 30);
             // centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "customProp2", 30);
-            final int statusWidth = 26; // TODO does not matter below 18px -- still remain 18px, +20+20 as padding
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dR", statusWidth);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iS", statusWidth);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iR", statusWidth);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "oN", statusWidth);
-            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "sR", statusWidth);
+            //            final int statusWidth = 26; // TODO does not matter below 18px -- still remain 18px, +20+20 as padding
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "dR", statusWidth);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iS", statusWidth);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "iR", statusWidth);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "oN", statusWidth);
+            //            centre.getSecondTick().setWidth(TgPersistentEntityWithProperties.class, "sR", statusWidth);
 
             return centre;
         });

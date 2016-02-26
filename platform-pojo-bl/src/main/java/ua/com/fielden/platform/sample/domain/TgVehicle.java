@@ -147,6 +147,13 @@ public class TgVehicle extends AbstractEntity<String> {
     @Calculated
     @Title("Calc Model")
     private TgVehicleModel calcModel;
+    
+    @Observable
+    public TgVehicle setCalcModel(TgVehicleModel calcModel) {
+        this.calcModel = calcModel;
+        return this;
+    }
+
     private static final ExpressionModel calcModel_ = expr().prop("model").model();
 
 

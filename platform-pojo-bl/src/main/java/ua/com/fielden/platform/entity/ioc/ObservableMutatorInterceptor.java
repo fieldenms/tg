@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.entity.ioc;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
+
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Optional;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -41,10 +43,10 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
      * @return
      * @throws Throwable
      */
-    private Object proceed(final MethodInvocation mi, final MetaProperty<?> property) throws Throwable {
+    private Object proceed(final MethodInvocation mi, final Optional<MetaProperty<?>> op) throws Throwable {
         final Object result = mi.proceed();
-        if (property != null) {
-            property.setAssigned(true);
+        if (op.isPresent()) {
+            op.get().setAssigned(true);
         }
         return result;
     }
@@ -68,13 +70,14 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         final String propertyName = Mutator.deducePropertyNameFromMutator(method);
         final String fullPropertyName = entity.getType().getName() + "." + propertyName;
         logger.debug(format("Property name is \"%s\".", fullPropertyName));
-        final MetaProperty property = entity.getProperty(propertyName);
+        final Optional<MetaProperty<?>> op = entity.getPropertyOptionally(propertyName);
         // check if entity is not in the initialisation mode during which no property validation should be performed
-        if (entity.isInitialising()) {
-            logger.debug(format("Skip further logic: Initialisation of entity is in progress.", AbstractUnionEntity.class.isAssignableFrom(entity.getClass()) ? entity.getClass()
-                    : entity));
-            return proceed(invocation, property);
+        if (entity.isInitialising() || !op.isPresent()) {
+            logger.debug(format("Property change observation logic is skipped. Initialisation or instantiation of entity [%s] is in progress.", AbstractUnionEntity.class.isAssignableFrom(entity.getClass()) ? entity.getClass()
+                    : entity.getType().getName()));
+            return proceed(invocation, op);
         }
+        final MetaProperty property = op.get();
         // check if entity can be modified at all
         final Result editableResult = entity.isEditable();
         if (!entity.isIgnoreEditableState() && !editableResult.isSuccessful()) {
@@ -85,11 +88,6 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         synchronized (entity) {
             entity.lock(); // this locking is required to prevent entity validation until all individual properties complete their modification (either successfully or not)
             try { // unlocking try-finally block
-                if (property == null) { // this is possible only if key is set to dynamic composite key and the meta-property factory is not yet assigned... thus no observation is
-                    // required at this stage
-                    logger.debug(format("Skip further logic: Property \"%s\" for intercepted mutator has no meta-property.", fullPropertyName));
-                    return proceed(invocation, property);
-                }
                 final boolean wasValid = property.isValid(); // this flag is needed for correct change event firing
                 logger.debug(format("Property \"%s\" was valid: %s", fullPropertyName, wasValid));
                 final Pair<Object, Object> newAndOldValues = determineNewAndOldValues(entity, propertyName, invocation.getArguments()[0], method);
@@ -306,9 +304,10 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
      */
     private SetterResult proceedSetter(final AbstractEntity<?> entity, final String propertyName, final MethodInvocation mutator, final boolean wasValidAndNotEnforced, final Pair<Object, Object> newAndOldValues)
             throws Throwable {
-        final MetaProperty metaProperty = entity.getProperty(propertyName);
+        final Optional<MetaProperty<?>> op = entity.getPropertyOptionally(propertyName);
+        final MetaProperty metaProperty = op.get();
         try {
-            final Object setterReturningValue = proceed(mutator, metaProperty);
+            final Object setterReturningValue = proceed(mutator, op);
             // check if the entity a union entity, which grands some extra processing
             if (AbstractUnionEntity.class.isAssignableFrom(entity.getType()) && AbstractEntity.class.isAssignableFrom(entity.getPropertyType(propertyName))) {
                 // if entity is of type AbstractUnionEntity then its properties can only be of type AbstractEntity

@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.sample.domain;
 
-import com.google.inject.Inject;
-
-import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
+import ua.com.fielden.platform.dao.EntityProducerWithNewEditActions;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+
+import com.google.inject.Inject;
 
 /**
  * A producer for new instances of entity {@link TgEntityWithPropertyDependency}.
@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  * @author TG Team
  *
  */
-public class TgEntityWithPropertyDependencyProducer extends DefaultEntityProducerWithContext<TgEntityWithPropertyDependency, TgEntityWithPropertyDependency> implements IEntityProducer<TgEntityWithPropertyDependency> {
+public class TgEntityWithPropertyDependencyProducer extends EntityProducerWithNewEditActions<TgEntityWithPropertyDependency, TgEntityWithPropertyDependency> implements IEntityProducer<TgEntityWithPropertyDependency> {
     private final ITgEntityWithPropertyDependency coTgEntityWithPropertyDependency;
 
     @Inject
@@ -23,7 +23,7 @@ public class TgEntityWithPropertyDependencyProducer extends DefaultEntityProduce
     }
 
     @Override
-    protected TgEntityWithPropertyDependency provideDefaultValues(final TgEntityWithPropertyDependency entity) {
+    protected TgEntityWithPropertyDependency provideDefaultValuesForNewEntity(final TgEntityWithPropertyDependency entity) {
         entity.setKey("DUMMY");
         return entity;
     }

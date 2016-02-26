@@ -36,8 +36,8 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
     @Test
     public void identification_of_retrievable_properties_for_non_composite_entity_with_non_persistent_props_other_than_desc() {
         final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
-        assertNull( cat1.getProperty(ID));
-        assertNull( cat1.getProperty(VERSION));
+        assertFalse(cat1.getPropertyOptionally(ID).isPresent());
+        assertFalse(cat1.getPropertyOptionally(VERSION).isPresent());
 
 
         final List<MetaProperty<?>> retrievableProps = cat1.getProperties().values().stream().
@@ -56,8 +56,8 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
     @Test
     public void identification_of_retrievable_properties_for_composite_entity_with_non_persistent_desc() {
         final TgOrgUnit2 cat1 = ao(TgOrgUnit2.class).findByKey(ao(TgOrgUnit1.class).findByKey("Org1"), "Org1_1");
-        assertNull( cat1.getProperty(ID));
-        assertNull( cat1.getProperty(VERSION));
+        assertFalse(cat1.getPropertyOptionally(ID).isPresent());
+        assertFalse(cat1.getPropertyOptionally(VERSION).isPresent());
 
 
         final List<MetaProperty<?>> retrievableProps = cat1.getProperties().values().stream().

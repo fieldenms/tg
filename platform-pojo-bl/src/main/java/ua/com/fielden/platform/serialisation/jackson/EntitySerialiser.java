@@ -25,6 +25,7 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDes
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
 
 import com.esotericsoftware.kryo.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,7 +42,6 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     private final List<CachedProperty> properties;
     private final EntityFactory factory;
     private final EntityType entityTypeInfo;
-    private final DefaultValueContract defaultValueContract;
 
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter) {
         this(type, module, mapper, factory, entityTypeInfoGetter, false);
@@ -53,12 +53,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
-
-        defaultValueContract = new DefaultValueContract();
         this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter);
 
-        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, defaultValueContract, excludeNulls);
-        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, defaultValueContract, entityTypeInfoGetter);
+        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, excludeNulls);
+        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, entityTypeInfoGetter);
 
         // register serialiser and deserialiser
         module.addSerializer(type, serialiser);
@@ -82,15 +80,15 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             entityTypeInfo.set_compositeKeyNames(compositeKeyNames);
 
             final String compositeKeySeparator = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) type);
-            if (!defaultValueContract.isCompositeKeySeparatorDefault(compositeKeySeparator)) {
+            if (!isCompositeKeySeparatorDefault(compositeKeySeparator)) {
                 entityTypeInfo.set_compositeKeySeparator(compositeKeySeparator);
             }
         }
         final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(type);
-        if (!defaultValueContract.isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
+        if (!isEntityTitleDefault(type, entityTitleAndDesc.getKey())) {
             entityTypeInfo.set_entityTitle(entityTitleAndDesc.getKey());
         }
-        if (!defaultValueContract.isEntityDescDefault(type, entityTitleAndDesc.getValue())) {
+        if (!isEntityDescDefault(type, entityTitleAndDesc.getValue())) {
             entityTypeInfo.set_entityDesc(entityTitleAndDesc.getValue());
         }
 
@@ -107,40 +105,40 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 //                }
 
                 final Boolean secrete = AnnotationReflector.isSecreteProperty(type, name);
-                if (!defaultValueContract.isSecreteDefault(secrete)) {
+                if (!isSecreteDefault(secrete)) {
                     entityTypeProp.set_secrete(secrete);
                 }
                 final Boolean upperCase = AnnotationReflector.isAnnotationPresentInHierarchy(UpperCase.class, type, name);
-                if (!defaultValueContract.isUpperCaseDefault(upperCase)) {
+                if (!isUpperCaseDefault(upperCase)) {
                     entityTypeProp.set_upperCase(upperCase);
                 }
                 final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(name, type);
                 entityTypeProp.set_title(titleAndDesc.getKey());
                 entityTypeProp.set_desc(titleAndDesc.getValue());
                 final Boolean critOnly = AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, type, name);
-                if (!defaultValueContract.isCritOnlyDefault(critOnly)) {
+                if (!isCritOnlyDefault(critOnly)) {
                     entityTypeProp.set_critOnly(critOnly);
                 }
                 final Boolean resultOnly = AnnotationReflector.isAnnotationPresentInHierarchy(ResultOnly.class, type, name);
-                if (!defaultValueContract.isResultOnlyDefault(resultOnly)) {
+                if (!isResultOnlyDefault(resultOnly)) {
                     entityTypeProp.set_resultOnly(resultOnly);
                 }
                 final Boolean ignore = AnnotationReflector.isAnnotationPresentInHierarchy(Ignore.class, type, name);
-                if (!defaultValueContract.isIgnoreDefault(ignore)) {
+                if (!isIgnoreDefault(ignore)) {
                     entityTypeProp.set_ignore(ignore);
                 }
                 final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, name);
                 if (mapTo != null) {
                     final Long length = mapTo.length();
-                    if (!defaultValueContract.isLengthDefault(length)) {
+                    if (!isLengthDefault(length)) {
                         entityTypeProp.set_length(length);
                     }
                     final Long precision = mapTo.precision();
-                    if (!defaultValueContract.isPrecisionDefault(precision)) {
+                    if (!isPrecisionDefault(precision)) {
                         entityTypeProp.set_precision(precision);
                     }
                     final Long scale = mapTo.scale();
-                    if (!defaultValueContract.isScaleDefault(scale)) {
+                    if (!isScaleDefault(scale)) {
                         entityTypeProp.set_scale(scale);
                     }
                 }

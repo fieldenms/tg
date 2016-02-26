@@ -91,12 +91,17 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_type_name_modification() throws Exception {
         assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
+        
+        assertEquals("Incorrect setter argument type.", Reflector.obtainPropertySetter(Entity.class, "entity").getParameterTypes()[0], Entity.class);
+        
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class.getName()).modifyTypeName(Entity.class.getName()
                 + "_enhanced1").endModification();
         assertTrue("Incorrect type name.", newType.getName().equals(Entity.class.getName() + "_enhanced1"));
         assertEquals("Incorrect inheritance.", Entity.class.getSuperclass(), newType.getSuperclass());
         assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(), newType);
 
+        assertEquals("Incorrect setter argument type.", Reflector.obtainPropertySetter(newType, "entity").getParameterTypes()[0], newType);
+        
         assertEquals("The type of properties (previously of root type) also becomes changed.", Entity.class.getName() + "_enhanced1", newType.getDeclaredField("entity").getType().getName());
     }
 

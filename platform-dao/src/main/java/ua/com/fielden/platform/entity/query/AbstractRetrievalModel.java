@@ -58,6 +58,10 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
         return originalFetch.getEntityType();
     }
 
+    public boolean isInstrumented() {
+        return originalFetch.isInstrumented();
+    }
+
     public Set<String> getPrimProps() {
         return primProps;
     }

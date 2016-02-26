@@ -93,7 +93,7 @@ public abstract class AbstractDomainTree {
         if (!EntityUtils.isEntityType(klass)) {
             throw new IllegalArgumentException("Root type [" + klass + "] should be entity-typed.");
         }
-        if (DynamicEntityClassLoader.isEnhanced(klass)) {
+        if (DynamicEntityClassLoader.isGenerated(klass)) {
             throw new IllegalArgumentException("Root type [" + klass + "] should be NOT ENHANCED type.");
         }
     }

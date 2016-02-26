@@ -40,17 +40,20 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
     @Override
     public final T newEntity() {
         final T entity = factory.newEntity(entityType);
-        if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
-            final AbstractFunctionalEntityWithCentreContext<?> funEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
-            
-            if (getCentreContext() != null) {
-                funEntity.setContext(getCentreContext());
-            }
-            
-            if (!StringUtils.isEmpty(getChosenProperty())) {
-                funEntity.setChosenProperty(getChosenProperty());
-            }
-        }
+
+        // TODO Assignment of context and chosen property below breaks execution of compound masters
+        //      Currently it is not know as to why this is the case.
+//        if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
+//            final AbstractFunctionalEntityWithCentreContext<?> funEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
+//            
+//            if (getCentreContext() != null) {
+//                funEntity.setContext(getCentreContext());
+//            }
+//            
+//            if (!StringUtils.isEmpty(getChosenProperty())) {
+//                funEntity.setChosenProperty(getChosenProperty());
+//            }
+//        }
         
         if (companion != null) {
             provideProxies(entity, companion.getFetchProvider());

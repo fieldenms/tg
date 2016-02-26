@@ -135,21 +135,15 @@ public class ReadonlyPropertyColumnMapping<T extends AbstractEntity> extends Abs
 
     @Override
     public JComponent getCellRendererComponent(final T entity, final Object value, final boolean isSelected, final boolean hasFocus, final JTable table, final int row, final int column) {
-        if (!shouldUseMetaProperty(entity)) {
-            return getEntityCellRendererComponent(entity);
-        } else {
+        if (shouldUseMetaProperty(entity)) {
             return getAbstractEntityCellRendererComponent(entity, value, isSelected, hasFocus, table, row, column);
+        } else {
+            return getEntityCellRendererComponent(entity);
         }
     }
 
-    /**
-     * 
-     * 
-     * @param entity
-     * @return
-     */
     private boolean shouldUseMetaProperty(final T entity) {
-        return !(entity instanceof EntityAggregates || isEmpty(getPropertyName()) || !entity.isEnhanced());
+        return !(entity instanceof EntityAggregates) && !isEmpty(getPropertyName()) && PropertyTypeDeterminator.isInstrumented(entity.getClass());
     }
 
     /**

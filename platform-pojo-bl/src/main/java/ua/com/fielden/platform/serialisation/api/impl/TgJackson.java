@@ -6,8 +6,8 @@ import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
@@ -28,7 +28,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
@@ -48,6 +47,7 @@ import ua.com.fielden.platform.serialisation.jackson.serialisers.MoneyJsonSerial
 import ua.com.fielden.platform.serialisation.jackson.serialisers.ResultJsonSerialiser;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -145,9 +145,8 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
 
             EntitySerialiser.getContext().reset();
             final T val = readValue(contentString, concreteType);
-            if (!DynamicEntityClassLoader.isEnhanced(concreteType.getRawClass())) {
-                executeDefiners();
-            }
+            
+            executeDefiners();
             return val;
         } catch (final IOException e) {
             logger.error(e.getMessage(), e);
@@ -221,22 +220,15 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         if (references != null) {
             // references is thread local variable, which gets reset if a nested deserialisation happens
             // therefore need to make a local cache of the present in references entities
-            final Set<AbstractEntity<?>> refs = references.getNotEnhancedEntities();
+            
+            final List<AbstractEntity<?>> deserialisedEntities = references.getDeserialisedEntities();
 
             // explicit reset in order to make the reason for the above snippet more explicit
             references.reset();
-
-            // iterate through all locally cached entity instances and execute respective definers
-            for (final AbstractEntity<?> entity : refs) {
-                entity.beginInitialising();
-                for (final MetaProperty<?> prop : entity.getProperties().values()) {
-                    if (prop != null) {
-                        if (!prop.isCollectional()) {
-                            prop.defineForOriginalValue();
-                        }
-                    }
-                }
-                entity.endInitialising();
+            
+            if (!deserialisedEntities.isEmpty()) {
+                // iterate through all locally cached entity instances and execute respective definers
+                DefinersExecutor.execute(deserialisedEntities);
             }
         }
     }

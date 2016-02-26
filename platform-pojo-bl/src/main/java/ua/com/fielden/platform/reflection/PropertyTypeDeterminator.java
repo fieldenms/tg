@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.format;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
@@ -11,6 +13,7 @@ import java.lang.reflect.WildcardType;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -226,8 +229,8 @@ public class PropertyTypeDeterminator {
             ////////////////// Property class determination using property accessor. //////////////////
             try {
                 return Reflector.obtainPropertyAccessor(clazz, propertyOrFunction).getGenericReturnType();
-            } catch (final NoSuchMethodException e) {
-                throw new IllegalArgumentException("No " + propertyOrFunction + " property in " + clazz.getSimpleName() + " class.");
+            } catch (final ReflectionException e) {
+                throw new ReflectionException(format("No [%s] property in type [%s].", propertyOrFunction, clazz.getName()), e);
             }
         }
     }
@@ -239,19 +242,32 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
-        return clazz != null && PropertyTypeDeterminator.isEnhanced(clazz) ? clazz.getSuperclass() : clazz;
+        return clazz != null && (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz)) ? stripIfNeeded(clazz.getSuperclass()) : clazz;
+    }
+    
+    private static boolean isLoadedByHibernate(final Class<?> clazz) {
+        return clazz.getName().contains("$$_javassist");
     }
 
     /**
-     * Returns if specified class is enhanced by Guice/Hibernate.
+     * Returns <code>true</code> if the specified class is proxied, <code>false</code> otherwise.
      *
-     * Enhancer.isEnhanced does not recognise classes enhanced directly with CGLIB (Hibernate), therefore need to provide an alternative way.
-     *
+     * @param clazz
+     * @return
+     */
+    public static boolean isProxied(final Class<?> clazz) {
+        return clazz.getName().contains("$ByteBuddy$");
+    }
+    
+    /**
+     * Returns <code>true</code> if the specified class is instrumented by Guice, and thus instances of this type should be fully initialised
+     * from TG perspective (having meta-properties, fitted with ACE/BCE interceptors etc.).
+     * 
      * @param klass
      * @return
      */
-    public static boolean isEnhanced(final Class<?> klass) {
-        return klass.getName().contains("$$Enhancer") || klass.getName().contains("$$_javassist");
+    public static boolean isInstrumented(final Class<?> clazz) {
+        return clazz.getName().contains("$$EnhancerByGuice");
     }
 
     public static boolean isDotNotation(final String exp) {

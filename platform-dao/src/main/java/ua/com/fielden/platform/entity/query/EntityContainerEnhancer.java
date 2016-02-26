@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -18,6 +19,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.Finder;
@@ -34,84 +36,75 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     }
 
     protected List<EntityContainer<E>> enhance(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) throws Exception {
-        if (entities.size() == 0) {
+        if (entities.size() == 0 || fetchModel == null) {
             return entities;
         }
 
-        if (fetchModel != null) {
-            final Map<String, fetch<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getFetchModels();
+        final Map<String, fetch<? extends AbstractEntity<?>>> propertiesFetchModels = fetchModel.getFetchModels();
 
-            for (final Map.Entry<String, fetch<?>> entry : propertiesFetchModels.entrySet()) {
-                final String propName = entry.getKey();
-                final fetch<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
+        for (final Map.Entry<String, fetch<?>> entry : propertiesFetchModels.entrySet()) {
+            final String propName = entry.getKey();
+            final fetch<? extends AbstractEntity<?>> propFetchModel = entry.getValue();
 
-                if (fetchModel.getEntityType() != EntityAggregates.class) {
-                    final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
-                    //System.out.println("*** ENHANCING entity [" + fetchModel.getEntityType().getSimpleName() + "] property [" + propName +"] with fetch: " + propFetchModel + " ppi = " + ppi.getType());
+            if (fetchModel.getEntityType() != EntityAggregates.class) {
+                final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), propName);
+                //System.out.println("*** ENHANCING entity [" + fetchModel.getEntityType().getSimpleName() + "] property [" + propName +"] with fetch: " + propFetchModel + " ppi = " + ppi.getType());
 
-                    if (ppi == null || ppi.isCollection()) {
-                        // TODO replace with EntityTree metadata (wrt collectional properties retrieval)
-                        final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
-                        for (final Field field : collProps) {
-                            if (field.getName().equals(propName)) {
-                                //final String linkPropName = field.getAnnotation(IsProperty.class).linkProperty();
-                                final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
-                                enhanceCollectional(entities, propName, field.getType(), linkPropName, propFetchModel);
-                            }
-                        }
-                    } else {
-                        if (ppi.isUnionEntity()) {
-                            enhanceProperty(entities, propName, propFetchModel);
-                        } else {
-                            try {
-                                final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
-                                enhancePropertyWithLinkToParent(entities, propName, propFetchModel, linkPropName);
-                            } catch (final Exception e) {
-                                if (ppi.isEntityOfPersistedType() || ppi.isOne2OneId()) {
-                                    enhanceProperty(entities, propName, propFetchModel);
-                                }
-                            }
+                if (ppi == null || ppi.isCollection()) {
+                    // TODO replace with EntityTree metadata (wrt collectional properties retrieval)
+                    final List<Field> collProps = EntityUtils.getCollectionalProperties(fetchModel.getEntityType());
+                    for (final Field field : collProps) {
+                        if (field.getName().equals(propName)) {
+                            //final String linkPropName = field.getAnnotation(IsProperty.class).linkProperty();
+                            final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
+                            enhanceCollectional(entities, propName, field.getType(), linkPropName, propFetchModel);
                         }
                     }
                 } else {
-                    enhanceProperty(entities, propName, propFetchModel);
-                }
-            }
-        }
-
-        return enhanceWithProxies(entities, fetchModel);
-    }
-
-    protected List<EntityContainer<E>> enhanceWithProxies(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) throws Exception {
-        if (fetchModel != null && fetchModel.getEntityType() != EntityAggregates.class) {
-
-            for (final EntityContainer<E> entContainer : entities) {
-                for (final String proxiedProp : fetchModel.getProxiedProps()) {
-                    if (entContainer.getEntities().get(proxiedProp) != null) {
-                        entContainer.getEntities().get(proxiedProp).setProxy();
+                    if (ppi.isUnionEntity()) {
+                        enhanceProperty(entities, propName, propFetchModel);
                     } else {
-                        //TODO this situation should disappear once possibility of explicit per-property yielding of persisted entities is removed in upcoming version of EQL 
-                        logger.debug("Property [" + proxiedProp + "] is outside the list of entity props containers of entity container for type [" + fetchModel.getEntityType()
-                                + "]");
-
-                        final PropertyMetadata ppi = domainMetadataAnalyser.getPropPersistenceInfoExplicitly(fetchModel.getEntityType(), proxiedProp);
-                        final EntityContainer<AbstractEntity<?>> idlessPropContainer = new EntityContainer<AbstractEntity<?>>(ppi.getJavaType());
-                        idlessPropContainer.setStrictProxy();
-                        entContainer.getEntities().put(proxiedProp, idlessPropContainer);
+                        try {
+                            final String linkPropName = Finder.findLinkProperty(fetchModel.getEntityType(), propName);
+                            enhancePropertyWithLinkToParent(entities, propName, propFetchModel, linkPropName);
+                        } catch (final Exception e) {
+                            if (ppi.isEntityOfPersistedType() || ppi.isOne2OneId()) {
+                                enhanceProperty(entities, propName, propFetchModel);
+                            }
+                        }
                     }
                 }
-
-                for (final Entry<String, Class<? extends AbstractEntity<?>>> proxiedProp : fetchModel.getProxiedPropsWithoutId().entrySet()) {
-                    if (entContainer.getEntities().get(proxiedProp) == null) {
-                        final EntityContainer<AbstractEntity<?>> calcPropContainer = new EntityContainer<AbstractEntity<?>>((Class<AbstractEntity<?>>) proxiedProp.getValue());
-                        calcPropContainer.setStrictProxy();
-                        entContainer.getEntities().put(proxiedProp.getKey(), calcPropContainer);
-                    }
-                }
+            } else {
+                enhanceProperty(entities, propName, propFetchModel);
             }
         }
+
+        assignProxiedResultTypeToContainers(entities, fetchModel);
+        assignInstrumentationSetting(entities, fetchModel);
+        //assignProxySetting(entities, fetchModel);
 
         return entities;
+    }
+
+    private void assignInstrumentationSetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
+        if (fetchModel.isInstrumented()) {
+            for (EntityContainer<E> entityContainer : entities) {
+                entityContainer.setInstrumented();
+            }
+        }
+    }
+
+    private void assignProxiedResultTypeToContainers(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
+        if (fetchModel.getEntityType() != EntityAggregates.class) {
+            Set<String> proxiedProps = new HashSet<>();
+            proxiedProps.addAll(fetchModel.getProxiedProps());
+            proxiedProps.addAll(fetchModel.getProxiedPropsWithoutId().keySet());
+            final Class<? extends E> proxiedResultType = EntityProxyContainer.proxy(fetchModel.getEntityType(), proxiedProps.toArray(new String[] {})).entityType;
+    
+            for (final EntityContainer<E> entContainer : entities) {
+                entContainer.setProxiedResultType(proxiedResultType);
+            }
+        }
     }
 
     private Map<Long, List<EntityContainer<E>>> getEntityPropertyIds(final List<EntityContainer<E>> entities, final String propertyName) {

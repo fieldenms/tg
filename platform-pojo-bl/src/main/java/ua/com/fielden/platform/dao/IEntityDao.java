@@ -122,19 +122,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     T findByEntityAndFetch(final fetch<T> fetchModel, final T entity);
 
     /**
-     * Load entity by id in lazy mode -- all its entity properties will be proxied in LAZY mode.
-     * <p>
-     * PLEASE REFRAIN YOURSELF AND OTHERS FROM USING THIS METHOD!!!
-     * </p>
-     *
-     * @param id
-     * @return
-     */
-    default T lazyLoad(final Long id) {
-        throw new org.apache.commons.lang.NotImplementedException("Should be overridden by subclasses");
-    }
-
-    /**
      * Should return a reference to the first page of the specified size containing entity instances.
      *
      * @param pageCapacity
@@ -218,13 +205,28 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     }
     
     /**
-     * Persists (saves/updates) the entity.
+     * Persists (saves/updates) the entity and returns the updated entity back.
+     * For safety consideration the passed in and the returned entity instances should NOT be considered reference equivalent.
+     * The returned entity should be thought of as a newer equivalent of the passed in instance and used everywhere in the downstream logic of the callee.
      *
      * @param entity
      * @return
      */
     T save(final T entity);
 
+    
+    /**
+     * Similar to method {@link #save(AbstractEntity)}, but returns an <code>id</code> of the saved entity.
+     * The implication is that this method should execute faster by skipping the steps that are required to instantiate a resultant entity.
+     * 
+     * @param entity
+     * @return
+     */
+    default long quickSave(final T entity) {
+        throw new UnsupportedOperationException(); 
+    }
+
+    
     /**
      * Deletes entity instance by its id. Currently, in most cases it is not supported since deletion is not a trivial operation.
      *
@@ -374,4 +376,5 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     IFetchProvider<T> getFetchProvider();
+    
 }

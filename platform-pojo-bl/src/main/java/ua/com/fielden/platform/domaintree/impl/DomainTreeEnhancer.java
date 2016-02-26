@@ -152,11 +152,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
 
         for (final Class<?> rootType : rootTypes) {
             // check whether the type WITH calculated properties IS enhanced 
-            if (!hasNoAdditionalProperties(rootType) && !DynamicEntityClassLoader.isEnhanced(getManagedType(rootType))) {
+            if (!hasNoAdditionalProperties(rootType) && !DynamicEntityClassLoader.isGenerated(getManagedType(rootType))) {
                 throw new IllegalStateException(String.format("The type [%s] should be enhanced -- it has %s properties.", rootType.getSimpleName(), additionalPropDefinitionsAsString(rootType)));
             }
             // check whether the type WITHOUT calculated properties IS NOT enhanced 
-            if (hasNoAdditionalProperties(rootType) && DynamicEntityClassLoader.isEnhanced(getManagedType(rootType))) {
+            if (hasNoAdditionalProperties(rootType) && DynamicEntityClassLoader.isGenerated(getManagedType(rootType))) {
                 throw new IllegalStateException(String.format("The type [%s] should be NOT enhanced -- it has no additional properties.", rootType.getSimpleName()));
             }
         }
@@ -492,7 +492,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
      */
     private static List<CalculatedProperty> reload(final Class<?> type, final Class<?> root, final String path, final IDomainTreeEnhancer dte, final boolean validateTitleContextOfExtractedProperties) {
         final List<CalculatedProperty> newCalcProperties = new ArrayList<CalculatedProperty>();
-        if (!DynamicEntityClassLoader.isEnhanced(type)) {
+        if (!DynamicEntityClassLoader.isGenerated(type)) {
             return newCalcProperties;
         } else {
             // add all first level calculated properties if any exist

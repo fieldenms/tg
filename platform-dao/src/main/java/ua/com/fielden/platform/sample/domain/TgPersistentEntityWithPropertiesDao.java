@@ -1,30 +1,15 @@
 package ua.com.fielden.platform.sample.domain;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
+import java.util.Collection;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.sample.domain.mixin.TgPersistentEntityWithPropertiesMixin;
 import ua.com.fielden.platform.sample.domain.observables.TgPersistentEntityWithPropertiesChangeSubject;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Inject;
 
@@ -53,21 +38,26 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
     @Override
     @SessionRequired
     public TgPersistentEntityWithProperties save(final TgPersistentEntityWithProperties entity) {
-        final boolean wasNew = !entity.isPersisted();
+        final boolean wasNew = false; // !entity.isPersisted();
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);
-        
+
         // if the entity was new and just successfully saved then let's return a new entity to mimic "continuous" entry
         // otherwise simply return the same entity
         if (wasNew && saved.isValid().isSuccessful()) {
             final TgPersistentEntityWithProperties newEntity = saved.getEntityFactory().newEntity(TgPersistentEntityWithProperties.class);
-            // the following two lines can be uncommented to simulate the situation of an invalid new entity returned from save 
+            // the following two lines can be uncommented to simulate the situation of an invalid new entity returned from save
             //newEntity.setRequiredValidatedProp(1);
             //newEntity.setRequiredValidatedProp(null);
             return newEntity;
         } else {
             return saved;
         }
+    }
+
+    @Override
+    public int batchDelete(final Collection<Long> entitiesIds) {
+        return defaultBatchDelete(entitiesIds);
     }
 
     @Override

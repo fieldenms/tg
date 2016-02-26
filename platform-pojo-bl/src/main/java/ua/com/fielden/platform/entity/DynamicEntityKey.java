@@ -9,12 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.jexl.Expression;
-import org.apache.commons.jexl.ExpressionFactory;
-import org.apache.commons.jexl.JexlContext;
-import org.apache.commons.jexl.JexlHelper;
-
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 
@@ -64,7 +60,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
         final List<Field> compositeKeyMambers = Finder.getKeyMembers(entity.getType());
         // If there is only one key member and it has name KEY then this is the wrong place to be using composite key
         if (compositeKeyMambers.size() == 1 && AbstractEntity.KEY.equals(compositeKeyMambers.get(0).getName())) {
-            throw new IllegalStateException("Composite key should have at least one member.");
+            throw new EntityDefinitionException("Composite key should have at least one member.");
         }
 
         this.entity = entity;

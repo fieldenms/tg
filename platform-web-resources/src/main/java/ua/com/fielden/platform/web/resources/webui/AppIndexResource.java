@@ -11,10 +11,10 @@ import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
-import com.google.common.base.Charsets;
-
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+
+import com.google.common.base.Charsets;
 
 /**
  * Responds to GET request with a generated application specific index resource (for desktop and mobile web apps).

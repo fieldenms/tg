@@ -41,7 +41,10 @@ public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T>
         if (entityCentre.eventSourceUri().isPresent()) {
             attrs.append(format("\"uri\": \"%s\", ", entityCentre.eventSourceUri().get()));
         }
-
+        
+        // let's make sure that uuid is defined from the embedded centre, which is required
+        // for proper communication of the centre with related actions
+        attrs.append("\"uuid\": this.uuid, ");
         attrs.append("}");
 
         final String attributes = attrs.toString().replace(", }", " }");
@@ -53,11 +56,11 @@ public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T>
                         format(""
                         + "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
                         + "    import='/centre_ui/%s' "
-                        + "    element-name='tg-%s-centre' "
-                        + "    attrs='%s'>"
+                        + "    element-name='tg-%s-centre'>"
                         + "</tg-element-loader>",
                         entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName(), attributes))
                 .replace("//@ready-callback", "self.classList.remove('canLeave');")
+                .replace("//@attached-callback", format("this.$.loader.attrs = %s;\n", attributes))
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivate + "");
 

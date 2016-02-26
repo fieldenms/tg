@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ua.com.fielden.platform.dom.CssStyles;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -8,6 +11,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
 public class CentreToolbar implements IToolbarConfig {
+
+    private List<DomElement> addedButtons = new ArrayList<>();
 
     protected final DomElement newButton = new DomElement("tg-page-action").clazz("entity-specific-action").attr("tabIndex", "-1").
             attr("icon", "add-circle-outline").attr("action", "[[_newAction]]").attr("short-desc", "Create new entity");
@@ -32,7 +37,7 @@ public class CentreToolbar implements IToolbarConfig {
             attr("icon", "refresh").attr("on-tap", "currentPage").attr("disabled$", "[[canNotCurrent(pageNumber, pageCount, isRunning)]]");
 
     protected DomElement createToolbarElement() {
-        return new DomContainer().add(newButton, editButton, deleteButton, topLevelPlacement, configButton, pagination, refreshButton);
+        return new DomContainer().add(addedButtons.toArray(new DomElement[0])).add(topLevelPlacement, configButton, pagination, refreshButton);
     }
 
     @Override
@@ -55,4 +60,18 @@ public class CentreToolbar implements IToolbarConfig {
         return new CssStyles();
     }
 
+    public CentreToolbar addNewAction() {
+        addedButtons.add(newButton);
+        return this;
+    }
+
+    public CentreToolbar addEditAction() {
+        addedButtons.add(editButton);
+        return this;
+    }
+
+    public CentreToolbar addDeleteAction() {
+        addedButtons.add(deleteButton);
+        return this;
+    }
 }

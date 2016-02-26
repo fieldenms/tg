@@ -60,7 +60,7 @@
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                     console.log("postValidated");
                 };
-                master.postSaved = function(potentiallySavedEntity, newBindingEntity) {
+                master.postSaved = function(potentiallySavedOrNewEntity, newBindingEntity) {
                     console.log("postSaved");
                 };
                 master.retrieve();

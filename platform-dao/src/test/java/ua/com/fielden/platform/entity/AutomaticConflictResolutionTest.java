@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
@@ -49,7 +50,7 @@ public class AutomaticConflictResolutionTest extends AbstractDomainDrivenTestCas
         try {
             save(cat1_v2.setDesc("other desc"));
             fail("Saving should have failed");
-        } catch (final Result ex) {
+        } catch (final EntityCompanionException ex) {
             assertEquals("Could not resolve conflicting changes. Entity Cat1 (Tg Category) could not be saved.", ex.getMessage());
         }
 
@@ -60,12 +61,8 @@ public class AutomaticConflictResolutionTest extends AbstractDomainDrivenTestCas
         final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
 
         save(new_(TgSystem.class, "Sys2").setActive(true).setCategory(cat1));
-        try {
-            save(new_(TgSystem.class, "Sys3").setActive(true).setCategory(cat1));
-            assertEquals(Integer.valueOf(3), ao(TgCategory.class).findByKey("Cat1").getRefCount());
-        } catch (final Result ex) {
-            fail("saving should have been successful");
-        }
+        save(new_(TgSystem.class, "Sys3").setActive(true).setCategory(cat1));
+        assertEquals(Integer.valueOf(3), ao(TgCategory.class).findByKey("Cat1").getRefCount());
     }
 
 

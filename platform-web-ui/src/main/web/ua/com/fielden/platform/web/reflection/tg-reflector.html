@@ -671,6 +671,90 @@
 	 */
 	var _EPrototype = _createEntityPrototype(_EIPPrototype, _SPEPrototype, _isError0, _isWarning0);
 	
+    /**
+     * Determines whether the specified object represents the entity.
+     */
+    var _isEntity = function (obj) {
+        return obj !== null && (obj instanceof _EPrototype);
+    };
+    
+    /**
+     * Returns 'true' if the regular values are equal, 'false' otherwise.
+     */
+    var _equalsEx = function (value1, value2) {
+        // if (value1) {
+        //     if (!value2) {
+        //         return false;
+        //     } else {
+        //         return ...
+        //     }
+        // }
+
+        // TODO 1: rectify whether this implementation is good
+        // TODO 2: potentially, extend implementation to support composite types: arrays and objects?
+        if (_isEntity(value1)) {
+            return _entitiesEqualsEx(value1, value2);
+        }
+        return value1 === value2;
+    };
+    
+    /**
+     * Returns 'true' if the entities are equal, 'false' otherwise.
+     *
+     * IMPORTANT: this is the mirror of the java methods AbstractEntity.equals() and DynamicEntityKey.compareTo(). So, please be carefull and maintain it
+     * in accordance with java counterparts.
+     */
+    var _entitiesEqualsEx = function (entity1, entity2) {
+        if (entity1 === entity2) {
+            return true;
+        }
+        if (!_isEntity(entity2)) {
+            return false;
+        }
+        // let's ensure that types match
+        if (entity1.type() !== entity2.type()) {
+            return false;
+        }
+        // now can compare key values
+        if (entity1.type().isCompositeEntity()) {
+            var compositeKeyNames = entity1.type().compositeKeyNames();
+            for (var i = 0; i < compositeKeyNames.length; i++) {
+                var compositePartName = compositeKeyNames[i];
+                var compositePart1, compositePart2;
+                try {
+                    compositePart1 = entity1.get(compositePartName);
+                } catch (strictProxyEx1) {
+                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
+                }
+                try {
+                    compositePart2 = entity2.get(compositePartName);
+                } catch (strictProxyEx2) {
+                    throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Composite key part [' + compositePartName + '] was not fetched in second entity, please check fetching strategy. ' + strictProxyEx2;
+                }
+                
+                if (!_equalsEx(compositePart1, compositePart2)) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            var key1, key2;
+            
+            try {
+                key1 = entity1.get('key');
+            } catch (strictProxyEx1) {
+                throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in first entity, please check fetching strategy.' + strictProxyEx1;
+            }
+            
+            try {
+                key2 = entity2.get('key');
+            } catch (strictProxyEx2) {
+                throw 'Comparison of entities [' + entity1 + ', ' + entity2 + '] failed. Property \'key\' was not fetched in second entity, please check fetching strategy.' + strictProxyEx2;
+            }
+            return _equalsEx(key1, key2);
+        }
+    };
+	
 	/**
 	 * Completes the process of type table preparation -- creates instances of EntityType objects for each entity type in type table.
 	 */
@@ -870,7 +954,7 @@
          * Determines whether the specified object represents the entity.
          */
         isEntity: function (obj) {
-            return obj !== null && (obj instanceof this.getEntityPrototype());
+            return _isEntity(obj);
         },
 
         /**

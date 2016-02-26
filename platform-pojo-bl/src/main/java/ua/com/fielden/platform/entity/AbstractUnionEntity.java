@@ -4,16 +4,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
  * A base class for implementing synthetic entities to be used for modelling situations where a property of some entity can be of multiple types, but any individual instance of a
@@ -150,16 +150,13 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      * @return
      */
     public final AbstractEntity<?> activeEntity() {
-        final Map<String, MetaProperty<?>> properties = getProperties();
-        for (final MetaProperty<?> property : properties.values()) {
-            if (!COMMON_PROPS.contains(property.getName())) { // there should be no other properties of ordinary types
-                final AbstractEntity<?> value = (AbstractEntity<?>) get(property.getName());
-                if (value != null) {
-                    return value;
-                }
-            }
-        }
-        return null;
+        final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(field -> field.getName());
+
+        return propertyNames
+                .filter(propName -> !COMMON_PROPS.contains(propName) && get(propName) != null)
+                .findFirst() // returns Optional
+                .map(propName -> (AbstractEntity<?>) get(propName)) // map optional propName value to an actual property value
+                .orElse(null); // return the property value or null if there was no matching propName
     }
 
     /**
@@ -240,7 +237,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
             try {
                 commonMethods.add(Reflector.obtainPropertyAccessor(propertyType, property));
                 commonMethods.add(Reflector.obtainPropertySetter(propertyType, property));
-            } catch (final NoSuchMethodException e) {
+            } catch (final ReflectionException e) {
                 throw new RuntimeException("Common property [" + property + "] inside [" + propertyType + "] does not have accessor or setter.");
             }
         }
