@@ -1233,10 +1233,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * Any change to a property on an instrumented entity instance leads to its dirtiness.
      * Once a dirty entity is persisted, the dirty state gets reset to <code>false</code>.
      * 
+     * The dirty state is applicable strictly to instrumented entities. 
+     * Therefore, an exception is thrown if this method is invoked on an uninstrumented instance.
+     * 
      * @return
      */
     public final boolean isDirty() {
-        return (isInstrumented() && !getDirtyProperties().isEmpty()) || !isPersisted();
+        return !getDirtyProperties().isEmpty() || !isPersisted();
     }
 
     public final AbstractEntity<K> setDirty(final boolean dirty) {
