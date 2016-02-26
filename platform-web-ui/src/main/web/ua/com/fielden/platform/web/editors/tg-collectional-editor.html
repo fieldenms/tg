@@ -91,7 +91,7 @@
             <input is="iron-input"  placeholder="Search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
             <iron-list id="input" class="custom-input" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
                 <template>
-                    <div class$="[[_computedItemClass(_disabled)]]" >
+                    <div class$="[[_computedItemClass(_disabled)]]" style="min-width:fit-content">
                       <div tabindex="0" class$="[[_computedClass(selected)]]"> <!-- aria-label$="[[_getAriaLabel(item, selected)]]"  -->
                         <!-- <img class="avatar" src="[[item.image]]"> -->
                         <div id$="[[_makeId(index)]]" class="pad">

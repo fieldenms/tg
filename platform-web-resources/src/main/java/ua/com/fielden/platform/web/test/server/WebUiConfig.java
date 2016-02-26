@@ -624,7 +624,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
-                        + format("[['flex']],")
+                        + format("[],")
                         + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .done();
@@ -638,7 +638,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
-                        + format("[['flex']],")
+                        + format("[],")
                         + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .done();
