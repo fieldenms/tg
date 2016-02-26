@@ -4,8 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -45,15 +44,12 @@ public class FetchProviderTest {
         }
 
         assertEquals("Incorrect allProperties list.", set(), fp.allProperties());
-        assertEquals("Incorrect fetch model has been generated.",
-                fetchOnly(TgPersistentEntityWithProperties.class),
-                fp.fetchModel());
+        assertEquals("Incorrect fetch model has been generated.", fetchOnlyAndInstrument(TgPersistentEntityWithProperties.class), fp.fetchModel());
     }
 
     @Test
     public void keyAndDesc_fetch_provider_generates_keyAndDescOnly_fetch_model() {
-        final IFetchProvider<TgPersistentEntityWithProperties> fp =
-                EntityUtils.fetchWithKeyAndDesc(TgPersistentEntityWithProperties.class);
+        final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchWithKeyAndDesc(TgPersistentEntityWithProperties.class);
 
         assertFalse("Incorrect shouldFetch for property.", fp.shouldFetch("integerProp"));
         assertFalse("Incorrect shouldFetch for property.", fp.shouldFetch("entityProp"));
@@ -70,9 +66,50 @@ public class FetchProviderTest {
         }
 
         assertEquals("Incorrect allProperties list.", set(), fp.allProperties());
+        assertEquals("Incorrect fetch model has been generated.", fetchKeyAndDescOnlyAndInstrument(TgPersistentEntityWithProperties.class), fp.fetchModel());
+    }
+    
+    
+    @Test
+    public void fetch_provider_generates_instrumented_fetch_model() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp =
+                EntityUtils.fetch(TgPersistentEntityWithProperties.class);
+
+        assertTrue("Should be intrumented.", fp.instrumented());
+    }
+
+    @Test
+    public void fetch_provider_withKeyAndDesc_generates_instrumented_fetch_model() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp =
+                EntityUtils.fetchWithKeyAndDesc(TgPersistentEntityWithProperties.class);
+
+        assertTrue("Should be intrumented.", fp.instrumented());
+    }
+    
+    @Test
+    public void fetch_provider_with_entity_typed_property_generates_instrumented_fetch_submodel() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp =
+                EntityUtils.fetchWithKeyAndDesc(TgPersistentEntityWithProperties.class)
+                .with("entityProp");
+
+        assertTrue("Should be intrumented.", fp.fetchFor("entityProp").instrumented());
+        assertEquals("Incorrect property provider.", EntityUtils.fetchWithKeyAndDesc(TgPersistentEntityWithProperties.class), fp.fetchFor("entityProp"));
+        assertEquals("Incorrect fetch model has been generated.",
+                fetchKeyAndDescOnlyAndInstrument(TgPersistentEntityWithProperties.class),
+                fp.fetchFor("entityProp").fetchModel());
+    }
+    
+    @Test
+    public void fetch_provider_with_entity_typed_property_concrete_provider_generates_concrete_fetch_submodel_with_concrete_instrumentation() {
+        final IFetchProvider<TgPersistentEntityWithProperties> fp =
+                EntityUtils.fetchWithKeyAndDesc(TgPersistentEntityWithProperties.class)
+                .with("entityProp", EntityUtils.fetchNotInstrumentedWithKeyAndDesc(TgPersistentEntityWithProperties.class));
+
+        assertFalse("Should be not intrumented.", fp.fetchFor("entityProp").instrumented());
+        assertEquals("Incorrect property provider.", EntityUtils.fetchNotInstrumentedWithKeyAndDesc(TgPersistentEntityWithProperties.class), fp.fetchFor("entityProp"));
         assertEquals("Incorrect fetch model has been generated.",
                 fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class),
-                fp.fetchModel());
+                fp.fetchFor("entityProp").fetchModel());
     }
 
     @Test
@@ -91,7 +128,7 @@ public class FetchProviderTest {
 
         assertEquals("Incorrect allProperties list.", set("integerProp"), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.",
-                fetchOnly(TgPersistentEntityWithProperties.class).with("integerProp"),
+                fetchOnlyAndInstrument(TgPersistentEntityWithProperties.class).with("integerProp"),
                 fp.fetchModel());
     }
 
@@ -107,8 +144,8 @@ public class FetchProviderTest {
 
         assertEquals("Incorrect allProperties list.", set("entityProp"), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.",
-                fetchOnly(TgPersistentEntityWithProperties.class).
-                        with("entityProp", fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class)),
+                fetchOnlyAndInstrument(TgPersistentEntityWithProperties.class).
+                with("entityProp", fetchKeyAndDescOnlyAndInstrument(TgPersistentEntityWithProperties.class)),
                 fp.fetchModel());
     }
 
@@ -124,8 +161,8 @@ public class FetchProviderTest {
 
         assertEquals("Incorrect allProperties list.", set("compositeProp"), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.",
-                fetchOnly(TgPersistentEntityWithProperties.class).
-                        with("compositeProp", fetchKeyAndDescOnly(TgPersistentCompositeEntity.class)),
+                fetchOnlyAndInstrument(TgPersistentEntityWithProperties.class).
+                with("compositeProp", fetchKeyAndDescOnlyAndInstrument(TgPersistentCompositeEntity.class)),
                 fp.fetchModel());
     }
 
@@ -153,10 +190,10 @@ public class FetchProviderTest {
 
         assertEquals("Incorrect allProperties list.", set("compositeProp", "compositeProp.key1"), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.",
-                fetchOnly(TgPersistentEntityWithProperties.class).
+                fetchOnlyAndInstrument(TgPersistentEntityWithProperties.class).
                         with("compositeProp",
-                                fetchOnly(TgPersistentCompositeEntity.class).
-                                        with("key1", fetchOnly(TgPersistentEntityWithProperties.class))),
+                                fetchOnlyAndInstrument(TgPersistentCompositeEntity.class).
+                                        with("key1", fetchOnlyAndInstrument(TgPersistentEntityWithProperties.class))),
                 fp.fetchModel());
     }
 
@@ -191,10 +228,10 @@ public class FetchProviderTest {
 
         assertEquals("Incorrect allProperties list.", set("compositeProp", "compositeProp.key1", "compositeProp.key2"), fp.allProperties());
         assertEquals("Incorrect fetch model has been generated.",
-                fetchOnly(TgPersistentEntityWithProperties.class).
+                fetchOnlyAndInstrument(TgPersistentEntityWithProperties.class).
                         with("compositeProp",
-                                fetchKeyAndDescOnly(TgPersistentCompositeEntity.class).
-                                        with("key1", fetchOnly(TgPersistentEntityWithProperties.class)).
+                                fetchKeyAndDescOnlyAndInstrument(TgPersistentCompositeEntity.class).
+                                        with("key1", fetchOnlyAndInstrument(TgPersistentEntityWithProperties.class)).
                                         with("key2"))
                 ,
                 fp.fetchModel());

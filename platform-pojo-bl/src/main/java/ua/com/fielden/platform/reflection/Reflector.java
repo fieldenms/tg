@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -13,12 +14,18 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
+import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -249,12 +256,16 @@ public final class Reflector {
      * @return
      * @throws Exception
      */
-    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) throws NoSuchMethodException {
+    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) {
         final String propertyNameInGetter = propertyName.toUpperCase().charAt(0) + propertyName.substring(1);
         try {
             return Reflector.getMethod(entityClass, "get" + propertyNameInGetter);
-        } catch (final Exception e) {
-            return Reflector.getMethod(entityClass, "is" + propertyNameInGetter);
+        } catch (final Exception e1) {
+            try {
+                return Reflector.getMethod(entityClass, "is" + propertyNameInGetter);
+            } catch (NoSuchMethodException e2) {
+                throw new ReflectionException(format("Could not obtain accessor for property [%s] in type [%s].", propertyName, entityClass.getName()), e1);
+            }
         }
     }
 
@@ -268,12 +279,27 @@ public final class Reflector {
      * @throws NoSuchMethodException
      * @throws Exception
      */
-    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) throws NoSuchMethodException {
+    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) {
         if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.contains("()")) {
             throw new IllegalArgumentException("DotNotationExp could not be empty or could not define construction with methods.");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);
-        return Reflector.getMethod(transformed.getKey(), "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1), PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false));
+        try {
+            final String methodName = "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1);
+            final Class<?> argumentType = PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false);
+            
+            if (DynamicEntityClassLoader.isGenerated(entityClass) && DynamicEntityClassLoader.getOriginalType(entityClass) == argumentType) {
+                return Reflector.getMethod(transformed.getKey(), 
+                        methodName, 
+                        entityClass);
+            } else {
+                return Reflector.getMethod(transformed.getKey(), 
+                        methodName, 
+                        argumentType);
+            }
+        } catch (final Exception ex) {
+            throw new ReflectionException(format("Could not obtain setter for property [%s] in type [%s].", dotNotationExp, entityClass.getName()), ex);
+        }
     }
 
     // ========================================================================================================
@@ -521,5 +547,47 @@ public final class Reflector {
      */
     public static String getKeyMemberSeparator(final Class<? extends AbstractEntity<DynamicEntityKey>> type) {
         return AnnotationReflector.getAnnotation(type, KeyType.class).keyMemberSeparator();
+    }
+    
+    /**
+     * Returns <code>true</code> if the specified property is proxied for a given entity instance.
+     *  
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyProxied(final AbstractEntity<?> entity, final String propName) {
+        return entity.proxiedPropertyNames().contains(propName);
+    }
+    
+    /**
+     * Identifies whether the specified field represents a retrievable property.
+     * The notion retrievable is different to persistent as it also includes calculated properties, which do get retrieved from a database. 
+     * 
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final Field field) {
+        final String name = field.getName();
+        return entity.isPersistent()
+               && (
+                      field.isAnnotationPresent(Calculated.class) ||
+                      (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
+                      (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
+                      (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class)) ||
+                      (Finder.isOne2One_association(entity.getType(), name))
+                  );
+    }
+    
+    /**
+     * A convenient equivalent to method {@link #isPropertyRetrievable(AbstractEntity, Field)} that accepts property name instead of the Field instance. 
+     * 
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final String propName) {
+        return isPropertyRetrievable(entity, Finder.findFieldByName(entity.getClass(), propName)); 
     }
 }

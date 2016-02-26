@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 /**
  * Class representing references to instances already serialised or deserialised.
@@ -19,7 +19,10 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
  */
 public class References {
     private final IdentityHashMap<AbstractEntity<?>, String> entityToReference = new IdentityHashMap<>();
-    private final Map<String, AbstractEntity<?>> referenceToEntity = new HashMap<>();
+    /**
+     * Returns an <b>ordered by insertion</b> map of deserialised entities to their string references.
+     */
+    private final Map<String, AbstractEntity<?>> referenceToEntity = new LinkedHashMap<>();
     private final Map<String, Long> typeToRefCount = new HashMap<>();
 
     public void reset() {
@@ -70,29 +73,22 @@ public class References {
         }
         return entityToReference.put(entity, reference);
     }
-
-    public Set<AbstractEntity<?>> getNotEnhancedEntities() {
-        //        for (int index = 2; index < 2 + references.referenceCount; index++) {
-        //            final Object obj = references.referenceToObject.get(index);
-        //
-        //            // let's try to identify whether we are loading generated types here
-        //            if (obj != null && DynamicEntityClassLoader.isEnhanced(obj.getClass())) {
-        //                return;
-        //            }
-        //
-        //            // interested only in instances of the enhanced AbstractEntity.
-        //            if (obj instanceof AbstractEntity) {
-        //                refs.add((AbstractEntity<?>) obj);
-        //            }
-        //        }
-
-        final Set<AbstractEntity<?>> refs = new HashSet<>();
+    
+    /**
+     * Returns <b>ordered</b> list of deserialised entities.
+     * <p>
+     * The order is defined by traversing order of JSON tree during deserialisation -- this order is the same as if Javascript entities, that were serialised into that JSON,
+     * were traversed with DFS algorithm.
+     *  
+     * @return
+     */
+    public List<AbstractEntity<?>> getDeserialisedEntities() {
+        final List<AbstractEntity<?>> result = new ArrayList<>();
         for (final AbstractEntity<?> entity : referenceToEntity.values()) {
-            if (entity != null && !DynamicEntityClassLoader.isEnhanced(entity.getClass())) {
-                refs.add(entity);
+            if (entity != null) {
+                result.add(entity);
             }
         }
-
-        return refs;
+        return result;
     }
 }

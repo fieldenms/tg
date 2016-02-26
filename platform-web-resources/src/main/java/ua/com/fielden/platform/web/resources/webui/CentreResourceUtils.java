@@ -49,6 +49,8 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
+
 /**
  * This utility class contains the methods that are shared across {@link CentreResource} and {@link CriteriaResource}.
  *
@@ -193,10 +195,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static Map<String, Map<String, Object>> createCriteriaMetaValues(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<AbstractEntity<?>> root) {
         final Map<String, Map<String, Object>> metaValues = new LinkedHashMap<>();
-        final DefaultValueContract dvc = new DefaultValueContract();
         for (final String checkedProp : cdtmae.getFirstTick().checkedProperties(root)) {
             if (!AbstractDomainTree.isPlaceholder(checkedProp)) {
-                metaValues.put(checkedProp, createMetaValuesFor(root, checkedProp, cdtmae, dvc));
+                metaValues.put(checkedProp, createMetaValuesFor(root, checkedProp, cdtmae));
             }
         }
         return metaValues;
@@ -211,42 +212,42 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param dvc
      * @return
      */
-    private static Map<String, Object> createMetaValuesFor(final Class<AbstractEntity<?>> root, final String prop, final ICentreDomainTreeManagerAndEnhancer cdtmae, final DefaultValueContract dvc) {
+    private static Map<String, Object> createMetaValuesFor(final Class<AbstractEntity<?>> root, final String prop, final ICentreDomainTreeManagerAndEnhancer cdtmae) {
         final IAddToCriteriaTickManager tickManager = cdtmae.getFirstTick();
 
         final Map<String, Object> metaValues = new LinkedHashMap<>();
 
         if (AbstractDomainTree.isDoubleCriterion(managedType(root, cdtmae), prop)) {
             final Boolean exclusive = tickManager.getExclusive(root, prop);
-            if (!dvc.isExclusiveDefault(exclusive)) {
+            if (!isExclusiveDefault(exclusive)) {
                 metaValues.put("exclusive", exclusive);
             }
             final Boolean exclusive2 = tickManager.getExclusive2(root, prop);
-            if (!dvc.isExclusive2Default(exclusive2)) {
+            if (!isExclusive2Default(exclusive2)) {
                 metaValues.put("exclusive2", exclusive2);
             }
         }
         final Class<?> propertyType = StringUtils.isEmpty(prop) ? managedType(root, cdtmae) : PropertyTypeDeterminator.determinePropertyType(managedType(root, cdtmae), prop);
         if (EntityUtils.isDate(propertyType)) {
             final DateRangePrefixEnum datePrefix = tickManager.getDatePrefix(root, prop);
-            if (!dvc.isDatePrefixDefault(datePrefix)) {
+            if (!isDatePrefixDefault(datePrefix)) {
                 metaValues.put("datePrefix", datePrefix);
             }
             final MnemonicEnum dateMnemonic = tickManager.getDateMnemonic(root, prop);
-            if (!dvc.isDateMnemonicDefault(dateMnemonic)) {
+            if (!isDateMnemonicDefault(dateMnemonic)) {
                 metaValues.put("dateMnemonic", dateMnemonic);
             }
             final Boolean andBefore = tickManager.getAndBefore(root, prop);
-            if (!dvc.isAndBeforeDefault(andBefore)) {
+            if (!isAndBeforeDefault(andBefore)) {
                 metaValues.put("andBefore", andBefore);
             }
         }
         final Boolean orNull = tickManager.getOrNull(root, prop);
-        if (!dvc.isOrNullDefault(orNull)) {
+        if (!isOrNullDefault(orNull)) {
             metaValues.put("orNull", orNull);
         }
         final Boolean not = tickManager.getNot(root, prop);
-        if (!dvc.isNotDefault(not)) {
+        if (!isNotDefault(not)) {
             metaValues.put("not", not);
         }
 

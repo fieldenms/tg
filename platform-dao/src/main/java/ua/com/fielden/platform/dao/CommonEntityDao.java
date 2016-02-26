@@ -202,17 +202,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return super.findByKey(keyValues);
     }
 
-    @Override
-    @SessionRequired
-    public T lazyLoad(final Long id) {
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants);
-        final List<T> result = new EntityFetcher(queryExecutionContext).getLazyEntitiesOnPage(from(select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model()).model(), 0, 1);
-
-        return !result.isEmpty() ? result.get(0) : null;
-    }
-    
-    
-    
     /**
      * {@inheritDoc} 
      */
@@ -244,11 +233,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @SessionRequired
     public T save(final T entity) {
         if (entity == null) {
-            throw new EntityCompanionException(format("Null reference to entity of type %s cannot be saved.", getEntityType()));
+            throw new EntityCompanionException(format("Null entity of type [%s] cannot be saved.", getEntityType().getName()));
         } else if (!entity.isPersistent()) {
             return entity;
+        } else if (!entity.isInstrumented()) {
+            throw new EntityCompanionException(format("Uninstrumented entity of type [%s] cannot be saved.", getEntityType().getName()));
         } else if (!entity.isDirty() && entity.isValid().isSuccessful()) {
-            logger.debug(format("Entity %s is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
+            logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
             return skipRefetching ? entity : findById(entity.getId(), FetchModelReconstructor.reconstruct(entity));
         }
         logger.debug(format("Start saving entity %s (ID = %s)", entity, entity.getId()));

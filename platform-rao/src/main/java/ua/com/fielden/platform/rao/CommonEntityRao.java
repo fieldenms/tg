@@ -618,8 +618,4 @@ public class CommonEntityRao<T extends AbstractEntity<?>> extends AbstractEntity
         return new DateTime().getMillis() + "";
     }
 
-    @Override
-    public T lazyLoad(final Long id) {
-        throw new UnsupportedOperationException("Lazy loading is supported only at the server side.");
-    }
 }

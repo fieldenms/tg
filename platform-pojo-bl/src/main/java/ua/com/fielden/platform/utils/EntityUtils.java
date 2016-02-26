@@ -825,22 +825,25 @@ public class EntityUtils {
         }
         return result;
     }
-
+    
     /**
      * Performs {@link AbstractEntity} instance's post-creation actions such as original values setting, definers invoking, dirtiness resetting etc.
+     * <p>
+     * FIXME this method should be removed as soon as MetaPostLoadListener will be removed 
+     * together with Hibernate loading of entity instances inside CommonEntityDao saving logic.
      *
      * @param instance
      * @return
      */
     public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance, final Set<String> proxiedProps) {
         final boolean unionEntity = instance instanceof AbstractUnionEntity;
-        if (!unionEntity && instance.getProperties().containsKey("key")) {
-            final Object keyValue = instance.get("key");
-            if (keyValue != null) {
-                // handle property "key" assignment
-                instance.set("key", keyValue);
-            }
-        }
+//        if (!unionEntity && instance.getProperties().containsKey("key")) {
+//            final Object keyValue = instance.get("key");
+//            if (keyValue != null) {
+//                // handle property "key" assignment
+//                instance.set("key", keyValue);
+//            }
+//        }
 
         for (final MetaProperty metaProp : instance.getProperties().values()) {
             final boolean notNull = metaProp != null;
@@ -848,13 +851,15 @@ public class EntityUtils {
             final boolean notProxied = notNull && !(proxiedProps.contains(metaProp.getName()));
             if (notNull && notCommonPropOfUnionEntity && notProxied) {
                 final Object newOriginalValue = instance.get(metaProp.getName());
-                metaProp.setOriginalValue(newOriginalValue);
+                if (instance.isPersisted()) {
+                    metaProp.setOriginalValue(newOriginalValue);
+                }
                 metaProp.define(newOriginalValue);
             }
         }
-        if (!unionEntity) {
-            instance.setDirty(false);
-        }
+//        if (!unionEntity) {
+//            instance.setDirty(false);
+//        }
 
         return instance;
     }
@@ -1032,22 +1037,42 @@ public class EntityUtils {
     }
 
     /**
-     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code>.
+     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> with instrumentation.
      *
      * @param entityType
      * @return
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {
-        return FetchProviderFactory.createDefaultFetchProvider(entityType);
+        return FetchProviderFactory.createDefaultFetchProvider(entityType, true);
     }
 
     /**
-     * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}).
+     * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) with instrumentation.
      *
      * @param entityType
      * @return
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType) {
-        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType);
+        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, true);
+    }
+    
+    /**
+     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> <b>without</b> instrumentation.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumented(final Class<T> entityType) {
+        return FetchProviderFactory.createDefaultFetchProvider(entityType, false);
+    }
+
+    /**
+     * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) <b>without</b> instrumentation.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumentedWithKeyAndDesc(final Class<T> entityType) {
+        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
     }
 }

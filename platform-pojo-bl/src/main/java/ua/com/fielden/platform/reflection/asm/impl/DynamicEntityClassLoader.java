@@ -1,24 +1,12 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import java.io.InputStream;
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.asm5.ClassReader;
-import org.kohsuke.asm5.ClassWriter;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -68,7 +56,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
         return new TypeMaker(this).startModification(typeName);
     }
 
-    protected final Class<?> defineType(String name, byte[] b, int off, int len) {
+    protected final Class<?> defineType(final String name, final byte[] b, final int off, final int len) {
         return super.defineClass(name, b, off, len);
     }
     
@@ -95,7 +83,16 @@ public class DynamicEntityClassLoader extends ClassLoader {
         return new ClassReader(currentType).getClassName().replace("/", ".");
     }
     
-    public static boolean isEnhanced(final Class<?> type) {
+    /**
+     * Returns <code>true</code> in case when the type is generated using ASM in TG platform from other (statically defined) entity type, <code>false</code> otherwise.
+     * <p>
+     * Most likely, generated types have one or more calculated (or custom) property. But there are also edge-cases
+     * (for example, in tests like SerialisationTestResource) when generated type have no calculated properties, but just have changed the type name.
+     * 
+     * @param type
+     * @return
+     */
+    public static boolean isGenerated(final Class<?> type) {
         return type.getName().contains(DynamicTypeNamingService.APPENDIX);
     }
 
@@ -119,7 +116,7 @@ public class DynamicEntityClassLoader extends ClassLoader {
     @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity<?>> Class<T> getOriginalType(final Class<?> type) {
         final String typeName = type.getName();
-        if (isEnhanced(type)) {
+        if (isGenerated(type)) {
             final String originalTypeName = typeName.substring(0, typeName.indexOf(DynamicTypeNamingService.APPENDIX));
             try {
                 return (Class<T>) ClassLoader.getSystemClassLoader().loadClass(originalTypeName);

@@ -27,11 +27,6 @@ public class EntityWithDynamicEntityKey extends AbstractEntity<DynamicEntityKey>
     @CompositeKeyMember(3)
     private Entity key3;
 
-    protected EntityWithDynamicEntityKey() {
-        super(null, null, "");
-        setKey(new DynamicEntityKey(this));
-    }
-
     public Integer getKey1() {
         return key1;
     }

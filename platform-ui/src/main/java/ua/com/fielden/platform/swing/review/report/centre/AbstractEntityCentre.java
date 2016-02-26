@@ -95,7 +95,7 @@ public abstract class AbstractEntityCentre<T extends AbstractEntity<?>, CDTME ex
         // Initiates the paginator related properties.
         final PaginatorModel paginatorModel = new PaginatorModel();
         // let's obtain computation monitor to enable users to cancel running computations
-        final IComputationMonitor monitor = DynamicEntityClassLoader.isEnhanced(model.getCriteria().getManagedType()) ? model.getCriteria().getGeneratedEntityController()
+        final IComputationMonitor monitor = DynamicEntityClassLoader.isGenerated(model.getCriteria().getManagedType()) ? model.getCriteria().getGeneratedEntityController()
                 : model.getCriteria().companionObject();
         this.reviewProgressLayer = new BlockingIndefiniteProgressLayer(null, "", monitor);
         this.feedBack = new JLabel("Page 0 of 0");
