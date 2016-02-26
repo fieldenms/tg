@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.sample.domain;
+package ua.com.fielden.platform.security.user;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -22,25 +22,25 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
- * A producer for new instances of entity {@link TgUpdateRolesAction}.
+ * A producer for new instances of entity {@link UserRolesUpdater}.
  *
  * @author TG Team
  *
  */
-public class TgUpdateRolesActionProducer extends AbstractFunctionalEntityProducerForCollectionModification<User, TgUpdateRolesAction> implements IEntityProducer<TgUpdateRolesAction> {
+public class UserRolesUpdaterProducer extends AbstractFunctionalEntityProducerForCollectionModification<User, UserRolesUpdater> implements IEntityProducer<UserRolesUpdater> {
     private final Logger logger = Logger.getLogger(getClass());
     private final IUserRoleDao coUserRole;
     private final IUser coUser;
     
     @Inject
-    public TgUpdateRolesActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IUserRoleDao coUserRole, final IUser coUser) {
-        super(factory, TgUpdateRolesAction.class, companionFinder);
+    public UserRolesUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IUserRoleDao coUserRole, final IUser coUser) {
+        super(factory, UserRolesUpdater.class, companionFinder);
         this.coUserRole = coUserRole;
         this.coUser = coUser;
     }
     
     @Override
-    protected TgUpdateRolesAction provideCurrentlyAssociatedValues(final TgUpdateRolesAction entity, final User masterEntity) {
+    protected UserRolesUpdater provideCurrentlyAssociatedValues(final UserRolesUpdater entity, final User masterEntity) {
         final List<UserRole> allAvailableRoles = coUserRole.findAll();
         final Set<UserRole> roles = new LinkedHashSet<>(allAvailableRoles);
         entity.setRoles(roles);
@@ -56,7 +56,7 @@ public class TgUpdateRolesActionProducer extends AbstractFunctionalEntityProduce
     @Override
     protected AbstractEntity<?> getMasterEntityFromContext(final CentreContext<?, ?> context) {
         // this producer is suitable for property actions on User master and for actions on User centre
-        return context.getMasterEntity() == null ? context.getCurrEntity() : context.getMasterEntity();
+        return context.getCurrEntity();
     }
 
     @Override

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.sample.domain;
+package ua.com.fielden.platform.security.user;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -21,11 +21,11 @@ import ua.com.fielden.platform.security.user.UserRole;
  * @author Developers
  *
  */
-@CompanionObject(ITgUpdateRolesAction.class)
+@CompanionObject(IUserRolesUpdater.class)
 @KeyType(User.class)
 @MapEntityTo
 @KeyTitle(value = "User", desc = "User, whose 'roles' collection modifies by this functional action.")
-public class TgUpdateRolesAction extends AbstractFunctionalEntityForCollectionModification<User, Long> {
+public class UserRolesUpdater extends AbstractFunctionalEntityForCollectionModification<User, Long> {
     private static final long serialVersionUID = 1L;
     
     @IsProperty(UserRole.class)
@@ -33,7 +33,7 @@ public class TgUpdateRolesAction extends AbstractFunctionalEntityForCollectionMo
     private Set<UserRole> roles = new LinkedHashSet<UserRole>();
 
     @Observable
-    protected TgUpdateRolesAction setRoles(final Set<UserRole> roles) {
+    protected UserRolesUpdater setRoles(final Set<UserRole> roles) {
         this.roles.clear();
         this.roles.addAll(roles);
         return this;

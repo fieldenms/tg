@@ -24,9 +24,8 @@ import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgSecurityToken;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgUpdateRolesAction;
-import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.sample.domain.TgUpdateTokensAction;
+import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 
 /**
@@ -64,7 +63,6 @@ public class TgTestApplicationDomain implements IApplicationDomainProvider {
         add(TgDummyAction.class);
         add(TgEntityWithPropertyDependency.class);
         add(DumpCsvTxtProcessor.class);
-        add(TgUpdateRolesAction.class);
         add(NewEntityAction.class);
         add(TgUpdateTokensAction.class);
         add(TgSecurityToken.class);

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.sample.domain;
+package ua.com.fielden.platform.security.user;
 
 import com.google.inject.Inject;
 
@@ -6,7 +6,6 @@ import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.security.user.User;
 
 /**
  * A producer for new instances of entity {@link User}.
@@ -16,7 +15,7 @@ import ua.com.fielden.platform.security.user.User;
  */
 public class UserProducer extends DefaultEntityProducerWithContext<User, User> implements IEntityProducer<User> {
     @Inject
-    public UserProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final ITgEntityWithPropertyDependency coTgEntityWithPropertyDependency) {
+    public UserProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, User.class, companionFinder);
     }
 
