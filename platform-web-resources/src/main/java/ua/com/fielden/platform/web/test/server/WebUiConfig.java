@@ -618,67 +618,28 @@ public class WebUiConfig extends AbstractWebUiConfig {
         
         final IMaster<TgUpdateRolesAction> masterConfigForUpdateRolesAction = new SimpleMasterBuilder<TgUpdateRolesAction>()
                 .forEntity(TgUpdateRolesAction.class)
-                .addProp("roles").asSinglelineText()
-                .also()
-                .addProp("chosenIds").asSinglelineText()
-                .also()
-                .addProp("addedIds").asSinglelineText()
-                .also()
-                .addProp("removedIds").asSinglelineText()
-                .also()
-                .addProp("surrogateVersion").asSpinner()
-                .also()
                 .addProp("roles").asCollectionalEditor()
                 .also()
-                .addAction(MasterActions.REFRESH)
-                //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("CANCEL")
-                /*      */.longDesc("Cancel action")
-                .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
-                .addAction(MasterActions.EDIT)
-                .addAction(MasterActions.VIEW)
-        
+                .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
-                        + format("[[%s], ['flex']],", fmr)
-                        + format("[[%s], ['flex']],", fmr)
                         + format("[['flex']],")
-                        + format("[['flex']],")
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .done();
         
         final IMaster<TgUpdateTokensAction> masterConfigForUpdateTokensAction = new SimpleMasterBuilder<TgUpdateTokensAction>()
                 .forEntity(TgUpdateTokensAction.class)
-                .addProp("tokens").asSinglelineText()
-                .also()
-                .addProp("chosenIds").asSinglelineText()
-                .also()
-                .addProp("addedIds").asSinglelineText()
-                .also()
-                .addProp("removedIds").asSinglelineText()
-                .also()
-                .addProp("surrogateVersion").asSpinner()
-                .also()
                 .addProp("tokens").asCollectionalEditor()
                 .also()
-                .addAction(MasterActions.REFRESH)
-                //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("CANCEL")
-                /*      */.longDesc("Cancel action")
-                .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
-                .addAction(MasterActions.EDIT)
-                .addAction(MasterActions.VIEW)
+                .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
         
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
-                        + format("[[%s], ['flex']],", fmr)
-                        + format("[[%s], ['flex']],", fmr)
                         + format("[['flex']],")
-                        + format("[['flex']],")
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .done();
 
