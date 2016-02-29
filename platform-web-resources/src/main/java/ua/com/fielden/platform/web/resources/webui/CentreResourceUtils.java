@@ -1,5 +1,13 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isExclusive2Default;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isExclusiveDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -28,6 +36,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -48,8 +57,6 @@ import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
-
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
 
 /**
  * This utility class contains the methods that are shared across {@link CentreResource} and {@link CriteriaResource}.
@@ -372,7 +379,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             if (List.class.isAssignableFrom(propField.getType()) && isMultiEntityTypedProperty(originalProperty, originalManagedType)) { // only List<String> is needed
                 final MetaProperty<List<String>> metaProperty = criteriaValidationPrototype.getProperty(propField.getName());
 
-                final Field originalValueField = Finder.findFieldByName(MetaProperty.class, "originalValue");
+                // TODO why not simply use MetaProperty.setOriginalValue?
+                final Field originalValueField = Finder.findFieldByName(MetaPropertyFull.class, "originalValue");
                 final boolean originalValueAccessible = originalValueField.isAccessible();
                 originalValueField.setAccessible(true);
                 try {
