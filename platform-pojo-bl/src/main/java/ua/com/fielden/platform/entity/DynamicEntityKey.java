@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.String.format;
+
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 
@@ -43,7 +46,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     private transient final Map<Integer, Comparator<?>> keyMemberComparables = new HashMap<>();
 
     /**
-     * This default constructor is required purely for Kryo serialisation.
+     * This default constructor is required purely for serialisation.
      */
     protected DynamicEntityKey() {
         KEY_MEMBERS_SEPARATOR = null;
@@ -91,7 +94,12 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
      * @return
      */
     private Object value(final int memberIndex) {
-        return entity.get(memberNames.get(memberIndex));
+        final String propertyName = memberNames.get(memberIndex);
+        if (Reflector.isPropertyProxied(entity, propertyName)) {
+            return null;
+        }
+
+        return entity.get(propertyName);
     }
 
     /**
