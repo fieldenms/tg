@@ -7,6 +7,7 @@ import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
@@ -145,7 +146,8 @@ public final class EntitySerialiser extends Serializer {
                 final String name = prop.field.getName();
                 lastProperty = name;
                 final Object value = prop.field.get(entity);
-                final boolean dirty = !entity.getPropertyOptionally(name).isPresent() ? false : entity.getProperty(name).isDirty();
+                final Optional<MetaProperty<?>> metaProp = entity.getPropertyOptionally(name);
+                final boolean dirty = !metaProp.isPresent() || metaProp.get().isProxy() ? false : metaProp.get().isDirty();
 
                 if (prop.propertyType != null) {
                     if (prop.serialiser == null) {
