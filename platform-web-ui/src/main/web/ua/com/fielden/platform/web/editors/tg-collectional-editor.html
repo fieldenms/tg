@@ -35,18 +35,10 @@
             background-color: var(--google-grey-100);
         }
         
-        .avatar {
-            height: 40px;
-            width: 40px;
-            border-radius: 20px;
-            box-sizing: border-box;
-            background-color: #DDD;
-        }
-        
         .pad {
-            @apply(--layout-flex);
             @apply(--layout-vertical);
-            padding: 0 16px;
+            padding-left: 16px;
+            width: calc(100% - 40px);
         }
         .primary {
             font-size: 16px;
@@ -58,6 +50,8 @@
             color: gray;
         }
         .star {
+            min-width: 24px;
+            min-height: 24px;
             width: 24px;
             height: 24px;
         }
@@ -68,6 +62,12 @@
         
         iron-list {
         	height: 300px;
+        }
+        
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
     </style>
@@ -87,20 +87,18 @@
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]"
             current-state="[[currentState]]">
-            <!-- <content class=".property-action"></content> -->
             <input is="iron-input"  placeholder="Search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
             <iron-list id="input" class="custom-input" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
                 <template>
-                    <div class$="[[_computedItemClass(_disabled)]]" style="min-width:fit-content">
-                      <div tabindex="0" class$="[[_computedClass(selected)]]"> <!-- aria-label$="[[_getAriaLabel(item, selected)]]"  -->
-                        <!-- <img class="avatar" src="[[item.image]]"> -->
+                    <div class$="[[_computedItemClass(_disabled)]]">
+                      <div tabindex="0" class$="[[_computedClass(selected)]]">
+                        <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
                         <div id$="[[_makeId(index)]]" class="pad">
-                          <div class="primary">
+                          <div class="primary truncate">
                             [[item.key]]
                           </div>
-                          <div class="secondary dim">[[item.desc]]</div>
+                          <div class="secondary dim truncate">[[item.desc]]</div>
                         </div>
-                        <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
                       </div>
                       <div class="border"></div>
                     </div>
