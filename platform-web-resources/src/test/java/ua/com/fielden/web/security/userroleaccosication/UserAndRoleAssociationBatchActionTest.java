@@ -43,12 +43,17 @@ public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
         final Map<Long, UserRole> roles = (Map<Long, UserRole>) mapById(userRoleRao.findAll());
 
         final Set<UserAndRoleAssociation> saveAssociations = new HashSet<>();
-        saveAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(3))));
+        final UserAndRoleAssociation userAndRoleAssociationToSave = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociation.class);
+        userAndRoleAssociationToSave.setUser(users.get(Long.valueOf(1))).setUserRole(roles.get(Long.valueOf(3)));
+        saveAssociations.add(userAndRoleAssociationToSave);
 
         final Set<UserAndRoleAssociation> removeAssociations = new HashSet<>();
-        removeAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(1))));
+        final UserAndRoleAssociation userAndRoleAssociationToRemove = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociation.class);
+        userAndRoleAssociationToRemove.setUser(users.get(Long.valueOf(1)));
+        userAndRoleAssociationToRemove.setUserRole(roles.get(Long.valueOf(1)));
+        removeAssociations.add(userAndRoleAssociationToRemove);
 
-        final UserAndRoleAssociationBatchAction action = new UserAndRoleAssociationBatchAction();
+        final UserAndRoleAssociationBatchAction action = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociationBatchAction.class);
         action.setSaveEntities(saveAssociations);
         action.setRemoveEntities(removeAssociations);
 
@@ -66,15 +71,20 @@ public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
         final Map<Long, User> users = (Map<Long, User>) mapById(userControllerRao.findAllUsers());
         final Map<Long, UserRole> roles = (Map<Long, UserRole>) mapById(userRoleRao.findAll());
 
-        final Set<UserAndRoleAssociation> saveAssociations = new LinkedHashSet<>();
-        saveAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(3))));
+        final Set<UserAndRoleAssociation> saveAssociations = new HashSet<>();
+        final UserAndRoleAssociation userAndRoleAssociationToSave = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociation.class);
+        userAndRoleAssociationToSave.setUser(users.get(Long.valueOf(1))).setUserRole(roles.get(Long.valueOf(3)));
+        saveAssociations.add(userAndRoleAssociationToSave);
 
         final Set<UserAndRoleAssociation> removeAssociations = new HashSet<>();
-        removeAssociations.add(new UserAndRoleAssociation(null, roles.get(Long.valueOf(1))));
+        final UserAndRoleAssociation userAndRoleAssociationToRemove = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociation.class);
+        userAndRoleAssociationToRemove.setUser(null).setUserRole(roles.get(Long.valueOf(1)));
+        removeAssociations.add(userAndRoleAssociationToRemove);
 
-        final UserAndRoleAssociationBatchAction action = new UserAndRoleAssociationBatchAction();
+        final UserAndRoleAssociationBatchAction action = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociationBatchAction.class);
         action.setSaveEntities(saveAssociations);
         action.setRemoveEntities(removeAssociations);
+
 
         try {
             associationRao.save(action);

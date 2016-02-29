@@ -14,8 +14,6 @@ import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
 import ua.com.fielden.platform.reflection.Reflector;
 
 /**
@@ -30,7 +28,6 @@ import ua.com.fielden.platform.reflection.Reflector;
 public class EntityProxyContainer<T extends AbstractEntity<?>> {
 
     private static final MethodDelegation proxyChecker = MethodDelegation.to(ProxyPropertyInterceptor.class);
-    private static final Observable observable = ObservableAnnotation.newInstance();
     
     private EntityProxyContainer() {
     }
@@ -64,8 +61,7 @@ public class EntityProxyContainer<T extends AbstractEntity<?>> {
                 .method(ElementMatchers.named(accessor.getName())) //
                     .intercept(proxyChecker)
                 .method(ElementMatchers.named(setter.getName())) // 
-                    .intercept(proxyChecker)
-                    .annotateMethod(observable);
+                    .intercept(proxyChecker);
 
         }
         

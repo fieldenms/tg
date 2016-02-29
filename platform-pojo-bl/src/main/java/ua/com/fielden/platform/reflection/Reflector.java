@@ -17,6 +17,7 @@ import org.apache.commons.lang.StringUtils;
 import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -257,12 +258,11 @@ public final class Reflector {
      * @throws Exception
      */
     public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) {
-        final String propertyNameInGetter = propertyName.toUpperCase().charAt(0) + propertyName.substring(1);
         try {
-            return Reflector.getMethod(entityClass, "get" + propertyNameInGetter);
+            return Reflector.getMethod(entityClass, Accessor.GET.getName(propertyName));
         } catch (final Exception e1) {
             try {
-                return Reflector.getMethod(entityClass, "is" + propertyNameInGetter);
+                return Reflector.getMethod(entityClass, Accessor.IS.getName(propertyName));
             } catch (NoSuchMethodException e2) {
                 throw new ReflectionException(format("Could not obtain accessor for property [%s] in type [%s].", propertyName, entityClass.getName()), e1);
             }

@@ -702,6 +702,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_fetch_with_sorted_collection() {
         final EntityResultQueryModel<TgWagon> qry = select(TgWagon.class).where().prop("key").eq().val("WAGON1").model();
+        // final List<TgWagon> models = wagonDao.getAllEntities(from(qry).with(fetch(TgWagon.class).with("slots", fetch(TgWagonSlot.class).with("bogie", fetchAll(TgBogie.class)))).model());
         final List<TgWagon> models = wagonDao.getAllEntities(from(qry).with(fetch(TgWagon.class).with("slots", fetch(TgWagonSlot.class).with("bogie"))).model());
         assertEquals("Incorrect key", 1, models.size());
         assertEquals("Incorrect key", 8, models.get(0).getSlots().size());
