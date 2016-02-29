@@ -402,7 +402,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             // let's collect activatable not dirty properties from entity to check them for activity and also to increment their refCount
             final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(f -> f.getName()).collect(Collectors.toSet());
             for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : collectActivatableNotDirtyProperties(entity, keyMembers)) {
-                final AbstractEntity<?> value = persistedEntity.get(prop.getName()); // value from persisted version of entity
+                // get value from a persisted version of entity, whch is loaded by Hibernate
+                // if a corresponding property is proxied due to insufficient fetch model, its value is retrieved lazily by Hibernate
+                final AbstractEntity<?> value = persistedEntity.get(prop.getName());
                 if (value != null) { // if there is actually some value
                     // load activatable value
                     final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), value.getId());
@@ -575,7 +577,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * Collects properties that represent non-dirty activatable properties
+     * Collects properties that represent not dirty activatable properties
      *
      * @param entity
      * @return
@@ -583,7 +585,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotDirtyProperties(final T entity, final Set<String> keyMembers) {
         final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
         for (final MetaProperty<?> prop : entity.getProperties().values()) {
-            if (!prop.isDirty() && prop.isActivatable()) {
+            // proxied property is considered to be not dirty in this context
+            final boolean notDirty = prop.isProxy() || !prop.isDirty(); 
+            if (notDirty && prop.isActivatable()) {
                 addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
             }
         }
@@ -591,7 +595,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     /**
-     * A helper method to determine of the provided property should be handled upon save from the perspective of activatable entity logic (update of refCount).
+     * A helper method to determine which of the provided properties should be handled upon save from the perspective of activatable entity logic (update of refCount).
+     * <p>
+     * A remark: the proxied activatable properties need to be handled from the perspective of activatable entity logic (update of refCount).
      *
      * @param entity
      * @param keyMembers
@@ -612,7 +618,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             belongsToDeactivatableDependencies = false;
         }
         // null values correspond to dereferencing and should be allowed only for already persisted entities
-        if (!belongsToDeactivatableDependencies && (prop.getValue() != null || entity.isPersisted())) {
+        // checking prop.isProxy() is really just to prevent calling prop.getValue() on proxied properties, which fails with StrictProxyException
+        // this also assumes that proxied properties might actually have a value and need to be included for further processing
+        // values for proxied properties are then retrieved in a lazy fashion by Hibernate
+        if (!belongsToDeactivatableDependencies && (prop.isProxy() || prop.getValue() != null || entity.isPersisted())) {
             result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
         }
     }

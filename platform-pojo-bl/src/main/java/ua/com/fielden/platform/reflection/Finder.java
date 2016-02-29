@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -623,7 +623,7 @@ public class Finder {
      * @return
      * @throws IllegalAccessException
      */
-    private static Object getAbstractUnionEntityFieldValue(final AbstractUnionEntity value, final String property) throws IllegalAccessException {
+    private static Object getAbstractUnionEntityFieldValue(final AbstractUnionEntity value, final String property) {
         final Optional<Field> field;
         final Object valueToRetrieveFrom;
         final List<String> unionProperties = getFieldNames(AbstractUnionEntity.unionProperties(value.getClass()));
@@ -643,7 +643,7 @@ public class Finder {
             return field.isPresent() ? getFieldValue(field.get(), valueToRetrieveFrom) : null;
         } catch (final Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Property [" + property + "] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.");
+            throw new ReflectionException(format("Could not obtain value of property [%s] for union entity [%s]. Potentially \"activeEntity.\" prefix should be explicitly specified.", property, value.getType().getName()), e);
         }
     }
 

@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.web.PrefDim;
@@ -37,7 +38,7 @@ public final class EntityActionConfig {
 	public enum UI_ROLE {
 	    ICON, BUTTON;
 	}
-	
+
     private EntityActionConfig(
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
             final CentreContextConfig context,
@@ -66,7 +67,12 @@ public final class EntityActionConfig {
         this.context = Optional.ofNullable(context);
         this.icon = Optional.ofNullable(icon);
         this.shortDesc = Optional.ofNullable(shortDesc);
-        this.longDesc = Optional.ofNullable(longDesc);
+        //Setting the long desc. If it's null then long desc should be equal to functional entity description.
+        String enhancedLongDesc = longDesc;
+        if (enhancedLongDesc == null && functionalEntity != null) {
+            enhancedLongDesc = TitlesDescsGetter.getEntityTitleAndDesc(functionalEntity).getValue();
+        }
+        this.longDesc = Optional.ofNullable(enhancedLongDesc);
         this.preAction = Optional.ofNullable(preAction);
         this.successPostAction = Optional.ofNullable(successPostAction);
         this.errorPostAction = Optional.ofNullable(errorPostAction);
@@ -112,10 +118,10 @@ public final class EntityActionConfig {
                 ip,
                 UI_ROLE.ICON);
     }
-    
+
     /**
      * Makes a new configuration based on the current one, but with the specified role.
-     * 
+     *
      * @param ac
      * @param role
      * @return

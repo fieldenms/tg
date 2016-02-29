@@ -2,6 +2,7 @@
 
 <link rel="import" href="/app/tg-reflector.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 
@@ -30,7 +31,7 @@
         <tg-reflector id="reflector"></tg-reflector>
         <div class="layout horizontal justified flex end">
             <content select=".criterion-editors" id="components"></content>
-            <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-vert"></paper-icon-buton>
+            <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-vert" tooltip-text="Show additional criteria constraints"></paper-icon-buton>
         </div>
     </template>
 </dom-module>
@@ -62,7 +63,9 @@
         		type: Boolean,
         		notify: true
         	}
-        }
+        },
+        
+        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],    
 
     });
 </script>

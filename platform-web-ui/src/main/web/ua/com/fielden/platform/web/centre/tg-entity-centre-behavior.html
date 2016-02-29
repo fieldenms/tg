@@ -1,4 +1,6 @@
 <link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/sse/tg-sse-behavior.html">
 <link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 
@@ -753,7 +755,7 @@
             }
         };
 
-        Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl];
+        Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgSseBehavior];
 
     })();
 </script>

@@ -85,14 +85,17 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
      */
     private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
         final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
-        for (final MetaProperty<?> prop : entity.getProperties().values()) {
-            final Object value = prop.getValue();
-            if (value != null && !prop.isProxy() &&
-                ActivatableAbstractEntity.class.isAssignableFrom(prop.getType()) &&
+        
+        entity.nonProxiedProperties()
+        .forEach(mp -> {
+            final Object value = mp.getValue();
+            if (value != null && 
+                ActivatableAbstractEntity.class.isAssignableFrom(mp.getType()) &&
                 !entity.equals(value)) {
-                result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
+                result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) mp);
             }
-        }
+        });
+        
         return result;
     }
 }

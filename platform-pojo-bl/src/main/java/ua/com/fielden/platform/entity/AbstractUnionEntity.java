@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.String.format;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -10,6 +12,7 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -38,7 +41,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
      */
     public final void ensureUnion(final String propertyName) {
         if (!StringUtils.isEmpty(activePropertyName)) {
-            throw new IllegalStateException("Union entity already has an active property.");
+            throw new EntityException(format("Invalid attempt to set property [%s] as active for union entity [%s] that already has property [%s] identified as active.", propertyName, getType().getName(),  activePropertyName));
         }
         activePropertyName = propertyName;
     }
@@ -56,7 +59,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         if (StringUtils.isEmpty(activePropertyName)) {
             activePropertyName = getNameOfAssignedUnionProperty();
             if (StringUtils.isEmpty(activePropertyName)) {
-                throw new IllegalStateException("Union entity active property has not been determined.");
+                throw new EntityException(format("Active property for union entity [%s] has not been determined.", getType().getName()));
             }
         }
     }
@@ -153,7 +156,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(field -> field.getName());
 
         return propertyNames
-                .filter(propName -> !COMMON_PROPS.contains(propName) && get(propName) != null)
+                .filter(propName -> !Reflector.isPropertyProxied(this, propName) && !COMMON_PROPS.contains(propName) && get(propName) != null)
                 .findFirst() // returns Optional
                 .map(propName -> (AbstractEntity<?>) get(propName)) // map optional propName value to an actual property value
                 .orElse(null); // return the property value or null if there was no matching propName
