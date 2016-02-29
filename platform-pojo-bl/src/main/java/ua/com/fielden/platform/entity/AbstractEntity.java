@@ -695,7 +695,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                     }
     
                     final Class<? extends AbstractEntity<?>> entityType = getType();
-                if (isCollectional && isLinkPropertyRequiredButMissing(field.getName())) {
+                    if (isCollectional && isLinkPropertyRequiredButMissing(propName)) {
                         final String error = format("Property [%s] in entity [%s] is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.",
                                 propName, getType().getName());
                         logger.error(error);
