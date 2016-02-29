@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
@@ -93,10 +94,8 @@
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]">
                         <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
-                        <div id$="[[_makeId(index)]]" class="pad">
-                          <div class="primary truncate">
-                            [[item.key]]
-                          </div>
+                        <div id$="[[_makeId(index)]]" class="pad" tooltip-text$="[[_calcItemTooltip(item)]]">
+                          <div class="primary truncate">[[item.key]]</div>
                           <div class="secondary dim truncate">[[item.desc]]</div>
                         </div>
                       </div>
@@ -111,7 +110,7 @@
 <script>
     Polymer({
         is: 'tg-collectional-editor',
-        behaviors: [ Polymer.TgBehaviors.TgEditorBehavior, Polymer.TgBehaviors.TgHighlightingBehavior ],
+        behaviors: [ Polymer.TgBehaviors.TgEditorBehavior, Polymer.TgBehaviors.TgHighlightingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
         
         properties: {
             _entities: {
@@ -163,6 +162,12 @@
             	// There is no need to proceed with search if user moved out of the search field
             	this._cancelSearch();
             }).bind(this);
+        },
+        
+        _calcItemTooltip: function(item) {
+            var tooltip = item.key ? "<b>" + item.key + "</b>" : "";
+            tooltip += item.desc ? (tooltip ? "<br>" + item.desc : item.desc) : "";
+            return tooltip;
         },
         
         /**
