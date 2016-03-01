@@ -130,6 +130,38 @@
                 
                 done();
             });
+            
+            test('equalsEx method works for arrays', function (done) {
+                var entity1 = reflector.newEntity(typeName1);
+                entity1.key = 'DEMO01';
+                var entity2 = reflector.newEntity(typeName1);
+                entity2.key = 'DEMO02';
+                var entity1copy = reflector.newEntity(typeName1);
+                entity1copy.key = 'DEMO01';
+                var entityWithoutKey = reflector.newEntity(typeName1);
+                
+                assert.strictEqual(reflector.equalsEx([], null), false, "Array should not be equal to null.");
+                assert.strictEqual(reflector.equalsEx(null, []), false, "Null should not be equal to array.");
+                assert.strictEqual(reflector.equalsEx([], undefined), false, "Array should not be equal to null.");
+                assert.strictEqual(reflector.equalsEx(undefined, []), false, "Null should not be equal to array.");
+                var arr1 = [];
+                var arr1copy = [];
+                assert.strictEqual(reflector.equalsEx(arr1, arr1), true, "Array should be equal to itself.");
+                assert.strictEqual(reflector.equalsEx(arr1, arr1copy), true, "Two empty arrays should be equal.");
+                var arr2 = [entity1];
+                assert.strictEqual(reflector.equalsEx(arr1, arr2), false, "Non-empty array should not be equal to empty.");
+                assert.strictEqual(reflector.equalsEx(arr2, arr1), false, "Non-empty array should not be equal to empty.");
+                var arr2copy = [entity1];
+                assert.strictEqual(reflector.equalsEx(arr2, arr2copy), true, "Two arrays with the same item should be equal.");
+                assert.strictEqual(reflector.equalsEx(arr2copy, arr2), true, "Two arrays with the same item should be equal.");
+                var arr2copy2 = [entity1copy];
+                assert.strictEqual(reflector.equalsEx(arr2, arr2copy2), true, "Two arrays with the equal item should be equal.");
+                assert.strictEqual(reflector.equalsEx(arr2copy2, arr2), true, "Two arrays with the equal item should be equal.");
+                var arr3 = [entity2];
+                assert.strictEqual(reflector.equalsEx(arr1, arr3), false, "Two arrays with non-equal item should not be equal.");
+
+                done();
+            });
         });
     </script>
 </body>
