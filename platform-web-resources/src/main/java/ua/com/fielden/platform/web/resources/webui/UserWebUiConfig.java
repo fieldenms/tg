@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
 import java.util.Optional;
-
-import com.google.inject.Injector;
 
 import ua.com.fielden.platform.sample.domain.MiUser;
 import ua.com.fielden.platform.security.user.User;
@@ -22,6 +19,8 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+
+import com.google.inject.Injector;
 
 /**
  * {@link User} Web UI configuration.
@@ -39,7 +38,7 @@ public class UserWebUiConfig {
         userMaster = createUserMaster(injector);
         userRolesUpdaterMaster = createUserRolesUpdaterMaster(injector);
     }
-    
+
     /**
      * Creates entity centre for {@link User}.
      *
@@ -65,7 +64,7 @@ public class UserWebUiConfig {
                     .icon("add-circle")
                     .shortDesc("Add / Remove roles")
                     .longDesc("Add / Remove roles for this user")
-                    .prefDimForView(mkDim(600, 750))
+                                        //.prefDimForView(mkDim(600, 750))
                     .build())
                 .build(), injector, (centre) -> {
                     // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
@@ -76,7 +75,7 @@ public class UserWebUiConfig {
                 });
         return userCentre;
     }
-    
+
     /**
      * Creates entity master for {@link User}.
      *
@@ -111,7 +110,7 @@ public class UserWebUiConfig {
                 .addAction(MasterActions.SAVE)
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
-        
+
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
                         + format("[[%s], [%s], [%s], ['flex']],", fmr, fmr, fmr)
@@ -124,7 +123,7 @@ public class UserWebUiConfig {
                 masterConfigForUser,
                 injector);
     }
-    
+
     /**
      * Creates entity master for {@link UserRolesUpdater}.
      *
@@ -134,17 +133,17 @@ public class UserWebUiConfig {
         final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
         final IMaster<UserRolesUpdater> masterConfig = new SimpleMasterBuilder<UserRolesUpdater>()
                 .forEntity(UserRolesUpdater.class)
-                .addProp("roles").asCollectionalEditor()
+                .addProp("roles").asCollectionalEditor().maxVisibleRows(5)
                 .also()
                 .addAction(MasterActions.REFRESH)
                 //      */.icon("trending-up") SHORT-CUT
                 /*      */.shortDesc("CANCEL")
                 /*      */.longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
-        
+
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', 'height:100%', 'box-sizing:border-box', "
-                        + format("['flex', 'overflow:auto', ['flex']],")
+                        "      ['padding:20px', 'width:750px', "
+                        + format("['flex', ['flex']],")
                         + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr)
                         + "    ]"))
                 .done();

@@ -42,10 +42,12 @@
             width: calc(100% - 40px);
         }
         .primary {
-            font-size: 16px;
+            font-size: 1.2rem;
+            height: 1.5rem;
         }
         .secondary {
-            font-size: 14px;
+            height: 1.3rem;
+            font-size: 1.1rem;
         }
         .dim {
             color: gray;
@@ -60,11 +62,6 @@
         span.key-value-highlighted {
             background-color: #ffff46;
         }
-        
-        iron-list {
-        	height: 300px;
-        }
-        
         .truncate {
             white-space: nowrap;
             overflow: hidden;
@@ -89,7 +86,7 @@
             _on-keydown="[[_onKeydown]]"
             current-state="[[currentState]]">
             <input is="iron-input"  placeholder="Search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
-            <iron-list id="input" class="custom-input" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
+            <iron-list id="input" class="custom-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]">
@@ -113,6 +110,11 @@
         behaviors: [ Polymer.TgBehaviors.TgEditorBehavior, Polymer.TgBehaviors.TgHighlightingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
         
         properties: {
+            
+            maxVisibleItems: {
+                type: Number
+            },
+            
             _entities: {
                 type: Array
             },
@@ -295,6 +297,11 @@
 			}
 			Polymer.dom.flush();
 		},
+        
+        _calcListHeight: function (maxVisibleItems) {
+            var rowCount = maxVisibleItems > 0 ? maxVisibleItems : 1; 
+            return "max-height:calc(" + rowCount + " * (2.8rem + 33px))";
+        },
 		
 		_addHighlightedProp : function(v) {
 			var html = '';

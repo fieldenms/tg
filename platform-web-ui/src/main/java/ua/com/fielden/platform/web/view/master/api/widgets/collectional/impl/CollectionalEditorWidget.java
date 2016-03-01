@@ -20,7 +20,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  *  1) when sending to client -- empty<br>
  *  2) when sending to server -- all added entity ids.<br>
  * <p>
- * Property with <code>removedIdsPropertyName</code> will hold<br> 
+ * Property with <code>removedIdsPropertyName</code> will hold<br>
  *  1) when sending to client -- empty<br>
  *  2) when sending to server -- all removed entity ids.<br>
  *
@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  */
 public class CollectionalEditorWidget extends AbstractWidget {
     /**
-     * The name of 'chosenIds' property, that represents the container with ordered list of chosen entity ids, which should exist in the 
+     * The name of 'chosenIds' property, that represents the container with ordered list of chosen entity ids, which should exist in the
      * list of all entities, that reside in propertyName'd property.
      */
     /**
@@ -39,7 +39,20 @@ public class CollectionalEditorWidget extends AbstractWidget {
      * The name of 'removedIds' property, that represents the container with unordered list of removed entity ids.
      */
 
+    private int maxVisibleRows = 3;
+
     public CollectionalEditorWidget(final Pair<String, String> titleAndDesc, final String propertyName) {
         super("editors/tg-collectional-editor", titleAndDesc, propertyName);
+    }
+
+    public void setMaxVisibleRows(final int maxVisibleRows) {
+        this.maxVisibleRows = maxVisibleRows;
+    }
+
+    @Override
+    protected Map<String, Object> createCustomAttributes() {
+        final Map<String, Object> customAttr = super.createCustomAttributes();
+        customAttr.put("max-visible-items", maxVisibleRows);
+        return customAttr;
     }
 }

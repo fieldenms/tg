@@ -16,8 +16,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -79,7 +77,6 @@ import ua.com.fielden.platform.sample.domain.TgUpdateTokensAction;
 import ua.com.fielden.platform.sample.domain.TgUpdateTokensActionProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserProducer;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -116,6 +113,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
+
+import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -201,7 +200,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     centre.getSecondTick().setWidth(TgEntityWithPropertyDependency.class, "dependentProp", 60);
                     return centre;
                 });
-        
+
         final EntityCentre<UserRole> userRoleCentre = new EntityCentre<>(MiUserRole.class, "User Roles",
                 EntityCentreBuilder.centreFor(UserRole.class)
                 .runAutomatically()
@@ -528,7 +527,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                     + "    ]"))
             .done();
-        
+
         final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>()
                 .forEntity(TgFunctionalEntityWithCentreContext.class) // forEntityWithSaveOnActivate
                 .addProp("valueToInsert").asSinglelineText()
@@ -557,16 +556,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]").replaceAll("actionMr", actionMr))
                 .done();
-        
+
         final IMaster<TgUpdateTokensAction> masterConfigForUpdateTokensAction = new SimpleMasterBuilder<TgUpdateTokensAction>()
                 .forEntity(TgUpdateTokensAction.class)
                 .addProp("tokens").asCollectionalEditor()
                 .also()
                 .addAction(MasterActions.SAVE)
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-        
+
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', "
+                        "      ['padding:20px', 'width:500px', "
                         + format("[],")
                         + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
