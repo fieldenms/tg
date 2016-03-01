@@ -39,6 +39,7 @@ import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDeserializer<T> {
     private static final long serialVersionUID = 1L;
@@ -105,8 +106,14 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             }
             entity.beginInitialising();
 
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_number());
-            references.putEntity(newReference, entity);
+            final String newServerSideReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_number());
+            
+            final JsonNode atIdNode = node.get("@id");
+            final String clientSideReference = atIdNode == null ? null : atIdNode.asText();
+            if (!EntityUtils.equalsEx(newServerSideReference, clientSideReference)) {
+                throw new EntityDeserialisationException(format("EntityJsonSerialiser has received reference number [%s] that does not conform to its internal next number [%s] for entity type [%s] for entity id [%s].", clientSideReference, newServerSideReference, type.getSimpleName(), id));
+            }
+            references.putEntity(newServerSideReference, entity);
 
             // deserialise version -- should never be null
             final JsonNode versionJsonNode = node.get(AbstractEntity.VERSION); // the node should not be null itself
