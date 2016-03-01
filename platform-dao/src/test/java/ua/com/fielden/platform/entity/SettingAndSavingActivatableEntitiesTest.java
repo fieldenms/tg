@@ -50,7 +50,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
         cat4.setActive(true);
 
         assertNotNull(cat4.getProperty(ACTIVE).getFirstFailure());
-        assertEquals(format("Entity %s has a reference to already inactive entity %s (type %s)", cat4, cat4.getParent(), cat4.getParent().getType()),
+        assertEquals("Property [parent] in entity Cat4@ua.com.fielden.platform.sample.domain.TgCategory references inactive entity Cat3@ua.com.fielden.platform.sample.domain.TgCategory.", 
                 cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
     }
 

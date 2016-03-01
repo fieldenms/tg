@@ -379,7 +379,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             if (List.class.isAssignableFrom(propField.getType()) && isMultiEntityTypedProperty(originalProperty, originalManagedType)) { // only List<String> is needed
                 final MetaProperty<List<String>> metaProperty = criteriaValidationPrototype.getProperty(propField.getName());
 
-                // TODO why not simply use MetaProperty.setOriginalValue?
                 final Field originalValueField = Finder.findFieldByName(MetaPropertyFull.class, "originalValue");
                 final boolean originalValueAccessible = originalValueField.isAccessible();
                 originalValueField.setAccessible(true);
