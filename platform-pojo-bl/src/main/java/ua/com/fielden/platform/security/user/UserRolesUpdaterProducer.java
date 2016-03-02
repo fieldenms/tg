@@ -56,7 +56,7 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityProducerFo
     @Override
     protected AbstractEntity<?> getMasterEntityFromContext(final CentreContext<?, ?> context) {
         // this producer is suitable for property actions on User master and for actions on User centre
-        return context.getCurrEntity();
+        return context.getMasterEntity() == null ? context.getCurrEntity() : context.getMasterEntity();
     }
 
     @Override
