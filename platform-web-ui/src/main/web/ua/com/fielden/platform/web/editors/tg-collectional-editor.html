@@ -178,9 +178,6 @@
         convertToString: function (value) {
             this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
             
-            // TODO the following setting of 'null' into bindingEntity needs to be investigated why it is necessary:
-            this.entity.set(this.propertyName, null);
-            
             var selEntities = [];
             var chosenIds = this.entity.get('chosenIds');
             

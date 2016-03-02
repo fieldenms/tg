@@ -44,6 +44,7 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityProducerFo
         final List<UserRole> allAvailableRoles = coUserRole.findAll();
         final Set<UserRole> roles = new LinkedHashSet<>(allAvailableRoles);
         entity.setRoles(roles);
+        entity.getProperty("roles").resetState();
         
         final Set<Long> chosenRoleIds = new LinkedHashSet<>();
         for (final UserAndRoleAssociation association: masterEntity.getRoles()) {
