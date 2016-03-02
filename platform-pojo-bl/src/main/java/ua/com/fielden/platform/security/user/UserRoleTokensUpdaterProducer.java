@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
-import org.apache.log4j.Logger;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -34,7 +32,6 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityProducerForCollectionModification<UserRole, UserRoleTokensUpdater> implements IEntityProducer<UserRoleTokensUpdater> {
-    private final Logger logger = Logger.getLogger(getClass());
     private final IUserRoleDao coUserRole;
     private final SecurityTokenProvider securityTokenProvider;
     private final ISecurityRoleAssociationDao associationCompanion;
@@ -51,7 +48,6 @@ public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityProdu
     protected UserRoleTokensUpdater provideCurrentlyAssociatedValues(final UserRoleTokensUpdater entity, final UserRole masterEntity) {
         final SortedSet<SecurityTokenNode> topLevelTokens = securityTokenProvider.getTopLevelSecurityTokenNodes();
         final Set<SecurityTokenInfo> linearisedTokens = lineariseTokens(topLevelTokens, factory());
-        logger.error("linearisedTokens == " + linearisedTokens);
         entity.setTokens(linearisedTokens);
         entity.getProperty("tokens").resetState();
         

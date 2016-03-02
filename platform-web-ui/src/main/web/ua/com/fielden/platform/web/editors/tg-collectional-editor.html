@@ -110,23 +110,37 @@
         behaviors: [ Polymer.TgBehaviors.TgEditorBehavior, Polymer.TgBehaviors.TgHighlightingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
         
         properties: {
-            
+            /**
+             * The maximum number of visible items on collectional editor (comes from Java API).
+             */
             maxVisibleItems: {
                 type: Number
             },
             
+            /**
+             * Entities to be bound to iron-list.
+             */
             _entities: {
                 type: Array
             },
+            /**
+             * Selected entities to be bound to iron-list.
+             */
             _selectedEntities: {
                 type: Array
             },
             
+            /**
+             * Switch for disabling selection listeners during iron-list initialisation.
+             */
             _disableSelectionListeners: {
                 type: Boolean,
                 value: false
             },
             
+            /**
+             * Original list of chosen ids. Used to implement the logic of 'what was changed' during editing.
+             */
             _originalChosenIds: {
                 type: Array
             },
@@ -187,8 +201,6 @@
                 selEntities.push(this._find(this._entities, chosenIds[index]) );
                 this._originalChosenIds.push(chosenIds[index]);
             }
-            
-            console.log('SELECTED ENTITIES', selEntities);
 
             this._disableSelectionListeners = true;
             this.$.input.clearSelection();
@@ -328,12 +340,8 @@
                 var addedIds = self.entity.get('addedIds');
                 var removedIds = self.entity.get('removedIds');
                 
-                console.log('_selectedEntitiesAddedOrRemoved: chosenIds = ', chosenIds, ' addedIds = ', addedIds, ' removedIds = ', removedIds);
-                
 	            changeRecord.indexSplices.forEach(function (s) {
 	                s.removed.forEach(function (removed) {
-	                    console.log(removed.key + ' was removed');
-	                    
 	                    if (removedIds.indexOf(self.idOrKey(removed)) > -1) {
 	                        throw 'Cannot remove ' + self.idOrKey(removed) + ' again (removedIds = ' + removedIds + ').';
 	                    } else {
@@ -355,7 +363,6 @@
 	                
 	                for (var i = s.index; i < s.index + s.addedCount; i++) {
 	                    var added = self._selectedEntities[i];
-	                    console.log(added.key + ' was added');
 	                    
 	                    if (addedIds.indexOf(self.idOrKey(added)) > -1) {
 	                        throw 'Cannot add ' + self.idOrKey(added) + ' again (addedIds = ' + addedIds + ').';
@@ -376,11 +383,7 @@
                             }
 	                    }
 	                }
-	                
-	                console.log('_selectedEntitiesAddedOrRemoved [POST]: chosenIds = ', chosenIds, ' addedIds = ', addedIds, ' removedIds = ', removedIds);
 	            }, self);
-            } else {
-                console.log('						_selectedEntitiesAddedOrRemoved: undefined changeRecord');
             }
         }
     });

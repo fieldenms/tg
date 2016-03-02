@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.apache.log4j.Logger;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -36,7 +34,6 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public abstract class AbstractFunctionalEntityProducerForCollectionModification<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE, ?>> extends DefaultEntityProducerWithContext<T, T> implements IEntityProducer<T> {
-    private final static Logger logger = Logger.getLogger(AbstractFunctionalEntityProducerForCollectionModification.class);
     private final IEntityDao<T> companion;
     private final ICompanionObjectFinder companionFinder;
     private final Class<MASTER_TYPE> masterEntityType;
@@ -67,7 +64,6 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         
         entity.setContext(getCentreContext());
 
-        // logger.error("current entity " + entity.getContext().getCurrEntity() + " with type " + entity.getContext().getCurrEntity().getClass().getName());
         final AbstractEntity<?> masterEntityFromContext = getMasterEntityFromContext(entity.getContext());
         if (masterEntityFromContext == null) {
             throw Result.failure("The master entity for collection modification is not provided in the context.");
@@ -92,7 +88,6 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         //   This is necessary to leave the property marked as 'changed from original' (origVal == null) to be able to apply afterwards
         //   the initial value against '"surrogateVersion", that was possibly changed by another user'
         entity.setSurrogateVersion(surrogateVersion(previouslyPersistedAction));
-        logger.error("surrogate version after modification == " + entity.getSurrogateVersion());
 
         return provideCurrentlyAssociatedValues(entity, masterEntity);
     }
@@ -139,12 +134,6 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         if (!res.isSuccessful()) {
             throw res;
         }
-        
-        logger.error("action's surrogate version after returning to the server == " + action.getSurrogateVersion());
-        
-        logger.error("action's chosenIds = " + action.getChosenIds());
-        logger.error("action's addedIds = " + action.getAddedIds());
-        logger.error("action's removedIds = " + action.getRemovedIds());
         
         final MASTER_TYPE masterEntityBeingUpdated = action.getKey(); // existence of master entity is checked during "producing" of functional action
         

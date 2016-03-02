@@ -178,14 +178,19 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class).in(Scopes.SINGLETON);
 
         // user security related bindings
-        bind(IUserRoleDao.class).to(UserRoleDao.class);
-        bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
+        bind(IUser.class).to(UserDao.class);
+        bind(IUserEx.class).to(UserDao.class);
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
+        
+        bind(IUserRoleDao.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
+
+        bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
-        bind(IUserEx.class).to(UserDao.class);
-        bind(IUser.class).to(UserDao.class);
+        bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
+        bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
+
         bind(IUserSession.class).to(UserSessionDao.class);
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
         if (tokenProvider != null) {
@@ -196,7 +201,5 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
-        bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
-        bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
     }
 }

@@ -4,8 +4,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
@@ -30,7 +28,6 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
  */
 @EntityType(UserRolesUpdater.class)
 public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> implements IUserRolesUpdater {
-    private final Logger logger = Logger.getLogger(getClass());
     private final IUserAndRoleAssociationBatchAction coUserAndRoleAssociationBatchAction;
     private final EntityFactory factory;
     
@@ -68,9 +65,6 @@ public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> imple
         coUserAndRoleAssociationBatchAction.save(batchAction);
         
         // after the association changes were successfully saved, the action should also be saved:
-        final UserRolesUpdater saved = super.save(actionToSave);
-        logger.error("saved.getVersion() = " + saved.getVersion());
-        logger.error("saved.getSurrogateVersion() = " + saved.getSurrogateVersion());
-        return saved;
+        return super.save(actionToSave);
     }
 }

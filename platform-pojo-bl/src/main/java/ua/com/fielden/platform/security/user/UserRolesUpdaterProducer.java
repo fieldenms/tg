@@ -4,8 +4,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
@@ -15,10 +13,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -28,7 +22,6 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public class UserRolesUpdaterProducer extends AbstractFunctionalEntityProducerForCollectionModification<User, UserRolesUpdater> implements IEntityProducer<UserRolesUpdater> {
-    private final Logger logger = Logger.getLogger(getClass());
     private final IUserRoleDao coUserRole;
     private final IUser coUser;
     

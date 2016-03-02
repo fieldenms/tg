@@ -47,9 +47,7 @@ public class PlatformDomainTypes {
         types.add(UserRoleTokensUpdater.class);
         types.add(SecurityTokenInfo.class);
         types.add(UserAndRoleAssociation.class);
-        // TODO add this here or in the end of the list? types.add(UserAndRoleAssociationBatchAction.class);
         types.add(SecurityRoleAssociation.class);
-        // TODO add this here or in the end of the list? types.add(SecurityRoleAssociationBatchAction.class);
         types.add(EntityCentreConfig.class);
         types.add(EntityCentreAnalysisConfig.class);
         types.add(EntityMasterConfig.class);

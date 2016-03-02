@@ -4,8 +4,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
@@ -32,7 +30,6 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
  */
 @EntityType(UserRoleTokensUpdater.class)
 public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpdater> implements IUserRoleTokensUpdater {
-    private final Logger logger = Logger.getLogger(getClass());
     private final ISecurityRoleAssociationBatchAction coSecurityRoleAssociationBatchAction;
     private final EntityFactory factory;
     
@@ -66,18 +63,13 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
             removedAssociations.add(assoc);
         }
         
-        logger.error("addedAssociations == " + addedAssociations + " removedAssociations == " + removedAssociations);
-
         final SecurityRoleAssociationBatchAction batchAction = new SecurityRoleAssociationBatchAction();
         batchAction.setSaveEntities(addedAssociations);
         batchAction.setRemoveEntities(removedAssociations);
         coSecurityRoleAssociationBatchAction.save(batchAction);
         
         // after the association changes were successfully saved, the action should also be saved:
-        final UserRoleTokensUpdater saved = super.save(actionToSave);
-        logger.error("saved.getVersion() = " + saved.getVersion());
-        logger.error("saved.getSurrogateVersion() = " + saved.getSurrogateVersion());
-        return saved;
+        return super.save(actionToSave);
     }
 
     private Class<? extends ISecurityToken> loadToken(final String name) {
