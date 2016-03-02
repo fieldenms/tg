@@ -176,8 +176,9 @@
          * This method promotes 'IRRELEVANT' into _editingValue which should not be a problem, since this 'editor' edits entity property (with name 'chosenNumbersPropertyName') directly.
          */
         convertToString: function (value) {
-            this._entities = value;
+            this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
             
+            // TODO the following setting of 'null' into bindingEntity needs to be investigated why it is necessary:
             this.entity.set(this.propertyName, null);
             
             var selEntities = [];

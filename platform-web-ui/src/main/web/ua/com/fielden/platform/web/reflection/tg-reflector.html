@@ -16,45 +16,6 @@
         return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Warning";
     };
     
-    var _arrayEqualsEx = function (value1, value2) {
-        // if the other array is a falsy value, return
-        if (value2 && value2.constructor && value2.constructor === Array) {
-            // compare lengths - can save a lot of time 
-            if (value1.length !== value2.length) {
-                return false;
-            }
-            
-            for (var i = 0; i < value1.length; i++) {
-                if (!_equalsEx(value1[i], value2[i])) {
-                    return false;
-                }
-            }
-            return true;
-        } else {
-            return false;
-        }
-    };
-    
-    /**
-     * Returns 'true' if the regular values are equal, 'false' otherwise.
-     */
-    var _equalsEx = function (value1, value2) {
-        // if (value1) {
-        //     if (!value2) {
-        //         return false;
-        //     } else {
-        //         return ...
-        //     }
-        // }
-
-        // TODO: potentially, extend implementation to support composite types: objects (arrays are already supported)
-        if (value1 && value1.constructor && value1.constructor === Array) {
-            return _arrayEqualsEx(value1, value2);
-        } else {
-            return value1 === value2;
-        }
-    };
-
 	/**
 	 * 'EntityTypeProp' creator. Dependencies: none.
 	 */
@@ -339,15 +300,7 @@
             if (instanceMetaProperty.isChangedFromOriginal()) {
                 return instanceMetaProperty.originalValue();
             } else {
-                if (value && value.constructor && value.constructor === Array) {
-                    var arrayCopy = [];
-                    for (var i = 0; i < value.length; i++) {
-                        arrayCopy.push(value[i]);
-                    }
-                    return arrayCopy;
-                } else {
-                    return value;
-                }
+                return value;
             }
         }
 
@@ -691,11 +644,37 @@
         // }
 
         // TODO 1: rectify whether this implementation is good
-        // TODO 2: potentially, extend implementation to support composite types: arrays and objects?
+        // TODO 2: potentially, extend implementation to support composite types: objects?
         if (_isEntity(value1)) {
             return _entitiesEqualsEx(value1, value2);
+        } else if (Array.isArray(value1)) {
+            return _arraysEqualsEx(value1, value2);
         }
         return value1 === value2;
+    };
+    
+    /**
+     * Returns 'true' if arrays are equal, 'false' otherwise.
+     */
+    var _arraysEqualsEx = function (array1, array2) {
+        if (array1 === array2) {
+            return true;
+        }
+        if (!Array.isArray(array2)) {
+            return false;
+        }
+        
+        if (array1.length !== array2.length) {
+            return false;
+        }
+        
+        // now can compare items
+        for (var index = 0; index < array1.length; index++) {
+            if (!_equalsEx(array1[index], array2[index])) {
+                return false;
+            }
+        }
+        return true;
     };
     
     /**
@@ -859,7 +838,7 @@
         getStrictProxyExceptionPrototype: function () {
             return _SPEPrototype;
         },
-        
+
         /**
          * Returns 'true' if the regular values are equal, 'false' otherwise.
          */
@@ -1001,10 +980,15 @@
                 return value;
             } else if (typeof value === "string") { // for string value -- return the same value for editors
                 return value;
-            // TODO implement conversion logic for Array of entities, which should convert to array of keys
-            } else if (value.constructor === Array) { // for Array value -- return the same value for tg-entity-search-criteria editor (and tg-collectional-representor)
+            } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-search-criteria editor
+                // Array items should be converted one-by-one (no entity-typed items should remain being entity-typed)
+                var convertedArray = [];
+                for (var index = 0; index < value.length; index++) {
+                    convertedArray.push(this.convert(value[index]));
+                }
+                return convertedArray;
                 return value;
-            } else if (typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 
+            } else if ( typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 
                 return value;
             } else {
                 throw new _UCEPrototype(value);
