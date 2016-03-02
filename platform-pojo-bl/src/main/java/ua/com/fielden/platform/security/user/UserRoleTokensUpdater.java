@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.sample.domain;
+package ua.com.fielden.platform.security.user;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.sample.domain.TgSecurityToken;
 
 /** 
  * Master entity object.
@@ -20,11 +20,11 @@ import ua.com.fielden.platform.security.user.UserRole;
  * @author Developers
  *
  */
-@CompanionObject(ITgUpdateTokensAction.class)
+@CompanionObject(IUserRoleTokensUpdater.class)
 @KeyType(UserRole.class)
 @MapEntityTo
 @KeyTitle(value = "User Role", desc = "User role, whose 'tokens' collection modifies by this functional action.")
-public class TgUpdateTokensAction extends AbstractFunctionalEntityForCollectionModification<UserRole, String> {
+public class UserRoleTokensUpdater extends AbstractFunctionalEntityForCollectionModification<UserRole, String> {
     private static final long serialVersionUID = 1L;
     
     @IsProperty(TgSecurityToken.class)
@@ -32,7 +32,7 @@ public class TgUpdateTokensAction extends AbstractFunctionalEntityForCollectionM
     private Set<TgSecurityToken> tokens = new LinkedHashSet<TgSecurityToken>();
 
     @Observable
-    protected TgUpdateTokensAction setTokens(final Set<TgSecurityToken> tokens) {
+    protected UserRoleTokensUpdater setTokens(final Set<TgSecurityToken> tokens) {
         this.tokens.clear();
         this.tokens.addAll(tokens);
         return this;

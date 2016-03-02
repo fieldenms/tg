@@ -14,6 +14,7 @@ import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
+import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
@@ -189,6 +190,7 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.add(UserAndRoleAssociationBatchAction.class);
         types.add(SecurityRoleAssociationBatchAction.class);
         types.add(UserRolesUpdater.class);
+        types.add(UserRoleTokensUpdater.class);
     }
 
     private List<Class<?>> typesForSerialisationTesting() {

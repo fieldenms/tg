@@ -29,14 +29,14 @@ import com.google.inject.Injector;
  *
  */
 public class UserWebUiConfig {
-    public final EntityMaster<UserRolesUpdater> userRolesUpdaterMaster;
-    public final EntityCentre<User> userCentre;
-    public final EntityMaster<User> userMaster;
+    public final EntityMaster<UserRolesUpdater> rolesUpdater;
+    public final EntityCentre<User> centre;
+    public final EntityMaster<User> master;
 
     public UserWebUiConfig(final Injector injector) {
-        userCentre = createUserCentre(injector);
-        userMaster = createUserMaster(injector);
-        userRolesUpdaterMaster = createUserRolesUpdaterMaster(injector);
+        centre = createCentre(injector);
+        master = createMaster(injector);
+        rolesUpdater = createRolesUpdater(injector);
     }
 
     /**
@@ -44,7 +44,7 @@ public class UserWebUiConfig {
      *
      * @return
      */
-    public static EntityCentre<User> createUserCentre(final Injector injector) {
+    private static EntityCentre<User> createCentre(final Injector injector) {
         final EntityCentre<User> userCentre = new EntityCentre<>(MiUser.class, "Users",
                 EntityCentreBuilder.centreFor(User.class)
                 .runAutomatically()
@@ -81,7 +81,7 @@ public class UserWebUiConfig {
      *
      * @return
      */
-    public static EntityMaster<User> createUserMaster(final Injector injector) {
+    private static EntityMaster<User> createMaster(final Injector injector) {
         final String fmr = "'flex', 'margin-right: 20px'";
         final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
 
@@ -129,7 +129,7 @@ public class UserWebUiConfig {
      *
      * @return
      */
-    public static EntityMaster<UserRolesUpdater> createUserRolesUpdaterMaster(final Injector injector) {
+    private static EntityMaster<UserRolesUpdater> createRolesUpdater(final Injector injector) {
         final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
         final IMaster<UserRolesUpdater> masterConfig = new SimpleMasterBuilder<UserRolesUpdater>()
                 .forEntity(UserRolesUpdater.class)

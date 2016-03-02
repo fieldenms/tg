@@ -1,15 +1,9 @@
-package ua.com.fielden.platform.sample.domain;
+package ua.com.fielden.platform.security.user;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,54 +13,43 @@ import java.util.SortedSet;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
-import com.sun.org.apache.regexp.internal.recompile;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.sample.domain.TgSecurityToken;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
-import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
-import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
- * A producer for new instances of entity {@link TgUpdateTokensAction}.
+ * A producer for new instances of entity {@link UserRoleTokensUpdater}.
  *
  * @author TG Team
  *
  */
-public class TgUpdateTokensActionProducer extends AbstractFunctionalEntityProducerForCollectionModification<UserRole, TgUpdateTokensAction> implements IEntityProducer<TgUpdateTokensAction> {
+public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityProducerForCollectionModification<UserRole, UserRoleTokensUpdater> implements IEntityProducer<UserRoleTokensUpdater> {
     private final Logger logger = Logger.getLogger(getClass());
     private final IUserRoleDao coUserRole;
-    private final IUser coUser;
     private final SecurityTokenProvider securityTokenProvider;
     private final ISecurityRoleAssociationDao associationCompanion;
     
     @Inject
-    public TgUpdateTokensActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IUserRoleDao coUserRole, final IUser coUser, final IApplicationSettings applicationSettings, final ISecurityRoleAssociationDao associationCompanion) throws Exception {
-        super(factory, TgUpdateTokensAction.class, companionFinder);
+    public UserRoleTokensUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final IUserRoleDao coUserRole, final IApplicationSettings applicationSettings, final ISecurityRoleAssociationDao associationCompanion) throws Exception {
+        super(factory, UserRoleTokensUpdater.class, companionFinder);
         this.coUserRole = coUserRole;
-        this.coUser = coUser;
         this.securityTokenProvider = new SecurityTokenProvider(applicationSettings.pathToSecurityTokens(), applicationSettings.securityTokensPackageName());
         this.associationCompanion = associationCompanion;
     }
     
     @Override
-    protected TgUpdateTokensAction provideCurrentlyAssociatedValues(final TgUpdateTokensAction entity, final UserRole masterEntity) {
+    protected UserRoleTokensUpdater provideCurrentlyAssociatedValues(final UserRoleTokensUpdater entity, final UserRole masterEntity) {
         final SortedSet<SecurityTokenNode> topLevelTokens = securityTokenProvider.getTopLevelSecurityTokenNodes();
         final Set<TgSecurityToken> linearisedTokens = lineariseTokens(topLevelTokens, factory());
         logger.error("linearisedTokens == " + linearisedTokens);

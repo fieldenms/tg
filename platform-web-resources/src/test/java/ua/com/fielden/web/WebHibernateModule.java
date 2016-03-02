@@ -24,9 +24,11 @@ import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
 import ua.com.fielden.platform.security.provider.UserDao;
 import ua.com.fielden.platform.security.provider.UserRolesUpdaterDao;
+import ua.com.fielden.platform.security.provider.UserRoleTokensUpdaterDao;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.IUserRolesUpdater;
+import ua.com.fielden.platform.security.user.IUserRoleTokensUpdater;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
@@ -64,6 +66,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         // bind DAO
         bind(IInspectedEntityDao.class).to(InspectedEntityDao.class);
         bind(IUserRoleDao.class).to(UserRoleDao.class);
+        bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
         bind(IUserEx.class).to(UserDao.class); // UserControllerForTestPurposes.class

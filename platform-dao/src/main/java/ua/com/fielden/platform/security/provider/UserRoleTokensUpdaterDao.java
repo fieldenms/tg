@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.sample.domain;
+package ua.com.fielden.platform.security.provider;
 
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -14,27 +14,30 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.sample.domain.TgSecurityToken;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.user.IUserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 /** 
- * DAO implementation for companion object {@link ITgUpdateTokensAction}.
+ * DAO implementation for companion object {@link IUserRoleTokensUpdater}.
  * 
  * @author Developers
  *
  */
-@EntityType(TgUpdateTokensAction.class)
-public class TgUpdateTokensActionDao extends CommonEntityDao<TgUpdateTokensAction> implements ITgUpdateTokensAction {
+@EntityType(UserRoleTokensUpdater.class)
+public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpdater> implements IUserRoleTokensUpdater {
     private final Logger logger = Logger.getLogger(getClass());
     private final ISecurityRoleAssociationBatchAction coSecurityRoleAssociationBatchAction;
     private final EntityFactory factory;
     
     @Inject
-    public TgUpdateTokensActionDao(final IFilter filter, final ISecurityRoleAssociationBatchAction coSecurityRoleAssociationBatchAction, final EntityFactory factory) {
+    public UserRoleTokensUpdaterDao(final IFilter filter, final ISecurityRoleAssociationBatchAction coSecurityRoleAssociationBatchAction, final EntityFactory factory) {
         super(filter);
         this.coSecurityRoleAssociationBatchAction = coSecurityRoleAssociationBatchAction;
         this.factory = factory;
@@ -42,9 +45,9 @@ public class TgUpdateTokensActionDao extends CommonEntityDao<TgUpdateTokensActio
     
     @Override
     @SessionRequired
-    public TgUpdateTokensAction save(final TgUpdateTokensAction action) {
-        final TgUpdateTokensAction actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getTokens(), this, factory, String.class);
-
+    public UserRoleTokensUpdater save(final UserRoleTokensUpdater action) {
+        final UserRoleTokensUpdater actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getTokens(), this, factory, String.class);
+        
         // after all validations have passed -- the association changes could be saved:
         final UserRole userRoleBeingUpdated = action.getKey();
         final Map<Object, TgSecurityToken> availableTokens = AbstractFunctionalEntityProducerForCollectionModification.mapById(action.getTokens(), String.class);
@@ -69,7 +72,7 @@ public class TgUpdateTokensActionDao extends CommonEntityDao<TgUpdateTokensActio
         coSecurityRoleAssociationBatchAction.save(batchAction);
         
         // after the association changes were successfully saved, the action should also be saved:
-        final TgUpdateTokensAction saved = super.save(actionToSave);
+        final UserRoleTokensUpdater saved = super.save(actionToSave);
         logger.error("saved.getVersion() = " + saved.getVersion());
         logger.error("saved.getSurrogateVersion() = " + saved.getSurrogateVersion());
         return saved;
