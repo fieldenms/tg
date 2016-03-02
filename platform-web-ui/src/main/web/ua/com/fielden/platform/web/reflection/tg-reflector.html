@@ -982,11 +982,11 @@
                 return value;
             } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-search-criteria editor
                 // Array items should be converted one-by-one (no entity-typed items should remain being entity-typed)
-                /* var convertedArray = [];
+                var convertedArray = [];
                 for (var index = 0; index < value.length; index++) {
                     convertedArray.push(this.convert(value[index]));
                 }
-                return convertedArray; */
+                return convertedArray;
                 return value;
             } else if ( typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 
                 return value;

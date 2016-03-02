@@ -4,9 +4,12 @@ import static java.util.Locale.getDefault;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.Date;
@@ -27,6 +30,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -38,6 +42,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.types.Colour;
@@ -380,6 +385,36 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private static <M extends AbstractEntity<?>> boolean multipleFoundEntities(final Class<M> type, final String propertyName, final Object reflectedValue, final Object newValue) {
         return reflectedValue != null && Arrays.asList().equals(newValue) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
     }
+    
+    /**
+     * Determines property type.
+     * <p>
+     * The exception from standard logic is only for "collection modification func action", where the type of "chosenIds", "addedIds" and "removedIds" properties
+     * determines from the second type parameter of the func action type. This is done due to generic nature of that types (see ID_TYPE parameter in {@link AbstractFunctionalEntityForCollectionModification}).
+     * 
+     * @param type
+     * @param propertyName
+     * @return
+     */
+    private static Class determinePropertyType(final Class<?> type, final String propertyName) {
+        final Class propertyType;
+        if (AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(type) && AbstractFunctionalEntityForCollectionModification.isCollectionOfIds(propertyName)) {
+            if (type.getAnnotatedSuperclass() == null) {
+                throw Result.failure(new IllegalStateException(String.format("The AnnotatedSuperclass of functional entity %s (for collection modification) is somehow not defined.", type.getSimpleName())));
+            }
+            if (!(type.getAnnotatedSuperclass().getType() instanceof ParameterizedType)) {
+                throw Result.failure(new IllegalStateException(String.format("The AnnotatedSuperclass's Type %s of functional entity %s (for collection modification) is somehow not ParameterizedType.", type.getAnnotatedSuperclass().getType(), type.getSimpleName())));
+            }
+            final ParameterizedType parameterizedEntityType = (ParameterizedType) type.getAnnotatedSuperclass().getType();
+            if (parameterizedEntityType.getActualTypeArguments().length != 2 || !(parameterizedEntityType.getActualTypeArguments()[1] instanceof Class)) {
+                throw Result.failure(new IllegalStateException(String.format("The type parameters %s of functional entity %s (for collection modification) is malformed.", Arrays.asList(parameterizedEntityType.getActualTypeArguments()), type.getSimpleName())));
+            }
+            propertyType = (Class) parameterizedEntityType.getActualTypeArguments()[1];
+        } else {
+            propertyType = PropertyTypeDeterminator.determinePropertyType(type, propertyName);
+        }
+        return propertyType;
+    }
 
     /**
      * Converts <code>reflectedValue</code> (which is a string, number, boolean or null) into a value of appropriate type (the type of actual property).
@@ -390,15 +425,15 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     private static <M extends AbstractEntity<?>> Object convert(final Class<M> type, final String propertyName, final Object reflectedValue, final ICompanionObjectFinder companionFinder) {
-        final Class propertyType = PropertyTypeDeterminator.determinePropertyType(type, propertyName);
-
+        if (reflectedValue == null) {
+            return null;
+        }
+        final Class propertyType = determinePropertyType(type, propertyName);
+        
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
             if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
                 throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s]. Collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
-            }
-            if (reflectedValue == null) {
-                return null;
             }
             final Class<AbstractEntity<?>> entityPropertyType = propertyType;
 
@@ -418,39 +453,43 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 }
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
-        } else if (EntityUtils.isString(propertyType)) {
-            return reflectedValue == null ? null : reflectedValue;
-        } else if (Integer.class.isAssignableFrom(propertyType)) {
-            return reflectedValue == null ? null : reflectedValue;
-        } else if (EntityUtils.isBoolean(propertyType)) {
-            return reflectedValue == null ? null : reflectedValue;
-        } else if (EntityUtils.isDate(propertyType)) {
-            return reflectedValue == null ? null : (reflectedValue instanceof Integer ? new Date(((Integer) reflectedValue).longValue()) : new Date((Long) reflectedValue));
-        } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
-            if (reflectedValue == null) {
-                return null;
-            } else {
-                final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, propertyName);
-                final CritOnly critOnly = AnnotationReflector.getPropertyAnnotation(CritOnly.class, type, propertyName);
-                final Integer propertyScale = mapTo != null && mapTo.scale() >= 0 ? ((int) mapTo.scale())
-                        : (critOnly != null && critOnly.scale() >= 0 ? ((int) critOnly.scale()) : 2)/* default value from Hibernate */;
-
-                if (reflectedValue instanceof Integer) {
-                    return new BigDecimal((Integer) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
-                } else if (reflectedValue instanceof Long) {
-                    return BigDecimal.valueOf((Long) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
-                } else if (reflectedValue instanceof BigInteger) {
-                    return new BigDecimal((BigInteger) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
-                } else if (reflectedValue instanceof BigDecimal) {
-                    return ((BigDecimal) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+        } else if (PropertyTypeDeterminator.isCollectional(type, propertyName) && Set.class.isAssignableFrom(Finder.findFieldByName(type, propertyName).getType()) && String.class.isAssignableFrom(propertyType)) {
+            final List<Object> list = (ArrayList<Object>) reflectedValue;
+            final Set<String> resultSet = new LinkedHashSet<>();
+            for (final Object entry : list) {
+                if (entry == null) {
+                    resultSet.add(null);
                 } else {
-                    throw new IllegalStateException("Unknown number type for 'reflectedValue'.");
+                    resultSet.add(entry.toString());
                 }
             }
-        } else if (Money.class.isAssignableFrom(propertyType)) {
-            if (reflectedValue == null) {
-                return null;
+            return resultSet;
+        } else if (EntityUtils.isString(propertyType)) {
+            return reflectedValue;
+        } else if (Integer.class.isAssignableFrom(propertyType)) {
+            return reflectedValue;
+        } else if (EntityUtils.isBoolean(propertyType)) {
+            return reflectedValue;
+        } else if (EntityUtils.isDate(propertyType)) {
+            return reflectedValue instanceof Integer ? new Date(((Integer) reflectedValue).longValue()) : new Date((Long) reflectedValue);
+        } else if (BigDecimal.class.isAssignableFrom(propertyType)) {
+            final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, propertyName);
+            final CritOnly critOnly = AnnotationReflector.getPropertyAnnotation(CritOnly.class, type, propertyName);
+            final Integer propertyScale = mapTo != null && mapTo.scale() >= 0 ? ((int) mapTo.scale())
+                    : (critOnly != null && critOnly.scale() >= 0 ? ((int) critOnly.scale()) : 2)/* default value from Hibernate */;
+
+            if (reflectedValue instanceof Integer) {
+                return new BigDecimal((Integer) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+            } else if (reflectedValue instanceof Long) {
+                return BigDecimal.valueOf((Long) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+            } else if (reflectedValue instanceof BigInteger) {
+                return new BigDecimal((BigInteger) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+            } else if (reflectedValue instanceof BigDecimal) {
+                return ((BigDecimal) reflectedValue).setScale(propertyScale, RoundingMode.HALF_UP);
+            } else {
+                throw new IllegalStateException("Unknown number type for 'reflectedValue'.");
             }
+        } else if (Money.class.isAssignableFrom(propertyType)) {
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
 
             final BigDecimal amount = new BigDecimal(map.get("amount").toString());
@@ -472,13 +511,31 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             }
 
         } else if (Colour.class.isAssignableFrom(propertyType)) {
-            if (reflectedValue == null) {
-                return null;
-            }
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
 
             final String hashlessUppercasedColourValue = (String) map.get("hashlessUppercasedColourValue");
             return hashlessUppercasedColourValue == null ? null : new Colour(hashlessUppercasedColourValue);
+        } else if (PropertyTypeDeterminator.isCollectional(type, propertyName) && Set.class.isAssignableFrom(Finder.findFieldByName(type, propertyName).getType()) && Long.class.isAssignableFrom(propertyType)) {
+            final List<Object> list = (ArrayList<Object>) reflectedValue;
+            final Set<Long> resultSet = new LinkedHashSet<>();
+            for (final Object entry : list) {
+                if (entry == null) {
+                    resultSet.add(null);
+                } else {
+                    resultSet.add(Long.parseLong(entry.toString()));
+                }
+            }
+            return resultSet;
+        } else if (Long.class.isAssignableFrom(propertyType)) {
+            if (reflectedValue instanceof Integer) {
+                return ((Integer) reflectedValue).longValue();
+            } else if (reflectedValue instanceof Long) {
+                return reflectedValue;
+            } else if (reflectedValue instanceof BigInteger) {
+                return ((BigInteger) reflectedValue).longValue();
+            } else {
+                throw new IllegalStateException(String.format("Unknown number type for 'reflectedValue' (%s) - can not convert to Long.", reflectedValue));
+            }
         } else {
             throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s].", type.getSimpleName(), propertyName, reflectedValue));
         }

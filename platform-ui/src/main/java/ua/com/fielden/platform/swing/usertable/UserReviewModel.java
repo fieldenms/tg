@@ -169,7 +169,8 @@ public class UserReviewModel {
             private Set<UserAndRoleAssociation> createAssociationsFor(final User user, final Set<UserRole> roles) {
                 final Set<UserAndRoleAssociation> associations = new HashSet<>();
                 for (final UserRole role : roles) {
-                    associations.add(new UserAndRoleAssociation(user, role));
+                    final UserAndRoleAssociation assoc = role.getEntityFactory().newByKey(UserAndRoleAssociation.class, user, role);
+                    associations.add(assoc);
                 }
                 return associations;
             }

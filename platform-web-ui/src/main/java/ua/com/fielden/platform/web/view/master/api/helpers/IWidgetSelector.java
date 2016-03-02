@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.view.master.api.helpers;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.view.master.api.widgets.IAutocompleterConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.ICheckboxConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.ICollectionalEditorConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.ICollectionalRepresentorConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IColourConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDatePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDateTimePickerConfig;
@@ -31,6 +33,8 @@ public interface IWidgetSelector<T extends AbstractEntity<?>> {
     ISinglelineTextConfig<T> asSinglelineText();
     IMultilineTextConfig<T> asMultilineText();
     IHiddenTextConfig<T> asHiddenText();
+    ICollectionalRepresentorConfig<T> asCollectionalRepresentor();
+    ICollectionalEditorConfig<T> asCollectionalEditor();
 
     IFileConfig<T> asFile();
 

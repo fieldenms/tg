@@ -251,6 +251,9 @@
             },
 
             _dialogOpened: function (e, detail, source) {
+                this.async(function () {
+                    this.refit();
+                }.bind(this), 1);
                 this._setIsRunning(false);
             },
 

@@ -84,6 +84,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         aoPerson.populateNew("Demo", "User", "Demo User", "DEMO", IDomainDrivenTestCaseConfiguration.hbc.getProperty("private-key"));
 
         final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies."));
+        System.out.println("admin.getId() == " + admin.getId());
 
         final User su = ((IUser) ao(User.class)).findByKey(User.system_users.SU.name());
         save(new_composite(UserAndRoleAssociation.class, su, admin));
@@ -150,12 +151,44 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgEntityForColourMaster colourEntity = new_(TgEntityForColourMaster.class, "KEY12").setStringProp("ok").setBooleanProp(true).setColourProp(new Colour("aaacdc"));
         final TgEntityForColourMaster defaultColourEnt = save(colourEntity);
         System.out.println("defaultColourEnt.getId() == " + defaultColourEnt.getId());
-        
+
         final TgEntityWithPropertyDependency entWithPropDependency = save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS"));
         System.out.println("entWithPropDependency.getId() == " + entWithPropDependency.getId());
 
         final User demo = ((IUser) ao(User.class)).findByKey("DEMO");
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
+
+        final UserRole stationMgr = save(new_(UserRole.class, "STATION_MGR", "A role, which has access to the the station managing functionality."));
+        System.out.println("stationMgr.getId() == " + stationMgr.getId());
+        final UserAndRoleAssociation su2StationMgr = save(new_composite(UserAndRoleAssociation.class, su, stationMgr));
+        System.out.println("su2StationMgr.getId() == " + su2StationMgr.getId());
+
+        final UserRole testRole1 = save(new_(UserRole.class, "TEST_ROLE1", "A role, which has access to the the station managing functionality."));
+        System.out.println("testRole1.getId() == " + testRole1.getId());
+
+        final UserRole testRole2 = save(new_(UserRole.class, "TEST_ROLE2", "A role, which has access to the the station managing functionality."));
+        System.out.println("testRole2.getId() == " + testRole2.getId());
+
+        final UserRole testRole3 = save(new_(UserRole.class, "TEST_ROLE3", "A role, which has access to the the station managing functionality."));
+        System.out.println("testRole3.getId() == " + testRole3.getId());
+
+        final UserRole testRole4 = save(new_(UserRole.class, "TEST_ROLE4", "A role, which has access to the the station managing functionality."));
+        System.out.println("testRole4.getId() == " + testRole4.getId());
+
+        final UserRole testRole5 = save(new_(UserRole.class, "TEST_ROLE5", "A role, which has access to the the station managing functionality."));
+        System.out.println("testRole5.getId() == " + testRole5.getId());
+
+        final UserRole testRole6 = save(new_(UserRole.class, "TEST_ROLE6", "A role, which has access to the the station managing functionality."));
+        System.out.println("testRole6.getId() == " + testRole6.getId());
+
+        final UserRole testRole7 = save(new_(UserRole.class, "TEST_ROLE7", "A role, which has access to the the station managing functionality."));
+        System.out.println("testRole7.getId() == " + testRole7.getId());
+
+        final UserRole testRole8 = save(new_(UserRole.class, "TEST_ROLE8", "A role, which has access to the the station managing functionality."));
+        System.out.println("testRole8.getId() == " + testRole8.getId());
+
+        final UserRole testRole9 = save(new_(UserRole.class, "TEST_ROLE9", "A role, which has access to the the station managing functionality."));
+        System.out.println("testRole9.getId() == " + testRole9.getId());
 
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
         mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));

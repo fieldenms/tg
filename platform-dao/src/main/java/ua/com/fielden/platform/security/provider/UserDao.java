@@ -10,11 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -24,8 +27,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-
-import com.google.inject.Inject;
 
 /**
  * Implementation of the user controller, which should be used managing system user information.
@@ -122,5 +123,12 @@ public class UserDao extends CommonEntityDao<User> implements IUserEx {
     @Override
     public User findUser(final String username) {
         return findByKeyAndFetch(fetch(User.class), username);
+    }
+    
+    @Override
+    public IFetchProvider<User> createFetchProvider() {
+        return super.createFetchProvider()
+                .with("key") // this property is "required" (necessary during saving) -- should be declared as fetching property
+                .with("base", "basedOnUser", "roles"); //
     }
 }

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.sample.domain;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -11,6 +14,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.sample.domain.definers.PropDefiner;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserRole;
 
 /** 
  * Master entity object.
@@ -35,6 +41,19 @@ public class TgEntityWithPropertyDependency extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Dependent Prop", desc = "Dependent Prop")
     private String dependentProp;
+    
+    @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
+    private Set<UserAndRoleAssociation> roles = new HashSet<UserAndRoleAssociation>();
+    
+    public Set<UserAndRoleAssociation> getRoles() {
+        return roles;
+    }
+
+    @Observable
+    public TgEntityWithPropertyDependency setRoles(final Set<UserAndRoleAssociation> roles) {
+        this.roles = roles;
+        return this;
+    }
 
     @Observable
     public TgEntityWithPropertyDependency setDependentProp(final String dependentProp) {

@@ -119,7 +119,8 @@ public class UserTableModel extends AbstractTableModel {
         users.add(newUser);
         final List<Boolean> userRoleIndicator = new ArrayList<Boolean>();
         for (final UserRole role : userRoles) {
-            final boolean flag = newUser.getRoles().contains(new UserAndRoleAssociation(newUser, role));
+            final UserAndRoleAssociation assoc = role.getEntityFactory().newByKey(UserAndRoleAssociation.class, newUser, role);
+            final boolean flag = newUser.getRoles().contains(assoc);
             userRoleIndicator.add(flag);
         }
         System.out.println("================whether contains itself===================");
@@ -134,7 +135,7 @@ public class UserTableModel extends AbstractTableModel {
         System.out.println("============end of new user roles association hash===================");
         System.out.println("============this user roles association hash===================");
         for (final UserRole role : userRoles) {
-            final UserAndRoleAssociation assoc = new UserAndRoleAssociation(newUser, role);
+            final UserAndRoleAssociation assoc = role.getEntityFactory().newByKey(UserAndRoleAssociation.class, newUser, role);
             System.out.println(assoc.toString() + " hash: " + assoc.hashCode());
         }
         System.out.println("============end of this user roles association hash===================");
