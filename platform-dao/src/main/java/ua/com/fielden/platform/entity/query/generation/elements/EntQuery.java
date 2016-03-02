@@ -147,6 +147,7 @@ public class EntQuery implements ISingleOperand {
             yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+            logger.debug("enhanceYieldsModel.allPropsYieldEnhancementRequired");
             if (mainSourceIsTypeBased()) {
                 for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
                     //                    if (ppi.isSynthetic()) {
@@ -159,7 +160,7 @@ public class EntQuery implements ISingleOperand {
                     //|| (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
                     ;
                     if (!skipProperty) {
-                        //System.out.println("!!!!!!!!!!!!!!!!!!! ------------------------ " + ppi.getName());
+                        logger.debug(" add yield: " + ppi.getName());
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                     }
                 }
@@ -244,6 +245,7 @@ public class EntQuery implements ISingleOperand {
         if (fetchModel == null) {
             logger.debug("adjustYieldsModelAccordingToFetchModel: no fetch model was provided -- nothing was removed");
         } else {
+            logger.debug("adjustYieldsModelAccordingToFetchModel: fetchModel\n" + fetchModel);
             final Set<Yield> toBeRemoved = new HashSet<Yield>();
 
             for (final Yield yield : yields.getYields()) {
