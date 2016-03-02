@@ -19,6 +19,7 @@ import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalE
 import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityTokenInfo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -44,6 +45,7 @@ public class PlatformDomainTypes {
         types.add(UserSession.class);
         types.add(UserRole.class);
         types.add(UserRoleTokensUpdater.class);
+        types.add(SecurityTokenInfo.class);
         types.add(UserAndRoleAssociation.class);
         // TODO add this here or in the end of the list? types.add(UserAndRoleAssociationBatchAction.class);
         types.add(SecurityRoleAssociation.class);
