@@ -37,53 +37,92 @@
 	
 	    test('run action works for complex centre', function (done) {
             var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+            	
+            	var entity = resultEntities[0];
+            	
+                // value ok?
+                entity.get("desc");
+                entity.get("dR");
+                entity.get("iS");
+                entity.get("iR");
+                entity.get("oN");
+                entity.get("sR");
+                entity.get("integerProp");
+                entity.get("sum_of_int");
+                entity.get("bigDecimalProp");
+                entity.get("max_of_dec");
+                entity.get("min_of_dec");
+                entity.get("sum_of_dec");
+                entity.get("entityProp");
+                entity.get("booleanProp");
+                entity.get("dateProp");
+                entity.get("compositeProp");
+                entity.get("stringProp");
+                
+                assert.strictEqual(resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
+                
+                centre._postRun = old_postRun;
+                done();
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+				centre.run();
+            };
+
+ 			centre.retrieve();
+	    });
+	    
+	    test('editing through EntityEditAction embedded master works for complex centre', function (done) {
+            var old_postRun = centre._postRun;
             var firstTime = false;
             
             centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
             	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
             	
             	if (firstTime === false) {
-                	var entity = resultEntities[0];
-                	
-                    // value ok?
-                    entity.get("desc");
-                    entity.get("dR");
-                    entity.get("iS");
-                    entity.get("iR");
-                    entity.get("oN");
-                    entity.get("sR");
-                    entity.get("integerProp");
-                    entity.get("sum_of_int");
-                    entity.get("bigDecimalProp");
-                    entity.get("max_of_dec");
-                    entity.get("min_of_dec");
-                    entity.get("sum_of_dec");
-                    entity.get("entityProp");
-                    entity.get("booleanProp");
-                    entity.get("dateProp");
-                    entity.get("compositeProp");
-                    entity.get("stringProp");
-                    
                     assert.strictEqual(resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
+                	var entity = resultEntities[0];
                     
-                    console.log('centre', centre);
+                    var editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
+                    editAction.currentEntity = entity;
+                    var value = editAction._run();
                     
-                    // var primaryActions = centre.$.egi.$$('.primary-action-class');
-                    var primaryActions = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes();
+                    editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                        console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
+                        
+                        var outerMaster = editAction._masterReferenceForTesting;
+                        var innerMaster = outerMaster.$$('tg-tgpersistententitywithproperties-master');
+                        var loader = outerMaster.$.loader;
+                        
+                        outerMaster.addEventListener('after-load', function (event) {
+                            var embeddedMaster = event.detail;
+                            
+            		        var edProperty = embeddedMaster.$.editor_4_bigDecimalProp;
+            		        
+            		        embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
+            	                assert.strictEqual(edProperty._editingValue, '23999', "_editingValue should be 'IS'.");
+            	                assert.strictEqual(edProperty._commValue, '23999', "_commValue should be 'IS'.");
+            	                assert.strictEqual(edProperty._acceptedValue, 23999, "_acceptedValue should be 'IS'.");
+            	                
+            	                assert.strictEqual(validatedEntity.get("bigDecimalProp"), 23999, "'property' value should be 'IS' after modification.");
+            	                assert.strictEqual(bindingEntity.get("bigDecimalProp"), 23999, "Binding 'property' value should be 'IS' after modification.");
+
+            	                done();
+            	            };
+                            
+                            embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+            	                edProperty._editingValue = '23999';
+            	                edProperty.commit();
+            	            };
+                        });
+                    }
                     
-                    // var primaryActionSelector = centre.$.egi.$.primary_action_selector;
-                    
-                    var editFirstEntity = primaryActions[0];
-                    
-                    editFirstEntity.currentEntity = entity;
-                    editFirstEntity._run();
-                    
-                    console.log('primaryActions', primaryActions);
                     firstTime = true;
             	} else {
             	    assert.strictEqual(resultEntities.length, 1, 'The count of refreshed entity for the centre should be 1.');
-            	    
-                	done();
             	}
             };
             
