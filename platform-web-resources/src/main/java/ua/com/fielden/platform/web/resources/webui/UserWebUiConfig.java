@@ -102,19 +102,13 @@ public class UserWebUiConfig {
                         .longDesc("Add / Remove roles")
                         .build())
                 .also()
-                .addAction(MasterActions.REFRESH)
-                //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("CANCEL")
-                /*      */.longDesc("Cancel action")
-                .addAction(MasterActions.VALIDATE)
+                .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
-                .addAction(MasterActions.EDIT)
-                .addAction(MasterActions.VIEW)
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
                         + format("[[%s], [%s], [%s], ['flex']],", fmr, fmr, fmr)
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .done();
         return new EntityMaster<User>(
@@ -135,10 +129,7 @@ public class UserWebUiConfig {
                 .forEntity(UserRolesUpdater.class)
                 .addProp("roles").asCollectionalEditor().maxVisibleRows(5)
                 .also()
-                .addAction(MasterActions.REFRESH)
-                //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("CANCEL")
-                /*      */.longDesc("Cancel action")
+                .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (

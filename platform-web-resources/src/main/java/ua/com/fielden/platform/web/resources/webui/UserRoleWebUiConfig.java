@@ -88,19 +88,13 @@ public class UserRoleWebUiConfig {
                 .also()
                 .addProp("desc").asSinglelineText()
                 .also()
-                .addAction(MasterActions.REFRESH)
-                //      */.icon("trending-up") SHORT-CUT
-                /*      */.shortDesc("CANCEL")
-                /*      */.longDesc("Cancel action")
-                .addAction(MasterActions.VALIDATE)
+                .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
-                .addAction(MasterActions.EDIT)
-                .addAction(MasterActions.VIEW)
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
                         + format("[[%s], ['flex']],", fmr)
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .done();
         return new EntityMaster<UserRole>(
