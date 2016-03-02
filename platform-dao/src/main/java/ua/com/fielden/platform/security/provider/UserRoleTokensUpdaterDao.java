@@ -55,13 +55,15 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
         final Set<SecurityRoleAssociation> addedAssociations = new LinkedHashSet<>();
         for (final String addedId : action.getAddedIds()) {
             final Class<? extends ISecurityToken> token = loadToken(availableTokens.get(addedId).getKey());
-            addedAssociations.add(factory.newPlainEntity(SecurityRoleAssociation.class, null).setSecurityToken(token).setRole(userRoleBeingUpdated));
+            final SecurityRoleAssociation assoc = factory.newByKey(SecurityRoleAssociation.class, token, userRoleBeingUpdated);
+            addedAssociations.add(assoc);
         }
 
         final Set<SecurityRoleAssociation> removedAssociations = new LinkedHashSet<>();
         for (final String removedId : action.getRemovedIds()) {
             final Class<? extends ISecurityToken> token = loadToken(availableTokens.get(removedId).getKey());
-            removedAssociations.add(factory.newPlainEntity(SecurityRoleAssociation.class, null).setSecurityToken(token).setRole(userRoleBeingUpdated));
+            final SecurityRoleAssociation assoc = factory.newByKey(SecurityRoleAssociation.class, token, userRoleBeingUpdated);
+            removedAssociations.add(assoc);
         }
         
         logger.error("addedAssociations == " + addedAssociations + " removedAssociations == " + removedAssociations);
