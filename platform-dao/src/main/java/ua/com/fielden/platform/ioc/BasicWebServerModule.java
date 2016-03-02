@@ -3,6 +3,9 @@ package ua.com.fielden.platform.ioc;
 import java.util.Map;
 import java.util.Properties;
 
+import com.google.inject.Scopes;
+import com.google.inject.name.Names;
+
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
@@ -29,18 +32,28 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.SecurityRoleAssociationBatchActionDao;
 import ua.com.fielden.platform.security.ServerAuthorisationModel;
+import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionDao;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
+import ua.com.fielden.platform.security.provider.SecurityTokenInfoDao;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.UserDao;
+import ua.com.fielden.platform.security.provider.UserRoleTokensUpdaterDao;
+import ua.com.fielden.platform.security.provider.UserRolesUpdaterDao;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
+import ua.com.fielden.platform.security.user.ISecurityTokenInfo;
 import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.IUserRoleTokensUpdater;
+import ua.com.fielden.platform.security.user.IUserRolesUpdater;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
@@ -62,9 +75,6 @@ import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigController
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityControllerDao;
 import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
-
-import com.google.inject.Scopes;
-import com.google.inject.name.Names;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -168,11 +178,19 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class).in(Scopes.SINGLETON);
 
         // user security related bindings
+        bind(IUser.class).to(UserDao.class);
+        bind(IUserEx.class).to(UserDao.class);
+        bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
+        
         bind(IUserRoleDao.class).to(UserRoleDao.class);
+        bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
+        bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
+
         bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
-        bind(IUserEx.class).to(UserDao.class);
-        bind(IUser.class).to(UserDao.class);
+        bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
+        bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
+
         bind(IUserSession.class).to(UserSessionDao.class);
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
         if (tokenProvider != null) {

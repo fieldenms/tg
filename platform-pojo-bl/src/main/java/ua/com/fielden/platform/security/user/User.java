@@ -71,6 +71,7 @@ public class User extends AbstractEntity<String> {
     private String password;
 
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
+    @Title(value = "Roles", desc = "The associated with this user roles.")
     private Set<UserAndRoleAssociation> roles = new HashSet<UserAndRoleAssociation>();
 
     @IsProperty

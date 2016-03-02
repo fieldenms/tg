@@ -41,17 +41,6 @@ public class UserAndRoleAssociation extends AbstractEntity<DynamicEntityKey> {
         super();
     }
 
-    /**
-     * Custom constructor
-     *
-     * @param user
-     * @param userRole
-     */
-    public UserAndRoleAssociation(final User user, final UserRole userRole) {
-        setUser(user);
-        setUserRole(userRole);
-    }
-
     public User getUser() {
         return user;
     }

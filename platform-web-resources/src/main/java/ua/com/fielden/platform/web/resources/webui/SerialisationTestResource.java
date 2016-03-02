@@ -151,14 +151,23 @@ public class SerialisationTestResource extends ServerResource {
                 if (!EntityUtils.equalsEx(e1.getVersion(), e2.getVersion())) {
                     return Result.failure(format("e1 [%s] version [%s] does not equal to e2 [%s] version [%s].", e1, e1.getVersion(), e2, e2.getVersion()));
                 }
+                
+                final boolean e1Instrumented = e1 == null ? false : PropertyTypeDeterminator.isInstrumented(e1.getClass());
+                final boolean e2Instrumented = e2 == null ? false : PropertyTypeDeterminator.isInstrumented(e2.getClass());
+                if (e1Instrumented != e2Instrumented) {
+                    return Result.failure(format("e1's [%s] instrumentation [%s] does not equal to e2's [%s] instrumentation [%s].", e1, e1Instrumented, e2, e2Instrumented));
+                }
+                
                 final List<CachedProperty> props = EntitySerialiser.createCachedProperties(e1.getType());
                 for (final CachedProperty prop : props) {
                     final String propName = prop.field().getName();
                     if (prop.getPropertyType() != null) {
                         // check property meta-info equality
-                        final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName));
-                        if (!metaPropEq.isSuccessful()) {
-                            return metaPropEq;
+                        if (e1Instrumented) {
+                            final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName));
+                            if (!metaPropEq.isSuccessful()) {
+                                return metaPropEq;
+                            }
                         }
                         // check property value equality
                         if (EntityUtils.isEntityType(prop.getPropertyType())) {

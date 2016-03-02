@@ -5,12 +5,15 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
@@ -84,5 +87,21 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
         final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class).where().prop("user.key").eq().val(username).and().prop("userRole.id").eq().prop("sra.role.id").model();
         final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).as("sra").where().prop("sra.securityToken").eq().val(token.getName()).and().exists(slaveModel).model();
         return count(model, Collections.<String, Object> emptyMap());
+    }
+    
+    @Override
+    @SessionRequired
+    public void removeAssociations(final Set<SecurityRoleAssociation> associations) {
+        if (associations.size() == 0) {
+            return;
+        }
+        String query = "delete from " + SecurityRoleAssociation.class.getName() + " where ";
+        final List<String> querySubstr = new ArrayList<>();
+        for (final SecurityRoleAssociation assoc : associations) {
+            querySubstr.add("(securityToken='" + assoc.getSecurityToken().getName() + "' and role.id=" + //
+                    assoc.getRole().getId() + ")");
+        }
+        query += StringUtils.join(querySubstr, " or ");
+        getSession().createQuery(query).executeUpdate();
     }
 }

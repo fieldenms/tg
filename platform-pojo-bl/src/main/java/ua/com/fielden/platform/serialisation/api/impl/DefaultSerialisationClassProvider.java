@@ -7,9 +7,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.user.UserRolesUpdater;
+import ua.com.fielden.platform.security.user.SecurityTokenInfo;
+import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
@@ -33,8 +39,6 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithString;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
-
-import com.google.inject.Inject;
 
 /**
  * Default implementation of {@link ISerialisationClassProvider}, which relies on the application settings to provide the location of classes to be used in serialisation.
@@ -185,6 +189,10 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.addAll(typesForSerialisationTesting());
         types.addAll(applicationDomain.entityTypes());
         types.add(UserAndRoleAssociationBatchAction.class);
+        types.add(SecurityRoleAssociationBatchAction.class);
+        types.add(UserRolesUpdater.class);
+        types.add(UserRoleTokensUpdater.class);
+        types.add(SecurityTokenInfo.class);
     }
 
     private List<Class<?>> typesForSerialisationTesting() {

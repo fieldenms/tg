@@ -644,11 +644,37 @@
         // }
 
         // TODO 1: rectify whether this implementation is good
-        // TODO 2: potentially, extend implementation to support composite types: arrays and objects?
+        // TODO 2: potentially, extend implementation to support composite types: objects?
         if (_isEntity(value1)) {
             return _entitiesEqualsEx(value1, value2);
+        } else if (Array.isArray(value1)) {
+            return _arraysEqualsEx(value1, value2);
         }
         return value1 === value2;
+    };
+    
+    /**
+     * Returns 'true' if arrays are equal, 'false' otherwise.
+     */
+    var _arraysEqualsEx = function (array1, array2) {
+        if (array1 === array2) {
+            return true;
+        }
+        if (!Array.isArray(array2)) {
+            return false;
+        }
+        
+        if (array1.length !== array2.length) {
+            return false;
+        }
+        
+        // now can compare items
+        for (var index = 0; index < array1.length; index++) {
+            if (!_equalsEx(array1[index], array2[index])) {
+                return false;
+            }
+        }
+        return true;
     };
     
     /**
@@ -954,7 +980,13 @@
                 return value;
             } else if (typeof value === "string") { // for string value -- return the same value for editors
                 return value;
-            } else if (value.constructor === Array) { // for Array value -- return the same value for tg-entity-search-criteria editor
+            } else if (Array.isArray(value)) { // for Array value -- return the same value for tg-entity-search-criteria editor
+                // Array items should be converted one-by-one (no entity-typed items should remain being entity-typed)
+                var convertedArray = [];
+                for (var index = 0; index < value.length; index++) {
+                    convertedArray.push(this.convert(value[index]));
+                }
+                return convertedArray;
                 return value;
             } else if ( typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 
                 return value;

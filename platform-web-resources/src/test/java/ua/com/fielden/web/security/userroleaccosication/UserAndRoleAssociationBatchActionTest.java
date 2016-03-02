@@ -17,6 +17,7 @@ import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionRao;
@@ -41,6 +42,7 @@ public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
     public void test_whether_user_and_role_batch_action_works() {
         final Map<Long, User> users = (Map<Long, User>) mapById(userControllerRao.findAllUsers());
         final Map<Long, UserRole> roles = (Map<Long, UserRole>) mapById(userRoleRao.findAll());
+        
 
         final Set<UserAndRoleAssociation> saveAssociations = new HashSet<>();
         final UserAndRoleAssociation userAndRoleAssociationToSave = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociation.class);

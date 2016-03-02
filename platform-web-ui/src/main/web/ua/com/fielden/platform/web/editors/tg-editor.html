@@ -43,6 +43,7 @@
         #input-container {
             @apply(--layout-flex);
         }
+        
         /* Styles for boolean property editors. */
         paper-checkbox {
             -moz-user-select: none;
@@ -179,6 +180,8 @@
                 <div id="input-container" style$="[[_calcDecoratorPartStyle(_disabled)]]">
                     <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
 
+                    <content select=".custom-input"></content>
+
                     <input id="input" is="iron-input" hidden$="[[!_isInteger(_editorKind)]]" type="number" step="1" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
 
                     <input id="input" is="iron-input" hidden$="[[!_isDecimal(_editorKind)]]" type="number" step="any" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled}}"/>
@@ -253,7 +256,7 @@
             currentState: String,
             _isBooleanChecked: Function
         },
-
+        
         _isDecimal: function (editorKind) {
             return 'DECIMAL' === editorKind;
         },
@@ -281,7 +284,11 @@
         _isColourEditor : function(editorKind) {
             return "COLOUR" === editorKind;
         },
-
+        
+        _isCollectional: function (editorKind) {
+            return "COLLECTIONAL" === editorKind;
+        },
+        
         /**
          * Calculates the style for container's label.
          */
