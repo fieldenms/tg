@@ -4,14 +4,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -25,13 +19,8 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.dao.PropertyMetadata;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> implements IRetrievalModel<T> {
     transient private final Logger logger = Logger.getLogger(this.getClass());
@@ -88,11 +77,15 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void populateProxies() {
         for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
-            if (ppi.isEntityOfPersistedType() && !containsProp(ppi.getName())) {
-                if (ppi.isCalculated()) {
-                    getProxiedPropsWithoutId().put(ppi.getName(), ppi.getJavaType());
-                } else if (!ppi.isSynthetic()) {
-                    getProxiedProps().add(ppi.getName());
+            if (!containsProp(ppi.getName())) {
+                if (ppi.isEntityOfPersistedType()) {
+                    if (ppi.isCalculated()) {
+                        getProxiedPropsWithoutId().put(ppi.getName(), ppi.getJavaType());
+                    } else if (!ppi.isSynthetic()) {
+                        getProxiedProps().add(ppi.getName());
+                    }
+                } else if (!ppi.getName().equals("key")){
+                    getProxiedPrimProps().add(ppi.getName());
                 }
             }
         }
@@ -196,7 +189,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void addEntityPropsModel(final String propName, final fetch<?> model) {
-        final fetch<?> existingFetch = (fetch<?>) getEntityProps().get(propName);
+        final fetch<?> existingFetch = getEntityProps().get(propName);
         getEntityProps().put(propName, existingFetch != null ? existingFetch.unionWith(model) : model);
     }
 

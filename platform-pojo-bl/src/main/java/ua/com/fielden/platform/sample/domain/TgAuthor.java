@@ -48,6 +48,19 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     private Money honorarium;
+    
+    @IsProperty
+    private TgPersonName pseudonym;
+
+    @Observable
+    public TgAuthor setPseudonym(final TgPersonName pseudonym) {
+        this.pseudonym = pseudonym;
+        return this;
+    }
+
+    public TgPersonName getPseudonym() {
+        return pseudonym;
+    }
  
     @Observable
     public TgAuthor setHonorarium(final Money honorarium) {
