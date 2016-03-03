@@ -16,6 +16,7 @@ import static ua.com.fielden.platform.dao.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC;
+import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC_COMPONENT_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.VIRTUAL_OVERRIDE;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -26,6 +27,10 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.Finder.hasLinkProperty;
+import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -67,8 +72,6 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Injector;
@@ -329,15 +332,15 @@ public class DomainMetadata {
 
         for (final Field field : getRealProperties(entityType)) {
             if (!result.containsKey(field.getName())) {
-                if (Collection.class.isAssignableFrom(field.getType()) && Finder.hasLinkProperty(entityType, field.getName())) {
+                if (Collection.class.isAssignableFrom(field.getType()) && hasLinkProperty(entityType, field.getName())) {
                     safeMapAdd(result, getCollectionalPropInfo(entityType, field));
-                } else if (AnnotationReflector.isAnnotationPresent(field, Calculated.class)) {
+                } else if (isAnnotationPresent(field, Calculated.class)) {
                     safeMapAdd(result, getCalculatedPropInfo(entityType, field));
-                } else if (AnnotationReflector.isAnnotationPresent(field, MapTo.class)) {
+                } else if (isAnnotationPresent(field, MapTo.class)) {
                     safeMapAdd(result, getCommonPropHibInfo(entityType, field));
-                } else if (Finder.isOne2One_association(entityType, field.getName())) {
+                } else if (isOne2One_association(entityType, field.getName())) {
                     safeMapAdd(result, getOneToOnePropInfo(entityType, field));
-                } else if (!AnnotationReflector.isAnnotationPresent(field, CritOnly.class)) {
+                } else if (!isAnnotationPresent(field, CritOnly.class)) {
                     safeMapAdd(result, getSyntheticPropInfo(entityType, field));
                 } else {
                     //System.out.println(" --------------------------------------------------------- " + entityType.getSimpleName() + ": " + field.getName());
@@ -445,7 +448,7 @@ public class DomainMetadata {
         final MapTo mapTo = getMapTo(entityType, propName);
         final Boolean compositeKeyMemberOptionalityInfo = getCompositeKeyMemberOptionalityInfo(entityType, propName);
         final boolean isCompositeKeyMember = compositeKeyMemberOptionalityInfo != null;
-        final boolean isRequired = AnnotationReflector.isAnnotationPresent(field, Required.class);
+        final boolean isRequired = isAnnotationPresent(field, Required.class);
         final PersistedType persistedType = getPersistedType(entityType, propName);
         final boolean nullable = !(isRequired || (isCompositeKeyMember && !compositeKeyMemberOptionalityInfo));
 
@@ -466,7 +469,7 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata getVirtualPropInfoForDynamicEntityKey(final Class<? extends AbstractEntity<DynamicEntityKey>> entityType) throws Exception {
-        final List<Field> keyMembers = Finder.getKeyMembers(entityType);
+        final List<Field> keyMembers = getKeyMembers(entityType);
         final List<Pair<Field, Boolean>> keyMembersWithOptionality = new ArrayList<>();
         for (final Field field : keyMembers) {
             keyMembersWithOptionality.add(new Pair<>(field, getCompositeKeyMemberOptionalityInfo(entityType, field.getName())));
@@ -496,7 +499,7 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata getCalculatedPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
-        final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(AnnotationReflector.getAnnotation(calculatedPropfield, Calculated.class).category());
+        final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(getAnnotation(calculatedPropfield, Calculated.class).category());
 
         final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
         final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
@@ -521,7 +524,7 @@ public class DomainMetadata {
         final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
         final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
         final Object hibernateType = getHibernateType(javaType, persistedType, false);
-        final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? COMPONENT_HEADER : SYNTHETIC;
+        final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? SYNTHETIC_COMPONENT_HEADER : SYNTHETIC;
         return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).hibType(hibernateType).type(propCat).build();
     }
 

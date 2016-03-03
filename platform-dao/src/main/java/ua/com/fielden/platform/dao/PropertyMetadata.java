@@ -7,6 +7,8 @@ import static ua.com.fielden.platform.dao.PropertyCategory.ENTITY_MEMBER_OF_COMP
 import static ua.com.fielden.platform.dao.PropertyCategory.ONE2ONE_ID;
 import static ua.com.fielden.platform.dao.PropertyCategory.PRIMITIVE_MEMBER_OF_COMPOSITE_KEY;
 import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC;
+import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC_COMPONENT_DETAILS;
+import static ua.com.fielden.platform.dao.PropertyCategory.SYNTHETIC_COMPONENT_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_DETAILS;
 import static ua.com.fielden.platform.dao.PropertyCategory.UNION_ENTITY_HEADER;
 import static ua.com.fielden.platform.dao.PropertyCategory.VIRTUAL_OVERRIDE;
@@ -17,6 +19,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.apache.log4j.Logger;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Hibernate;
@@ -42,6 +45,8 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     private final ExpressionModel expressionModel;
     private final boolean aggregatedExpression; // contains aggregation function on the root level (i.e. Totals in entity centre tree)
 
+    transient private final Logger logger = Logger.getLogger(this.getClass());
+    
     private PropertyMetadata(final Builder builder) {
         type = builder.type;
         name = builder.name;
@@ -136,7 +141,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
 
     public boolean isSynthetic() {
-        return type.equals(SYNTHETIC);
+        return type.equals(SYNTHETIC) || type.equals(SYNTHETIC_COMPONENT_HEADER) || type.equals(SYNTHETIC_COMPONENT_DETAILS);
     }
 
     public String getTypeString() {
@@ -149,24 +154,26 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public Set<PropertyMetadata> getCompositeTypeSubprops() {
         final Set<PropertyMetadata> result = new HashSet<PropertyMetadata>();
-        if (COMPONENT_HEADER.equals(type) || getHibTypeAsCompositeUserType() != null) {
+        if (COMPONENT_HEADER.equals(type) || SYNTHETIC_COMPONENT_HEADER.equals(type) || getHibTypeAsCompositeUserType() != null) {
+            logger.debug("=== (COMPONENT_HEADER.equals(type)) = " + COMPONENT_HEADER.equals(type) + "=== (SYNTHETIC_COMPONENT_HEADER.equals(type)) = " + SYNTHETIC_COMPONENT_HEADER.equals(type) + " ---- (getHibTypeAsCompositeUserType() != null) = " + (getHibTypeAsCompositeUserType() != null));
             final List<String> subprops = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyNames());
             final List<Object> subpropsTypes = Arrays.asList(((ICompositeUserTypeInstantiate) hibType).getPropertyTypes());
+            PropertyCategory detailsPropCategory = COMPONENT_HEADER.equals(type) ?  COMPONENT_DETAILS : SYNTHETIC_COMPONENT_DETAILS;
             if (subprops.size() == 1) {
                 final Object hibType = subpropsTypes.get(0);
                 if (expressionModel != null) {
-                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(getExpressionModel()).aggregatedExpression(aggregatedExpression).type(COMPONENT_DETAILS).hibType(hibType).build());
+                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).expression(getExpressionModel()).aggregatedExpression(aggregatedExpression).type(detailsPropCategory).hibType(hibType).build());
                 } else if (columns.size() == 0) {
-                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).aggregatedExpression(aggregatedExpression).type(COMPONENT_DETAILS).hibType(hibType).build());
+                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) hibType).getReturnedClass(), nullable).aggregatedExpression(aggregatedExpression).type(detailsPropCategory).hibType(hibType).build());
                 } else {
-                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) subpropsTypes.get(0)).getReturnedClass(), nullable).column(columns.get(0)).type(COMPONENT_DETAILS).hibType(subpropsTypes.get(0)).build());
+                    result.add(new PropertyMetadata.Builder(name + "." + subprops.get(0), ((Type) subpropsTypes.get(0)).getReturnedClass(), nullable).column(columns.get(0)).type(detailsPropCategory).hibType(subpropsTypes.get(0)).build());
                 }
             } else {
                 int index = 0;
                 for (final String subpropName : subprops) {
                     final PropertyColumn column = columns.get(index);
                     final Object hibType = subpropsTypes.get(index);
-                    result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(COMPONENT_DETAILS).hibType(hibType).build());
+                    result.add(new PropertyMetadata.Builder(name + "." + subpropName, ((Type) hibType).getReturnedClass(), nullable).column(column).type(detailsPropCategory).hibType(hibType).build());
                     index = index + 1;
                 }
             }

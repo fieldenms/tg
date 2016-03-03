@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -24,7 +25,8 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
  *
  */
 public class HibernateMappingsGenerator {
-
+    transient private final Logger logger = Logger.getLogger(this.getClass());
+    
     public String generateMappings(final DomainMetadata domainMetadata) {
         final Collection<PersistedEntityMetadata> entityMetadatas = domainMetadata.getPersistedEntityMetadatas();
         final StringBuffer sb = new StringBuffer();
@@ -46,7 +48,7 @@ public class HibernateMappingsGenerator {
         sb.append("</hibernate-mapping>");
 
         final String result = sb.toString();
-        // System.out.println(result);
+        logger.debug("\n\n" + result + "\n\n");
         return result;
     }
 
