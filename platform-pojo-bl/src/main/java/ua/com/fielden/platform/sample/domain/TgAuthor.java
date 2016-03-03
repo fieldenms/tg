@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.types.Money;
 
 @KeyTitle("Author")
 @KeyType(DynamicEntityKey.class)
@@ -44,6 +45,19 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     @Optional
     @CompositeKeyMember(3)
     private String patronymic;
+
+    @IsProperty
+    private Money honorarium;
+ 
+    @Observable
+    public TgAuthor setHonorarium(final Money honorarium) {
+        this.honorarium = honorarium;
+        return this;
+    }
+
+    public Money getHonorarium() {
+        return honorarium;
+    }
 
     @Observable
     public TgAuthor setPatronymic(final String patronymic) {

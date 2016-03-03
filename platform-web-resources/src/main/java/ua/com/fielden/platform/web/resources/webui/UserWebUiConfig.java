@@ -45,34 +45,31 @@ public class UserWebUiConfig {
      * @return
      */
     private static EntityCentre<User> createCentre(final Injector injector) {
+        final String critLayout = "['vertical', 'center-justified', "
+                + "['flex'], "
+                + "['flex'], "
+                + "['flex']"
+                + "]";
+        
         final EntityCentre<User> userCentre = new EntityCentre<>(MiUser.class, "Users",
                 EntityCentreBuilder.centreFor(User.class)
                 .runAutomatically()
                 .addCrit("this").asMulti().autocompleter(User.class).also()
                 .addCrit("base").asMulti().bool().also()
                 .addCrit("basedOnUser").asMulti().autocompleter(User.class)
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex'], ['flex']]]")
-
-                .addProp("this").also()
-                .addProp("base").also()
-                .addProp("basedOnUser")
-                .addPrimaryAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
-                .also()
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), critLayout)
+                .addProp("this").width(200).also()
+                .addProp("basedOnUser").width(200).also()
+                .addProp("base").minWidth(80)
+                .addPrimaryAction(EntityActionConfig.createMasterInDialogInvocationActionConfig()).also()
                 .addSecondaryAction(
                     action(UserRolesUpdater.class)
                     .withContext(context().withCurrentEntity().build())
                     .icon("add-circle")
-                    .shortDesc("Add / Remove roles")
-                    .longDesc("Add / Remove roles for this user")
-                                        //.prefDimForView(mkDim(600, 750))
+                    .shortDesc("Add/Remove roles")
+                    .longDesc("Add/Remove roles for this user")
                     .build())
-                .build(), injector, (centre) -> {
-                    // ... please implement some additional hooks if necessary -- for e.g. centre.getFirstTick().setWidth(...), add calculated properties through domain tree API, etc.
-                    centre.getSecondTick().setWidth(User.class, "", 60);
-                    centre.getSecondTick().setWidth(User.class, "base", 60);
-                    centre.getSecondTick().setWidth(User.class, "basedOnUser", 60);
-                    return centre;
-                });
+                .build(), injector, null);
         return userCentre;
     }
 
@@ -83,8 +80,15 @@ public class UserWebUiConfig {
      */
     private static EntityMaster<User> createMaster(final Injector injector) {
         final String fmr = "'flex', 'margin-right: 20px'";
-        final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
-
+        final String fmrLast = "'flex'";
+        final String actionButton = "'margin: 10px', 'width: 110px'";
+        
+        final String layout = "['padding:20px', "
+        + format("[[%s], [%s], [%s]], ", fmr, fmr, fmrLast)
+               + "[['flex']],"
+        + format(" ['horizontal', 'margin-top: 20px', 'justify-content: center', [%s], [%s]]", actionButton, actionButton)
+        + "    ]";
+        
         final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
                 .forEntity(User.class)
                 .addProp("key").asSinglelineText()
@@ -104,12 +108,7 @@ public class UserWebUiConfig {
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
-
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', "
-                        + format("[[%s], [%s], [%s], ['flex']],", fmr, fmr, fmr)
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
-                        + "    ]"))
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .done();
         return new EntityMaster<User>(
                 User.class,

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl;
 
 import java.util.Map;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
@@ -40,6 +41,8 @@ public class CollectionalEditorWidget extends AbstractWidget {
      */
 
     private int maxVisibleRows = 3;
+    private String headerPropertyName = AbstractEntity.KEY;
+    private String descriptionPropertyName = AbstractEntity.DESC;
 
     public CollectionalEditorWidget(final Pair<String, String> titleAndDesc, final String propertyName) {
         super("editors/tg-collectional-editor", titleAndDesc, propertyName);
@@ -48,11 +51,21 @@ public class CollectionalEditorWidget extends AbstractWidget {
     public void setMaxVisibleRows(final int maxVisibleRows) {
         this.maxVisibleRows = maxVisibleRows;
     }
+    
+    public void setHeaderPropertyName(final String headerPropertyName) {
+        this.headerPropertyName = headerPropertyName;
+    }
+    
+    public void setDescriptionPropertyName(final String descriptionPropertyName) {
+        this.descriptionPropertyName = descriptionPropertyName;
+    }
 
     @Override
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> customAttr = super.createCustomAttributes();
         customAttr.put("max-visible-items", maxVisibleRows);
+        customAttr.put("header-property-name", headerPropertyName);
+        customAttr.put("description-property-name", descriptionPropertyName);
         return customAttr;
     }
 }

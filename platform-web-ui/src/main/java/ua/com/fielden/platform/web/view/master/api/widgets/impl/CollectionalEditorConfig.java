@@ -5,6 +5,7 @@ import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.ICollectionalEditorConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.collectional.ICollectionalEditorConfig0;
 import ua.com.fielden.platform.web.view.master.api.widgets.collectional.ICollectionalEditorConfig1;
+import ua.com.fielden.platform.web.view.master.api.widgets.collectional.ICollectionalEditorConfig2;
 import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.CollectionalEditorWidget;
 
 public class CollectionalEditorConfig<T extends AbstractEntity<?>>
@@ -24,6 +25,18 @@ public class CollectionalEditorConfig<T extends AbstractEntity<?>>
     @Override
     public ICollectionalEditorConfig1<T> maxVisibleRows(final int maxVisibleRows) {
         widget().setMaxVisibleRows(maxVisibleRows);
+        return this;
+    }
+    
+    @Override
+    public ICollectionalEditorConfig2<T> withHeader(final String headerPropertyName) {
+        widget().setHeaderPropertyName(headerPropertyName);
+        return this;
+    }
+    
+    @Override
+    public ICollectionalEditorConfig2<T> withDescription(final String descriptionPropertyName) {
+        widget().setDescriptionPropertyName(descriptionPropertyName);
         return this;
     }
 }

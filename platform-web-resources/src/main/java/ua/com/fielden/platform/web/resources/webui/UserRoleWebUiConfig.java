@@ -113,7 +113,7 @@ public class UserRoleWebUiConfig {
         final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
         final IMaster<UserRoleTokensUpdater> masterConfig = new SimpleMasterBuilder<UserRoleTokensUpdater>()
                 .forEntity(UserRoleTokensUpdater.class)
-                .addProp("tokens").asCollectionalEditor().maxVisibleRows(5)
+                .addProp("tokens").asCollectionalEditor().maxVisibleRows(5).withHeader("title")
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)

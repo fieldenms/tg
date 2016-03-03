@@ -20,6 +20,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.Map.Entry;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.dao.PropertyMetadata;
@@ -32,7 +34,8 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> implements IRetrievalModel<T> {
-
+    transient private final Logger logger = Logger.getLogger(this.getClass());
+    
     public EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         super(originalFetch, domainMetadataAnalyser);
 
@@ -115,7 +118,8 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void includeAllFirstLevelPrimPropsAndKey() {
         for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
-            if (!ppi.isCalculated()) {
+            if (!ppi.isCalculated()/* && !ppi.isSynthetic()*/) {
+                logger.debug("adding not calculated prop to fetch model: " + ppi.getName());
                 final boolean skipEntities = !(ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) ||
                         ppi.getType().equals(PropertyCategory.ENTITY_AS_KEY) ||
                         ppi.getType().equals(PropertyCategory.UNION_ENTITY_DETAILS) ||
