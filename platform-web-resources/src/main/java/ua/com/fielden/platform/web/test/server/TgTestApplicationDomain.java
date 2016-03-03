@@ -7,6 +7,8 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
@@ -55,6 +57,8 @@ public class TgTestApplicationDomain implements IApplicationDomainProvider {
         add(TgSRStatusActivationFunctionalEntity.class);
         add(TgPersistentStatus.class);
         add(TgFetchProviderTestEntity.class);
+        add(TgCollectionalSerialisationParent.class);
+        add(TgCollectionalSerialisationChild.class);
         add(TgCentreInvokerWithCentreContext.class);
         add(TgEntityForColourMaster.class);
         add(TgCreatePersistentStatusAction.class);
