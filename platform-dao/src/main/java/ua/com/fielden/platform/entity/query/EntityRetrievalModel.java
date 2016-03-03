@@ -77,14 +77,19 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void populateProxies() {
         for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
-            if (!containsProp(ppi.getName())) {
+            // FIXME the following condition needs to be revisited as part of EQL 3 implementation
+            if (!ID.equals(ppi.getName()) && 
+                !KEY.equals(ppi.getName()) && 
+                !ppi.getName().endsWith(".amount") && 
+                !containsProp(ppi.getName())) {
+                
                 if (ppi.isEntityOfPersistedType()) {
                     if (ppi.isCalculated()) {
                         getProxiedPropsWithoutId().put(ppi.getName(), ppi.getJavaType());
                     } else if (!ppi.isSynthetic()) {
                         getProxiedProps().add(ppi.getName());
                     }
-                } else if (!ppi.getName().equals("key")){
+                } else if (!KEY.equals(ppi.getName())){
                     getProxiedPrimProps().add(ppi.getName());
                 }
             }
