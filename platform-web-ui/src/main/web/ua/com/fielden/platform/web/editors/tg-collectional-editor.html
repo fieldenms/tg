@@ -6,6 +6,7 @@
 <link rel="import" href="/resources/editors/tg-editor.html">
 <link rel="import" href="/resources/polymer/iron-list/iron-list.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
+<link rel="import" href="/resources/editors/tg-dom-stamper.html">
 
 <dom-module id="tg-collectional-editor">
     <style>
@@ -58,10 +59,6 @@
             width: 24px;
             height: 24px;
         }
-        
-        span.key-value-highlighted {
-            background-color: #ffff46;
-        }
         .truncate {
             white-space: nowrap;
             overflow: hidden;
@@ -91,9 +88,9 @@
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]">
                         <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
-                        <div id$="[[_makeId(index)]]" class="pad" tooltip-text$="[[_calcItemTooltip(item)]]">
-                          <div class="primary truncate">[[item.key]]</div>
-                          <div class="secondary dim truncate">[[item.desc]]</div>
+                        <div class="pad" tooltip-text$="[[_calcItemTooltip(item)]]">
+                          <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                          <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
                         </div>
                       </div>
                       <div class="border"></div>
@@ -115,6 +112,22 @@
              */
             maxVisibleItems: {
                 type: Number
+            },
+            
+            /**
+             * The name of the property to be shown in item header.
+             */
+            headerPropertyName: {
+                type: String,
+                value: 'title' // 'key'
+            },
+            
+            /**
+             * The name of the property to be shown in item description.
+             */
+            descriptionPropertyName: {
+                type: String,
+                value: 'desc'
             },
             
             /**
@@ -146,6 +159,10 @@
             },
             
             _phraseForSearching: {
+                type: String
+            },
+            
+            _phraseForSearchingCommited: {
                 type: String
             },
             _asyncSearchHandle: {
@@ -180,10 +197,26 @@
             }).bind(this);
         },
         
-        _calcItemTooltip: function(item) {
-            var tooltip = item.key ? "<b>" + item.key + "</b>" : "";
-            tooltip += item.desc ? (tooltip ? "<br>" + item.desc : item.desc) : "";
+        _calcItemTooltip: function (item) {
+            var header = this._calcItemText(item, this.headerPropertyName);
+            var desc = this._calcItemText(item, this.descriptionPropertyName);
+            var tooltip = header ? "<b>" + header + "</b>" : "";
+            tooltip += desc ? (tooltip ? "<br>" + desc : desc) : "";
             return tooltip;
+        },
+        
+        /**
+         * Returns the text representation of the item to be shown in header or description.
+         */
+        _calcItemText: function (item, propName) {
+            return item.get(propName);
+        },
+        
+        /**
+         * Returns the text representation of the item to be shown in header or description.
+         */
+        _calcItemTextHighlighted: function (item, propName, searchPhrase) {
+            return this._highlightedValue(this._calcItemText(item, propName), searchPhrase);
         },
         
         /**
@@ -209,6 +242,9 @@
                 this.$.input.selectItem(selEntities[index]);
             }
             this._disableSelectionListeners = false;
+            
+            this.scrollToFirstFoundElement();
+            
             return 'IRRELEVANT';
         },
         
@@ -269,66 +305,41 @@
         searchForPhrase: function (entities, phrase) {
             for (var entityIndex = 0; entityIndex < entities.length; entityIndex++) {
                 var currentEntity = entities[entityIndex];
-                var positionInKey = (currentEntity.get('key').toLowerCase()).search(phrase.toLowerCase());
-                var positionInDesc = (currentEntity.get('desc').toLowerCase()).search(phrase.toLowerCase());
-                if (positionInKey >= 0 || positionInDesc >= 0){
+                var positionInHeader = (this._calcItemText(currentEntity, this.headerPropertyName).toLowerCase()).search(phrase.toLowerCase());
+                var positionInDesc = (this._calcItemText(currentEntity, this.descriptionPropertyName).toLowerCase()).search(phrase.toLowerCase());
+                if (positionInHeader >= 0 || positionInDesc >= 0){
 					return entityIndex; 
 				}
             }
         },
         
         scrollToFirstFoundElement: function () {
-            var indexOfFirstElementWithPhrase = this.searchForPhrase(this._entities, this._phraseForSearching); 
+            this._phraseForSearchingCommited = this._phraseForSearching;
+            var indexOfFirstElementWithPhrase = this.searchForPhrase(this._entities, this._phraseForSearchingCommited); 
             this.$.input.scrollToIndex(indexOfFirstElementWithPhrase);
-            this.highlightMatchedParts();
         },
-        
-        highlightMatchedParts: function () {
-            this.highlightMatchedPartsKeyOrDesc('key', 0);
-            this.highlightMatchedPartsKeyOrDesc('desc', 1);
-		},
-		
-		highlightMatchedPartsKeyOrDesc: function (keyOrDesc, indexOfChild) {
-			for (var index = 0; index < this._entities.length; index++) {
-				var html = '';
-				var v = this._entities[index];
-				
-				// add key and desc value with highlighting of matching parts
-				if (keyOrDesc === 'key') {
-					html = html + this._addHighlightedProp(v.key);
-				} else{
-				    html = html + this._addHighlightedProp(v.desc);
-				}
-				
-				// put the composed for the current item HTML into the content of paper-item
-				var id = this._makeId(index);
-				var paperItem = Polymer.dom(this.root).querySelector("#" + id);
-				(Polymer.dom(paperItem.children[indexOfChild])).innerHTML = html;
-			}
-			Polymer.dom.flush();
-		},
         
         _calcListHeight: function (maxVisibleItems) {
             var rowCount = maxVisibleItems > 0 ? maxVisibleItems : 1; 
             return "max-height:calc(" + rowCount + " * (2.8rem + 33px))";
         },
 		
-		_addHighlightedProp : function(v) {
+		_highlightedValue : function (propertyValue, phraseForSearchingCommited) {
 			var html = '';
-			var matchedParts = this._matchedParts(v, this._phraseForSearching);
+			var matchedParts = this._matchedParts(propertyValue, phraseForSearchingCommited);
 			for (var index = 0; index < matchedParts.length; index++) {
 				var part = matchedParts[index];
 				if (part.matched) {
 					// addition style-scope and this.is (element name) styles is required to enformse custom style processing
 					html = html
-							+ '<span class="key-value-highlighted">'
+							+ '<span style="background-color: #ffff46;">'
 							+ part.part + '</span>';
 				} else {
 					html = html + part.part;
 				}
 			}
-			if (this._phraseForSearching === ''){
-			    html = v;
+			if (phraseForSearchingCommited === '') {
+			    html = propertyValue;
 			}
 			return html;
 		},
