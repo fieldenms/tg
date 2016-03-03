@@ -129,6 +129,6 @@ public class UserDao extends CommonEntityDao<User> implements IUserEx {
     public IFetchProvider<User> createFetchProvider() {
         return super.createFetchProvider()
                 .with("key") // this property is "required" (necessary during saving) -- should be declared as fetching property
-                .with("base", "basedOnUser", "roles"); //
+                .with("base", "basedOnUser.base", "roles"); //
     }
 }
