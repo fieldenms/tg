@@ -50,6 +50,8 @@ public class FetchModelTest extends BaseEntQueryTCase {
         assertTrue(fetchModelForAuthor.containsProp("surname"));
         assertTrue(fetchModelForAuthor.containsProp("id"));
         assertTrue(fetchModelForAuthor.containsProp("version"));
+        //assertFalse(fetchModelForAuthor.containsProp("honorarium"));
+        //assertFalse(fetchModelForAuthor.containsProp("honorarium.amount"));
         assertNotNull(fetchModelForAuthor.getFetchModels().get("name"));
     }
 

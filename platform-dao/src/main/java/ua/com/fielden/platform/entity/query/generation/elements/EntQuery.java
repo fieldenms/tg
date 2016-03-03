@@ -160,7 +160,7 @@ public class EntQuery implements ISingleOperand {
                     //|| (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
                     ;
                     if (!skipProperty) {
-                        logger.debug(" add yield: " + ppi.getName());
+                        logger.debug(" add yield: " + ppi);
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                     }
                 }
