@@ -94,12 +94,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
      * @return
      */
     private Object value(final int memberIndex) {
-        final String propertyName = memberNames.get(memberIndex);
-        if (Reflector.isPropertyProxied(entity, propertyName)) {
-            return null;
-        }
-
-        return entity.get(propertyName);
+        return entity.get(memberNames.get(memberIndex));
     }
 
     /**

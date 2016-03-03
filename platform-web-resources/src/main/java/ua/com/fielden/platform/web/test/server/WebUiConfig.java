@@ -37,6 +37,7 @@ import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.MiDetailsCentre;
+import ua.com.fielden.platform.sample.domain.MiTgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.MiTgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
@@ -48,6 +49,9 @@ import ua.com.fielden.platform.sample.domain.MiUser;
 import ua.com.fielden.platform.sample.domain.MiUserRole;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusActionProducer;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
@@ -78,8 +82,8 @@ import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityP
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
+import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -162,6 +166,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         // .addProp("additionalProp")
                         .build(), injector(), null);
          configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
+         
+         final EntityCentre<TgCollectionalSerialisationParent> collectionalSerialisationTestCentre = new EntityCentre<>(MiTgCollectionalSerialisationParent.class, "TgCollectionalSerialisationParent",
+                 EntityCentreBuilder.centreFor(TgCollectionalSerialisationParent.class)
+                         .addCrit("desc").asMulti().text()
+                         .setLayoutFor(Device.DESKTOP, Optional.empty(), "[[]]")
+
+                         .addProp("desc")
+                         .addPrimaryAction(action(EntityEditAction.class).
+                                 withContext(context().withCurrentEntity().withSelectionCrit().build()).
+                                 icon("editor:mode-edit").
+                                 shortDesc("Edit entity").
+                                 longDesc("Opens master for editing this entity").
+                                 build())
+                         .build(), injector(), null);
+          configApp().addCentre(MiTgCollectionalSerialisationParent.class, collectionalSerialisationTestCentre);
 
         final EntityCentre<TgPersistentEntityWithProperties> detailsCentre = createEntityCentre(MiDetailsCentre.class, "Details Centre", createEntityCentreConfig(false, true, true));
         final EntityCentre<TgEntityWithPropertyDependency> propDependencyCentre = new EntityCentre<>(MiTgEntityWithPropertyDependency.class, "Property Dependency Example",
@@ -503,6 +522,30 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                     + "    ]"))
             .done();
+        
+        final IMaster<TgCollectionalSerialisationParent> masterConfigForCollSerialisationTest = new SimpleMasterBuilder<TgCollectionalSerialisationParent>()
+                .forEntity(TgCollectionalSerialisationParent.class)
+                .addProp("key").asSinglelineText()
+                .also()
+                .addProp("desc").asSinglelineText()
+                .also()
+                .addProp("collProp").asCollectionalRepresentor()
+                .also()
+                .addAction(MasterActions.REFRESH)
+                //      */.icon("trending-up") SHORT-CUT
+                /*      */.shortDesc("CANCEL")
+                /*      */.longDesc("Cancel action")
+                .addAction(MasterActions.VALIDATE)
+                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.EDIT)
+                .addAction(MasterActions.VIEW)
+
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
+                        "      ['padding:20px', "
+                        + format("[[%s], [%s], ['flex']],", fmr, fmr)
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + "    ]"))
+                .done();
 
         final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>()
                 .forEntity(TgFunctionalEntityWithCentreContext.class) // forEntityWithSaveOnActivate
@@ -558,6 +601,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgEntityWithPropertyDependency.class,
                     TgEntityWithPropertyDependencyProducer.class,
                     masterConfigForPropDependencyExample,
+                    injector())).
+            addMaster(TgCollectionalSerialisationParent.class, new EntityMaster<TgCollectionalSerialisationParent>(
+                    TgCollectionalSerialisationParent.class,
+                    TgCollectionalSerialisationParentProducer.class,
+                    masterConfigForCollSerialisationTest,
                     injector())).
             addMaster(User.class, userWebUiConfig.master).
             addMaster(UserRolesUpdater.class, userWebUiConfig.rolesUpdater).
@@ -665,6 +713,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*  */.addMenuItem("Entity Centre 2").description("Entity centre description").centre(entityCentre2).done()
                 /*  */.addMenuItem("Entity Centre 3").description("Entity centre description").centre(entityCentre3).done()
                 /*  */.addMenuItem("Entity Centre 4").description("Entity centre description").centre(entityCentre4).done()
+                /*  */.addMenuItem("Collectional Serialisation Test").description("Collectional Serialisation Test description").centre(collectionalSerialisationTestCentre).done()
                 /*  */.addMenuItem("Third view").description("Third view description").view(null).done().done()
                 /*.menu()
                     .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()*/
