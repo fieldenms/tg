@@ -84,6 +84,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 !KEY.equals(name) && 
                 !ppi.isCollection() &&
                 !name.endsWith(".amount") &&
+                !ppi.isSynthetic() &&
                 !containsProp(name)) {
                 
                 if (ppi.isEntityOfPersistedType()) {
