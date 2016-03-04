@@ -379,7 +379,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     public boolean isDirty() {
-        throw new StrictProxyException(format("Invalid call [isDirty] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+        return false;
     }
 
     public MetaProperty<T> setDirty(final boolean dirty) {
