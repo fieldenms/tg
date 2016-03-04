@@ -90,7 +90,12 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             // serialise version -- should never be null
             generator.writeFieldName(AbstractEntity.VERSION);
-            generator.writeObject(entity.getVersion());
+            if (Reflector.isPropertyProxied(entity, AbstractEntity.VERSION)) {
+                generator.writeObject(Long.valueOf(0L));
+            } else {
+                generator.writeObject(entity.getVersion());
+            }
+            
 
             // serialise all the properties relying on the fact that property sequence is consistent with order of fields in the class declaration
             for (final CachedProperty prop : properties) {
