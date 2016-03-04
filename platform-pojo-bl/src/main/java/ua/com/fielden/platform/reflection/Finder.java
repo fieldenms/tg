@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -349,15 +350,17 @@ public class Finder {
      * @return
      */
     private final static List<Field> loadKeyMembers(final Class<?> type) {
-        final SortedMap<Integer, Field> properties = new TreeMap<Integer, Field>(); // the use of SortedMap ensures the correct order of properties to be used the composite key
+        // the use of SortedMap ensures the correct order of properties to be used for composite key
+        final SortedMap<Integer, Field> properties = new TreeMap<Integer, Field>();
         final List<Field> compositeKeyFields = findRealProperties(type, CompositeKeyMember.class);
 
         for (final Field field : compositeKeyFields) {
             final CompositeKeyMember annotation = AnnotationReflector.getAnnotation(field, CompositeKeyMember.class);
             final int order = annotation.value();
             if (properties.containsKey(order)) {
-                throw new IllegalArgumentException("Annotation " + CompositeKeyMember.class.getName() + " in class " + type.getName() + " for property '" + field.getName()
-                        + "' has a duplicate order value of " + order + ", which is already present in property '" + properties.get(order) + "'.");
+                throw new ReflectionException(
+                        format("Annotation [%s] in class [%s] for property [%s] has a duplicate order value of [%s], which is already present in property [%s].",
+                        CompositeKeyMember.class.getName(), type.getName(), field.getName(), order, properties.get(order)));
             }
             properties.put(order, field);
         }
