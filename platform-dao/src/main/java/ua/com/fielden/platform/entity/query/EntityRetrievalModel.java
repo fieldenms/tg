@@ -21,6 +21,7 @@ import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.reflection.Reflector;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> implements IRetrievalModel<T> {
     transient private final Logger logger = Logger.getLogger(this.getClass());
@@ -78,19 +79,20 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private void populateProxies() {
         for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
-            if (!ID.equals(ppi.getName()) && 
-                !KEY.equals(ppi.getName()) && 
-                !ppi.getName().endsWith(".amount") && 
-                !containsProp(ppi.getName())) {
+            final String name = ppi.getName();
+            if (!ID.equals(name) && 
+                !KEY.equals(name) && 
+                !name.endsWith(".amount") &&
+                !containsProp(name)) {
                 
                 if (ppi.isEntityOfPersistedType()) {
                     if (ppi.isCalculated()) {
-                        getProxiedPropsWithoutId().put(ppi.getName(), ppi.getJavaType());
+                        getProxiedPropsWithoutId().put(name, ppi.getJavaType());
                     } else if (!ppi.isSynthetic()) {
-                        getProxiedProps().add(ppi.getName());
+                        getProxiedProps().add(name);
                     }
-                } else if (!KEY.equals(ppi.getName())){
-                    getProxiedPrimProps().add(ppi.getName());
+                } else {
+                    getProxiedPrimProps().add(name);
                 }
             }
         }
