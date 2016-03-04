@@ -82,6 +82,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             final String name = ppi.getName();
             if (!ID.equals(name) && 
                 !KEY.equals(name) && 
+                !ppi.isCollection() &&
                 !name.endsWith(".amount") &&
                 !containsProp(name)) {
                 
