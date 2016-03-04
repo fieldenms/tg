@@ -143,12 +143,13 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @Deprecated
     public IValueMatcher<?> getValueMatcher(final String propertyName) {
-        if (valueMatchers.get(propertyName) == null) {
-            valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher(getType(), propertyName));
-        }
-        return valueMatchers.get(propertyName);
+        throw new UnsupportedOperationException("This is an old Swing related code, which should not be called.");
+//        if (valueMatchers.get(propertyName) == null) {
+//            valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher(getType(), propertyName));
+//        }
+//        return valueMatchers.get(propertyName);
     }
 
     /**

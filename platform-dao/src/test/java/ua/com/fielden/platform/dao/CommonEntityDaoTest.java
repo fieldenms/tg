@@ -1,8 +1,20 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+
+
+
+
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -14,6 +26,9 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -186,7 +201,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     }
 
     public void test_entity_is_dirty_support() {
-        EntityWithMoney entity = dao.findByKey("key1");
+        EntityWithMoney entity = dao.findByKeyAndFetch(fetchAllInclCalc(EntityWithMoney.class), "key1");
         assertFalse("Entity should not be dirty after retrieval", entity.isDirty());
         entity.setCalculatedProperty(new BigDecimal("0.00"));
         entity.setCalculatedProperty(new BigDecimal("1.00"));

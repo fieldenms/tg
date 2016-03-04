@@ -29,7 +29,7 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 
 public class FetchModelTest extends BaseEntQueryTCase {
 
-    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(fetch<T> fetchModel) {
+    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
         return EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<T>(fetchModel, DOMAIN_METADATA_ANALYSER) : //
             new EntityRetrievalModel<T>(fetchModel, DOMAIN_METADATA_ANALYSER);
     }
@@ -52,6 +52,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
         assertTrue(fetchModelForAuthor.containsProp("version"));
         //assertFalse(fetchModelForAuthor.containsProp("honorarium"));
         //assertFalse(fetchModelForAuthor.containsProp("honorarium.amount"));
+        assertFalse(fetchModelForAuthor.containsProp("pseudonym"));
         assertNotNull(fetchModelForAuthor.getFetchModels().get("name"));
     }
 
@@ -257,11 +258,12 @@ public class FetchModelTest extends BaseEntQueryTCase {
 
     @Test
     public void all_fetching_works() {
-        final fetch<TgVehicle> fetch = fetchAll(TgVehicle.class);
+        final fetch<TgVehicle> fetch = fetchAll(TgVehicle.class).without("desc");
         final IRetrievalModel<TgVehicle> fetchModel = produceRetrievalModel(fetch);
         assertFalse(fetchModel.containsProp("lastFuelUsage"));
         assertFalse(fetchModel.containsProp("constValueProp"));
         assertTrue(fetchModel.containsProxy("lastFuelUsage"));
+        assertTrue(fetchModel.containsProxy("desc"));
     }
 
     @Test

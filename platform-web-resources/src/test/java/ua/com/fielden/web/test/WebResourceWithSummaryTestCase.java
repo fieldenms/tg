@@ -12,9 +12,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
+
+import com.google.inject.Injector;
+import com.google.inject.Module;
 
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
@@ -36,15 +40,13 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntity;
 
-import com.google.inject.Injector;
-import com.google.inject.Module;
-
 /**
  * Provides a unit test to ensure correct interaction with IPage summary model.
  *
  * @author TG Team
  *
  */
+@Deprecated
 public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
 
     private final IGeneratedEntityController rao = new GeneratedEntityRao(config.restClientUtil());
@@ -80,32 +82,33 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     @Override
     public void setUp() {
         super.setUp();
-
-        dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
-        dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "", "SUM(intProperty)", "intProperty Sum", "desc", NO_ATTR, "intProperty");
-        dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "", "MAX(intProperty) - MIN(intProperty)", "minimaxDiff", "desc", NO_ATTR, "intProperty");
-        dtm.getEnhancer().apply();
-        final List<ByteArray> byteListOfTypes = dtm.getEnhancer().getManagedTypeArrays(InspectedEntity.class);
-        binaryTypes = toByteArray(byteListOfTypes);
-        type = (Class<? extends AbstractEntity<?>>) dtm.getEnhancer().getManagedType(InspectedEntity.class);
-        rao.setEntityType(type);
-
-        final EntityResultQueryModel model = select(type).//
-        yield().prop("id").as("id").//
-        yield().prop("version").as("version").//
-        yield().prop("key").as("key").//
-        yield().prop("desc").as("desc").//
-        yield().prop("intProperty").as("intProperty").//
-        yield().prop("decimalProperty").as("decimalProperty").//
-        modelAsEntity(type);
-        final EntityResultQueryModel summaryModel = select(type).where().prop("intProperty").lt().val(30).//
-        yield().prop("intPropertySum").as("intPropertySum").//
-        yield().prop("minimaxDiff").as("minimaxDiff").//
-        modelAsEntity(type);
-        page = rao.firstPage(from(model).with(fetchAll(type)).model(), from(summaryModel).with(fetchAll(type).with("intPropertySum").with("minimaxDiff")).model(), 15, binaryTypes);
+//
+//        dtm = new DomainTreeManagerAndEnhancer1(serialiser, rootTypes);
+//        dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "", "SUM(intProperty)", "intProperty Sum", "desc", NO_ATTR, "intProperty");
+//        dtm.getEnhancer().addCalculatedProperty(InspectedEntity.class, "", "MAX(intProperty) - MIN(intProperty)", "minimaxDiff", "desc", NO_ATTR, "intProperty");
+//        dtm.getEnhancer().apply();
+//        final List<ByteArray> byteListOfTypes = dtm.getEnhancer().getManagedTypeArrays(InspectedEntity.class);
+//        binaryTypes = toByteArray(byteListOfTypes);
+//        type = (Class<? extends AbstractEntity<?>>) dtm.getEnhancer().getManagedType(InspectedEntity.class);
+//        rao.setEntityType(type);
+//
+//        final EntityResultQueryModel model = select(type).//
+//        yield().prop("id").as("id").//
+//        yield().prop("version").as("version").//
+//        yield().prop("key").as("key").//
+//        yield().prop("desc").as("desc").//
+//        yield().prop("intProperty").as("intProperty").//
+//        yield().prop("decimalProperty").as("decimalProperty").//
+//        modelAsEntity(type);
+//        final EntityResultQueryModel summaryModel = select(type).where().prop("intProperty").lt().val(30).//
+//        yield().prop("intPropertySum").as("intPropertySum").//
+//        yield().prop("minimaxDiff").as("minimaxDiff").//
+//        modelAsEntity(type);
+//        page = rao.firstPage(from(model).with(fetchAll(type)).model(), from(summaryModel).with(fetchAll(type).without("intPropertySum").without("minimaxDiff")).model(), 15, binaryTypes);
     }
 
     @Test
+    @Ignore
     public void test_first_page() {
         assertEquals("Incorrect value of returned items.", 15, page.data().size());
         assertNotNull("Summary should have been calculated.", page.summary());
@@ -114,6 +117,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     }
 
     @Test
+    @Ignore
     public void test_next_page() {
         final IPage<?> nextPage = page.next();
 
@@ -124,6 +128,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     }
 
     @Test
+    @Ignore
     public void test_prev_page() {
         final IPage<?> prevPage = page.next().prev();
 
@@ -134,6 +139,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     }
 
     @Test
+    @Ignore
     public void test_last_page() {
         final IPage<?> lastPage = page.last();
 
@@ -144,6 +150,7 @@ public class WebResourceWithSummaryTestCase extends WebBasedTestCase {
     }
 
     @Test
+    @Ignore
     public void test_from_first_to_last_page() {
         final IPage<?> firstPage = page.last().first();
 

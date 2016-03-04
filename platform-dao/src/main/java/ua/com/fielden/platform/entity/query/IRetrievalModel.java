@@ -15,6 +15,8 @@ public interface IRetrievalModel<T extends AbstractEntity<?>> {
     
     Set<String> getPrimProps();
     
+    Set<String> getProxiedPrimProps();
+    
     Set<String> getProxiedProps();
     
     Map<String, Class<? extends AbstractEntity<?>>> getProxiedPropsWithoutId();

@@ -149,7 +149,7 @@ public class TgVehicle extends AbstractEntity<String> {
     private TgVehicleModel calcModel;
     
     @Observable
-    public TgVehicle setCalcModel(TgVehicleModel calcModel) {
+    public TgVehicle setCalcModel(final TgVehicleModel calcModel) {
         this.calcModel = calcModel;
         return this;
     }
@@ -237,7 +237,7 @@ public class TgVehicle extends AbstractEntity<String> {
     public BigDecimal getCalc6() {
         return calc6;
     }
-
+    
     @Observable
     public TgVehicle setLastMeterReading(final BigDecimal lastMeterReading) {
         this.lastMeterReading = lastMeterReading;
@@ -337,6 +337,60 @@ public class TgVehicle extends AbstractEntity<String> {
     @EntityExists(TgVehicle.class)
     public TgVehicle setReplacedBy(final TgVehicle replacedBy) {
         this.replacedBy = replacedBy;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setConstValueProp(final Integer constValueProp) {
+        this.constValueProp = constValueProp;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc0(final BigDecimal calc0) {
+        this.calc0 = calc0;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setLastFuelUsageQty(final BigDecimal lastFuelUsageQty) {
+        this.lastFuelUsageQty = lastFuelUsageQty;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setSumOfPrices(final Money sumOfPrices) {
+        this.sumOfPrices = sumOfPrices;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc2(final BigDecimal calc2) {
+        this.calc2 = calc2;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc3(final BigDecimal calc3) {
+        this.calc3 = calc3;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc4(final BigDecimal calc4) {
+        this.calc4 = calc4;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc5(final BigDecimal calc5) {
+        this.calc5 = calc5;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc6(final BigDecimal calc6) {
+        this.calc6 = calc6;
         return this;
     }
 }

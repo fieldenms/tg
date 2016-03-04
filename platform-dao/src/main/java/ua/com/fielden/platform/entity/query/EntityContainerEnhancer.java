@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -88,7 +87,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
 
     private void assignInstrumentationSetting(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
         if (fetchModel.isInstrumented()) {
-            for (EntityContainer<E> entityContainer : entities) {
+            for (final EntityContainer<E> entityContainer : entities) {
                 entityContainer.setInstrumented();
             }
         }
@@ -96,8 +95,9 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
 
     private void assignProxiedResultTypeToContainers(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
         if (fetchModel.getEntityType() != EntityAggregates.class) {
-            Set<String> proxiedProps = new HashSet<>();
+            final Set<String> proxiedProps = new HashSet<>();
             proxiedProps.addAll(fetchModel.getProxiedProps());
+            proxiedProps.addAll(fetchModel.getProxiedPrimProps());
             proxiedProps.addAll(fetchModel.getProxiedPropsWithoutId().keySet());
             final Class<? extends E> proxiedResultType = EntityProxyContainer.proxy(fetchModel.getEntityType(), proxiedProps.toArray(new String[] {}));
     

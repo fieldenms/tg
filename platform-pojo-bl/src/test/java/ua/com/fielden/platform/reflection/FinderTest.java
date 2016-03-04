@@ -213,7 +213,7 @@ public class FinderTest {
     public void testThatFieldsAnnotatedWithWorksForFirstLevelOfInheritance() {
         List<Field> properties = Finder.findProperties(FirstLevelEntity.class);
         assertEquals("Incorrect number of properties in class FirstLevelEntity.", 5, properties.size()); // key is annotated
-        assertEquals("Incorrect property name.", "property", properties.get(0).getName());
+        assertEquals("Incorrect property name.", "propertyTwo", properties.get(0).getName());
         assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
         properties = Finder.findProperties(FirstLevelEntity.class, Title.class, CompositeKeyMember.class);
@@ -231,7 +231,7 @@ public class FinderTest {
     public void test_that_getSimpleFieldsAnnotatedWith() {
         List<Field> properties = Finder.findRealProperties(FirstLevelEntity.class);
         assertEquals("Incorrect number of properties in class FirstLevelEntity.", 5, properties.size()); // key is annotated
-        assertEquals("Incorrect property name.", "property", properties.get(0).getName());
+        assertEquals("Incorrect property name.", "propertyTwo", properties.get(0).getName());
         assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
         properties = Finder.findRealProperties(FirstLevelEntity.class, Title.class, CompositeKeyMember.class);
@@ -267,19 +267,25 @@ public class FinderTest {
     }
 
     @Test
-    public void testThatGetCompositeKeyMembersWorksForFirstLevelOfInheritance() {
+    public void composite_key_members_are_identified_for_first_level_of_inheritance_with_correct_order() {
         List<Field> members = Finder.getKeyMembers(FirstLevelEntity.class);
         assertEquals("Incorrect number of composite key members in FirstLevelEntity.", 2, members.size());
-
+        assertEquals("property", members.get(0).getName());
+        assertEquals("propertyTwo", members.get(1).getName());
+        
         members = Finder.getKeyMembers(UnionEntityWithoutDesc.class);
         assertEquals("IncorrectNumber of key members in the UnionEntityWithoutDesc", 1, members.size());
     }
 
     @Test
-    public void testThatGetCompositeKeyMembersWorksForSecondLevelOfInheritance() {
+    public void composite_key_members_are_identified_for_second_level_of_inheritance_with_correct_order() {
         final List<Field> members = Finder.getKeyMembers(SecondLevelEntity.class);
         // two properties annotated as composite keys are inherited from ForstLevelEntity and one declared within SecondLevelEntity
         assertEquals("Incorrect number of composite key members in SecondLevelEntity.", 3, members.size());
+        assertEquals("property", members.get(0).getName());
+        assertEquals("propertyTwo", members.get(1).getName());
+        assertEquals("anotherProperty", members.get(2).getName());
+
     }
 
     @Test

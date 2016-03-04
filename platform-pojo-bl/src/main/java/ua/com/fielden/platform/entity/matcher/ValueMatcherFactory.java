@@ -28,6 +28,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
+@Deprecated
 public class ValueMatcherFactory implements IValueMatcherFactory {
     private final Map<Class, Map<String, IValueMatcher>> map = new HashMap<Class, Map<String, IValueMatcher>>();
     private final ICompanionObjectFinder coFinder;
