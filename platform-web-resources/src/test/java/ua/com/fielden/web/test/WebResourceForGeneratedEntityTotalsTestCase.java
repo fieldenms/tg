@@ -11,9 +11,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
+
+import com.google.inject.Injector;
+import com.google.inject.Module;
 
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
@@ -35,15 +39,13 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntity;
 
-import com.google.inject.Injector;
-import com.google.inject.Module;
-
 /**
  * Provides a unit test to ensure correct operation of EQL with generated types when it comes to calculation of totals.
  * 
  * @author TG Team
  * 
  */
+@Deprecated
 public class WebResourceForGeneratedEntityTotalsTestCase extends WebBasedTestCase {
     private final IGeneratedEntityController rao = new GeneratedEntityRao(config.restClientUtil());
 
@@ -105,6 +107,7 @@ public class WebResourceForGeneratedEntityTotalsTestCase extends WebBasedTestCas
     }
 
     @Test
+    @Ignore
     public void test_selection_of_totals() {
         final EntityResultQueryModel model = select(type).where().prop("intProperty").lt().val(30).//
         yield().prop("intPropertySum").as("intPropertySum").//
