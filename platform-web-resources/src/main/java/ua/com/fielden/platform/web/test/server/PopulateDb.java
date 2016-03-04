@@ -16,6 +16,8 @@ import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
@@ -190,6 +192,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final UserRole testRole9 = save(new_(UserRole.class, "TEST_ROLE9", "A role, which has access to the the station managing functionality."));
         System.out.println("testRole9.getId() == " + testRole9.getId());
 
+        final TgCollectionalSerialisationParent csp1 = (TgCollectionalSerialisationParent) save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
+        save(new_composite(TgCollectionalSerialisationChild.class, csp1, "1").setDesc("desc1"));
+        
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
         mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));
         save(mainMenu);

@@ -14,15 +14,15 @@
 	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
   
     <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties">
-    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.sample.domain.MiTgCollectionalSerialisationParent">
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent">
 </head>
 
 <body>
 	<tg-reflector id="reflector"></tg-reflector>
 	<test-fixture id="CentreFixture">
     	<template>
-    	    <tg-MiTgPersistentEntityWithProperties-centre id="centre"></tg-MiTgPersistentEntityWithProperties-centre>
+    	    <tg-MiTgCollectionalSerialisationParent-centre id="centre"></tg-MiTgCollectionalSerialisationParent-centre>
     	</template>
 	</test-fixture>
 
@@ -34,48 +34,7 @@
 			centre = fixture('CentreFixture');
 	      	reflector = document.querySelector('#reflector');
 	    });
-	
-	    test('run action works for complex centre', function (done) {
-            var old_postRun = centre._postRun;
-            
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
-            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-            	
-            	var entity = resultEntities[0];
-            	
-                // value ok?
-                entity.get("desc");
-                entity.get("dR");
-                entity.get("iS");
-                entity.get("iR");
-                entity.get("oN");
-                entity.get("sR");
-                entity.get("integerProp");
-                entity.get("sum_of_int");
-                entity.get("bigDecimalProp");
-                entity.get("max_of_dec");
-                entity.get("min_of_dec");
-                entity.get("sum_of_dec");
-                entity.get("entityProp");
-                entity.get("booleanProp");
-                entity.get("dateProp");
-                entity.get("compositeProp");
-                entity.get("stringProp");
-                
-                assert.strictEqual(resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
-                
-                centre._postRun = old_postRun;
-                done();
-            };
-            
-            centre.postRetrieved = function (entity, bindingEntity, customObject) {
-				centre.run();
-            };
-
- 			centre.retrieve();
-	    });
-	    
-	    test('editing through EntityEditAction embedded master works for complex centre', function (done) {
+	    test('editing through EntityEditAction embedded master (with collectional properties) works', function (done) {
             var old_postRun = centre._postRun;
             var firstTime = false;
             
@@ -83,7 +42,7 @@
             	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
             	
             	if (firstTime === false) {
-                    assert.strictEqual(resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
+                    assert.strictEqual(resultEntities.length, 1, 'The count of resultant entities for the centre should be 1.');
                 	var entity = resultEntities[0];
                     
                     var editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
@@ -94,21 +53,21 @@
                         console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
                         
                         var outerMaster = editAction._masterReferenceForTesting;
-                        var innerMaster = outerMaster.$$('tg-tgpersistententitywithproperties-master');
+                        var innerMaster = outerMaster.$$('tg-tgcollectionalserialisationparent-master');
                         var loader = outerMaster.$.loader;
                         
                         outerMaster.addEventListener('after-load', function (event) {
                             var embeddedMaster = event.detail;
                             
-            		        var edProperty = embeddedMaster.$.editor_4_bigDecimalProp;
+            		        var edProperty = embeddedMaster.$.editor_4_desc;
             		        
             		        embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
             	                assert.strictEqual(edProperty._editingValue, '23999', "_editingValue should be 'IS'.");
             	                assert.strictEqual(edProperty._commValue, '23999', "_commValue should be 'IS'.");
-            	                assert.strictEqual(edProperty._acceptedValue, 23999, "_acceptedValue should be 'IS'.");
+            	                assert.strictEqual(edProperty._acceptedValue, '23999', "_acceptedValue should be 'IS'.");
             	                
-            	                assert.strictEqual(validatedEntity.get("bigDecimalProp"), 23999, "'property' value should be 'IS' after modification.");
-            	                assert.strictEqual(bindingEntity.get("bigDecimalProp"), 23999, "Binding 'property' value should be 'IS' after modification.");
+            	                assert.strictEqual(validatedEntity.get("desc"), '23999', "'property' value should be 'IS' after modification.");
+            	                assert.strictEqual(bindingEntity.get("desc"), '23999', "Binding 'property' value should be 'IS' after modification.");
 
             	                done();
             	            };
