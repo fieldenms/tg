@@ -33,7 +33,7 @@ public class WebUiBuilder implements IWebUiBuilder {
     /**
      * Holds the map between master's entity type and its master component.
      */
-    private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> mastersMap = new LinkedHashMap<>();
 
     /**
      * Holds the map between entity centre's menu item type and entity centre.

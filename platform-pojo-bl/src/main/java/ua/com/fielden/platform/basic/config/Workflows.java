@@ -9,7 +9,7 @@ package ua.com.fielden.platform.basic.config;
  * 
  */
 public enum Workflows {
-    development, deployment;
+    development, deployment, vulcanizing;
 
     public static void main(final String[] args) {
         System.out.println(Workflows.development.equals(Workflows.valueOf("development")));

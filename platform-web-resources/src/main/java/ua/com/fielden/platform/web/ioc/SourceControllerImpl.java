@@ -14,9 +14,11 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.ISourceController;
@@ -55,15 +57,24 @@ public class SourceControllerImpl implements ISourceController {
      */
     private final Map<DeviceProfile, LinkedHashSet<String>> preloadedResourcesByProfile;
     private final boolean deploymentMode;
+    private final boolean vulcanizingMode;
 
     @Inject
-    public SourceControllerImpl(final IWebUiConfig webUiConfig, final ISerialiser serialiser, final IApplicationSettings appSettings) {
+    public SourceControllerImpl(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
         this.webUiConfig = webUiConfig;
         this.serialiser = serialiser;
         this.tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
+        
+        final Workflows workflow = this.webUiConfig.workflow();
 
-        this.deploymentMode = Workflows.deployment.equals(Workflows.valueOf(appSettings.workflow()));
+        this.deploymentMode = Workflows.deployment.equals(workflow);
         logger.info(String.format("\t[%s MODE]", this.deploymentMode ? "DEPLOYMENT" : "DEVELOPMENT"));
+        System.out.println(String.format("\t[%s MODE]", this.deploymentMode ? "DEPLOYMENT" : "DEVELOPMENT"));
+        this.vulcanizingMode = Workflows.vulcanizing.equals(workflow);
+        if (vulcanizingMode) {
+            logger.info(String.format("\t[%s MODE]", "VULCANIZING"));
+            System.out.println(String.format("\t[%s MODE]", "VULCANIZING"));
+        }
 
         this.preloadedResourcesByProfile = calculatePreloadedResourcesByProfile();
         this.dependenciesByURI.clear();
@@ -282,7 +293,9 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     private String getSource(final String resourceURI, final DeviceProfile deviceProfile) {
-        if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
+        if ("/app/desktop-application-startup-resources.html".equalsIgnoreCase(resourceURI)) {
+            return getDesktopApplicationStartupResourcesSource(webUiConfig, this);
+        } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppIndexSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-app-config.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppConfigSource(webUiConfig);
@@ -347,6 +360,37 @@ public class SourceControllerImpl implements ISourceController {
         final String originalSource = ResourceLoader.getText("ua/com/fielden/platform/web/reflection/tg-reflector.html");
 
         return originalSource.replace("@typeTable", typeTableRepresentation);
+    }
+    
+    private static String getDesktopApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {
+        final String source = getFileSource("/resources/desktop-application-startup-resources.html", webUiConfig.resourcePaths());
+        
+        if (sourceControllerImpl.vulcanizingMode) {
+            final String sourceWithMastersAndCentres = injectMastersAndCentres(source, webUiConfig);
+            
+            System.out.println("========================================= desktop-application-startup-resources WITH MASTERS AND CENTRES =============================================");
+            System.out.println(sourceWithMastersAndCentres);
+            System.out.println("========================================= desktop-application-startup-resources WITH MASTERS AND CENTRES [END] =============================================");
+            return sourceWithMastersAndCentres;
+        } else {
+            final String sourceWithoutMastersAndCentres = source.replace("<!-- MASTERS AND CENTRES -->", "<!-- NO MASTERS AND CENTRES ARE NEEDED IN DEVELOPMENT MODE -->");
+            
+            System.out.println("========================================= desktop-application-startup-resources =============================================");
+            System.out.println(sourceWithoutMastersAndCentres);
+            System.out.println("========================================= desktop-application-startup-resources [END] =============================================");
+            return sourceWithoutMastersAndCentres;
+        }
+    }
+
+    private static String injectMastersAndCentres(final String source, final IWebUiConfig webUiConfig) {
+        final StringBuilder sb = new StringBuilder();
+        for (final Class<? extends AbstractEntity<?>> masterEntityType : webUiConfig.getMasters().keySet()) {
+            sb.append(String.format("<link rel=\"import\" href=\"/master_ui/%s\">\n", masterEntityType.getName()));
+        }
+        for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
+            sb.append(String.format("<link rel=\"import\" href=\"/centre_ui/%s\">\n", centreMiType.getName()));
+        }
+        return source.replace("<!-- MASTERS AND CENTRES -->", sb.toString());
     }
 
     private static String getElementLoaderSource(final SourceControllerImpl sourceControllerImpl, final IWebUiConfig webUiConfig, final DeviceProfile deviceProfile) {

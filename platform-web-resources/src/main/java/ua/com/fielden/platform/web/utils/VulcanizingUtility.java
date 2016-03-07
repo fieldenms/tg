@@ -60,7 +60,7 @@ public class VulcanizingUtility {
         }
 
         // needs to be overridden to start vulcanization in development mode (no need to calculate preloaded resources)
-        props.setProperty("workflow", "development");
+        props.setProperty("workflow", "vulcanizing");
 
         // configure logging
         DOMConfigurator.configure(props.getProperty("log4j"));

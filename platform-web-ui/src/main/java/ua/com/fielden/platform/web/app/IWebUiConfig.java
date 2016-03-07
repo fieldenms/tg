@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.app;
 import java.util.List;
 import java.util.Map;
 
+import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -121,4 +122,6 @@ public interface IWebUiConfig {
      * with other custom paths. When client asks for a resource then this application will search for that resource in these paths starting from the custom ones.
      */
     List<String> resourcePaths();
+    
+    Workflows workflow();
 }

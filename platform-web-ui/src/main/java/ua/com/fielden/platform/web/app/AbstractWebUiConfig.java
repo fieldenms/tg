@@ -102,18 +102,22 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public final String genDesktopAppIndex() {
         final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/desktop-index.html").
                 replace("@title", title);
-        if (Workflows.development.equals(this.workflow)) {
+        if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@desktopStartupResources", "desktop-startup-resources-origin");
         } else {
             return indexSource.replace("@desktopStartupResources", "desktop-startup-resources-vulcanized");
         }
+    }
+    
+    private static boolean isDevelopmentWorkflow(final Workflows workflow) {
+        return Workflows.development.equals(workflow) || Workflows.vulcanizing.equals(workflow);
     }
 
     @Override
     public String genMobileAppIndex() {
         final String indexSource = ResourceLoader.getText("ua/com/fielden/platform/web/mobile-index.html").
                 replace("@title", title);
-        if (Workflows.development.equals(this.workflow)) {
+        if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@mobileStartupResources", "mobile-startup-resources-origin");
         } else {
             return indexSource.replace("@mobileStartupResources", "mobile-startup-resources-vulcanized");
@@ -156,5 +160,10 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public List<String> resourcePaths() {
         return this.resourcePaths;
+    }
+    
+    @Override
+    public Workflows workflow() {
+        return workflow;
     }
 }
