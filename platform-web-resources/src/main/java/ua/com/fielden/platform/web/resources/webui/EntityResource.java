@@ -165,8 +165,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                             null /* compound master entity id */,
                             masterEntity /* master context */
                     );
-                    ((AbstractFunctionalEntityWithCentreContext) entity).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
-                    return restUtil.rawListJSONRepresentation(entity);
+                    return restUtil.rawListJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(entity));
                 }
             } else {
                 return restUtil.rawListJSONRepresentation(utils.createValidationPrototype(entityId));
@@ -200,10 +199,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
 
         
         final T potentiallySaved = applied.isDirty() ? save(applied) : applied;
-        if (savingInfoHolder.getCentreContextHolder() != null && potentiallySaved instanceof AbstractFunctionalEntityWithCentreContext) {
-            ((AbstractFunctionalEntityWithCentreContext) potentiallySaved).setContext(null); // it is necessary to reset centreContext not to send it back to the client!
-        }
-        return restUtil.singleJSONRepresentation(potentiallySaved);
+        return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(potentiallySaved));
     }
 
     /**
