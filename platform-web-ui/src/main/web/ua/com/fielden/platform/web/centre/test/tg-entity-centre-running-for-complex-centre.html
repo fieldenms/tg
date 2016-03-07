@@ -38,12 +38,26 @@
 	    test('run action works for complex centre', function (done) {
             var old_postRun = centre._postRun;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
-            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
             	
             	var entity = resultEntities[0];
             	
-                // value ok?
+            	// checking summary entity
+                try {
+	                summary.get("integerProp");
+	                assert.fail('', '', "The unfetched EGI row property for summary entity should throw an exception.");
+                } catch (e) {}
+                try {
+	                summary.get("iS");
+	                assert.fail('', '', "The unfetched EGI row property for summary entity should throw an exception.");
+                } catch (e) {}
+                summary.get("sum_of_int");
+                summary.get("max_of_dec");
+                summary.get("min_of_dec");
+                summary.get("sum_of_dec");
+            	
+                // checking row entity
                 entity.get("desc");
                 entity.get("dR");
                 entity.get("iS");
@@ -51,11 +65,23 @@
                 entity.get("oN");
                 entity.get("sR");
                 entity.get("integerProp");
-                entity.get("sum_of_int");
+                try {
+	                entity.get("sum_of_int");
+	                assert.fail('', '', "The unfetched summary property for EGI row entity should throw an exception.");
+                } catch (e) {}
                 entity.get("bigDecimalProp");
-                entity.get("max_of_dec");
-                entity.get("min_of_dec");
-                entity.get("sum_of_dec");
+                try {
+	                entity.get("max_of_dec");
+	                assert.fail('', '', "The unfetched summary property for EGI row entity should throw an exception.");
+                } catch (e) {}
+                try {
+	                entity.get("min_of_dec");
+	                assert.fail('', '', "The unfetched summary property for EGI row entity should throw an exception.");
+                } catch (e) {}
+                try {
+	                entity.get("sum_of_dec");
+	                assert.fail('', '', "The unfetched summary property for EGI row entity should throw an exception.");
+                } catch (e) {}
                 entity.get("entityProp");
                 entity.get("booleanProp");
                 entity.get("dateProp");
@@ -79,8 +105,8 @@
             var old_postRun = centre._postRun;
             var firstTime = false;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
-            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
             	
             	if (firstTime === false) {
                     assert.strictEqual(resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');

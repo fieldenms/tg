@@ -31,6 +31,7 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -118,6 +119,24 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             defProducer.setMasterEntity(masterContext);
             return defProducer.newEntity();
         }
+    }
+    
+    /**
+     * Resets the context for the entity to <code>null</code> in case where the entity is {@link AbstractFunctionalEntityWithCentreContext} descendant.
+     * <p>
+     * This is necessary to be done just before sending the entity to the client application (retrieval, validation and saving actions). It should not be done in producer
+     * because the validation prototype's context could be used later (during application of modified properties, or in DAO save method etc.).
+     * 
+     * @param entity
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> T resetContextBeforeSendingToClient(final T entity) {
+        if (entity instanceof AbstractFunctionalEntityWithCentreContext && ((AbstractFunctionalEntityWithCentreContext) entity).getContext() != null) {
+            final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
+            funcEntity.setContext(null); // it is necessary to reset centreContext not to send it back to the client!
+            funcEntity.getProperty("context").resetState();
+        }
+        return entity;
     }
 
     public Class<T> getEntityType() {
