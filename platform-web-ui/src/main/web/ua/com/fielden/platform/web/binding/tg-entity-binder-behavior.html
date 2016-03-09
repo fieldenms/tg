@@ -380,6 +380,9 @@
                 }).bind(self);
                 
                 self.retrieve = (function (context) {
+                    // cancel previous validation before starting refreshing process!
+                    this._validator().abortValidationIfAny();
+                    
                 	if (context) {
                         var ser = this._serialiser().serialise(context);
                         this._ajaxRetriever().body = JSON.stringify(ser);
