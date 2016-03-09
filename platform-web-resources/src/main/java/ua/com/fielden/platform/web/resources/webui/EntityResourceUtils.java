@@ -351,11 +351,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static <M extends AbstractEntity<?>> M disregardNotAppliedRequiredProperties(final M entity, final Set<String> appliedProps) {
-        for (final Map.Entry<String, MetaProperty<?>> entry : entity.getProperties().entrySet()) {
-            if (entry.getValue().isRequired() && !appliedProps.contains(entry.getKey())) {
-                entry.getValue().setRequiredValidationResult(Result.successful(entity));
-            }
-        }
+        entity.nonProxiedProperties().filter(mp -> mp.isRequired() && !appliedProps.contains(mp.getName())).forEach(mp -> {
+            mp.setRequiredValidationResult(Result.successful(entity));
+        });
+        
         return entity;
     }
 
@@ -367,15 +366,13 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     public static <M extends AbstractEntity<?>> void disregardCritOnlyRequiredProperties(final M entity) {
         final Class<?> managedType = entity.getType();
         if (!EntityQueryCriteria.class.isAssignableFrom(managedType)) {
-            for (final Map.Entry<String, MetaProperty<?>> entry : entity.getProperties().entrySet()) {
-                if (entry.getValue().isRequired()) {
-                    final String prop = entry.getKey();
-                    final CritOnly critOnlyAnnotation = AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, prop);
-                    if (critOnlyAnnotation != null) {
-                        entry.getValue().setRequiredValidationResult(Result.successful(entity));
-                    }
+            entity.nonProxiedProperties().filter(mp -> mp.isRequired()).forEach(mp -> {
+                final String prop = mp.getName();
+                final CritOnly critOnlyAnnotation = AnnotationReflector.getPropertyAnnotation(CritOnly.class, managedType, prop);
+                if (critOnlyAnnotation != null) {
+                    mp.setRequiredValidationResult(Result.successful(entity));
                 }
-            }
+            });
         }
     }
 

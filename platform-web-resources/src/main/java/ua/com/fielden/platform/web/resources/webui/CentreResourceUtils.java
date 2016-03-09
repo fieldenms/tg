@@ -130,12 +130,25 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             }
             final boolean isNotRefreshingConcreteEntities = customObject.get("@@idsToRefresh") == null;
 
-            final ArrayList<Object> resultEntities = new ArrayList<Object>(isNotRefreshingConcreteEntities
-                    ? page.data()
-                    : selectEntities(page.data(), convertToListWithLongValues((List) customObject.get("@@idsToRefresh"))));
+            ArrayList<Object> resultEntities;
+            try {
+                resultEntities = new ArrayList<>(isNotRefreshingConcreteEntities
+                        ? page.data()
+                        : selectEntities(page.data(), convertToListWithLongValues((List<?>) customObject.get("@@idsToRefresh"))));
+                resultantCustomObject.put("resultEntities", resultEntities);
+                resultantCustomObject.put("pageCount", page.numberOfPages());
 
-            resultantCustomObject.put("resultEntities", resultEntities);
-            resultantCustomObject.put("pageCount", page.numberOfPages());
+            } catch (final IndexOutOfBoundsException ex) {
+                // let's be defensive about how are we refreshing the current page
+                // there are situations where refreshing a centre with underlying data that populated the current page deleted
+                // results in IndexOutOfBoundsException exception in call page.data()
+                // if this is the case, we can simply return the result of a simple run
+                // TODO need todo something about pageCount and the current pageNumber
+                final IPage<T> p = criteriaEntity.run(pageCapacity);
+                resultEntities = new ArrayList<>(p.data());
+                resultantCustomObject.put("resultEntities", resultEntities);
+            }
+            
             if (!isNotRefreshingConcreteEntities) {
                 // mark customObject with a special property, that indicates the process of concrete entities refreshing (potentially this can be removed
                 // and resolved purely on the client side)
