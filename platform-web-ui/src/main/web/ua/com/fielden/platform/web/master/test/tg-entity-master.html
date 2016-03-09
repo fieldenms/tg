@@ -14,7 +14,7 @@
 	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
   
     <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/master_ui/Test_TgPersistentEntityWithProperties"> <!-- ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties -->
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties"> <!-- Test_TgPersistentEntityWithProperties -->
 </head>
 
 <body>
@@ -561,6 +561,40 @@
 	                bindingEntity.set("stringProp", "okok");
 
 	                master.validate();
+	            };
+
+	            master.retrieve();
+		    });
+		    
+		    test('works for uppercased property editor', function (done) {
+		    	master.entityId = '9';
+		        var edProperty = master.$.editor_4_stringProp;
+		    	
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(validatedEntity.get("stringProp"), "Property value should be initialised.");
+	                assert.strictEqual(validatedEntity.get("stringProp"), "OKOK", "Property value should be uppercased for @UpperCase property.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("stringProp"), "Binding property should be initialised.");
+	                assert.strictEqual(bindingEntity.get("stringProp"), "OKOK", "Binding property value should be uppercased for @UpperCase property.");
+
+	                done();
+	            };
+
+	            master.postRetrieved = function(entity, bindingEntity, customObject) {
+	                // value ok?
+	                assert.ok(entity.get("stringProp"), "Property value should be initialised.");
+	                assert.strictEqual(entity.get("stringProp"), "ok", "Property value should be correct.");
+
+	                // binding value ok?
+	                assert.ok(bindingEntity.get("stringProp"), "Binding property should be initialised.");
+	                assert.strictEqual(bindingEntity.get("stringProp"), "ok", "Binding property should be string entity representation.");
+	                
+	                // ACTUAL PROPERTY CHANGE
+	                // intentionally set lowercased value to check whether the result will be uppercased
+	                edProperty._editingValue = 'okOk';
+	                edProperty.commit();
 	            };
 
 	            master.retrieve();

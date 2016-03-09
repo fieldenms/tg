@@ -212,7 +212,7 @@
                 	type: Function,
                 	value: function () {
                 		return (function (event) {
-                    		console.log("_onChange:", event);
+                    		// console.debug("_onChange:", event);
                     		
                     		if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
                     			this.commit();
@@ -246,7 +246,7 @@
                 	type: Function,
                 	value: function () {
                 		return (function (event) {
-                    		console.log("_onInput:", event);
+                    		// console.debug("_onInput:", event);
                     	}).bind(this);
                 	}
                 }
@@ -347,7 +347,7 @@
              * IMPORTANT: please do override this method if needed, but only with this.super([oldValue, newValue]); invoked!
              */
             _editingValueChanged: function (newValue, oldValue) {
-                // console.log("_editingValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
+                // console.debug("_editingValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
                 
                 // TODO provide alternative?
                 // TODO provide alternative?
@@ -377,7 +377,7 @@
                     
                 	this.assignValue(newValue, this.propertyName, this.reflector().getBindingValue.bind(this.reflector()));
                 } else {
-                    console.log("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
+                    // console.debug("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
                 }
             },
             
@@ -502,7 +502,16 @@
              * Commits editing value.
              */
             commit: function () {
-                // console.log("commit [", this._editingValue, "] value.");
+                console.debug('COMMIT: start.');
+                if (this.reflector().isEntity(this.entity) && typeof this.entity["@" + this.propertyName + "_uppercase"] !== 'undefined') {
+                    var upperCased = this._editingValue.toLocaleUpperCase();
+                    console.debug('COMMIT (value should be uppercased): current editingValue = [', this._editingValue, '] upperCased = [', upperCased, ']');
+                    if (!this.reflector().equalsEx(upperCased, this._editingValue)) {
+                        console.debug('COMMIT (value should be uppercased): change editingValue to [', upperCased, ']');
+	                    this._editingValue = upperCased;
+                    }
+                }
+                console.debug("COMMIT: [", this._editingValue, "] value.");
    	            this._commValue = this._editingValue;
             },
 
