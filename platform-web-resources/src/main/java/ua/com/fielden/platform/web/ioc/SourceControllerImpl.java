@@ -12,11 +12,15 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import com.google.common.base.Charsets;
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.ISourceController;
@@ -24,9 +28,6 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
-
-import com.google.common.base.Charsets;
-import com.google.inject.Inject;
 
 /**
  * {@link ISourceController} implementation.
@@ -55,15 +56,19 @@ public class SourceControllerImpl implements ISourceController {
      */
     private final Map<DeviceProfile, LinkedHashSet<String>> preloadedResourcesByProfile;
     private final boolean deploymentMode;
+    private final boolean vulcanizingMode;
 
     @Inject
-    public SourceControllerImpl(final IWebUiConfig webUiConfig, final ISerialiser serialiser, final IApplicationSettings appSettings) {
+    public SourceControllerImpl(final IWebUiConfig webUiConfig, final ISerialiser serialiser) {
         this.webUiConfig = webUiConfig;
         this.serialiser = serialiser;
         this.tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
+        
+        final Workflows workflow = this.webUiConfig.workflow();
 
-        this.deploymentMode = Workflows.deployment.equals(Workflows.valueOf(appSettings.workflow()));
-        logger.info(String.format("\t[%s MODE]", this.deploymentMode ? "DEPLOYMENT" : "DEVELOPMENT"));
+        this.deploymentMode = Workflows.deployment.equals(workflow);
+        this.vulcanizingMode = Workflows.vulcanizing.equals(workflow);
+        logger.info(String.format("\t[%s MODE]", vulcanizingMode ? "VULCANIZING (uses DEVELOPMENT internally)" : deploymentMode ? "DEPLOYMENT" : "DEVELOPMENT"));
 
         this.preloadedResourcesByProfile = calculatePreloadedResourcesByProfile();
         this.dependenciesByURI.clear();
@@ -182,7 +187,7 @@ public class SourceControllerImpl implements ISourceController {
         final String result = isVulcanized(filePath) ? source : enhanceSource(source, deviceProfile);
 
         final Period pd = new Period(start, new DateTime());
-        logger.info("loadSourceWithFilePath: loaded [" + filePath + "]. Duration [" + pd.getSeconds() + " s " + pd.getMillis() + " ms].");
+        logger.debug("loadSourceWithFilePath: loaded [" + filePath + "]. Duration [" + pd.getSeconds() + " s " + pd.getMillis() + " ms].");
         return result;
     }
 
@@ -282,7 +287,9 @@ public class SourceControllerImpl implements ISourceController {
     }
 
     private String getSource(final String resourceURI, final DeviceProfile deviceProfile) {
-        if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
+        if ("/app/desktop-application-startup-resources.html".equalsIgnoreCase(resourceURI)) {
+            return getDesktopApplicationStartupResourcesSource(webUiConfig, this);
+        } else if ("/app/tg-app-index.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppIndexSource(webUiConfig, deviceProfile);
         } else if ("/app/tg-app-config.html".equalsIgnoreCase(resourceURI)) {
             return getTgAppConfigSource(webUiConfig);
@@ -347,6 +354,60 @@ public class SourceControllerImpl implements ISourceController {
         final String originalSource = ResourceLoader.getText("ua/com/fielden/platform/web/reflection/tg-reflector.html");
 
         return originalSource.replace("@typeTable", typeTableRepresentation);
+    }
+    
+    private static String getDesktopApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {
+        final String source = getFileSource("/resources/desktop-application-startup-resources.html", webUiConfig.resourcePaths());
+        
+        if (sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode) {
+            final String sourceWithMastersAndCentres = appendMastersAndCentresImportURIs(source, webUiConfig);
+            
+            logger.debug("========================================= desktop-application-startup-resources WITH MASTERS AND CENTRES =============================================");
+            logger.debug(sourceWithMastersAndCentres);
+            logger.debug("========================================= desktop-application-startup-resources WITH MASTERS AND CENTRES [END] =============================================");
+            return sourceWithMastersAndCentres;
+        } else {
+            logger.debug("========================================= desktop-application-startup-resources =============================================");
+            logger.debug(source);
+            logger.debug("========================================= desktop-application-startup-resources [END] =============================================");
+            return source;
+        }
+    }
+
+    /**
+     * Appends the import URIs for all masters / centres, registered in WebUiConfig, that were not already included in <code>source</code>.
+     * 
+     * @param source
+     * @param webUiConfig
+     * @return
+     */
+    private static String appendMastersAndCentresImportURIs(final String source, final IWebUiConfig webUiConfig) {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(source);
+        sb.append("\n\n<!-- GENERATED MASTERS FROM IWebUiConfig-->\n");
+        for (final Class<? extends AbstractEntity<?>> masterEntityType : webUiConfig.getMasters().keySet()) {
+            if (!alreadyIncluded(masterEntityType.getName(), source)) {
+                sb.append(String.format("<link rel=\"import\" href=\"/master_ui/%s\">\n", masterEntityType.getName()));
+            }
+        }
+        sb.append("\n<!-- GENERATED CENTRES FROM IWebUiConfig-->\n");
+        for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
+            if (!alreadyIncluded(centreMiType.getName(), source)) {
+                sb.append(String.format("<link rel=\"import\" href=\"/centre_ui/%s\">\n", centreMiType.getName()));
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Checks whether the master or centre, associated with type <code>name</code>, was already included in 'desktop-application-startup-resources' file with <code>source</code>.
+     * 
+     * @param name
+     * @param source
+     * @return
+     */
+    private static boolean alreadyIncluded(final String name, final String source) {
+        return source.contains(name);
     }
 
     private static String getElementLoaderSource(final SourceControllerImpl sourceControllerImpl, final IWebUiConfig webUiConfig, final DeviceProfile deviceProfile) {

@@ -1168,7 +1168,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final String originalPropertyName = CentreUtils.getOriginalPropertyName(criteriaType, criterionPropertyName);
         final String dslProp = dslName(originalPropertyName);
-        logger.error("createValueMatcherAndContextConfig: propertyName = " + criterionPropertyName + " originalPropertyName = " + dslProp);
+        logger.debug("createValueMatcherAndContextConfig: propertyName = " + criterionPropertyName + " originalPropertyName = " + dslProp);
         final Class<? extends IValueMatcherWithCentreContext<V>> matcherType = matchers.isPresent() && matchers.get().containsKey(dslProp) ?
                 (Class<? extends IValueMatcherWithCentreContext<V>>) matchers.get().get(dslProp).getKey() : null;
         final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndContextConfig;
