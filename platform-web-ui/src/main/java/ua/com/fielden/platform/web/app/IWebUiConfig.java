@@ -123,5 +123,10 @@ public interface IWebUiConfig {
      */
     List<String> resourcePaths();
     
+    /**
+     * The current {@link Workflows} of the server and client applications.
+     * 
+     * @return
+     */
     Workflows workflow();
 }
