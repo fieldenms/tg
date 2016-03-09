@@ -359,7 +359,7 @@ public class SourceControllerImpl implements ISourceController {
     private static String getDesktopApplicationStartupResourcesSource(final IWebUiConfig webUiConfig, final SourceControllerImpl sourceControllerImpl) {
         final String source = getFileSource("/resources/desktop-application-startup-resources.html", webUiConfig.resourcePaths());
         
-        if (sourceControllerImpl.vulcanizingMode) {
+        if (sourceControllerImpl.vulcanizingMode || sourceControllerImpl.deploymentMode) {
             final String sourceWithMastersAndCentres = appendMastersAndCentresImportURIs(source, webUiConfig);
             
             logger.debug("========================================= desktop-application-startup-resources WITH MASTERS AND CENTRES =============================================");
