@@ -12,7 +12,9 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import com.google.common.base.Charsets;
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -26,9 +28,6 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.resources.webui.FileResource;
-
-import com.google.common.base.Charsets;
-import com.google.inject.Inject;
 
 /**
  * {@link ISourceController} implementation.
@@ -188,7 +187,7 @@ public class SourceControllerImpl implements ISourceController {
         final String result = isVulcanized(filePath) ? source : enhanceSource(source, deviceProfile);
 
         final Period pd = new Period(start, new DateTime());
-        logger.info("loadSourceWithFilePath: loaded [" + filePath + "]. Duration [" + pd.getSeconds() + " s " + pd.getMillis() + " ms].");
+        logger.debug("loadSourceWithFilePath: loaded [" + filePath + "]. Duration [" + pd.getSeconds() + " s " + pd.getMillis() + " ms].");
         return result;
     }
 
@@ -361,31 +360,54 @@ public class SourceControllerImpl implements ISourceController {
         final String source = getFileSource("/resources/desktop-application-startup-resources.html", webUiConfig.resourcePaths());
         
         if (sourceControllerImpl.vulcanizingMode) {
-            final String sourceWithMastersAndCentres = injectMastersAndCentres(source, webUiConfig);
+            final String sourceWithMastersAndCentres = appendMastersAndCentresImportURIs(source, webUiConfig);
             
-            System.out.println("========================================= desktop-application-startup-resources WITH MASTERS AND CENTRES =============================================");
-            System.out.println(sourceWithMastersAndCentres);
-            System.out.println("========================================= desktop-application-startup-resources WITH MASTERS AND CENTRES [END] =============================================");
+            logger.debug("========================================= desktop-application-startup-resources WITH MASTERS AND CENTRES =============================================");
+            logger.debug(sourceWithMastersAndCentres);
+            logger.debug("========================================= desktop-application-startup-resources WITH MASTERS AND CENTRES [END] =============================================");
             return sourceWithMastersAndCentres;
         } else {
-            final String sourceWithoutMastersAndCentres = source.replace("<!-- MASTERS AND CENTRES -->", "<!-- NO MASTERS AND CENTRES ARE NEEDED IN DEVELOPMENT MODE -->");
-            
-            System.out.println("========================================= desktop-application-startup-resources =============================================");
-            System.out.println(sourceWithoutMastersAndCentres);
-            System.out.println("========================================= desktop-application-startup-resources [END] =============================================");
-            return sourceWithoutMastersAndCentres;
+            logger.debug("========================================= desktop-application-startup-resources =============================================");
+            logger.debug(source);
+            logger.debug("========================================= desktop-application-startup-resources [END] =============================================");
+            return source;
         }
     }
 
-    private static String injectMastersAndCentres(final String source, final IWebUiConfig webUiConfig) {
+    /**
+     * Appends the import URIs for all masters / centres, registered in WebUiConfig, that were not already included in <code>source</code>.
+     * 
+     * @param source
+     * @param webUiConfig
+     * @return
+     */
+    private static String appendMastersAndCentresImportURIs(final String source, final IWebUiConfig webUiConfig) {
         final StringBuilder sb = new StringBuilder();
+        sb.append(source);
+        sb.append("\n\n<!-- GENERATED MASTERS FROM IWebUiConfig-->\n");
         for (final Class<? extends AbstractEntity<?>> masterEntityType : webUiConfig.getMasters().keySet()) {
-            sb.append(String.format("<link rel=\"import\" href=\"/master_ui/%s\">\n", masterEntityType.getName()));
+            if (!alreadyIncluded(masterEntityType.getName(), source)) {
+                sb.append(String.format("<link rel=\"import\" href=\"/master_ui/%s\">\n", masterEntityType.getName()));
+            }
         }
+        sb.append("\n<!-- GENERATED CENTRES FROM IWebUiConfig-->\n");
         for (final Class<? extends MiWithConfigurationSupport<?>> centreMiType : webUiConfig.getCentres().keySet()) {
-            sb.append(String.format("<link rel=\"import\" href=\"/centre_ui/%s\">\n", centreMiType.getName()));
+            if (!alreadyIncluded(centreMiType.getName(), source)) {
+                sb.append(String.format("<link rel=\"import\" href=\"/centre_ui/%s\">\n", centreMiType.getName()));
+            }
         }
-        return source.replace("<!-- MASTERS AND CENTRES -->", sb.toString());
+        return sb.toString();
+    }
+
+    /**
+     * Checks whether the master or centre, associated with type <code>name</code>, was already included in 'desktop-application-startup-resources' file with <code>source</code>.
+     * 
+     * @param name
+     * @param source
+     * @return
+     */
+    private static boolean alreadyIncluded(final String name, final String source) {
+        return source.contains(name);
     }
 
     private static String getElementLoaderSource(final SourceControllerImpl sourceControllerImpl, final IWebUiConfig webUiConfig, final DeviceProfile deviceProfile) {

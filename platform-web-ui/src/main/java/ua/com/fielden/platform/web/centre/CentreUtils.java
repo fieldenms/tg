@@ -104,10 +104,10 @@ public class CentreUtils<T extends AbstractEntity<?>> {
      */
     public static ICentreDomainTreeManagerAndEnhancer getFreshCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
         synchronized (gdtm) {
-            logger.info("Getting 'fresh centre' for miType [" + miType.getSimpleName() + "]...");
-            final DateTime start = new DateTime();
-
             if (gdtm.getEntityCentreManager(miType, FRESH_CENTRE_NAME) == null) {
+                logger.info(String.format("Initialising 'fresh centre' for miType [%s] for the first time for user %s...", miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+                final DateTime start = new DateTime();
+
                 final ICentreDomainTreeManagerAndEnhancer freshCentre =
                         applyDifferences(
                                 ((GlobalDomainTreeManager) gdtm).copyCentre(getDefaultCentre(gdtm, miType)),
@@ -120,13 +120,11 @@ public class CentreUtils<T extends AbstractEntity<?>> {
                 if (gdtm.isChangedEntityCentreManager(miType, FRESH_CENTRE_NAME)) {
                     throw new IllegalStateException("Should be not changed.");
                 }
+                final DateTime end = new DateTime();
+                final Period pd = new Period(start, end);
+                logger.info(String.format("Initialised the 'fresh centre' for miType [%s] for the first time for user %s... done in [%s].", miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
             }
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = freshCentre(gdtm, miType);
-
-            final DateTime end = new DateTime();
-            final Period pd = new Period(start, end);
-            logger.info("Got the 'fresh centre' for miType [" + miType.getSimpleName() + "]... done in [" + pd.getSeconds() + " s " + pd.getMillis() + " ms].");
-            return freshCentre;
+            return freshCentre(gdtm, miType);
         }
     }
 
