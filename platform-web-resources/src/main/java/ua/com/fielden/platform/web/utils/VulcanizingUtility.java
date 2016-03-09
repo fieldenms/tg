@@ -162,8 +162,10 @@ public class VulcanizingUtility {
         logger.info("\t\tDownloading " + deviceProfile + " generated resources...");
         downloadSource("app", "tg-app.html", sourceController, deviceProfile, logger);
         downloadSource("app", "tg-element-loader.html", sourceController, deviceProfile, logger);
-        logger.info("\t\t\tDownloading " + deviceProfile + " generated resource 'desktop-application-startup-resources.html'...");
-        downloadSource("app", "desktop-application-startup-resources.html", sourceController, deviceProfile, logger);
+        if (DeviceProfile.DESKTOP.equals(deviceProfile)) {
+            logger.info("\t\t\tDownloading " + deviceProfile + " generated resource 'desktop-application-startup-resources.html'...");
+            downloadSource("app", "desktop-application-startup-resources.html", sourceController, deviceProfile, logger);
+        }
         logger.info("\t\tDownloaded " + deviceProfile + " generated resources.");
     }
 
