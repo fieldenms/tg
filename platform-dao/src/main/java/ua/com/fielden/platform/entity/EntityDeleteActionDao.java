@@ -38,7 +38,7 @@ public class EntityDeleteActionDao extends CommonEntityDao<EntityDeleteAction> i
             selectedEntities.forEach(selectedEntity -> ids.add(selectedEntity.getId()));
             co.batchDelete(ids);
         } else {
-            throw new IllegalStateException("Please selecte entityies to delete or add selected entities to the context for delete action!");
+            throw new IllegalStateException("Please select entities those should be deleted");
         }
         return entity;
     }

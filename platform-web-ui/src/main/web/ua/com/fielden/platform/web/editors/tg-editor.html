@@ -1,5 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-error.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-char-counter.html">
@@ -204,7 +206,7 @@
 				<content select=".property-action"></content>
             </div>
 
-            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]">[[_error]]</paper-input-error>
+            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]">[[_error]]</paper-input-error>
 
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]"></paper-input-char-counter>
         </paper-input-container>
@@ -256,6 +258,8 @@
             currentState: String,
             _isBooleanChecked: Function
         },
+        
+        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
         
         _isDecimal: function (editorKind) {
             return 'DECIMAL' === editorKind;
