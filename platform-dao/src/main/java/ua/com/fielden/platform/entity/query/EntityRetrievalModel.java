@@ -21,7 +21,6 @@ import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.reflection.Reflector;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> implements IRetrievalModel<T> {
     transient private final Logger logger = Logger.getLogger(this.getClass());
@@ -90,7 +89,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 if (ppi.isEntityOfPersistedType()) {
                     if (ppi.isCalculated()) {
                         getProxiedPropsWithoutId().put(name, ppi.getJavaType());
-                    } else if (!ppi.isSynthetic()) {
+                    } else {
                         getProxiedProps().add(name);
                     }
                 } else {
