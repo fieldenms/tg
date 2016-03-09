@@ -34,6 +34,7 @@ import com.google.inject.Injector;
  *
  */
 public class VulcanizingUtility {
+    private final static Logger logger = Logger.getLogger(VulcanizingUtility.class);
 
     /**
      * Retrieves application properties from the specified file.
@@ -90,8 +91,7 @@ public class VulcanizingUtility {
             final String loginTargetPlatformSpecificPath,
             final String mobileAndDesktopAppSpecificPath,
             final Function<String, String[]> commandMaker,
-            final String[] additionalPaths,
-            final Logger logger) {
+            final String[] additionalPaths) {
         if (logger == null) {
             throw new IllegalArgumentException("Logger is a required argumet.");
         }
@@ -162,6 +162,8 @@ public class VulcanizingUtility {
         logger.info("\t\tDownloading " + deviceProfile + " generated resources...");
         downloadSource("app", "tg-app.html", sourceController, deviceProfile, logger);
         downloadSource("app", "tg-element-loader.html", sourceController, deviceProfile, logger);
+        logger.info("\t\t\tDownloading " + deviceProfile + " generated resource 'desktop-application-startup-resources.html'...");
+        downloadSource("app", "desktop-application-startup-resources.html", sourceController, deviceProfile, logger);
         logger.info("\t\tDownloaded " + deviceProfile + " generated resources.");
     }
 
