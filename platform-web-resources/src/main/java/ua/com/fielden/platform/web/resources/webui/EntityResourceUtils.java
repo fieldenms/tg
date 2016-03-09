@@ -251,6 +251,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
         disregardCritOnlyRequiredProperties(entity);
         disregardNotAppliedRequiredProperties(entity, appliedProps);
+        disregardAppliedRequiredPropertiesWithEmptyValueForNotPersistedEntity(entity, appliedProps);
 
         return entity;
     }
@@ -355,6 +356,24 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             mp.setRequiredValidationResult(Result.successful(entity));
         });
         
+        return entity;
+    }
+    
+    /**
+     * Disregards the 'required' errors for those properties, that were provided with some value and then cleared back to empty value during editing of new entity.
+     *
+     * @param entity
+     * @param appliedProps
+     *            -- list of 'applied' properties, i.e. those for which the setter has been invoked (maybe in 'enforced' manner)
+     * @return
+     */
+    public static <M extends AbstractEntity<?>> M disregardAppliedRequiredPropertiesWithEmptyValueForNotPersistedEntity(final M entity, final Set<String> appliedProps) {
+        if (!entity.isPersisted()) {
+            entity.nonProxiedProperties().filter(mp -> mp.isRequired() && appliedProps.contains(mp.getName()) && mp.getValue() == null).forEach(mp -> {
+                mp.setRequiredValidationResult(Result.successful(entity));
+            });
+        }
+
         return entity;
     }
 
