@@ -708,11 +708,11 @@
                         } else {
                             bindingView["@" + propertyName + "_required"] = false;
                         }
-                        if (entity.type().prop(propertyName).isUpperCase()) {
-                            bindingView["@" + propertyName + "_uppercase"] = true;
-                        }
                     }
-                    
+                    // the following logic is required in both cases: property with error and without error
+                    if (entity.type().prop(propertyName).isUpperCase()) {
+                        bindingView["@" + propertyName + "_uppercase"] = true;
+                    }
                     bindingView["@" + propertyName + "_editable"] = entity.prop(propertyName).isEditable();
 
                     if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
