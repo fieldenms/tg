@@ -3,8 +3,8 @@ package ua.com.fielden.platform.entity.query;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
@@ -20,7 +20,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
     private final Set<String> primProps = new HashSet<String>();
     private final Set<String> proxiedPrimProps = new HashSet<String>();
     private final Set<String> proxiedProps = new HashSet<String>();
-    private final Map<String, Class<? extends AbstractEntity<?>>>  proxiedPropsWithoutId = new HashMap<String, Class<? extends AbstractEntity<?>>>();
+    private final Set<String> proxiedPropsWithoutId = new HashSet<String>();
 
     public AbstractRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.originalFetch = originalFetch;
@@ -43,7 +43,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
         return proxiedProps;
     }
     
-    public Map<String, Class<? extends AbstractEntity<?>>> getProxiedPropsWithoutId() {
+    public Set<String> getProxiedPropsWithoutId() {
         return proxiedPropsWithoutId;
     }
 
@@ -56,7 +56,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
     }
 
     public boolean containsProxy(final String propName) {
-        return proxiedProps.contains(propName) || proxiedPropsWithoutId.containsKey(propName) || proxiedPrimProps.contains(propName);
+        return proxiedProps.contains(propName) || proxiedPropsWithoutId.contains(propName) || proxiedPrimProps.contains(propName);
     }
 
     public Class<T> getEntityType() {

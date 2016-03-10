@@ -98,7 +98,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             final Set<String> proxiedProps = new HashSet<>();
             proxiedProps.addAll(fetchModel.getProxiedProps());
             proxiedProps.addAll(fetchModel.getProxiedPrimProps());
-            proxiedProps.addAll(fetchModel.getProxiedPropsWithoutId().keySet());
+            proxiedProps.addAll(fetchModel.getProxiedPropsWithoutId());
             final Class<? extends E> proxiedResultType = EntityProxyContainer.proxy(fetchModel.getEntityType(), proxiedProps.toArray(new String[] {}));
     
             for (final EntityContainer<E> entContainer : entities) {

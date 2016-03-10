@@ -88,7 +88,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 
                 if (ppi.isEntityOfPersistedType()) {
                     if (ppi.isCalculated()) {
-                        getProxiedPropsWithoutId().put(name, ppi.getJavaType());
+                        getProxiedPropsWithoutId().add(name);
                     } else {
                         getProxiedProps().add(name);
                     }
