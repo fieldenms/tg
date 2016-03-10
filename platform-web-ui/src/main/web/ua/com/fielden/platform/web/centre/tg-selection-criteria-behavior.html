@@ -451,9 +451,11 @@
             _createPromise: function (isRunAction, entitiesToRefresh, assignmentFun) {
                 var self = this;
             
-                return new Promise(function(resolve, reject) {
-                    if (isRunAction || self._persistedModifiedPropertiesHolder === null) {
+                return new Promise(function (resolve, reject) {
+                    if (isRunAction) {
                         self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                    } else if (self._persistedModifiedPropertiesHolder === null) {
+                        throw '_persistedModifiedPropertiesHolder is not initialised, however this is not Run action, and _persistedModifiedPropertiesHolder is fully required at this stage.';
                     }
     
                     // cancel previous validation before starting saving process -- it includes validation process internally!
