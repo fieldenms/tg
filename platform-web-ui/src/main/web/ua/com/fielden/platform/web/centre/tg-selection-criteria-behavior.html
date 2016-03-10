@@ -208,20 +208,32 @@
 				
 				// calbacks, that will potentially be augmented by tg-action child elements: 
                 self._postRunDefault = (function (criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary) {
-	                this._setPropertyModel(metaValues);
-	                this._centreChanged = centreChanged;
-
-	                var msg = this._toastMsg("Running", criteriaEntity);
-	                this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
-
-	                var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-
-	                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
-	                // custom external action
-	                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
-
-	                this.pageNumberUpdated = this.pageNumber;
-	                this.pageCountUpdated = this.pageCount;
+                    if (criteriaEntity === null) {
+    	                var msg = "Running completed successfully.";
+    	                this._openToastWithoutEntity(msg, false, msg, false);
+    	                
+    	                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
+		                // custom external action
+		                this.postRun(null, null, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+    	                
+    	                this.pageNumberUpdated = this.pageNumber;
+    	                this.pageCountUpdated = this.pageCount;
+                    } else {
+		                this._setPropertyModel(metaValues);
+		                this._centreChanged = centreChanged;
+	
+		                var msg = this._toastMsg("Running", criteriaEntity);
+		                this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
+	
+		                var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
+	
+		                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
+		                // custom external action
+		                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+	
+		                this.pageNumberUpdated = this.pageNumber;
+		                this.pageCountUpdated = this.pageCount;
+                    }
 				}).bind(self);
 				
                 self._postRunDefaultError = (function (errorResult) {

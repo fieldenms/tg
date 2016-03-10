@@ -317,7 +317,7 @@
 
                 self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-                    if (criteriaEntity.isValid()) {
+                    if (criteriaEntity === null || criteriaEntity.isValid()) {
                         if (typeof summary !== 'undefined') {
                             this.$.egi.totals = summary;
                         }

@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
 import org.apache.log4j.Logger;
 
@@ -224,6 +225,22 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
         return currentCentres.get(key(menuItemType, name));
+    }
+    
+    /**
+     * This method should not be used. It was addded only for specific edge-case, when pagination actions were needed to be done against not modified EntityCentreManager 
+     * (see _persistedModifiedPropertiesHolder in tg-selection-criteria-behavior).
+     * <p>
+     * It returns the copy of original version of entity centre manager.
+     * 
+     * @param menuItemType
+     * @param name
+     * @return
+     */
+    public ICentreDomainTreeManagerAndEnhancer getEntityCentreManagerWithoutModifications(final Class<?> menuItemType, final String name) {
+        validateMenuItemType(menuItemType);
+        validateMenuItemTypeRootType(menuItemType);
+        return copyCentre(persistentCentres.get(key(menuItemType, name)));
     }
 
     private User currentUser() {
@@ -885,11 +902,15 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public boolean isChangedEntityCentreManager(final Class<?> menuItemType, final String name) {
+        return isChangedEntityCentreManager(() -> currentCentres.get(key(menuItemType, name)), menuItemType, name);
+    }
+    
+    public boolean isChangedEntityCentreManager(final Supplier<ICentreDomainTreeManagerAndEnhancer> cdtmaeSupplier, final Class<?> menuItemType, final String name) {
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
 
         notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
-        return !EntityUtils.equalsEx(currentCentres.get(key(menuItemType, name)), persistentCentres.get(key(menuItemType, name)));
+        return !EntityUtils.equalsEx(cdtmaeSupplier.get(), persistentCentres.get(key(menuItemType, name)));
     }
 
     @Override

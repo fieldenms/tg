@@ -172,17 +172,26 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
             final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
-            final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
-            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
-            final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
-
             final Map<String, Object> customObject = new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject());
+
+            final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
+            
+            // final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
+            // load fresh centre if it is not loaded yet
+            CentreResourceUtils.getFreshCentre(gdtm, miType);
+            final boolean isRunning = customObject.get("@@pageNumber") == null;
+            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = isRunning ? CentreResourceUtils.freshCentre(gdtm, miType) : CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType); 
+            
+            final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
+            final Map<String, Map<String, Object>> extractedCriteriaMetaValues = isRunning ? CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)) : null;
+            final boolean isCentreChanged = isRunning ? CentreResourceUtils.isFreshCentreChanged(miType, gdtm) : false; // CentreResourceUtils.isCentreChanged(originalCdtmae, miType, gdtm);
+
             final Pair<Map<String, Object>, ArrayList<?>> pair =
                     CentreResourceUtils.<T, M> createCriteriaMetaValuesCustomObjectWithResult(
                             customObject,
-                            CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)),
+                            extractedCriteriaMetaValues,
                             appliedCriteriaEntity,
-                            CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
+                            isCentreChanged,
                             centre.getAdditionalFetchProvider(),
                             createQueryEnhancerAndContext(
                                     webUiConfig,
@@ -195,7 +204,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                                     centre.getQueryEnhancerConfig(),
                                     appliedCriteriaEntity));
             if (pair.getValue() == null) {
-                return restUtil.rawListJSONRepresentation(appliedCriteriaEntity, pair.getKey());
+                return restUtil.rawListJSONRepresentation(isRunning ? appliedCriteriaEntity : null, pair.getKey());
             }
 
             //Running the rendering customiser for result set of entities.
@@ -214,7 +223,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             enhanceResultEntitiesWithCustomPropertyValues(centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
 
             final ArrayList<Object> list = new ArrayList<Object>();
-            list.add(appliedCriteriaEntity);
+            list.add(isRunning ? appliedCriteriaEntity : null);
             list.add(pair.getKey());
 
             // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence

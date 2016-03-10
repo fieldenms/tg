@@ -46,6 +46,20 @@ public class CentreUtils<T extends AbstractEntity<?>> {
         logger.debug("isCentreChanged == " + isCentreChanged);
         return isCentreChanged;
     }
+    
+    /**
+     * Returns <code>true</code> if the specified <code>cdtmae</code> is changed from original version of 'fresh' entity centre, <code>false</code> otherwise.
+     *
+     * @param cdtmae
+     * @param miType
+     * @param gdtm
+     * @return
+     */
+    public static boolean isCentreChanged(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
+        final boolean isCentreChanged = ((GlobalDomainTreeManager) gdtm).isChangedEntityCentreManager(() -> cdtmae, miType, FRESH_CENTRE_NAME);
+        logger.debug("isCentreChanged == " + isCentreChanged);
+        return isCentreChanged;
+    }
 
     /**
      * Returns the current version of default centre manager (initialises it in case if it is not created yet).
@@ -140,6 +154,22 @@ public class CentreUtils<T extends AbstractEntity<?>> {
             throw new IllegalStateException("The 'fresh centre' should be initialised.");
         }
         return gdtm.getEntityCentreManager(miType, FRESH_CENTRE_NAME);
+    }
+    
+    /**
+     * Returns the current version of 'fresh' centre manager but in unchaged form (aka from 'persistentCentres' not 'currentCentres' of GlobalDomainTreeManager).
+     * <p>
+     * It assumes that it should be initialised!
+     *
+     * @param gdtm
+     * @param miType
+     * @return
+     */
+    public static ICentreDomainTreeManagerAndEnhancer freshCentreWithoutModifications(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        if (gdtm.getEntityCentreManager(miType, FRESH_CENTRE_NAME) == null) {
+            throw new IllegalStateException("The 'fresh centre' should be initialised.");
+        }
+        return ((GlobalDomainTreeManager) gdtm).getEntityCentreManagerWithoutModifications(miType, FRESH_CENTRE_NAME);
     }
 
     /**

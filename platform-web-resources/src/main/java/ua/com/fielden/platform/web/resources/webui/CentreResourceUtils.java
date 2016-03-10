@@ -97,9 +97,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> customObject, final Map<String, Map<String, Object>> criteriaMetaValues, final M criteriaEntity, final boolean isCentreChanged, final Optional<IFetchProvider<T>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext) {
+        final boolean isRunning = customObject.get("@@pageNumber") == null;
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
-        resultantCustomObject.put("isCentreChanged", isCentreChanged);
-        resultantCustomObject.put("metaValues", criteriaMetaValues);
+        resultantCustomObject.put("isCentreChanged", isRunning ? isCentreChanged : false);
+        resultantCustomObject.put("metaValues", isRunning ? criteriaMetaValues : null);
 
         // the next action validates the entity one more time, but with the check for 'required' properties
         final Result validationResult = criteriaEntity.isValid();
@@ -118,7 +119,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final T summary;
             final Integer pageCapacity = (Integer) customObject.get("@@pageCapacity");
             customObject.remove("@@pageCapacity");
-            if (customObject.get("@@pageNumber") == null) {
+            if (isRunning) {
                 page = criteriaEntity.run(pageCapacity);
                 summary = page.summary();
             } else {
