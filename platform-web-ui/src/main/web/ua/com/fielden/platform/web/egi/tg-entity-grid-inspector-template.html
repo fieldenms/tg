@@ -547,8 +547,8 @@
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
-                                <div id="bottomLockPanel" class="absolutelyWhite" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
-                                    <div class="layout vertical" style="padding-bottom:15px;background-color:white;width:fit-content;">
+                                <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
+                                    <div class="layout vertical flex" style="padding-bottom:15px;background-color:white;">
                                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                             <div class="layout horizontal table-footer-row">
                                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
@@ -1358,17 +1358,16 @@
                 if (item.width === 0) {
                     colStyle += "display: none;";
                 }
+                if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
+                    colStyle += "text-align: right;"
+                }
                 return colStyle;
             },
             /**
              * Calculates the column's style.
              */
             _calcColumnStyle: function (item, index, numOfFixedCols) {
-                var colStyle = this._calcColumnHeaderStyle(item, index, numOfFixedCols);
-                if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
-                    colStyle += "text-align: right;"
-                }
-                return colStyle;
+                return this._calcColumnHeaderStyle(item, index, numOfFixedCols);
             },
             /**
              * Calculates style for fotter row (e.a. summary row should be hidden if the grid has fixed summaries or it should be visible otherwise).
