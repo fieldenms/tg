@@ -175,6 +175,12 @@
             ready: function () {
                 var self = this;
                 
+                // this is very important to assign initial values, because the following properties are used in multi-property observers like 'canNotFirst: function (pageNumber, pageCount, isRunning) ...'
+                this.pageNumber = 0;
+                this.pageCount = null;
+                this.pageNumberUpdated = 0;
+                this.pageCountUpdated = null;
+                
                 this.propertyModel = null;
                 this.currentState = "EDIT";
                 
