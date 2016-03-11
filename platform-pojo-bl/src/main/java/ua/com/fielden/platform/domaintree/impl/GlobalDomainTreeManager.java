@@ -14,7 +14,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Supplier;
 
 import org.apache.log4j.Logger;
 
@@ -902,15 +901,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public boolean isChangedEntityCentreManager(final Class<?> menuItemType, final String name) {
-        return isChangedEntityCentreManager(() -> currentCentres.get(key(menuItemType, name)), menuItemType, name);
-    }
-    
-    public boolean isChangedEntityCentreManager(final Supplier<ICentreDomainTreeManagerAndEnhancer> cdtmaeSupplier, final Class<?> menuItemType, final String name) {
         validateMenuItemType(menuItemType);
         validateMenuItemTypeRootType(menuItemType);
 
         notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
-        return !EntityUtils.equalsEx(cdtmaeSupplier.get(), persistentCentres.get(key(menuItemType, name)));
+        return !EntityUtils.equalsEx(currentCentres.get(key(menuItemType, name)), persistentCentres.get(key(menuItemType, name)));
     }
 
     @Override
