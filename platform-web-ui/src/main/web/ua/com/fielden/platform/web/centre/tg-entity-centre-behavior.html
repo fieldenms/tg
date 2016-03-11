@@ -718,6 +718,13 @@
             canNotCurrent: function (pageNumber, pageCount, isRunning) {
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canCurrent(pageNumber, pageCount));
             },
+            
+            computeConfigButtonTooltip: function (staleCriteriaMessage) {
+                return staleCriteriaMessage === null ? 'Show selection criteria' : staleCriteriaMessage;
+            },
+            computeConfigButtonClasses: function (staleCriteriaMessage) {
+                return staleCriteriaMessage === null ? 'standart-action' : 'standart-action orange';
+            },
 
             currPageFeedback: function (pageNumberUpdated, pageCountUpdated) {
                 return ('' + (pageNumberUpdated !== null ? (pageNumberUpdated + 1) : 1)) + ' / ' + ('' + (pageCountUpdated !== null ? pageCountUpdated : 1));

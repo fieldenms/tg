@@ -186,8 +186,10 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae, !isRunning);
             final Map<String, Map<String, Object>> extractedCriteriaMetaValues = isRunning ? CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)) : null;
             final boolean isCentreChanged = isRunning ? CentreResourceUtils.isFreshCentreChanged(miType, gdtm) : false; // CentreResourceUtils.isCentreChanged(originalCdtmae, miType, gdtm);
-            if (!isRunning && !EntityUtils.equalsEx(originalCdtmae, CentreResourceUtils.freshCentre(gdtm, miType))) {
-                logger.info("You have changed the criteria. Please, re-run centre in case where you need fresh results. However if you won't rerun centre, you could still paginate with previous criteria.");
+            final String staleCriteriaMessage = !isRunning && !EntityUtils.equalsEx(originalCdtmae, CentreResourceUtils.freshCentre(gdtm, miType)) ? 
+                    "You have changed the criteria. Please, re-run centre in case where you need fresh results. However if you won't rerun centre, you could still paginate with previous criteria." : null;
+            if (staleCriteriaMessage != null) {
+                logger.info(staleCriteriaMessage);
             }
 
             final Pair<Map<String, Object>, ArrayList<?>> pair =
@@ -207,6 +209,8 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                                     centreContextHolder,
                                     centre.getQueryEnhancerConfig(),
                                     appliedCriteriaEntity));
+            pair.getKey().put("staleCriteriaMessage", staleCriteriaMessage);
+            
             if (pair.getValue() == null) {
                 return restUtil.rawListJSONRepresentation(isRunning ? appliedCriteriaEntity : null, pair.getKey());
             }

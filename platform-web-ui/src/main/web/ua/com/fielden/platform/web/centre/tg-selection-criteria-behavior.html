@@ -120,6 +120,15 @@
              	propertyModel: Object,
              	
              	/**
+             	 * Defines whether the criteria is stale, i.e. the pagination action (or Current Page or Refresh Individual Entities actions)
+             	 * was done againt previously Run criteria, not the fresh criteria that was changed by the user.
+             	 */
+             	staleCriteriaMessage: {
+                    type: String,
+                    notify: true
+             	},
+             	
+             	/**
                  * The current number of pages after the firstPage has been retrieved. To update this please invoke run() action one more time.
                  */
                 pageCount: {
@@ -184,6 +193,8 @@
                 this.propertyModel = null;
                 this.currentState = "EDIT";
                 
+                this.staleCriteriaMessage = null;
+                
                 self._processRunnerResponse = function (e) {
                 	self._processResponse(e, "run", function (entityAndCustomObject) {
                         var criteriaEntity = entityAndCustomObject[0];
@@ -195,8 +206,9 @@
                         var renderingHints = customObject.renderingHints || [];
                         var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
                         var summary = customObject.summary;
+                        var staleCriteriaMessage = customObject.staleCriteriaMessage;
 
-                        self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary);
+                        self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary, staleCriteriaMessage);
                 	});
                 };
                 
@@ -207,7 +219,8 @@
                 };
 				
 				// calbacks, that will potentially be augmented by tg-action child elements: 
-                self._postRunDefault = (function (criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary) {
+                self._postRunDefault = (function (criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary, staleCriteriaMessage) {
+                    this.staleCriteriaMessage = staleCriteriaMessage;
                     if (criteriaEntity === null) {
     	                var msg = "Running completed successfully.";
     	                this._openToastWithoutEntity(msg, false, msg, false);
