@@ -177,27 +177,20 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
 
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             
-            // final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
             // load fresh centre if it is not loaded yet
             CentreResourceUtils.getFreshCentre(gdtm, miType);
-            final boolean isRunning = customObject.get("@@pageNumber") == null;
+            // We need to choose centre manager, against which modifPropertiesHolder should be applied -- if isRunning action is performing then it should be the most fresh cdtmae instance,
+            // otherwise, for pagination actions, it should be freshCentreWithout[Recent]Modifications.
+            // For isRunning case -- recent modifications will be applied on top of the most fresh centre manager.
+            // For !isRunning case -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
+            final boolean isRunning = CentreResourceUtils.isRunning(customObject);
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = isRunning ? CentreResourceUtils.freshCentre(gdtm, miType) : CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType); 
-            
             final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae, !isRunning);
-            final Map<String, Map<String, Object>> extractedCriteriaMetaValues = isRunning ? CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)) : null;
-            final boolean isCentreChanged = isRunning ? CentreResourceUtils.isFreshCentreChanged(miType, gdtm) : false; // CentreResourceUtils.isCentreChanged(originalCdtmae, miType, gdtm);
-            final String staleCriteriaMessage = !isRunning && !EntityUtils.equalsEx(originalCdtmae, CentreResourceUtils.freshCentre(gdtm, miType)) ? 
-                    "You have changed the criteria. Please, re-run centre in case where you need fresh results. However if you won't rerun centre, you could still paginate with previous criteria." : null;
-            if (staleCriteriaMessage != null) {
-                logger.info(staleCriteriaMessage);
-            }
 
             final Pair<Map<String, Object>, ArrayList<?>> pair =
                     CentreResourceUtils.<T, M> createCriteriaMetaValuesCustomObjectWithResult(
                             customObject,
-                            extractedCriteriaMetaValues,
                             appliedCriteriaEntity,
-                            isCentreChanged,
                             centre.getAdditionalFetchProvider(),
                             createQueryEnhancerAndContext(
                                     webUiConfig,
@@ -209,7 +202,17 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                                     centreContextHolder,
                                     centre.getQueryEnhancerConfig(),
                                     appliedCriteriaEntity));
-            pair.getKey().put("staleCriteriaMessage", staleCriteriaMessage);
+            if (isRunning) {
+                pair.getKey().put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(miType, gdtm));
+                pair.getKey().put("metaValues", CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)));
+            } else {
+                final boolean isCriteriaStale = !EntityUtils.equalsEx(originalCdtmae, CentreResourceUtils.freshCentre(gdtm, miType));
+                if (isCriteriaStale) {
+                    final String staleCriteriaMessage = "You have changed the criteria. Please, re-run centre in case where you need fresh results. However if you won't rerun centre, you could still paginate with previous criteria.";
+                    logger.info(staleCriteriaMessage);
+                    pair.getKey().put("staleCriteriaMessage", staleCriteriaMessage);
+                }
+            }
             
             if (pair.getValue() == null) {
                 return restUtil.rawListJSONRepresentation(isRunning ? appliedCriteriaEntity : null, pair.getKey());

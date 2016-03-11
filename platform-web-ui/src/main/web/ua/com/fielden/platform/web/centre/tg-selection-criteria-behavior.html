@@ -206,7 +206,7 @@
                         var renderingHints = customObject.renderingHints || [];
                         var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
                         var summary = customObject.summary;
-                        var staleCriteriaMessage = customObject.staleCriteriaMessage;
+                        var staleCriteriaMessage = customObject.staleCriteriaMessage || null;
 
                         self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary, staleCriteriaMessage);
                 	});
