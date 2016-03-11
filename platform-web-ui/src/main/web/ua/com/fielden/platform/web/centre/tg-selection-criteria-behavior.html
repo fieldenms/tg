@@ -466,6 +466,7 @@
                 return new Promise(function (resolve, reject) {
                     if (isRunAction) {
                         self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                        console.debug('_persistedModifiedPropertiesHolder has been cached (Run action): ', self._persistedModifiedPropertiesHolder);
                     } else if (self._persistedModifiedPropertiesHolder === null) {
                         throw '_persistedModifiedPropertiesHolder is not initialised, however this is not Run action, and _persistedModifiedPropertiesHolder is fully required at this stage.';
                     }

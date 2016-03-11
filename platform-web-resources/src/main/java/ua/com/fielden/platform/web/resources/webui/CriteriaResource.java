@@ -182,7 +182,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final boolean isRunning = customObject.get("@@pageNumber") == null;
             final ICentreDomainTreeManagerAndEnhancer originalCdtmae = isRunning ? CentreResourceUtils.freshCentre(gdtm, miType) : CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType); 
             
-            final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
+            final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae, !isRunning);
             final Map<String, Map<String, Object>> extractedCriteriaMetaValues = isRunning ? CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)) : null;
             final boolean isCentreChanged = isRunning ? CentreResourceUtils.isFreshCentreChanged(miType, gdtm) : false; // CentreResourceUtils.isCentreChanged(originalCdtmae, miType, gdtm);
 
