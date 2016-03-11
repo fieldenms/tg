@@ -116,16 +116,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
             }
             final IPage<T> page;
-            final T summary;
             final Integer pageCapacity = (Integer) customObject.get("@@pageCapacity");
             customObject.remove("@@pageCapacity");
             if (isRunning) {
                 page = criteriaEntity.run(pageCapacity);
-                summary = page.summary();
+                resultantCustomObject.put("summary", page.summary());
             } else {
-                final IPage<T> pageWithSummary = criteriaEntity.run(1);
                 page = criteriaEntity.getPage((Integer) customObject.get("@@pageNumber"), (Integer) customObject.get("@@pageCount"), pageCapacity);
-                summary = pageWithSummary.summary();
                 customObject.remove("@@pageNumber");
                 customObject.remove("@@pageCount");
             }
@@ -155,7 +152,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 // and resolved purely on the client side)
                 resultantCustomObject.put("isRefreshingConcreteEntities", "yes");
             }
-            resultantCustomObject.put("summary", summary);
             return new Pair<>(resultantCustomObject, resultEntities);
         }
         return new Pair<>(resultantCustomObject, null);
