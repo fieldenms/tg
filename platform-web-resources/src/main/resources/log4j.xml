@@ -58,7 +58,7 @@
 	</logger>
 	
 	<logger name="ua.com.fielden.platform.web.resources.webui.CriteriaResource" additivity="false">
-		<level value="error" />
+		<level value="info" />
 		<appender-ref ref="stdout" />
 	</logger>	
 	<logger name="ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource" additivity="false">
