@@ -1,0 +1,115 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+
+<style is="custom-style">
+    .confirm-dialog paper-button {
+        color: var(--paper-light-blue-500);
+        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+    }
+    .confirm-dialog paper-button:hover {
+        background: var(--paper-light-blue-50);
+    }
+</style>
+
+<dom-module id="tg-confirmation-dialog">
+    <script>
+        (function () {
+            var dialogModel = document.createElement('template', 'dom-bind');
+            var dialog = function () {
+                   
+                    domBind._cancelDateBind = function () {
+                        self.decoratedInput().focus();
+                    };
+
+                    domBind._acceptDateBind = function () {
+                        self._isAcceptingDateFromPicker = true;
+                        self._editingValue = moment(this.$.datePicker.selectedDate)
+                            .hour(this.$.datePicker.selectedHour)
+                            .minute(this.$.datePicker.selectedMinute)
+                            .format("L LT");
+                        self.decoratedInput().focus();
+                    }.bind(domBind);
+
+                    domBind.open = function () {
+                        var dialog = this.$.dateDialog;
+                        var datePicker = this.$.datePicker;
+                        datePicker.selectedDate = null;
+                        datePicker.selectedHour = 0;
+                        datePicker.selectedMinute = 0;
+
+                        if (self._editingValue !== '') {
+                            var selectedMoment = moment(self._editingValue.trim(), "L LT", true);
+                            if (selectedMoment.isValid()) {
+                                datePicker.selectedDate = selectedMoment.valueOf();
+                                datePicker.selectedHour = selectedMoment.hour();
+                                datePicker.selectedMinute = selectedMoment.minute();
+                            }
+                        }
+
+                        Polymer.dom(document.body).appendChild(dialog);
+                        Polymer.dom.flush();
+                        // let's open the dialog with magical async...
+                        // this ensures that the dialog is opened after its relocation to body
+                        this.async(function () {
+                            dialog.open();
+                        }.bind(this), 1);
+                    }.bind(domBind);
+
+                    var div = domBind.content.ownerDocument.createElement('div');
+                    div.innerHTML =
+                        
+
+                    domBind.content.innerHTML = '<paper-dialog id="confirmDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">' +
+                        '<tg-calendar id="datePicker" pick-time></tg-calendar>' +
+                        '<div class="buttons">' +
+                        '<paper-button dialog-dismiss affirmative on-tap="_cancelDateBind">Cancel</paper-button>' +
+                        '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +
+                        '</div>' +
+                        '</paper-dialog>';
+                    return domBind;
+                },
+            
+            Polymer({
+                is: 'tg-confirmation-dialog',
+
+                properties: {
+                    text: {
+                        type: String
+                    },
+                    
+                    yes: {
+                        type: Boolean,
+                        value: false,
+                    }, 
+                    
+                    no: {
+                        type: Boolean,
+                        value: false,
+                    }
+                },
+
+                _showCalendar: function (e) {
+                    var mve = this._createCalendarDialog();
+                    Polymer.dom(document.body).appendChild(mve);
+                    Polymer.dom.flush();
+
+                    mve.open();
+                },
+
+                
+                _editingValueChanged: function (newValue, oldValue) {
+                    Polymer.TgBehaviors.TgEditorBehavior._editingValueChanged.call(this, newValue, oldValue);
+
+                    if (this._isAcceptingDateFromPicker) {
+                        this._isAcceptingDateFromPicker = false;
+
+                        this.commit();
+                    }
+                }
+
+            });
+        })();
+    </script>
+</dom-module>
