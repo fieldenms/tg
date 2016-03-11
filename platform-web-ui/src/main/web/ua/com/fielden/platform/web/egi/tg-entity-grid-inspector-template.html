@@ -300,7 +300,7 @@
                         </div>
                     </div>
                     <div id="baseContainer" class="relative layout horizontal">
-                        <div id="scrollContainer" on-scroll="_handleScrollEvent" style$="[[_calculateScrollContainerStyle(summaryFixed, visibleRowCount, _totalsRowCount)]]" class="flex">
+                        <div id="scrollContainer" on-scroll="_handleScrollEvent" class="flex">
                             <!-- Table header -->
                             <div class="layout horizontal table-header-row">
                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
@@ -942,18 +942,23 @@
             _resizeEventListener: function (event, details) {
                 var baseContainer = this.$$("#baseContainer");
                 var scrollContainer = this.$$("#scrollContainer");
+                var propertyToSet = this.visibleRowCount > 0 ? "max-height" : "height";
+                var propertyToRemove = this.visibleRowCount > 0 ? "height" : "max-height";
+                var rowCount, height;
                 if (baseContainer && scrollContainer) {
                     var lockContainer = this.$$("#lockContainer");
                     var bottomPosition = this._calcHorizontalScrollBarHeight();
                     if (this.visibleRowCount > 0) {
-                        var rowCount = this.visibleRowCount + (this.summaryFixed ? this._totalsRowCount : 0);
-                        var maxHeight = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px)";
-                        baseContainer.style.maxHeight = maxHeight;
-                        scrollContainer.style.maxHeight = maxHeight;
+                        rowCount = this.visibleRowCount + (this.summaryFixed ? this._totalsRowCount : 0);
+                        height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px)";
                     } else {
-                        baseContainer.style.removeProperty("maxHeight");
-                        scrollContainer.style.removeProperty("maxHeight");
+                        rowCount = this.entities.length + this._totalsRowCount;
+                        height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + 15px + " + bottomPosition + "px)";
                     }
+                    baseContainer.style.removeProperty(propertyToRemove);
+                    scrollContainer.style.removeProperty(propertyToRemove);
+                    baseContainer.style[propertyToSet] = height;
+                    scrollContainer.style[propertyToSet] = height;
                     if (lockContainer) {
                         lockContainer.style.bottom = bottomPosition + "px";
                         lockContainer.style.right = this._calcVerticalScrollBarWidth() + "px";
@@ -1079,16 +1084,6 @@
 
             _isBottomRightPanelVisible: function (totals, summaryFixed, secondaryActions, secondaryActionsFixed) {
                 return totals && summaryFixed && ((this._isSecondaryActionsPresent(secondaryActions) && secondaryActionsFixed));
-            },
-
-            /**
-             * Calculates the height of the scrollcontainer.
-             */
-            _calculateScrollContainerStyle: function (summaryFixed, visibleRowCount, _totalsRowCount) {
-                if (visibleRowCount > 0) {
-                    var rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
-                    return "max-height:calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px)";
-                }
             },
 
             /**
