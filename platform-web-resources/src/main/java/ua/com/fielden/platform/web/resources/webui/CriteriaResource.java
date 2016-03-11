@@ -30,6 +30,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -185,6 +186,9 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae, !isRunning);
             final Map<String, Map<String, Object>> extractedCriteriaMetaValues = isRunning ? CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)) : null;
             final boolean isCentreChanged = isRunning ? CentreResourceUtils.isFreshCentreChanged(miType, gdtm) : false; // CentreResourceUtils.isCentreChanged(originalCdtmae, miType, gdtm);
+            if (!isRunning && !EntityUtils.equalsEx(originalCdtmae, CentreResourceUtils.freshCentre(gdtm, miType))) {
+                logger.info("You have changed the criteria. Please, re-run centre in case where you need fresh results. However if you won't rerun centre, you could still paginate with previous criteria.");
+            }
 
             final Pair<Map<String, Object>, ArrayList<?>> pair =
                     CentreResourceUtils.<T, M> createCriteriaMetaValuesCustomObjectWithResult(
