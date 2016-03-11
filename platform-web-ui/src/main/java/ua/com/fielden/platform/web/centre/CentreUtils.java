@@ -46,20 +46,6 @@ public class CentreUtils<T extends AbstractEntity<?>> {
         logger.debug("isCentreChanged == " + isCentreChanged);
         return isCentreChanged;
     }
-    
-    /**
-     * Returns <code>true</code> if the specified <code>cdtmae</code> is changed from original version of 'fresh' entity centre, <code>false</code> otherwise.
-     *
-     * @param cdtmae
-     * @param miType
-     * @param gdtm
-     * @return
-     */
-    public static boolean isCentreChanged(final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
-        final boolean isCentreChanged = ((GlobalDomainTreeManager) gdtm).isChangedEntityCentreManager(() -> cdtmae, miType, FRESH_CENTRE_NAME);
-        logger.debug("isCentreChanged == " + isCentreChanged);
-        return isCentreChanged;
-    }
 
     /**
      * Returns the current version of default centre manager (initialises it in case if it is not created yet).
