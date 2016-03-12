@@ -260,6 +260,7 @@
                 }).bind(self);
                 
                 self.postValidated = (function (validatedEntity, bindingEntity, customObject) {
+                    this.staleCriteriaMessage = customObject.staleCriteriaMessage || null;
                     this._setPropertyModel(customObject.metaValues);
                     this._centreChanged = customObject.isCentreChanged;
 
@@ -282,6 +283,7 @@
                 var modPropHolder = Polymer.TgBehaviors.TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
                 if (this._reflector().isEntity(bindingEntity)) {
                     modPropHolder["@@metaValues"] = {};
+                    modPropHolder["@@persistedModifiedPropertiesHolder"] = this._persistedModifiedPropertiesHolder;
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
                     for (var property in this.propertyModel) {
                         if (this.propertyModel.hasOwnProperty(property)) {

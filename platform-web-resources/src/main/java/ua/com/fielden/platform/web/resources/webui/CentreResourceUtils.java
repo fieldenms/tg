@@ -78,10 +78,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param isCentreChanged
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final String staleCriteriaMessage) {
         final Map<String, Object> customObject = new LinkedHashMap<>();
         customObject.put("isCentreChanged", isCentreChanged);
         customObject.put("metaValues", criteriaMetaValues);
+        customObject.put("staleCriteriaMessage", staleCriteriaMessage);
         return customObject;
     }
     
