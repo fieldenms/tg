@@ -575,7 +575,10 @@
              * Create context holder with custom '@@miType' property.
              */
             createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
-            	return this._createContextHolder(this._createModifiedPropertiesHolder, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
+                var self = this;
+                return this._createContextHolder(function () {
+                    return self._reset(self._persistedModifiedPropertiesHolder);
+                }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
             },
             
             /**
@@ -587,6 +590,11 @@
     				modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
                 );
                 this._reflector().setCustomProperty(contextHolder, "@@miType", this.miType);
+                if (this.pageCount !== null) {
+                    this._reflector().setCustomProperty(contextHolder, "@@pageNumber", this.pageNumber);
+                } else {
+                    this._reflector().removeCustomProperty(contextHolder, "@@pageNumber");
+                }
                 return contextHolder;
             },
             

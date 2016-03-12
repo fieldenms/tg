@@ -515,10 +515,18 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         } catch (final ClassNotFoundException e) {
             throw new IllegalStateException(e);
         }
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = getFreshCentre(gdtm, miType);
+        final Map<String, Object> customObject = new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject());
+        // load fresh centre if it is not loaded yet
+        CentreResourceUtils.getFreshCentre(gdtm, miType);
+        // We need to choose centre manager, against which modifPropertiesHolder should be applied -- if isRunning action is performing then it should be the most fresh cdtmae instance,
+        // otherwise, for pagination actions, it should be freshCentreWithout[Recent]Modifications.
+        // For isRunning case -- recent modifications will be applied on top of the most fresh centre manager.
+        // For !isRunning case -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
+        final boolean isRunning = CentreResourceUtils.isRunning(customObject);
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = isRunning ? CentreResourceUtils.freshCentre(gdtm, miType) : CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType); 
 
         return isEmpty(centreContextHolder.getModifHolder()) ? null
-                : createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
+                : createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae, !isRunning);
     }
 
     /**
