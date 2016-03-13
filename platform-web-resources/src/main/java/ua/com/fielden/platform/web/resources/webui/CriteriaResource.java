@@ -56,6 +56,10 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends ServerResource {
     private final static Logger logger = Logger.getLogger(CriteriaResource.class);
 
+    private final static String staleCriteriaMessage = "Selection criteria have been changed, but not applied. "
+                                                     + "Previously applied values are in effect. "
+                                                     + "Please tap action <b>RUN</b> to apply the updated selection criteria.";
+    
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
 
@@ -174,7 +178,6 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(persistedModifiedPropertiesHolder, companionFinder, critGenerator, miType, originalCdtmae, true);
             final boolean isCriteriaStale = !EntityUtils.equalsEx(originalCdtmae, CentreResourceUtils.freshCentre(gdtm, miType));
             if (isCriteriaStale) {
-                final String staleCriteriaMessage = "You have changed the criteria. Please, re-run centre in case where you need fresh results. However if you won't rerun centre, you could still paginate with previous criteria.";
                 logger.info(staleCriteriaMessage);
                 return staleCriteriaMessage;
             }
@@ -230,7 +233,6 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             } else {
                 final boolean isCriteriaStale = !EntityUtils.equalsEx(originalCdtmae, CentreResourceUtils.freshCentre(gdtm, miType));
                 if (isCriteriaStale) {
-                    final String staleCriteriaMessage = "You have changed the criteria. Please, re-run centre in case where you need fresh results. However if you won't rerun centre, you could still paginate with previous criteria.";
                     logger.info(staleCriteriaMessage);
                     pair.getKey().put("staleCriteriaMessage", staleCriteriaMessage);
                 }
