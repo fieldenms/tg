@@ -159,7 +159,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                                     critGenerator, 
                                     utils.entityFactory(), 
                                     centreContextHolder,
-                                    CentreResourceUtils.createCriteriaEntity(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator)//
+                                    CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator)//
                             ),
                             centreContextHolder.getChosenProperty(),
                             null /* compound master entity id */,
@@ -300,7 +300,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                             critGenerator, 
                             utils.entityFactory(), 
                             savingInfoHolder.getCentreContextHolder(),
-                            CentreResourceUtils.createCriteriaEntity(savingInfoHolder.getCentreContextHolder(), companionFinder, gdtm, critGenerator)),
+                            CentreResourceUtils.createCriteriaEntityForContext(savingInfoHolder.getCentreContextHolder(), companionFinder, gdtm, critGenerator)),
                     savingInfoHolder.getCentreContextHolder().getChosenProperty(),
                     compoundMasterEntityId,
                     masterContext

@@ -227,8 +227,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     }
     
     /**
-     * This method should not be used. It was addded only for specific edge-case, when pagination actions were needed to be done against not modified EntityCentreManager 
-     * (see _persistedModifiedPropertiesHolder in tg-selection-criteria-behavior).
+     * This method should not be used. It was addded only for specific edge-case, when pagination actions were needed to be done against not modified EntityCentreManager.
      * <p>
      * It returns the copy of original version of entity centre manager.
      * 

@@ -503,7 +503,9 @@
                     // cancel previous validation before starting Discard process!
                     sc._validator().abortValidationIfAny();
 
-                    this._ajaxDiscarder().body = JSON.stringify('Ok');
+                    var customObject = {};
+                    customObject['@@wasRun'] = this.$.selection_criteria._wasRun;
+                    this._ajaxDiscarder().body = JSON.stringify(customObject);
                     return this._ajaxDiscarder().generateRequest().completes;
                 }).bind(self);
                 

@@ -147,6 +147,25 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                 )//
         );
     }
+    
+    public static Representation createCriteriaDiscardEnvelope(
+            final ICentreDomainTreeManagerAndEnhancer cdtmae,
+            final Class<? extends MiWithConfigurationSupport<?>> miType,
+            final IGlobalDomainTreeManager gdtm,
+            final RestServerUtil restUtil,
+            final ICompanionObjectFinder companionFinder,
+            final ICriteriaGenerator critGenerator,
+            final String staleCriteriaMessage
+                    ) {
+        return restUtil.rawListJSONRepresentation(
+                CentreResourceUtils.createCriteriaValidationPrototype(miType, cdtmae, critGenerator, -1L),
+                CentreResourceUtils.createCriteriaMetaValuesCustomObject(
+                        CentreResourceUtils.createCriteriaMetaValues(cdtmae, CentreResourceUtils.getEntityType(miType)),
+                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
+                        staleCriteriaMessage
+                )//
+        );
+    }
 
     private static Representation createCriteriaValidationEnvelope(
             final Map<String, Object> modifiedPropertiesHolder,
@@ -162,24 +181,20 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
                         CentreResourceUtils.createCriteriaMetaValues(cdtmae, CentreResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
-                        createStaleCriteriaMessage((Map<String, Object>) modifiedPropertiesHolder.get("@@persistedModifiedPropertiesHolder"), cdtmae, miType, gdtm, companionFinder, critGenerator)
+                        createStaleCriteriaMessage((String) modifiedPropertiesHolder.get("@@wasRun"), cdtmae, miType, gdtm, companionFinder, critGenerator)
                 )//
         );
     }
 
-    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> String createStaleCriteriaMessage(final Map<String, Object> persistedModifiedPropertiesHolder, final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator) {
-        if (persistedModifiedPropertiesHolder != null) {
+    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> String createStaleCriteriaMessage(final String wasRun, final ICentreDomainTreeManagerAndEnhancer cdtmae, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator) {
+        if (wasRun != null) {
+            CentreResourceUtils.pushRestartClientApplicationMessage(gdtm, miType);
             // load fresh centre if it is not loaded yet
             CentreResourceUtils.getFreshCentre(gdtm, miType);
-            // We need to choose freshCentreWithout[Recent]Modifications to check the staleness of criteria -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
-            // Apply persistedModifiedPropertiesHolder and look whether the fresh criteria are different from 'persisted' ones.
-            if (!CentreResourceUtils.isEmpty(persistedModifiedPropertiesHolder)) {
-                CentreResourceUtils.<T, M> createCriteriaEntity(persistedModifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm, true);
-                final boolean isCriteriaStale = !EntityUtils.equalsEx(CentreResourceUtils.previouslyRunCentre(gdtm, miType), CentreResourceUtils.freshCentre(gdtm, miType));
-                if (isCriteriaStale) {
-                    logger.info(staleCriteriaMessage);
-                    return staleCriteriaMessage;
-                }
+            final boolean isCriteriaStale = !EntityUtils.equalsEx(CentreResourceUtils.previouslyRunCentre(gdtm, miType), CentreResourceUtils.freshCentre(gdtm, miType));
+            if (isCriteriaStale) {
+                logger.info(staleCriteriaMessage);
+                return staleCriteriaMessage;
             }
         }
         return null;
@@ -203,7 +218,8 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             
             final boolean isRunning = CentreResourceUtils.isRunning(customObject);
-            final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm, !isRunning);
+            final M appliedCriteriaEntity = isRunning ? CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm) : 
+                CentreResourceUtils.<T, M> createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm);
 
             final Pair<Map<String, Object>, ArrayList<?>> pair =
                     CentreResourceUtils.<T, M> createCriteriaMetaValuesCustomObjectWithResult(

@@ -117,12 +117,14 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
     @Put
     public Representation discard(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+            final Map<String, Object> wasRunHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
 
+            final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage((String) wasRunHolder.get("@@wasRun"), CentreResourceUtils.getFreshCentre(gdtm, miType), miType, gdtm, companionFinder, critGenerator);
             discardActualState(gdtm);
 
             // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-            return CriteriaResource.createCriteriaRetrievalEnvelope(CentreResourceUtils.getFreshCentre(gdtm, miType), miType, gdtm, restUtil, companionFinder, critGenerator);
+            return CriteriaResource.createCriteriaDiscardEnvelope(CentreResourceUtils.getFreshCentre(gdtm, miType), miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage);
         }, restUtil);
     }
 }

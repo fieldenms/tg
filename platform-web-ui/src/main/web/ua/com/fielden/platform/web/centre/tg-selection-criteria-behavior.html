@@ -100,10 +100,10 @@
                 },
                 
                 /**
-                 * The current modified properties holder to be used during pagination (it was "persisted" after run() action has been performed).
+                 * Indicates whether this centre was run by the user (after run() action has been performed).
                  */
-                _persistedModifiedPropertiesHolder: {
-                	type: Object,
+                _wasRun: {
+                	type: String,
                 	value: null
                 },
                 
@@ -287,7 +287,7 @@
                 var modPropHolder = Polymer.TgBehaviors.TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
                 if (this._reflector().isEntity(bindingEntity)) {
                     modPropHolder["@@metaValues"] = {};
-                    modPropHolder["@@persistedModifiedPropertiesHolder"] = this._persistedModifiedPropertiesHolder;
+                    modPropHolder["@@wasRun"] = this._wasRun;
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
                     for (var property in this.propertyModel) {
                         if (this.propertyModel.hasOwnProperty(property)) {
@@ -483,11 +483,13 @@
                 var self = this;
             
                 return new Promise(function (resolve, reject) {
+                    var _persistedModifiedPropertiesHolder = null;
                     if (isRunAction) {
-                        self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
-                        console.debug('_persistedModifiedPropertiesHolder has been cached (Run action): ', self._persistedModifiedPropertiesHolder);
-                    } else if (self._persistedModifiedPropertiesHolder === null) {
-                        throw '_persistedModifiedPropertiesHolder is not initialised, however this is not Run action, and _persistedModifiedPropertiesHolder is fully required at this stage.';
+                        self._wasRun = 'yes';
+                        _persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                        console.debug('_wasRun has been changed to: ', self._wasRun);
+                    } else if (self._wasRun === null) {
+                        throw '_wasRun is not initialised, however this is not Run action, and _wasRun should be defined as yes at this stage.';
                     }
     
                     // cancel previous validation before starting saving process -- it includes validation process internally!
@@ -499,8 +501,8 @@
 	                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
 	                    //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
                     	self._runModifiedProperties(
-	                    	self._createContextHolderForRunning(function() {
-	                    			return self._reset(self._persistedModifiedPropertiesHolder);
+	                    	self._createContextHolderForRunning(function () {
+	                    			return isRunAction ? self._reset(_persistedModifiedPropertiesHolder) : null;
 	                    		}, 
 	                    		self.requireSelectedEntities, 
 	                    		self.requireMasterEntity, 
@@ -583,7 +585,7 @@
             createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
                 var self = this;
                 return this._createContextHolder(function () {
-                    return self._reset(self._persistedModifiedPropertiesHolder);
+                    return null;
                 }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
             },
             
@@ -596,11 +598,6 @@
     				modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
                 );
                 this._reflector().setCustomProperty(contextHolder, "@@miType", this.miType);
-                if (this.pageCount !== null) {
-                    this._reflector().setCustomProperty(contextHolder, "@@pageNumber", this.pageNumber);
-                } else {
-                    this._reflector().removeCustomProperty(contextHolder, "@@pageNumber");
-                }
                 return contextHolder;
             },
             

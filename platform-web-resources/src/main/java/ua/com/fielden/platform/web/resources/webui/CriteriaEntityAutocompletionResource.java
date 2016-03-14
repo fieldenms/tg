@@ -101,7 +101,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             if (CentreResourceUtils.isEmpty(centreContextHolder.getModifHolder())) {
                 // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
                 criteriaEntity = null;
-                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreResourceUtils.getFreshCentre(gdtm, miType), critGenerator, 0L /* TODO does it matter? */);
+                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreResourceUtils.getFreshCentre(gdtm, miType), critGenerator, 0L);
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
 
             } else {

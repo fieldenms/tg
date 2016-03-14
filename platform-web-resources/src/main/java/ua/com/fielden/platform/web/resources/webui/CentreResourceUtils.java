@@ -521,7 +521,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param centreContextHolder
      * @return
      */
-    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
+    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
         if (centreContextHolder.getCustomObject().get("@@miType") == null) {
             return null;
         }
@@ -531,27 +531,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         } catch (final ClassNotFoundException e) {
             throw new IllegalStateException(e);
         }
-        final Map<String, Object> customObject = new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject());
-
-        final boolean isRunning = CentreResourceUtils.isRunning(customObject);
-        if (isRunning) {
-            throw new IllegalStateException("During context capturing on entity centre it is necessary to have switched on 'isPaginating' mode.");
-        }
-        if (isEmpty(centreContextHolder.getModifHolder())) {
-            return null;
-        }
-        
-        return createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm, true);
-    }
-
-    /**
-     * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
-     *
-     * @param centreContextHolder
-     * @return
-     */
-    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
-        return createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm, false);
+        return createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm);
     }
     
     /**
@@ -561,35 +541,43 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param isPaginating -- returns <code>true</code> in case when this method is a part of 'Paginating Actions', <code>false</code> otherwise
      * @return
      */
-    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final boolean isPaginating) {
+    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForPaginating(final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
+        pushRestartClientApplicationMessage(gdtm, miType);
+        
+        // load fresh centre if it is not loaded yet
+        CentreResourceUtils.getFreshCentre(gdtm, miType);
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.previouslyRunCentre(gdtm, miType);
+    
+        return createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, 0L);
+    }
+    
+    /**
+     * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
+     *
+     * @param centreContextHolder
+     * @param isPaginating -- returns <code>true</code> in case when this method is a part of 'Paginating Actions', <code>false</code> otherwise
+     * @return
+     */
+    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
         if (isEmpty(modifiedPropertiesHolder)) {
             throw new IllegalArgumentException("ModifiedPropertiesHolder should not be empty during invocation of fully fledged criteria entity creation.");
-        }
-        if (isPaginating) {
-            pushRestartClientApplicationMessage(gdtm, miType);
         }
         
         // load fresh centre if it is not loaded yet
         CentreResourceUtils.getFreshCentre(gdtm, miType);
-        // We need to choose centre manager, against which modifPropertiesHolder should be applied -- if isRunning action is performing then it should be the most fresh cdtmae instance,
-        // otherwise, for pagination actions, it should be freshCentreWithout[Recent]Modifications.
-        // For !isPaginating case -- recent modifications will be applied on top of the most fresh centre manager.
-        // For isPaginating case -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = !isPaginating ? CentreResourceUtils.freshCentre(gdtm, miType) : CentreResourceUtils.previouslyRunCentre(gdtm, miType);
-
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.freshCentre(gdtm, miType);
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
-        final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, isPaginating ? EntityResourceUtils.getVersion(modifiedPropertiesHolder) - 1 : EntityResourceUtils.getVersion(modifiedPropertiesHolder));
+        final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
                 modifiedPropertiesHolder,
                 validationPrototype,
                 CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
                 companionFinder//
         ).getKey();
-        
         return appliedCriteriaEntity;
     }
     
-    private static void pushRestartClientApplicationMessage(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+    protected static void pushRestartClientApplicationMessage(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
         try {
             CentreUtils.previouslyRunCentre(gdtm, miType);
         } catch (final PreviouslyRunCentreNotInitialisedException notInitialisedError) {
