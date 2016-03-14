@@ -13,7 +13,7 @@
         <tg-criteria-validator id="validator" mi-type="[[miType]]" post-validated-default="[[_postValidatedDefault]]" post-validated-default-error="[[_postValidatedDefaultError]]" process-response="[[_processResponse]]" process-error="[[_processError]]"></tg-criteria-validator>
         
         <iron-ajax id="ajaxRetriever" url="[[_url]]" method="GET" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
-        <iron-ajax id="ajaxRunner" loading="{{isRunning}}" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRunnerResponse" on-error="_processRunnerError"></iron-ajax>
+        <iron-ajax id="ajaxRunner" loading="{{_isLoading}}" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRunnerResponse" on-error="_processRunnerError"></iron-ajax>
         
         <content></content>
     </template>
@@ -32,11 +32,25 @@
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	
     		miType: String,
-            //Property that determines whether selection criteria is loading data or not.
+             
+            /**
+             * The property that determines whether selection criteria running is in progress (for example Run, Next Page, Refresh Individual Entities actions).
+             *
+             * This is very important to have this property initialised at the beginning, because it is used in 'disablement logic' for pagination buttons and Config button.
+             */
             isRunning: {
                 type: Boolean,
                 notify: true
             },
+            
+            /**
+             * The inner property that is bound to iron-ajax's 'loading' property, but its value is undefined at the beginning.
+             */
+            _isLoading: {
+                type: Boolean,
+                observer: '_isLoadingChanged'
+            },
+            
     		_postValidatedDefault: Function,
     		_postValidatedDefaultError: Function,
     		_processResponse: Function,
@@ -59,6 +73,18 @@
          		type: String,
          		computed: '_computeUrl(miType)'
          	}
+    	},
+    	
+    	ready: function () {
+            // this is very important to assign initial value, because the following property is used in multi-property observers like 'canNotFirst: function (pageNumber, pageCount, isRunning) ...'
+    	    this.isRunning = false;
+    	},
+    	
+    	/**
+    	 * Promotes the change of _isLoading value to isRunning property.
+    	 */
+    	_isLoadingChanged: function (newValue, oldValue) {
+    	    this.isRunning = newValue;
     	},
     	
     	/**

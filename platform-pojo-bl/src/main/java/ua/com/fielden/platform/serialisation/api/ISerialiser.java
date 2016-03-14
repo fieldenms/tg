@@ -32,7 +32,7 @@ public interface ISerialiser extends ISerialiserEngine {
      * @return
      * @throws Exception
      */
-    <T> T deserialise(final byte[] content, final Class<T> type, final SerialiserEngines serialiserEngine) throws Exception;
+    <T> T deserialise(final byte[] content, final Class<T> type, final SerialiserEngines serialiserEngine);
 
     /**
      * Deserialises an object using specified {@link SerialiserEngines}.
@@ -45,7 +45,7 @@ public interface ISerialiser extends ISerialiserEngine {
      * @return
      * @throws Exception
      */
-    <T> T deserialise(final InputStream content, final Class<T> type, final SerialiserEngines serialiserEngine) throws Exception;
+    <T> T deserialise(final InputStream content, final Class<T> type, final SerialiserEngines serialiserEngine);
 
     /**
      * Returns serialisation engine by its name.

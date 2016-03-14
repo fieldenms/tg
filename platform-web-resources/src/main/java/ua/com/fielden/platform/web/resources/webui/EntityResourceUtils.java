@@ -5,7 +5,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -217,10 +216,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                         // do nothing
                     } else {
                         final Object originalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
-                        if (EntityUtils.isStale(originalValue, entity.get(name))) {
-                            final String msg = "The property has been recently changed by other user.";
-                            logger.info(msg);
-                            entity.getProperty(name).setDomainValidationResult(Result.warning(entity, msg));
+                        final Object actualValue = entity.get(name);
+                        if (EntityUtils.isStale(originalValue, actualValue)) {
+                            logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), actualValue, originalValue));
+                            entity.getProperty(name).setDomainValidationResult(Result.warning(entity, "The property has been recently changed by other user."));
                         }
                     }
                 }
@@ -282,10 +281,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             enforceSet(shouldApplyOriginalValue, name, entity, newValue);
         } else {
             final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
-            if (EntityUtils.isConflicting(newValue, staleOriginalValue, entity.get(name))) {
-                final String msg = "The property has been recently changed by other user. Please revert property value to resolve conflict.";
-                logger.info(msg);
-                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
+            final Object actualValue = entity.get(name);
+            if (EntityUtils.isConflicting(newValue, staleOriginalValue, actualValue)) {
+                logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), actualValue, staleOriginalValue, newValue));
+                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, "The property has been recently changed by other user. Please revert property value to resolve conflict."));
             } else {
                 enforceSet(shouldApplyOriginalValue, name, entity, newValue);
             }
@@ -583,12 +582,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static Map<String, Object> restoreModifiedPropertiesHolderFrom(final Representation envelope, final RestServerUtil restUtil) {
-        try {
-            return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
-        } catch (final Exception ex) {
-            logger.error("An undesirable error has occured during deserialisation of modified properties holder, which should be validated.", ex);
-            throw new IllegalStateException(ex);
-        }
+        return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
     }
 
     /**
@@ -598,12 +592,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static CentreContextHolder restoreCentreContextHolder(final Representation envelope, final RestServerUtil restUtil) {
-        try {
-            return restUtil.restoreJSONEntity(envelope, CentreContextHolder.class);
-        } catch (final Exception ex) {
-            logger.error("An undesirable error has occured during deserialisation of centre context holder, which should be validated.", ex);
-            throw new IllegalStateException(ex);
-        }
+        return restUtil.restoreJSONEntity(envelope, CentreContextHolder.class);
     }
 
     /**
@@ -613,12 +602,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static Result restoreJSONResult(final Representation envelope, final RestServerUtil restUtil) {
-        try {
-            return restUtil.restoreJSONResult(envelope);
-        } catch (final Exception ex) {
-            logger.error("An undesirable error has occured during deserialisation of Result.", ex);
-            throw new IllegalStateException(ex);
-        }
+        return restUtil.restoreJSONResult(envelope);
     }
 
     /**
@@ -628,12 +612,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static SavingInfoHolder restoreSavingInfoHolder(final Representation envelope, final RestServerUtil restUtil) {
-        try {
-            return restUtil.restoreJSONEntity(envelope, SavingInfoHolder.class);
-        } catch (final Exception ex) {
-            logger.error("An undesirable error has occured during deserialisation of SavingInfoHolder, which should be validated.", ex);
-            throw new IllegalStateException(ex);
-        }
+        return restUtil.restoreJSONEntity(envelope, SavingInfoHolder.class);
     }
 
     /**

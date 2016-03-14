@@ -81,7 +81,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
 
             // before SAVING process there is a need to apply all actual criteria from modifHolder:
-            CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, CentreResourceUtils.getFreshCentre(gdtm, miType));
+            CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm);
 
             saveActualState(gdtm);
 
@@ -117,12 +117,19 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
     @Put
     public Representation discard(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+            final Map<String, Object> wasRunHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
+            final String wasRun = (String) wasRunHolder.get("@@wasRun");
+            if (wasRun != null) {
+                CentreResourceUtils.pushRestartClientApplicationMessage(gdtm, miType);
+            }
 
             discardActualState(gdtm);
+            
+            final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage(wasRun, CentreResourceUtils.getFreshCentre(gdtm, miType), miType, gdtm, companionFinder, critGenerator);
 
             // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-            return CriteriaResource.createCriteriaRetrievalEnvelope(CentreResourceUtils.getFreshCentre(gdtm, miType), miType, gdtm, restUtil, companionFinder, critGenerator);
+            return CriteriaResource.createCriteriaDiscardEnvelope(CentreResourceUtils.getFreshCentre(gdtm, miType), miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage);
         }, restUtil);
     }
 }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,6 +24,9 @@ import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.util.Series;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DynamicallyTypedQueryContainer;
@@ -33,9 +37,7 @@ import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.snappy.SnappyQuery;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.inject.Inject;
+import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
 
 /**
  * This is a convenience class providing some common routines used in the implementation of web-resources.
@@ -257,16 +259,11 @@ public class RestServerUtil {
      */
     public Representation mapJSONRepresentation(final Map<?, ?> map) {
         logger.debug("Start building JSON map representation.");
-        try {
-            // create a Result enclosing map
-            final Result result = new Result(new LinkedHashMap<>(map), "All is cool");
-            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-            logger.debug("SIZE: " + bytes.length);
-            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
-        } catch (final Exception ex) {
-            logger.error(ex.getMessage(), ex);
-            return errorRepresentation("The following error occurred during request processing:\n" + ex.getMessage());
-        }
+        // create a Result enclosing map
+        final Result result = new Result(new LinkedHashMap<>(map), "All is cool");
+        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+        logger.debug("SIZE: " + bytes.length);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /*, bytes.length*/);
     }
 
     /**
@@ -349,10 +346,9 @@ public class RestServerUtil {
      *
      * @param representation
      * @return
-     * @throws Exception
      */
-    public QueryExecutionModel<?, ?> restoreQueryExecutionModel(final Representation representation) throws Exception {
-        return serialiser.deserialise(representation.getStream(), QueryExecutionModel.class);
+    public QueryExecutionModel<?, ?> restoreQueryExecutionModel(final Representation representation) {
+        return serialiser.deserialise(getStream(representation), QueryExecutionModel.class);
     }
 
     /**
@@ -361,10 +357,9 @@ public class RestServerUtil {
      * @param <T>
      * @param representation
      * @return
-     * @throws Exception
      */
-    public QueryExecutionModel<?, ?> restoreQueryExecutionModelForGeneratedType(final Representation representation) throws Exception {
-        return serialiser.deserialise(representation.getStream(), DynamicallyTypedQueryContainer.class).getQem();
+    public QueryExecutionModel<?, ?> restoreQueryExecutionModelForGeneratedType(final Representation representation) {
+        return serialiser.deserialise(getStream(representation), DynamicallyTypedQueryContainer.class).getQem();
     }
 
     /**
@@ -372,14 +367,13 @@ public class RestServerUtil {
      *
      * @param representation
      * @return
-     * @throws Exception
      */
-    public LifecycleQueryContainer restoreLifecycleQueryContainer(final Representation representation) throws Exception {
-        return serialiser.deserialise(representation.getStream(), LifecycleQueryContainer.class);
+    public LifecycleQueryContainer restoreLifecycleQueryContainer(final Representation representation) {
+        return serialiser.deserialise(getStream(representation), LifecycleQueryContainer.class);
     }
 
-    public SnappyQuery restoreSnappyQuery(final Representation representation) throws Exception {
-        return serialiser.deserialise(representation.getStream(), SnappyQuery.class);
+    public SnappyQuery restoreSnappyQuery(final Representation representation) {
+        return serialiser.deserialise(getStream(representation), SnappyQuery.class);
     }
 
     /**
@@ -387,10 +381,9 @@ public class RestServerUtil {
      *
      * @param representation
      * @return
-     * @throws Exception
      */
-    public List<?> restoreList(final Representation representation) throws Exception {
-        return serialiser.deserialise(representation.getStream(), List.class);
+    public List<?> restoreList(final Representation representation) {
+        return serialiser.deserialise(getStream(representation), List.class);
     }
 
     /**
@@ -398,10 +391,9 @@ public class RestServerUtil {
      *
      * @param representation
      * @return
-     * @throws Exception
      */
-    public Result restoreJSONResult(final Representation representation) throws Exception {
-        return serialiser.deserialise(representation.getStream(), Result.class, SerialiserEngines.JACKSON);
+    public Result restoreJSONResult(final Representation representation) {
+        return serialiser.deserialise(getStream(representation), Result.class, SerialiserEngines.JACKSON);
     }
 
     /**
@@ -412,10 +404,9 @@ public class RestServerUtil {
      * @param representation
      * @param type
      * @return
-     * @throws Exception
      */
-    public <T extends AbstractEntity> T restoreEntity(final Representation representation, final Class<T> type) throws Exception {
-        return serialiser.deserialise(representation.getStream(), type);
+    public <T extends AbstractEntity> T restoreEntity(final Representation representation, final Class<T> type) {
+        return serialiser.deserialise(getStream(representation), type);
     }
 
     /**
@@ -426,10 +417,9 @@ public class RestServerUtil {
      * @param representation
      * @param type
      * @return
-     * @throws Exception
      */
-    public <T extends AbstractEntity> T restoreJSONEntity(final Representation representation, final Class<T> type) throws Exception {
-        return serialiser.deserialise(representation.getStream(), type, SerialiserEngines.JACKSON);
+    public <T extends AbstractEntity> T restoreJSONEntity(final Representation representation, final Class<T> type) {
+        return serialiser.deserialise(getStream(representation), type, SerialiserEngines.JACKSON);
     }
 
     /**
@@ -437,10 +427,9 @@ public class RestServerUtil {
      *
      * @param representation
      * @return
-     * @throws Exception
      */
-    public Map<?, ?> restoreMap(final Representation representation) throws Exception {
-        return serialiser.deserialise(representation.getStream(), Map.class);
+    public Map<?, ?> restoreMap(final Representation representation) {
+        return serialiser.deserialise(getStream(representation), Map.class);
     }
 
     /**
@@ -448,12 +437,19 @@ public class RestServerUtil {
      *
      * @param representation
      * @return
-     * @throws Exception
      */
-    public Map<?, ?> restoreJSONMap(final Representation representation) throws Exception {
-        return serialiser.deserialise(representation.getStream(), Map.class, SerialiserEngines.JACKSON);
+    public Map<?, ?> restoreJSONMap(final Representation representation) {
+        return serialiser.deserialise(getStream(representation), Map.class, SerialiserEngines.JACKSON);
     }
-
+    
+    private final static InputStream getStream(final Representation representation) {
+        try {
+            return representation.getStream();
+        } catch (final IOException ioException) {
+            throw new StreamCouldNotBeResolvedException(String.format("The stream could not be resolved from representation [%s].", representation), ioException);
+        }
+    }
+    
     public String getAppWidePublicKey() {
         return appWidePublicKey;
     }

@@ -121,13 +121,13 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     }
 
     @Override
-    public <T> T deserialise(final byte[] content, final Class<T> type) throws Exception {
+    public <T> T deserialise(final byte[] content, final Class<T> type) {
         final ByteArrayInputStream bis = new ByteArrayInputStream(content);
         return deserialise(bis, type);
     }
 
     @Override
-    public <T> T deserialise(final InputStream content, final Class<T> type) throws Exception {
+    public <T> T deserialise(final InputStream content, final Class<T> type) {
         try {
             final String contentString = IOUtils.toString(content, "UTF-8");
             logger.debug("JSON before deserialisation = |" + contentString + "|.");
