@@ -50,6 +50,7 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.RefreshApplicationException;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
@@ -533,8 +534,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Map<String, Object> customObject = new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject());
 
         final boolean isRunning = CentreResourceUtils.isRunning(customObject);
-        return isEmpty(centreContextHolder.getModifHolder()) ? null
-                : createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm, !isRunning);
+        if (isRunning) {
+            throw new IllegalStateException("During context capturing on entity centre it is necessary to have switched on 'isPaginating' mode.");
+        }
+        if (isEmpty(centreContextHolder.getModifHolder())) {
+            return null;
+        }
+        
+        return createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm, true);
     }
 
     /**
@@ -558,15 +565,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         if (isEmpty(modifiedPropertiesHolder)) {
             throw new IllegalArgumentException("ModifiedPropertiesHolder should not be empty during invocation of fully fledged criteria entity creation.");
         }
+        if (isPaginating) {
+            pushRestartClientApplicationMessage(gdtm, miType);
+        }
         
         // load fresh centre if it is not loaded yet
         CentreResourceUtils.getFreshCentre(gdtm, miType);
         // We need to choose centre manager, against which modifPropertiesHolder should be applied -- if isRunning action is performing then it should be the most fresh cdtmae instance,
         // otherwise, for pagination actions, it should be freshCentreWithout[Recent]Modifications.
-        // For isRunning case -- recent modifications will be applied on top of the most fresh centre manager.
-        // For !isRunning case -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
-        final boolean isRunning = !isPaginating; // TODO remove CentreResourceUtils.isRunning(customObject);
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = isRunning ? CentreResourceUtils.freshCentre(gdtm, miType) : CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType); 
+        // For !isPaginating case -- recent modifications will be applied on top of the most fresh centre manager.
+        // For isPaginating case -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = !isPaginating ? CentreResourceUtils.freshCentre(gdtm, miType) : CentreResourceUtils.previouslyRunCentre(gdtm, miType);
 
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
         final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, isPaginating ? EntityResourceUtils.getVersion(modifiedPropertiesHolder) - 1 : EntityResourceUtils.getVersion(modifiedPropertiesHolder));
@@ -576,7 +585,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
                 companionFinder//
         ).getKey();
+        
         return appliedCriteriaEntity;
+    }
+    
+    private static void pushRestartClientApplicationMessage(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        try {
+            CentreUtils.previouslyRunCentre(gdtm, miType);
+        } catch (final PreviouslyRunCentreNotInitialisedException notInitialisedError) {
+            throw new RefreshApplicationException();
+        }
     }
 
     /**

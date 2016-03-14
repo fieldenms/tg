@@ -23,6 +23,7 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
+import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -34,6 +35,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
@@ -173,7 +175,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             // Apply persistedModifiedPropertiesHolder and look whether the fresh criteria are different from 'persisted' ones.
             if (!CentreResourceUtils.isEmpty(persistedModifiedPropertiesHolder)) {
                 CentreResourceUtils.<T, M> createCriteriaEntity(persistedModifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm, true);
-                final boolean isCriteriaStale = !EntityUtils.equalsEx(CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType), CentreResourceUtils.freshCentre(gdtm, miType));
+                final boolean isCriteriaStale = !EntityUtils.equalsEx(CentreResourceUtils.previouslyRunCentre(gdtm, miType), CentreResourceUtils.freshCentre(gdtm, miType));
                 if (isCriteriaStale) {
                     logger.info(staleCriteriaMessage);
                     return staleCriteriaMessage;
@@ -219,6 +221,9 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                                     centre.getQueryEnhancerConfig(),
                                     appliedCriteriaEntity));
             if (isRunning) {
+                // init 'previously Run centre'
+                CentreResourceUtils.initUnchangedCentreManager(gdtm, miType, CentreResourceUtils.PREVIOUSLY_RUN_CENTRE_NAME, ((GlobalDomainTreeManager) gdtm).copyCentre(appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer()));
+
                 pair.getKey().put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(miType, gdtm));
                 pair.getKey().put("metaValues", CentreResourceUtils.createCriteriaMetaValues(appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer(), CentreResourceUtils.getEntityType(miType)));
                 pair.getKey().put("staleCriteriaMessage", null);

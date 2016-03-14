@@ -30,6 +30,7 @@ public class CentreUtils<T extends AbstractEntity<?>> {
     private final static Logger logger = Logger.getLogger(CentreUtils.class);
     private static final String DIFFERENCES_CENTRE_NAME = "__________DIFFERENCES_CENTRE_NAME";
     private static final String FRESH_CENTRE_NAME = "__________FRESH_CENTRE_NAME";
+    public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN_CENTRE_NAME";
 
     public CentreUtils() {
     }
@@ -115,7 +116,7 @@ public class CentreUtils<T extends AbstractEntity<?>> {
                                 getEntityType(miType)
                         );
 
-                ((GlobalDomainTreeManager) gdtm).init(miType, FRESH_CENTRE_NAME, freshCentre, true);
+                initUnchangedCentreManager(gdtm, miType, FRESH_CENTRE_NAME, freshCentre);
 
                 if (gdtm.isChangedEntityCentreManager(miType, FRESH_CENTRE_NAME)) {
                     throw new IllegalStateException("Should be not changed.");
@@ -126,6 +127,10 @@ public class CentreUtils<T extends AbstractEntity<?>> {
             }
             return freshCentre(gdtm, miType);
         }
+    }
+    
+    public static void initUnchangedCentreManager(final IGlobalDomainTreeManager gdtm, final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer mgr) {
+        ((GlobalDomainTreeManager) gdtm).init(menuItemType, name, mgr, true);
     }
 
     /**
@@ -143,7 +148,7 @@ public class CentreUtils<T extends AbstractEntity<?>> {
     }
     
     /**
-     * Returns the current version of 'fresh' centre manager but in unchaged form (aka from 'persistentCentres' not 'currentCentres' of GlobalDomainTreeManager).
+     * Returns previously run centre manager, not the freshest one with, perhaps, changed criteria.
      * <p>
      * It assumes that it should be initialised!
      *
@@ -151,13 +156,20 @@ public class CentreUtils<T extends AbstractEntity<?>> {
      * @param miType
      * @return
      */
-    public static ICentreDomainTreeManagerAndEnhancer freshCentreWithoutModifications(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        if (gdtm.getEntityCentreManager(miType, FRESH_CENTRE_NAME) == null) {
-            throw new IllegalStateException("The 'fresh centre' should be initialised.");
+    public static ICentreDomainTreeManagerAndEnhancer previouslyRunCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        if (gdtm.getEntityCentreManager(miType, PREVIOUSLY_RUN_CENTRE_NAME) == null) {
+            throw new PreviouslyRunCentreNotInitialisedException("The 'previously run centre' should be initialised.");
         }
-        return ((GlobalDomainTreeManager) gdtm).getEntityCentreManagerWithoutModifications(miType, FRESH_CENTRE_NAME);
+        return ((GlobalDomainTreeManager) gdtm).getEntityCentreManagerWithoutModifications(miType, PREVIOUSLY_RUN_CENTRE_NAME);
     }
+    
+    public static class PreviouslyRunCentreNotInitialisedException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
 
+        public PreviouslyRunCentreNotInitialisedException(final String string) {
+        }
+    }
+    
     /**
      * Removes fresh centre (to be able later to re-populate it automatically).
      *
