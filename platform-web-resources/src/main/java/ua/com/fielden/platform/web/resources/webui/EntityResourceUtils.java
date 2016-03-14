@@ -582,12 +582,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static Map<String, Object> restoreModifiedPropertiesHolderFrom(final Representation envelope, final RestServerUtil restUtil) {
-        try {
-            return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
-        } catch (final Exception ex) {
-            logger.error("An undesirable error has occured during deserialisation of modified properties holder, which should be validated.", ex);
-            throw new IllegalStateException(ex);
-        }
+        return (Map<String, Object>) restUtil.restoreJSONMap(envelope);
     }
 
     /**
@@ -597,12 +592,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static CentreContextHolder restoreCentreContextHolder(final Representation envelope, final RestServerUtil restUtil) {
-        try {
-            return restUtil.restoreJSONEntity(envelope, CentreContextHolder.class);
-        } catch (final Exception ex) {
-            logger.error("An undesirable error has occured during deserialisation of centre context holder, which should be validated.", ex);
-            throw new IllegalStateException(ex);
-        }
+        return restUtil.restoreJSONEntity(envelope, CentreContextHolder.class);
     }
 
     /**
@@ -612,12 +602,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static Result restoreJSONResult(final Representation envelope, final RestServerUtil restUtil) {
-        try {
-            return restUtil.restoreJSONResult(envelope);
-        } catch (final Exception ex) {
-            logger.error("An undesirable error has occured during deserialisation of Result.", ex);
-            throw new IllegalStateException(ex);
-        }
+        return restUtil.restoreJSONResult(envelope);
     }
 
     /**
@@ -627,12 +612,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static SavingInfoHolder restoreSavingInfoHolder(final Representation envelope, final RestServerUtil restUtil) {
-        try {
-            return restUtil.restoreJSONEntity(envelope, SavingInfoHolder.class);
-        } catch (final Exception ex) {
-            logger.error("An undesirable error has occured during deserialisation of SavingInfoHolder, which should be validated.", ex);
-            throw new IllegalStateException(ex);
-        }
+        return restUtil.restoreJSONEntity(envelope, SavingInfoHolder.class);
     }
 
     /**

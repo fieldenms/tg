@@ -135,6 +135,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
 
 import com.esotericsoftware.kryo.Context;
 import com.esotericsoftware.kryo.Kryo;
@@ -574,15 +575,20 @@ class TgKryo extends Kryo implements ISerialiserEngine {
     }
 
     @Override
-    public <T> T deserialise(final byte[] content, final Class<T> type) throws Exception {
+    public <T> T deserialise(final byte[] content, final Class<T> type) {
         final ByteArrayInputStream bis = new ByteArrayInputStream(content);
         return deserialise(bis, type);
     }
 
     @Override
-    public <T> T deserialise(final InputStream content, final Class<T> type) throws Exception {
+    public <T> T deserialise(final InputStream content, final Class<T> type) {
         final InflaterInputStream in = new InflaterInputStream(content);
-        final ByteBuffer readBuffer = IoHelper.readAsByteBuffer(in);
+        ByteBuffer readBuffer;
+        try {
+            readBuffer = IoHelper.readAsByteBuffer(in);
+        } catch (final IOException ioException) {
+            throw new StreamCouldNotBeResolvedException("The stream could not be resolved.", ioException);
+        }
         try {
             final Class<?> serialisedType = readClass(readBuffer).getType();
             final T result = (T) readObject(readBuffer, serialisedType);

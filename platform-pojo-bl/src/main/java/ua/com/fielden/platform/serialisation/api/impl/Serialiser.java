@@ -33,12 +33,12 @@ public class Serialiser implements ISerialiser {
     }
 
     @Override
-    public <T> T deserialise(final byte[] content, final Class<T> type, final SerialiserEngines serialiserEngine) throws Exception {
+    public <T> T deserialise(final byte[] content, final Class<T> type, final SerialiserEngines serialiserEngine) {
         return SerialiserEngines.KRYO.equals(serialiserEngine) ? tgKryo.deserialise(content, type) : tgJackson.deserialise(content, type);
     }
 
     @Override
-    public <T> T deserialise(final InputStream content, final Class<T> type, final SerialiserEngines serialiserEngine) throws Exception {
+    public <T> T deserialise(final InputStream content, final Class<T> type, final SerialiserEngines serialiserEngine) {
         return SerialiserEngines.KRYO.equals(serialiserEngine) ? tgKryo.deserialise(content, type) : tgJackson.deserialise(content, type);
     }
 
@@ -48,12 +48,12 @@ public class Serialiser implements ISerialiser {
     }
 
     @Override
-    public <T> T deserialise(final byte[] content, final Class<T> type) throws Exception {
+    public <T> T deserialise(final byte[] content, final Class<T> type) {
         return deserialise(content, type, SerialiserEngines.KRYO);
     }
 
     @Override
-    public <T> T deserialise(final InputStream content, final Class<T> type) throws Exception {
+    public <T> T deserialise(final InputStream content, final Class<T> type) {
         return deserialise(content, type, SerialiserEngines.KRYO);
     }
 

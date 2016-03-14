@@ -30,7 +30,7 @@ public interface ISerialiserEngine {
      * @return
      * @throws Exception
      */
-    <T> T deserialise(final byte[] content, final Class<T> type) throws Exception;
+    <T> T deserialise(final byte[] content, final Class<T> type);
 
     /**
      * Deserialises an object.
@@ -42,7 +42,7 @@ public interface ISerialiserEngine {
      * @return
      * @throws Exception
      */
-    <T> T deserialise(final InputStream content, final Class<T> type) throws Exception;
+    <T> T deserialise(final InputStream content, final Class<T> type);
 
     EntityFactory factory();
 }
