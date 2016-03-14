@@ -503,16 +503,25 @@
              */
             commit: function () {
                 console.debug('COMMIT: start.');
-                if (this.reflector().isEntity(this.entity) && typeof this.entity["@" + this.propertyName + "_uppercase"] !== 'undefined') {
-                    var upperCased = this._editingValue.toLocaleUpperCase();
-                    console.debug('COMMIT (value should be uppercased): current editingValue = [', this._editingValue, '] upperCased = [', upperCased, ']');
-                    if (!this.reflector().equalsEx(upperCased, this._editingValue)) {
-                        console.debug('COMMIT (value should be uppercased): change editingValue to [', upperCased, ']');
-	                    this._editingValue = upperCased;
+                if (this.reflector().isEntity(this.entity)) {
+                    if (typeof this.entity["@" + this.propertyName + "_uppercase"] !== 'undefined') {
+                        var upperCased = this._editingValue.toLocaleUpperCase();
+                        console.debug('COMMIT (value should be uppercased): current editingValue = [', this._editingValue, '] upperCased = [', upperCased, ']');
+                        if (!this.reflector().equalsEx(upperCased, this._editingValue)) {
+                            console.debug('COMMIT (value should be uppercased): change editingValue to [', upperCased, ']');
+    	                    this._editingValue = upperCased;
+                        }
                     }
+                    this._commitForDescendants();
                 }
                 console.debug("COMMIT: [", this._editingValue, "] value.");
    	            this._commValue = this._editingValue;
+            },
+            
+            /**
+             * Please, override this method (in descendant editors) in case where some custom '_editingValue' preprocessing is needed. 
+             */
+            _commitForDescendants: function () {
             },
 
             _bindMessages: function (entity, property, _editorValidationMsg) {
