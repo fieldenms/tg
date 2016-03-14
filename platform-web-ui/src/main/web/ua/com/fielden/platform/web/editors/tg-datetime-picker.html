@@ -231,8 +231,31 @@
 
                     this.commit();
                 }
+            },
+            
+            _commitForDescendants: function () {
+                var approximated = this._approximate(this._editingValue);
+                console.debug('COMMIT (value should be approximated): current editingValue = [', this._editingValue, '] approximated = [', approximated, ']');
+                if (!this.reflector().equalsEx(approximated, this._editingValue)) {
+                    console.debug('COMMIT (value should be approximated): change editingValue to [', approximated, ']');
+                    this._editingValue = approximated;
+                }
+            }, 
+            
+            _approximate: function (dateEditingValue) {
+                if (dateEditingValue) {
+                    var value = dateEditingValue.trim();
+                    
+                    var tryingMoment = moment(value, "DD/MM/YYYY", true);
+                    if (tryingMoment.isValid()) {
+                        return moment(tryingMoment.valueOf()).format("L LT");
+                    } else {
+                        return dateEditingValue;
+                    }
+                } else {
+                    return dateEditingValue;
+                }
             }
-
         });
     })();
 </script>
