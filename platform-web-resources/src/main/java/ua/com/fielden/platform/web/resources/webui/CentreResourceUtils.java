@@ -78,10 +78,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param isCentreChanged
      * @return
      */
-    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final String staleCriteriaMessage) {
+    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged) {
         final Map<String, Object> customObject = new LinkedHashMap<>();
         customObject.put("isCentreChanged", isCentreChanged);
         customObject.put("metaValues", criteriaMetaValues);
+        return customObject;
+    }
+    
+    /**
+     * Creates the 'custom object' that contain 'critMetaValues' and 'isCentreChanged' flag.
+     *
+     * @param criteriaMetaValues
+     * @param isCentreChanged
+     * @param staleCriteriaMessage -- if not <code>null</code> then the criteria is stale and the user will be informed about that ('orange' config button), otherwise (if <code>null</code>) -- the criteria were not changed and the user will be informed about that ('black' config button).
+     * 
+     * @return
+     */
+    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final String staleCriteriaMessage) {
+        final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
         customObject.put("staleCriteriaMessage", staleCriteriaMessage);
         return customObject;
     }

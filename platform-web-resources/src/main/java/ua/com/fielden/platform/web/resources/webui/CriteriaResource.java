@@ -141,8 +141,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                 CentreResourceUtils.createCriteriaValidationPrototype(miType, cdtmae, critGenerator, -1L),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
                         CentreResourceUtils.createCriteriaMetaValues(cdtmae, CentreResourceUtils.getEntityType(miType)),
-                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm), //
-                        null // TODO after save / discard action -- retrieval is performed. That is why the state of 'yellow' config button is reset to 'black' which is not desired behaviour in some cases
+                        CentreResourceUtils.isFreshCentreChanged(miType, gdtm)
                 )//
         );
     }
@@ -174,8 +173,9 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             // otherwise, for pagination actions, it should be freshCentreWithout[Recent]Modifications.
             // For isRunning case -- recent modifications will be applied on top of the most fresh centre manager.
             // For !isRunning case -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
-            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType); 
-            final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(persistedModifiedPropertiesHolder, companionFinder, critGenerator, miType, originalCdtmae, true);
+            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType);
+            // apply persistedModifiedPropertiesHolder and look whether the fresh criteria are different from 'persisted' ones
+            CentreResourceUtils.<T, M> createCriteriaEntity(persistedModifiedPropertiesHolder, companionFinder, critGenerator, miType, originalCdtmae, true);
             final boolean isCriteriaStale = !EntityUtils.equalsEx(originalCdtmae, CentreResourceUtils.freshCentre(gdtm, miType));
             if (isCriteriaStale) {
                 logger.info(staleCriteriaMessage);
@@ -230,12 +230,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             if (isRunning) {
                 pair.getKey().put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(miType, gdtm));
                 pair.getKey().put("metaValues", CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)));
-            } else {
-                final boolean isCriteriaStale = !EntityUtils.equalsEx(originalCdtmae, CentreResourceUtils.freshCentre(gdtm, miType));
-                if (isCriteriaStale) {
-                    logger.info(staleCriteriaMessage);
-                    pair.getKey().put("staleCriteriaMessage", staleCriteriaMessage);
-                }
+                pair.getKey().put("staleCriteriaMessage", null);
             }
             
             if (pair.getValue() == null) {

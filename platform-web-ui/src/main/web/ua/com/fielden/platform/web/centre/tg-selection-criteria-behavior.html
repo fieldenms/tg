@@ -206,7 +206,7 @@
                         var renderingHints = customObject.renderingHints || [];
                         var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
                         var summary = customObject.summary;
-                        var staleCriteriaMessage = customObject.staleCriteriaMessage || null;
+                        var staleCriteriaMessage = customObject.staleCriteriaMessage;
 
                         self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary, staleCriteriaMessage);
                 	});
@@ -220,7 +220,9 @@
 				
 				// calbacks, that will potentially be augmented by tg-action child elements: 
                 self._postRunDefault = (function (criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary, staleCriteriaMessage) {
-                    this.staleCriteriaMessage = staleCriteriaMessage;
+                    if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
+                        this.staleCriteriaMessage = staleCriteriaMessage;
+                    }
                     if (criteriaEntity === null) {
     	                var msg = "Running completed successfully.";
     	                this._openToastWithoutEntity(msg, false, msg, false);
@@ -260,7 +262,9 @@
                 }).bind(self);
                 
                 self.postValidated = (function (validatedEntity, bindingEntity, customObject) {
-                    this.staleCriteriaMessage = customObject.staleCriteriaMessage || null;
+                    if (typeof customObject.staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
+                        this.staleCriteriaMessage = customObject.staleCriteriaMessage;
+                    }
                     this._setPropertyModel(customObject.metaValues);
                     this._centreChanged = customObject.isCentreChanged;
 
