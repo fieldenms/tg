@@ -531,17 +531,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             throw new IllegalStateException(e);
         }
         final Map<String, Object> customObject = new LinkedHashMap<String, Object>(centreContextHolder.getCustomObject());
-        // load fresh centre if it is not loaded yet
-        CentreResourceUtils.getFreshCentre(gdtm, miType);
-        // We need to choose centre manager, against which modifPropertiesHolder should be applied -- if isRunning action is performing then it should be the most fresh cdtmae instance,
-        // otherwise, for pagination actions, it should be freshCentreWithout[Recent]Modifications.
-        // For isRunning case -- recent modifications will be applied on top of the most fresh centre manager.
-        // For !isRunning case -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
-        final boolean isRunning = CentreResourceUtils.isRunning(customObject);
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = isRunning ? CentreResourceUtils.freshCentre(gdtm, miType) : CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType); 
 
+        final boolean isRunning = CentreResourceUtils.isRunning(customObject);
         return isEmpty(centreContextHolder.getModifHolder()) ? null
-                : createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae, !isRunning);
+                : createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm, !isRunning);
     }
 
     /**
@@ -550,8 +543,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param centreContextHolder
      * @return
      */
-    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer originalCdtmae) {
-        return createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, originalCdtmae, false);
+    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
+        return createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm, false);
     }
     
     /**
@@ -561,10 +554,19 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param isPaginating -- returns <code>true</code> in case when this method is a part of 'Paginating Actions', <code>false</code> otherwise
      * @return
      */
-    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer originalCdtmae, final boolean isPaginating) {
+    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final boolean isPaginating) {
         if (isEmpty(modifiedPropertiesHolder)) {
             throw new IllegalArgumentException("ModifiedPropertiesHolder should not be empty during invocation of fully fledged criteria entity creation.");
         }
+        
+        // load fresh centre if it is not loaded yet
+        CentreResourceUtils.getFreshCentre(gdtm, miType);
+        // We need to choose centre manager, against which modifPropertiesHolder should be applied -- if isRunning action is performing then it should be the most fresh cdtmae instance,
+        // otherwise, for pagination actions, it should be freshCentreWithout[Recent]Modifications.
+        // For isRunning case -- recent modifications will be applied on top of the most fresh centre manager.
+        // For !isRunning case -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
+        final boolean isRunning = !isPaginating; // TODO remove CentreResourceUtils.isRunning(customObject);
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = isRunning ? CentreResourceUtils.freshCentre(gdtm, miType) : CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType); 
 
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
         final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, isPaginating ? EntityResourceUtils.getVersion(modifiedPropertiesHolder) - 1 : EntityResourceUtils.getVersion(modifiedPropertiesHolder));

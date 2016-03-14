@@ -81,7 +81,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             final Map<String, Object> modifiedPropertiesHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
 
             // before SAVING process there is a need to apply all actual criteria from modifHolder:
-            CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, CentreResourceUtils.getFreshCentre(gdtm, miType));
+            CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm);
 
             saveActualState(gdtm);
 

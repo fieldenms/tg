@@ -156,7 +156,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final ICriteriaGenerator critGenerator
                     ) {
         return restUtil.rawListJSONRepresentation(
-                CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, cdtmae),
+                CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
                         CentreResourceUtils.createCriteriaMetaValues(cdtmae, CentreResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(miType, gdtm),
@@ -169,17 +169,15 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
         if (persistedModifiedPropertiesHolder != null) {
             // load fresh centre if it is not loaded yet
             CentreResourceUtils.getFreshCentre(gdtm, miType);
-            // We need to choose centre manager, against which modifPropertiesHolder should be applied -- if isRunning action is performing then it should be the most fresh cdtmae instance,
-            // otherwise, for pagination actions, it should be freshCentreWithout[Recent]Modifications.
-            // For isRunning case -- recent modifications will be applied on top of the most fresh centre manager.
-            // For !isRunning case -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
-            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType);
-            // apply persistedModifiedPropertiesHolder and look whether the fresh criteria are different from 'persisted' ones
-            CentreResourceUtils.<T, M> createCriteriaEntity(persistedModifiedPropertiesHolder, companionFinder, critGenerator, miType, originalCdtmae, true);
-            final boolean isCriteriaStale = !EntityUtils.equalsEx(originalCdtmae, CentreResourceUtils.freshCentre(gdtm, miType));
-            if (isCriteriaStale) {
-                logger.info(staleCriteriaMessage);
-                return staleCriteriaMessage;
+            // We need to choose freshCentreWithout[Recent]Modifications to check the staleness of criteria -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
+            // Apply persistedModifiedPropertiesHolder and look whether the fresh criteria are different from 'persisted' ones.
+            if (!CentreResourceUtils.isEmpty(persistedModifiedPropertiesHolder)) {
+                CentreResourceUtils.<T, M> createCriteriaEntity(persistedModifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm, true);
+                final boolean isCriteriaStale = !EntityUtils.equalsEx(CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType), CentreResourceUtils.freshCentre(gdtm, miType));
+                if (isCriteriaStale) {
+                    logger.info(staleCriteriaMessage);
+                    return staleCriteriaMessage;
+                }
             }
         }
         return null;
@@ -202,15 +200,8 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
 
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             
-            // load fresh centre if it is not loaded yet
-            CentreResourceUtils.getFreshCentre(gdtm, miType);
-            // We need to choose centre manager, against which modifPropertiesHolder should be applied -- if isRunning action is performing then it should be the most fresh cdtmae instance,
-            // otherwise, for pagination actions, it should be freshCentreWithout[Recent]Modifications.
-            // For isRunning case -- recent modifications will be applied on top of the most fresh centre manager.
-            // For !isRunning case -- 'persisted from last Run session' modifications will be applied on top of the most freshCentreWithout[Recent]Modifications manager (see '_persistedModifiedPropertiesHolder' in 'tg-selection-criteria-behavior').
             final boolean isRunning = CentreResourceUtils.isRunning(customObject);
-            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = isRunning ? CentreResourceUtils.freshCentre(gdtm, miType) : CentreResourceUtils.freshCentreWithoutModifications(gdtm, miType); 
-            final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae, !isRunning);
+            final M appliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm, !isRunning);
 
             final Pair<Map<String, Object>, ArrayList<?>> pair =
                     CentreResourceUtils.<T, M> createCriteriaMetaValuesCustomObjectWithResult(
@@ -229,7 +220,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                                     appliedCriteriaEntity));
             if (isRunning) {
                 pair.getKey().put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(miType, gdtm));
-                pair.getKey().put("metaValues", CentreResourceUtils.createCriteriaMetaValues(originalCdtmae, CentreResourceUtils.getEntityType(miType)));
+                pair.getKey().put("metaValues", CentreResourceUtils.createCriteriaMetaValues(appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer(), CentreResourceUtils.getEntityType(miType)));
                 pair.getKey().put("staleCriteriaMessage", null);
             }
             

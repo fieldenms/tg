@@ -95,18 +95,17 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
-            final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.getFreshCentre(gdtm, miType);
 
             final M criteriaEntity;
             final Class<M> criteriaType;
             if (CentreResourceUtils.isEmpty(centreContextHolder.getModifHolder())) {
                 // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
                 criteriaEntity = null;
-                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, 0L /* TODO does it matter? */);
+                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreResourceUtils.getFreshCentre(gdtm, miType), critGenerator, 0L /* TODO does it matter? */);
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
 
             } else {
-                criteriaEntity = (M) CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), coFinder, critGenerator, miType, originalCdtmae);
+                criteriaEntity = (M) CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), coFinder, critGenerator, miType, gdtm);
                 criteriaType = (Class<M>) criteriaEntity.getClass();
             }
 
