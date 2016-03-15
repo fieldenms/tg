@@ -1038,7 +1038,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 preAction(new IPreAction() {
                                     @Override
                                     public JsCode build() {
-                                        return new JsCode("    return confirm('Are you sure you want to proceed?');\n");
+                                        return new JsCode("    return self.confirm('Are you sure you want to proceed?',"
+                                                + " [{name: 'yes', confirm: true},{name: 'no', confirm: false}]);\n");
                                     }
                                 }).
                                 icon("assignment-ind").

@@ -5,6 +5,7 @@
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
 
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/components/tg-confirmation-dialog.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
@@ -44,6 +45,8 @@
 
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError"></iron-ajax>
         <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
+        
+        <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
         <iron-pages selected="[[_selectedView]]" on-scroll="_handleScroll">
             <div class="fit">
@@ -154,6 +157,13 @@
          */
         _reflector: function () {
             return this.$.serialiser.$.reflector;
+        },
+        
+        /**
+         * Returns the confirmation dialog for this centre.
+         */
+        _confirmationDialog: function() {
+            return this.$.confirmationDialog;
         },
 
         saveAsync: function () {
