@@ -96,6 +96,12 @@
 
             ready: function () {
                 this.$.editorDom._editorKind = 'DATE';
+                
+                moment.parseTwoDigitYear = function (input) {
+                    var currYear = moment().year();
+                    console.debug('parseTwoDigitYear: [', input, '] currYear ', currYear);
+                    return parseInt(input, 10) + ( (parseInt(input, 10) < currYear - 2000 + 30) ? 2000 : 1900);
+                };
             },
 
             properties: {
@@ -126,7 +132,9 @@
                     value: function () {
                         return [
                             'L LT',
-                            'DD/MM/YYYY'
+                            'D/M/YYYY',
+                            'D/M/YY',
+                            'D/M/Y'
                         ];
                     }
                 },
@@ -293,7 +301,11 @@
                     var firstFormat = formats[0];
                     var tryingMoment = moment(stringValue, firstFormat, true);
                     if (tryingMoment.isValid()) {
-                        if ('DD/MM/YYYY' === firstFormat && this.timePortionToBecomeEndOfDay === true) {
+                        if (['D/M/Y'].indexOf(firstFormat) !== -1) {
+                            tryingMoment = moment(this._convertToDoubleDigitYear(stringValue), 'D/M/YY', true);
+                        }
+                        
+                        if (['D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {
                             tryingMoment.add(1, 'days').subtract(1, 'milliseconds');
                         }
                         return tryingMoment;
@@ -302,6 +314,11 @@
                         return this._tryFormats(stringValue, formats);
                     }
                 }
+            },
+            
+            _convertToDoubleDigitYear: function (oneDigitYearString) {
+                var insertionPoint = oneDigitYearString.length - 1;
+                return oneDigitYearString.slice(0, insertionPoint) + "0" + oneDigitYearString.slice(insertionPoint);
             }
         });
     })();
