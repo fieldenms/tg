@@ -99,6 +99,13 @@
             },
 
             properties: {
+                /**
+                 * If true -- the empty time portion should be approximated to '23:59:59.999', otherwise -- to '00:00:00.000'.
+                 */
+                timePortionToBecomeEndOfDay: {
+                    type: Boolean
+                },
+                
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,15 +117,27 @@
                     type: Boolean,
                     value: false
                 },
-
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-                //   prefix. 																				           //
-                // Also, these properties are designed to be bound to children element properties -- it is necessary to//
-                //   populate their default values in ready callback (to have these values populated in children)!     //
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                
+                /**
+                 * The formats for approximation. The order of this array is important -- it defines the order in which formats are tried during approximation.
+                 */
+                _formats: {
+                    type: Array,
+                    value: function () {
+                        return [
+                            'L LT',
+                            'DD/MM/YYYY'
+                        ];
+                    }
+                },
+                
+                /**
+                 * The property that holds valid approximated 'moment' value in case if approximation has been successful or 'null' otherwise.
+                 */
+                _validMoment: {
+                    type: Object,
+                    value: null
+                }
             },
 
             /**
@@ -127,9 +146,8 @@
             convertFromString: function (strValue) {
                 // console.log(moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a"));
                 if (strValue) {
-                    var acceptedMoment = moment(strValue.trim(), "L LT", true);
-                    if (acceptedMoment.isValid()) {
-                        return acceptedMoment.valueOf();
+                    if (this._validMoment !== null) {
+                        return this._validMoment.valueOf();
                     } else {
                         throw "The entered date is incorrect."
                     }
@@ -233,6 +251,9 @@
                 }
             },
             
+            /**
+             * Overridden to provide value approximations.
+             */
             _commitForDescendants: function () {
                 var approximated = this._approximate(this._editingValue);
                 console.debug('COMMIT (value should be approximated): current editingValue = [', this._editingValue, '] approximated = [', approximated, ']');
@@ -240,20 +261,46 @@
                     console.debug('COMMIT (value should be approximated): change editingValue to [', approximated, ']');
                     this._editingValue = approximated;
                 }
-            }, 
+            },
             
+            /**
+             * Approximates the 'dateEditingValue' using registered '_formats' to the standard form like [09/09/2002 11:03 AM].
+             * If approximation is failed -- returns the same 'dateEditingValue'.
+             */
             _approximate: function (dateEditingValue) {
                 if (dateEditingValue) {
                     var value = dateEditingValue.trim();
                     
-                    var tryingMoment = moment(value, "DD/MM/YYYY", true);
-                    if (tryingMoment.isValid()) {
-                        return moment(tryingMoment.valueOf()).format("L LT");
-                    } else {
-                        return dateEditingValue;
+                    if (value) {
+                        this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
+                        if (this._validMoment !== null) {
+                            return moment(this._validMoment.valueOf()).format('L LT');
+                        }
                     }
+                } 
+                return dateEditingValue;
+            },
+            
+            /**
+             * Tries the formats one-by-one and returns the valid 'moment' object in case where some format has been successed.
+             * In case of all formats failure -- returns 'null'.
+             */
+            _tryFormats: function (stringValue, formats) {
+                if (formats.length === 0) {
+                    return null;
                 } else {
-                    return dateEditingValue;
+                    console.debug('formats', formats);
+                    var firstFormat = formats[0];
+                    var tryingMoment = moment(stringValue, firstFormat, true);
+                    if (tryingMoment.isValid()) {
+                        if ('DD/MM/YYYY' === firstFormat && this.timePortionToBecomeEndOfDay === true) {
+                            tryingMoment.add(1, 'days').subtract(1, 'milliseconds');
+                        }
+                        return tryingMoment;
+                    } else {
+                        formats.shift(); // first element is removed
+                        return this._tryFormats(stringValue, formats);
+                    }
                 }
             }
         });

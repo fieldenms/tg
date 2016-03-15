@@ -20,7 +20,8 @@ public class DateSingleCriterionWidget extends AbstractSingleCriterionWidget {
         super(propertyName,
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
-                        AbstractCriterionWidget.generateSingleName(root, managedType, propertyName)
+                        AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),
+                        false
                 ));
     }
 }
