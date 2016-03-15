@@ -4,15 +4,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
-
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+
+import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
+import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
+import ua.com.fielden.platform.utils.RefreshApplicationException;
 
 /**
  * Deserialiser for list of unknown objects (should determine their type ad-hoc).
@@ -45,7 +47,11 @@ public class ArrayListJsonDeserialiser extends StdDeserializer<ArrayList> {
                 list.add(null);
             } else if (el.isObject() && (el.get("@id_ref") != null || el.get("@id") != null)) {
                 final String typeNumber = el.get("@id_ref") != null ? el.get("@id_ref").asText().substring(0, el.get("@id_ref").asText().indexOf("#")) : el.get("@id").asText().substring(0, el.get("@id").asText().indexOf("#"));
-                final Class<?> instanceType = ClassesRetriever.findClass(entityTypeInfoGetter.get(Long.parseLong(typeNumber)).getKey());
+                final EntityType instanceTypeInfo = entityTypeInfoGetter.get(Long.parseLong(typeNumber));
+                if (instanceTypeInfo == null) {
+                    throw new RefreshApplicationException();
+                }
+                final Class<?> instanceType = ClassesRetriever.findClass(instanceTypeInfo.getKey());
                 list.add(mapper.readValue(el.traverse(mapper), instanceType));
             } else {
                 throw new UnsupportedOperationException("ListJsonDeserialiser does not support node [" + el + "] with type [" + el.getNodeType() + "] at this stage."); // not supported

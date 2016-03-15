@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
@@ -419,19 +420,19 @@ public class EntityUtils {
      *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
      * @throws Result
      */
-    public static void validateDateRange(final Date start, final Date finish, final MetaProperty startProperty, final MetaProperty finishProperty, final boolean finishSetter)
-            throws Result {
+    public static void validateDateRange(final Date start, final Date finish, final MetaProperty<Date> startProperty, final MetaProperty<Date> finishProperty, final boolean finishSetter) {
         if (finish != null) {
             if (start != null) {
                 if (start.after(finish)) {
-                    throw new Result("", new Exception(finishSetter ? //
-                    /*      */finishProperty.getTitle() + " cannot be before " + startProperty.getTitle() + "." //
-                    : startProperty.getTitle() + " cannot be after " + finishProperty.getTitle() + "."));
+                    throw Result.failure(finishSetter
+                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), toString(finish) , startProperty.getTitle(), toString(start))
+                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), toString(start), finishProperty.getTitle(), toString(finish)));
                 }
             } else {
-                throw new Result("", new Exception(finishSetter ? //
-                /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                throw Result.failure(finishSetter 
+                ? format("Property [%s] (value [%s]) cannot be specified without property [%s].", finishProperty.getTitle(), finish, startProperty.getTitle())
+                : format("Property [%s] cannot be empty if property [%s] (value [%s]) if specified.", startProperty.getTitle(), finishProperty.getTitle(), finish));
+
             }
         }
     }
@@ -447,19 +448,18 @@ public class EntityUtils {
      *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
      * @throws Result
      */
-    public static void validateDateTimeRange(final DateTime start, final DateTime finish, final MetaProperty startProperty, final MetaProperty finishProperty, final boolean finishSetter)
-            throws Result {
+    public static void validateDateTimeRange(final DateTime start, final DateTime finish, final MetaProperty<DateTime> startProperty, final MetaProperty<DateTime> finishProperty, final boolean finishSetter) {
         if (finish != null) {
             if (start != null) {
                 if (start.isAfter(finish)) {
-                    throw new Result("", new Exception(finishSetter ? //
-                    /*      */finishProperty.getTitle() + " cannot be before " + startProperty.getTitle() + "." //
-                    : startProperty.getTitle() + " cannot be after " + finishProperty.getTitle() + "."));
+                    throw Result.failure(finishSetter
+                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), toString(finish) , startProperty.getTitle(), toString(start))
+                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), toString(start), finishProperty.getTitle(), toString(finish)));
                 }
             } else {
-                throw new Result("", new Exception(finishSetter ? //
-                /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                throw Result.failure(finishSetter 
+                ? format("Property [%s] (value [%s]) cannot be specified without property [%s].", finishProperty.getTitle(), finish, startProperty.getTitle())
+                : format("Property [%s] cannot be empty if property [%s] (value [%s]) if specified.", startProperty.getTitle(), finishProperty.getTitle(), finish));
             }
         }
     }

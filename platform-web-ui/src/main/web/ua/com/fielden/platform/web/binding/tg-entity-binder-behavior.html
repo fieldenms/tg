@@ -483,6 +483,20 @@
             },
             
             /**
+             * Opens the toast with some message and with indication whether progress is started.
+             */
+            _openToastWithoutEntity: function (toastMsg, hasMoreInfo, moreInfo, showProgress) {
+                this._toastGreeting().text = toastMsg;
+                this._toastGreeting().hasMore = hasMoreInfo;
+                this._toastGreeting().msgText = moreInfo;
+                this._toastGreeting().showProgress = showProgress;
+                if (hasMoreInfo) {
+                    this._toastGreeting().msgHeading = "Info";
+                }
+                this._toastGreeting().show();
+            },
+            
+            /**
              * Hides the toast.
              */
             _hideToast: function() {

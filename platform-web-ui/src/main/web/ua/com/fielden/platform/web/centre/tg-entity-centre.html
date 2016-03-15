@@ -115,10 +115,18 @@
             save: Function,
             discard: Function,
             run: Function,
-            _activateResultSetView: Function
+            _activateResultSetView: Function,
+            staleCriteriaMessage: {
+                type: String,
+                observer: '_staleCriteriaMessageChanged'
+            }
         },
         
         behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+        
+        _staleCriteriaMessageChanged: function (newValue, oldValue) {
+            console.debug('_staleCriteriaMessageChanged:', newValue, oldValue);
+        },
 
         /**
          * The core-ajax component for centre discarding.

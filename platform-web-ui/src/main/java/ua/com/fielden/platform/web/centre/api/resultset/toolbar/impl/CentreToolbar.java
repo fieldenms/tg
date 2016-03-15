@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl;
 
+import ua.com.fielden.platform.dom.CssElement;
 import ua.com.fielden.platform.dom.CssStyles;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -10,9 +11,9 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 public class CentreToolbar implements IToolbarConfig {
 
     protected final InnerTextElement topLevelPlacement = new InnerTextElement("<!-- GENERATED FUNCTIONAL ACTIONS: -->\n<!--@functional_actions-->");
-    protected final DomElement configButton = new DomElement("paper-icon-button").clazz("standart-action").
+    protected final DomElement configButton = new DomElement("paper-icon-button").attr("class$", "[[computeConfigButtonClasses(staleCriteriaMessage)]]").
             attr("icon", "icons:settings").attr("on-tap", "_activateSelectionCriteriaView").attr("disabled$", "[[isRunning]]").
-            attr("tooltip-text", "Show selection criteria");
+            attr("tooltip-text$", "[[computeConfigButtonTooltip(staleCriteriaMessage)]]");
     protected final DomElement pagination = new DomContainer().
             add(new DomElement("paper-icon-button").clazz("revers", "standart-action").attr("icon", "hardware:keyboard-tab").
                     attr("on-tap", "firstPage").attr("disabled$", "[[canNotFirst(pageNumber, pageCount, isRunning)]]").
@@ -48,6 +49,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     @Override
     public CssStyles styles() {
-        return new CssStyles();
+        return new CssStyles()
+                .add(new CssElement("paper-icon-button.orange").setStyle("color", "var(--paper-orange-500)").setStyle("border-color", "var(--paper-orange-500)"));
     }
 }

@@ -18,7 +18,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
+import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
 
+import com.google.common.base.Charsets;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.CompactWriter;
 
@@ -30,9 +32,11 @@ import com.thoughtworks.xstream.io.xml.CompactWriter;
  * @author TG Team
  *
  */
+@Deprecated
 public abstract class XStreamSerialiser extends XStream implements ISerialiserEngine {
     private final boolean compact;
 
+    @Deprecated
     protected XStreamSerialiser(final boolean compact) {
         alias("r", Result.class);
         alias("w", Warning.class);
@@ -84,17 +88,22 @@ public abstract class XStreamSerialiser extends XStream implements ISerialiserEn
     }
 
     @Override
-    public <T> T deserialise(final byte[] content, final Class<T> type) throws Exception {
+    public <T> T deserialise(final byte[] content, final Class<T> type) {
         return deserialise(new ByteArrayInputStream(content), type);
     }
 
     @Override
-    public <T> T deserialise(final InputStream content, final Class<T> type) throws Exception {
+    public <T> T deserialise(final InputStream content, final Class<T> type) {
         // every entity type is represented as e at both server and client sides
         if (AbstractEntity.class.isAssignableFrom(type)) {
             alias("e", type);
         }
-        final GZIPInputStream zIn = new GZIPInputStream(content);
-        return type.cast(fromXML(new BufferedReader(new InputStreamReader(zIn, "UTF-8"))));
+        GZIPInputStream zIn;
+        try {
+            zIn = new GZIPInputStream(content);
+        } catch (final IOException ioException) {
+            throw new StreamCouldNotBeResolvedException("The stream could not be resolved.", ioException);
+        }
+        return type.cast(fromXML(new BufferedReader(new InputStreamReader(zIn, Charsets.UTF_8))));
     }
 }

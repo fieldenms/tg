@@ -50,6 +50,7 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.utils.RefreshApplicationException;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
@@ -84,6 +85,31 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         customObject.put("metaValues", criteriaMetaValues);
         return customObject;
     }
+    
+    /**
+     * Creates the 'custom object' that contain 'critMetaValues' and 'isCentreChanged' flag.
+     *
+     * @param criteriaMetaValues
+     * @param isCentreChanged
+     * @param staleCriteriaMessage -- if not <code>null</code> then the criteria is stale and the user will be informed about that ('orange' config button), otherwise (if <code>null</code>) -- the criteria were not changed and the user will be informed about that ('black' config button).
+     * 
+     * @return
+     */
+    static Map<String, Object> createCriteriaMetaValuesCustomObject(final Map<String, Map<String, Object>> criteriaMetaValues, final boolean isCentreChanged, final String staleCriteriaMessage) {
+        final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, isCentreChanged);
+        customObject.put("staleCriteriaMessage", staleCriteriaMessage);
+        return customObject;
+    }
+    
+    /**
+     * Returns <code>true</code> if 'Run' action is performed represented by specified <code>customObject</code>, otherwise <code>false</code>.
+     * 
+     * @param customObject
+     * @return
+     */
+    public static boolean isRunning(final Map<String, Object> customObject) {
+        return customObject.get("@@pageNumber") == null;
+    }
 
     /**
      * Creates the pair of 'custom object' (that contain 'critMetaValues', 'isCentreChanged' flag, 'resultEntities' and 'pageCount') and 'resultEntities' (query run is performed
@@ -96,10 +122,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param additionalFetchProvider
      * @return
      */
-    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> customObject, final Map<String, Map<String, Object>> criteriaMetaValues, final M criteriaEntity, final boolean isCentreChanged, final Optional<IFetchProvider<T>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext) {
+    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> customObject, final M criteriaEntity, final Optional<IFetchProvider<T>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
-        resultantCustomObject.put("isCentreChanged", isCentreChanged);
-        resultantCustomObject.put("metaValues", criteriaMetaValues);
 
         // the next action validates the entity one more time, but with the check for 'required' properties
         final Result validationResult = criteriaEntity.isValid();
@@ -115,16 +139,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
             }
             final IPage<T> page;
-            final T summary;
             final Integer pageCapacity = (Integer) customObject.get("@@pageCapacity");
             customObject.remove("@@pageCapacity");
-            if (customObject.get("@@pageNumber") == null) {
+            if (isRunning(customObject)) {
                 page = criteriaEntity.run(pageCapacity);
-                summary = page.summary();
+                resultantCustomObject.put("summary", page.summary());
             } else {
-                final IPage<T> pageWithSummary = criteriaEntity.run(1);
                 page = criteriaEntity.getPage((Integer) customObject.get("@@pageNumber"), (Integer) customObject.get("@@pageCount"), pageCapacity);
-                summary = pageWithSummary.summary();
                 customObject.remove("@@pageNumber");
                 customObject.remove("@@pageCount");
             }
@@ -154,7 +175,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 // and resolved purely on the client side)
                 resultantCustomObject.put("isRefreshingConcreteEntities", "yes");
             }
-            resultantCustomObject.put("summary", summary);
             return new Pair<>(resultantCustomObject, resultEntities);
         }
         return new Pair<>(resultantCustomObject, null);
@@ -501,7 +521,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param centreContextHolder
      * @return
      */
-    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
+    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
         if (centreContextHolder.getCustomObject().get("@@miType") == null) {
             return null;
         }
@@ -511,23 +531,41 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         } catch (final ClassNotFoundException e) {
             throw new IllegalStateException(e);
         }
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = getFreshCentre(gdtm, miType);
-
-        return isEmpty(centreContextHolder.getModifHolder()) ? null
-                : createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, originalCdtmae);
+        return createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm);
     }
-
+    
     /**
      * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
      *
      * @param centreContextHolder
+     * @param isPaginating -- returns <code>true</code> in case when this method is a part of 'Paginating Actions', <code>false</code> otherwise
      * @return
      */
-    public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer originalCdtmae) {
+    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForPaginating(final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
+        pushRestartClientApplicationMessage(gdtm, miType);
+        
+        // load fresh centre if it is not loaded yet
+        CentreResourceUtils.getFreshCentre(gdtm, miType);
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.previouslyRunCentre(gdtm, miType);
+    
+        return createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, 0L);
+    }
+    
+    /**
+     * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
+     *
+     * @param centreContextHolder
+     * @param isPaginating -- returns <code>true</code> in case when this method is a part of 'Paginating Actions', <code>false</code> otherwise
+     * @return
+     */
+    protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
         if (isEmpty(modifiedPropertiesHolder)) {
             throw new IllegalArgumentException("ModifiedPropertiesHolder should not be empty during invocation of fully fledged criteria entity creation.");
         }
-
+        
+        // load fresh centre if it is not loaded yet
+        CentreResourceUtils.getFreshCentre(gdtm, miType);
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.freshCentre(gdtm, miType);
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
         final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
@@ -537,6 +575,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 companionFinder//
         ).getKey();
         return appliedCriteriaEntity;
+    }
+    
+    protected static void pushRestartClientApplicationMessage(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        try {
+            CentreUtils.previouslyRunCentre(gdtm, miType);
+        } catch (final PreviouslyRunCentreNotInitialisedException notInitialisedError) {
+            throw new RefreshApplicationException();
+        }
     }
 
     /**

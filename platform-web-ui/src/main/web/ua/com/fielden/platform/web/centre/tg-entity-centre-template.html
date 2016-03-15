@@ -139,6 +139,7 @@
         	discard="[[discard]]"
         	run="[[run]]"
         	_activate-result-set-view="[[_activateResultSetView]]"
+        	stale-criteria-message="[[staleCriteriaMessage]]"
         	>
             <tg-@mi_type-selection-criteria
             	id="selection_criteria"
@@ -157,6 +158,7 @@
             	page-number-updated="{{pageNumberUpdated}}"
             	page-count-updated="{{pageCountUpdated}}"
                 is-running="{{isRunning}}"
+                stale-criteria-message="{{staleCriteriaMessage}}"
             	@queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
 
             <tg-@mi_type-grid-inspector id="egi" class="entity-grid-inspector custom-egi" @gridLayout>
@@ -211,6 +213,7 @@
             	pageCount: Number,
             	pageNumberUpdated: Number,
             	pageCountUpdated: Number,
+            	staleCriteriaMessage: String
             },
             
             created: function () {

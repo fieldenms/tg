@@ -100,10 +100,10 @@
                 },
                 
                 /**
-                 * The current modified properties holder to be used during pagination (it was "persisted" after run() action has been performed).
+                 * Indicates whether this centre was run by the user (after run() action has been performed).
                  */
-                _persistedModifiedPropertiesHolder: {
-                	type: Object,
+                _wasRun: {
+                	type: String,
                 	value: null
                 },
                 
@@ -118,6 +118,15 @@
              	//   populate their default values in ready callback (to have these values populated in children)!     //
              	/////////////////////////////////////////////////////////////////////////////////////////////////////////
              	propertyModel: Object,
+             	
+             	/**
+             	 * Defines whether the criteria is stale, i.e. the pagination action (or Current Page or Refresh Individual Entities actions)
+             	 * was done againt previously Run criteria, not the fresh criteria that was changed by the user.
+             	 */
+             	staleCriteriaMessage: {
+                    type: String,
+                    notify: true
+             	},
              	
              	/**
                  * The current number of pages after the firstPage has been retrieved. To update this please invoke run() action one more time.
@@ -175,8 +184,16 @@
             ready: function () {
                 var self = this;
                 
+                // this is very important to assign initial values, because the following properties are used in multi-property observers like 'canNotFirst: function (pageNumber, pageCount, isRunning) ...'
+                this.pageNumber = 0;
+                this.pageCount = null;
+                this.pageNumberUpdated = 0;
+                this.pageCountUpdated = null;
+                
                 this.propertyModel = null;
                 this.currentState = "EDIT";
+                
+                this.staleCriteriaMessage = null;
                 
                 self._processRunnerResponse = function (e) {
                 	self._processResponse(e, "run", function (entityAndCustomObject) {
@@ -189,8 +206,9 @@
                         var renderingHints = customObject.renderingHints || [];
                         var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
                         var summary = customObject.summary;
+                        var staleCriteriaMessage = customObject.staleCriteriaMessage;
 
-                        self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary);
+                        self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary, staleCriteriaMessage);
                 	});
                 };
                 
@@ -201,21 +219,36 @@
                 };
 				
 				// calbacks, that will potentially be augmented by tg-action child elements: 
-                self._postRunDefault = (function (criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary) {
-	                this._setPropertyModel(metaValues);
-	                this._centreChanged = centreChanged;
-
-	                var msg = this._toastMsg("Running", criteriaEntity);
-	                this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
-
-	                var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-
-	                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
-	                // custom external action
-	                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
-
-	                this.pageNumberUpdated = this.pageNumber;
-	                this.pageCountUpdated = this.pageCount;
+                self._postRunDefault = (function (criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary, staleCriteriaMessage) {
+                    if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
+                        this.staleCriteriaMessage = staleCriteriaMessage;
+                    }
+                    if (criteriaEntity === null) {
+    	                var msg = "Running completed successfully.";
+    	                this._openToastWithoutEntity(msg, false, msg, false);
+    	                
+    	                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
+		                // custom external action
+		                this.postRun(null, null, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+    	                
+    	                this.pageNumberUpdated = this.pageNumber;
+    	                this.pageCountUpdated = this.pageCount;
+                    } else {
+		                this._setPropertyModel(metaValues);
+		                this._centreChanged = centreChanged;
+	
+		                var msg = this._toastMsg("Running", criteriaEntity);
+		                this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
+	
+		                var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
+	
+		                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
+		                // custom external action
+		                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+	
+		                this.pageNumberUpdated = this.pageNumber;
+		                this.pageCountUpdated = this.pageCount;
+                    }
 				}).bind(self);
 				
                 self._postRunDefaultError = (function (errorResult) {
@@ -229,6 +262,9 @@
                 }).bind(self);
                 
                 self.postValidated = (function (validatedEntity, bindingEntity, customObject) {
+                    if (typeof customObject.staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
+                        this.staleCriteriaMessage = customObject.staleCriteriaMessage;
+                    }
                     this._setPropertyModel(customObject.metaValues);
                     this._centreChanged = customObject.isCentreChanged;
 
@@ -251,6 +287,7 @@
                 var modPropHolder = Polymer.TgBehaviors.TgEntityBinderBehavior._extractModifiedPropertiesHolder.call(this, bindingEntity, _originalBindingEntity);
                 if (this._reflector().isEntity(bindingEntity)) {
                     modPropHolder["@@metaValues"] = {};
+                    modPropHolder["@@wasRun"] = this._wasRun;
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
                     for (var property in this.propertyModel) {
                         if (this.propertyModel.hasOwnProperty(property)) {
@@ -445,9 +482,14 @@
             _createPromise: function (isRunAction, entitiesToRefresh, assignmentFun) {
                 var self = this;
             
-                return new Promise(function(resolve, reject) {
-                    if (isRunAction || self._persistedModifiedPropertiesHolder === null) {
-                        self._persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                return new Promise(function (resolve, reject) {
+                    var _persistedModifiedPropertiesHolder = null;
+                    if (isRunAction) {
+                        self._wasRun = 'yes';
+                        _persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
+                        console.debug('_wasRun has been changed to: ', self._wasRun);
+                    } else if (self._wasRun === null) {
+                        throw '_wasRun is not initialised, however this is not Run action, and _wasRun should be defined as yes at this stage.';
                     }
     
                     // cancel previous validation before starting saving process -- it includes validation process internally!
@@ -459,8 +501,8 @@
 	                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
 	                    //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
                     	self._runModifiedProperties(
-	                    	self._createContextHolderForRunning(function() {
-	                    			return self._reset(self._persistedModifiedPropertiesHolder);
+	                    	self._createContextHolderForRunning(function () {
+	                    			return isRunAction ? self._reset(_persistedModifiedPropertiesHolder) : null;
 	                    		}, 
 	                    		self.requireSelectedEntities, 
 	                    		self.requireMasterEntity, 
@@ -541,7 +583,10 @@
              * Create context holder with custom '@@miType' property.
              */
             createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
-            	return this._createContextHolder(this._createModifiedPropertiesHolder, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
+                var self = this;
+                return this._createContextHolder(function () {
+                    return null;
+                }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
             },
             
             /**
