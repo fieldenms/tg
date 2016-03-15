@@ -132,6 +132,24 @@
                     value: function () {
                         return [
                             'L LT',
+                            'D/M/YYYY hmma',
+                            'D/M/YY hmma',
+                            'D/M/Y hmma',
+                            'D/M/YYYY hmm',
+                            'D/M/YY hmm',
+                            'D/M/Y hmm',
+                            'D/M/YYYY h:ma',
+                            'D/M/YY h:ma',
+                            'D/M/Y h:ma',
+                            'D/M/YYYY h:m',
+                            'D/M/YY h:m',
+                            'D/M/Y h:m',
+                            'D/M/YYYY ha',
+                            'D/M/YY ha',
+                            'D/M/Y ha',
+                            'D/M/YYYY h',
+                            'D/M/YY h',
+                            'D/M/Y h',
                             'D/M/YYYY',
                             'D/M/YY',
                             'D/M/Y'
@@ -301,8 +319,8 @@
                     var firstFormat = formats[0];
                     var tryingMoment = moment(stringValue, firstFormat, true);
                     if (tryingMoment.isValid()) {
-                        if (['D/M/Y'].indexOf(firstFormat) !== -1) {
-                            tryingMoment = moment(this._convertToDoubleDigitYear(stringValue), 'D/M/YY', true);
+                        if (['D/M/Y', 'D/M/Y hmma', 'D/M/Y hmm', 'D/M/Y h:ma', 'D/M/Y h:m', 'D/M/Y ha', 'D/M/Y h'].indexOf(firstFormat) !== -1) {
+                            tryingMoment = moment(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true);
                         }
                         
                         if (['D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {
@@ -317,8 +335,17 @@
             },
             
             _convertToDoubleDigitYear: function (oneDigitYearString) {
-                var insertionPoint = oneDigitYearString.length - 1;
+                var insertionPoint = this._findSecondSlashIndex(oneDigitYearString) + 1;
                 return oneDigitYearString.slice(0, insertionPoint) + "0" + oneDigitYearString.slice(insertionPoint);
+            },
+            
+            _findSecondSlashIndex: function (str) {
+                var firstSlashIndex = str.indexOf('/');
+                if (firstSlashIndex === -1) {
+                    throw 'The slash should exist.';
+                } else {
+                    return str.indexOf('/', firstSlashIndex + 1);
+                }
             }
         });
     })();
