@@ -1,7 +1,17 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
 import static java.util.Locale.getDefault;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.ParameterizedType;
@@ -28,6 +38,7 @@ import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
@@ -39,7 +50,11 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -270,7 +285,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         final Object val = shouldApplyOriginalValue ? valAndOrigVal.get("origVal") : valAndOrigVal.get("val");
         final Object newValue = convert(type, name, val, companionFinder);
         if (notFoundEntity(type, name, val, newValue)) {
-            final String msg = String.format("The entity has not been found for [%s].", val);
+            final String msg = String.format("No entity with key [%s] has been found.", val);
             logger.info(msg);
             entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
         } else if (multipleFoundEntities(type, name, val, newValue)) {
@@ -451,7 +466,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
-     * Converts <code>reflectedValue</code> (which is a string, number, boolean or null) into a value of appropriate type (the type of actual property).
+     * Converts <code>reflectedValue</code>, which could be a string, a number, a boolean or a null, into a value of appropriate type (the type of the actual property).
      *
      * @param type
      * @param propertyName
@@ -462,29 +477,42 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         if (reflectedValue == null) {
             return null;
         }
-        final Class propertyType = determinePropertyType(type, propertyName);
+        final Class<?> propertyType = determinePropertyType(type, propertyName);
         
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
             if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
                 throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s]. Collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
             }
-            final Class<AbstractEntity<?>> entityPropertyType = propertyType;
 
-            final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType);
+            final Class<AbstractEntity<?>> entityPropertyType = (Class<AbstractEntity<?>>) propertyType;
 
-            final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
-            /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList((String) reflectedValue))).//
-            /*      */model();
-            final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, type, propertyName).fetchModel()).model();
-            try {
-                return propertyCompanion.getEntity(qem);
-            } catch (final IllegalArgumentException e) {
-                if (e.getMessage().equals("The provided query model leads to retrieval of more than one entity (2).")) {
-                    return Arrays.asList();
-                } else {
-                    throw e;
+            if (EntityUtils.isCompositeEntity(entityPropertyType)) {
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType);
+                
+                final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
+                /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList((String) reflectedValue))).//
+                /*      */model();
+                final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, type, propertyName).fetchModel()).model();
+                try {
+                    return propertyCompanion.getEntity(qem);
+                } catch (final UnexpectedNumberOfReturnedEntities e) {
+                    return null;
                 }
+            } else {
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType);
+    
+                final String[] keys = MiscUtilities.prepare(Arrays.asList((String) reflectedValue));
+                final String key;
+                if (keys.length > 1) {
+                    throw new IllegalArgumentException(format("Value [%s] does not represent a single key value, which is required for coversion to an instance of type [%s].", reflectedValue, entityPropertyType.getName()));
+                } else if (keys.length == 0) {
+                    key = "";
+                } else {
+                    key = keys[0];
+                }
+                
+                return propertyCompanion.findByKeyAndFetch(fetchForProperty(companionFinder, type, propertyName).fetchModel(), key);
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
         } else if (PropertyTypeDeterminator.isCollectional(type, propertyName) && Set.class.isAssignableFrom(Finder.findFieldByName(type, propertyName).getType()) && String.class.isAssignableFrom(propertyType)) {
