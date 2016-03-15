@@ -4,6 +4,8 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.centre.api.actions.ConfirmationPreAction.ConfirmationButtons.NO;
+import static ua.com.fielden.platform.web.centre.api.actions.ConfirmationPreAction.ConfirmationButtons.YES;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
@@ -90,6 +92,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.actions.ConfirmationPreAction;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
@@ -1035,12 +1038,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
-                                preAction(new IPreAction() {
-                                    @Override
-                                    public JsCode build() {
-                                        return new JsCode("    return confirm('Are you sure you want to proceed?');\n");
-                                    }
-                                }).
+                                preAction(new ConfirmationPreAction("Are you sure you want to proceed?", YES, NO)).
                                 icon("assignment-ind").
                                 shortDesc("Function 1").
                                 //longDesc("Functional context-dependent action 1").

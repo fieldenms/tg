@@ -247,7 +247,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         if (conf().preAction.isPresent()) {
             attrs.append(conf().preAction.get().build().toString());
         } else {
-            attrs.append("    return true;\n");
+            attrs.append("    return Promise.resolve(true);\n");
         }
         attrs.append("},\n");
 
