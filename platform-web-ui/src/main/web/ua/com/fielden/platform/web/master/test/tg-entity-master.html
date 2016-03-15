@@ -469,7 +469,7 @@
 		    	// TODO at this stage whatever currency is used for setting into binding entity (to be saved), retrieval from database 
 		    	//      will return money instances with the currency, that is currently used in your OS.
 		    	// Please, adjust the currency to be the same as in your OS to make this test happy.
-		    	var expectedCurrency = "USD"; // "AUD"
+		    	var expectedCurrency = 'USD'; // 'AUD'
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
