@@ -94,7 +94,7 @@ public class CommonEntityQuckSaveTest extends AbstractDomainDrivenTestCase {
     @Test
     public void test_quickSave_is_more_performant_than_save() {
         final IEntityDao<EntityWithMoney> co = ao(EntityWithMoney.class);
-        int times = 10;
+        int times = 100;
         
         long quickSaveTime = 0;
         for (int index = 0; index < times; index++) {
@@ -114,7 +114,7 @@ public class CommonEntityQuckSaveTest extends AbstractDomainDrivenTestCase {
             saveTime += (System.nanoTime() - start);
         }
 
-        assertTrue("save() should not be faster than quickSave()", saveTime > quickSaveTime);
+        assertTrue("save() should not be faster than quickSave()", saveTime >= quickSaveTime);
     }
 
     @Test

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -106,13 +107,19 @@ public abstract class AbstractDomainDrivenTestCase {
     @Before
     public final void beforeTest() throws Exception {
         final Connection conn = createConnection();
-
+        Optional<Exception> raisedEx = Optional.empty();
+        
         if (domainPopulated) {
             // apply data population script
             logger.debug("Executing data population script.");
             exec(dataScript, conn);
         } else {
-            populateDomain();
+            try {
+                populateDomain();
+            } catch (final Exception ex) {
+                raisedEx = Optional.of(ex);
+                ex.printStackTrace();
+            }
 
             // record data population statements
             final Statement st = conn.createStatement();
@@ -139,6 +146,11 @@ public abstract class AbstractDomainDrivenTestCase {
         }
 
         conn.close();
+        
+        if (raisedEx.isPresent()) {
+            domainPopulated = false;
+            throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
+        }
     }
 
     private void exec(final List<String> statements, final Connection conn) throws SQLException {
