@@ -125,7 +125,7 @@ public class fetch<T extends AbstractEntity<?>> {
         return Collections.unmodifiableMap(includedPropsWithModels);
     }
 
-    public Set<String> getIncudedProps() {
+    public Set<String> getIncludedProps() {
         return Collections.unmodifiableSet(includedProps);
     }
 

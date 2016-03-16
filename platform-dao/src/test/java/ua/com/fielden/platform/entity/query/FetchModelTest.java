@@ -189,7 +189,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
         assertTrue(vehicleFetchModel.getFetchCategory().equals(FetchCategory.MINIMAL));
         assertTrue(vehicleFetchModel.getEntityType().equals(TgVehicle.class));
         assertTrue(vehicleFetchModel.getIncludedPropsWithModels().size() == 0);
-        assertTrue(vehicleFetchModel.getIncudedProps().size() == 0);
+        assertTrue(vehicleFetchModel.getIncludedProps().size() == 0);
         assertTrue(vehicleFetchModel.getExcludedProps().size() == 0);
     }
 
@@ -205,7 +205,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
         assertTrue(locationFetchModel.getFetchCategory().equals(FetchCategory.ALL));
         assertTrue(locationFetchModel.getEntityType().equals(TgBogieLocation.class));
         assertTrue(locationFetchModel.getIncludedPropsWithModels().size() == 0);
-        assertTrue(locationFetchModel.getIncudedProps().size() == 0);
+        assertTrue(locationFetchModel.getIncludedProps().size() == 0);
         assertTrue(locationFetchModel.getExcludedProps().size() == 0);
     }
 

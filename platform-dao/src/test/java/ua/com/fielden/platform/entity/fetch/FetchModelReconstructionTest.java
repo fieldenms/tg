@@ -79,7 +79,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
 
         assertFalse(reconFetch.getIncludedPropsWithModels().containsKey("replacedBy"));
-        assertFalse(reconFetch.getIncudedProps().contains("replacedBy"));
+        assertFalse(reconFetch.getIncludedProps().contains("replacedBy"));
     }
 
     @Test
@@ -111,7 +111,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
     }
 
     private void assertSuperSet(final fetch<?> origModel, final fetch<?> superModel, boolean rootLevel) {
-        assertTrue(format("Incomplete fetch model %s comparing to model %s.", superModel, origModel), superModel.getIncudedProps().containsAll(origModel.getIncudedProps())
+        assertTrue(format("Incomplete fetch model %s comparing to model %s.", superModel, origModel), superModel.getIncludedProps().containsAll(origModel.getIncludedProps())
                 && (!rootLevel && superModel.isInstrumented() == origModel.isInstrumented() || rootLevel));
 
         for (final Entry<String, fetch<? extends AbstractEntity<?>>> pair : origModel.getIncludedPropsWithModels().entrySet()) {

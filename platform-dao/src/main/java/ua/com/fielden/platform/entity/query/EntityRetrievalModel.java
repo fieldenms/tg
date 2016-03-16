@@ -62,7 +62,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             without(propName);
         }
 
-        for (final String propName : originalFetch.getIncudedProps()) {
+        for (final String propName : originalFetch.getIncludedProps()) {
             with(propName, false);
         }
 
