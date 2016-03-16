@@ -302,6 +302,11 @@
                     	} else {
                     		// continue with normal handling of the result's instance
     	                    e.detail.successful = customHandlerFor(deserialisedResult.instance);
+                    		// Need to open toast message in case where the top-level result is unsuccessful -- this message will be shown AFTER 
+                    		//   other messages about validation errors of 'deserialisedResult.instance' or '... completed successfully'
+                    	    if (this._reflector().isError(deserialisedResult)) {
+                        	    this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult));
+                        	}
                     		console.log('CUSTOM HANDLER FOR RETURNED', e.detail.successful);
                     		// in case of customHandlerFor not returning any result need to assign true to recognise event handling as successful by default
                     		if (e.detail.successful !== false) {

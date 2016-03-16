@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
@@ -339,6 +340,33 @@ public class RestServerUtil {
         }
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
+    }
+    
+    /**
+     * Composes JACKSON representation of an entity with exception.
+     *
+     * @return
+     * @throws JsonProcessingException
+     */
+    public <T extends AbstractEntity<?>> Representation singleJSONRepresentation(final T entity, final Optional<Exception> savingException) {
+        if (entity != null && savingException.isPresent()) {
+            final Exception ex = savingException.get();
+            final Result result;
+            if (ex instanceof Result) {
+                final Result thrownResult = (Result) ex;
+                if (thrownResult.isSuccessful()) {
+                    throw Result.failure(String.format("The successful result [%s] was thrown during unsuccesful saving of entity [%s]. This is most likely programming error.", thrownResult, entity));
+                }
+                result = thrownResult.copyWith(entity);
+                logger.warn(String.format("The unsuccessful result [%s] was thrown during unsuccesful saving of entity [%s]. Its instance [%s] will be overridden with the [%s] entity to be able to bind the entity to respective master.", thrownResult, entity, thrownResult.getInstance(), entity));
+            } else {
+                result = new Result(entity, ex);
+            }
+            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
+        } else {
+            return singleJSONRepresentation(entity);
+        }
     }
 
     /**

@@ -1,8 +1,11 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.*;
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.FIND_OR_NEW;
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.ID;
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -17,6 +20,7 @@ import org.restlet.resource.ServerResource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
@@ -26,12 +30,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -198,8 +200,12 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
 
         
-        final T potentiallySaved = applied.isDirty() ? save(applied) : applied;
-        return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(potentiallySaved));
+        if (applied.isDirty()) {
+            final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied);
+            return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(potentiallySavedWithException.getKey()), potentiallySavedWithException.getValue());
+        } else {
+            return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(applied));
+        }
     }
 
     /**
@@ -310,28 +316,29 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     }
 
     /**
-     * Checks the entity on validation errors and saves it if validation was successful, returns it "as is" if validation was not successful.
+     * Performs DAO saving of <code>validatedEntity</code>.
+     * <p>
+     * IMPORTANT: note that if <code>validatedEntity</code> has been mutated during saving in its concrete companion object (for example VehicleStatusChangeDao) or 
+     * in {@link CommonEntityDao} saving methods -- still that entity instance will be returned in case of exceptional situation and will be bound to respective entity master.
+     * The toast message, however, will show the message, that was thrown during saving as exceptional (not first validation error of the entity).
      *
      * @param validatedEntity
-     * @return
+     * 
+     * @return if saving was successful -- returns saved entity with no exception
+     *         if saving was unsuccessful with exception -- returns <code>validatedEntity</code> (to be bound to appropriate entity master) and thrown exception (to be shown in toast message) 
      */
-    private T save(final T validatedEntity) {
+    private Pair<T, Optional<Exception>> save(final T validatedEntity) {
         T savedEntity;
         try {
             // try to save the entity with its companion 'save' method
             savedEntity = utils.save(validatedEntity);
-        } catch (final Result result) {
-            // some result can be thrown inside 1) its companion 'save' method OR 2) CommonEntityDao 'save' during its internal validation
-            if (!validatedEntity.isValid().isSuccessful()) {
-                // if entity is invalid after its unsuccessful save -- return invalid entity back to the client
-                return validatedEntity;
-            } else {
-                // if entity is valid after its unsuccessful save -- just throw result further
-                throw result;
-            }
+        } catch (final Exception exception) {
+            // Some exception can be thrown inside 1) its companion 'save' method OR 2) CommonEntityDao 'save' during its internal validation.
+            // Return entity back to the client after its unsuccessful save with the exception that was thrown during saving
+            return Pair.pair(validatedEntity, Optional.of(exception));
         }
         
-        return savedEntity;
+        return Pair.pair(savedEntity, Optional.empty());
     }
 
     /**
