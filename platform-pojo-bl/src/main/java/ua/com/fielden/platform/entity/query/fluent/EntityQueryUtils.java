@@ -74,11 +74,11 @@ public class EntityQueryUtils {
     }
 
     public static <T extends AbstractEntity<?>> fetch<T> fetchOnly(final Class<T> entityType) {
-        return new fetch<T>(entityType, FetchCategory.NONE);
+        return new fetch<T>(entityType, FetchCategory.ID_AND_VERSTION);
     }
 
     public static <T extends AbstractEntity<?>> fetch<T> fetchOnlyAndInstrument(final Class<T> entityType) {
-        return new fetch<T>(entityType, FetchCategory.NONE, true);
+        return new fetch<T>(entityType, FetchCategory.ID_AND_VERSTION, true);
     }
 
     public static <T extends AbstractEntity<?>> fetch<T> fetchKeyAndDescOnly(final Class<T> entityType) {
@@ -90,6 +90,6 @@ public class EntityQueryUtils {
     }
 
     public static fetch<EntityAggregates> fetchAggregates() {
-        return new fetch<EntityAggregates>(EntityAggregates.class, FetchCategory.NONE);
+        return new fetch<EntityAggregates>(EntityAggregates.class, FetchCategory.ID_AND_VERSTION);
     }
 }

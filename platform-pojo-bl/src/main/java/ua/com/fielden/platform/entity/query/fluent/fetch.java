@@ -13,7 +13,7 @@ import ua.com.fielden.platform.reflection.Finder;
 
 public class fetch<T extends AbstractEntity<?>> {
     public enum FetchCategory {
-        ALL, MINIMAL, KEY_AND_DESC, NONE, ALL_INCL_CALC
+        ALL, MINIMAL, KEY_AND_DESC, ID_AND_VERSTION, ALL_INCL_CALC
     }
 
     private final Class<T> entityType;
@@ -27,7 +27,7 @@ public class fetch<T extends AbstractEntity<?>> {
      * Used mainly for serialisation.
      */
     protected fetch() {
-        this(null, FetchCategory.NONE);
+        this(null, FetchCategory.ID_AND_VERSTION);
     }
 
     public fetch(final Class<T> entityType, final FetchCategory fetchCategory, final boolean instrumented) {
@@ -236,7 +236,7 @@ public class fetch<T extends AbstractEntity<?>> {
             return FetchCategory.KEY_AND_DESC;
         }
 
-        return FetchCategory.NONE;
+        return FetchCategory.ID_AND_VERSTION;
     }
 
     public fetch<?> unionWith(final fetch<?> second) {

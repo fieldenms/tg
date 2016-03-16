@@ -77,8 +77,8 @@ public class FetchModelTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_none_fetching_of_make() {
-        final fetch<TgVehicleMake> fetch = new fetch<TgVehicleMake>(TgVehicleMake.class, FetchCategory.NONE);
+    public void test_id_and_version_fetching_of_make() {
+        final fetch<TgVehicleMake> fetch = new fetch<TgVehicleMake>(TgVehicleMake.class, FetchCategory.ID_AND_VERSTION);
         final IRetrievalModel<TgVehicleMake> fetchModel = produceRetrievalModel(fetch);
         assertFalse(fetchModel.containsProp("key"));
         assertFalse(fetchModel.containsProp("desc"));
@@ -109,8 +109,8 @@ public class FetchModelTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_none_fetching_of_model() {
-        final fetch<TgVehicleModel> fetch = new fetch<TgVehicleModel>(TgVehicleModel.class, FetchCategory.NONE);
+    public void test_id_and_version_fetching_of_model() {
+        final fetch<TgVehicleModel> fetch = new fetch<TgVehicleModel>(TgVehicleModel.class, FetchCategory.ID_AND_VERSTION);
         final IRetrievalModel<TgVehicleModel> fetchModel = produceRetrievalModel(fetch);
         assertFalse(fetchModel.containsProp("key"));
         assertFalse(fetchModel.containsProp("desc"));
@@ -144,8 +144,8 @@ public class FetchModelTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_none_fetching_of_fuel_usage() {
-        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, FetchCategory.NONE);
+    public void test_id_and_version_fetching_of_fuel_usage() {
+        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, FetchCategory.ID_AND_VERSTION);
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(fetch);
         assertFalse(fetchModel.containsProp("vehicle"));
         assertFalse(fetchModel.containsProp("date"));
@@ -155,8 +155,8 @@ public class FetchModelTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_none_fetching_of_fuel_usage_with_date_and_qty() {
-        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, FetchCategory.NONE).with("date").with("qty");
+    public void test_id_and_version_fetching_of_fuel_usage_with_date_and_qty() {
+        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, FetchCategory.ID_AND_VERSTION).with("date").with("qty");
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(fetch);
         assertFalse(fetchModel.containsProp("vehicle"));
         assertTrue(fetchModel.containsProp("date"));
@@ -177,8 +177,8 @@ public class FetchModelTest extends BaseEntQueryTCase {
     }
 
     @Test
-    public void test_none_fetching_of_fuel_usage_with_vehicle() {
-        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, FetchCategory.NONE).with("vehicle");
+    public void test_id_and_version_fetching_of_fuel_usage_with_vehicle() {
+        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, FetchCategory.ID_AND_VERSTION).with("vehicle");
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(fetch);
         assertTrue(fetchModel.containsProp("vehicle"));
         assertFalse(fetchModel.containsProp("date"));

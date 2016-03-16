@@ -41,7 +41,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         case KEY_AND_DESC:
             includeKeyAndDescOnly();
             break;
-        case NONE:
+        case ID_AND_VERSTION:
             if (isPersistedEntityType(getEntityType())) {
                 includeIdAndVersionOnly();
             } else if (isEntityType(getKeyType(getEntityType()))) {

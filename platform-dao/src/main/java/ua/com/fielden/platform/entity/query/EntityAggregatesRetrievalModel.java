@@ -24,7 +24,7 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
     }
 
     private void validateModel() {
-        if (!FetchCategory.NONE.equals(getOriginalFetch().getFetchCategory())) {
+        if (!FetchCategory.ID_AND_VERSTION.equals(getOriginalFetch().getFetchCategory())) {
             throw new IllegalArgumentException("The only acceptable category for EntityAggregates entity type fetch model creation is NONE. Use EntityQueryUtils.fetchOnly(..) method for obtaining correct fetch model.");
         }
 
