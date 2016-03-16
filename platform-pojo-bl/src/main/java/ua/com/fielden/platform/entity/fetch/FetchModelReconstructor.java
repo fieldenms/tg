@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
@@ -98,7 +99,8 @@ public class FetchModelReconstructor {
             return exploredFetchModels.get(identity);
         }
 
-        fetch<?> fetchModel = PropertyTypeDeterminator.isInstrumented(entity.getClass()) ? fetchAndInstrument(entity.getType()).with(AbstractEntity.ID) : fetch(entity.getType()).with(AbstractEntity.ID);
+        fetch<?> fetchModel = PropertyTypeDeterminator.isInstrumented(entity.getClass()) ? fetchAndInstrument(entity.getType()).with(AbstractEntity.ID) 
+                              : entity.isIdOnlyProxy() ? fetchIdOnly(entity.getType()) : fetch(entity.getType()).with(AbstractEntity.ID);
         explored.add(identity);
         exploredFetchModels.put(identity, fetchModel);
 
@@ -117,8 +119,10 @@ public class FetchModelReconstructor {
                     frontier.push(value);
                     fetchModel = fetchModel.with(propName, explore(frontier, explored, exploredFetchModels));
                 } else {
-                    // fetch cannot be identified from null, so the default fetch is used
-                    fetchModel = fetchModel.with(propName);
+                    // fetch cannot be identified from null, so the fetch id only strategy is the most suitable
+                    @SuppressWarnings("unchecked")
+                    final Class<AbstractEntity<?>> valueType = (Class<AbstractEntity<?>>) propField.getType();
+                    fetchModel = fetchModel.with(propName, fetchIdOnly(valueType));
                 }
             } else { // handle ordinary type properties
                 fetchModel = fetchModel.with(propName);

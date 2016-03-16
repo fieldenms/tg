@@ -1512,4 +1512,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     public Set<String> proxiedPropertyNames() {
         return Collections.emptySet();
     }
+    
+    /**
+     * Indicates whether this instance represents a proxied id-only value.
+     * 
+     * @return
+     */
+    public boolean isIdOnlyProxy() {
+        return proxiedPropertyNames().contains(VERSION);
+    }
 }
