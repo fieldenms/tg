@@ -880,7 +880,7 @@
                 master.retrieve();
             });
             
-            test('[9 / 9  /2002 09:37PM] to [09/09/2002 9:37 PM]', function(done) {
+            test('[9 / 9  /   2002 09:37PM] to [09/09/2002 9:37 PM]', function(done) {
                 var edProperty = master.$.editor_4_dateProp;
                 var approximated = '09/09/2002 9:37 PM';
             
@@ -904,7 +904,7 @@
                     assert.strictEqual(entity.get("dateProp"), null, "'property' value should be empty on start (null).");
                     assert.strictEqual(bindingEntity.get("dateProp"), null, "Binding 'property' value should be empty on start (null).");
             
-                    edProperty._editingValue = '9 / 9  /2002 09:37PM';
+                    edProperty._editingValue = '9 / 9  /   2002 09:37PM';
                     edProperty.commit();
                     assert.strictEqual(edProperty._editingValue, approximated, "_editingValue should be already approximated.");
                 };
@@ -1135,6 +1135,82 @@
             
                 master.retrieve();
             });
+            
+            test('[9/9/] to [9/9/]', function(done) {
+                var edProperty = master.$.editor_4_dateProp;
+                var approximated = '9/9/';
+            
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    throw 'Validation should not be invoked in case of incorrect date format.';
+                };
+            
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
+                    assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
+                    assert.strictEqual(edProperty._acceptedValue, null, "_acceptedValue should be empty on start (null).");
+            
+                    assert.strictEqual(entity.get("dateProp"), null, "'property' value should be empty on start (null).");
+                    assert.strictEqual(bindingEntity.get("dateProp"), null, "Binding 'property' value should be empty on start (null).");
+            
+                    edProperty._editingValue = '9/9/';
+                    edProperty.commit();
+                    assert.strictEqual(edProperty._editingValue, approximated, "_editingValue should be already approximated.");
+                    done();
+                };
+            
+                master.retrieve();
+            });
+            
+            test('[9/] to [9/]', function(done) {
+                var edProperty = master.$.editor_4_dateProp;
+                var approximated = '9/';
+            
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    throw 'Validation should not be invoked in case of incorrect date format.';
+                };
+            
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
+                    assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
+                    assert.strictEqual(edProperty._acceptedValue, null, "_acceptedValue should be empty on start (null).");
+            
+                    assert.strictEqual(entity.get("dateProp"), null, "'property' value should be empty on start (null).");
+                    assert.strictEqual(bindingEntity.get("dateProp"), null, "Binding 'property' value should be empty on start (null).");
+            
+                    edProperty._editingValue = '9/';
+                    edProperty.commit();
+                    assert.strictEqual(edProperty._editingValue, approximated, "_editingValue should be already approximated.");
+                    done();
+                };
+            
+                master.retrieve();
+            });
+            
+            test('[9] to [9]', function(done) {
+                var edProperty = master.$.editor_4_dateProp;
+                var approximated = '9';
+            
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    throw 'Validation should not be invoked in case of incorrect date format.';
+                };
+            
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
+                    assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
+                    assert.strictEqual(edProperty._acceptedValue, null, "_acceptedValue should be empty on start (null).");
+            
+                    assert.strictEqual(entity.get("dateProp"), null, "'property' value should be empty on start (null).");
+                    assert.strictEqual(bindingEntity.get("dateProp"), null, "Binding 'property' value should be empty on start (null).");
+            
+                    edProperty._editingValue = '9';
+                    edProperty.commit();
+                    assert.strictEqual(edProperty._editingValue, approximated, "_editingValue should be already approximated.");
+                    done();
+                };
+            
+                master.retrieve();
+            });
+
         });
     </script>
 </body>
