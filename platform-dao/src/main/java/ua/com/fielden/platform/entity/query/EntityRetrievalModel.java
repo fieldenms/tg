@@ -41,6 +41,9 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         case KEY_AND_DESC:
             includeKeyAndDescOnly();
             break;
+        case ID:
+            includeIdOly();
+            break;
         case ID_AND_VERSTION:
             if (isPersistedEntityType(getEntityType())) {
                 includeIdAndVersionOnly();
@@ -164,6 +167,10 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 with(ppi.getName(), false);
             }
         }
+    }
+    
+    private void includeIdOly() {
+        getPrimProps().add(ID);
     }
 
     private void includeIdAndVersionOnly() {

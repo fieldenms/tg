@@ -49,6 +49,10 @@ public class EntityQueryUtils {
         return QueryExecutionModel.from(queryModel);
     }
 
+    public static <T extends AbstractEntity<?>> fetch<T> fetchIdOnly(final Class<T> entityType) {
+        return new fetch<T>(entityType, FetchCategory.ID);
+    }
+
     public static <T extends AbstractEntity<?>> fetch<T> fetch(final Class<T> entityType) {
         return new fetch<T>(entityType, FetchCategory.MINIMAL);
     }
@@ -84,7 +88,7 @@ public class EntityQueryUtils {
     public static <T extends AbstractEntity<?>> fetch<T> fetchKeyAndDescOnly(final Class<T> entityType) {
         return new fetch<T>(entityType, FetchCategory.KEY_AND_DESC);
     }
-    
+
     public static <T extends AbstractEntity<?>> fetch<T> fetchKeyAndDescOnlyAndInstrument(final Class<T> entityType) {
         return new fetch<T>(entityType, FetchCategory.KEY_AND_DESC, true);
     }
