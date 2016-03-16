@@ -31,9 +31,9 @@ public class FetchModelTest extends BaseEntQueryTCase {
 
     private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
         return EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<T>(fetchModel, DOMAIN_METADATA_ANALYSER) : //
-            new EntityRetrievalModel<T>(fetchModel, DOMAIN_METADATA_ANALYSER);
+                new EntityRetrievalModel<T>(fetchModel, DOMAIN_METADATA_ANALYSER);
     }
-    
+
     @Test
     public void test_nested_fetching_of_composite_key() {
         final fetch<TgAuthorship> fetch = new fetch<TgAuthorship>(TgAuthorship.class, FetchCategory.MINIMAL);
@@ -272,5 +272,27 @@ public class FetchModelTest extends BaseEntQueryTCase {
         final IRetrievalModel<TgVehicle> fetchModel = produceRetrievalModel(fetch);
         assertTrue(fetchModel.containsProp("lastFuelUsage"));
         assertTrue(fetchModel.containsProp("constValueProp"));
+    }
+
+    @Test
+    public void fetch_id_only_works() {
+        final fetch<TgAuthorship> fetch = new fetch<TgAuthorship>(TgAuthorship.class, FetchCategory.ID);
+        final IRetrievalModel<TgAuthorship> fetchModel = produceRetrievalModel(fetch);
+        assertTrue(fetchModel.containsProxy("title"));
+        assertTrue(fetchModel.containsProxy("author"));
+        assertTrue(fetchModel.containsProxy("year"));
+        assertTrue(fetchModel.containsProxy("version"));
+        assertTrue(fetchModel.containsProp("id"));
+    }
+
+    @Test
+    public void fetch_id_only_works_for_union_entity_props() {
+        final fetch<TgBogie> fetch = new fetch<TgBogie>(TgBogie.class, FetchCategory.ID);
+        final IRetrievalModel<TgBogie> fetchModel = produceRetrievalModel(fetch);
+        assertTrue(fetchModel.containsProp("id"));
+        assertTrue(fetchModel.containsProxy("version"));
+        assertTrue(fetchModel.containsProxy("key"));
+        assertTrue(fetchModel.containsProxy("location"));
+        assertFalse(fetchModel.containsProxy("location.workshop"));
     }
 }
