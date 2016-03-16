@@ -105,7 +105,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
         assertTrue(fetchModel.containsProp("desc"));
         assertTrue(fetchModel.containsProp("id"));
         assertTrue(fetchModel.containsProp("version"));
-        assertFalse(fetchModel.containsProp("make"));
+        assertTrue(fetchModel.containsProp("make"));
     }
 
     @Test
