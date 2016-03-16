@@ -93,14 +93,19 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         }
     }
 
+    private <T extends AbstractEntity<?>> Class<? extends T> determineProxiedResultTypeFromFetchModel(final IRetrievalModel<T> fetchModel) {
+        final Set<String> proxiedProps = new HashSet<>();
+        proxiedProps.addAll(fetchModel.getProxiedProps());
+        proxiedProps.addAll(fetchModel.getProxiedPrimProps());
+        proxiedProps.addAll(fetchModel.getProxiedPropsWithoutId());
+        logger.debug("Constructing proxy type [" + fetchModel.getEntityType().getSimpleName() + "] with proxied props: " + proxiedProps + " for fetch: " + fetchModel);
+        return EntityProxyContainer.proxy(fetchModel.getEntityType(), proxiedProps.toArray(new String[] {}));
+    }
+
     private void assignProxiedResultTypeToContainers(final List<EntityContainer<E>> entities, final IRetrievalModel<E> fetchModel) {
         if (fetchModel.getEntityType() != EntityAggregates.class) {
-            final Set<String> proxiedProps = new HashSet<>();
-            proxiedProps.addAll(fetchModel.getProxiedProps());
-            proxiedProps.addAll(fetchModel.getProxiedPrimProps());
-            proxiedProps.addAll(fetchModel.getProxiedPropsWithoutId());
-            final Class<? extends E> proxiedResultType = EntityProxyContainer.proxy(fetchModel.getEntityType(), proxiedProps.toArray(new String[] {}));
-    
+            final Class<? extends E> proxiedResultType = determineProxiedResultTypeFromFetchModel(fetchModel);
+
             for (final EntityContainer<E> entContainer : entities) {
                 entContainer.setProxiedResultType(proxiedResultType);
             }
