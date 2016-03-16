@@ -295,8 +295,10 @@
              */
             _approximate: function (dateEditingValue) {
                 if (dateEditingValue) {
-                    var value = dateEditingValue.trim();
-                    
+                    var numberOfDigitsAfterSecondSlash = this._calculateNumberOfDigitsAfterSecondSlash(dateEditingValue);
+                    // console.debug('ORIGINAL VALUE no spaces:', dateEditingValue.replace(new RegExp(' ', 'g'), ''));
+                    var value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigitsAfterSecondSlash).trim();
+                    console.debug('THE VALUE:', value);
                     if (value) {
                         this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
                         if (this._validMoment !== null) {
@@ -344,7 +346,37 @@
                 if (firstSlashIndex === -1) {
                     throw 'The slash should exist.';
                 } else {
-                    return str.indexOf('/', firstSlashIndex + 1);
+                    var secondSlashIndex = str.indexOf('/', firstSlashIndex + 1);
+                    if (secondSlashIndex === -1) {
+                        throw 'The second slash should exist.';
+                    }                    
+                    return secondSlashIndex;
+                }
+            },
+            
+            _calculateNumberOfDigitsAfterSecondSlash: function (str) {
+                var secondSlashIndex = this._findSecondSlashIndex(str);
+                var numberOfDigits = 0;
+                for (var index = secondSlashIndex + 1; index < str.length; index++) {
+                    if (' ' === str[index]) {
+                        if (numberOfDigits > 0) {
+                            return numberOfDigits;
+                        }
+                    } else {
+                        // assuming that not ' ' is a digit
+                        numberOfDigits++;
+                    }
+                }
+                return numberOfDigits;
+            },
+            
+            _insertOneSpace: function (strWithoutSpaces, numberOfDigitsAfterSecondSlash) {
+                if (numberOfDigitsAfterSecondSlash === 0) {
+                    return strWithoutSpaces;
+                } else {
+                    var secondSlashIndex = this._findSecondSlashIndex(strWithoutSpaces);
+                    var insertionPoint = secondSlashIndex + numberOfDigitsAfterSecondSlash + 1;
+                    return strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint);
                 }
             }
         });
