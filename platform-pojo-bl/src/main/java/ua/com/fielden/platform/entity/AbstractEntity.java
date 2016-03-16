@@ -1383,12 +1383,21 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
+     * Throws an exception if entity factory was not provided for this entity instance.
+     */
+    private void assertEntityFactoryPresence() {
+        if (getEntityFactory() == null) {
+            throw new EntityException(format("Entity factory is required, but is missing from an instance of entity [%s].", getType().getName()));
+        }
+    }
+    /**
      * Creates a new instance of the given type and copies all properties including, but not system properties such as ID and version.
      *
      * @param type
      * @return
      */
     public final <COPY extends AbstractEntity> COPY copyWithoutIdentity(final Class<COPY> type) {
+        assertEntityFactoryPresence();
         return copyTo(getEntityFactory().newEntity(type));
     }
 
@@ -1433,6 +1442,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     protected final <COPY extends AbstractEntity> COPY createCopyInstance(final Class<COPY> type) {
+        assertEntityFactoryPresence();
         return getEntityFactory().newEntity(type, getId());
     }
 
