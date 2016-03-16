@@ -260,22 +260,12 @@ public class EntQuery implements ISingleOperand {
         }
     }
 
-    private boolean shouldYieldBeRemoved(final IRetrievalModel fetchModel, final Yield yield) {
+    private boolean shouldYieldBeRemoved(final IRetrievalModel fetchModel, Yield yield) {
+        boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
         final boolean allFetchedPropsAreAggregatedExpressions = areAllFetchedPropsAggregatedExpressions(fetchModel);
         // this means that all not fetched props should be 100% removed -- in order to get valid sql stmt for entity centre totals query
-
-        final boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
-        final boolean presentInProxiedCalculatedProps = fetchModel.getProxiedPropsWithoutId().contains(yield.getAlias()); 
-        final boolean isOfEntityType = yieldIsOfEntityType(yield);
-        final boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
-        logger.debug("shouldYieldBeRemoved: yield [" + yield.getAlias() + "] presentInFetchModel [" + presentInFetchModel + "] isOfEntityType [" + isOfEntityType + "] presentInProxiedCalculatedProps [" + presentInProxiedCalculatedProps + "]");
-        return (!isOfEntityType && !presentInFetchModel)
-                ||
-                (allFetchedPropsAreAggregatedExpressions && !presentInFetchModel)
-                ||
-                (allFetchedPropsAreAggregatedExpressions && isHeaderOfMoneyType)
-                ||
-                presentInProxiedCalculatedProps;
+        boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
+        return allFetchedPropsAreAggregatedExpressions ? (!presentInFetchModel || isHeaderOfMoneyType) : !presentInFetchModel;
     }
 
     private void adjustOrderBys() {
