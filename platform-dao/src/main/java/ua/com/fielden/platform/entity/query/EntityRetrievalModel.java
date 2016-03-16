@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
+import java.util.Collection;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
@@ -24,9 +25,11 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> implements IRetrievalModel<T> {
     transient private final Logger logger = Logger.getLogger(this.getClass());
-    
+    private final Collection<PropertyMetadata> propsMetadata;
+
     public EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         super(originalFetch, domainMetadataAnalyser);
+        this.propsMetadata = domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType());
 
         switch (originalFetch.getFetchCategory()) {
         case ALL:
@@ -79,7 +82,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void populateProxies() {
-        for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
+        for (final PropertyMetadata ppi : propsMetadata) {
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
             final String name = ppi.getName();
             if (!ID.equals(name) && 
@@ -103,7 +106,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeAllCompositeKeyMembers() {
-        for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
+        for (final PropertyMetadata ppi : propsMetadata) {
             if (ppi.isEntityMemberOfCompositeKey()) {
                 with(ppi.getName(), false);
             } else if (ppi.isPrimitiveMemberOfCompositeKey()) {
@@ -113,7 +116,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeAllUnionEntityKeyMembers() {
-        for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
+        for (final PropertyMetadata ppi : propsMetadata) {
             if (ppi.isEntityOfPersistedType()) {
                 with(ppi.getName(), false);
             }
@@ -121,7 +124,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeAllFirstLevelPrimPropsAndKey() {
-        for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
+        for (final PropertyMetadata ppi : propsMetadata) {
             if (!ppi.isCalculated()/* && !ppi.isSynthetic()*/) {
                 logger.debug("adding not calculated prop to fetch model: " + ppi.getName());
                 final boolean skipEntities = !(ppi.getType().equals(PropertyCategory.ENTITY_MEMBER_OF_COMPOSITE_KEY) ||
@@ -150,7 +153,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeAllFirstLevelProps() {
-        for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
+        for (final PropertyMetadata ppi : propsMetadata) {
             if (ppi.isUnionEntity()) {
                 with(ppi.getName(), fetchAll(ppi.getJavaType()));
             } else if (!ppi.isCalculated() && !ppi.isCollection()) {
@@ -160,7 +163,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     }
 
     private void includeAllFirstLevelPropsInclCalc() {
-        for (final PropertyMetadata ppi : getDomainMetadataAnalyser().getPropertyMetadatasForEntity(getEntityType())) {
+        for (final PropertyMetadata ppi : propsMetadata) {
             if (ppi.isUnionEntity()) {
                 with(ppi.getName(), fetchAll(ppi.getJavaType()));
             } else if (!ppi.isCollection()) {
