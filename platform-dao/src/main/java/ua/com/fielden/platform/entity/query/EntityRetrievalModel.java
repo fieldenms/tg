@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -85,13 +86,15 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         for (final PropertyMetadata ppi : propsMetadata) {
             // FIXME the following condition needs to be revisited as part of EQL 3 implementation
             final String name = ppi.getName();
-            if (!ID.equals(name) && 
-                !KEY.equals(name) && 
-                !ppi.isCollection() &&
-                !name.endsWith(".amount") &&
-                !ppi.isSynthetic() &&
-                !containsProp(name)) {
-                
+            if (!ID.equals(name) &&
+                    !(KEY.equals(name) && !ppi.affectsMapping()) &&
+                    !ppi.isCollection() &&
+                    !name.endsWith(".amount") &&
+                    !name.endsWith(".currency") &&
+                    !ppi.isUnionEntityDetails() &&
+                    !ppi.isSynthetic() &&
+                    !containsProp(name)) {
+
                 if (ppi.isEntityOfPersistedType()) {
                     if (ppi.isCalculated()) {
                         getProxiedPropsWithoutId().add(name);
@@ -171,7 +174,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             }
         }
     }
-    
+
     private void includeIdOly() {
         getPrimProps().add(ID);
     }
@@ -193,6 +196,9 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             if (AbstractEntity.class.isAssignableFrom(propType)/* && !ppi.isId()*/) {
                 if (!skipEntities) {
                     addEntityPropsModel(propName, fetch(propType));
+                } else if (ppi.affectsMapping()) {
+                    //logger.debug("going to add " + propName + " with ID only fetch model");
+                    addEntityPropsModel(propName, fetchIdOnly(propType));
                 }
             } else if (ppi.isUnionEntity()) {
                 System.out.println("                   " + ppi.getName());
