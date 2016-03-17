@@ -478,11 +478,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         if (this.getType() != that.getType()) {
             return false;
         }
+
+        // TODO need to carefully consider this bit of logic for comparing ID-only values
+        if (this.isPersistent() && (that.isIdOnlyProxy() || this.isIdOnlyProxy()) && 
+                (!that.isInstrumented() || !that.isDirty()) && 
+                (!this.isInstrumented() || !this.isDirty()) && 
+                that.getId().equals(this.getId())) {
+            return true;
+        }
         // now can compare key values
         final Object thatKey = that.getKey();
         return getKey() != null && getKey().equals(thatKey) || getKey() == null && thatKey == null;
     }
-
+    
     @Override
     public String toString() {
         return getKey() != null ? getKey().toString() : null;
@@ -670,7 +678,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             final boolean isKey = keyMembers.contains(field);
             //logger.debug("IS_KEY (" + field.getName() + ") : " + isKey);
             
-            if (proxiedPropertyNames().contains(propName)) {
+            if (Reflector.isPropertyProxied(this, propName)) {
                 properties.put(propName, new MetaProperty(this, field, type, isKey, true, extractDependentProperties(field, fields)));
             } else {
                 //logger.debug("Property " + field.getName());
