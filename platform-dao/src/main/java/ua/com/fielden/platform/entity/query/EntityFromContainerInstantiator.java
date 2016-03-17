@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
@@ -32,7 +33,7 @@ public class EntityFromContainerInstantiator {
             return entContainer.isInstrumented() ? entFactory.newEntity(entContainer.getResultType(), entContainer.getId())
                     : entFactory.newPlainEntity(entContainer.getResultType(), entContainer.getId());
         }
-        
+
         return entContainer.isInstrumented() ? entFactory.newEntity(entContainer.getProxiedResultType(), entContainer.getId())
                 : entFactory.newPlainEntity(entContainer.getProxiedResultType(), entContainer.getId());
     }
@@ -43,7 +44,7 @@ public class EntityFromContainerInstantiator {
         final boolean unionEntity = isUnionEntityType(entityContainer.getResultType());
 
         for (final Map.Entry<String, Object> primPropEntry : entityContainer.getPrimitives().entrySet()) {
-            if (!justAddedEntity.proxiedPropertyNames().contains(primPropEntry.getKey())) {
+            if (!justAddedEntity.proxiedPropertyNames().contains(primPropEntry.getKey()) && !primPropEntry.getKey().equals(ID)) {
                 setPropertyValue(justAddedEntity, primPropEntry.getKey(), primPropEntry.getValue(), entityContainer.getResultType());
             }
         }
