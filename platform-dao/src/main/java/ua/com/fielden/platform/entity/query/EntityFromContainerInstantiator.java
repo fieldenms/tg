@@ -44,7 +44,7 @@ public class EntityFromContainerInstantiator {
         final boolean unionEntity = isUnionEntityType(entityContainer.getResultType());
 
         for (final Map.Entry<String, Object> primPropEntry : entityContainer.getPrimitives().entrySet()) {
-            if (!justAddedEntity.proxiedPropertyNames().contains(primPropEntry.getKey()) && !primPropEntry.getKey().equals(ID)) {
+            if (!justAddedEntity.proxiedPropertyNames().contains(primPropEntry.getKey()) && !ID.equals(primPropEntry.getKey())) {
                 setPropertyValue(justAddedEntity, primPropEntry.getKey(), primPropEntry.getValue(), entityContainer.getResultType());
             }
         }
