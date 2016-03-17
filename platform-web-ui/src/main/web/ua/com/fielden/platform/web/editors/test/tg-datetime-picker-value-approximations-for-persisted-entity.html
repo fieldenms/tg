@@ -36,6 +36,7 @@
 
             setup(function() {
                 master = fixture('MasterFixture');
+                master.entityId = '11';
                 reflector = document.querySelector('#reflector');
             });
             
@@ -61,12 +62,13 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
-                    assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
-                    assert.strictEqual(edProperty._acceptedValue, null, "_acceptedValue should be empty on start (null).");
+                    assert.strictEqual(edProperty._editingValue, '01/01/1970 2:00 AM', "_editingValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._commValue, '01/01/1970 2:00 AM', "_commValue should be non-empty on start.");
+                    // TODO millis are now lost after conversion from 01/01/1970 2:00 AM editingValue representation...
+                    // assert.strictEqual(edProperty._acceptedValue, 9999, "_acceptedValue should be non-empty on start.");
 
-                    assert.strictEqual(entity.get("dateProp"), null, "'property' value should be empty on start (null).");
-                    assert.strictEqual(bindingEntity.get("dateProp"), null, "Binding 'property' value should be empty on start (null).");
+                    assert.strictEqual(entity.get("dateProp"), 9999, "'property' value should be non-empty on start.");
+                    assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding 'property' value should be non-empty on start.");
 
                     edProperty._editingValue = targetEditingValue;
                     edProperty.commit();
@@ -86,12 +88,13 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
-                    assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
-                    assert.strictEqual(edProperty._acceptedValue, null, "_acceptedValue should be empty on start (null).");
+                    assert.strictEqual(edProperty._editingValue, '01/01/1970 2:00 AM', "_editingValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._commValue, '01/01/1970 2:00 AM', "_commValue should be non-empty on start.");
+                    // TODO millis are now lost after conversion from 01/01/1970 2:00 AM editingValue representation...
+                    // assert.strictEqual(edProperty._acceptedValue, 9999, "_acceptedValue should be non-empty on start.");
 
-                    assert.strictEqual(entity.get("dateProp"), null, "'property' value should be empty on start (null).");
-                    assert.strictEqual(bindingEntity.get("dateProp"), null, "Binding 'property' value should be empty on start (null).");
+                    assert.strictEqual(entity.get("dateProp"), 9999, "'property' value should be non-empty on start.");
+                    assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding 'property' value should be non-empty on start.");
 
                     edProperty._editingValue = targetEditingValue;
                     edProperty.commit();

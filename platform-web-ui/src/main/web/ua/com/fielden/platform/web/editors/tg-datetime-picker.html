@@ -294,6 +294,7 @@
              * If approximation is failed -- returns the same 'dateEditingValue'.
              */
             _approximate: function (dateEditingValue) {
+                this._validMoment = null;
                 if (dateEditingValue) {
                     // remove all spaces and insert one after year digits
                     var numberOfDigitsAfterSecondSlash = this._calculateNumberOfDigitsAfterSecondSlash(dateEditingValue);
