@@ -42,7 +42,7 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
     public Long getId() {
         final Object idObject = primitives.get(AbstractEntity.ID);
-        return idObject != null ? new Long(((Number) idObject).longValue())
+        return idObject != null ? Long.valueOf(((Number) idObject).longValue())
                 : (isUnionEntityType(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
     }
 
