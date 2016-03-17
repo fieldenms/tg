@@ -317,7 +317,7 @@
 
                 self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-                    if (criteriaEntity.isValid()) {
+                    if (criteriaEntity === null || criteriaEntity.isValid()) {
                         if (typeof summary !== 'undefined') {
                             this.$.egi.totals = summary;
                         }
@@ -503,7 +503,9 @@
                     // cancel previous validation before starting Discard process!
                     sc._validator().abortValidationIfAny();
 
-                    this._ajaxDiscarder().body = JSON.stringify('Ok');
+                    var customObject = {};
+                    customObject['@@wasRun'] = this.$.selection_criteria._wasRun;
+                    this._ajaxDiscarder().body = JSON.stringify(customObject);
                     return this._ajaxDiscarder().generateRequest().completes;
                 }).bind(self);
                 
@@ -717,6 +719,13 @@
             },
             canNotCurrent: function (pageNumber, pageCount, isRunning) {
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canCurrent(pageNumber, pageCount));
+            },
+            
+            computeConfigButtonTooltip: function (staleCriteriaMessage) {
+                return staleCriteriaMessage === null ? 'Show selection criteria' : staleCriteriaMessage;
+            },
+            computeConfigButtonClasses: function (staleCriteriaMessage) {
+                return staleCriteriaMessage === null ? 'standart-action' : 'standart-action orange';
             },
 
             currPageFeedback: function (pageNumberUpdated, pageCountUpdated) {

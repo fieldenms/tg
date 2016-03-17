@@ -31,6 +31,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
+import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.dao.handlers.IAfterSave;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -831,7 +832,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public T getEntity(final QueryExecutionModel<T, ?> model) {
         final List<T> data = getFirstEntities(model, 2);
         if (data.size() > 1) {
-            throw new EntityCompanionException(format("The provided query model leads to retrieval of more than one entity (%s).", data.size()));
+            throw new UnexpectedNumberOfReturnedEntities(format("The provided query model leads to retrieval of more than one entity (%s).", data.size()));
         }
         return data.size() == 1 ? data.get(0) : null;
     }

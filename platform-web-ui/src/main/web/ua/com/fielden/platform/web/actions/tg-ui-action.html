@@ -323,9 +323,14 @@
                 console.log(this.shortDesc + ": execute");
 
                 if (this.preAction) {
-                    if (this.preAction(this)) { // returns 'true' in case whether the action should proceed
-                        this.showDialog(this);
-                    }
+                    var result = this.preAction(this)
+                    var promise = result instanceof Promise ? result : Promise.resolve(result);
+                    
+                    this.preAction(this).then(function(value) {
+                        self.showDialog(self);
+                    }, function (error) {
+                        console.log("The action was rejected with error: " + error);
+                    });
                 } else {
                 	this.showDialog(this);
                 }

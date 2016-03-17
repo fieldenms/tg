@@ -101,6 +101,11 @@
             text-rendering: optimizeLegibility;
             min-width: fit-content;
         }
+        .table-data-row:last-of-type,
+        .table-footer-row:last-of-type,
+        #bottomShadow {
+            margin-bottom: 15px;
+        }
         .table-data-row[selected] {
             background-color: #F5F5F5;
         }
@@ -282,7 +287,7 @@
         </paper-dialog>
 
         <template is="dom-if" if="[[!cardLayout]]" restamp>
-            <paper-material elevation="1" style="margin: 10px 10px;">
+            <paper-material elevation="1" style="margin: 10px 10px;" class="layout vertical">
                 <div class="layout vertical data-table">
                     <!--Table toolbar-->
                     <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
@@ -294,8 +299,8 @@
                             <content select=".standart-action"></content>
                         </div>
                     </div>
-                    <div id="baseContainer" class="relative">
-                        <div id="scrollContainer" on-scroll="_handleScrollEvent" style$="[[_calculateScrollContainerStyle(summaryFixed, visibleRowCount, _totalsRowCount)]]">
+                    <div id="baseContainer" class="relative layout horizontal">
+                        <div id="scrollContainer" on-scroll="_handleScrollEvent" class="flex">
                             <!-- Table header -->
                             <div class="layout horizontal table-header-row">
                                 <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
@@ -414,7 +419,7 @@
                                             </div>
                                         </template>
                                         <template is="dom-repeat" items="[[columns]]">
-                                            <div class="table-cell layout horizontal center-center" hidden$= "[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
+                                            <div class="table-cell layout horizontal center-center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnHeaderStyle(item, index, numOfFixedCols)]]" tooltip-text$="[[item.columnDesc]]">
                                                 <div class="truncate" style="width:100%">[[item.columnTitle]]</div>
                                             </div>
                                         </template>
@@ -432,7 +437,7 @@
                                                 </div>
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                                <div class="table-data-cell relative layout horizontal center" hidden$= "[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
+                                                <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
                                                     <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
                                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                                         <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
@@ -539,41 +544,43 @@
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
-                                <div id="bottomLockPanel" class="absolutelyWhite layout vertical" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
-                                    <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
-                                        <div class="layout horizontal table-footer-row">
-                                            <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
-                                            </div>
-                                            <template is="dom-if" if="[[_isPrimaryActionsNotFixedAndPresent(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
-                                                <div class="action-cell layout horizontal center no-flexible">
-                                                    <!--Primary action stub header goes here-->
+                                <div id="bottomLockPanel" class="absolute layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
+                                    <div class="layout vertical flex" style="background-color:white;">
+                                        <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
+                                            <div class="layout horizontal table-footer-row">
+                                                <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!_isCheckboxesNotFixedAndVisible(checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" tooltip-text$="[[_selectAllTooltip(selectedAll)]]">
                                                 </div>
-                                            </template>
-                                            <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
-                                                <template is="dom-if" if="[[!_isColumnFixed(summaryIndex, numOfFixedCols)]]">
-                                                    <template is="dom-if" if="[[summary]]">
-                                                        <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary, summaryIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
-                                                            <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
-                                                                <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
-                                                            </template>
-                                                            <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
-                                                                <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
-                                                            </template>
-                                                        </div>
-                                                    </template>
-                                                    <template is="dom-if" if="[[!summary]]">
-                                                        <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns, numOfFixedCols)]]">
-                                                        </div>
+                                                <template is="dom-if" if="[[_isPrimaryActionsNotFixedAndPresent(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
+                                                    <div class="action-cell layout horizontal center no-flexible">
+                                                        <!--Primary action stub header goes here-->
+                                                    </div>
+                                                </template>
+                                                <template is="dom-repeat" items="[[summaryRow]]" as="summary" index-as="summaryIndex">
+                                                    <template is="dom-if" if="[[!_isColumnFixed(summaryIndex, numOfFixedCols)]]">
+                                                        <template is="dom-if" if="[[summary]]">
+                                                            <div class="table-cell layout horizontal center" style$="[[_calcColumnStyle(summary, summaryIndex, numOfFixedCols)]]" tooltip-text$="[[_getTotalTooltip(summary)]]">
+                                                                <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
+                                                                    <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
+                                                                </template>
+                                                                <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                                                    <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
+                                                                </template>
+                                                            </div>
+                                                        </template>
+                                                        <template is="dom-if" if="[[!summary]]">
+                                                            <div class="table-cell" style$="[[_calcEmptyTotalStyle(summaryIndex, columns, numOfFixedCols)]]">
+                                                            </div>
+                                                        </template>
                                                     </template>
                                                 </template>
-                                            </template>
-                                            <template is="dom-if" if="[[_isSecondaryActionsPresentAndNotFixed(secondaryActions, secondaryActionsFixed)]]">
-                                                <div class="action-cell layout horizontal center no-flexible">
-                                                    <!--Secondary actions header goes here-->
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </template>
+                                                <template is="dom-if" if="[[_isSecondaryActionsPresentAndNotFixed(secondaryActions, secondaryActionsFixed)]]">
+                                                    <div class="action-cell layout horizontal center no-flexible">
+                                                        <!--Secondary actions header goes here-->
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isTopLeftPanelVisible(checkboxVisible, checkboxesFixed, primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols, headerFixed)]]">
@@ -827,7 +834,11 @@
                 },
                 _cellPadding: {
                     type: String,
-                    value : "1.2rem"
+                    value: "1.2rem"
+                },
+                _bottomMargin: {
+                    type: String,
+                    value: "15px"
                 }
             },
 
@@ -937,17 +948,23 @@
             _resizeEventListener: function (event, details) {
                 var baseContainer = this.$$("#baseContainer");
                 var scrollContainer = this.$$("#scrollContainer");
+                var propertyToSet = this.visibleRowCount > 0 ? "max-height" : "height";
+                var propertyToRemove = this.visibleRowCount > 0 ? "height" : "max-height";
+                var rowCount, height;
                 if (baseContainer && scrollContainer) {
                     var lockContainer = this.$$("#lockContainer");
                     var bottomPosition = this._calcHorizontalScrollBarHeight();
                     if (this.visibleRowCount > 0) {
-                        var rowCount = this.visibleRowCount + (this.summaryFixed ? this._totalsRowCount : 0);
-                        baseContainer.style.maxHeight = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px)";
-                        scrollContainer.style.maxHeight = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px)";
+                        rowCount = this.visibleRowCount + (this.summaryFixed ? this._totalsRowCount : 0);
+                        height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + " + bottomPosition + "px" + (this.summaryFixed && this._totalsRowCount > 0 ? (" + " + this._bottomMargin) : "") + ")";
                     } else {
-                        baseContainer.style.removeProperty("maxHeight");
-                        scrollContainer.style.removeProperty("maxHeight");
+                        rowCount = this.entities.length + this._totalsRowCount;
+                        height = "calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px + 15px + " + bottomPosition + "px)";
                     }
+                    baseContainer.style.removeProperty(propertyToRemove);
+                    scrollContainer.style.removeProperty(propertyToRemove);
+                    baseContainer.style[propertyToSet] = height;
+                    scrollContainer.style[propertyToSet] = height;
                     if (lockContainer) {
                         lockContainer.style.bottom = bottomPosition + "px";
                         lockContainer.style.right = this._calcVerticalScrollBarWidth() + "px";
@@ -994,11 +1011,11 @@
             _isCheckboxesOrHeaderFixed: function (checkboxesFixed, checkboxesWithPrimaryActionsFixed, headerFixed, numOfFixedCols) {
                 return this._isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) || headerFixed;
             },
-            
+
             _isCheckboxesFixed: function (checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
                 return checkboxesFixed || checkboxesWithPrimaryActionsFixed || (numOfFixedCols > 0);
             },
-            
+
             _isCheckboxesNotFixedAndVisible: function (checkboxVisible, checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols) {
                 return checkboxVisible && !checkboxesFixed && !checkboxesWithPrimaryActionsFixed && (numOfFixedCols <= 0);
             },
@@ -1026,15 +1043,15 @@
             _isHeaderFixed: function (headerFixed) {
                 return headerFixed;
             },
-            
+
             _isHeaderColumnHidden: function (headerFixed, index, numOfFixedCols) {
                 return headerFixed || this._isColumnFixed(index, numOfFixedCols);
             },
-            
+
             _isColumnFixed: function (index, numOfFixedCols) {
                 return index < numOfFixedCols;
             },
-            
+
             _isSummaryFixed: function () {
                 console.log(arguments);
             },
@@ -1073,16 +1090,6 @@
 
             _isBottomRightPanelVisible: function (totals, summaryFixed, secondaryActions, secondaryActionsFixed) {
                 return totals && summaryFixed && ((this._isSecondaryActionsPresent(secondaryActions) && secondaryActionsFixed));
-            },
-
-            /**
-             * Calculates the height of the scrollcontainer.
-             */
-            _calculateScrollContainerStyle: function (summaryFixed, visibleRowCount, _totalsRowCount) {
-                if (visibleRowCount > 0) {
-                    var rowCount = visibleRowCount + (summaryFixed ? _totalsRowCount : 0);
-                    return "max-height:calc(3rem + " + rowCount + " * 1.5rem + " + rowCount + " * 1px)";
-                }
             },
 
             /**
@@ -1343,17 +1350,16 @@
                 if (item.width === 0) {
                     colStyle += "display: none;";
                 }
+                if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
+                    colStyle += "text-align: right;"
+                }
                 return colStyle;
             },
             /**
              * Calculates the column's style.
              */
             _calcColumnStyle: function (item, index, numOfFixedCols) {
-                var colStyle = this._calcColumnHeaderStyle(item, index, numOfFixedCols);
-                if (item.type === 'Integer' || item.type === 'BigDecimal' || item.type === 'Money') {
-                    colStyle += "text-align: right;"
-                }
-                return colStyle;
+                return this._calcColumnHeaderStyle(item, index, numOfFixedCols);
             },
             /**
              * Calculates style for fotter row (e.a. summary row should be hidden if the grid has fixed summaries or it should be visible otherwise).
@@ -1427,7 +1433,7 @@
             _calculatePrimaryActionWidth: function (primaryAction, fixed) {
                 return (primaryAction && fixed) ? this._actionWidth + " + 0.6rem" : "0px";
             },
-            
+
             _calculateFixedColsWidth: function (numOfFixedCols) {
                 var colIndex, fixedColsWidth = 0;
                 for (colIndex = 0; colIndex < numOfFixedCols; colIndex++) {

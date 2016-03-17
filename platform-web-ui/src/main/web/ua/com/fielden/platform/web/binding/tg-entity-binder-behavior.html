@@ -380,6 +380,9 @@
                 }).bind(self);
                 
                 self.retrieve = (function (context) {
+                    // cancel previous validation before starting refreshing process!
+                    this._validator().abortValidationIfAny();
+                    
                 	if (context) {
                         var ser = this._serialiser().serialise(context);
                         this._ajaxRetriever().body = JSON.stringify(ser);
@@ -475,6 +478,20 @@
                     } else {
                         this._toastGreeting().msgHeading = "Info";
                     }
+                }
+                this._toastGreeting().show();
+            },
+            
+            /**
+             * Opens the toast with some message and with indication whether progress is started.
+             */
+            _openToastWithoutEntity: function (toastMsg, hasMoreInfo, moreInfo, showProgress) {
+                this._toastGreeting().text = toastMsg;
+                this._toastGreeting().hasMore = hasMoreInfo;
+                this._toastGreeting().msgText = moreInfo;
+                this._toastGreeting().showProgress = showProgress;
+                if (hasMoreInfo) {
+                    this._toastGreeting().msgHeading = "Info";
                 }
                 this._toastGreeting().show();
             },
@@ -708,11 +725,11 @@
                         } else {
                             bindingView["@" + propertyName + "_required"] = false;
                         }
-                        if (entity.type().prop(propertyName).isUpperCase()) {
-                            bindingView["@" + propertyName + "_uppercase"] = true;
-                        }
                     }
-                    
+                    // the following logic is required in both cases: property with error and without error
+                    if (entity.type().prop(propertyName).isUpperCase()) {
+                        bindingView["@" + propertyName + "_uppercase"] = true;
+                    }
                     bindingView["@" + propertyName + "_editable"] = entity.prop(propertyName).isEditable();
 
                     if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {

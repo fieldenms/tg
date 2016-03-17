@@ -115,7 +115,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IDateTimePickerConfig<T> asDateTimePicker() {
-        widget = new DateTimePickerWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
+        widget = new DateTimePickerWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName, false);
         return new DateTimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
     }
 

@@ -73,8 +73,7 @@ public class Vulcanize extends VulcanizingUtility {
                 loginTargetPlatformSpecificPath, 
                 mobileAndDesktopAppSpecificPath, 
                 Vulcanize::unixCommands, 
-                additionalPaths,
-                logger);
+                additionalPaths);
     }
 
 }

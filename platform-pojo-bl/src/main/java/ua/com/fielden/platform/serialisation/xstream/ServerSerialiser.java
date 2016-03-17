@@ -11,15 +11,18 @@ import com.google.inject.Inject;
  * @author TG Team
  * 
  */
+@Deprecated
 public class ServerSerialiser extends XStreamSerialiser {
     private final EntityFactory factory;
 
+    @Deprecated
     public ServerSerialiser(final EntityFactory factory, final boolean compact) {
         super(compact);
         this.factory = factory;
         registerConverter(new ServerEntityConverter(this.factory));
     }
 
+    @Deprecated
     @Inject
     public ServerSerialiser(final EntityFactory factory) {
         this(factory, true);

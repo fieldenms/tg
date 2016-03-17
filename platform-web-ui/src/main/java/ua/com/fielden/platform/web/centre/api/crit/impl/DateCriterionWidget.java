@@ -22,11 +22,13 @@ public class DateCriterionWidget extends AbstractRangeCriterionWidget {
         super("centre/criterion/multi/range/tg-date-range-criterion", propertyName,
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),
-                        AbstractCriterionWidget.generateNames(root, managedType, propertyName).getKey()
+                        AbstractCriterionWidget.generateNames(root, managedType, propertyName).getKey(),
+                        false
                 ),
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getValue(),
-                        AbstractCriterionWidget.generateNames(root, managedType, propertyName).getValue()
+                        AbstractCriterionWidget.generateNames(root, managedType, propertyName).getValue(),
+                        true
                 ));
     }
 

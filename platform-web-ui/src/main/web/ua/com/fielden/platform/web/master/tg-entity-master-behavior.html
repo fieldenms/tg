@@ -262,7 +262,7 @@
                         /* TODO && !this._currEntity.isPersisted() */ && !potentiallySavedOrNewEntity.isPersisted() 
                         && !this._reflector().equalsEx(this._currEntity, potentiallySavedOrNewEntity);
                     
-                    var msg = this._toastMsg("Saving", potentiallySavedOrNewEntity);
+                    var msg = this._toastMsg("Operation", potentiallySavedOrNewEntity);
                     this._openToast(potentiallySavedOrNewEntity, msg, !potentiallySavedOrNewEntity.isValid() || potentiallySavedOrNewEntity.isValidWithWarning(), msg, false);
                     
                     // isRefreshingProcess should be 'true' to reset old binding information in case where 'continuously created' entity arrive

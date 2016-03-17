@@ -242,14 +242,24 @@
                     // let's open the dialog with magical async...
                     // this ensures that the dialog is opened after its relocation to body and after all layouting is done
                     this.async(function () {
+                        this.addEventListener('binding-entity-appeared', this._focus.bind(this));
+                        this._focus(); // this is a legacy support
                         this.open();
-                        if (element.focusFirstInput) {
-                            element.focusFirstInput();
-                        }
                     }.bind(this), 200);
                 }
             },
 
+            /** 
+             * A convenience function acting as event listener for 'binding-entity-appeared' to focus the opened dialog only after the entity is bound. 
+             * A named function was used in favoir of an anonymous one in order to avoid accumulation of event listeners.
+             */
+            _focus: function() {
+                if (this._lastElement.focusFirstInput) {
+                    this._lastElement.focusFirstInput();
+                }                            
+    		},
+
+            
             _dialogOpened: function (e, detail, source) {
                 this.async(function () {
                     this.refit();

@@ -30,6 +30,7 @@ public class CentreUtils<T extends AbstractEntity<?>> {
     private final static Logger logger = Logger.getLogger(CentreUtils.class);
     private static final String DIFFERENCES_CENTRE_NAME = "__________DIFFERENCES_CENTRE_NAME";
     private static final String FRESH_CENTRE_NAME = "__________FRESH_CENTRE_NAME";
+    public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN_CENTRE_NAME";
 
     public CentreUtils() {
     }
@@ -104,10 +105,10 @@ public class CentreUtils<T extends AbstractEntity<?>> {
      */
     public static ICentreDomainTreeManagerAndEnhancer getFreshCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
         synchronized (gdtm) {
-            logger.info("Getting 'fresh centre' for miType [" + miType.getSimpleName() + "]...");
-            final DateTime start = new DateTime();
-
             if (gdtm.getEntityCentreManager(miType, FRESH_CENTRE_NAME) == null) {
+                logger.info(String.format("Initialising 'fresh centre' for miType [%s] for the first time for user %s...", miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+                final DateTime start = new DateTime();
+
                 final ICentreDomainTreeManagerAndEnhancer freshCentre =
                         applyDifferences(
                                 ((GlobalDomainTreeManager) gdtm).copyCentre(getDefaultCentre(gdtm, miType)),
@@ -115,19 +116,21 @@ public class CentreUtils<T extends AbstractEntity<?>> {
                                 getEntityType(miType)
                         );
 
-                ((GlobalDomainTreeManager) gdtm).init(miType, FRESH_CENTRE_NAME, freshCentre, true);
+                initUnchangedCentreManager(gdtm, miType, FRESH_CENTRE_NAME, freshCentre);
 
                 if (gdtm.isChangedEntityCentreManager(miType, FRESH_CENTRE_NAME)) {
                     throw new IllegalStateException("Should be not changed.");
                 }
+                final DateTime end = new DateTime();
+                final Period pd = new Period(start, end);
+                logger.info(String.format("Initialised the 'fresh centre' for miType [%s] for the first time for user %s... done in [%s].", miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
             }
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = freshCentre(gdtm, miType);
-
-            final DateTime end = new DateTime();
-            final Period pd = new Period(start, end);
-            logger.info("Got the 'fresh centre' for miType [" + miType.getSimpleName() + "]... done in [" + pd.getSeconds() + " s " + pd.getMillis() + " ms].");
-            return freshCentre;
+            return freshCentre(gdtm, miType);
         }
+    }
+    
+    public static void initUnchangedCentreManager(final IGlobalDomainTreeManager gdtm, final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer mgr) {
+        ((GlobalDomainTreeManager) gdtm).init(menuItemType, name, mgr, true);
     }
 
     /**
@@ -143,7 +146,30 @@ public class CentreUtils<T extends AbstractEntity<?>> {
         }
         return gdtm.getEntityCentreManager(miType, FRESH_CENTRE_NAME);
     }
+    
+    /**
+     * Returns previously run centre manager, not the freshest one with, perhaps, changed criteria.
+     * <p>
+     * It assumes that it should be initialised!
+     *
+     * @param gdtm
+     * @param miType
+     * @return
+     */
+    public static ICentreDomainTreeManagerAndEnhancer previouslyRunCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        if (gdtm.getEntityCentreManager(miType, PREVIOUSLY_RUN_CENTRE_NAME) == null) {
+            throw new PreviouslyRunCentreNotInitialisedException("The 'previously run centre' should be initialised.");
+        }
+        return ((GlobalDomainTreeManager) gdtm).getEntityCentreManagerWithoutModifications(miType, PREVIOUSLY_RUN_CENTRE_NAME);
+    }
+    
+    public static class PreviouslyRunCentreNotInitialisedException extends IllegalStateException {
+        private static final long serialVersionUID = 1L;
 
+        public PreviouslyRunCentreNotInitialisedException(final String string) {
+        }
+    }
+    
     /**
      * Removes fresh centre (to be able later to re-populate it automatically).
      *

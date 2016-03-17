@@ -58,7 +58,7 @@
 	</logger>
 	
 	<logger name="ua.com.fielden.platform.web.resources.webui.CriteriaResource" additivity="false">
-		<level value="error" />
+		<level value="info" />
 		<appender-ref ref="stdout" />
 	</logger>	
 	<logger name="ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource" additivity="false">
@@ -68,7 +68,19 @@
 	<logger name="ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource" additivity="false">
 		<level value="error" />
 		<appender-ref ref="stdout" />
-	</logger>	
+	</logger>
+	<logger name="ua.com.fielden.platform.web.ioc.SourceControllerImpl" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.web.utils.VulcanizingUtility" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.web.test.server.Vulcanize" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
 	
 	<logger name="ua.com.fielden.platform.dao.QueryExecutionModel" additivity="false">
 		<level value="error" />

@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
+import static ua.com.fielden.platform.web.centre.api.actions.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
@@ -49,7 +50,6 @@ import ua.com.fielden.platform.sample.domain.MiUser;
 import ua.com.fielden.platform.sample.domain.MiUserRole;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
@@ -166,7 +166,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         // .addProp("additionalProp")
                         .build(), injector(), null);
          configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
-         
+
          final EntityCentre<TgCollectionalSerialisationParent> collectionalSerialisationTestCentre = new EntityCentre<>(MiTgCollectionalSerialisationParent.class, "TgCollectionalSerialisationParent",
                  EntityCentreBuilder.centreFor(TgCollectionalSerialisationParent.class)
                          .addCrit("desc").asMulti().text()
@@ -522,7 +522,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
                     + "    ]"))
             .done();
-        
+
         final IMaster<TgCollectionalSerialisationParent> masterConfigForCollSerialisationTest = new SimpleMasterBuilder<TgCollectionalSerialisationParent>()
                 .forEntity(TgCollectionalSerialisationParent.class)
                 .addProp("key").asSinglelineText()
@@ -1036,12 +1036,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
-                                preAction(new IPreAction() {
-                                    @Override
-                                    public JsCode build() {
-                                        return new JsCode("    return confirm('Are you sure you want to proceed?');\n");
-                                    }
-                                }).
+                                preAction(yesNo("Are you sure you want to proceed?")).
                                 icon("assignment-ind").
                                 shortDesc("Function 1").
                                 //longDesc("Functional context-dependent action 1").
@@ -1163,7 +1158,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 //.hideCheckboxes()
                 //.notScrollable()
-                .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(1).withFixedSecondaryActions().withFixedHeader().done())
+                .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(1).withFixedSecondaryActions().withFixedHeader().withFixedSummary().done())
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
                 .addProp("this").minWidth(60).withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
