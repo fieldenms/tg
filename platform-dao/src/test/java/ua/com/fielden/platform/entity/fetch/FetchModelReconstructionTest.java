@@ -73,13 +73,12 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    public void reconstructed_fetch_model_should_not_contain_submodels_for_proxied_properties() {
+    public void reconstructed_fetch_model_contains_fetchIdOnly_submodels_for_not_fetched_properties_of_entity_types() {
         final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch(TgVehicle.class), "CAR1");
 
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
 
-        assertFalse(reconFetch.getIncludedPropsWithModels().containsKey("replacedBy"));
-        assertFalse(reconFetch.getIncludedProps().contains("replacedBy"));
+        assertTrue(reconFetch.getIncludedPropsWithModels().containsKey("replacedBy"));
     }
 
     @Test
