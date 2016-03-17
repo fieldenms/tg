@@ -277,8 +277,15 @@
                     return this._reset(mph);
                 }).bind(self);
                 
+                self._provideExceptionOccured = function (entity, exceptionOccured) {
+                    if (exceptionOccured !== null && this._reflector().isEntity(entity)) {
+                        entity._setExceptionOccured(exceptionOccured);
+                    }
+                };
+                
                 self._processRetrieverResponse = function (e) {
-                	self._processResponse(e, "retrieve", function (entityAndCustomObject) {
+                	self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccured) {
+                	    self._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
                 		return self._postRetrievedDefault(entityAndCustomObject);
                 	});
                 };
@@ -301,11 +308,12 @@
                     		//this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult));
                     	} else {
                     		// continue with normal handling of the result's instance
-    	                    e.detail.successful = customHandlerFor(deserialisedResult.instance);
+    	                    e.detail.successful = customHandlerFor(deserialisedResult.instance, this._reflector().isError(deserialisedResult));
                     		// Need to open toast message in case where the top-level result is unsuccessful -- this message will be shown AFTER 
                     		//   other messages about validation errors of 'deserialisedResult.instance' or '... completed successfully'
                     	    if (this._reflector().isError(deserialisedResult)) {
                         	    this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult));
+                        	    e.detail.successful = false;
                         	}
                     		console.log('CUSTOM HANDLER FOR RETURNED', e.detail.successful);
                     		// in case of customHandlerFor not returning any result need to assign true to recognise event handling as successful by default

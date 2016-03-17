@@ -211,7 +211,8 @@
                 var self = this;
                 
                 self._processSaverResponse = function (e) {
-                	self._processResponse(e, "save", function (potentiallySavedOrNewEntity) {
+                	self._processResponse(e, "save", function (potentiallySavedOrNewEntity, exceptionOccured) {
+                	    self._provideExceptionOccured(potentiallySavedOrNewEntity, exceptionOccured);
                 		return self._postSavedDefault(potentiallySavedOrNewEntity);
                 	});
                 };

@@ -343,6 +343,22 @@
         Entity.prototype.isValid = function () {
             return this.firstFailure() === null;
         }
+        
+        /**
+         * Determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occured (e.g. saving exception).
+         *
+         */
+        Entity.prototype.exceptionOccured = function () {
+            return (typeof this['@@___exception-occured'] === 'undefined') ? null : this['@@___exception-occured'];
+        }
+        
+        /**
+         * Provides a value 'exceptionOccured' flag, which determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occured (e.g. saving exception).
+         *
+         */
+        Entity.prototype._setExceptionOccured = function (exceptionOccured) {
+            return this['@@___exception-occured'] = exceptionOccured;
+        }
 
         /**
          * Finds the first failure for the properties of this entity, if any.

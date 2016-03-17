@@ -196,8 +196,9 @@
                 this.staleCriteriaMessage = null;
                 
                 self._processRunnerResponse = function (e) {
-                	self._processResponse(e, "run", function (entityAndCustomObject) {
+                	self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {
                         var criteriaEntity = entityAndCustomObject[0];
+                        self._provideExceptionOccured(criteriaEntity, exceptionOccured);
                         var customObject = self._reflector().customObject(entityAndCustomObject);
                         var resultEntities = customObject.resultEntities || [];
                         var pageCount = customObject.pageCount || null;
