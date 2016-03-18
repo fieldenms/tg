@@ -326,7 +326,7 @@
                     var result = this.preAction(this)
                     var promise = result instanceof Promise ? result : Promise.resolve(result);
                     
-                    this.preAction(this).then(function(value) {
+                    promise.then(function(value) {
                         self.showDialog(self);
                     }, function (error) {
                         console.log("The action was rejected with error: " + error);
