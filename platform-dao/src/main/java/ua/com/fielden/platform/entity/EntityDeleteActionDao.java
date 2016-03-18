@@ -5,6 +5,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
@@ -38,7 +39,7 @@ public class EntityDeleteActionDao extends CommonEntityDao<EntityDeleteAction> i
             selectedEntities.forEach(selectedEntity -> ids.add(selectedEntity.getId()));
             co.batchDelete(ids);
         } else {
-            throw new IllegalStateException("Please select entities those should be deleted");
+            throw new EntityCompanionException("Please select at least one entity to delete.");
         }
         return entity;
     }
