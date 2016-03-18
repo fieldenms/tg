@@ -219,8 +219,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         if (!StringUtils.isEmpty(reqErrorMsg)) {
             result = Result.failure(getEntity(), reqErrorMsg);
         } else {
-            final String msg = format("Required property %s is not specified for entity %s",
-                    getTitleAndDesc(name, getEntity().getType()),
+            final String msg = format("Required property [%s] is not specified for entity [%s].",
+                    getTitleAndDesc(name, getEntity().getType()).getKey(),
                     getEntityTitleAndDesc(getEntity().getType()).getKey());
 
             result = Result.failure(getEntity(), msg);
