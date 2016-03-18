@@ -294,14 +294,19 @@
              * If approximation is failed -- returns the same 'dateEditingValue'.
              */
             _approximate: function (dateEditingValue) {
+                this._validMoment = null;
                 if (dateEditingValue) {
                     // remove all spaces and insert one after year digits
                     var numberOfDigitsAfterSecondSlash = this._calculateNumberOfDigitsAfterSecondSlash(dateEditingValue);
-                    var value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigitsAfterSecondSlash).trim();
-                    if (value) {
-                        this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
-                        if (this._validMoment !== null) {
-                            return moment(this._validMoment.valueOf()).format('L LT');
+                    // If numberOfDigitsAfterSecondSlash equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'
+                    // But they should not be valid. Only 1, 2 and 4 digits for years should be valid.
+                    if (numberOfDigitsAfterSecondSlash === 1 || numberOfDigitsAfterSecondSlash === 2 || numberOfDigitsAfterSecondSlash === 4) {
+                        var value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigitsAfterSecondSlash).trim();
+                        if (value) {
+                            this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
+                            if (this._validMoment !== null) {
+                                return moment(this._validMoment.valueOf()).format('L LT');
+                            }
                         }
                     }
                 } 
