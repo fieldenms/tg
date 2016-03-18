@@ -31,6 +31,16 @@
 	</test-fixture>
 
 	<script>
+        var _editProperties = function (master, datePropEditingValue) {
+            master.$.editor_4_requiredValidatedProp._editingValue = '30';
+            master.$.editor_4_requiredValidatedProp.commit();
+            master.$.editor_4_key._editingValue = 'key_to_pass_validation_before_save_' + (new Date()).getTime();
+            master.$.editor_4_key.commit();
+            // MockInteractions.focus(master.$.editor_4_dateProp.decoratedInput());
+            master.$.editor_4_dateProp._editingValue = datePropEditingValue;
+            master.$.editor_4_dateProp.commit();
+        };
+	
 		suite('retrieval', function() {
 		    var master, reflector;
 		
@@ -469,7 +479,7 @@
 		    	// TODO at this stage whatever currency is used for setting into binding entity (to be saved), retrieval from database 
 		    	//      will return money instances with the currency, that is currently used in your OS.
 		    	// Please, adjust the currency to be the same as in your OS to make this test happy.
-		    	var expectedCurrency = 'USD'; // 'AUD'
+		    	var expectedCurrency = 'AUD'; // 'AUD'
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -837,6 +847,58 @@
 	            master.retrieve();
 		    });
 		    
+            
+            
+                
+            test('works for new entity with exception thrown', function (done) {
+                // master.entityId = '11';
+                
+	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+	                assert.fail('', '', "Validation should not occur, it should be cancelled after saving starts.");
+	            };
+                
+                master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
+                    assert.isNull(potentiallySavedOrNewEntity.id, "Entity id should be null.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.version, 0, "Entity version should be the same.");
+                    
+                    // var arrivedValue = 1044073140000;
+                    var arrivedValue = null;
+                    
+                    // value ok?
+                    assert.notOk(potentiallySavedOrNewEntity.get("dateProp"), "Property value should be initialised.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.get("dateProp"), arrivedValue, "Property value should be correct.");
+                    
+                    // value is changed?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+                    
+                    // value validationresult?
+                    assert.isNotNull(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have empty (successful) validation result.");
+                    
+	                assert.ok(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have non-empty (unsuccessful) validation result.");
+	                assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult()["@resultType"], "ua.com.fielden.platform.error.Result");
+	                assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult().message, "[1/2/3 6:19] is not acceptable.");
+	                
+	                /* master.async(function () {
+                        assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 6:19 AM', 'Editing value should correspond to invalid value.');
+                        done();
+	                }, 200); */
+	                
+	                done();
+                    
+                    // binding value ok?
+                    // assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
+                    // assert.strictEqual(bindingEntity.get("dateProp"), 1044073140000, "Binding property should be correct.");
+                };
+                
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    _editProperties(master, '1/2/3 6:19');
+                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                    MockInteractions.tap(saveButton);
+                };
+                
+                master.retrieve();
+            });
+            
 		    test('works for existing entity', function (done) {
 
 	            master.postSaved = function(potentiallySavedOrNewEntity, bindingEntity) {
