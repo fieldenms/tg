@@ -51,11 +51,11 @@
         <iron-pages selected="[[_selectedView]]" on-scroll="_handleScroll">
             <div class="fit">
                 <paper-material>
-                    <div class="selection-criteria layout vertical" style="padding: 24px;">
-                        <div style="overflow:auto">
+                    <div class="selection-criteria layout vertical">
+                        <div style="overflow:auto; padding: 24px;">
                             <content select=".custom-selection-criteria"></content>
                         </div>
-                        <div class="layout horizontal justified" style="margin-top:24px;">
+                        <div class="layout horizontal justified" style="padding: 0 24px 24px 24px;">
                             <div class="layout horizontal">
                                 <paper-button id="saver" raised roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]" tooltip-text="Save configuration">Save</paper-button>
                                 <paper-button id="discarder" raised roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard configuration">Discard</paper-button>
