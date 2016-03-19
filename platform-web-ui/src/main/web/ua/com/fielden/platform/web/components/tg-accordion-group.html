@@ -29,7 +29,8 @@
                         if (this.singleOpen) {
                             if (e.detail) {
                                 this.accordions.forEach(function (accordion) {
-                                    if (accordion !== e.srcElement) {
+                                    var target = e.target || e.srcElement;
+                                    if (accordion !== target) {
                                         accordion.opened = false;
                                     }
                                 });

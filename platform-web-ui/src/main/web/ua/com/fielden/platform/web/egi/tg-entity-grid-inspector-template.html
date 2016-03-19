@@ -1293,11 +1293,12 @@
             _allSelectionChanged: function (e) {
                 var i;
                 if (this.egiModel) {
+                    var target = e.target || e.srcElement;
                     for (i = 0; i < this.egiModel.length; i += 1) {
-                        this.set("egiModel." + i + ".selected", e.srcElement.checked);
-                        _processEntitySelection(this.selectedEntities, this.entities[i], e.srcElement.checked);
+                        this.set("egiModel." + i + ".selected", target.checked);
+                        _processEntitySelection(this.selectedEntities, this.entities[i], target.checked);
                     }
-                    this.selectedAll = e.srcElement.checked;
+                    this.selectedAll = target.checked;
                     console.log("all ", this.getSelectedRows());
                     this.fire("egi-selection-changed", this.getSelectedEntities());
                 }
@@ -1309,9 +1310,10 @@
                 var index;
                 if (this.egiModel) {
                     index = e.model.entityIndex;
-                    this.set("egiModel." + index + ".selected", e.srcElement.checked);
-                    _processEntitySelection(this.selectedEntities, this.entities[index], e.srcElement.checked);
-                    if (this.selectedAll && !e.srcElement.checked) {
+                    var target = e.target || e.srcElement;
+                    this.set("egiModel." + index + ".selected", target.checked);
+                    _processEntitySelection(this.selectedEntities, this.entities[index], target.checked);
+                    if (this.selectedAll && !target.checked) {
                         this.selectedAll = false;
                     } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {
                         return elem.selected
