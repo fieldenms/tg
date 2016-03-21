@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -98,7 +100,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
     protected void without(final String propName) {
         final Class propType = getPropMetadata(propName).getJavaType();
 
-        if (AbstractEntity.class.isAssignableFrom(propType)) {
+        if (isEntityType(propType)) {
             final Object removalResult = getEntityProps().remove(propName);
             if (removalResult == null) {
                 throw new IllegalStateException("Couldn't find property [" + propName + "] to be excluded from fetched entity properties of entity type " + getEntityType());

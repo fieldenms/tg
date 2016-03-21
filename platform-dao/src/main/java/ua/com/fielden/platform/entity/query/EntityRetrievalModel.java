@@ -4,6 +4,8 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
@@ -12,6 +14,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 
 import java.util.Collection;
 import java.util.Map.Entry;
@@ -171,6 +174,10 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private void includeIdAndVersionOnly() {
         with(ID, true);
         with(VERSION, true);
+        if (isActivatableEntityType(getEntityType())) {
+            with(ACTIVE, true);
+            with(REF_COUNT, true);
+        }
     }
 
     private void with(final String propName, final boolean skipEntities) {
@@ -186,7 +193,6 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 if (!skipEntities) {
                     addEntityPropsModel(propName, fetch(propType));
                 } else if (ppi.affectsMapping()) {
-                    //logger.debug("going to add " + propName + " with ID only fetch model");
                     addEntityPropsModel(propName, fetchIdOnly(propType));
                 }
             } else if (ppi.isUnionEntity()) {
