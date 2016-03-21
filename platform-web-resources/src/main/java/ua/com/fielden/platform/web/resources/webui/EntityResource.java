@@ -198,14 +198,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
         final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
-
         
-        if (applied.isDirty()) {
-            final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied);
-            return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(potentiallySavedWithException.getKey()), potentiallySavedWithException.getValue());
-        } else {
-            return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(applied));
-        }
+        final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied);
+        return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(potentiallySavedWithException.getKey()), potentiallySavedWithException.getValue());
     }
 
     /**
