@@ -308,9 +308,11 @@
                     		//this._openToastForError('Warning.', this._toastMsgForError(deserialisedResult));
                     	} else {
                     		// continue with normal handling of the result's instance
-    	                    e.detail.successful = customHandlerFor(deserialisedResult.instance, this._reflector().isError(deserialisedResult));
+                    		var deserialisedInstance = deserialisedResult.instance;
+                    		deserialisedResult.instance = null;
+    	                    e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     		// Need to open toast message in case where the top-level result is unsuccessful -- this message will be shown AFTER 
-                    		//   other messages about validation errors of 'deserialisedResult.instance' or '... completed successfully'
+                    		//   other messages about validation errors of 'deserialisedInstance' or '... completed successfully'
                     	    if (this._reflector().isError(deserialisedResult)) {
                         	    this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult));
                         	    e.detail.successful = false;
@@ -319,9 +321,9 @@
                     		// in case of customHandlerFor not returning any result need to assign true to recognise event handling as successful by default
                     		if (e.detail.successful !== false) {
                     		    e.detail.successful = true;
-                    		    if (typeof deserialisedResult.instance.id !== 'undefined') {
-                    		    	e.detail.entityId = deserialisedResult.instance.id;
-                    		    	e.detail.entityPersistent = deserialisedResult.instance.type().isPersistent();
+                    		    if (typeof deserialisedInstance.id !== 'undefined') {
+                    		    	e.detail.entityId = deserialisedInstance.id;
+                    		    	e.detail.entityPersistent = deserialisedInstance.type().isPersistent();
                     		    }
                     		}
                     	}
