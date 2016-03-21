@@ -846,12 +846,10 @@
 	            master.retrieve();
 		    });
             
-            /*
-            TODO The following test needs to be uncommented during implementation of issue https://github.com/fieldenms/tg/issues/479
-            
             test('works for new entity with validation result thrown in CommonEntityDao save method', function (done) {
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
-                    assert.fail('', '', "Validation should not occur, it should be cancelled after saving starts.");
+                    // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
+                    // see issue https://github.com/fieldenms/tg/issues/479
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
@@ -892,7 +890,6 @@
                 
                 master.retrieve();
             });
-            */
             
 		    test('works for existing entity', function (done) {
 
