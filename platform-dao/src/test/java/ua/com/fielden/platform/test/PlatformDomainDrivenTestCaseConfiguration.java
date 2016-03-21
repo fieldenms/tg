@@ -8,6 +8,7 @@ import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.DefaultFilter;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassProvider;
@@ -106,5 +107,10 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
     @Override
     public DomainMetadata getDomainMetadata() {
         return hibernateModule.getDomainMetadata();
+    }
+    
+    @Override
+    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
+        return hibernateModule.getIdOnlyProxiedEntityTypeCache();
     }
 }

@@ -13,6 +13,7 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
@@ -84,8 +85,8 @@ import com.google.inject.TypeLiteral;
  */
 public class DaoTestHibernateModule extends CommonFactoryModule {
 
-    public DaoTestHibernateModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
-        super(sessionFactory, domainMetadata);
+    public DaoTestHibernateModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+        super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
     }
 
     @Override

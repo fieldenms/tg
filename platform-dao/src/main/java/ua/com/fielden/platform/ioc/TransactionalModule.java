@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
@@ -36,6 +37,7 @@ public abstract class TransactionalModule extends EntityModule {
     private final DomainValidationConfig domainValidationConfig = new DomainValidationConfig();
     private final DomainMetaPropertyConfig domainMetaPropertyConfig = new DomainMetaPropertyConfig();
     private final DomainMetadata domainMetadata;
+    private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     private final ProxyInterceptor interceptor;
     private final HibernateUtil hibernateUtil;
     private final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes;
@@ -61,6 +63,7 @@ public abstract class TransactionalModule extends EntityModule {
 
         this.sessionFactory = hibernateUtil.getSessionFactory();
         this.domainMetadata = hcf.getDomainMetadata();
+        this.idOnlyProxiedEntityTypeCache = hcf.getIdOnlyProxiedEntityTypeCache();
         this.applicationEntityTypes = applicationEntityTypes;
     }
 
@@ -75,13 +78,14 @@ public abstract class TransactionalModule extends EntityModule {
         return AnnotationReflector.getAnnotation(User.class, MapEntityTo.class);
     }
 
-    public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
+    public TransactionalModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         interceptor = null;
         hibernateUtil = null;
         applicationEntityTypes = null;
 
         this.sessionFactory = sessionFactory;
         this.domainMetadata = domainMetadata;
+        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
     }
 
     @Override
@@ -91,6 +95,11 @@ public abstract class TransactionalModule extends EntityModule {
         if (domainMetadata != null) {
             bind(DomainMetadata.class).toInstance(domainMetadata);
         }
+
+        if (idOnlyProxiedEntityTypeCache != null) {
+            bind(IdOnlyProxiedEntityTypeCache.class).toInstance(idOnlyProxiedEntityTypeCache);
+        }
+        
         // hibernate util
         if (hibernateUtil != null) {
             bind(HibernateUtil.class).toInstance(hibernateUtil);
@@ -117,6 +126,10 @@ public abstract class TransactionalModule extends EntityModule {
 
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
+    }
+    
+    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
+        return idOnlyProxiedEntityTypeCache;
     }
 
     protected List<Class<? extends AbstractEntity<?>>> getApplicationEntityTypes() {

@@ -5,6 +5,7 @@ import java.util.Properties;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
@@ -72,5 +73,10 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     @Override
     public DomainMetadata getDomainMetadata() {
         return module.getDomainMetadata();
+    }
+    
+    @Override
+    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
+        return module.getIdOnlyProxiedEntityTypeCache();
     }
 }

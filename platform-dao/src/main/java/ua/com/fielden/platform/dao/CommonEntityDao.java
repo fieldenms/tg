@@ -49,6 +49,7 @@ import ua.com.fielden.platform.entity.query.EntityBatchDeleterByIds;
 import ua.com.fielden.platform.entity.query.EntityBatchDeleterByQueryModel;
 import ua.com.fielden.platform.entity.query.EntityFetcher;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -89,6 +90,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private Session session;
 
     private DomainMetadata domainMetadata;
+    
+    private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
     private EntityFactory entityFactory;
 
@@ -153,6 +156,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Inject
     protected void setDomainMetadata(final DomainMetadata domainMetadata) {
         this.domainMetadata = domainMetadata;
+    }
+
+
+    @Inject
+    protected void setIdOnlyProxiedEntityTypeCache(final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
     }
 
     /**
@@ -285,7 +294,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
         // let's make sure that entity is not a duplicate
         final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants);
+        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants, idOnlyProxiedEntityTypeCache);
         final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).model());
         final int count = ids.size();
         if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
@@ -768,7 +777,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
+        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
         return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
     }
 
@@ -872,7 +881,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 : select((AggregatedResultQueryModel) model).yield().countAll().as("count").modelAsAggregate();
         final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> countModel = from(countQuery).with(paramValues).with(fetchAggregates().with("count")).lightweight().model();
 
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
+        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
         final List<EntityAggregates> counts = new EntityFetcher(queryExecutionContext).getEntities(countModel);
 
         final int resultSize = ((Number) counts.get(0).get("count")).intValue();
@@ -959,7 +968,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new EntityCompanionException("Null is not an acceptable value for eQuery model.");
         }
         
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
+        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
 
         return new EntityBatchDeleterByQueryModel(queryExecutionContext).deleteEntities(model, paramValues);
     }
@@ -984,7 +993,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new EntityCompanionException("No entities ids have been provided for deletion.");
         }
         
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants);
+        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
 
         return new EntityBatchDeleterByIds(queryExecutionContext).deleteEntities(entitiesIds, getEntityType());
     }
@@ -995,6 +1004,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
+    }
+
+    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
+        return idOnlyProxiedEntityTypeCache;
     }
 
     @Override
