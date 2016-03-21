@@ -40,7 +40,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void reconstruction_of_fetch_model_without_sub_models_succeeds() {
-        final fetch<TgVehicle> fetch = fetchOnly(TgVehicle.class).with("id").with("key").with("desc");
+        final fetch<TgVehicle> fetch = fetchOnly(TgVehicle.class).with("key").with("desc");
         final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
 
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
