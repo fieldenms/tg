@@ -89,9 +89,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             if (!ID.equals(name) &&
                     !(KEY.equals(name) && !ppi.affectsMapping()) &&
                     !ppi.isCollection() &&
-                    !name.endsWith(".amount") &&
-                    !name.endsWith(".currency") &&
-                    !ppi.isUnionEntityDetails() &&
+                    !name.contains(".") &&
                     !ppi.isSynthetic() &&
                     !containsProp(name)) {
                 getProxiedProps().add(name);
