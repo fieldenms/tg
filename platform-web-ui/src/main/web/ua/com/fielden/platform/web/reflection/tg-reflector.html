@@ -345,6 +345,14 @@
         }
         
         /**
+         * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occured during saving.
+         *
+         */
+        Entity.prototype.isValidWithoutSavingException = function () {
+            return this.isValid() && !this.exceptionOccured();
+        }
+        
+        /**
          * Determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occured (e.g. saving exception).
          *
          */
