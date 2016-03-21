@@ -118,7 +118,8 @@ The `tg-date-range-criterion-config` contains just the DOM part of all date rang
             if (e.detail) {
             	Array.prototype.forEach.call(this._datePrefixes, function (prefix) {
                 	var accordion = Polymer.dom(self.root).querySelector("#" + prefix);
-                	if (accordion !== e.srcElement) {
+                	var target = e.target || e.srcElement;
+                	if (accordion !== target) {
                         accordion.opened = false;
                     }
                 });
@@ -131,7 +132,7 @@ The `tg-date-range-criterion-config` contains just the DOM part of all date rang
         },
         
         _dateMetaValueChanged: function (e, detail) {
-            var source = e.srcElement;
+            var source = e.target || e.srcElement;
             if (source.checked) {
                 this._datePrefix = source.dateprefix;
                 this._dateMnemonic = source.datemnemonic;
