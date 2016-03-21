@@ -36,7 +36,6 @@
             master.$.editor_4_requiredValidatedProp.commit();
             master.$.editor_4_key._editingValue = 'key_to_pass_validation_before_save_' + (new Date()).getTime();
             master.$.editor_4_key.commit();
-            // MockInteractions.focus(master.$.editor_4_dateProp.decoratedInput());
             master.$.editor_4_dateProp._editingValue = datePropEditingValue;
             master.$.editor_4_dateProp.commit();
         };
@@ -846,22 +845,19 @@
 
 	            master.retrieve();
 		    });
-		    
             
+            /*
+            TODO The following test needs to be uncommented during implementation of issue https://github.com/fieldenms/tg/issues/479
             
-                
-            test('works for new entity with exception thrown', function (done) {
-                // master.entityId = '11';
-                
-	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
-	                assert.fail('', '', "Validation should not occur, it should be cancelled after saving starts.");
-	            };
+            test('works for new entity with validation result thrown in CommonEntityDao save method', function (done) {
+                master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+                    assert.fail('', '', "Validation should not occur, it should be cancelled after saving starts.");
+                };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
                     assert.isNull(potentiallySavedOrNewEntity.id, "Entity id should be null.");
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, "Entity version should be the same.");
                     
-                    // var arrivedValue = 1044073140000;
                     var arrivedValue = null;
                     
                     // value ok?
@@ -874,20 +870,18 @@
                     // value validationresult?
                     assert.isNotNull(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have empty (successful) validation result.");
                     
-	                assert.ok(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have non-empty (unsuccessful) validation result.");
-	                assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult()["@resultType"], "ua.com.fielden.platform.error.Result");
-	                assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult().message, "[1/2/3 6:19] is not acceptable.");
-	                
-	                /* master.async(function () {
-                        assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 6:19 AM', 'Editing value should correspond to invalid value.');
-                        done();
-	                }, 200); */
-	                
-	                done();
+                    assert.ok(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have non-empty (unsuccessful) validation result.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult()["@resultType"], "ua.com.fielden.platform.error.Result");
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult().message, "[1/2/3 6:19] is not acceptable.");
                     
+                    // _editingValue ok?
+                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 6:19 AM', 'Editing value should correspond to invalid value [01/02/2003 6:19 AM].');
                     // binding value ok?
-                    // assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
-                    // assert.strictEqual(bindingEntity.get("dateProp"), 1044073140000, "Binding property should be correct.");
+                    assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
+                    var invalidDateValue = 1044073140000;
+                    assert.strictEqual(bindingEntity.get("dateProp"), invalidDateValue, "Binding property should contain the invalid value that represents [1/2/3 6:19] date.");
+                    
+                    done();
                 };
                 
                 master.postRetrieved = function(entity, bindingEntity, customObject) {
@@ -898,6 +892,7 @@
                 
                 master.retrieve();
             });
+            */
             
 		    test('works for existing entity', function (done) {
 
