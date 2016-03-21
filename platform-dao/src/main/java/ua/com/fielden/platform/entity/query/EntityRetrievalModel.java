@@ -39,7 +39,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         case ALL_INCL_CALC:
             includeAllFirstLevelPropsInclCalc();
             break;
-        case MINIMAL:
+        case DEFAULT:
             includeAllFirstLevelPrimPropsAndKey();
             break;
         case KEY_AND_DESC:

@@ -36,14 +36,14 @@ public class FetchModelTest extends BaseEntQueryTCase {
 
     @Test
     public void test_nested_fetching_of_composite_key() {
-        final fetch<TgAuthorship> fetch = new fetch<TgAuthorship>(TgAuthorship.class, FetchCategory.MINIMAL);
+        final fetch<TgAuthorship> fetch = new fetch<TgAuthorship>(TgAuthorship.class, FetchCategory.DEFAULT);
         final IRetrievalModel<TgAuthorship> fetchModel = produceRetrievalModel(fetch);
         assertTrue(fetchModel.containsProp("title"));
         assertTrue(fetchModel.containsProp("author"));
         assertTrue(fetchModel.containsProp("id"));
         assertTrue(fetchModel.containsProp("version"));
         assertNotNull(fetchModel.getFetchModels().get("author"));
-        final fetch<TgAuthor> exp = new fetch<TgAuthor>(TgAuthor.class, FetchCategory.MINIMAL);
+        final fetch<TgAuthor> exp = new fetch<TgAuthor>(TgAuthor.class, FetchCategory.DEFAULT);
         assertEquals("Should be equal", exp, fetchModel.getFetchModels().get("author"));
         final IRetrievalModel<TgAuthor> fetchModelForAuthor = produceRetrievalModel(exp);
         assertTrue(fetchModelForAuthor.containsProp("name"));
@@ -68,7 +68,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
 
     @Test
     public void test_minimal_fetching_of_make() {
-        final fetch<TgVehicleMake> fetch = new fetch<TgVehicleMake>(TgVehicleMake.class, FetchCategory.MINIMAL);
+        final fetch<TgVehicleMake> fetch = new fetch<TgVehicleMake>(TgVehicleMake.class, FetchCategory.DEFAULT);
         final IRetrievalModel<TgVehicleMake> fetchModel = produceRetrievalModel(fetch);
         assertTrue(fetchModel.containsProp("key"));
         assertTrue(fetchModel.containsProp("desc"));
@@ -99,7 +99,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
 
     @Test
     public void test_minimal_fetching_of_model() {
-        final fetch<TgVehicleModel> fetch = new fetch<TgVehicleModel>(TgVehicleModel.class, FetchCategory.MINIMAL);
+        final fetch<TgVehicleModel> fetch = new fetch<TgVehicleModel>(TgVehicleModel.class, FetchCategory.DEFAULT);
         final IRetrievalModel<TgVehicleModel> fetchModel = produceRetrievalModel(fetch);
         assertTrue(fetchModel.containsProp("key"));
         assertTrue(fetchModel.containsProp("desc"));
@@ -134,7 +134,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
 
     @Test
     public void test_minimal_fetching_of_fuel_usage() {
-        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, FetchCategory.MINIMAL);
+        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, FetchCategory.DEFAULT);
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(fetch);
         assertTrue(fetchModel.containsProp("id"));
         assertTrue(fetchModel.containsProp("version"));
@@ -167,7 +167,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
 
     @Test
     public void test_minimal_fetching_of_fuel_usage_without_date_and_qty() {
-        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, FetchCategory.MINIMAL).without("date").without("qty");
+        final fetch<TgFuelUsage> fetch = new fetch<TgFuelUsage>(TgFuelUsage.class, FetchCategory.DEFAULT).without("date").without("qty");
         final IRetrievalModel<TgFuelUsage> fetchModel = produceRetrievalModel(fetch);
         assertTrue(fetchModel.containsProp("id"));
         assertTrue(fetchModel.containsProp("version"));
@@ -186,7 +186,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
         assertTrue(fetchModel.containsProp("id"));
         assertTrue(fetchModel.containsProp("version"));
         final fetch<? extends AbstractEntity<?>> vehicleFetchModel = fetchModel.getFetchModels().get("vehicle");
-        assertTrue(vehicleFetchModel.getFetchCategory().equals(FetchCategory.MINIMAL));
+        assertTrue(vehicleFetchModel.getFetchCategory().equals(FetchCategory.DEFAULT));
         assertTrue(vehicleFetchModel.getEntityType().equals(TgVehicle.class));
         assertTrue(vehicleFetchModel.getIncludedPropsWithModels().size() == 0);
         assertTrue(vehicleFetchModel.getIncludedProps().size() == 0);
@@ -211,7 +211,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
 
     @Test
     public void test_virtual_composite_key_property() {
-        final fetch<TgAuthor> fetch = new fetch<TgAuthor>(TgAuthor.class, FetchCategory.MINIMAL);
+        final fetch<TgAuthor> fetch = new fetch<TgAuthor>(TgAuthor.class, FetchCategory.DEFAULT);
         final IRetrievalModel<TgAuthor> fetchModel = produceRetrievalModel(fetch);
         assertTrue(fetchModel.containsProp("id"));
         assertTrue(fetchModel.containsProp("version"));
@@ -223,7 +223,7 @@ public class FetchModelTest extends BaseEntQueryTCase {
     @Test
     @Ignore
     public void test_entity_key_of_synchetic_entity() {
-        final fetch<TgAverageFuelUsage> fetch = new fetch<TgAverageFuelUsage>(TgAverageFuelUsage.class, FetchCategory.MINIMAL);
+        final fetch<TgAverageFuelUsage> fetch = new fetch<TgAverageFuelUsage>(TgAverageFuelUsage.class, FetchCategory.DEFAULT);
         final IRetrievalModel<TgAverageFuelUsage> fetchModel = produceRetrievalModel(fetch);
         assertFalse(fetchModel.containsProp("id"));
         assertFalse(fetchModel.containsProp("version"));

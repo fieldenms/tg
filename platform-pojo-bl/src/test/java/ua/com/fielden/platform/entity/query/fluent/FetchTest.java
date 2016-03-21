@@ -12,14 +12,14 @@ public class FetchTest {
 
     @Test
     public void test_immutability() {
-        final fetch<TgVehicleMake> makeFetchModel = new fetch<TgVehicleMake>(TgVehicleMake.class, FetchCategory.MINIMAL) {
+        final fetch<TgVehicleMake> makeFetchModel = new fetch<TgVehicleMake>(TgVehicleMake.class, FetchCategory.DEFAULT) {
         };
         assertFalse("Two fetch models should not be equal", makeFetchModel.equals(makeFetchModel.without("desc")));
     }
 
     @Test
     public void test_duplication() {
-        final fetch<TgVehicleMake> makeFetchModel = new fetch<TgVehicleMake>(TgVehicleMake.class, FetchCategory.MINIMAL) {
+        final fetch<TgVehicleMake> makeFetchModel = new fetch<TgVehicleMake>(TgVehicleMake.class, FetchCategory.DEFAULT) {
         };
         try {
             makeFetchModel.with("desc").without("desc");
@@ -30,7 +30,7 @@ public class FetchTest {
 
     @Test
     public void test_validation_of_non_existing_property() {
-        final fetch<TgVehicleMake> makeFetchModel = new fetch<TgVehicleMake>(TgVehicleMake.class, FetchCategory.MINIMAL) {
+        final fetch<TgVehicleMake> makeFetchModel = new fetch<TgVehicleMake>(TgVehicleMake.class, FetchCategory.DEFAULT) {
         };
         try {
             makeFetchModel.with("ket");

@@ -54,11 +54,11 @@ public class EntityQueryUtils {
     }
 
     public static <T extends AbstractEntity<?>> fetch<T> fetch(final Class<T> entityType) {
-        return new fetch<T>(entityType, FetchCategory.MINIMAL);
+        return new fetch<T>(entityType, FetchCategory.DEFAULT);
     }
 
     public static <T extends AbstractEntity<?>> fetch<T> fetchAndInstrument(final Class<T> entityType) {
-        return new fetch<T>(entityType, FetchCategory.MINIMAL, true);
+        return new fetch<T>(entityType, FetchCategory.DEFAULT, true);
     }
 
     public static <T extends AbstractEntity<?>> fetch<T> fetchAll(final Class<T> entityType) {
