@@ -94,16 +94,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                     !ppi.isUnionEntityDetails() &&
                     !ppi.isSynthetic() &&
                     !containsProp(name)) {
-
-                if (ppi.isEntityOfPersistedType()) {
-                    if (ppi.isCalculated()) {
-                        getProxiedPropsWithoutId().add(name);
-                    } else {
-                        getProxiedProps().add(name);
-                    }
-                } else {
-                    getProxiedPrimProps().add(name);
-                }
+                getProxiedProps().add(name);
             }
         }
     }

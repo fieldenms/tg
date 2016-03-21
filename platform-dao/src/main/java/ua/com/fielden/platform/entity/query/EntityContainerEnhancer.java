@@ -107,13 +107,8 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     }
 
     private <T extends AbstractEntity<?>> Class<? extends T> determineProxiedResultTypeFromFetchModel(final IRetrievalModel<T> fetchModel) {
-        final Set<String> proxiedProps = new HashSet<>();
-        proxiedProps.addAll(fetchModel.getProxiedProps());
-        proxiedProps.addAll(fetchModel.getProxiedPrimProps());
-        proxiedProps.addAll(fetchModel.getProxiedPropsWithoutId());
-        
         final DateTime st = new DateTime();
-        final Class<? extends T>  proxiedType = EntityProxyContainer.proxy(fetchModel.getEntityType(), proxiedProps.toArray(new String[] {}));
+        final Class<? extends T>  proxiedType = EntityProxyContainer.proxy(fetchModel.getEntityType(), fetchModel.getProxiedProps().toArray(new String[] {}));
         final Period pd = new Period(st, new DateTime());
         logger.debug(format("Constructing proxy type [" + fetchModel.getEntityType().getSimpleName() + "] duration: %s m %s s %s ms.", pd.getMinutes(), pd.getSeconds(), pd.getMillis()));
         return proxiedType;

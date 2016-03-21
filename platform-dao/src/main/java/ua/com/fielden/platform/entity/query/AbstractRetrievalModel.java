@@ -18,9 +18,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
 
     private final Map<String, fetch<? extends AbstractEntity<?>>> entityProps = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
     private final Set<String> primProps = new HashSet<String>();
-    private final Set<String> proxiedPrimProps = new HashSet<String>();
     private final Set<String> proxiedProps = new HashSet<String>();
-    private final Set<String> proxiedPropsWithoutId = new HashSet<String>();
 
     public AbstractRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.originalFetch = originalFetch;
@@ -35,18 +33,10 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
         return entityProps;
     }
 
-    public Set<String> getProxiedPrimProps() {
-        return proxiedPrimProps;
-    }
-    
     public Set<String> getProxiedProps() {
         return proxiedProps;
     }
     
-    public Set<String> getProxiedPropsWithoutId() {
-        return proxiedPropsWithoutId;
-    }
-
     public DomainMetadataAnalyser getDomainMetadataAnalyser() {
         return domainMetadataAnalyser;
     }
@@ -56,7 +46,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
     }
 
     public boolean containsProxy(final String propName) {
-        return proxiedProps.contains(propName) || proxiedPropsWithoutId.contains(propName) || proxiedPrimProps.contains(propName);
+        return proxiedProps.contains(propName);
     }
 
     public Class<T> getEntityType() {
