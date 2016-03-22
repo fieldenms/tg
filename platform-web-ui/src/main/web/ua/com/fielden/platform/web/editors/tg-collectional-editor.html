@@ -1,0 +1,399 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+<link rel="import" href="/resources/polymer/iron-list/iron-list.html">
+<link rel="import" href="/resources/polymer/paper-input/paper-input.html">
+<link rel="import" href="/resources/editors/tg-dom-stamper.html">
+
+<dom-module id="tg-collectional-editor">
+    <style>
+        .item-disabled {
+            pointer-events: none;
+        }
+        
+        .item {
+            @apply(--layout-horizontal);
+            cursor: pointer;
+            padding: 16px 22px;
+            border-bottom: 1px solid #DDD;
+        }
+        
+        .item:hover {
+            background-color: var(--google-grey-100);
+        }
+        
+        .item:focus,
+        .item.selected:focus {
+            outline: 0;
+        }
+        
+        .item.selected .star {
+            color: var(--paper-blue-600);
+        }
+        .item.selected {
+            background-color: var(--google-grey-100);
+        }
+        
+        .pad {
+            @apply(--layout-vertical);
+            padding-left: 16px;
+            width: calc(100% - 40px);
+        }
+        .primary {
+            font-size: 1.2rem;
+            height: 1.5rem;
+        }
+        .secondary {
+            height: 1.3rem;
+            font-size: 1.1rem;
+        }
+        .dim {
+            color: gray;
+        }
+        .star {
+            min-width: 24px;
+            min-height: 24px;
+            width: 24px;
+            height: 24px;
+        }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+    </style>
+
+    <template>
+        <tg-editor 
+            id="editorDom" 
+            prop-title="[[propTitle]]"
+            _disabled="[[_disabled]]" 
+            _editing-value="{{_editingValue}}" 
+            action="[[action]]" 
+            _error="[[_error]]" 
+            _comm-value="[[_commValue]]" 
+            _accepted-value="[[_acceptedValue]]" 
+            debug="[[debug]]" 
+            _on-change="[[_onChange]]"
+            _on-input="[[_onInput]]"
+            _on-keydown="[[_onKeydown]]"
+            current-state="[[currentState]]">
+            <input is="iron-input"  placeholder="Search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
+            <iron-list id="input" class="custom-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
+                <template>
+                    <div class$="[[_computedItemClass(_disabled)]]">
+                      <div tabindex="0" class$="[[_computedClass(selected)]]">
+                        <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
+                        <div class="pad" tooltip-text$="[[_calcItemTooltip(item)]]">
+                          <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                          <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                        </div>
+                      </div>
+                      <div class="border"></div>
+                    </div>
+                </template>
+            </iron-list>
+    	</tg-editor>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+        is: 'tg-collectional-editor',
+        behaviors: [ Polymer.TgBehaviors.TgEditorBehavior, Polymer.TgBehaviors.TgHighlightingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+        
+        properties: {
+            /**
+             * The maximum number of visible items on collectional editor (comes from Java API).
+             */
+            maxVisibleItems: {
+                type: Number
+            },
+            
+            /**
+             * The name of the property to be shown in item header.
+             */
+            headerPropertyName: {
+                type: String
+            },
+            
+            /**
+             * The name of the property to be shown in item description.
+             */
+            descriptionPropertyName: {
+                type: String
+            },
+            
+            /**
+             * Entities to be bound to iron-list.
+             */
+            _entities: {
+                type: Array
+            },
+            /**
+             * Selected entities to be bound to iron-list.
+             */
+            _selectedEntities: {
+                type: Array
+            },
+            
+            /**
+             * Switch for disabling selection listeners during iron-list initialisation.
+             */
+            _disableSelectionListeners: {
+                type: Boolean,
+                value: false
+            },
+            
+            /**
+             * Original list of chosen ids. Used to implement the logic of 'what was changed' during editing.
+             */
+            _originalChosenIds: {
+                type: Array
+            },
+            
+            _phraseForSearching: {
+                type: String
+            },
+            
+            _phraseForSearchingCommited: {
+                type: String
+            },
+            _asyncSearchHandle: {
+            	type: Object,
+            	value: null
+            },
+            
+            _eventHandler: {
+            	type: Function
+            },
+            
+            _onInput: {
+            	type: Function,
+            	value: function () {
+            		return (function () {
+            		   this._cancelSearch();
+            		   this._asyncSearchHandle = this.async(this.scrollToFirstFoundElement, 700);
+                	}).bind(this);
+            	}
+            },
+        },
+        
+        observers: [
+            '_selectedEntitiesAddedOrRemoved(_selectedEntities.splices)'
+        ],
+        
+        ready: function () {
+            this.$.editorDom._editorKind = "COLLECTIONAL";
+            this._eventHandler = (function(e) {
+            	// There is no need to proceed with search if user moved out of the search field
+            	this._cancelSearch();
+            }).bind(this);
+        },
+        
+        _calcItemTooltip: function (item) {
+            var header = this._calcItemText(item, this.headerPropertyName);
+            var desc = this._calcItemText(item, this.descriptionPropertyName);
+            var tooltip = header ? "<b>" + header + "</b>" : "";
+            tooltip += desc ? (tooltip ? "<br>" + desc : desc) : "";
+            return tooltip;
+        },
+        
+        /**
+         * Returns the text representation of the item to be shown in header or description.
+         */
+        _calcItemText: function (item, propName) {
+            return item.get(propName);
+        },
+        
+        /**
+         * Returns the text representation of the item to be shown in header or description.
+         */
+        _calcItemTextHighlighted: function (item, propName, searchPhrase) {
+            return this._highlightedValue(this._calcItemText(item, propName), searchPhrase);
+        },
+        
+        /**
+         * This method promotes 'IRRELEVANT' into _editingValue which should not be a problem, since this 'editor' edits entity property (with name 'chosenNumbersPropertyName') directly.
+         */
+        convertToString: function (value) {
+            this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
+            
+            var selEntities = [];
+            var chosenIds = this.entity.get('chosenIds');
+            
+            this._originalChosenIds = [];
+            
+            for (var index = 0; index < chosenIds.length; index++) {
+                selEntities.push(this._find(this._entities, chosenIds[index]) );
+                this._originalChosenIds.push(chosenIds[index]);
+            }
+
+            this._disableSelectionListeners = true;
+            this.$.input.clearSelection();
+            
+            for (var index = 0; index < selEntities.length; index++) {
+                this.$.input.selectItem(selEntities[index]);
+            }
+            this._disableSelectionListeners = false;
+            
+            this.scrollToFirstFoundElement();
+            
+            return 'IRRELEVANT';
+        },
+        
+        /**
+         * Returns identificator of the entity. If it is persisted -- such identificator is represented by id, otherwise -- by key.
+         */
+        idOrKey: function (entity) {
+            return entity.id === null ? entity.get('key') : entity.id;
+        },
+        
+        _find: function (entities, idOrKey) {
+            for (var i = 0; i < entities.length; i++) {
+                if (idOrKey === this.idOrKey(entities[i])) {
+                    return entities[i];
+                }
+            }
+            throw 'The entity with idOrKey ' + idOrKey + ' does not exist in entities list ' + entities;
+        },
+
+        /**
+         * This method promotes 'IRRELEVANT' into _acceptedValue which should not be a problem, since this 'representor' is not editable at all.
+         */
+        convertFromString: function (strValue) {
+            return 'IRRELEVANT';
+        }, 
+        
+        _computedClass: function (isSelected) {
+            var classes = 'item';
+            if (isSelected) {
+              classes += ' selected';
+            }
+            return classes;
+        },
+        
+        _computedItemClass: function (isDisabled) {
+            var classes = '';
+            if (isDisabled) {
+              classes += ' item-disabled';
+            }
+            return classes;
+        },
+        
+        iconForItem: function (isSelected) {
+            return isSelected ? 'star' : 'star-border';
+        },
+        
+        _makeId: function(id) {
+        	return "id" + id;
+        },
+        
+        _cancelSearch: function() {
+        	if (this._asyncSearchHandle) {
+        		this.cancelAsync(this._asyncSearchHandle);
+        		this._asyncSearchHandle = null;
+        	}
+        }, 
+        
+        searchForPhrase: function (entities, phrase) {
+            for (var entityIndex = 0; entityIndex < entities.length; entityIndex++) {
+                var currentEntity = entities[entityIndex];
+                var positionInHeader = (this._calcItemText(currentEntity, this.headerPropertyName).toLowerCase()).search(phrase.toLowerCase());
+                var positionInDesc = (this._calcItemText(currentEntity, this.descriptionPropertyName).toLowerCase()).search(phrase.toLowerCase());
+                if (positionInHeader >= 0 || positionInDesc >= 0){
+					return entityIndex; 
+				}
+            }
+        },
+        
+        scrollToFirstFoundElement: function () {
+            this._phraseForSearchingCommited = this._phraseForSearching;
+            var indexOfFirstElementWithPhrase = this.searchForPhrase(this._entities, this._phraseForSearchingCommited); 
+            this.$.input.scrollToIndex(indexOfFirstElementWithPhrase);
+        },
+        
+        _calcListHeight: function (maxVisibleItems) {
+            var rowCount = maxVisibleItems > 0 ? maxVisibleItems : 1; 
+            return "max-height:calc(" + rowCount + " * (2.8rem + 33px))";
+        },
+		
+		_highlightedValue : function (propertyValue, phraseForSearchingCommited) {
+			var html = '';
+			var matchedParts = this._matchedParts(propertyValue, phraseForSearchingCommited);
+			for (var index = 0; index < matchedParts.length; index++) {
+				var part = matchedParts[index];
+				if (part.matched) {
+					// addition style-scope and this.is (element name) styles is required to enformse custom style processing
+					html = html
+							+ '<span style="background-color: #ffff46;">'
+							+ part.part + '</span>';
+				} else {
+					html = html + part.part;
+				}
+			}
+			if (phraseForSearchingCommited === '') {
+			    html = propertyValue;
+			}
+			return html;
+		},
+        
+        _selectedEntitiesAddedOrRemoved: function (changeRecord) {
+            var self = this;
+            if (changeRecord && self.entity && self._disableSelectionListeners === false) {
+                var chosenIds = self.entity.get('chosenIds');
+                var addedIds = self.entity.get('addedIds');
+                var removedIds = self.entity.get('removedIds');
+                
+	            changeRecord.indexSplices.forEach(function (s) {
+	                s.removed.forEach(function (removed) {
+	                    if (removedIds.indexOf(self.idOrKey(removed)) > -1) {
+	                        throw 'Cannot remove ' + self.idOrKey(removed) + ' again (removedIds = ' + removedIds + ').';
+	                    } else {
+	                        var foundId = addedIds.indexOf(self.idOrKey(removed));
+	                        if (foundId > -1) {
+	                            addedIds.splice(foundId, 1);
+	                        } else {
+	                            removedIds.push(self.idOrKey(removed));
+	                        }
+	                        
+	                        var foundInChosenIds = chosenIds.indexOf(self.idOrKey(removed));
+	                        if (foundInChosenIds > -1) {
+	                            chosenIds.splice(foundInChosenIds, 1);
+	                        } else {
+	                            throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
+	                        }
+	                    }
+	                });
+	                
+	                for (var i = s.index; i < s.index + s.addedCount; i++) {
+	                    var added = self._selectedEntities[i];
+	                    
+	                    if (addedIds.indexOf(self.idOrKey(added)) > -1) {
+	                        throw 'Cannot add ' + self.idOrKey(added) + ' again (addedIds = ' + addedIds + ').';
+	                    } else {
+	                        var foundId = removedIds.indexOf(self.idOrKey(added));
+	                        if (foundId > -1) {
+	                            removedIds.splice(foundId, 1);
+	                        } 
+	                        
+	                        var foundInChosenIds = chosenIds.indexOf(self.idOrKey(added));
+	                        if (foundInChosenIds > -1) {
+	                            throw 'Cannot add ' + self.idOrKey(added) + ' which is chosen already (chosenIds = ' + chosenIds + ').';
+	                        }
+                            
+                            chosenIds.push(self.idOrKey(added));
+                            if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
+                                addedIds.push(self.idOrKey(added));
+                            }
+	                    }
+	                }
+	            }, self);
+            }
+        }
+    });
+</script>

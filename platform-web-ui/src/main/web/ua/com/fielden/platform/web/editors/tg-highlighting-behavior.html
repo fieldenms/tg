@@ -1,0 +1,60 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<script>
+	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+	Polymer.TgBehaviors.TgHighlightingBehavior = {
+        /* 
+         * Method that identifies matching parts in the str for the searchQuery.
+         * Returns an array of objects representing matched and non-matched parts of the str in sequential order.
+         * It is used to identify those parts that needs to be highlighted during rendering.
+         */
+        _matchedParts: function (str, searchQuery) {
+            var parts = [];
+            var text = str.toUpperCase();
+            // if all is matched then return a single value
+            if ("\\w*" == searchQuery) {
+                parts.push({
+                    part: str,
+                    matched: false
+                });
+                return parts;
+            } else if ('' == searchQuery) {
+                return parts;
+            }
+
+            // otherwise split 
+            var searchExp = new RegExp(searchQuery, 'gi');
+            var match;
+            var startIndex = 0;
+            while ((match = searchExp.exec(text)) !== null) {
+                if (match.index > startIndex) { // match is not from the start, so need to record thing before as not matched
+                    var part = {
+                        part: str.substring(startIndex, match.index),
+                        matched: false
+                    };
+                    parts.push(part);
+                }
+
+                // record the matched part
+                var part = {
+                    part: str.substring(match.index, searchExp.lastIndex),
+                    matched: true
+                };
+                parts.push(part);
+
+                startIndex = searchExp.lastIndex;
+
+            }
+            // check if there is an unmatched part at the end
+            if (startIndex < str.length) {
+                var part = {
+                    part: str.substring(startIndex, text.length),
+                    matched: false
+                };
+                parts.push(part);
+            }
+            // return the result
+            return parts;
+        }
+    };
+</script>

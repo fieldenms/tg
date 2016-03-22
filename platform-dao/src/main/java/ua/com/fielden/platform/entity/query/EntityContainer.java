@@ -9,12 +9,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 
 public final class EntityContainer<R extends AbstractEntity<?>> {
     private final Class<R> resultType;
+    private Class<? extends R> proxiedResultType;
     private final Map<String, Object> primitives = new HashMap<String, Object>();
     private final Map<String, ValueContainer> composites = new HashMap<String, ValueContainer>();
     private final Map<String, EntityContainer<? extends AbstractEntity<?>>> entities = new HashMap<String, EntityContainer<? extends AbstractEntity<?>>>();
     private final Map<String, CollectionContainer<? extends AbstractEntity<?>>> collections = new HashMap<String, CollectionContainer<? extends AbstractEntity<?>>>();
-    private boolean proxy = false;
-    private boolean strictProxy = false;
+    private boolean instrumented = false;
 
     public EntityContainer(final Class<R> resultType) {
         this.resultType = resultType;
@@ -42,30 +42,30 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
     public Long getId() {
         final Object idObject = primitives.get(AbstractEntity.ID);
-        return idObject != null ? new Long(((Number) idObject).longValue())
+        return idObject != null ? Long.valueOf(((Number) idObject).longValue())
                 : (isUnionEntityType(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
     }
 
-    public boolean isProxy() {
-        return proxy;
+    public void setInstrumented() {
+        this.instrumented = true;
     }
-
-    public void setProxy() {
-        this.proxy = true;
-    }
-
-    public boolean isStrictProxy() {
-        return strictProxy;
-    }
-
-    public void setStrictProxy() {
-        this.strictProxy = true;
+    
+    public boolean isInstrumented() {
+        return instrumented;
     }
 
     public Class<R> getResultType() {
         return resultType;
     }
 
+    public Class<? extends R> getProxiedResultType() {
+        return proxiedResultType;
+    }
+
+    public void setProxiedResultType(Class<? extends R> proxiedResultType) {
+        this.proxiedResultType = proxiedResultType;
+    }
+    
     public Map<String, Object> getPrimitives() {
         return primitives;
     }

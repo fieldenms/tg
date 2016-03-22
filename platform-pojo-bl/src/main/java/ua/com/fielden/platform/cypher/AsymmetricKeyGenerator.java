@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.cypher;
 
+import java.security.SignatureException;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -12,13 +15,16 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+
 /**
  * A class for generation of private/public key pair for the RSA algorithm.
  * <p>
  * If the passed into the constructor key length is less than 512 (minimum allowed by RSA) then 512 is set without any user warning.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AsymmetricKeyGenerator {
     public static final String ALGORITHM = "RSA";
@@ -63,6 +69,7 @@ public class AsymmetricKeyGenerator {
         return keyFactory.generatePublic(publicKeySpec);
     }
 
+    @Override
     public String toString() {
         final StringBuffer buffer = new StringBuffer();
         buffer.append("Algorithm: " + getALGORITHM() + " (" + getKeyLength() + " bits); Generated on " + getGenTime() + "\n");
@@ -104,8 +111,9 @@ public class AsymmetricKeyGenerator {
         return genTime;
     }
 
+
     public static void main(final String[] args) throws Exception {
-        final AsymmetricKeyGenerator gen = new AsymmetricKeyGenerator(512);
+        final AsymmetricKeyGenerator gen = new AsymmetricKeyGenerator(1024);
         System.out.println(gen);
 
         final PrivateKey privateKey = AsymmetricKeyGenerator.restorePrivateKey(gen.getStrPrivateKey());

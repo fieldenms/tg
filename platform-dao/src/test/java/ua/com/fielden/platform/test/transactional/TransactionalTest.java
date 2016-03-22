@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.test.transactional;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.types.Money;
@@ -16,12 +18,13 @@ import ua.com.fielden.platform.types.Money;
 public class TransactionalTest extends DbDrivenTestCase {
     private LogicThatNeedsTransaction logic;
     private EntityWithMoneyDao dao;
-
-    @Override
+    private EntityFactory factory;
+    @Before
     public void setUp() throws Exception {
         super.setUp();
         dao = injector.getInstance(EntityWithMoneyDao.class);
         logic = injector.getInstance(LogicThatNeedsTransaction.class);
+        factory = injector.getInstance(EntityFactory.class);
         // commit transaction opened in the parent setUp in order not to mess the transactional testing...
         hibernateUtil.getSessionFactory().getCurrentSession().close();
     }
@@ -95,8 +98,10 @@ public class TransactionalTest extends DbDrivenTestCase {
     public void test_session_required_atomic_behaviour() {
         hibernateUtil.getSessionFactory().getCurrentSession().close();
         try {
-            final EntityWithMoney one = new EntityWithMoney("one", "first", new Money("0.00"));
-            final EntityWithMoney two = new EntityWithMoney("one", "first", new Money("0.00"));
+            final EntityWithMoney one = factory.newEntity(EntityWithMoney.class, "one", "first").setMoney(new Money("0.00")); 
+                    //new EntityWithMoney("one", "first", new Money("0.00"));
+            final EntityWithMoney two = factory.newEntity(EntityWithMoney.class, "one", "first").setMoney(new Money("0.00")); 
+                    //new EntityWithMoney("one", "first", new Money("0.00"));
 
             final EntityWithMoneyDao dao = injector.getInstance(EntityWithMoneyDao.class);
             dao.saveTwoWithException(one, two);

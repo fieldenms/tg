@@ -13,7 +13,7 @@ import org.hibernate.Transaction;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 
 import com.google.inject.Injector;
 
@@ -215,7 +215,7 @@ public class MigrateDb {
         // reset passwords
         if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {
             System.out.println("Resetting user passwords...");
-            final ResetUserPassword passwordReset = new ResetUserPassword(injector.getInstance(IUserController.class));
+            final ResetUserPassword passwordReset = new ResetUserPassword(injector.getInstance(IUserEx.class));
             passwordReset.resetAll(props.getProperty("private-key"));
         }
 

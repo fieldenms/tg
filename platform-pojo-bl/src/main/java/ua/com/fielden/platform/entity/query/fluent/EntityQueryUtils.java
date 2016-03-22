@@ -49,27 +49,51 @@ public class EntityQueryUtils {
         return QueryExecutionModel.from(queryModel);
     }
 
+    public static <T extends AbstractEntity<?>> fetch<T> fetchIdOnly(final Class<T> entityType) {
+        return new fetch<T>(entityType, FetchCategory.ID);
+    }
+
     public static <T extends AbstractEntity<?>> fetch<T> fetch(final Class<T> entityType) {
-        return new fetch<T>(entityType, FetchCategory.MINIMAL);
+        return new fetch<T>(entityType, FetchCategory.DEFAULT);
+    }
+
+    public static <T extends AbstractEntity<?>> fetch<T> fetchAndInstrument(final Class<T> entityType) {
+        return new fetch<T>(entityType, FetchCategory.DEFAULT, true);
     }
 
     public static <T extends AbstractEntity<?>> fetch<T> fetchAll(final Class<T> entityType) {
         return new fetch<T>(entityType, FetchCategory.ALL);
     }
 
+    public static <T extends AbstractEntity<?>> fetch<T> fetchAllAndInstrument(final Class<T> entityType) {
+        return new fetch<T>(entityType, FetchCategory.ALL, true);
+    }
+
     public static <T extends AbstractEntity<?>> fetch<T> fetchAllInclCalc(final Class<T> entityType) {
         return new fetch<T>(entityType, FetchCategory.ALL_INCL_CALC);
     }
 
+    public static <T extends AbstractEntity<?>> fetch<T> fetchAllInclCalcAndInstrument(final Class<T> entityType) {
+        return new fetch<T>(entityType, FetchCategory.ALL_INCL_CALC, true);
+    }
+
     public static <T extends AbstractEntity<?>> fetch<T> fetchOnly(final Class<T> entityType) {
-        return new fetch<T>(entityType, FetchCategory.NONE);
+        return new fetch<T>(entityType, FetchCategory.ID_AND_VERSTION);
+    }
+
+    public static <T extends AbstractEntity<?>> fetch<T> fetchOnlyAndInstrument(final Class<T> entityType) {
+        return new fetch<T>(entityType, FetchCategory.ID_AND_VERSTION, true);
     }
 
     public static <T extends AbstractEntity<?>> fetch<T> fetchKeyAndDescOnly(final Class<T> entityType) {
         return new fetch<T>(entityType, FetchCategory.KEY_AND_DESC);
     }
-    
+
+    public static <T extends AbstractEntity<?>> fetch<T> fetchKeyAndDescOnlyAndInstrument(final Class<T> entityType) {
+        return new fetch<T>(entityType, FetchCategory.KEY_AND_DESC, true);
+    }
+
     public static fetch<EntityAggregates> fetchAggregates() {
-        return new fetch<EntityAggregates>(EntityAggregates.class, FetchCategory.NONE);
+        return new fetch<EntityAggregates>(EntityAggregates.class, FetchCategory.ID_AND_VERSTION);
     }
 }

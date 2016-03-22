@@ -14,7 +14,7 @@
 	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
 		<layout class="org.apache.log4j.PatternLayout">
 			<param name="ConversionPattern"
-				value="%d{yyyy-MMM-dd@HH:mm:ss} %X{user} %X{PID} %X{MEM} %5p %c{1} %C{1}:%-3L &quot;%m&quot;%n" />
+				value="[%-22.22t] %-5.5p %-22.22c %d{ISO8601} - %m%n" />
 		</layout>
 	</appender>
 
@@ -35,15 +35,61 @@
 	<!--
 		Logger of top level category 'ua.com.fielden.platform.web'. Additional logger can be added any time if required.
 	-->
+	
+	<logger name="ua.com.fielden.platform.security.session" additivity="false">
+		<level value="debug" />
+		<appender-ref ref="stdout" />
+	</logger>
 	<logger name="ua.com.fielden.platform.web" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.serialisation.api.impl.TgJackson" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.web.resources.webui.EntityResourceUtils" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
+	
+	<logger name="ua.com.fielden.platform.web.resources.webui.CriteriaResource" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>	
+	<logger name="ua.com.fielden.platform.web.resources.webui.EntityAutocompletionResource" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>	
+	<logger name="ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.web.ioc.SourceControllerImpl" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.web.utils.VulcanizingUtility" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.web.test.server.Vulcanize" additivity="false">
 		<level value="info" />
 		<appender-ref ref="stdout" />
 	</logger>
 	
 	<logger name="ua.com.fielden.platform.dao.QueryExecutionModel" additivity="false">
-		<level value="off" />
+		<level value="error" />
 		<appender-ref ref="stdout" />
 	</logger>
+	<logger name="ua.com.fielden.platform.entity.query.EntityHibernateRetrievalQueryProducer" additivity="false">
+        <level value="error" />
+        <appender-ref ref="stdout" />
+    </logger>
 		
 	<!-- 
 		Loggers for Hibernate.
@@ -69,7 +115,7 @@
 		<appender-ref ref="stdout" />
 	</logger>
 	<logger name="org.hibernate.jdbc" additivity="false">
-		<level value="error" />
+		<level value="debug" />
 		<appender-ref ref="stdout" />
 	</logger>
 	

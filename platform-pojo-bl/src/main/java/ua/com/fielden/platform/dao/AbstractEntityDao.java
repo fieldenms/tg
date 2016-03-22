@@ -6,9 +6,12 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.order
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -186,21 +189,6 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
         } else {
             return cond().prop(propName).eq().val(propValue).model();
         }
-    }
-
-    @Override
-    public void delete(final T entity) {
-        throw new UnsupportedOperationException("By default deletion is not supported.");
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        throw new UnsupportedOperationException("By default deletion is not supported.");
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<T> model) {
-        delete(model, Collections.<String, Object> emptyMap());
     }
 
     @Override

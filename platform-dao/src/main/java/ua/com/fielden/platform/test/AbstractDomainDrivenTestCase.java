@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -61,7 +62,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
             // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
             //      This should be modified once correct db schema generation is implemented
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", "jdbc:h2:src/test/resources/db/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE");
+            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", "jdbc:h2:./src/test/resources/db/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.username", "sa");
@@ -106,13 +107,19 @@ public abstract class AbstractDomainDrivenTestCase {
     @Before
     public final void beforeTest() throws Exception {
         final Connection conn = createConnection();
-
+        Optional<Exception> raisedEx = Optional.empty();
+        
         if (domainPopulated) {
             // apply data population script
             logger.debug("Executing data population script.");
             exec(dataScript, conn);
         } else {
-            populateDomain();
+            try {
+                populateDomain();
+            } catch (final Exception ex) {
+                raisedEx = Optional.of(ex);
+                ex.printStackTrace();
+            }
 
             // record data population statements
             final Statement st = conn.createStatement();
@@ -139,6 +146,11 @@ public abstract class AbstractDomainDrivenTestCase {
         }
 
         conn.close();
+        
+        if (raisedEx.isPresent()) {
+            domainPopulated = false;
+            throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
+        }
     }
 
     private void exec(final List<String> statements, final Connection conn) throws SQLException {
@@ -151,11 +163,8 @@ public abstract class AbstractDomainDrivenTestCase {
 
     @After
     public final void afterTest() throws Exception {
-        final Connection conn = createConnection();
-
-        // TODO need to switch off referential integrity
+        exec(truncateScript, createConnection());
         logger.debug("Executing tables truncation script.");
-        exec(truncateScript, conn);
     }
 
     private static Connection createConnection() {

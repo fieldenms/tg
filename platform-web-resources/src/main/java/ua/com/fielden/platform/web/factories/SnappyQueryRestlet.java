@@ -6,7 +6,7 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.snappy.ISnappyDao;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -39,7 +39,7 @@ public class SnappyQueryRestlet<T extends AbstractEntity> extends Restlet {
 
         final ISnappyDao dao = injector.getInstance(ISnappyDao.class);
         final String username = (String) request.getAttributes().get("username");
-        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
 
         if (Method.GET.equals(request.getMethod())) {
         } else if (Method.HEAD.equals(request.getMethod())) {

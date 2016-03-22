@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -21,7 +22,7 @@ import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
@@ -49,7 +50,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
         cat4.setActive(true);
 
         assertNotNull(cat4.getProperty(ACTIVE).getFirstFailure());
-        assertEquals(format("Entity %s has a reference to already inactive entity %s (type %s)", cat4, cat4.getParent(), cat4.getParent().getType()),
+        assertEquals("Property [parent] in entity Cat4@ua.com.fielden.platform.sample.domain.TgCategory references inactive entity Cat3@ua.com.fielden.platform.sample.domain.TgCategory.", 
                 cat4.getProperty(ACTIVE).getFirstFailure().getMessage());
     }
 
@@ -62,7 +63,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
         try {
             ao(TgCategory.class).save(cat4);
             fail("Should have failed");
-        } catch (final Result ex) {
+        } catch (final EntityCompanionException ex) {
             final TgCategory cat4Full = ao(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat4");
             assertEquals(format("Entity %s has a reference to already inactive entity %s (type %s)", cat4Full, cat4Full.getParent(), cat4Full.getParent().getType()),
                     ex.getMessage());
@@ -214,7 +215,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
         final String loggedInUser = "LOGGED IN USER";
         save(new_(TgPerson.class, loggedInUser).setUsername(loggedInUser).setBase(true));
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername(loggedInUser, getInstance(IUserController.class));
+        up.setUsername(loggedInUser, getInstance(IUserEx.class));
 
         // now the test data
         TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));

@@ -1,0 +1,309 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+<link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
+
+<dom-module id="tg-colour-picker">
+    <style>
+        .colour-box {
+             position: relative;
+             min-width: 40px;
+             min-height: 40px;
+         }
+         .dummy-box {
+             position: absolute;
+             top: -3px;
+             left: -3px;
+             min-width: 40px;
+             min-height: 40px;
+             border: 3px solid white;
+             background-color: none;
+             box-shadow: 0px 2px 6px #ccc;
+             z-index: 1;
+             display: none;
+             cursor: pointer;
+         }
+         .icon {
+             min-width: 40px;
+             min-height: 40px;
+             color: #757575;
+         }
+         .small-icon {          
+             display: block;
+             max-width: 14px;
+             max-height: 14px;
+             color: #757575;
+         }
+         .hidden-icon {
+             visibility: hidden;
+         }
+         .colour-box:hover > .dummy-box {
+             display: block;
+         }
+         .small-box {
+             max-width: 14px;
+             max-height: 14px;
+             background-color: #FAFAFA;
+             border: 2px solid #BDBDBD;
+             border-radius: 2px;
+             cursor: pointer;
+         }
+         iron-dropdown {
+             background-color: #FAFAFA;
+             box-shadow: 0px 2px 6px #ccc;
+         }
+         .prefix {
+             margin-left: 1px;
+             font-family: 'Roboto', 'Noto', sans-serif;
+             margin-left: 10px;
+             font-size: 1rem;
+         }
+    </style>
+    <template>
+        <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" _on-change="[[_onChange]]" current-state="[[currentState]]" _calc-colour-text-style="[[_calcColourTextStyle]]">
+            <div class="layout horizontal prefix-custom-attributes" style$="[[_calcDecoratorPartStyle(_disabled)]]">
+                <div on-tap="_openColourPicker" class="small-box prefix-custom-attributes" style$="[[_calcColourBoxStyle(_editingValue)]]">
+                    <iron-icon class$="[[_calcColourSmallIconClass(_editingValue)]]" icon="close"></iron-icon>
+                </div>
+                <div class="prefix prefix-custom-attributes" style$="[[_calcColourPrefixStyle(_editingValue)]]">#</div>
+            </div>
+            <content class=".property-action"></content>
+        </tg-editor>
+    </template>
+    <script>
+    (function () {
+        var colourLuminance = function (hex, lum) {
+            if (hex != null) {
+                hex = String(hex).replace(/[^0-9a-f]/gi, '');
+                if (hex.length < 6) {
+                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                }
+                lum = lum || 0;
+                var c, i, rgb = "#";
+                for (i = 0; i < 3; i++) {
+                    c = parseInt(hex.substr(i * 2, 2), 16);
+                    c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+                    rgb += ("00" + c).substr(c.length);
+                }
+                return rgb;
+            } else {
+                return hex;
+            }
+        };
+        
+        var rgbToHex = function (colourString) {
+            if (colourString === null||colourString.length === 3 || colourString.length === 6) {
+                return colourString.toUpperCase();
+            }
+            var nums = /(.*?)rgb\((\d+),\s*(\d+),\s*(\d+)\)/i.exec(colourString);
+            var r = parseInt(nums[2], 10).toString(16);
+            var g = parseInt(nums[3], 10).toString(16);
+            var b = parseInt(nums[4], 10).toString(16);    
+            return "#" + ((r.length == 1 ? "0" + r : r) +(g.length == 1 ? "0" + g : g) + (b.length == 1 ? "0" + b : b));
+        };
+		
+        Polymer({
+            is: 'tg-colour-picker',
+            behaviors: [Polymer.TgBehaviors.TgEditorBehavior],
+
+            properties: {
+                _isAcceptingColourFromPicker: {
+                    type: Boolean,
+                    value: false
+                },
+                /*
+                 * This published property specifies to dialog with colour should be bound.
+                 */
+                _colourPalette: {
+                    type: Object
+                },
+                
+                _calcColourTextStyle: {
+                    type: Function
+                }
+            },
+            
+            ready: function () {
+                this.$.editorDom._editorKind = "COLOUR";
+                this._calcColourTextStyle = (function (editingValue) {
+                    if (editingValue === "" || editingValue.length === 3 || editingValue.length === 6) {
+                        return "margin-left: 1px; color: #212121";                    
+                    } else {
+                        return "margin-left: 1px; color: #DD2C00";
+                    }
+                }).bind(this);  
+            },
+
+            convertToString: function (value) {
+                if (value === null) {
+                    return "";
+                } else {
+                    return value.hashlessUppercasedColourValue;
+                }
+            },
+
+            convertFromString: function (strValue) {
+                if (strValue.length !== 3 && strValue.length !== 6 && strValue !== "") {
+                    throw "The entered value [ #" + strValue + "] is not a valid colour (use only [0-9; A-F], 3 or 6 characters).";
+                } else {
+                    return {
+                        hashlessUppercasedColourValue: strValue
+                    };
+                }
+            },
+            
+            _openColourPicker: function () {
+                if (this._disabled === false) {
+                    if (!this._colourPalette) {
+                        this._colourPalette = this._createDialog();
+                        Polymer.dom(this.root).appendChild(this._colourPalette);
+                        Polymer.dom.flush();
+                    }
+                    this._colourPalette.open();
+                }
+            },
+
+            _createDialog: function () {
+                var self = this;
+                var domBind = document.createElement('template', 'dom-bind');
+                
+                domBind.colourSelected = function (e, detail) {
+                    this._acceptColourBind();
+                    var target = e.target || e.srcElement;
+                    self._editingValue = ((rgbToHex(target.style['background-color'])).substring(1)).toUpperCase();
+                    this.$.dropdown.close();
+                }.bind(domBind);
+
+                domBind.nonColourSelected = function () {
+                    this._acceptColourBind();
+                    self._editingValue = "";
+                    this.$.dropdown.close();
+
+                }.bind(domBind);
+
+                domBind._acceptColourBind = function () {
+                    self._isAcceptingColourFromPicker = true;
+                    self.decoratedInput().focus();
+                }.bind(domBind);
+
+                domBind.open = function () {
+                    this.$.dropdown.open();
+                }.bind(domBind);
+
+                var div = domBind.content.ownerDocument.createElement('div');
+                div.innerHTML =
+                    '<iron-dropdown  id="dropdown">' +
+                    '<div class="dropdown-content">' +
+                    '<div class="layout vertical" style="margin:10px 10px 10px 10px;">' +
+                    '<div class="layout horizontal">' +
+                    '<div class="colour-box" on-tap="nonColourSelected" style="background-color:#F5F5F5">' +
+                    '<div class="dummy-box" style="background-color:#F5F5F5">' +
+                    '<iron-icon class="icon" icon="icons:close"></iron-icon>' +
+                    '</div>' +
+                    '<iron-icon class="icon" icon="icons:close"></iron-icon>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#F44336">' +
+                    '<div class="dummy-box" style="background-color:#F44336"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#FF9800">' +
+                    '<div class="dummy-box" style="background-color:#FF9800"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#FFEB3B">' +
+                    '<div class="dummy-box" style="background-color:#FFEB3B"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#4CAF50;">' +
+                    '<div class="dummy-box" style="background-color:#4CAF50;"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#009688">' +
+                    '<div class="dummy-box" style="background-color:#009688"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#00BCD4">' +
+                    '<div class="dummy-box" style="background-color:#00BCD4"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#3F51B5">' +
+                    '<div class="dummy-box" style="background-color:#3F51B5"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#9C27B0">' +
+                    '<div class="dummy-box" style="background-color:#9C27B0"></div>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="layout horizontal">' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#D7CCC8">' +
+                    '<div class="dummy-box" style="background-color:#D7CCC8"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#EF9A9A">' +
+                    '<div class="dummy-box" style="background-color:#EF9A9A"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#FFCC80">' +
+                    '<div class="dummy-box" style="background-color:#FFCC80"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#FFF59D">' +
+                    '<div class="dummy-box" style="background-color:#FFF59D"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#A5D6A7;">' +
+                    '<div class="dummy-box" style="background-color:#A5D6A7;"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#80CBC4">' +
+                    '<div class="dummy-box" style="background-color:#80CBC4"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#80DEEA">' +
+                    '<div class="dummy-box" style="background-color:#80DEEA"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#9FA8DA">' +
+                    '<div class="dummy-box" style="background-color:#9FA8DA"></div>' +
+                    '</div>' +
+                    '<div class="colour-box" on-tap="colourSelected" style="background-color:#CE93D8">' +
+                    '<div class="dummy-box" style="background-color:#CE93D8"></div>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '</iron-dropdown>';
+
+                domBind.content.appendChild(div);
+                return domBind;
+            },
+            
+            _editingValueChanged: function (newValue, oldValue) {
+                Polymer.TgBehaviors.TgEditorBehavior._editingValueChanged.call(this, newValue, oldValue);
+                if (this._isAcceptingColourFromPicker) {
+                    this._isAcceptingColourFromPicker = false;
+                    this.commit();
+                }
+            },
+
+            _calcColourBoxStyle: function (editingValue) {
+                if (editingValue.length === 3 || editingValue.length === 6) {
+                    return "border-color: " + colourLuminance('#' + editingValue, -0.1) + ";background-color: " + '#' + editingValue;
+                } 
+                return "";
+            },
+
+            _calcColourSmallIconClass: function (editingValue) {
+                if (editingValue.length === 3 || editingValue.length === 6) {
+                    return "hidden-icon";
+                } else  {
+                    return "small-icon";
+                }
+            },
+
+            _calcColourPrefixStyle: function (editingValue) {
+            	if (editingValue === "") {
+                    return "visibility: hidden;";
+                }else if (editingValue.length === 3 || editingValue.length === 6) {
+                    return "color: #212121;";
+                } else {
+                    return "color: #DD2C00;";
+                }
+            },
+            _calcDecoratorPartStyle: function (_disabled) {
+                var style = "";
+                if (_disabled === true) {
+                    style += "opacity: 0.6;"
+                }
+                return style;
+            }
+          });
+        })();
+    </script>
+</dom-module>

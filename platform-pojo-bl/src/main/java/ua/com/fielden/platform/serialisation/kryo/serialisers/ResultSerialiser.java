@@ -15,9 +15,9 @@ import com.esotericsoftware.kryo.serialize.StringSerializer;
 
 /**
  * Serialises {@link Result} instances.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ResultSerialiser extends SimpleSerializer<Result> {
 
@@ -76,10 +76,8 @@ public class ResultSerialiser extends SimpleSerializer<Result> {
         final String message = buffer.get() == NULL ? null : mesageSerialiser.readObject(buffer, String.class);
 
         // instantiate the result; warning type checking is required only when instance and message are not null
-        if (ex != null && message == null) {
+        if (ex != null) {
             return new Result(instance, ex);
-        } else if (ex != null && message != null) {
-            return new Result(instance, message, ex);
         } else {
             return Warning.class.equals(resultType) ? new Warning(instance, message) : new Result(instance, message);
         }

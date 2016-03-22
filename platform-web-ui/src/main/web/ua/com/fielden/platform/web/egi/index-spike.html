@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Egi on centre spike</title>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+    <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+    <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+    <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+    <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+    <link rel="import" href="centre-comp-spike.html">
+    <link rel="import" href="egi-comp-spike.html">
+
+    <style>
+        html {
+            font-size: 10pt;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+        .left-insertion-point,
+        .right-insertion-point,
+        .bottom-insertion-point {
+            background-color: white;
+            margin: 10px;
+            height: 450px;
+        }
+        .left-insertion-point,
+        .right-insertion-point
+        {
+            width: 350px;
+        }
+    </style>
+
+</head>
+
+<body unresolved class="fullbleed">
+    <template is="dom-bind" id="app">
+        <centre-comp-spike class="fit">
+            <paper-material class="layout horizontal center-center left-insertion-point"><div>left-top insertion point</div></paper-material>
+            <paper-material class="layout horizontal center-center left-insertion-point"><div>left-bot insertion point</div></paper-material>
+            <paper-material class="layout horizontal center-center right-insertion-point"><div>right-top insertion point</div></paper-material>
+            <paper-material class="layout horizontal center-center right-insertion-point"><div>right-bot insertion point</div></paper-material>
+            <paper-material class="layout horizontal center-center bottom-insertion-point"><div>bottom insertion point</div></paper-material>
+            <egi-comp-spike class="custom-egi">
+                
+                <paper-icon-button class="entity-specific-action" icon="code"></paper-icon-button>
+                <paper-icon-button class="entity-specific-action" icon="code"></paper-icon-button>
+                <paper-icon-button class="entity-specific-action" icon="code"></paper-icon-button>
+                <paper-icon-button class="entity-specific-action" icon="code"></paper-icon-button>
+                
+                <paper-icon-button class="standart-action" icon="code"></paper-icon-button>
+                <paper-icon-button class="standart-action" icon="code"></paper-icon-button>
+                <paper-icon-button class="standart-action" icon="code"></paper-icon-button>
+                <paper-icon-button class="standart-action" icon="code"></paper-icon-button>
+            </egi-comp-spike>
+        </centre-comp-spike>
+    </template>
+    <script>
+        (function () {
+            var app = document.querySelector('#app');
+        })();
+    </script>
+</body>
+
+</html>

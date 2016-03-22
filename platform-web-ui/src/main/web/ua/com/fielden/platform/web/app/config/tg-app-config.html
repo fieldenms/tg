@@ -1,0 +1,47 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/moment-component.html">
+
+<script>
+    (function () {
+
+        moment.locale(@locale, {
+            longDateFormat: {
+                LT: @timeFormat,
+                L: @dateFormat
+            }
+        });
+
+        Polymer({
+
+            is: "tg-app-config",
+
+            properties: {
+                minDesktopWidth: {
+                    type: Number,
+                    readOnly: true,
+                    value: @minDesktopWidth
+                },
+                minTabletWidth: {
+                    type: Number,
+                    readOnly: true,
+                    value: @minTabletWidth
+                },
+                locale: {
+                    type: String,
+                    readOnly: true,
+                    value: @locale
+                },
+                dateFormat: {
+                    type: String,
+                    readOnly: true,
+                    value: @dateFormat
+                },
+                timeFormat: {
+                    type: String,
+                    readOnly: true,
+                    value: @timeFormat
+                }
+            }
+        });
+    })();
+</script>

@@ -13,6 +13,7 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
@@ -38,9 +39,9 @@ import ua.com.fielden.platform.sample.domain.TgWorkorderDao;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
-import ua.com.fielden.platform.security.provider.IUserController;
-import ua.com.fielden.platform.security.provider.UserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.provider.UserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -84,8 +85,8 @@ import com.google.inject.TypeLiteral;
  */
 public class DaoTestHibernateModule extends CommonFactoryModule {
 
-    public DaoTestHibernateModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
-        super(sessionFactory, domainMetadata);
+    public DaoTestHibernateModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+        super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
     }
 
     @Override
@@ -111,8 +112,8 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
 
-        bind(IUserDao.class).to(UserController.class);
-        bind(IUserController.class).to(UserController.class);
+        bind(IUser.class).to(UserDao.class);
+        bind(IUserEx.class).to(UserDao.class);
         // bind IUserProvider
         bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
 

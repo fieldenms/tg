@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.property.DaoMetaPropertyFactory;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
@@ -39,8 +40,8 @@ public class PropertyFactoryModule extends TransactionalModule {
         initHibernateConfig(entityFactory);
     }
 
-    public PropertyFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata) {
-        super(sessionFactory, domainMetadata);
+    public PropertyFactoryModule(final SessionFactory sessionFactory, final DomainMetadata domainMetadata, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
+        super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
         entityFactory = new EntityFactory() {
         };
         defaultControllerProvider = new DefaultCompanionObjectFinderImpl();

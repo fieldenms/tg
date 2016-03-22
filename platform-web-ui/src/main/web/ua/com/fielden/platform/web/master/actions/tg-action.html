@@ -1,0 +1,57 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/master/actions/tg-action-behavior.html">
+<link rel="import" href="/resources/master/actions/tg-abstract-action.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+
+<dom-module id="tg-action">
+    <template>
+	    <style>
+	        paper-spinner {
+	            position: absolute;
+	            top: 0px;
+	            padding: 2px;
+	            margin: 0px;
+	            width: 24px;
+	            height: 24px;
+	            --paper-spinner-layer-1-color: var(--paper-blue-500);
+	            --paper-spinner-layer-2-color: var(--paper-blue-500);
+	            --paper-spinner-layer-3-color: var(--paper-blue-500);
+	            --paper-spinner-layer-4-color: var(--paper-blue-500);
+	        }
+	    </style>
+
+        <tg-abstract-action id="abstractActionDom">
+        </tg-abstract-action>
+
+        <!-- <core-tooltip position="bottom" tabIndex="-1" class="delayed" style="width:100%" disabled="{{!longDesc}}"> -->
+        <paper-button id="actionButton" raised roll="button" on-tap="_asyncRun" style="width:100%" disabled$="[[_disabled]]" tooltip-text$="[[longDesc]]">
+            <paper-spinner id="spinner" active="[[_working]]" class="blue" style="visibility: hidden;" alt="in progress">
+            </paper-spinner>
+            <span>[[shortDesc]]</span>
+        </paper-button>
+        <!-- <span class="span-tooltip" tip>
+                {{longDesc}}
+            </span>
+        </core-tooltip> -->
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+        is: "tg-action",
+
+        behaviors: [Polymer.TgBehaviors.TgActionBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+        
+        _asyncRun: function () {
+            // it is critical to execute the actual logic that is intended for an on-tap action in async
+            // with a relatively long delay to make sure that all required changes
+            this.async( function () {
+                this.run();
+            }, 100);
+        }
+    });
+</script>

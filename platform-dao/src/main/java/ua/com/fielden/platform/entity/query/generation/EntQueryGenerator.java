@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -36,11 +37,14 @@ public class EntQueryGenerator {
     }
 
     public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery generateEntQueryAsResultQuery(final Q query, final OrderingModel orderModel, final Class<T> resultType, final IRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
+        final Map<String, Object> localParamValues = new HashMap<>();    
+        localParamValues.putAll(paramValues);
+        
         if (universalConstants.now() != null) {
-        	paramValues.put(NOW, universalConstants.now().toDate());	
+            localParamValues.put(NOW, universalConstants.now().toDate());	
         }
     	
-        return generateEntQuery(query, orderModel, resultType, fetchModel, paramValues, QueryCategory.RESULT_QUERY, filter, username);
+        return generateEntQuery(query, orderModel, resultType, fetchModel, localParamValues, QueryCategory.RESULT_QUERY, filter, username);
     }
 
     public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues, final Class resultType) {

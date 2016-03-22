@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="planning.css">
+    <style type="text/css">
+    .red {
+        fill: red;
+    }
+    .green {
+        fill: green;
+    }
+    .blue {
+        fill: blue;
+    }
+    .task-selected{
+        fill: white;
+    }
+    .task-completed {
+        fill: black;
+    }
+    .task-over-completed {
+        fill: gray;
+    }
+    </style>
+    <script charset="utf-8" src="d3.js"></script>
+    <script src="planning.js"></script>
+    <title>Planning example</title>
+</head>
+<body>
+   <script type="text/javascript">
+   var move = d3.planning.TaskAction.MOVE;
+   var left = d3.planning.TaskAction.LEFT;
+   var right = d3.planning.TaskAction.RIGHT;
+   var zero = new Date(2013, 9, 7);
+   var leftBound = new Date(zero);
+   leftBound.setDate(leftBound.getDate() - 30);
+   var rightBound = new Date(zero);
+   rightBound.setDate(rightBound.getDate() + 30);
+   var tasks = ["WA #240 (Case I.b)", "WA #238 (Case I.a)", "WA #239 (Case II)", "WA #235 (Case III)", "WA #236 (Case IV)", "WA #237 (Case V)", "WA #234 (Case VI)"];
+   var taskData = [];
+   var from = new Date(2013, 9, 1), to = new Date(2013, 9, 6);
+   taskData.push({from: from, to: to, completedPos: to - from, uncompletedMark: "-10", completedMark: "110", style: "red", allowedActions: [right], task: "WA #234 (Case VI)", frozen: false});
+   from = new Date(2013, 8, 28); to = new Date(2013, 9, 3);
+   taskData.push({from: from, to: to, completedPos: to - from, uncompletedMark: "20", completedMark: "10", style: "green", allowedActions: [right], task: "WA #237 (Case V)", frozen: false});
+   from = new Date(2013, 9, 5); to = new Date(2013, 9, 10);
+   taskData.push({from: from, to: to, completedPos: zero - from, uncompletedMark: "-5", completedMark: "40", style: "blue", allowedActions: [right], task: "WA #236 (Case IV)", frozen: false});
+   from = new Date(2013, 9, 4); to = new Date(2013, 9, 12);
+   taskData.push({from: from, to: to, completedPos: zero - from, uncompletedMark: "50", completedMark: "50", style: "green", allowedActions: [right], task: "WA #235 (Case III)", frozen: false});
+   from = new Date(2013, 8, 30); to = new Date(2013, 9, 1);
+   taskData.push({from: from, to: to, completedPos: 0, uncompletedMark: "10", completedMark: "0", style: "green", allowedActions: [left, move, right], task: "WA #239 (Case II)", frozen: false});
+   from = new Date(2013, 9, 11); to = new Date(2013, 9, 13);
+   taskData.push({from: from, to: to, completedPos: 0, uncompletedMark: "15", completedMark: "0", style: "green", allowedActions: [left, move, right], task: "WA #238 (Case I.a)", frozen: false});
+   from = new Date(2013, 9, 6); to = new Date(2013, 9, 11);
+   taskData.push({from: from, to: to, completedPos: 0, uncompletedMark: "21", completedMark: "0", style: "green", allowedActions: [left, move, right], task: "WA #240 (Case I.b)", frozen: true});
+   var isOverCompleted = function(task) {
+       if(+task.completedMark < 0) {
+           return true;
+       }
+       return false;
+   }
+   var planningFunc = d3.planning(0.5, 0.3, zero, "task-selected", leftBound, rightBound,  isOverCompleted, "task-completed", "task-over-completed")
+           .margin({left: 110})
+           .taskTypes(tasks)
+           .taskStatuses(taskData);
+   d3.select("body").call(planningFunc);
+   </script>
+</body>
+</html>

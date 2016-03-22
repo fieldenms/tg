@@ -12,11 +12,11 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
-public class UserControllerForTestPurposes implements IUserController {
+public class UserControllerForTestPurposes implements IUserEx {
     public static final String USER_NAME = "user";
     public static final String PASSWORD = "password";
     private User user;
@@ -89,10 +89,6 @@ public class UserControllerForTestPurposes implements IUserController {
     }
 
     @Override
-    public void delete(final User user) {
-    }
-
-    @Override
     public boolean isStale(final Long entityId, final Long version) {
         return false;
     }
@@ -160,18 +156,6 @@ public class UserControllerForTestPurposes implements IUserController {
     public IPage<User> getPage(final QueryExecutionModel<User, ?> query, final int pageNo, final int pageCount, final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<User> model, final Map<String, Object> paramValues) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<User> model) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override

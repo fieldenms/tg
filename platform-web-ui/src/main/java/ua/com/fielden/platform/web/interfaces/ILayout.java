@@ -1,33 +1,55 @@
 package ua.com.fielden.platform.web.interfaces;
 
-import ua.com.fielden.platform.web.component.AbstractWebComponent;
 
-/**
- * The web layout manager contract.
- *
- * @author TG Team
- *
- * @param <T>
- */
-public interface ILayout<T> extends IRenderable {
+public interface ILayout<T extends ILayoutSetter<?>> {
 
     /**
-     * Adds the {@link AbstractWebComponent} to the layout manager.
+     * Specifies the device and orientation for which the specific layout must be set.
      *
-     * @param component
-     *            - a component to be added to layout manager.
+     * @param device
+     * @param orientation
      * @return
      */
-    ILayout<T> add(AbstractWebComponent component);
+    public T whenMedia(final Device device, final Orientation orientation);
 
     /**
-     * Adds the {@link AbstractWebComponent} to the layout manager.
+     * Specifies the device for which the specific layout must be set.
      *
-     * @param component
-     *            - a component to be added to layout manager
-     * @param constraints
-     *            - additional layout configuration parameters for the component.
+     * @param device
      * @return
      */
-    ILayout<T> add(AbstractWebComponent component, T constraints);
+    public T whenMedia(final Device device);
+
+    /**
+     * Represents the list of supported devices.
+     *
+     * @author TG Team
+     *
+     *         - a component to be added to layout manager.
+     */
+    public static enum Device {
+        DESKTOP,
+        TABLET,
+        MOBILE,
+        PRINT;
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        };
+    }
+
+    /**
+     * Represents the device orientation.
+     *
+     * @author TG Team
+     *
+     */
+    public static enum Orientation {
+        LANDSCAPE,
+        PORTRAIT;
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        };
+    }
 }

@@ -14,35 +14,35 @@ import ua.com.fielden.snappy.MnemonicEnum;
 /**
  * This interface defines how domain tree can be managed for <b>entity centres</b>. <br>
  * <br>
- * 
+ *
  * Domain tree consists of a tree of properties. <br>
  * <br>
- * 
+ *
  * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances. <br>
  * <br>
- * 
+ *
  * 1. The domain can be enhanced by <i>calculated properties</i> using {@link IDomainTreeEnhancer} instance ({@link #getEnhancer()} method).<br>
  * 2. Each property has two "tick" managers (refer to {@link IAddToCriteriaTickManager} and {@link IAddToResultTickManager}), which include tick checking logic, criteria values,
  * result property ordering etc.<br>
  * 3. The rules of tree representation (properties disablement, immutable checking etc.) can be changed by {@link IDomainTreeRepresentation} instance ({@link #getRepresentation()}
  * method).<br>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public interface ICentreDomainTreeManager extends IDomainTreeManager {
     /**
      * A <i>domain tree manager<i> with <i>enhancer</i> inside.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public interface ICentreDomainTreeManagerAndEnhancer extends IDomainTreeManagerAndEnhancer, ICentreDomainTreeManager {
         /**
          * A type of analysis.
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         public enum AnalysisType {
             SIMPLE, PIVOT, LIFECYCLE, SENTINEL, MULTIPLEDEC
@@ -50,9 +50,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
         /**
          * A post-successful listener for analysis adding / removal.
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         public interface IAnalysisListener extends IPropertyStateListener<Boolean> {
             /**
@@ -66,7 +66,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
         /**
          * Adds a {@link IAnalysisListener} listener.
-         * 
+         *
          * @param listener
          * @return
          */
@@ -74,7 +74,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
         /**
          * Removes a {@link IAnalysisListener} listener.
-         * 
+         *
          * @param listener
          * @return
          */
@@ -83,15 +83,15 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Initialises a brand new <b>analysis manager</b> with specified <code>name</code> and <code>analysisType</code>. The initialisation uses raw instance creation. <br>
          * <br>
-         * 
+         *
          * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
          * [persistentAnalyses => currentAnalyses]. <br>
          * <br>
-         * 
+         *
          * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
          * {@link #discardAnalysisManager(String)} method). <br>
          * <br>
-         * 
+         *
          * @param name
          *            -- a name that defines an analysis
          * @param analysisType
@@ -104,15 +104,15 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Discards a current version of analysis manager with specified <code>name</code>. If a current version of <b>analysis manager</b> was freezed then it just "discards" the
          * changes after freezing. <br>
          * <br>
-         * 
+         *
          * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
          * [persistentAnalyses => currentAnalyses]. <br>
          * <br>
-         * 
+         *
          * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
          * {@link #discardAnalysisManager(String)} method). <br>
          * <br>
-         * 
+         *
          * @param name
          *            -- a name that defines an analysis.
          * @return
@@ -123,15 +123,15 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Accepts a current version of analysis manager with specified <code>name</code>. If a current version of <b>analysis manager</b> was freezed then it just "accepts" the
          * current version. <br>
          * <br>
-         * 
+         *
          * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
          * [persistentAnalyses => currentAnalyses]. <br>
          * <br>
-         * 
+         *
          * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
          * {@link #discardAnalysisManager(String)} method). <br>
          * <br>
-         * 
+         *
          * @param name
          *            -- a name that defines an analysis.
          * @return
@@ -142,15 +142,15 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Returns <code>true</code> if the current version of analysis manager instance with specified <code>name</code> has been changed since last saving/discard (or since the
          * beginning of analysis history). <br>
          * <br>
-         * 
+         *
          * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
          * [persistentAnalyses => currentAnalyses]. <br>
          * <br>
-         * 
+         *
          * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
          * {@link #discardAnalysisManager(String)} method). <br>
          * <br>
-         * 
+         *
          * @param name
          *            -- a name that defines an analysis.
          * @return
@@ -161,15 +161,15 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * Removes an analysis manager with specified <code>name</code>. Throws {@link IllegalArgumentException} when analysis does not exist. The analysis to be removed can be
          * persisted or not (but should exist - at least locally). <br>
          * <br>
-         * 
+         *
          * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
          * [persistentAnalyses => currentAnalyses]. <br>
          * <br>
-         * 
+         *
          * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
          * {@link #discardAnalysisManager(String)} method). <br>
          * <br>
-         * 
+         *
          * @param name
          *            -- a name that defines an analysis.
          * @return
@@ -179,15 +179,15 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Gets a current version of analysis manager with specified <code>name</code>. <br>
          * <br>
-         * 
+         *
          * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
          * [persistentAnalyses => currentAnalyses]. <br>
          * <br>
-         * 
+         *
          * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
          * {@link #discardAnalysisManager(String)} method). <br>
          * <br>
-         * 
+         *
          * @param name
          *            -- a name that defines an analysis.
          * @return
@@ -197,15 +197,15 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Freezes a current version of analysis manager with specified <code>name</code>. <br>
          * <br>
-         * 
+         *
          * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
          * [persistentAnalyses => currentAnalyses]. <br>
          * <br>
-         * 
+         *
          * This current version of a analysis manager can be altered by its methods, and then accepted ({@link #acceptAnalysisManager(String)} method) or discarded (
          * {@link #discardAnalysisManager(String)} method). <br>
          * <br>
-         * 
+         *
          * @param name
          *            -- a name that defines an analysis.
          * @return
@@ -217,15 +217,15 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * {@link #discardAnalysisManager(String)} or {@link #acceptAnalysisManager(String)} to discard / accept the changes that were made after freezing (these actions trigger
          * automatic unfreezing after that). <br>
          * <br>
-         * 
+         *
          * (implementation note) : there should be two sets of analysis managers : persistentAnalyses and currentAnalyses. save = [persistentAnalyses <= currentAnalyses]. discard =
          * [persistentAnalyses => currentAnalyses]. <br>
          * <br>
-         * 
+         *
          * This current version of a analysis manager can be altered by its methods, and then saved ({@link #acceptAnalysisManager(String)} method) or discarded (
          * {@link #discardAnalysisManager(String)} method). <br>
          * <br>
-         * 
+         *
          * @param name
          *            -- a name that defines an analysis.
          * @return
@@ -234,7 +234,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
         /**
          * Returns an <b>ordered</b> list of existent analysis names (which are the keys, that can be used in {@link #getAnalysisManager(String)} method).
-         * 
+         *
          * @return
          */
         List<String> analysisKeys();
@@ -259,25 +259,28 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
     /**
      * Returns a domain representation that is able to change domain representation rules. See {@link IDomainTreeRepresentation} documentation for more details.
-     * 
+     *
      * @return
      */
+    @Override
     ICentreDomainTreeRepresentation getRepresentation();
 
     /**
      * Returns a tree manager for a <b>add to criteria</b> tick. See {@link IAddToCriteriaTickManager} for more details.
      */
+    @Override
     IAddToCriteriaTickManager getFirstTick();
 
     /**
      * Returns a tree manager for a <b>add to result-set</b> tick. See {@link IAddToResultTickManager} for more details.
      */
+    @Override
     IAddToResultTickManager getSecondTick();
 
     /**
      * Gets a <i>runAutomatically</i> flag. <br>
      * <br>
-     * 
+     *
      * @return
      */
     boolean isRunAutomatically();
@@ -285,7 +288,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     /**
      * Sets a <i>runAutomatically</i> flag. <br>
      * <br>
-     * 
+     *
      * @param runAutomatically
      *            -- a value to set
      * @return -- a criteria manager
@@ -295,23 +298,53 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     /**
      * This interface defines <b>entity centre</b> domain tree can be managed for <b>criteria</b> (property represents as a criteria editor). <br>
      * <br>
-     * 
+     *
      * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances. <br>
      * <br>
-     * 
+     *
      * The major aspects of tree management (context-specific) are following: <br>
      * 1. property's checking (adding to criteria);<br>
      * 2. property's [default/____] values/exclusiveness/negation/missingValue;<br>
      * 3. entity-typed property's locators etc...<br>
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public interface IAddToCriteriaTickManager extends ITickManager, ILocatorManager {
         /**
+         * A type of meta values.
+         *
+         * @author TG Team
+         *
+         */
+        public enum MetaValueType {
+            VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE
+        }
+
+        /**
+         * Returns <code>true</code> whether the meta value is present (when it was explicitly marked as 'present'), <code>false</code> otherwise.
+         *
+         * @param metaValueType
+         * @param root
+         * @param property
+         * @return
+         */
+        boolean isMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property);
+
+        /**
+         * Marks the meta value as 'present'.
+         *
+         * @param metaValueType
+         * @param root
+         * @param property
+         * @return
+         */
+        IAddToCriteriaTickManager markMetaValuePresent(final MetaValueType metaValueType, final Class<?> root, final String property);
+
+        /**
          * Gets a <i>columnsNumber</i> for criteria editors. <br>
          * <br>
-         * 
+         *
          * @return
          */
         int getColumnsNumber();
@@ -319,7 +352,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Sets a <i>columnsNumber</i> for criteria editors. Should be >= 1, as it represents a columns number in entity criteria (throws {@link IllegalArgumentException} if trying
          * to set <code>columnsNumber</code> <= 0).
-         * 
+         *
          * @param columnsNumber
          *            -- a value to set
          * @return -- a criteria manager
@@ -329,9 +362,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Returns value that indicates whether <i>main</i> value of a criteria property is empty or not.<br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -343,9 +376,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Gets a <i>main</i> value of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -357,9 +390,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Sets a <i>main</i> value of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -372,9 +405,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
         /**
          * A post-successful listener for property Value changes.
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         public interface IPropertyValueListener extends IPropertyStateListener<Object> {
             /**
@@ -387,7 +420,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
         /**
          * Adds a {@link IPropertyValueListener} listener for main "Value".
-         * 
+         *
          * @param listener
          * @return
          */
@@ -395,14 +428,14 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
         /**
          * Adds a weak {@link IPropertyValueListener} listener for main "Value"
-         * 
+         *
          * @param listener
          */
         void addWeakPropertyValueListener(final IPropertyValueListener listener);
 
         /**
          * Removes a {@link IPropertyValueListener} listener for main "value".
-         * 
+         *
          * @param listener
          * @return
          */
@@ -410,7 +443,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
         /**
          * Adds a {@link IPropertyValueListener} listener for secondary "Value".
-         * 
+         *
          * @param listener
          * @return
          */
@@ -418,14 +451,14 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
 
         /**
          * Adds a weak {@link IPropertyValueListener} listener for secondary "Value"
-         * 
+         *
          * @param listener
          */
         void addWeakPropertyValue2Listener(final IPropertyValueListener listener);
 
         /**
          * Removes a {@link IPropertyValueListener} listener for secondary "value".
-         * 
+         *
          * @param listener
          * @return
          */
@@ -434,11 +467,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Returns value that indicates whether <i>secondary</i> value of a criteria property is empty or not. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an
          * {@link IllegalArgumentException}.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -450,11 +483,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Gets a <i>secondary</i> value of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an
          * {@link IllegalArgumentException}.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -466,11 +499,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Sets a <i>secondary</i> value of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor (or boolean)</i> properties. These include date type, money type, number type etc. The conflict will produce an
          * {@link IllegalArgumentException}.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -484,11 +517,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Gets an <b>exclusive</b> flag for <i>main</i> value of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an
          * {@link IllegalArgumentException}.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -500,11 +533,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Sets an <b>exclusive</b> flag for <i>main</i> value of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an
          * {@link IllegalArgumentException}.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -517,11 +550,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Gets an <b>exclusive</b> flag for <i>secondary</i> value of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an
          * {@link IllegalArgumentException}.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -533,11 +566,11 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Sets an <b>exclusive</b> flag for <i>secondary</i> value of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).<br>
          * It is applicable only to <i>double editor</i> properties. These include date type, money type, number type etc. The conflict will produce an
          * {@link IllegalArgumentException}.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -550,10 +583,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Gets a date prefix of a criteria <i>date</i> property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
          * property is not of date type.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -565,10 +598,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Sets a date prefix of a criteria <i>date</i> property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
          * property is not of date type.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -581,10 +614,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Gets a date mnemonic of a criteria <i>date</i> property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
          * property is not of date type.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -596,10 +629,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Sets a date mnemonic of a criteria <i>date</i> property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
          * property is not of date type.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -612,10 +645,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Gets an "and before" flag of a criteria <i>date</i> property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
          * property is not of date type.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -627,10 +660,10 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Sets an "and before" flag of a criteria <i>date</i> property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method). Throws {@link IllegalArgumentException} when the
          * property is not of date type.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -643,9 +676,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Gets an "or null" flag (missing value) of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -657,9 +690,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Sets an "or null" flag (missing value) of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -672,9 +705,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Gets a "not" flag (negation) of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -686,9 +719,9 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Sets an "not" flag (negation) of a criteria property. <br>
          * <br>
-         * 
+         *
          * Throws {@link IllegalArgumentException} when the property is not checked (see {@link #isChecked(Class, String)} method).
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
@@ -704,38 +737,40 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         /**
          * Marks a concrete property's tick to be <b>mutably</b> checked in domain tree representation. <br>
          * <br>
-         * 
+         *
          * The action should not conflict with a contract of disabled / checked property's ticks. The conflict will produce an {@link IllegalArgumentException}.
          * <p>
          * <b>IMPORTANT</b> : a list of checked properties also contains "placeholders", which can be swapped, moved exactly as simple property. Placeholder property name has
          * contract "<numberOfPlaceholder>-placeholder-origin-<placeholderOriginalRow>-<placeholderOriginalColumn>", but this is only for information, not for "property-related"
          * usage.
-         * 
+         *
          * @param root
          *            -- a root type that contains property.
          * @param property
          *            -- a dot-notation expression that defines a property.
          * @param check
          *            -- an action to perform (<code>true</code> to check, <code>false</code> to uncheck)
-         * 
+         *
          */
+        @Override
         IAddToCriteriaTickManager check(final Class<?> root, final String property, final boolean check);
 
         /**
          * Returns an <b>ordered</b> list of checked properties for concrete <code>root</code> type. <br>
          * <br>
-         * 
+         *
          * The order of the checked properties should be following (if it was not altered using {@link #swap(Class, String, String)}/{@link #move(Class, String, String)} methods):<br>
          * 1. all checked properties as defined by a) {@link #isChecked(Class, String)} contract b) {@link IDomainTreeRepresentation#includedProperties(Class)} order<br>
          * 2. all manually checked properties (in order that they were checked)
          * <p>
          * <b>IMPORTANT</b> : a list of properties also contains "placeholders", which can be swapped, moved exactly as simple property. Placeholder property name has contract
          * "<numberOfPlaceholder>-placeholder-origin-<placeholderOriginalRow>-<placeholderOriginalColumn>", but this is only for information, not for "property-related" usage.
-         * 
+         *
          * @param root
          *            -- a root type that contains a checked properties.
          * @return
          */
+        @Override
         List<String> checkedProperties(final Class<?> root);
 
         /**
@@ -743,7 +778,7 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * <p>
          * <b>IMPORTANT</b> : a list of properties also contains "placeholders", which can be swapped, moved exactly as simple property. Placeholder property name has contract
          * "<numberOfPlaceholder>-placeholder-origin-<placeholderOriginalRow>-<placeholderOriginalColumn>", but this is only for information, not for "property-related" usage.
-         * 
+         *
          * @param root
          *            -- a root type that contains a checked properties.
          * @param property1
@@ -751,11 +786,12 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param property2
          *            -- a second property to swap
          */
+        @Override
         IAddToCriteriaTickManager swap(final Class<?> root, final String property1, final String property2);
 
         /**
          * Throws {@link UnsupportedOperationException}.
-         * 
+         *
          * @param root
          *            -- a root type that contains a checked properties.
          * @param what
@@ -763,29 +799,31 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
          * @param beforeWhat
          *            -- a property before which property "what" will be inserted
          */
+        @Override
         IAddToCriteriaTickManager move(final Class<?> root, final String what, final String beforeWhat);
 
         /**
          * Throws {@link UnsupportedOperationException}.
-         * 
+         *
          * @param root
          *            -- a root type that contains a checked properties.
          * @param what
          *            -- a property to move
          */
+        @Override
         IAddToCriteriaTickManager moveToTheEnd(final Class<?> root, final String what);
     }
 
     /**
      * This interface defines how <b>entity centre</b> domain tree can be managed for <b>result-set</b> (property represents as a result column). <br>
      * <br>
-     * 
+     *
      * <b>Important:</b> it is necessary to override {@link #equals(Object)} and {@link #hashCode()} methods in implementors to provide logical comparison of instances. <br>
      * <br>
-     * 
+     *
      * @see IOrderingManager
      * @author TG Team
-     * 
+     *
      */
     public interface IAddToResultTickManager extends IOrderingManager, IWidthManager, ITickManager {
     }

@@ -33,7 +33,7 @@ public class DynamicallyTypedQueryContainerSerialiser extends TgSimpleSerializer
         // deserialise a list of binary representation of dynamically generated types
         final List<byte[]> binaryTypes = readValue(buffer, List.class);
         // load dynamically generated types from their binary representation before restoring query model
-        final DynamicEntityClassLoader classLoader = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         for (final byte[] binaryType : binaryTypes) {
             classLoader.defineClass(binaryType);
         }

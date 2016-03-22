@@ -17,13 +17,14 @@ import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionRao;
 import ua.com.fielden.platform.security.UserControllerRao;
 import ua.com.fielden.platform.security.UserRoleRao;
-import ua.com.fielden.platform.security.provider.IUserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -34,21 +35,27 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
 
     private final IUserRoleDao userRoleRao = new UserRoleRao(config.restClientUtil());
-    private final IUserController userControllerRao = new UserControllerRao(userRoleRao, config.restClientUtil());
+    private final IUserEx userControllerRao = new UserControllerRao(userRoleRao, config.restClientUtil());
     private final IUserAndRoleAssociationBatchAction associationRao = new UserAndRoleAssociationBatchActionRao(config.restClientUtil());
 
     @Test
     public void test_whether_user_and_role_batch_action_works() {
         final Map<Long, User> users = (Map<Long, User>) mapById(userControllerRao.findAllUsers());
         final Map<Long, UserRole> roles = (Map<Long, UserRole>) mapById(userRoleRao.findAll());
+        
 
         final Set<UserAndRoleAssociation> saveAssociations = new HashSet<>();
-        saveAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(3))));
+        final UserAndRoleAssociation userAndRoleAssociationToSave = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociation.class);
+        userAndRoleAssociationToSave.setUser(users.get(Long.valueOf(1))).setUserRole(roles.get(Long.valueOf(3)));
+        saveAssociations.add(userAndRoleAssociationToSave);
 
         final Set<UserAndRoleAssociation> removeAssociations = new HashSet<>();
-        removeAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(1))));
+        final UserAndRoleAssociation userAndRoleAssociationToRemove = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociation.class);
+        userAndRoleAssociationToRemove.setUser(users.get(Long.valueOf(1)));
+        userAndRoleAssociationToRemove.setUserRole(roles.get(Long.valueOf(1)));
+        removeAssociations.add(userAndRoleAssociationToRemove);
 
-        final UserAndRoleAssociationBatchAction action = new UserAndRoleAssociationBatchAction();
+        final UserAndRoleAssociationBatchAction action = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociationBatchAction.class);
         action.setSaveEntities(saveAssociations);
         action.setRemoveEntities(removeAssociations);
 
@@ -66,15 +73,20 @@ public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
         final Map<Long, User> users = (Map<Long, User>) mapById(userControllerRao.findAllUsers());
         final Map<Long, UserRole> roles = (Map<Long, UserRole>) mapById(userRoleRao.findAll());
 
-        final Set<UserAndRoleAssociation> saveAssociations = new LinkedHashSet<>();
-        saveAssociations.add(new UserAndRoleAssociation(users.get(Long.valueOf(1)), roles.get(Long.valueOf(3))));
+        final Set<UserAndRoleAssociation> saveAssociations = new HashSet<>();
+        final UserAndRoleAssociation userAndRoleAssociationToSave = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociation.class);
+        userAndRoleAssociationToSave.setUser(users.get(Long.valueOf(1))).setUserRole(roles.get(Long.valueOf(3)));
+        saveAssociations.add(userAndRoleAssociationToSave);
 
         final Set<UserAndRoleAssociation> removeAssociations = new HashSet<>();
-        removeAssociations.add(new UserAndRoleAssociation(null, roles.get(Long.valueOf(1))));
+        final UserAndRoleAssociation userAndRoleAssociationToRemove = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociation.class);
+        userAndRoleAssociationToRemove.setUser(null).setUserRole(roles.get(Long.valueOf(1)));
+        removeAssociations.add(userAndRoleAssociationToRemove);
 
-        final UserAndRoleAssociationBatchAction action = new UserAndRoleAssociationBatchAction();
+        final UserAndRoleAssociationBatchAction action = DbDrivenTestCase.entityFactory.newEntity(UserAndRoleAssociationBatchAction.class);
         action.setSaveEntities(saveAssociations);
         action.setRemoveEntities(removeAssociations);
+
 
         try {
             associationRao.save(action);
@@ -110,7 +122,7 @@ public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
 
         final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
         helper.register(router, IUserRoleDao.class);
-        helper.register(router, IUserDao.class);
+        helper.register(router, IUser.class);
         helper.register(router, IUserAndRoleAssociationBatchAction.class);
 
         return router;

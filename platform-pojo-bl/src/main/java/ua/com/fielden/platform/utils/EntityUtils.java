@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.utils;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
@@ -10,7 +11,6 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -33,6 +34,7 @@ import ua.com.fielden.platform.entity.fetch.FetchProviderFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -419,19 +421,19 @@ public class EntityUtils {
      *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
      * @throws Result
      */
-    public static void validateDateRange(final Date start, final Date finish, final MetaProperty startProperty, final MetaProperty finishProperty, final boolean finishSetter)
-            throws Result {
+    public static void validateDateRange(final Date start, final Date finish, final MetaProperty<Date> startProperty, final MetaProperty<Date> finishProperty, final boolean finishSetter) {
         if (finish != null) {
             if (start != null) {
                 if (start.after(finish)) {
-                    throw new Result("", new Exception(finishSetter ? //
-                    /*      */finishProperty.getTitle() + " cannot be before " + startProperty.getTitle() + "." //
-                    : startProperty.getTitle() + " cannot be after " + finishProperty.getTitle() + "."));
+                    throw Result.failure(finishSetter
+                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), toString(finish) , startProperty.getTitle(), toString(start))
+                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), toString(start), finishProperty.getTitle(), toString(finish)));
                 }
             } else {
-                throw new Result("", new Exception(finishSetter ? //
-                /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                throw Result.failure(finishSetter 
+                ? format("Property [%s] (value [%s]) cannot be specified without property [%s].", finishProperty.getTitle(), finish, startProperty.getTitle())
+                : format("Property [%s] cannot be empty if property [%s] (value [%s]) if specified.", startProperty.getTitle(), finishProperty.getTitle(), finish));
+
             }
         }
     }
@@ -447,19 +449,18 @@ public class EntityUtils {
      *            - use true if validation have to be performed inside the "finish" date setter, false - inside the "start" date setter
      * @throws Result
      */
-    public static void validateDateTimeRange(final DateTime start, final DateTime finish, final MetaProperty startProperty, final MetaProperty finishProperty, final boolean finishSetter)
-            throws Result {
+    public static void validateDateTimeRange(final DateTime start, final DateTime finish, final MetaProperty<DateTime> startProperty, final MetaProperty<DateTime> finishProperty, final boolean finishSetter) {
         if (finish != null) {
             if (start != null) {
                 if (start.isAfter(finish)) {
-                    throw new Result("", new Exception(finishSetter ? //
-                    /*      */finishProperty.getTitle() + " cannot be before " + startProperty.getTitle() + "." //
-                    : startProperty.getTitle() + " cannot be after " + finishProperty.getTitle() + "."));
+                    throw Result.failure(finishSetter
+                    ? format("Property [%s] (value [%s]) cannot be before property [%s] (value [%s]).", finishProperty.getTitle(), toString(finish) , startProperty.getTitle(), toString(start))
+                    : format("Property [%s] (value [%s]) cannot be after property [%s] (value [%s]).", startProperty.getTitle(), toString(start), finishProperty.getTitle(), toString(finish)));
                 }
             } else {
-                throw new Result("", new Exception(finishSetter ? //
-                /*      */finishProperty.getTitle() + " cannot be specified without " + startProperty.getTitle() //
-                : startProperty.getTitle() + " cannot be empty when " + finishProperty.getTitle() + " is specified."));
+                throw Result.failure(finishSetter 
+                ? format("Property [%s] (value [%s]) cannot be specified without property [%s].", finishProperty.getTitle(), finish, startProperty.getTitle())
+                : format("Property [%s] cannot be empty if property [%s] (value [%s]) if specified.", startProperty.getTitle(), finishProperty.getTitle(), finish));
             }
         }
     }
@@ -615,6 +616,35 @@ public class EntityUtils {
     public static boolean isEntityType(final Class<?> type) {
         return AbstractEntity.class.isAssignableFrom(type);
     }
+    
+    
+    /**
+     * Indicates whether type represents {@link ActivatableAbstractEntity}-typed values.
+     *
+     * @return
+     */
+    public static boolean isActivatableEntityType(final Class<?> type) {
+        return ActivatableAbstractEntity.class.isAssignableFrom(type);
+    }
+    
+
+    /**
+     * Indicates whether type represents {@link Integer}-typed values.
+     *
+     * @return
+     */
+    public static boolean isInteger(final Class<?> type) {
+        return Integer.class.isAssignableFrom(type);
+    }
+
+    /**
+     * Indicates whether type represents either {@link BigDecimal} or {@link Money}-typed values.
+     *
+     * @return
+     */
+    public static boolean isDecimal(final Class<?> type) {
+        return BigDecimal.class.isAssignableFrom(type) || Money.class.isAssignableFrom(type);
+    }
 
     public static boolean isDynamicEntityKey(final Class<?> type) {
         return DynamicEntityKey.class.isAssignableFrom(type);
@@ -636,9 +666,6 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> boolean isCompositeEntity(final Class<T> entityType) {
-        // this was the old implementation:
-        // return Finder.getKeyMembers(entityType).size() > 1;
-
         final KeyType keyAnnotation = AnnotationReflector.getAnnotation(entityType, KeyType.class);
 
         if (keyAnnotation != null) {
@@ -810,38 +837,41 @@ public class EntityUtils {
         }
         return result;
     }
-
+    
     /**
      * Performs {@link AbstractEntity} instance's post-creation actions such as original values setting, definers invoking, dirtiness resetting etc.
+     * <p>
+     * FIXME this method should be removed as soon as MetaPostLoadListener will be removed 
+     * together with Hibernate loading of entity instances inside CommonEntityDao saving logic.
      *
      * @param instance
      * @return
      */
     public static AbstractEntity<?> handleMetaProperties(final AbstractEntity<?> instance, final Set<String> proxiedProps) {
-        boolean unionEntity = instance instanceof AbstractUnionEntity;
-        if (!unionEntity && instance.getProperties().containsKey("key")) {
-            final Object keyValue = instance.get("key");
-            if (keyValue != null) {
-                // handle property "key" assignment
-                instance.set("key", keyValue);
-            }
-        }
+        final boolean unionEntity = instance instanceof AbstractUnionEntity;
+//        if (!unionEntity && instance.getProperties().containsKey("key")) {
+//            final Object keyValue = instance.get("key");
+//            if (keyValue != null) {
+//                // handle property "key" assignment
+//                instance.set("key", keyValue);
+//            }
+//        }
 
         for (final MetaProperty metaProp : instance.getProperties().values()) {
-            boolean notNull = metaProp != null;
-            boolean notCommonPropOfUnionEntity = notNull && !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
-            boolean notProxied = notNull && !(proxiedProps.contains(metaProp.getName()));
+            final boolean notNull = metaProp != null;
+            final boolean notCommonPropOfUnionEntity = notNull && !(COMMON_PROPS.contains(metaProp.getName()) && unionEntity);
+            final boolean notProxied = notNull && !(proxiedProps.contains(metaProp.getName()));
             if (notNull && notCommonPropOfUnionEntity && notProxied) {
                 final Object newOriginalValue = instance.get(metaProp.getName());
-                metaProp.setOriginalValue(newOriginalValue);
-                if (!metaProp.isCollectional()) {
-                    metaProp.define(newOriginalValue);
+                if (instance.isPersisted()) {
+                    metaProp.setOriginalValue(newOriginalValue);
                 }
+                metaProp.define(newOriginalValue);
             }
         }
-        if (!unionEntity) {
-            instance.setDirty(false);
-        }
+//        if (!unionEntity) {
+//            instance.setDirty(false);
+//        }
 
         return instance;
     }
@@ -1019,12 +1049,42 @@ public class EntityUtils {
     }
 
     /**
-     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code>.
+     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> with instrumentation.
      *
      * @param entityType
      * @return
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {
-        return FetchProviderFactory.createDefaultFetchProvider(entityType);
+        return FetchProviderFactory.createDefaultFetchProvider(entityType, true);
+    }
+
+    /**
+     * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) with instrumentation.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType) {
+        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, true);
+    }
+    
+    /**
+     * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> <b>without</b> instrumentation.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumented(final Class<T> entityType) {
+        return FetchProviderFactory.createDefaultFetchProvider(entityType, false);
+    }
+
+    /**
+     * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) <b>without</b> instrumentation.
+     *
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumentedWithKeyAndDesc(final Class<T> entityType) {
+        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
     }
 }

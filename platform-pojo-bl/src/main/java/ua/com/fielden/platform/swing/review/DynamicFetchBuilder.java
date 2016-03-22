@@ -9,6 +9,7 @@ import java.util.Set;
 import ua.com.fielden.platform.dynamictree.DynamicEntityTree;
 import ua.com.fielden.platform.dynamictree.DynamicEntityTreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 
@@ -39,7 +40,27 @@ public class DynamicFetchBuilder {
      */
     public static <T extends AbstractEntity<?>> fetch<T> createTotalFetchModel(final Class<T> managedType, final Set<String> fetchProperties) {
         final fetch<T> result = fetch(managedType, fetchProperties, true);
-        return isQueryBasedEntityType(managedType) ? result.without("id") : result.without("id").without("version");
+        return isQueryBasedEntityType(managedType) ? result.without(AbstractEntity.ID) : withoutLowLevelProps(managedType, result);
+    }
+
+    /**
+     * Constructs a fetch strategy based on the provided <code>uncompletedFetch</code> without so called <code>low level</code> properties,
+     * such as <code>id</code>, <code>version</code> for all entity types and <code>active</code>, <code>refCount</code> for activatable entity types.
+     * 
+     * @param managedType
+     * @param uncompletedFetch
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> fetch<T> withoutLowLevelProps(Class<T> managedType, final fetch<T> uncompletedFetch) {
+        final fetch<T> result;
+        if (ActivatableAbstractEntity.class.isAssignableFrom(managedType)) {
+            result = uncompletedFetch.without(AbstractEntity.ID).without(AbstractEntity.VERSION)
+                    .without(ActivatableAbstractEntity.ACTIVE).without(ActivatableAbstractEntity.REF_COUNT);
+        } else {
+            result = uncompletedFetch.without(AbstractEntity.ID).without(AbstractEntity.VERSION);
+        }
+        
+        return result;
     }
 
     /**

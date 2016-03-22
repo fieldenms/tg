@@ -7,6 +7,7 @@ import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
@@ -115,7 +116,7 @@ public final class EntitySerialiser extends Serializer {
             IntSerializer.put(buffer, reference, true);
             return;
         }
-
+        
         IntSerializer.put(buffer, 0, true);
         references.referenceCount++;
         references.objectToReference.put(instance, references.referenceCount);
@@ -144,8 +145,15 @@ public final class EntitySerialiser extends Serializer {
                 // non-composite keys should be persisted by identifying their actual type
                 final String name = prop.field.getName();
                 lastProperty = name;
-                final Object value = prop.field.get(entity);
-                final boolean dirty = entity.getProperty(name) == null ? false : entity.getProperty(name).isDirty();
+                
+                Object protoValue = prop.field.get(entity);
+                if (protoValue instanceof AbstractEntity) {
+                    protoValue = ((AbstractEntity<?>) protoValue).isIdOnlyProxy() ? null : protoValue; 
+                }
+                
+                final Object value =  protoValue;
+                final Optional<MetaProperty<?>> metaProp = entity.getPropertyOptionally(name);
+                final boolean dirty = !metaProp.isPresent() || metaProp.get().isProxy() ? false : metaProp.get().isDirty();
 
                 if (prop.propertyType != null) {
                     if (prop.serialiser == null) {
@@ -215,7 +223,7 @@ public final class EntitySerialiser extends Serializer {
             final Long id = NOT_NULL_NOT_DIRTY == buffer.get() ? LongSerializer.get(buffer, false) : null;
             final AbstractEntity<?> entity;
 
-            if (DynamicEntityClassLoader.isEnhanced(type)) {
+            if (DynamicEntityClassLoader.isGenerated(type)) {
                 entity = factory.newPlainEntity(type, id);
                 entity.setEntityFactory(factory);
             } else {
@@ -242,7 +250,7 @@ public final class EntitySerialiser extends Serializer {
                     }
                     break;
                 case NULL_DIRTY:
-                    if (!DynamicEntityClassLoader.isEnhanced(type)) {
+                    if (!DynamicEntityClassLoader.isGenerated(type)) {
                         entity.getProperty(prop.field.getName()).setOriginalValue(null).setDirty(true);
                     }
                     break;
@@ -250,7 +258,7 @@ public final class EntitySerialiser extends Serializer {
                     readProperty(buffer, entity, prop);
                     break;
                 case NULL_NOT_DIRTY:
-                    if (!DynamicEntityClassLoader.isEnhanced(type)) {
+                    if (!DynamicEntityClassLoader.isGenerated(type)) {
                         entity.getProperty(prop.field.getName()).setOriginalValue(null);
                     }
                     break;
@@ -295,7 +303,7 @@ public final class EntitySerialiser extends Serializer {
         final Object value = serializer.readObjectData(buffer, concreteType);
         prop.field.set(entity, value);
 
-        return !DynamicEntityClassLoader.isEnhanced(type) ? entity.getProperty(prop.field.getName()).setOriginalValue(value) : null;
+        return !DynamicEntityClassLoader.isGenerated(type) ? entity.getProperty(prop.field.getName()).setOriginalValue(value) : null;
     }
 
     /**

@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>entity-centre basic tests</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	
+	<script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+	<script src="/resources/polymer/web-component-tester/browser.js"></script>
+	<script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+	<script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+	
+	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+  
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties">
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+</head>
+
+<body>
+	<tg-reflector id="reflector"></tg-reflector>
+	<test-fixture id="CentreFixture">
+    	<template>
+    	    <tg-MiTgPersistentEntityWithProperties-centre id="centre"></tg-MiTgPersistentEntityWithProperties-centre>
+    	</template>
+	</test-fixture>
+
+    <script>
+	suite('entity centre', function() {
+	    var centre, reflector;
+	
+	    setup(function() {
+			centre = fixture('CentreFixture');
+	      	reflector = document.querySelector('#reflector');
+	    });
+	
+	    test('run action works for complex centre', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+            	
+            	var entity = resultEntities[0];
+            	
+            	// checking summary entity
+                try {
+	                summary.get("integerProp");
+	                assert.fail('', '', "The unfetched EGI row property for summary entity should throw an exception.");
+                } catch (e) {}
+                try {
+	                summary.get("iS");
+	                assert.fail('', '', "The unfetched EGI row property for summary entity should throw an exception.");
+                } catch (e) {}
+                summary.get("sum_of_int");
+                summary.get("max_of_dec");
+                summary.get("min_of_dec");
+                summary.get("sum_of_dec");
+            	
+                // checking row entity
+                entity.get("desc");
+                entity.get("dR");
+                entity.get("iS");
+                entity.get("iR");
+                entity.get("oN");
+                entity.get("sR");
+                entity.get("integerProp");
+                try {
+	                entity.get("sum_of_int");
+	                assert.fail('', '', "The unfetched summary property for EGI row entity should throw an exception.");
+                } catch (e) {}
+                entity.get("bigDecimalProp");
+                try {
+	                entity.get("max_of_dec");
+	                assert.fail('', '', "The unfetched summary property for EGI row entity should throw an exception.");
+                } catch (e) {}
+                try {
+	                entity.get("min_of_dec");
+	                assert.fail('', '', "The unfetched summary property for EGI row entity should throw an exception.");
+                } catch (e) {}
+                try {
+	                entity.get("sum_of_dec");
+	                assert.fail('', '', "The unfetched summary property for EGI row entity should throw an exception.");
+                } catch (e) {}
+                entity.get("entityProp");
+                entity.get("booleanProp");
+                entity.get("dateProp");
+                entity.get("compositeProp");
+                entity.get("stringProp");
+                
+                assert.strictEqual(resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
+                
+                centre._postRun = old_postRun;
+                done();
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+				centre.run();
+            };
+
+ 			centre.retrieve();
+	    });
+	    
+	    test('editing through EntityEditAction embedded master works for complex centre', function (done) {
+            var old_postRun = centre._postRun;
+            var firstTime = false;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+            	
+            	if (firstTime === false) {
+                    assert.strictEqual(resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
+                	var entity = resultEntities[0];
+                    
+                    var editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
+                    editAction.currentEntity = entity;
+                    var value = editAction._run();
+                    
+                    editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                        console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
+                        
+                        var outerMaster = editAction._masterReferenceForTesting;
+                        var innerMaster = outerMaster.$$('tg-tgpersistententitywithproperties-master');
+                        var loader = outerMaster.$.loader;
+                        
+                        outerMaster.addEventListener('after-load', function (event) {
+                            var embeddedMaster = event.detail;
+                            
+            		        var edProperty = embeddedMaster.$.editor_4_bigDecimalProp;
+            		        
+            		        embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
+            	                assert.strictEqual(edProperty._editingValue, '23999', "_editingValue should be 'IS'.");
+            	                assert.strictEqual(edProperty._commValue, '23999', "_commValue should be 'IS'.");
+            	                assert.strictEqual(edProperty._acceptedValue, 23999, "_acceptedValue should be 'IS'.");
+            	                
+            	                assert.strictEqual(validatedEntity.get("bigDecimalProp"), 23999, "'property' value should be 'IS' after modification.");
+            	                assert.strictEqual(bindingEntity.get("bigDecimalProp"), 23999, "Binding 'property' value should be 'IS' after modification.");
+
+            	                done();
+            	            };
+                            
+                            embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+            	                edProperty._editingValue = '23999';
+            	                edProperty.commit();
+            	            };
+                        });
+                    }
+                    
+                    firstTime = true;
+            	} else {
+            	    assert.strictEqual(resultEntities.length, 1, 'The count of refreshed entity for the centre should be 1.');
+            	}
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+				centre.run();
+            };
+
+ 			centre.retrieve();
+	    });
+	});
+    </script>
+
+</body>
+
+</html>

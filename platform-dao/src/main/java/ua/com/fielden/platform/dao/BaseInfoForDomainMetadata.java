@@ -25,15 +25,14 @@ import ua.com.fielden.platform.security.user.User;
 public class BaseInfoForDomainMetadata {
     private final MapEntityTo userMapTo;
     private final Map<Class<? extends AbstractEntity<?>>, EntityTypeInfo> map = new HashMap<>();
-    
-    public BaseInfoForDomainMetadata(MapEntityTo userMapTo) {
-        super();
+
+    public BaseInfoForDomainMetadata(final MapEntityTo userMapTo) {
         this.userMapTo = userMapTo;
     }
-    
+
     public <ET extends AbstractEntity<?>> String getTableClause(final Class<ET> entityType) {
-        EntityTypeInfo<ET> entityTypeInfo = getEntityTypeInfo(entityType);
-        
+        final EntityTypeInfo<ET> entityTypeInfo = getEntityTypeInfo(entityType);
+
         if (!entityTypeInfo.category.equals(EntityCategory.PERSISTED)) {
             return null;
         }
@@ -45,27 +44,27 @@ public class BaseInfoForDomainMetadata {
             return DynamicEntityClassLoader.getOriginalType(entityType).getSimpleName().toUpperCase() + "_";
         }
     }
-    
+
     public <ET extends AbstractEntity<?>>  List<EntityResultQueryModel<ET>> getEntityModels(final Class<ET> entityType) {
         return getEntityTypeInfo(entityType).entityModels;
     }
-    
+
     public <ET extends AbstractEntity<?>>  List<EntityResultQueryModel<ET>> getUnionEntityModels(final Class<ET> entityType) {
         return getEntityTypeInfo(entityType).unionEntityModels;
     }
 
-    private <ET extends AbstractEntity<?>> EntityTypeInfo<ET> getEntityTypeInfo(Class<ET> entityType) {
-        EntityTypeInfo<ET> existing = map.get(entityType);
+    private <ET extends AbstractEntity<?>> EntityTypeInfo<ET> getEntityTypeInfo(final Class<ET> entityType) {
+        final EntityTypeInfo<ET> existing = map.get(entityType);
         if (existing != null) {
             return existing;
         } else {
-            EntityTypeInfo<ET> created = new EntityTypeInfo<ET>(entityType);
+            final EntityTypeInfo<ET> created = new EntityTypeInfo<ET>(entityType);
             map.put(entityType, created);
             return created;
         }
     }
-    
-    public EntityCategory getCategory(Class<? extends AbstractEntity<?>> entityType) {
+
+    public EntityCategory getCategory(final Class<? extends AbstractEntity<?>> entityType) {
         return getEntityTypeInfo(entityType).category;
     }
 
@@ -74,7 +73,7 @@ public class BaseInfoForDomainMetadata {
         if (!isUnionEntityType(entityType)) {
             return result;
         }
-        
+
         final List<Field> unionProps = AbstractUnionEntity.unionProperties((Class<? extends AbstractUnionEntity>) entityType);
         for (final Field currProp : unionProps) {
             result.add(generateModelForUnionEntityProperty(unionProps, currProp).modelAsEntity(entityType));
@@ -96,15 +95,15 @@ public class BaseInfoForDomainMetadata {
 
         return m;
     }
-    
+
     class EntityTypeInfo <ET extends AbstractEntity<?>> {
         final Class<ET> entityType;
         final EntityCategory category;
         final MapEntityTo mapEntityToAnnotation;
         final List<EntityResultQueryModel<ET>> entityModels;
         final List<EntityResultQueryModel<ET>> unionEntityModels;
-        
-        public EntityTypeInfo(Class<ET> entityType) {
+
+        public EntityTypeInfo(final Class<ET> entityType) {
             this.entityType = entityType;
             mapEntityToAnnotation = User.class == entityType ? userMapTo : AnnotationReflector.getAnnotation(entityType, MapEntityTo.class);
             entityModels = getEntityModelsOfQueryBasedEntityType(entityType);
@@ -118,8 +117,8 @@ public class BaseInfoForDomainMetadata {
             } else if (mapEntityToAnnotation == null && (entityModels.size() + unionEntityModels.size() == 0)) {
                 category = EntityCategory.PURE;
             } else {
-                throw new IllegalStateException("Unable to determine entity type category for type: " + entityType + "!\n MapEntityToAnnotation: " + 
-            mapEntityToAnnotation + ";\n EntityModels.size: " + entityModels.size() + 
+                throw new IllegalStateException("Unable to determine entity type category for type: " + entityType + "!\n MapEntityToAnnotation: " +
+            mapEntityToAnnotation + ";\n EntityModels.size: " + entityModels.size() +
             ";\n UnionModels.size: " + unionEntityModels.size());
             }
         }

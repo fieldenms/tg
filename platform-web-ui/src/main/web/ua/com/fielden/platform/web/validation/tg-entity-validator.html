@@ -1,44 +1,94 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/core-ajax/core-ajax.html">
+
+<link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 
-<polymer-element name="tg-entity-validator" attributes="user entitytype onValidated" hidden>
+<dom-module id="tg-entity-validator"> <!-- TODO hidden -->
     <template>
         <tg-serialiser id="serialiser"></tg-serialiser>
-        <core-ajax id="ajaxSender" url="/users/{{user}}/validation/{{entitytype}}" method="POST" handleas="json"></core-ajax> 
+        <iron-ajax id="ajaxSender" url="[[_url]]" method="POST" handle-as="json" on-response="_processValidatorResponse" on-error="_processValidatorError"></iron-ajax>
     </template>
-    <script>
-        (function () {
-            Polymer({
-                ready: function() { 
-                    var self = this;
+</dom-module>
 
-                    self.$.ajaxSender.addEventListener('core-response', function(e) {
-                        var validatedEntity = self.$.serialiser.deserialise(e.detail.response).instance;
-                        self.onValidated(validatedEntity);
+<script>
+    (function () {
+        Polymer({
+        	is: 'tg-entity-validator',
+        	
+        	properties: {
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	// These mandatory properties must be specified in attributes, when constructing descendant elements.  //
+            	// No default values are allowed in this case.														   //
+            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+            	entityType: String,
+            	postValidatedDefault: Function,
+            	postValidatedDefaultError: Function,
+            	processResponse: Function,
+            	processError: Function,
+        		
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+             	//   prefix. 																				           //
+             	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
+             	//   populate their default values in ready callback (to have these values populated in children)!     //
+             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	_url: {
+             		type: String,
+             		computed: '_computeUrl(entityType)'
+             	}
+        	},
+        	
+            ready: function() { 
+                var self = this;
+                
+                self._processValidatorResponse = function (e) {
+                	self.processResponse(e, "validate", function (entityAndCustomObject) {
+                        self.postValidatedDefault(entityAndCustomObject);
+                	});
+                };
+                
+                self._processValidatorError = function (e) {
+                	self.processError(e, "validate", function (errorResult) {
+                        self.postValidatedDefaultError(errorResult);
                     });
-                },
+                };
+            },
 
-                /**
-                 * Starts the process of entity validation.
-                 *
-                 * @param modifiedPropertiesHolder -- the entity with modified properties
-                 */
-                validate: function (modifiedPropertiesHolder) {
-                    // console.log("validate: modifiedPropertiesHolder", modifiedPropertiesHolder);
-                    var ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
-                    // console.log("validate: serialised modifiedPropertiesHolder", ser);
-                    this.$.ajaxSender.body = JSON.stringify(ser);
-                    this.$.ajaxSender.go();
-                },
+            /**
+             * Starts the process of entity validation.
+             *
+             * @param modifiedPropertiesHolder -- the entity with modified properties
+             * @param context -- optional centre context (intended first of all for validation of newly created entities where validation prototypes at the server side requre context to be instantiated)
+             */
+            validate: function (modifiedPropertiesHolder, context) {
+            	if (context) {
+                    console.log('VALIDATE: CONTEXT PROVIDED = ', context);
+            	}
+            	// previous implementation ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
+                var ser = this.$.serialiser.serialise(this.$.serialiser.$.reflector.createSavingInfoHolder(modifiedPropertiesHolder, context));
+                this.$.ajaxSender.body = JSON.stringify(ser);
+                this.$.ajaxSender.generateRequest();
+            },
 
-                /**
-                 * Cancels any unfinished validation that was requested earlier (if any).
-                 */
-                abortValidationIfAny: function() {
-                    this.$.ajaxSender.abort();
-                }
-            });
-        })();
-    </script>
-</polymer-element>
+            /**
+             * Cancels any unfinished validation that was requested earlier (if any).
+             */
+            abortValidationIfAny: function() {
+            	var reflector = this.$.serialiser.$.reflector;
+            	var numberOfAbortedRequests = reflector.discardAllRequests(this.$.ajaxSender);
+            	console.warn("abortValidationIfAny: number of aborted requests =", numberOfAbortedRequests);
+            },
+            
+        	/**
+        	 * Computes URL for 'ajaxSender'.
+        	 */
+        	_computeUrl: function (entityType) {
+        		return "/validation/" + entityType;
+        	}
+        });
+    })();
+</script>

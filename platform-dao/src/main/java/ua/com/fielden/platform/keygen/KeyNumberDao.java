@@ -1,25 +1,32 @@
 package ua.com.fielden.platform.keygen;
 
-import org.hibernate.LockMode;
+import static java.lang.String.format;
+
+import org.hibernate.LockOptions;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-
-import com.google.inject.Inject;
 
 /**
  * Hibernate driven implementation of {@link IKeyNumberGenerator);
  *
- * @author 01es
+ * @author TG Team
  */
 @EntityType(KeyNumber.class)
 public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumber {
-
+    
+    private final EntityFactory factory;
+    
     @Inject
-    protected KeyNumberDao(final IFilter filter) {
+    protected KeyNumberDao(final IFilter filter, final EntityFactory factory) {
         super(filter);
+        this.factory = factory;
     }
 
     /**
@@ -31,12 +38,12 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
         KeyNumber number = findByKey(key); // find an instance
         if (number != null) {
             // re-fetch instance with pessimistic UPGRADE lock
-            number = (KeyNumber) getSession().get(KeyNumber.class, number.getId(), LockMode.UPGRADE);
+            number = (KeyNumber) getSession().load(KeyNumber.class, number.getId(), LockOptions.UPGRADE);
         } else { // this would most likely never happen since the target legacy db should already have some values in table NUMBERS
-            number = new KeyNumber(key, "0");
+            number = factory.newByKey(KeyNumber.class, key).setValue("0");
         }
 
-        final Integer nextNo = new Integer(Integer.parseInt(number.getValue()) + 1);
+        final Integer nextNo = Integer.parseInt(number.getValue()) + 1;
         number.setValue(nextNo.toString());
         save(number);
         return nextNo;
@@ -50,8 +57,8 @@ public class KeyNumberDao extends CommonEntityDao<KeyNumber> implements IKeyNumb
     public Integer currNumber(final String key) {
         final KeyNumber number = findByKey(key); // find an instance
         if (number == null) {
-            throw new RuntimeException("No number associated with '" + key + "'.");
+            throw new EntityCompanionException(format("No number associated with key [%s].", key));
         }
-        return new Integer(number.getValue());
+        return Integer.valueOf(number.getValue());
     }
 }

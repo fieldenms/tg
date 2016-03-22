@@ -5,6 +5,7 @@ import static java.math.RoundingMode.HALF_UP;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Currency.getInstance;
 import static java.util.Locale.getDefault;
+import static java.lang.String.format;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -39,13 +40,10 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
  * <b>IMPORTANT:</b><br/>
  *  1. Currently all monetary arithmetic operations produce tax sensitive instances if the instance operated on is tax sensitive.<br/>
  *  2. Methods equals() and compareTo() use only properties <code>amount</code> and <code>currency</code>.<br/>
- * 
- * @author Yura
- * @author 01es
+ *
+ * @author TG Team
  */
 public class Money implements Comparable<Money> {
-
-    private static final long serialVersionUID = 3047143730250375634L;
 
     private static final Random random = new Random();
 
@@ -68,7 +66,7 @@ public class Money implements Comparable<Money> {
     /**
      * Creates an instance not requiring tax data, where null values are assigned to properties <code>exTaxAmount</code> and <code>taxAmount</code>. Constructor parameters should
      * not be null.
-     * 
+     *
      * @param amount
      *            -- monetary amount, which could be either tax inclusive or exclusive -- this depends on the usage context.
      * @param currency
@@ -83,7 +81,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * Creates an instance requiring tax data based on tax percent. Constructor parameters should not be null.
-     * 
+     *
      * @param amount
      *            -- monetary amount tax inclusive
      * @param taxPercent
@@ -102,7 +100,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * Convenience constructor accepting amount as string.
-     * 
+     *
      * @param amount
      * @param taxPercent
      * @param currency
@@ -113,7 +111,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * Creates an instance requiring tax data based on tax amount. Constructor parameters should not be null.
-     * 
+     *
      * @param amount
      *            -- monetary amount tax inclusive
      * @param taxAmount
@@ -132,7 +130,7 @@ public class Money implements Comparable<Money> {
     /**
      * This is a convenience constructor, which utilises a default locale to derive the currency. Creates an instance not requiring tax data, where null values are assigned to
      * properties <code>exTaxAmount</code> and <code>taxAmount</code>.
-     * 
+     *
      * @param amount
      */
     public Money(final BigDecimal amount) {
@@ -142,7 +140,7 @@ public class Money implements Comparable<Money> {
     /**
      * This is a convenience constructor that accepts string representation of the amount. Creates an instance not requiring tax data, where null values are assigned to properties
      * <code>exTaxAmount</code> and <code>taxAmount</code>.
-     * 
+     *
      * @param amount
      */
     public Money(final String amount, final Currency currency) {
@@ -152,7 +150,7 @@ public class Money implements Comparable<Money> {
     /**
      * This is a convenience constructor that accepts string representation of the amount and utilises a default locale to derive the currency. Creates an instance not requiring
      * tax data, where null values are assigned to properties <code>exTaxAmount</code> and <code>taxAmount</code>.
-     * 
+     *
      * @param amount
      */
     public Money(final String amount) {
@@ -169,7 +167,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * If currencies match adds two amounts and returns result as new instance. Otherwise throws {@link IllegalArgumentException}
-     * 
+     *
      * @param monetaryAmount
      */
     public Money plus(final Money monetaryAmount) {
@@ -181,7 +179,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * If currencies match subtracts passed amount from this amount and returns result as new instance. Otherwise throws {@link IllegalArgumentException}
-     * 
+     *
      * @param monetaryAmount
      */
     public Money minus(final Money monetaryAmount) {
@@ -193,7 +191,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * Multiplies current amount by passed value, rounds the result using {@link RoundingMode#HALF_EVEN} rule with 2 digits after comma and returns result as new instance.
-     * 
+     *
      * @param value
      */
     public Money multiply(final BigDecimal value) {
@@ -203,7 +201,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * This is a convenience method based on {@link #multiply(BigDecimal)}.
-     * 
+     *
      * @param value
      */
     public Money multiply(final int value) {
@@ -212,7 +210,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * Divides current amount by passed value, rounds the result using {@link RoundingMode#HALF_EVEN} rule with 2 digits after comma and returns result as new instance.
-     * 
+     *
      * @param value
      */
     public Money divide(final BigDecimal value) {
@@ -222,7 +220,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * This is a convenience method based on {@link #divide(BigDecimal)}.
-     * 
+     *
      * @param value
      */
     public Money divide(final int value) {
@@ -231,7 +229,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * Splits current amount into certain parts and returns them as list. Throws an exception if passed parameter is less than 1.
-     * 
+     *
      * @param value
      */
     public List<Money> split(final int value) {
@@ -307,7 +305,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * Throws {@link IllegalArgumentException} if currencies doesn't match
-     * 
+     *
      * @param monetaryAmount
      */
     private void checkCurrencies(final Money monetaryAmount) {
@@ -319,7 +317,7 @@ public class Money implements Comparable<Money> {
 
     /**
      * Throws {@link IllegalArgumentException} if any of parameters is null
-     * 
+     *
      * @param value
      * @param currency
      */
@@ -337,14 +335,14 @@ public class Money implements Comparable<Money> {
 
     /**
      * In addition to {@link #checkParameters(BigDecimal, Currency)} validates the <code>taxPersent</code>, which should be between 1 and 100 inclusive.
-     * 
+     *
      * @param amount
      * @param taxPercent
      * @param currency
      */
     private BigDecimal checkParameters(final BigDecimal amount, final int taxPercent, final Currency currency) {
         if (taxPercent < 1 || taxPercent > 100) {
-            throw new IllegalArgumentException("Tax percentage should not be outside of period [1,100].");
+            throw new IllegalArgumentException(format("Tax percentage [%s] should not be outside of period [1,100].", taxPercent));
         }
         return checkParameters(amount, currency);
     }

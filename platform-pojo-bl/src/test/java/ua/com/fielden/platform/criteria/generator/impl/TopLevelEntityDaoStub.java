@@ -91,18 +91,6 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public void delete(final TopLevelEntity entity) {
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<TopLevelEntity> model, final Map<String, Object> paramValues) {
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<TopLevelEntity> model) {
-    }
-
-    @Override
     public boolean entityExists(final TopLevelEntity entity) {
         return false;
     }

@@ -1,0 +1,394 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/components/moment-component.html">
+<link rel="import" href="/resources/components/tg-calendar.html">
+
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+
+<link rel="import" href="/resources/polymer/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
+
+<style is="custom-style">
+    .date-picker paper-button {
+        color: var(--paper-light-blue-500);
+        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+    }
+    .date-picker paper-button:hover {
+        background: var(--paper-light-blue-50);
+    }
+    .date-picker > tg-calendar {
+        margin: 0;
+        padding: 0;
+    }
+    .date-picker {
+        line-height: normal;
+        overflow: auto;
+    }
+</style>
+<dom-module id="tg-datetime-picker">
+    <style>
+        .picker-button::shadow #ink {
+            width: 1.9rem;
+            height: 1.9rem;
+            top: -0.3rem;
+            left: -0.3rem;
+        }
+        .picker-button {
+            --iron-icon-height: 1.3rem;
+            --iron-icon-width: 1.3rem;
+            width: 1.3rem;
+            height: 1.3rem;
+            padding: 0;
+        }
+        /*
+        .date-picker paper-button {
+            color: var(--paper-light-blue-500);
+            --paper-button-flat-focus-color: var(--paper-light-blue-50);
+        }
+        .date-picker paper-button:hover {
+            background: var(--paper-light-blue-50);
+        }
+        .date-picker > tg-calendar {
+            margin: 0;
+            padding: 0;
+        }
+        .date-picker {
+            line-height: normal;
+        }
+*/
+    }
+    </style>
+
+    <template>
+        <tg-editor 
+        	id="editorDom" 
+        	prop-title="[[propTitle]]"
+        	_disabled="[[_disabled]]" 
+        	_editing-value="{{_editingValue}}" 
+        	action="[[action]]" _error="[[_error]]" 
+        	_comm-value="[[_commValue]]" 
+        	_accepted-value="[[_acceptedValue]]" 
+        	debug="[[debug]]" 
+        	_on-change="[[_onChange]]" 
+        	_on-input="[[_onInput]]" 
+        	_on-keydown="[[_onKeydown]]" 
+        	current-state="[[currentState]]">
+            <content class=".property-action"></content>
+            <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
+        </tg-editor>
+    </template>
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+            is: 'tg-datetime-picker',
+            behaviors: [Polymer.TgBehaviors.TgEditorBehavior, Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+
+            ready: function () {
+                this.$.editorDom._editorKind = 'DATE';
+                
+                moment.parseTwoDigitYear = function (input) {
+                    var currYear = moment().year();
+                    console.debug('parseTwoDigitYear: [', input, '] currYear ', currYear);
+                    return parseInt(input, 10) + ( (parseInt(input, 10) < currYear - 2000 + 30) ? 2000 : 1900);
+                };
+            },
+
+            properties: {
+                /**
+                 * If true -- the empty time portion should be approximated to '23:59:59.999', otherwise -- to '00:00:00.000'.
+                 */
+                timePortionToBecomeEndOfDay: {
+                    type: Boolean
+                },
+                
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+                //   prefix and default values specified in 'value' specificator of the property definition (or,       //
+                //   alternatively, computing function needs to be specified). 									       //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                _isAcceptingDateFromPicker: {
+                    type: Boolean,
+                    value: false
+                },
+                
+                /**
+                 * The formats for approximation. The order of this array is important -- it defines the order in which formats are tried during approximation.
+                 */
+                _formats: {
+                    type: Array,
+                    value: function () {
+                        return [
+                            'L LT',
+                            'D/M/YYYY hmma',
+                            'D/M/YY hmma',
+                            'D/M/Y hmma',
+                            'D/M/YYYY hmm',
+                            'D/M/YY hmm',
+                            'D/M/Y hmm',
+                            'D/M/YYYY h:ma',
+                            'D/M/YY h:ma',
+                            'D/M/Y h:ma',
+                            'D/M/YYYY h:m',
+                            'D/M/YY h:m',
+                            'D/M/Y h:m',
+                            'D/M/YYYY ha',
+                            'D/M/YY ha',
+                            'D/M/Y ha',
+                            'D/M/YYYY h',
+                            'D/M/YY h',
+                            'D/M/Y h',
+                            'D/M/YYYY',
+                            'D/M/YY',
+                            'D/M/Y'
+                        ];
+                    }
+                },
+                
+                /**
+                 * The property that holds valid approximated 'moment' value in case if approximation has been successful or 'null' otherwise.
+                 */
+                _validMoment: {
+                    type: Object,
+                    value: null
+                }
+            },
+
+            /**
+             * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
+             */
+            convertFromString: function (strValue) {
+                // console.log(moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a"));
+                if (strValue) {
+                    if (this._validMoment !== null) {
+                        return this._validMoment.valueOf();
+                    } else {
+                        throw "The entered date is incorrect."
+                    }
+                } else {
+                    return null;
+                }
+            },
+
+            /**
+             * Converts the value into string representation (which is used in editing / comm values).
+             */
+            convertToString: function (value) {
+                if (value === null) {
+                    return "";
+                } else {
+                    return moment(value).format("L LT");
+                }
+            },
+
+            _showCalendar: function (e) {
+                var mve = this._createCalendarDialog();
+                Polymer.dom(document.body).appendChild(mve);
+                Polymer.dom.flush();
+                
+                mve.open();
+            },
+            
+            /**
+             * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
+             */
+            _createCalendarDialog: function() {
+            	var self = this;
+            	var domBind = document.createElement('template', 'dom-bind');
+            	
+            	domBind._closedBind = function(e) {
+            		var dialog = this.$.dateDialog;
+            		Polymer.dom(document.body).removeChild(dialog);
+            		Polymer.dom(document.body).removeChild(this);
+            		Polymer.dom.flush();
+            	}.bind(domBind);
+            	
+            	domBind._cancelDateBind = function() {
+            		self.decoratedInput().focus();
+           		};
+           		
+            	domBind._acceptDateBind = function() {
+                    self._isAcceptingDateFromPicker = true;
+                    self._editingValue = moment(this.$.datePicker.selectedDate)
+                        .hour(this.$.datePicker.selectedHour)
+                        .minute(this.$.datePicker.selectedMinute)
+                        .format("L LT");
+                    self.decoratedInput().focus();
+           		}.bind(domBind);
+           		
+           		domBind.open = function () {
+           			var dialog = this.$.dateDialog;
+           			var datePicker = this.$.datePicker;
+           			datePicker.selectedDate = null;
+                	datePicker.selectedHour = 0;
+                	datePicker.selectedMinute = 0;
+                	
+                    if (self._editingValue  !== '') {
+                        var selectedMoment = moment(self._editingValue.trim(), "L LT", true);
+                        if (selectedMoment.isValid()) {
+                            datePicker.selectedDate = selectedMoment.valueOf();
+                            datePicker.selectedHour = selectedMoment.hour();
+                            datePicker.selectedMinute = selectedMoment.minute();
+                        }
+                    }
+           			
+                    Polymer.dom(document.body).appendChild(dialog);
+                    Polymer.dom.flush();
+                    // let's open the dialog with magical async...
+                    // this ensures that the dialog is opened after its relocation to body
+                    this.async(function () {
+                    	dialog.open();
+                    }.bind(this), 1);
+           		}.bind(domBind);
+           		
+            	var div = domBind.content.ownerDocument.createElement('div');
+            	div.innerHTML = 
+            	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind">' +
+                    '<tg-calendar id="datePicker" pick-time></tg-calendar>' +
+                    '<div class="buttons">' +
+                        '<paper-button dialog-dismiss affirmative on-tap="_cancelDateBind">Cancel</paper-button>' +
+                        '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +
+                    '</div>' +
+                '</paper-dialog>';
+            	
+            	domBind.content.appendChild(div);
+            	return domBind;
+            },
+
+            _editingValueChanged: function (newValue, oldValue) {
+                Polymer.TgBehaviors.TgEditorBehavior._editingValueChanged.call(this, newValue, oldValue);
+
+                if (this._isAcceptingDateFromPicker) {
+                    this._isAcceptingDateFromPicker = false;
+
+                    this.commit();
+                }
+            },
+            
+            /**
+             * Overridden to provide value approximations.
+             */
+            _commitForDescendants: function () {
+                var approximated = this._approximate(this._editingValue);
+                console.debug('COMMIT (value should be approximated): current editingValue = [', this._editingValue, '] approximated = [', approximated, ']');
+                if (!this.reflector().equalsEx(approximated, this._editingValue)) {
+                    console.debug('COMMIT (value should be approximated): change editingValue to [', approximated, ']');
+                    this._editingValue = approximated;
+                }
+            },
+            
+            /**
+             * Approximates the 'dateEditingValue' using registered '_formats' to the standard form like [09/09/2002 11:03 AM].
+             * If approximation is failed -- returns the same 'dateEditingValue'.
+             */
+            _approximate: function (dateEditingValue) {
+                this._validMoment = null;
+                if (dateEditingValue) {
+                    // remove all spaces and insert one after year digits
+                    var numberOfDigitsAfterSecondSlash = this._calculateNumberOfDigitsAfterSecondSlash(dateEditingValue);
+                    // If numberOfDigitsAfterSecondSlash equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'
+                    // But they should not be valid. Only 1, 2 and 4 digits for years should be valid.
+                    if (numberOfDigitsAfterSecondSlash === 1 || numberOfDigitsAfterSecondSlash === 2 || numberOfDigitsAfterSecondSlash === 4) {
+                        var value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigitsAfterSecondSlash).trim();
+                        if (value) {
+                            this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
+                            if (this._validMoment !== null) {
+                                return moment(this._validMoment.valueOf()).format('L LT');
+                            }
+                        }
+                    }
+                } 
+                return dateEditingValue;
+            },
+            
+            /**
+             * Tries the formats one-by-one and returns the valid 'moment' object in case where some format has been successed.
+             * In case of all formats failure -- returns 'null'.
+             */
+            _tryFormats: function (stringValue, formats) {
+                if (formats.length === 0) {
+                    return null;
+                } else {
+                    console.debug('formats', formats);
+                    var firstFormat = formats[0];
+                    var tryingMoment = moment(stringValue, firstFormat, true);
+                    if (tryingMoment.isValid()) {
+                        if (['D/M/Y', 'D/M/Y hmma', 'D/M/Y hmm', 'D/M/Y h:ma', 'D/M/Y h:m', 'D/M/Y ha', 'D/M/Y h'].indexOf(firstFormat) !== -1) {
+                            tryingMoment = moment(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true);
+                        }
+                        
+                        if (['D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {
+                            tryingMoment.add(1, 'days').subtract(1, 'milliseconds');
+                        }
+                        return tryingMoment;
+                    } else {
+                        formats.shift(); // first element is removed
+                        return this._tryFormats(stringValue, formats);
+                    }
+                }
+            },
+            
+            _convertToDoubleDigitYear: function (oneDigitYearString) {
+                var insertionPoint = this._findSecondSlashIndex(oneDigitYearString) + 1;
+                return oneDigitYearString.slice(0, insertionPoint) + "0" + oneDigitYearString.slice(insertionPoint);
+            },
+            
+            _findSecondSlashIndex: function (str) {
+                var firstSlashIndex = str.indexOf('/');
+                if (firstSlashIndex === -1) {
+                    return -1;
+                } else {
+                    var secondSlashIndex = str.indexOf('/', firstSlashIndex + 1);
+                    if (secondSlashIndex === -1) {
+                        return -1;
+                    }                    
+                    return secondSlashIndex;
+                }
+            },
+            
+            _calculateNumberOfDigitsAfterSecondSlash: function (str) {
+                var secondSlashIndex = this._findSecondSlashIndex(str);
+                var numberOfDigits = 0;
+                if (secondSlashIndex === -1) {
+                    return numberOfDigits;
+                }
+                for (var index = secondSlashIndex + 1; index < str.length; index++) {
+                    if (' ' === str[index]) {
+                        if (numberOfDigits > 0) {
+                            return numberOfDigits;
+                        }
+                    } else {
+                        // assuming that not ' ' is a digit
+                        numberOfDigits++;
+                    }
+                }
+                return numberOfDigits;
+            },
+            
+            _insertOneSpace: function (strWithoutSpaces, numberOfDigitsAfterSecondSlash) {
+                if (numberOfDigitsAfterSecondSlash === 0) {
+                    return strWithoutSpaces;
+                } else {
+                    var secondSlashIndex = this._findSecondSlashIndex(strWithoutSpaces);
+                    if (secondSlashIndex === -1) {
+                        return strWithoutSpaces;
+                    }
+                    var insertionPoint = secondSlashIndex + numberOfDigitsAfterSecondSlash + 1;
+                    return strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint);
+                }
+            }
+        });
+    })();
+</script>

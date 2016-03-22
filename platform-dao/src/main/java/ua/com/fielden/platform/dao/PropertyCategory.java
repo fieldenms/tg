@@ -49,7 +49,19 @@ public enum PropertyCategory {
             return true;
         }
     }, //
+    SYNTHETIC_COMPONENT_HEADER {
+        @Override
+        boolean affectsMappings() {
+            return false;
+        }
+    }, //
     COMPONENT_DETAILS {
+        @Override
+        boolean affectsMappings() {
+            return false;
+        }
+    }, //
+    SYNTHETIC_COMPONENT_DETAILS {
         @Override
         boolean affectsMappings() {
             return false;

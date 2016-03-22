@@ -29,7 +29,7 @@ import com.google.inject.Injector;
  * <p>
  * These resources are unversioned by intrinsic nature of the basic requirement for a web client to be able to connetect to the application server regardless of the version in
  * order handle things like application updates, user authentication (required for updates) etc.
- * 
+ *
  * @author TG Team
  */
 public final class SystemResources extends Application {
@@ -42,7 +42,15 @@ public final class SystemResources extends Application {
     private final RouterHelper helper;
     private final UserAuthResourceFactory uarFactory;
 
-    public SystemResources(final Context context, final UserAuthResourceFactory uarFactory, final Injector injector, final EntityFactory factory, final RestServerUtil serverRestUtil, final String authenticationUri, final String referenceDependeciensLocation, final String appInfo) {
+    public SystemResources(
+            final Context context,
+            final UserAuthResourceFactory uarFactory,
+            final Injector injector,
+            final EntityFactory factory,
+            final RestServerUtil serverRestUtil,
+            final String authenticationUri,
+            final String referenceDependeciensLocation,
+            final String appInfo) {
         super(context);
         this.injector = injector;
         this.util = serverRestUtil;

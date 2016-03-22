@@ -17,10 +17,19 @@ import ua.com.fielden.platform.error.Result;
 public class BceTitleValidation implements IBeforeChangeEventHandler<String> {
     @Override
     public Result handle(final MetaProperty<String> property, final String newTitle, final String oldValue, final Set<Annotation> mutatorAnnotations) {
-        try {
-            CalculatedProperty.validateTitle((CalculatedProperty) property.getEntity(), newTitle);
-        } catch (final IncorrectCalcPropertyException e) {
-            return e;
+        final CalculatedProperty calcProperty = (CalculatedProperty) property.getEntity();
+        if (calcProperty.getCustomPropertyName() != null) {
+            try {
+                CalculatedProperty.validateName(calcProperty, calcProperty.getCustomPropertyName());
+            } catch (final IncorrectCalcPropertyException e) {
+                return e;
+            }
+        } else {
+            try {
+                CalculatedProperty.validateTitle(calcProperty, newTitle);
+            } catch (final IncorrectCalcPropertyException e) {
+                return e;
+            }
         }
         return Result.successful(newTitle);
     }

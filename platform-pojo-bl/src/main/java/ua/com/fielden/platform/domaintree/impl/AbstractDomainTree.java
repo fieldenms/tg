@@ -93,7 +93,7 @@ public abstract class AbstractDomainTree {
         if (!EntityUtils.isEntityType(klass)) {
             throw new IllegalArgumentException("Root type [" + klass + "] should be entity-typed.");
         }
-        if (DynamicEntityClassLoader.isEnhanced(klass)) {
+        if (DynamicEntityClassLoader.isGenerated(klass)) {
             throw new IllegalArgumentException("Root type [" + klass + "] should be NOT ENHANCED type.");
         }
     }
@@ -348,5 +348,20 @@ public abstract class AbstractDomainTree {
         final Class<?> propertyType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, property);
         final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, property);
         return EntityUtils.isRangeType(propertyType) && !(critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value()));
+    }
+
+    /**
+     * Returns <code>true</code> when the property represents crit-only single criterion, <code>false</code> otherwise.
+     *
+     * @param root
+     *            -- a root type that contains property.
+     * @param property
+     *            -- a dot-notation expression that defines a property.
+     * @return
+     */
+    public static boolean isCritOnlySingle(final Class<?> root, final String property) {
+        final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+        final CritOnly critOnlyAnnotation = isEntityItself ? null : AnnotationReflector.getPropertyAnnotation(CritOnly.class, root, property);
+        return critOnlyAnnotation != null && Type.SINGLE.equals(critOnlyAnnotation.value());
     }
 }

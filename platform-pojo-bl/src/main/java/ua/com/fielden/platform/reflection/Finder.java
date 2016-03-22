@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -13,16 +14,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -35,6 +40,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -109,22 +115,21 @@ public class Finder {
         final String[] properties = dotNotationExp.split(Reflector.DOT_SPLITTER);
         final List<MetaProperty> metaProperties = new ArrayList<MetaProperty>();
         Object owner = entity;
-        MetaProperty result = null;
         for (final String propertyName : properties) {
-            // if the owner is null then there is no way it is possible to determine the meta-property.
+            // if the owner is null or not an entity then there is no way to determine meta-properties at the next level.
             if (!(owner instanceof AbstractEntity)) {
-                // throw new RuntimeException("The property " + propertyName + " owner is null.");
                 break;
             }
             // get the meta-property instance, which can but should not be null
-            result = ((AbstractEntity<?>) owner).getProperty(propertyName);
-            if (result != null) {
-                metaProperties.add(result);
+            final Optional<MetaProperty<?>> op = ((AbstractEntity<?>) owner).getPropertyOptionally(propertyName);
+            if (op.isPresent()) {
+                metaProperties.add(op.get());
             } else {
                 throw new IllegalArgumentException("Failed to locate meta-property " + dotNotationExp + " starting with entity " + entity.getType() + ": " + entity);
             }
-            // obtain the value for the current propertyName, which becomes the owner for the next property
-            owner = ((AbstractEntity<?>) owner).get(propertyName);
+            // obtain the value for the current property, which might be an entity instance
+            // and needs to be recognized as an owner for the property at the next level
+            owner = op.get().getValue();
         }
 
         return metaProperties;
@@ -203,6 +208,18 @@ public class Finder {
      */
     @SafeVarargs
     public static List<Field> findProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
+        return streamProperties(entityType, annotations).collect(Collectors.toList());
+    }
+
+    /**
+     * A stream equivalent to method {@link #findProperties(Class, Class...)}.
+     * 
+     * @param entityType
+     * @param annotations
+     * @return
+     */
+    @SafeVarargs
+    public static Stream<Field> streamProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
         return getFieldsAnnotatedWith(entityType, true, IsProperty.class, annotations);
     }
 
@@ -218,6 +235,18 @@ public class Finder {
      */
     @SafeVarargs
     public static List<Field> findRealProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
+        return streamRealProperties(entityType, annotations).collect(Collectors.toList());
+    }
+
+    /**
+     * A stream equivalent to method {@link #findRealProperties(Class, Class...)}.
+     * 
+     * @param entityType
+     * @param annotations
+     * @return
+     */
+    @SafeVarargs
+    public static Stream<Field> streamRealProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
         return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations);
     }
 
@@ -321,15 +350,17 @@ public class Finder {
      * @return
      */
     private final static List<Field> loadKeyMembers(final Class<?> type) {
-        final SortedMap<Integer, Field> properties = new TreeMap<Integer, Field>(); // the use of SortedMap ensures the correct order of properties to be used the composite key
+        // the use of SortedMap ensures the correct order of properties to be used for composite key
+        final SortedMap<Integer, Field> properties = new TreeMap<Integer, Field>();
         final List<Field> compositeKeyFields = findRealProperties(type, CompositeKeyMember.class);
 
         for (final Field field : compositeKeyFields) {
             final CompositeKeyMember annotation = AnnotationReflector.getAnnotation(field, CompositeKeyMember.class);
             final int order = annotation.value();
             if (properties.containsKey(order)) {
-                throw new IllegalArgumentException("Annotation " + CompositeKeyMember.class.getName() + " in class " + type.getName() + " for property '" + field.getName()
-                        + "' has a duplicate order value of " + order + ", which is already present in property '" + properties.get(order) + "'.");
+                throw new ReflectionException(
+                        format("Annotation [%s] in class [%s] for property [%s] has a duplicate order value of [%s], which is already present in property [%s].",
+                        CompositeKeyMember.class.getName(), type.getName(), field.getName(), order, properties.get(order)));
             }
             properties.put(order, field);
         }
@@ -494,26 +525,22 @@ public class Finder {
     }
 
     /**
-     * Traces through specified list of fields and returns those annotated with allAnnotations.
-     *
+     * Traces through specified list of fields and returns a stream of those annotated with allAnnotations.
+     * 
      * @param fields
      * @param allAnnotations
      * @return
      */
-    private static List<Field> getFieldsAnnotatedWith(final List<Field> fields, final Collection<Class<? extends Annotation>> allAnnotations) {
-        final List<Field> properties = new ArrayList<Field>();
-        for (final Field field : fields) {
+    private static Stream<Field> streamFieldsAnnotatedWith(final List<Field> fields, final Collection<Class<? extends Annotation>> allAnnotations) {
+        return fields.stream().filter(field -> {
             int count = 0;
             for (final Class<? extends Annotation> annotation : allAnnotations) {
                 if (AnnotationReflector.isAnnotationPresent(field, annotation)) {
                     count++;
                 }
             }
-            if (count == allAnnotations.size()) {
-                properties.add(field);
-            }
-        }
-        return properties;
+            return count == allAnnotations.size();
+        });
     }
 
     /**
@@ -575,7 +602,7 @@ public class Finder {
     }
 
     /**
-     * Returns a list of fields (including private, protected and public) annotated with the specified annotation. This method processes the whole class hierarchy.
+     * Returns a stream of fields (including private, protected and public) annotated with the specified annotation. This method processes the whole class hierarchy.
      *
      * @param type
      * @param annotation
@@ -584,30 +611,11 @@ public class Finder {
      *
      * @return
      */
-    private static List<Field> getFieldsAnnotatedWith(final Class<?> type, final boolean withUnion, final Class<? extends Annotation> annot, final Class<? extends Annotation>... annotations) {
+    private static Stream<Field> getFieldsAnnotatedWith(final Class<?> type, final boolean withUnion, final Class<? extends Annotation> annot, final Class<? extends Annotation>... annotations) {
         final Set<Class<? extends Annotation>> allAnnotations = new HashSet<Class<? extends Annotation>>();
         allAnnotations.add(annot);
         allAnnotations.addAll(Arrays.asList(annotations));
-        return getFieldsAnnotatedWith(getFields(type, withUnion), allAnnotations);
-        //        final List<Field> properties = new ArrayList<Field>();
-        //        Class<?> klass = type;
-        //        if (AbstractUnionEntity.class.isAssignableFrom(klass) && withUnion) {
-        //            properties.addAll(getFieldsAnnotatedWith(getUnionEntityFields((Class<AbstractUnionEntity>) type), allAnnotations));
-        //        } else {
-        //            while (klass != Object.class) { // need to iterated thought
-        //        	// hierarchy in order to retrieve
-        //        	// fields from above the current
-        //        	// instance
-        //        	// iterate though the list of fields declared in the class
-        //        	// represented by klass variable, and add those annotated with
-        //        	// the specified annotation
-        //        	properties.addAll(getFieldsAnnotatedWith(Arrays.asList(klass.getDeclaredFields()), allAnnotations));
-        //        	// move to the upper class in the hierarchy in search for more
-        //        	// fields
-        //        	klass = klass.getSuperclass();
-        //            }
-        //        }
-        //        return properties;
+        return streamFieldsAnnotatedWith(getFields(type, withUnion), allAnnotations);
     }
 
     /**
@@ -618,27 +626,27 @@ public class Finder {
      * @return
      * @throws IllegalAccessException
      */
-    private static Object getAbstractUnionEntityFieldValue(final AbstractUnionEntity value, final String property) throws IllegalAccessException {
-        Field field = null;
-        Object valueToRetrieveFrom = null;
+    private static Object getAbstractUnionEntityFieldValue(final AbstractUnionEntity value, final String property) {
+        final Optional<Field> field;
+        final Object valueToRetrieveFrom;
         final List<String> unionProperties = getFieldNames(AbstractUnionEntity.unionProperties(value.getClass()));
         final List<String> commonProperties = AbstractUnionEntity.commonProperties(value.getClass());
 
         try {
             if (unionProperties.contains(property)) { // union properties:
-                field = getFieldByName(value.getClass(), property);
+                field = Optional.ofNullable(getFieldByName(value.getClass(), property));
                 valueToRetrieveFrom = value;
             } else if (commonProperties.contains(property) || COMMON_PROPS.contains(property) || ID.equals(property)) { // common property:
                 final AbstractEntity<?> activeEntity = value.activeEntity();
-                field = getFieldByName(activeEntity.getClass(), property);
+                field = Optional.ofNullable(activeEntity != null ? getFieldByName(activeEntity.getClass(), property) : null);
                 valueToRetrieveFrom = activeEntity;
             } else { // not-properly specified property:
-                throw new RuntimeException("Property [" + property + "] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.");
+                throw new ReflectionException(format("Property [%s] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.", property));
             }
-            return getFieldValue(field, valueToRetrieveFrom);
+            return field.isPresent() ? getFieldValue(field.get(), valueToRetrieveFrom) : null;
         } catch (final Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Property [" + property + "] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.");
+            throw new ReflectionException(format("Could not obtain value of property [%s] for union entity [%s]. Potentially \"activeEntity.\" prefix should be explicitly specified.", property, value.getType().getName()), e);
         }
     }
 

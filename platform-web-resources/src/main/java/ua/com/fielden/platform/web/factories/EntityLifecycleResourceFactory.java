@@ -8,7 +8,7 @@ import org.restlet.data.Method;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ILifecycleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.EntityLifecycleResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -48,7 +48,7 @@ public class EntityLifecycleResourceFactory<T extends AbstractEntity<?>, DAO ext
         if (dao instanceof ILifecycleDao) {
             if (Method.POST.equals(request.getMethod())) {
                 final String username = (String) request.getAttributes().get("username");
-                injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserController.class));
+                injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
 
                 new EntityLifecycleResource<T>((ILifecycleDao<T>) dao, restUtil, getContext(), request, response).handle();
             }

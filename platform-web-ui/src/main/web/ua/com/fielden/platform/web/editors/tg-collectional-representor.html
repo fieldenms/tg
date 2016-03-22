@@ -1,0 +1,72 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+
+<dom-module id="tg-collectional-representor">
+    <style>
+    </style>
+
+    <template>
+    	<tg-editor 
+    		id="editorDom" 
+    		prop-title="[[propTitle]]"
+    		_disabled="[[_disabled]]" 
+    		_editing-value="{{_editingValue}}" 
+    		action="[[action]]" 
+    		_error="[[_error]]" 
+    		_comm-value="[[_commValue]]" 
+    		_accepted-value="[[_acceptedValue]]" 
+    		debug="[[debug]]" 
+    		_on-change="[[_onChange]]"
+    		_on-input="[[_onInput]]"
+    		_on-keydown="[[_onKeydown]]"
+        	current-state="[[currentState]]">
+        	<content class=".property-action"></content>
+    	</tg-editor>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+    	is: 'tg-collectional-representor',
+    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+    	
+    	ready: function () {
+    		this.$.editorDom._editorKind = "SINGLELINE_TEXT";
+    	},
+    	
+        /**
+         * Converts the value into string representation (which is used in edititing / comm values).
+         */
+        convertToString: function (value) {
+            if (value === null) {
+                return "";
+            }
+            
+            if (value.constructor !== Array) {
+                throw 'Unsupported value has appeared inside collectional representor: ' + value;
+            }
+            
+            var str = '';
+            for (var i = 0; i < value.length; i++) {
+                str = str + this.reflector().convert(value[i]) + ', '; // assuming that value[i] is an entity
+            }
+            return str;
+        },
+
+        /**
+         * This method promotes 'IRRELEVANT' into _acceptedValue which should not be a problem, since this 'representor' is not editable at all.
+         */
+        convertFromString: function (strValue) {
+            return 'IRRELEVANT';
+        },
+        
+        /**
+         * This 'representor' is disabled for editing (just gives a view of the entity collection).
+         */
+        _isDisabled: function (currentState, bindingEntity, propertyName) {
+            return true;
+        }
+    });
+</script>

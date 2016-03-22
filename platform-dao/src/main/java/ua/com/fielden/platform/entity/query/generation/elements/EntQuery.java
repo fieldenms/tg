@@ -147,6 +147,7 @@ public class EntQuery implements ISingleOperand {
             yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+            logger.debug("enhanceYieldsModel.allPropsYieldEnhancementRequired");
             if (mainSourceIsTypeBased()) {
                 for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
                     //                    if (ppi.isSynthetic()) {
@@ -159,7 +160,7 @@ public class EntQuery implements ISingleOperand {
                     //|| (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
                     ;
                     if (!skipProperty) {
-                        //System.out.println("!!!!!!!!!!!!!!!!!!! ------------------------ " + ppi.getName());
+                        logger.debug(" add yield: " + ppi);
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                     }
                 }
@@ -244,6 +245,7 @@ public class EntQuery implements ISingleOperand {
         if (fetchModel == null) {
             logger.debug("adjustYieldsModelAccordingToFetchModel: no fetch model was provided -- nothing was removed");
         } else {
+            logger.debug("adjustYieldsModelAccordingToFetchModel: fetchModel\n" + fetchModel);
             final Set<Yield> toBeRemoved = new HashSet<Yield>();
 
             for (final Yield yield : yields.getYields()) {
@@ -259,21 +261,11 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean shouldYieldBeRemoved(final IRetrievalModel fetchModel, Yield yield) {
+        boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
         final boolean allFetchedPropsAreAggregatedExpressions = areAllFetchedPropsAggregatedExpressions(fetchModel);
         // this means that all not fetched props should be 100% removed -- in order to get valid sql stmt for entity centre totals query
-
-        boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
-        boolean presentInProxiedCalculatedProps = fetchModel.getProxiedPropsWithoutId().containsKey(yield.getAlias()); 
-        boolean isOfEntityType = yieldIsOfEntityType(yield);
         boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
-        logger.debug("shouldYieldBeRemoved: yield [" + yield.getAlias() + "] presentInFetchModel [" + presentInFetchModel + "] isOfEntityType [" + isOfEntityType + "] presentInProxiedCalculatedProps [" + presentInProxiedCalculatedProps + "]");
-        return (!isOfEntityType && !presentInFetchModel)
-                ||
-                (allFetchedPropsAreAggregatedExpressions && !presentInFetchModel)
-                ||
-                (allFetchedPropsAreAggregatedExpressions && isHeaderOfMoneyType)
-                ||
-                presentInProxiedCalculatedProps;
+        return allFetchedPropsAreAggregatedExpressions ? (!presentInFetchModel || isHeaderOfMoneyType) : !presentInFetchModel;
     }
 
     private void adjustOrderBys() {

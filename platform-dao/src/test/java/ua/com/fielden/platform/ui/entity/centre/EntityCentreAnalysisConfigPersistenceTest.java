@@ -8,8 +8,8 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.security.provider.UserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.provider.UserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
@@ -34,7 +34,7 @@ public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDomainDri
     private final IEntityCentreConfigController daoECC = getInstance(EntityCentreConfigControllerDao.class);
     private final IEntityCentreAnalysisConfig dao = getInstance(EntityCentreAnalysisConfigDao.class);
     private final IMainMenuItemController menuDao = getInstance(MainMenuItemControllerDao.class);
-    private final IUserDao userDao = getInstance(UserController.class);
+    private final IUser userDao = getInstance(UserDao.class);
 
     @Test
     public void test_insertion_and_retrieval_of_data() {

@@ -7,15 +7,16 @@ import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-
-import com.google.inject.Inject;
 
 
 /**
@@ -69,7 +70,7 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
             for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableProps) {
                 final ActivatableAbstractEntity<?> value = prop.getValue();
                 if (!value.isActive()) {
-                    return Result.failure(format("Entity %s has a reference to already inactive entity %s (type %s)", entity, value, prop.getType()));
+                    return Result.failure(format("Property [%s] in entity %s@%s references inactive entity %s@%s.", prop.getName(), entity, entity.getType().getName(), value, prop.getType().getName()));
                 }
             }
 
@@ -85,14 +86,19 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
      */
     private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableNotNullNotProxyProperties(final ActivatableAbstractEntity<?> entity) {
         final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
-        for (final MetaProperty<?> prop : entity.getProperties().values()) {
-            final Object value = prop.getValue();
-            if (value != null && !prop.isProxy() &&
-                ActivatableAbstractEntity.class.isAssignableFrom(prop.getType()) &&
+        
+        entity.nonProxiedProperties()
+        .forEach(mp -> {
+            final Object value = mp.getValue();
+            if (value != null && 
+                ActivatableAbstractEntity.class.isAssignableFrom(mp.getType()) &&
+                !((AbstractEntity<?>) value).isIdOnlyProxy() &&
                 !entity.equals(value)) {
-                result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) prop);
+                
+                result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) mp);
             }
-        }
+        });
+        
         return result;
     }
 }

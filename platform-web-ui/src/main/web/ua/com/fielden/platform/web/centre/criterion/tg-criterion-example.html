@@ -1,0 +1,177 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+    <title>tg-criterion example</title>
+    
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
+    
+    <link rel="import" href="/resources/centre/criterion/tg-criterion-example-supplements.html">
+
+    <link rel="import" href="/resources/editors/tg-integer-editor.html">
+    <link rel="import" href="/resources/editors/tg-singleline-text-editor.html">
+    <link rel="import" href="/resources/editors/tg-multiline-text-editor.html">
+    <link rel="import" href="/resources/editors/tg-datetime-picker.html">
+
+    <link rel="import" href="/resources/centre/criterion/single/tg-single-criterion.html">
+    <link rel="import" href="/resources/centre/criterion/multi/tg-multi-criterion.html">
+    <link rel="import" href="/resources/centre/criterion/multi/tg-boolean-criterion.html">
+    <link rel="import" href="/resources/centre/criterion/multi/range/tg-range-criterion.html">
+    <link rel="import" href="/resources/centre/criterion/multi/range/tg-date-range-criterion.html">
+</head>
+
+<body unresolved>
+  	<template is="dom-bind">
+  		<iron-ajax
+  			auto
+  			url='/entity/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties/new'
+  			method="POST"
+  			handle-as="json"
+  			on-response="processResponse"
+  			on-error="processError"
+  			>
+  		</iron-ajax>
+  		
+  		<tg-criterion-example-supplements
+  			binding-entity="{{entity}}"
+  			validation-callback="{{validationCallback}}"
+  			process-response="{{processResponse}}"
+  			process-error="{{processError}}"
+  			or-null="{{orNull}}"
+  			not="{{not}}"
+  			exclusive="{{exclusive}}"
+  			exclusive2="{{exclusive2}}"
+  			date-prefix="{{datePrefix}}"
+  			date-mnemonic="{{dateMnemonic}}"
+  			and-before="{{andBefore}}"
+  			>
+  		</tg-criterion-example-supplements>
+  		
+  	    
+  	    <tg-multi-criterion
+  	    	or-null="{{orNull}}"
+  	    	not="{{not}}"
+  	    	validation-callback="[[validationCallback]]" 
+  	    	>
+			<tg-integer-editor 
+				entity="[[entity]]" 
+				class="criterion-editors"
+				property-name="integerProp" 
+				current-state="EDIT" 
+				prop-title="Integer property title" 
+				prop-desc="Integer property desc"
+				action="null" 
+				validation-callback="[[validationCallback]]">
+			</tg-integer-editor>
+  	    </tg-multi-criterion>
+  	    
+  	    <tg-boolean-criterion
+  	    	or-null="{{orNull}}"
+  	    	not="{{not}}"
+  	    	validation-callback="[[validationCallback]]" 
+  	    	>
+			<tg-integer-editor 
+				entity="[[entity]]" 
+				class="criterion-editors"
+				property-name="integerProp" 
+				current-state="EDIT" 
+				prop-title="Bool IS title" 
+				prop-desc="Bool IS desc"
+				action="null" 
+				validation-callback="[[validationCallback]]">
+			</tg-integer-editor>
+			<tg-integer-editor 
+				entity="[[entity]]" 
+				class="criterion-editors"
+				property-name="integerProp" 
+				current-state="EDIT" 
+				prop-title="Bool IS NOT" 
+				prop-desc="Bool IS NOT desc"
+				action="null" 
+				validation-callback="[[validationCallback]]">
+			</tg-integer-editor>
+  	    </tg-boolean-criterion>
+  	    
+  	    <tg-range-criterion
+  	    	exclusive="{{exclusive}}"
+  	    	exclusive2="{{exclusive2}}"
+  	    	or-null="{{orNull}}"
+  	    	not="{{not}}"
+  	    	validation-callback="[[validationCallback]]" 
+  	    	>
+			<tg-integer-editor 
+				entity="[[entity]]" 
+				class="criterion-editors"
+				property-name="integerProp" 
+				current-state="EDIT" 
+				prop-title="Integer from" 
+				prop-desc="Integer from desc"
+				action="null" 
+				validation-callback="[[validationCallback]]">
+			</tg-integer-editor>
+			<tg-integer-editor 
+				entity="[[entity]]" 
+				class="criterion-editors"
+				property-name="integerProp" 
+				current-state="EDIT" 
+				prop-title="Integer to" 
+				prop-desc="Integer to desc"
+				action="null" 
+				validation-callback="[[validationCallback]]">
+			</tg-integer-editor>
+  	    </tg-range-criterion>
+  	    
+  	    <tg-date-range-criterion
+  	    	date-prefix="{{datePrefix}}"
+  	    	date-mnemonic="{{dateMnemonic}}"
+  	    	and-before="{{andBefore}}"
+  	    	exclusive="{{exclusive}}"
+  	    	exclusive2="{{exclusive2}}"
+  	    	or-null="{{orNull}}"
+  	    	not="{{not}}"
+  	    	validation-callback="[[validationCallback]]" 
+  	    	>
+ 	   	    <tg-datetime-picker 
+  		    	entity="[[entity]]"
+  		    	class="criterion-editors"
+  		    	property-name="dateProp" 
+  	    		current-state="EDIT" 
+  	    		prop-title="Date FROM" 
+  	    		prop-desc="Date FROM desc"
+  	    		action="null" 
+  	    		validation-callback="[[validationCallback]]">
+	  	    </tg-datetime-picker>
+ 	   	    <tg-datetime-picker 
+  		    	entity="[[entity]]"
+  		    	class="criterion-editors"
+  		    	property-name="dateProp" 
+  	    		current-state="EDIT" 
+  	    		prop-title="Date TO" 
+  	    		prop-desc="Date TO desc"
+  	    		action="null" 
+  	    		validation-callback="[[validationCallback]]">
+	  	    </tg-datetime-picker>
+  	    </tg-date-range-criterion>
+  	    
+  	    <tg-single-criterion
+  	    	validation-callback="[[validationCallback]]" 
+  	    	>
+			<tg-integer-editor 
+				entity="[[entity]]" 
+				class="criterion-editors"
+				property-name="integerProp" 
+				current-state="EDIT" 
+				prop-title="Integer property title" 
+				prop-desc="Integer property desc"
+				action="null" 
+				validation-callback="[[validationCallback]]">
+			</tg-integer-editor>
+  	    </tg-single-criterion>
+
+  	</template>
+</body>
+
+</html>

@@ -26,7 +26,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.CommonEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -36,14 +36,14 @@ import ua.com.fielden.platform.utils.Pair;
 import com.google.inject.Inject;
 
 /**
- * RAO implementation of the {@link IUserController}.
+ * RAO implementation of the {@link IUserEx}.
  * 
  * @author TG Team
  * 
  */
 
 @EntityType(User.class)
-public class UserControllerRao extends CommonEntityRao<User> implements IUserController {
+public class UserControllerRao extends CommonEntityRao<User> implements IUserEx {
     private final fetch<User> fetchModel = fetch(User.class).with("basedOnUser").with("roles", fetchAll(UserAndRoleAssociation.class));//.with("userRole").with("user")
 
     private final IUserRoleDao userRoleDao;

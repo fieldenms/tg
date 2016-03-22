@@ -1,17 +1,36 @@
 package ua.com.fielden.platform.dao;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+
+
+
+
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -106,6 +125,63 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertEquals("Incorrect number of instances on the last page.", 1, lastPage.data().size());
     }
 
+    public void test_unconditional_streaming_should_contain_all_matching_entities() {
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(query).model();
+
+        final Stream<EntityWithMoney> streamBy3 = dao.stream(qem, 3);
+        assertEquals("Incorrect number of entities in the stream", dao.count(query), streamBy3.count());
+        
+        final Stream<EntityWithMoney> streamBy1 = dao.stream(qem, 1);
+        assertFalse("The stream should not be parallel", streamBy1.isParallel());
+        assertEquals("Incorrect number of entities in the stream", dao.count(query), streamBy1.count());
+    }
+
+    public void test_that_there_is_API_for_streaming_with_default_page_capacity() {
+        final Stream<EntityWithMoney> stream = dao.stream(from(select(EntityWithMoney.class).model()).model());
+        assertEquals("Incorrect number of entities in the stream", 4, stream.count());
+    }
+
+    public void test_streaming_based_on_ordered_qem_should_have_the_same_traversal_order() {
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class).model();
+        final OrderingModel orderBy = orderBy().prop("key").asc().model();
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(query).with(orderBy).model();
+
+        final Iterator<EntityWithMoney> iterator = dao.getAllEntities(qem).iterator();
+        final Stream<EntityWithMoney> stream = dao.stream(qem, 2);
+        stream.forEach(entity -> assertEquals(iterator.next(), entity));
+    }
+
+    public void test_streaming_based_on_conditional_qem_should_contain_only_matching_entities() {
+        final EntityResultQueryModel<EntityWithMoney> query = select(EntityWithMoney.class)
+                .where().prop("money.amount").ge().val(new BigDecimal("30.00"))//
+                .model();
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = from(query).model();
+
+        final Stream<EntityWithMoney> stream = dao.stream(qem, 2);
+        assertEquals("Incorrect number of entities in the stream", dao.count(query), stream.count());
+    }
+
+    public void test_stream_should_not_be_parallel() {
+        final Stream<EntityWithMoney> streamBy3 = dao.stream(from(select(EntityWithMoney.class).model()).model(), 2);
+        assertFalse("The stream should not be parallel", streamBy3.isParallel());
+    }
+
+    public void test_stream_should_not_be_accecible_once_traversed() {
+        final Stream<EntityWithMoney> stream = dao.stream(from(select(EntityWithMoney.class).model()).model(), 2);
+        
+        // consume the stream by traversing it
+        stream.forEach(e -> e.getMoney()/* basically do nothing*/);
+        
+        // try to consume the stream again by counting the number of elements in it
+        try {
+            stream.count();
+            fail("Should have failed due to illegal state exception of the stream");
+        } catch (final IllegalStateException ex) {
+        }
+    }
+
+    
     public void test_entity_exists_using_entity() {
         final EntityWithMoney entity = dao.findByKey("key1");
         assertTrue(dao.entityExists(entity));
@@ -125,7 +201,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     }
 
     public void test_entity_is_dirty_support() {
-        EntityWithMoney entity = dao.findByKey("key1");
+        EntityWithMoney entity = dao.findByKeyAndFetch(fetchAllInclCalc(EntityWithMoney.class), "key1");
         assertFalse("Entity should not be dirty after retrieval", entity.isDirty());
         entity.setCalculatedProperty(new BigDecimal("0.00"));
         entity.setCalculatedProperty(new BigDecimal("1.00"));
@@ -261,7 +337,8 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 
     }
 
-    public void test_that_version_is_updated() {
+    @Test
+    public void test_entity_version_is_updated_after_save() {
         EntityWithMoney entity = dao.findByKey("key1");
 
         hibernateUtil.getSessionFactory().getCurrentSession().close();
@@ -277,6 +354,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertEquals("Incorrect prev version", Long.valueOf(1), updatedEntity.getVersion());
     }
 
+    @Test
     public void test_entity_staleness_check() {
         final EntityWithMoney entity = dao.findByKey("key1");
         // update entity to simulate staleness
@@ -291,7 +369,9 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertFalse("This version should have been recognised as current.", dao.isStale(entity.getId(), 1L));
     }
 
-    public void test_that_optimistic_locking_with_versioning_worx() {
+    
+    @Test
+    public void test_optimistic_locking_based_on_versioning_works_for_save() {
         // get entity, which will be modified but not saved
         final EntityWithMoney entity = dao.findByKey("key1");
         assertEquals("Incorrect prev version", Long.valueOf(0), entity.getVersion());
@@ -358,7 +438,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     //    }
 
     @Test
-    public void test_non_population_of_transaction_date_property_for_persistent_entity() {
+    public void test_transaction_date_property_for_previously_persisted_entity_is_not_reassigned_with_save() {
         final EntityWithMoney entity = dao.findByKey("key1");
         assertNull("Test pre-condition is invalid -- transDate should be null.", dao.findByKey("key1").getTransDate());
         dao.save(entity);
@@ -366,16 +446,16 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     }
 
     @Test
-    public void test_population_of_transaction_date_property_for_new_entity() {
+    public void test_transaction_date_property_for_new_entity_gets_auto_assigned_with_save() {
         final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "new entity");
         assertNull("Test pre-condition is invalid -- transDate should be null.", newEntity.getTransDate());
         newEntity.setMoney(new Money("12")); // required property -- has to be set
         dao.save(newEntity);
         assertNotNull("transDate should have been assigned.", dao.findByKey("new entity").getTransDate());
     }
-
+ 
     @Test
-    public void test_non_population_of_already_assigned_transaction_date_property_for_new_entity() {
+    public void test_already_assigned_transaction_date_property_for_new_entity_does_not_get_repopulated_with_save() {
         final EntityWithMoney newEntity = entityFactory.newByKey(EntityWithMoney.class, "new entity");
         final Date date = new DateTime(2009, 01, 01, 0, 0, 0, 0).toDate();
         newEntity.setTransDate(date);

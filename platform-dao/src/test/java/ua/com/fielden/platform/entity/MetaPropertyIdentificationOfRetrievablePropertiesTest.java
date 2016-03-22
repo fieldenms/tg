@@ -10,7 +10,25 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
@@ -36,12 +54,12 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
     @Test
     public void identification_of_retrievable_properties_for_non_composite_entity_with_non_persistent_props_other_than_desc() {
         final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
-        assertNull( cat1.getProperty(ID));
-        assertNull( cat1.getProperty(VERSION));
+        assertFalse(cat1.getPropertyOptionally(ID).isPresent());
+        assertFalse(cat1.getPropertyOptionally(VERSION).isPresent());
 
 
-        final List<MetaProperty<?>> retrievableProps = cat1.getProperties().values().stream().
-                filter(p -> p.isRetrievable()).collect(Collectors.toList());
+        final List<MetaProperty<?>> retrievableProps = cat1.getProperties().values().stream()
+                .filter(p -> p.isRetrievable()).collect(Collectors.toList());
 
         assertEquals(5, retrievableProps.size());
 
@@ -56,8 +74,8 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
     @Test
     public void identification_of_retrievable_properties_for_composite_entity_with_non_persistent_desc() {
         final TgOrgUnit2 cat1 = ao(TgOrgUnit2.class).findByKey(ao(TgOrgUnit1.class).findByKey("Org1"), "Org1_1");
-        assertNull( cat1.getProperty(ID));
-        assertNull( cat1.getProperty(VERSION));
+        assertFalse(cat1.getPropertyOptionally(ID).isPresent());
+        assertFalse(cat1.getPropertyOptionally(VERSION).isPresent());
 
 
         final List<MetaProperty<?>> retrievableProps = cat1.getProperties().values().stream().
@@ -72,12 +90,12 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
 
     @Test
     public void identifycation_of_retrievable_properties_for_entity_with_calcualted_props() {
-        final TgVehicle veh = ao(TgVehicle.class).findByKey("CAR2");
+        final TgVehicle veh = ao(TgVehicle.class).findByKeyAndFetch(fetchAll(TgVehicle.class), "CAR2");
 
-        final List<MetaProperty<?>> retrievableProps = veh.getProperties().values().stream().
-                filter(p -> p.isRetrievable()).collect(Collectors.toList());
+        final List<MetaProperty<?>> retrievableProps = veh.getProperties().values().stream()
+                .filter(p -> p.isRetrievable()).collect(Collectors.toList());
 
-        assertEquals(22, retrievableProps.size());
+        assertEquals(23, retrievableProps.size());
 
         final Set<String> names = retrievableProps.stream().map(p -> p.getName()).collect(Collectors.toSet());
         assertTrue(names.contains(KEY));
@@ -102,6 +120,7 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
         assertTrue(names.contains("calc5"));
         assertTrue(names.contains("calc6"));
         assertTrue(names.contains("calcModel"));
+        assertTrue(names.contains("finDetails"));
     }
 
     @Override

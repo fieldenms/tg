@@ -9,7 +9,7 @@ import org.restlet.security.ChallengeAuthenticator;
 
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -23,6 +23,7 @@ import com.google.inject.Injector;
  * @author TG Team
  * 
  */
+@Deprecated
 public class ResourceGuard extends ChallengeAuthenticator {
 
     private final RestServerUtil util;
@@ -60,7 +61,7 @@ public class ResourceGuard extends ChallengeAuthenticator {
             }
             // use the username to lookup a corresponding public key to decode security token
             final String username = parts[0];
-            final IUserController controller = getController();
+            final IUserEx controller = getController();
             final User user = controller.findByKey(username);
             if (user == null) {
                 forbid(response);
@@ -86,7 +87,7 @@ public class ResourceGuard extends ChallengeAuthenticator {
         return true;
     }
 
-    protected IUserController getController() {
-        return injector.getInstance(IUserController.class);
+    protected IUserEx getController() {
+        return injector.getInstance(IUserEx.class);
     }
 }

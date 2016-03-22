@@ -54,9 +54,9 @@ import ua.com.fielden.platform.utils.ClassComparator;
 
 /**
  * The only {@link ICalculatedProperty} implementation, which can be binded to Expression Editor.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 @EntityTitle(value = "Calculated property", desc = "<i>Calculated property</i> entity")
@@ -125,6 +125,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
 
     private/* final */transient IDomainTreeEnhancer enhancer;
     private transient boolean validateTitleContextOfExtractedProperties;
+    private String customPropertyName;
 
     /**
      * Default constructor.
@@ -250,7 +251,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
 
     /**
      * Provides an ABOVE path for the specified <code>contextPath</code>. For the root <code>contextPath</code> it returns the <code>contextPath</code> itself.
-     * 
+     *
      * @param contextPath
      * @return
      */
@@ -273,7 +274,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
 
     /**
      * Generates a name of new property from a title by removing all non-word characters, removing starting digits (if exist) and capitalising all words except first.
-     * 
+     *
      * @param title
      * @return
      */
@@ -362,7 +363,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     /**
      * Creates empty {@link CalculatedProperty} with only necessary {@link #getRoot()} and {@link #getContextPath()} initialised. It is obvious that other required stuff will not
      * be initialised. Immediate validation intentionally will not be performed.
-     * 
+     *
      * @param factory
      * @param root
      * @param contextPath
@@ -376,7 +377,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     /**
      * Creates empty {@link CalculatedProperty} with only necessary {@link #getRoot()} and {@link #getContextPath()} initialised. It is obvious that other required stuff will not
      * be initialised. Immediate validation intentionally will not be performed.
-     * 
+     *
      * @param factory
      * @param root
      * @param contextPath
@@ -426,7 +427,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
 
     /**
      * Creates full {@link CalculatedProperty} with all keys initialised and validates it.
-     * 
+     *
      * @param factory
      * @param root
      * @param contextPath
@@ -444,7 +445,25 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
 
     /**
      * Creates full {@link CalculatedProperty} with all keys initialised and validates it.
-     * 
+     *
+     * @param factory
+     * @param root
+     * @param contextPath
+     * @param contextualExpression
+     * @param title
+     * @param desc
+     * @param attribute
+     * @param originationProperty
+     * @param domainTreeEnhancer
+     * @return
+     */
+    private static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer, final boolean validateTitleContextOfExtractedProperties) {
+        return setImportantStuff(customPropertyName, contextualExpression, title, desc, attribute, originationProperty, createEmpty(factory, root, contextPath, domainTreeEnhancer, validateTitleContextOfExtractedProperties));
+    }
+
+    /**
+     * Creates full {@link CalculatedProperty} with all keys initialised and validates it.
+     *
      * @return
      */
     private static CalculatedProperty create(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
@@ -461,6 +480,13 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     /**
      * Creates full {@link CalculatedProperty} with all keys initialised, validates it and throws validation exception if any.
      */
+    protected final static CalculatedProperty createCorrect(final EntityFactory factory, final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer) {
+        return createCorrect(factory, root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, domainTreeEnhancer, true);
+    }
+
+    /**
+     * Creates full {@link CalculatedProperty} with all keys initialised, validates it and throws validation exception if any.
+     */
     protected final static CalculatedProperty createCorrect(final EntityFactory factory, final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer, final boolean validateTitleContextOfExtractedProperties) {
         final CalculatedProperty calc = create(factory, root, contextPath, contextualExpression, title, desc, attribute, originationProperty, domainTreeEnhancer, validateTitleContextOfExtractedProperties);
 
@@ -470,6 +496,31 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         if (calc.category() == null) {
             throw new IncorrectCalcPropertyException("The category of calculated property cannot be null.");
         }
+        return calc;
+    }
+
+    /**
+     * Creates full {@link CalculatedProperty} with all keys initialised, validates it and throws validation exception if any.
+     */
+    protected final static CalculatedProperty createCorrect(final EntityFactory factory, final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final IDomainTreeEnhancer domainTreeEnhancer, final boolean validateTitleContextOfExtractedProperties) {
+        final CalculatedProperty calc = create(factory, root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty, domainTreeEnhancer, validateTitleContextOfExtractedProperties);
+
+        if (!calc.isValid().isSuccessful()) {
+            throw calc.isValid();
+        }
+        if (calc.category() == null) {
+            throw new IncorrectCalcPropertyException("The category of calculated property cannot be null.");
+        }
+        return calc;
+    }
+
+    private static CalculatedProperty setImportantStuff(final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty, final CalculatedProperty calc) {
+        calc.provideCustomPropertyName(customPropertyName);
+        calc.setContextualExpression(contextualExpression);
+        calc.setTitle(title);
+        calc.setDesc(desc);
+        calc.setAttribute(attribute);
+        calc.setOriginationProperty(originationProperty);
         return calc;
     }
 
@@ -507,6 +558,10 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
 
     protected void inferName() {
         this.name = generateNameFrom(title);
+    }
+
+    protected void inferNameFromCustomName() {
+        this.name = this.customPropertyName;
     }
 
     protected void inferContextType() {
@@ -605,6 +660,10 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
         //	    throw new IncorrectCalcPropertyException("A title of the calculated property cannot be empty.");
         //	}
         final String name = CalculatedProperty.generateNameFrom(newTitle);
+        validateName(cp, name);
+    }
+
+    protected static void validateName(final CalculatedProperty cp, final String name) {
         if (StringUtils.isEmpty(name)) {
             throw new IncorrectCalcPropertyException("Please specify more appropriate title with some characters (and perhaps digits).");
         }
@@ -618,7 +677,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     /**
      * Validates the calculated property key (see {@link #validatePropertyKey0(Class, String, Map)}) and checks whether another property with the same name exists (calculated or
      * not). If exists -- throws {@link IncorrectCalcPropertyException}.
-     * 
+     *
      * @param calculatedPropertyToCheck
      * @param newPathAndName
      * @param calculatedProperties
@@ -687,10 +746,23 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
 
     /**
      * TODO This very tricky setter is used for mutating a property name of calc prop not to match it with 'generateNameFrom(title)'.
-     * 
+     *
      * @param name
      */
     public void setNameVeryTricky(final String name) {
         this.name = name;
+    }
+
+    /**
+     * Sets a custom property name for this calculated property (not derived from title).
+     *
+     * @param customPropertyName
+     */
+    public void provideCustomPropertyName(final String customPropertyName) {
+        this.customPropertyName = customPropertyName;
+    }
+
+    public String getCustomPropertyName() {
+        return customPropertyName;
     }
 }

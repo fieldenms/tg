@@ -73,7 +73,7 @@ public class CollectionalAttribute<T> extends Attribute<List<T>> {
     @Override
     public String toString() {
         final String strValue = StringUtils.join(value, separator);
-        final String quoteString = quotes ? "\"" : "";
+        final String quoteString = quotes ? "'" : "";
         return StringUtils.isEmpty(strValue) ? "" : (name + nameValueSeparator + quoteString + strValue + quoteString);
     }
 }

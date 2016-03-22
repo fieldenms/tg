@@ -2,6 +2,7 @@ package ua.com.fielden.platform.dom;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +22,7 @@ public class DomElement {
     /**
      * The map of this {@link DomElement} attributes.
      */
-    protected final Map<String, Attribute<?>> attrs = new HashMap<>();
+    protected final Map<String, Attribute<?>> attrs = new LinkedHashMap<>();
     /**
      * Children of this {@link DomElement} instance.
      */
@@ -95,6 +96,15 @@ public class DomElement {
         final DomElement element = children.remove(index);
         element.parent = null;
         return this;
+    }
+
+    /**
+     * Returns the number of children in this dom element.
+     *
+     * @return
+     */
+    public int childCount() {
+        return children.size();
     }
 
     /**
@@ -238,12 +248,36 @@ public class DomElement {
             clazz(value.toString());
             break;
         case "style":
-            style(value.toString());
+            if (value.toString().contains(";")) {
+                style(value.toString().split(";"));
+            } else {
+                style(value.toString());
+            }
             break;
         default:
-            attrs.put(name, new SingleValueAttribute(name, value));
+        	if (value != null && (Boolean.class == value.getClass() || boolean.class == value.getClass())) {
+        		if (Boolean.TRUE.equals(value)) {
+        			attrs.put(name, new NoValueAttribute(name));
+        		}
+        	} else {  
+        		attrs.put(name, new SingleValueAttribute(name, value));
+        	}
             break;
         }
+        return this;
+    }
+
+    /**
+     * Provides the set of attributes for this {@link DomElement} instance.
+     *
+     * @param attributes
+     *            - the map of [the attribute name for which value should be set; the value to be set for the specifed attribute name].
+     * @return
+     */
+    public DomElement attrs(final Map<String, Object> attributes) {
+        attributes.forEach((name, val) -> {
+            attr(name, val);
+        });
         return this;
     }
 
@@ -254,8 +288,8 @@ public class DomElement {
      *            - the attribute name for which the appropriate attribute value must be returned.
      * @return
      */
-    public Object getAttr(final String name) {
-        return attrs.containsKey(name) ? attrs.get(name) : "";
+    public Attribute<?> getAttr(final String name) {
+        return attrs.containsKey(name) ? attrs.get(name) : null;
     }
 
     /**

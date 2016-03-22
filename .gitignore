@@ -1,3 +1,4 @@
+rebel.xml
 *.synctex.gz
 *.orig
 *.aux
@@ -41,3 +42,6 @@ platform-web-resources/src/test/resources/data-files/attachments/NEW-ATTACHMENT-
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# JRevel project config files
+rebel.xml

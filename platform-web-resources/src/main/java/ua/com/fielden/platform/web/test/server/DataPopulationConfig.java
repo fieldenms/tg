@@ -5,6 +5,7 @@ import java.util.Properties;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
@@ -22,7 +23,7 @@ import com.google.inject.Injector;
 public final class DataPopulationConfig implements IDomainDrivenTestCaseConfiguration {
     private final EntityFactory entityFactory;
     private final Injector injector;
-    private final ApplicationServerModule module;
+    private final TgTestApplicationServerModule module;
 
     /**
      * Default constructor is required for dynamic instantiation by {@link DbDrivenTestCase}.
@@ -40,8 +41,8 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
             props.setProperty("workflow", "development");
 
-            final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
-            module = new ApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
+            final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
+            module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
             injector = new ApplicationInjectorFactory().add(module).getInjector();
             entityFactory = injector.getInstance(EntityFactory.class);
         } catch (final Exception e) {
@@ -72,5 +73,10 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     @Override
     public DomainMetadata getDomainMetadata() {
         return module.getDomainMetadata();
+    }
+    
+    @Override
+    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
+        return module.getIdOnlyProxiedEntityTypeCache();
     }
 }

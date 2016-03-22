@@ -1,0 +1,54 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+
+<dom-module id="tg-integer-editor">
+    <template>
+    	<tg-editor 
+    		id="editorDom" 
+    		prop-title="[[propTitle]]"
+    		_disabled="[[_disabled]]" 
+    		_editing-value="{{_editingValue}}" 
+    		action="[[action]]" 
+    		_error="[[_error]]" 
+    		_comm-value="[[_commValue]]" 
+    		_accepted-value="[[_acceptedValue]]" 
+    		debug="[[debug]]" 
+    		_on-change="[[_onChange]]"
+    		_on-input="[[_onInput]]"
+    		_on-keydown="[[_onKeydown]]"
+    		current-state="[[currentState]]">
+    		<content class=".property-action"></content>
+    	</tg-editor>
+    </template>
+</dom-module>
+
+<script>
+    Polymer({
+    	is: 'tg-integer-editor',
+    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+    	
+    	ready: function () {
+    		this.$.editorDom._editorKind = "INTEGER";
+    	},
+    	
+        /**
+         * Converts the value into string representation (which is used in edititing / comm values).
+         */
+        convertToString: function (value) {
+        	// NOTE: consider the follwing example, of how 'super' method can be invoked.
+        	//   Just use concrete name of the 'super' behavior and call the function excplicitly:            		
+        	// Polymer.TgBehaviors.TgEditorBehavior.convertToString(value);
+        	
+            return value === null ? "" : "" + value;
+        },
+
+        /**
+         * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (Number).
+         */
+        convertFromString: function (strValue) {
+        	return strValue === '' ? null : parseInt(strValue);
+        }
+    });
+</script>
