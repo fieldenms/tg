@@ -116,7 +116,7 @@ public final class EntitySerialiser extends Serializer {
             IntSerializer.put(buffer, reference, true);
             return;
         }
-
+        
         IntSerializer.put(buffer, 0, true);
         references.referenceCount++;
         references.objectToReference.put(instance, references.referenceCount);
@@ -145,7 +145,13 @@ public final class EntitySerialiser extends Serializer {
                 // non-composite keys should be persisted by identifying their actual type
                 final String name = prop.field.getName();
                 lastProperty = name;
-                final Object value = prop.field.get(entity);
+                
+                Object protoValue = prop.field.get(entity);
+                if (protoValue instanceof AbstractEntity) {
+                    protoValue = ((AbstractEntity<?>) protoValue).isIdOnlyProxy() ? null : protoValue; 
+                }
+                
+                final Object value =  protoValue;
                 final Optional<MetaProperty<?>> metaProp = entity.getPropertyOptionally(name);
                 final boolean dirty = !metaProp.isPresent() || metaProp.get().isProxy() ? false : metaProp.get().isDirty();
 

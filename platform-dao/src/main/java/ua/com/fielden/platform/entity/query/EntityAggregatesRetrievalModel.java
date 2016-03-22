@@ -14,7 +14,7 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
 
         validateModel();
 
-        for (final String propName : originalFetch.getIncudedProps()) {
+        for (final String propName : originalFetch.getIncludedProps()) {
             with(propName, false);
         }
 
@@ -24,7 +24,7 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
     }
 
     private void validateModel() {
-        if (!FetchCategory.NONE.equals(getOriginalFetch().getFetchCategory())) {
+        if (!FetchCategory.ID_AND_VERSTION.equals(getOriginalFetch().getFetchCategory())) {
             throw new IllegalArgumentException("The only acceptable category for EntityAggregates entity type fetch model creation is NONE. Use EntityQueryUtils.fetchOnly(..) method for obtaining correct fetch model.");
         }
 
@@ -32,7 +32,7 @@ public class EntityAggregatesRetrievalModel<T extends AbstractEntity<?>> extends
             throw new IllegalArgumentException("The possibility to exclude certain properties can't be applied for EntityAggregates entity type fetch model!");
         }
 
-        if (getOriginalFetch().getIncludedPropsWithModels().size() + getOriginalFetch().getIncudedProps().size() == 0) {
+        if (getOriginalFetch().getIncludedPropsWithModels().size() + getOriginalFetch().getIncludedProps().size() == 0) {
             throw new IllegalArgumentException("Can't accept empty fetch model for EntityAggregates entity type fetching!");
         }
 
