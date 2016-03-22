@@ -310,11 +310,14 @@
                     		// continue with normal handling of the result's instance
                     		var deserialisedInstance = deserialisedResult.instance;
                     		deserialisedResult.instance = null;
-    	                    e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
-                    		// Need to open toast message in case where the top-level result is unsuccessful -- this message will be shown AFTER 
-                    		//   other messages about validation errors of 'deserialisedInstance' or '... completed successfully'
+                    		// Need to open toast message in case where the top-level result is unsuccessful -- this message will be shown BEFORE 
+                    		//   other messages about validation errors of 'deserialisedInstance' or '... completed successfully'.
+                    		// Current logic of tg-toast will discard all other messages after this message, until this message dissapear.
                     	    if (this._reflector().isError(deserialisedResult)) {
                         	    this._openToastForError(deserialisedResult.message, this._toastMsgForError(deserialisedResult));
+                        	}
+    	                    e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
+                    	    if (this._reflector().isError(deserialisedResult)) {
                         	    e.detail.successful = false;
                         	}
                     		console.log('CUSTOM HANDLER FOR RETURNED', e.detail.successful);
@@ -509,13 +512,6 @@
                     this._toastGreeting().msgHeading = "Info";
                 }
                 this._toastGreeting().show();
-            },
-            
-            /**
-             * Hides the toast.
-             */
-            _hideToast: function() {
-                 this._toastGreeting().hide();
             },
             
             /**
