@@ -39,12 +39,13 @@
         ready: function () {
             this.$.editorDom._editorKind = "BOOLEAN";
             
-            this._onChange = (function (event) {
-                console.log("_onChange:", event);
-                this._editingValue = this.convertToString(event.srcElement.checked);
+            this._onChange = (function (e) {
+                console.log("_onChange:", e);
+                var target = e.target || e.srcElement;
+                this._editingValue = this.convertToString(target.checked);
                 
     			var parentFunction = Polymer.TgBehaviors.TgEditorBehavior.properties._onChange.value.call(this);
-    			parentFunction.call(this, event);
+    			parentFunction.call(this, e);
             }).bind(this);
             
             this._isBooleanChecked = (function (editingValue) {

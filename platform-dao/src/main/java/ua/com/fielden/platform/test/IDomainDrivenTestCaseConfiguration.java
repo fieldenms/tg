@@ -5,6 +5,7 @@ import java.util.Properties;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 
 /**
@@ -25,4 +26,6 @@ public interface IDomainDrivenTestCaseConfiguration {
     DomainMetaPropertyConfig getDomainMetaPropertyConfig();
 
     DomainMetadata getDomainMetadata();
+    
+    IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache();
 }

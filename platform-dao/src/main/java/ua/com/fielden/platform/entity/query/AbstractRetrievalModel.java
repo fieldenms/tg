@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.entity.query;
 
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyMetadata;
@@ -18,9 +20,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
 
     private final Map<String, fetch<? extends AbstractEntity<?>>> entityProps = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
     private final Set<String> primProps = new HashSet<String>();
-    private final Set<String> proxiedPrimProps = new HashSet<String>();
     private final Set<String> proxiedProps = new HashSet<String>();
-    private final Map<String, Class<? extends AbstractEntity<?>>>  proxiedPropsWithoutId = new HashMap<String, Class<? extends AbstractEntity<?>>>();
 
     public AbstractRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
         this.originalFetch = originalFetch;
@@ -35,18 +35,10 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
         return entityProps;
     }
 
-    public Set<String> getProxiedPrimProps() {
-        return proxiedPrimProps;
-    }
-    
     public Set<String> getProxiedProps() {
         return proxiedProps;
     }
     
-    public Map<String, Class<? extends AbstractEntity<?>>> getProxiedPropsWithoutId() {
-        return proxiedPropsWithoutId;
-    }
-
     public DomainMetadataAnalyser getDomainMetadataAnalyser() {
         return domainMetadataAnalyser;
     }
@@ -56,7 +48,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
     }
 
     public boolean containsProxy(final String propName) {
-        return proxiedProps.contains(propName) || proxiedPropsWithoutId.containsKey(propName) || proxiedPrimProps.contains(propName);
+        return proxiedProps.contains(propName);
     }
 
     public Class<T> getEntityType() {
@@ -108,7 +100,7 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> {
     protected void without(final String propName) {
         final Class propType = getPropMetadata(propName).getJavaType();
 
-        if (AbstractEntity.class.isAssignableFrom(propType)) {
+        if (isEntityType(propType)) {
             final Object removalResult = getEntityProps().remove(propName);
             if (removalResult == null) {
                 throw new IllegalStateException("Couldn't find property [" + propName + "] to be excluded from fetched entity properties of entity type " + getEntityType());

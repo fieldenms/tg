@@ -1,34 +1,20 @@
 package ua.com.fielden.platform.entity.fetch;
 
 import static java.lang.String.format;
-import static org.junit.Assert.*;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
@@ -53,8 +39,8 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
     private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
 
     @Test
-    public void reconstruction_of_fetch_model_without_sub_models_should_succeed() {
-        final fetch<TgVehicle> fetch = fetchOnly(TgVehicle.class).with("id").with("key").with("desc");
+    public void reconstruction_of_fetch_model_without_sub_models_succeeds() {
+        final fetch<TgVehicle> fetch = fetchOnly(TgVehicle.class).with("key").with("desc");
         final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
 
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
@@ -73,18 +59,17 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
     }
 
     @Test
-    public void reconstructed_fetch_model_should_not_contain_submodels_for_proxied_properties() {
+    public void reconstructed_fetch_model_contains_fetchIdOnly_submodels_for_not_fetched_properties_of_entity_types() {
         final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch(TgVehicle.class), "CAR1");
 
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
 
-        assertFalse(reconFetch.getIncludedPropsWithModels().containsKey("replacedBy"));
-        assertFalse(reconFetch.getIncudedProps().contains("replacedBy"));
+        assertTrue(reconFetch.getIncludedPropsWithModels().containsKey("replacedBy"));
     }
 
     @Test
     public void fetch_model_reconstruction_recognizes_instrumented_properties_to_produce_fetch_with_instrumentation() {
-        final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class));
+        final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchOnly(TgVehicleModel.class).with("key"));
         final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
 
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);
@@ -111,7 +96,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
     }
 
     private void assertSuperSet(final fetch<?> origModel, final fetch<?> superModel, boolean rootLevel) {
-        assertTrue(format("Incomplete fetch model %s comparing to model %s.", superModel, origModel), superModel.getIncudedProps().containsAll(origModel.getIncudedProps())
+        assertTrue(format("Incomplete fetch model %s comparing to model %s.", superModel, origModel), superModel.getIncludedProps().containsAll(origModel.getIncludedProps())
                 && (!rootLevel && superModel.isInstrumented() == origModel.isInstrumented() || rootLevel));
 
         for (final Entry<String, fetch<? extends AbstractEntity<?>>> pair : origModel.getIncludedPropsWithModels().entrySet()) {

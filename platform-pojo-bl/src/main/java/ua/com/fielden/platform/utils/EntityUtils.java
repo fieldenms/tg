@@ -24,6 +24,7 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -615,6 +616,17 @@ public class EntityUtils {
     public static boolean isEntityType(final Class<?> type) {
         return AbstractEntity.class.isAssignableFrom(type);
     }
+    
+    
+    /**
+     * Indicates whether type represents {@link ActivatableAbstractEntity}-typed values.
+     *
+     * @return
+     */
+    public static boolean isActivatableEntityType(final Class<?> type) {
+        return ActivatableAbstractEntity.class.isAssignableFrom(type);
+    }
+    
 
     /**
      * Indicates whether type represents {@link Integer}-typed values.

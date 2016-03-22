@@ -22,7 +22,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
-public class EntityContainerFetcher<E extends AbstractEntity<?>> {
+public class EntityContainerFetcher {
     private final QueryExecutionContext executionContext;    
     private final Logger logger = Logger.getLogger(this.getClass());
 
@@ -30,7 +30,7 @@ public class EntityContainerFetcher<E extends AbstractEntity<?>> {
         this.executionContext = executionContext;
     }
     
-    public List<EntityContainer<E>> listAndEnhanceContainers(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity)
+    public <E extends AbstractEntity<?>> List<EntityContainer<E>> listAndEnhanceContainers(final QueryExecutionModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity)
             throws Exception {
         final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser, executionContext.getFilter(), executionContext.getUsername());
@@ -41,10 +41,10 @@ public class EntityContainerFetcher<E extends AbstractEntity<?>> {
         
         final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
         logger.debug("Fetch model:\n" + modelResult.getFetchModel());
-        return new EntityContainerEnhancer<E>(this, domainMetadataAnalyser).enhance(result, modelResult.getFetchModel());
+        return new EntityContainerEnhancer<E>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache()).enhance(result, modelResult.getFetchModel());
     }
     
-    private List<EntityContainer<E>> listContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType, final Integer pageNumber, final Integer pageCapacity) throws Exception {
+    private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType, final Integer pageNumber, final Integer pageCapacity) throws Exception {
         final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel) queryModel.getQueryModel()).model();
         
         final QueryExecutionModel<E,EntityResultQueryModel<E>> idOnlyQem = from(idOnlyModel).
@@ -57,7 +57,7 @@ public class EntityContainerFetcher<E extends AbstractEntity<?>> {
         return listAndEnhanceContainers(idOnlyQem, pageNumber, pageCapacity);
     }
 
-    private List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity)
+    private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity)
             throws Exception {
         final EntityTree<E> resultTree = new EntityResultTreeBuilder().buildEntityTree(modelResult.getResultType(), modelResult.getYieldedPropsInfo());
 
@@ -70,7 +70,7 @@ public class EntityContainerFetcher<E extends AbstractEntity<?>> {
         return entityRawResultConverter.transformFromNativeResult(resultTree, query.list());
     }
     
-    private QueryModelResult<E> getModelResult(final QueryExecutionModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
+    private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryExecutionModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
         final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.getUniversalConstants());
         final IRetrievalModel<E> fm = qem.getFetchModel() == null ? //
         (qem.getQueryModel().getResultType().equals(EntityAggregates.class) ? null

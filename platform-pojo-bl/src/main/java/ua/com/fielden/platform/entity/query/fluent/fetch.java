@@ -13,7 +13,7 @@ import ua.com.fielden.platform.reflection.Finder;
 
 public class fetch<T extends AbstractEntity<?>> {
     public enum FetchCategory {
-        ALL, MINIMAL, KEY_AND_DESC, NONE, ALL_INCL_CALC
+        ALL, DEFAULT, KEY_AND_DESC, ID_AND_VERSTION, ID, ALL_INCL_CALC
     }
 
     private final Class<T> entityType;
@@ -27,7 +27,7 @@ public class fetch<T extends AbstractEntity<?>> {
      * Used mainly for serialisation.
      */
     protected fetch() {
-        this(null, FetchCategory.NONE);
+        this(null, FetchCategory.ID_AND_VERSTION);
     }
 
     public fetch(final Class<T> entityType, final FetchCategory fetchCategory, final boolean instrumented) {
@@ -125,7 +125,7 @@ public class fetch<T extends AbstractEntity<?>> {
         return Collections.unmodifiableMap(includedPropsWithModels);
     }
 
-    public Set<String> getIncudedProps() {
+    public Set<String> getIncludedProps() {
         return Collections.unmodifiableSet(includedProps);
     }
 
@@ -228,15 +228,19 @@ public class fetch<T extends AbstractEntity<?>> {
             return FetchCategory.ALL;
         }
 
-        if (fetchCategory == FetchCategory.MINIMAL || second.fetchCategory == FetchCategory.MINIMAL) {
-            return FetchCategory.MINIMAL;
+        if (fetchCategory == FetchCategory.DEFAULT || second.fetchCategory == FetchCategory.DEFAULT) {
+            return FetchCategory.DEFAULT;
         }
 
         if (fetchCategory == FetchCategory.KEY_AND_DESC || second.fetchCategory == FetchCategory.KEY_AND_DESC) {
             return FetchCategory.KEY_AND_DESC;
         }
 
-        return FetchCategory.NONE;
+        if (fetchCategory == FetchCategory.ID_AND_VERSTION || second.fetchCategory == FetchCategory.ID_AND_VERSTION) {
+            return FetchCategory.ID_AND_VERSTION;
+        }
+
+        return FetchCategory.ID;
     }
 
     public fetch<?> unionWith(final fetch<?> second) {

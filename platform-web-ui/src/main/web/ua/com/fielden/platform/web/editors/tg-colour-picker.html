@@ -169,7 +169,8 @@
                 
                 domBind.colourSelected = function (e, detail) {
                     this._acceptColourBind();
-                    self._editingValue = ((rgbToHex(e.srcElement.style['background-color'])).substring(1)).toUpperCase();
+                    var target = e.target || e.srcElement;
+                    self._editingValue = ((rgbToHex(target.style['background-color'])).substring(1)).toUpperCase();
                     this.$.dropdown.close();
                 }.bind(domBind);
 

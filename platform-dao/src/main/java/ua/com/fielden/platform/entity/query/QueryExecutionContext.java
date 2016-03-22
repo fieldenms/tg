@@ -16,8 +16,9 @@ public class QueryExecutionContext {
     private final IFilter filter;
     private final String username;
     private final IUniversalConstants universalConstants;
+    private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
     
-    public QueryExecutionContext(Session session, EntityFactory entityFactory, ICompanionObjectFinder coFinder, DomainMetadata domainMetadata, IFilter filter, String username, IUniversalConstants universalConstants) {
+    public QueryExecutionContext(Session session, EntityFactory entityFactory, ICompanionObjectFinder coFinder, DomainMetadata domainMetadata, IFilter filter, String username, IUniversalConstants universalConstants, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         super();
         this.session = session;
         this.entityFactory = entityFactory;
@@ -26,6 +27,7 @@ public class QueryExecutionContext {
         this.filter = filter;
         this.username = username;
         this.universalConstants = universalConstants;
+        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
     }
 
     public Session getSession() {
@@ -54,5 +56,9 @@ public class QueryExecutionContext {
 
     public IUniversalConstants getUniversalConstants() {
         return universalConstants;
+    }
+
+    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
+        return idOnlyProxiedEntityTypeCache;
     }
 }

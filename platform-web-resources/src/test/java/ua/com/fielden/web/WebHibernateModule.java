@@ -11,6 +11,7 @@ import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
@@ -53,8 +54,9 @@ public class WebHibernateModule extends CommonFactoryModule {
     public WebHibernateModule(//
     final SessionFactory sessionFactory,//
             final DomainMetadata domainMetadata,//
+            final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache, 
             final ISerialisationClassProvider serialisationClassProvider) {
-        super(sessionFactory, domainMetadata);
+        super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
         this.serialisationClassProvider = serialisationClassProvider;
     }
 
