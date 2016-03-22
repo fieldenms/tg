@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.fetch;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 
@@ -69,7 +69,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void fetch_model_reconstruction_recognizes_instrumented_properties_to_produce_fetch_with_instrumentation() {
-        final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchAndInstrument(TgVehicleModel.class));
+        final fetch<TgVehicle> fetch = fetch(TgVehicle.class).with("model", fetchOnly(TgVehicleModel.class).with("key"));
         final TgVehicle vehicle = vehicleDao.findByKeyAndFetch(fetch, "CAR1");
 
         final fetch<TgVehicle> reconFetch = FetchModelReconstructor.reconstruct(vehicle);

@@ -102,14 +102,17 @@ public class FetchModelReconstructor {
                     // produce fetch
                     frontier.push(value);
                     fetchModel = fetchModel.with(propName, explore(frontier, explored, exploredFetchModels));
+                    exploredFetchModels.put(identity, fetchModel);
                 } else {
                     // fetch cannot be identified from null, so the fetch id only strategy is the most suitable
                     @SuppressWarnings("unchecked")
                     final Class<AbstractEntity<?>> valueType = (Class<AbstractEntity<?>>) propField.getType();
                     fetchModel = fetchModel.with(propName, fetchIdOnly(valueType));
+                    exploredFetchModels.put(identity, fetchModel);
                 }
             } else { // handle ordinary type properties
                 fetchModel = fetchModel.with(propName);
+                exploredFetchModels.put(identity, fetchModel);
             }
         }
 
