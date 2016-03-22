@@ -211,7 +211,8 @@
                 var self = this;
                 
                 self._processSaverResponse = function (e) {
-                	self._processResponse(e, "save", function (potentiallySavedOrNewEntity) {
+                	self._processResponse(e, "save", function (potentiallySavedOrNewEntity, exceptionOccured) {
+                	    self._provideExceptionOccured(potentiallySavedOrNewEntity, exceptionOccured);
                 		return self._postSavedDefault(potentiallySavedOrNewEntity);
                 	});
                 };
@@ -275,7 +276,7 @@
                     
                     // Context creator should assigned only after successful master entity saving.
                     // In case of successful assignment it gets promoted to embedded views by means of binding.
-                    if (potentiallySavedOrNewEntity.isValid()) {
+                    if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
                         this._createContextHolderForEmbeddedViews = (function () {
                             var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
                             this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
@@ -283,7 +284,7 @@
                         }).bind(this);
                     }
                     
-                    return potentiallySavedOrNewEntity.isValid();
+                    return potentiallySavedOrNewEntity.isValidWithoutSavingException();
 				}).bind(self);
 				
                 self._postSavedDefaultError = (function (errorResult) {
@@ -313,15 +314,8 @@
                     }
                 }).bind(self);
                 
-                self.save = (function () {
-                    if (this._savingInProgress()) {
-                        var SimultaneousSaveException = this._getSimultaneousSaveExceptionType();
-                        throw new SimultaneousSaveException();
-                    }
-
+                self._createSavingPromise = (function () {
                     var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-                    // cancel previous validation before starting saving process -- it includes validation process internally!
-                    this._validator().abortValidationIfAny();
 
                     // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
                     //            This check will be done on server -- and appropriate _postSavedDefault callback will be triggered.
@@ -332,6 +326,26 @@
                     //     this._validator().validate(this._reset(holder));
                     // }
                     
+                }).bind(self);
+                
+                self.save = (function () {
+                    var self = this;
+                    if (self._savingInProgress()) {
+                        var SimultaneousSaveException = self._getSimultaneousSaveExceptionType();
+                        throw new SimultaneousSaveException();
+                    }
+
+                    // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process, 
+                    // otherwise -- saving process will simply start immediately
+                    var lastValidationPromise = self._validator().abortValidationExceptLastOne();
+                    if (lastValidationPromise !== null) {
+                        console.warn("Saving is chained to the last validation promise...");
+                        return lastValidationPromise
+                        .then(function () {
+                            return self._createSavingPromise();
+                        });
+                    }
+                    return self._createSavingPromise();
                 }).bind(self);
                 
                 self.augmentContextWithSavedEntity = (function (compoundMasterEntityId) {
