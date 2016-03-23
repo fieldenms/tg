@@ -24,6 +24,12 @@ public class Result extends RuntimeException {
         message = null;
         instance = null;
     }
+    
+    private Result(final Object instance, final String message, final Exception exception) {
+        this.instance = instance;
+        this.message = message;
+        this.ex = exception;
+    }
 
     /**
      * Convenient factory method for creating a successful result.
@@ -140,6 +146,16 @@ public class Result extends RuntimeException {
 
     public <T> T getInstance(final Class<T> expectedType) {
         return expectedType.cast(instance);
+    }
+    
+    /**
+     * Copies this result with overridden instance.
+     * 
+     * @param anotherInstance
+     * @return
+     */
+    public Result copyWith(final Object anotherInstance) {
+        return new Result(anotherInstance, message, ex);
     }
 
     public boolean isSuccessful() {

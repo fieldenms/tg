@@ -2,6 +2,7 @@ package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -979,7 +980,17 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
 
     @SessionRequired
-    protected int defaultBatchDelete(List<? extends AbstractEntity<?>> entities) {
+    protected int defaultBatchDelete(final List<? extends AbstractEntity<?>> entities) {
+        return defaultBatchDeleteByPropertyValues(ID, entities);
+    }
+    
+    @SessionRequired
+    protected int defaultBatchDelete(final Collection<Long> entitiesIds) {
+        return defaultBatchDeleteByPropertyValues(ID, entitiesIds);
+    }
+    
+    @SessionRequired
+    protected int defaultBatchDeleteByPropertyValues(final String propName, final List<? extends AbstractEntity<?>> entities) {
         Set<Long> ids = new HashSet<>();
         for (AbstractEntity<?> entity : entities) {
             ids.add(entity.getId());
@@ -988,16 +999,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
     
     @SessionRequired
-    protected int defaultBatchDelete(Collection<Long> entitiesIds) {
+    protected int defaultBatchDeleteByPropertyValues(final String propName, final Collection<Long> entitiesIds) {
         if (entitiesIds.size() == 0) {
             throw new EntityCompanionException("No entities ids have been provided for deletion.");
         }
-        
-        final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
 
-        return new EntityBatchDeleterByIds(queryExecutionContext).deleteEntities(entitiesIds, getEntityType());
+        return new EntityBatchDeleterByIds(getSession(), domainMetadata.getPersistedEntityMetadataMap().get(getEntityType())).deleteEntities(propName, entitiesIds);
     }
-    
+
     protected EntityFactory getEntityFactory() {
         return entityFactory;
     }

@@ -30,9 +30,9 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
     private final EntityType entityType;
-    private final boolean excludeNulls;
+    private final boolean excludeNullsAndIdOnlyProxies;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNullsAndIdOnlyProxies) {
         super(type);
         if (entityType.get_number() == null) {
             throw new IllegalStateException("The number of the type [" + entityType + "] should be populated to be ready for serialisation.");
@@ -41,7 +41,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
         this.type = type;
         this.properties = properties;
         this.entityType = entityType;
-        this.excludeNulls = excludeNulls;
+        this.excludeNullsAndIdOnlyProxies = excludeNullsAndIdOnlyProxies;
     }
 
     @Override
@@ -117,7 +117,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                         throw e;
                     }
                     
-                    if (value != null || !excludeNulls) {
+                    if ((value != null && !isIdOnlyProxiedEntity(value, prop.isEntityTyped())) || !excludeNullsAndIdOnlyProxies) {
                         // write actual property
                         generator.writeFieldName(name);
                         generator.writeObject(value);
@@ -172,5 +172,16 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         }
+    }
+    
+    /**
+     * Returns <code>true</code> in case where non-null <code>value</code> represents id-only entity proxy, <code>false</code> otherwise.
+     * 
+     * @param value
+     * @param isEntityTyped -- indicates whether <code>value</code> is the value of entity-typed property, <code>false</code> otherwise
+     * @return
+     */
+    private static boolean isIdOnlyProxiedEntity(final Object value, final boolean isEntityTyped) {
+        return isEntityTyped && ((AbstractEntity<?>) value).isIdOnlyProxy();
     }
 }

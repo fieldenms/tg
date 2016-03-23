@@ -52,9 +52,9 @@
 	            --paper-spinner-layer-4-color: var(--paper-blue-500);
 	        }    	
     	</style>
-        <paper-toast id="toast" class="paper-toast" text="[[text]]"> <!-- TODO responsive-width="250px" -->
+        <paper-toast id="toast" class="paper-toast" text="[[_text]]"> <!-- TODO responsive-width="250px" -->
             <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
-            <div hidden$="[[_skipShowMore(showProgress, hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">MORE</div>
+            <div hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">MORE</div>
         </paper-toast>
     </template>
 </dom-module>
@@ -99,10 +99,26 @@
              	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
              	//   populate their default values in ready callback (to have these values populated in children)!     //
              	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+             	_text: {
+            		type: String
+            	},
+            	
+            	_msgText: {
+            		type: String,
+            		value: ''
+            	},
+            	
+                _showProgress: {
+                	type: Boolean
+                },
+                
+                _hasMore: {
+                	type: Boolean
+                },
              	
                 _skipShowProgress: {
                 	type: Boolean,
-                	computed: '_shouldSkipProgress(showProgress, hasMore)'
+                	computed: '_shouldSkipProgress(_showProgress, _hasMore)'
                 }
         	},
 
@@ -127,7 +143,7 @@
                     var paperDialogScrollable = domBind.content.ownerDocument.createElement('paper-dialog-scrollable');
                     var msgPar = domBind.content.ownerDocument.createElement('p');
                     Polymer.dom(msgPar).setAttribute("style", "padding: 10px");
-                    Polymer.dom(msgPar).innerHTML = this.msgText;
+                    Polymer.dom(msgPar).innerHTML = this._msgText;
                     Polymer.dom(paperDialogScrollable).appendChild(msgPar);
                     
                     var buttonsDiv = domBind.content.ownerDocument.createElement('div');
@@ -159,32 +175,66 @@
                 
             },
             
-            _shouldSkipProgress: function (progress, more) {
-                return !progress || more;
+            _shouldSkipProgress: function (progress, hasMore) {
+                return !progress || hasMore;
             },
 
-            _skipShowMore: function (progress, more) {
-                return progress || !more;
+            _skipShowMore: function (progress, hasMore) {
+                return progress || !hasMore;
+            },
+            
+            _getPreviousToast() {
+                var toasts = document.querySelectorAll('#toast');
+                var toast = null;
+                var existingToastCount = 0;
+                for (var index = 0; index < toasts.length; index++) {
+                    var currToast = toasts.item(index);
+                    if (currToast.parentNode === document.body) {
+                        existingToastCount++;
+                        // console.debug('toast show() parentNode is [', existingToastCount ,']', Polymer.dom(currToast).parentNode, currToast.parentNode, ' body == ', Polymer.dom(document.body), document.body);
+                        if (existingToastCount > 1) {
+                            throw 'More than one toast exist in body direct children.';
+                        }
+                        toast = currToast;
+                    } else {
+                        // console.warn('toast show() parentNode is ', Polymer.dom(currToast).parentNode, currToast.parentNode, ' body == ', Polymer.dom(document.body), document.body);
+                    }
+                }
+                return toast;
             },
             
             show: function () {
-                var toast = document.querySelectorAll('#toast');
-                for (var index = 0; index < toast.length; index++) {
-                    Polymer.dom(document.body).removeChild(toast.item(index));
-                }
-                if (this.showProgress && !this.hasMore) {
-                    this.$.toast.duration = 3600000 //1 hour
+                // console.debug('toast show(): [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
+                var previousToast = this._getPreviousToast();
+                if (!previousToast) {
+                    this._showNewToast();
+                } else if (previousToast.error === true && previousToast.visible) {
+                    console.debug('toast show() discarded: [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
                 } else {
-                    this.$.toast.duration = 3000 //3 seconds
+                    Polymer.dom(document.body).removeChild(previousToast);
+                    this._showNewToast();
+                }
+            },
+            
+            _showNewToast: function () {
+                this._text = this.text;
+                this._msgText = this.msgText; 
+                this._showProgress = this.showProgress;
+                this._hasMore = this.hasMore;
+                
+                if (this._showProgress && !this._hasMore) {
+                    this.$.toast.duration = 3600000; //1 hour
+                } else {
+                    this.$.toast.duration = 3000; //3 seconds
                 }
                 this.$.toast.style['z-index'] = 1000;
+                // var clonedToast = this.$.toast.cloneNode(true);
+                // console.debug('cloned toast', clonedToast);
+                this.$.toast.error = this._hasMore;
                 Polymer.dom(document.body).appendChild(this.$.toast);
                 Polymer.dom().flush();
                 this.$.toast.show();
-            },
-            
-            hide: function() {
-                this.$.toast.hide();
+                // console.debug('toast show() ended : [', this._text + ':' + this._msgText, '] hasMore = ', this._hasMore);
             }
         })
     })();
