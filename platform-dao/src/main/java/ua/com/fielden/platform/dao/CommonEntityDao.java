@@ -516,10 +516,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new EntityCompanionException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()));
         }
 
-        // reconstruct entity fetch model for future retrieval at the end of the method call
-        final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
         // process transactional assignments
         assignPropertiesBeforeSave(entity);
+        // reconstruct entity fetch model for future retrieval at the end of the method call
+        final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
 
         // new entity might be activatable, but this has no effect on its refCount -- should be zero as no other entity could yet reference it
         // however, it might reference other activatable entities, which warrants update to their refCount.
