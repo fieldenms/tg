@@ -55,9 +55,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      * @param mapper
      * @param factory
      * @param entityTypeInfoGetter
-     * @param excludeNullsAndIdOnlyProxies -- the special switch that indicate whether <code>null</code> properties (or id-only proxies) should be fully disregarded during serialisation into JSON
+     * @param excludeNulls -- the special switch that indicate whether <code>null</code> properties should be fully disregarded during serialisation into JSON
      */
-    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNullsAndIdOnlyProxies) {
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls) {
         this.type = type;
         this.factory = factory;
 
@@ -65,7 +65,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         properties = createCachedProperties(type);
         this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter);
 
-        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, excludeNullsAndIdOnlyProxies);
+        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, excludeNulls);
         final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, entityTypeInfoGetter);
 
         // register serialiser and deserialiser

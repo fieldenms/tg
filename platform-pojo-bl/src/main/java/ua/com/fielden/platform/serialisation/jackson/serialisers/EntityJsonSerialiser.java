@@ -30,9 +30,9 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
     private final EntityType entityType;
-    private final boolean excludeNullsAndIdOnlyProxies;
+    private final boolean excludeNulls;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNullsAndIdOnlyProxies) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls) {
         super(type);
         if (entityType.get_number() == null) {
             throw new IllegalStateException("The number of the type [" + entityType + "] should be populated to be ready for serialisation.");
@@ -41,7 +41,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
         this.type = type;
         this.properties = properties;
         this.entityType = entityType;
-        this.excludeNullsAndIdOnlyProxies = excludeNullsAndIdOnlyProxies;
+        this.excludeNulls = excludeNulls;
     }
 
     @Override
@@ -117,7 +117,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                         throw e;
                     }
                     
-                    if ((value != null && !isIdOnlyProxiedEntity(value, prop.isEntityTyped())) || !excludeNullsAndIdOnlyProxies) {
+                    if (!disregardValueSerialisation(value, prop.isEntityTyped(), excludeNulls)) {
                         // write actual property
                         generator.writeFieldName(name);
                         generator.writeObject(value);
@@ -172,6 +172,19 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         }
+    }
+    
+    /**
+     * Returns <code>true</code> in case when value serialisation should be skipped, <code>false</code> otherwise.
+     * 
+     * @param value
+     * @param isEntityTyped
+     * @param excludeNulls
+     * @return
+     */
+    private static boolean disregardValueSerialisation(final Object value, final boolean isEntityTyped, final boolean excludeNulls) {
+        return value == null && excludeNulls || 
+               value != null && isIdOnlyProxiedEntity(value, isEntityTyped);
     }
     
     /**
