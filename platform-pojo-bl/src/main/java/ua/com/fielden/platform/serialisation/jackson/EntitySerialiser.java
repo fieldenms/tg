@@ -47,7 +47,17 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         this(type, module, mapper, factory, entityTypeInfoGetter, false);
     }
 
-    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls) {
+    /**
+     * Creates {@link EntitySerialiser} instance based on the specified <code>type</code>.
+     * 
+     * @param type
+     * @param module
+     * @param mapper
+     * @param factory
+     * @param entityTypeInfoGetter
+     * @param excludeNullsAndIdOnlyProxies -- the special switch that indicate whether <code>null</code> properties (or id-only proxies) should be fully disregarded during serialisation into JSON
+     */
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNullsAndIdOnlyProxies) {
         this.type = type;
         this.factory = factory;
 
@@ -55,7 +65,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         properties = createCachedProperties(type);
         this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter);
 
-        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, excludeNulls);
+        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, excludeNullsAndIdOnlyProxies);
         final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, entityTypeInfoGetter);
 
         // register serialiser and deserialiser
@@ -217,6 +227,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     public final static class CachedProperty {
         private final Field field;
         private Class<?> propertyType;
+        private boolean entityTyped = false;
 
         CachedProperty(final Field field) {
             this.field = field;
@@ -228,6 +239,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
         public void setPropertyType(final Class<?> type) {
             this.propertyType = type;
+            this.entityTyped = EntityUtils.isEntityType(this.propertyType);
+        }
+        
+        public boolean isEntityTyped() {
+            return entityTyped;
         }
 
         public Field field() {
