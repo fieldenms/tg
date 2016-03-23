@@ -291,6 +291,28 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     }
     
     /**
+     * Performs batch deletion of entities, which entity property values are within provided collection.
+     * 
+     * @param propName
+     * @param propEntitiesIds
+     * @return
+     */
+    default int batchDeleteByPropertyValues(final String propName, final Collection<Long> propEntitiesIds) {
+        throw new UnsupportedOperationException("By default batch deletion is not supported.");
+    }
+
+    /**
+     * Performs batch deletion of entities, which entity property values are within provided list.
+     * 
+     * @param propName
+     * @param propEntities
+     * @return
+     */
+    default int batchDeleteByPropertyValues(final String propName, final List<T> propEntities){
+        throw new UnsupportedOperationException("By default batch deletion is not supported.");
+    }
+
+    /**
      * Should return true if the passed entity exists in the persistent state.
      *
      * @param entity
