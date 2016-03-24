@@ -1224,6 +1224,16 @@
         		}
         	}
         	return number;
+        },
+        
+    	/**
+    	 * Returns milliseconds from 1-st Jan 1970 in current locale, defined in momentjs.
+    	 * 
+    	 * Please, use this function only in environment with moment(...) function defined.
+    	 * Currently it is used in date-specific unit testing.
+    	 */
+        _millis: function (fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.SSS' format 
+            return moment(fullDateString, 'DD/MM/YYYY HH:mm:ss.SSS', true).valueOf();
         }
     });
 })();    
