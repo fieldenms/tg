@@ -4,8 +4,9 @@
 <script>
     (function () {
 
-        moment.locale(@locale, {
+        moment.locale('custom-locale', {
             longDateFormat: {
+                LTS: @timeWithMillisFormat,
                 LT: @timeFormat,
                 L: @dateFormat
             }

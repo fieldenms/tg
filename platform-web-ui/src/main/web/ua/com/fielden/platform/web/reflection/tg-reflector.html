@@ -1234,6 +1234,21 @@
     	 */
         _millis: function (fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.SSS' format 
             return moment(fullDateString, 'DD/MM/YYYY HH:mm:ss.SSS', true).valueOf();
+        },
+        
+        millisDateRepresentation: function (dateMillis) {
+            var millisecondsRemainder = dateMillis % 1000;
+            var millisecondsExist = (millisecondsRemainder !== 0);
+            if (millisecondsExist) {
+                return moment(dateMillis).format('L LTS');
+            } else {
+                var secondsRemainder = (dateMillis - millisecondsRemainder) % 60;
+                var secondsExist = (secondsRemainder !== 0);
+                if (secondsExist) {
+                    return moment(dateMillis).format('L LTS');
+                }
+            }
+            return moment(dateMillis).format('L LT');
         }
     });
 })();    

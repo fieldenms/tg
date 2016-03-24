@@ -29,6 +29,7 @@ public class WebUiBuilder implements IWebUiBuilder {
     private String locale = "en-AU";
     private String dateFormat = "DD/MM/YYYY";
     private String timeFormat = "h:mm A";
+    private String timeWithMillisFormat = "h:mm:ss.SSS A";
 
     /**
      * Holds the map between master's entity type and its master component.
@@ -77,6 +78,12 @@ public class WebUiBuilder implements IWebUiBuilder {
         this.timeFormat = timeFormat;
         return this;
     }
+    
+    @Override
+    public IWebUiBuilder setTimeWithMillisFormat(final String timeWithMillisFormat) {
+        this.timeWithMillisFormat = timeWithMillisFormat;
+        return this;
+    }
 
     @Override
     public IWebUiBuilder setDateFormat(final String dateFormat) {
@@ -123,11 +130,12 @@ public class WebUiBuilder implements IWebUiBuilder {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }
         return ResourceLoader.getText("ua/com/fielden/platform/web/app/config/tg-app-config.html").
-                replaceAll("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
-                replaceAll("@minTabletWidth", Integer.toString(this.minTabletWidth)).
-                replaceAll("@locale", "\"" + this.locale + "\"").
-                replaceAll("@dateFormat", "\"" + this.dateFormat + "\"").
-                replaceAll("@timeFormat", "\"" + this.timeFormat + "\"");
+                replace("@minDesktopWidth", Integer.toString(this.minDesktopWidth)).
+                replace("@minTabletWidth", Integer.toString(this.minTabletWidth)).
+                replace("@locale", "\"" + this.locale + "\"").
+                replace("@dateFormat", "\"" + this.dateFormat + "\"").
+                replace("@timeFormat", "\"" + this.timeFormat + "\"").
+                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"");
     }
 
     @Override

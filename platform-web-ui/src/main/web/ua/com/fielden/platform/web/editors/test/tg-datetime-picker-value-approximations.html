@@ -117,8 +117,8 @@
                 correctlyApproximates(done, '09/09/2002', '09/09/2002 12:00 AM');
             });
             
-            test('[09/09/2002] to [09/09/2002 11:59 PM] in case of editor with timePortionToBecomeEndOfDay as true', function (done) {
-                correctlyApproximates(done, '09/09/2002', '09/09/2002 11:59 PM', reflector._millis('09/09/2002 23:59:59.999'));
+            test('[09/09/2002] to [09/09/2002 11:59:59.999 PM] in case of editor with timePortionToBecomeEndOfDay as true', function (done) {
+                correctlyApproximates(done, '09/09/2002', '09/09/2002 11:59:59.999 PM', reflector._millis('09/09/2002 23:59:59.999'));
             });
             
             test('[9/09/2002] to [09/09/2002 12:00 AM]', function (done) {
