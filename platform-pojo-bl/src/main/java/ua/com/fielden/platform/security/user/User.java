@@ -24,7 +24,7 @@ import ua.com.fielden.platform.error.Result;
  */
 @KeyTitle("Application User")
 @KeyType(String.class)
-@MapEntityTo(value = "CRAFT", keyColumn = "USER_NAME")
+@MapEntityTo
 @CompanionObject(IUser.class)
 public class User extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
@@ -60,7 +60,7 @@ public class User extends AbstractEntity<String> {
 
     @IsProperty
     @Invisible
-    @MapTo(value = "USER_PASSWORD", length = 255)
+    @MapTo(length = 255)
     @Title(desc = "A hash code of the actual password that only the user should know")
     private String password;
 
@@ -70,12 +70,12 @@ public class User extends AbstractEntity<String> {
 
     @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")
-    @MapTo("IS_BASE")
+    @MapTo
     private boolean base = false;
 
     @IsProperty
     @Title(value = "Base user", desc = "A user on which the current user is based. This mainly relates to the application configuration and security user roles.")
-    @MapTo("ID_BASE_CRAFT")
+    @MapTo
     private User basedOnUser;
 
     protected User() {
