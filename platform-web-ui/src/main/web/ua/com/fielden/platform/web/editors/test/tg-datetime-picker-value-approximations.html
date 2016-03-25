@@ -266,6 +266,34 @@
             test('[01/01/201112 3:15] to [01/01/201112 3:15]', function(done) {
                 incorrectlyApproximates(done, '01/01/201112 3:15');
             });
+            
+            test('[09/09/2007 11:05:34.567 PM] to [09/09/2007 11:05:34.567 PM]', function(done) {
+                correctlyApproximates(done, '09/09/2007 11:05:34.567 PM', '09/09/2007 11:05:34.567 PM');
+            });
+            
+            test('[09/09/2007 11:05:3.567 PM] to [09/09/2007 11:05:3.567 PM]', function(done) {
+                incorrectlyApproximates(done, '09/09/2007 11:05:3.567 PM');
+            });
+            
+            test('[09/09/2007 11:05:34.56 PM] to [09/09/2007 11:05:34.56 PM]', function(done) {
+                incorrectlyApproximates(done, '09/09/2007 11:05:34.56 PM');
+            });
+            
+            test('[9/9/7 9:5:34.567 PM] to [09/09/2007 9:05:34.567 PM]', function(done) {
+                correctlyApproximates(done, '9/9/7 9:5:34.567 PM', '09/09/2007 9:05:34.567 PM');
+            });
+            
+            test('[9/9/7 9:5:34.567AM  ] to [09/09/2007 9:05:34.567 AM]', function(done) {
+                correctlyApproximates(done, '9/9/7 9:5:34.567AM  ', '09/09/2007 9:05:34.567 AM');
+            });
+            
+            test('[9/9/7 9:5 : 34  .  567 AM  ] to [09/09/2007 9:05:34.567 AM]', function(done) {
+                correctlyApproximates(done, '9/9/7 9:5 : 34  .  567 AM  ', '09/09/2007 9:05:34.567 AM');
+            });
+            
+            test('[9/9/7 9:5:34.567  ] to [09/09/2007 9:05:34.567 AM]', function(done) {
+                correctlyApproximates(done, '9/9/7 9:5:34.567  ', '09/09/2007 9:05:34.567 AM');
+            });
         });
     </script>
 </body>
