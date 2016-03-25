@@ -135,28 +135,28 @@
                             'D/M/YYYY h:m:ss.SSSa',
                             'D/M/YY h:m:ss.SSSa',
                             'D/M/Y h:m:ss.SSSa',
-                            'D/M/YYYY h:m:ss.SSS',
-                            'D/M/YY h:m:ss.SSS',
-                            'D/M/Y h:m:ss.SSS',
+                            'D/M/YYYY H:m:ss.SSS',
+                            'D/M/YY H:m:ss.SSS',
+                            'D/M/Y H:m:ss.SSS',
                             'L LT',
                             'D/M/YYYY hmma',
                             'D/M/YY hmma',
                             'D/M/Y hmma',
-                            'D/M/YYYY hmm',
-                            'D/M/YY hmm',
-                            'D/M/Y hmm',
+                            'D/M/YYYY Hmm',
+                            'D/M/YY Hmm',
+                            'D/M/Y Hmm',
                             'D/M/YYYY h:ma',
                             'D/M/YY h:ma',
                             'D/M/Y h:ma',
-                            'D/M/YYYY h:m',
-                            'D/M/YY h:m',
-                            'D/M/Y h:m',
+                            'D/M/YYYY H:m',
+                            'D/M/YY H:m',
+                            'D/M/Y H:m',
                             'D/M/YYYY ha',
                             'D/M/YY ha',
                             'D/M/Y ha',
-                            'D/M/YYYY h',
-                            'D/M/YY h',
-                            'D/M/Y h',
+                            'D/M/YYYY H',
+                            'D/M/YY H',
+                            'D/M/Y H',
                             'D/M/YYYY',
                             'D/M/YY',
                             'D/M/Y'
@@ -329,7 +329,7 @@
                     var firstFormat = formats[0];
                     var tryingMoment = moment(stringValue, firstFormat, true);
                     if (tryingMoment.isValid()) {
-                        if (['D/M/Y h:m:ss.SSS', 'D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y hmm', 'D/M/Y h:ma', 'D/M/Y h:m', 'D/M/Y ha', 'D/M/Y h', 'D/M/Y'].indexOf(firstFormat) !== -1) {
+                        if (['D/M/Y H:m:ss.SSS', 'D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y Hmm', 'D/M/Y h:ma', 'D/M/Y H:m', 'D/M/Y ha', 'D/M/Y H', 'D/M/Y'].indexOf(firstFormat) !== -1) {
                             tryingMoment = moment(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true);
                         }
                         
@@ -357,7 +357,7 @@
                     var secondSlashIndex = str.indexOf('/', firstSlashIndex + 1);
                     if (secondSlashIndex === -1) {
                         return -1;
-                    }                    
+                    }
                     return secondSlashIndex;
                 }
             },
