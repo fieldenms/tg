@@ -12,6 +12,7 @@ import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 
@@ -81,6 +82,10 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
 
     @Override
     public boolean canAccess(final String username, final Class<? extends ISecurityToken> securityTokenClass) {
+        if (securityTokenClass == AlwaysAccessibleToken.class) {
+            return true;
+        }
+
         return securityAssociationDao.countAssociations(username, securityTokenClass) > 0;
     }
 
