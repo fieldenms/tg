@@ -77,11 +77,12 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
 
         final int count = count(q);
         if (count > 0) {
-            super.defaultDelete(q);
+            logger.info(format("Removing [%s] sessions for user [%s].", count, user.getKey()));
+            defaultBatchDelete(q);
         }
         return count;
     }
-
+    
     @Override
     public void clearUntrusted(final User user) {
         final EntityResultQueryModel<UserSession> query =
