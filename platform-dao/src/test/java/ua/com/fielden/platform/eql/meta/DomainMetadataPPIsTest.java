@@ -99,6 +99,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
     }
 
     @Test
+    @Ignore
     public void test_user_entity_props_metadata() {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
         expected.add(ppi("id", LONG, false, H_LONG, "_ID", PRIMITIVE));

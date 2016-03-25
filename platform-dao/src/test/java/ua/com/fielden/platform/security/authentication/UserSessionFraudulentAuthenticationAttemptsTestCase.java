@@ -110,8 +110,9 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
         super.populateDomain();
 
         // add more users
-        save(new_(TgPerson.class, "Person 1").setUsername("USER-1").setBase(true));
-        save(new_(TgPerson.class, "Person 2").setUsername("USER-2").setBase(true));
+        final IUser coUser = ao(User.class);
+        save(new_(TgPerson.class, "Person 1").setUser(coUser.save(new_(User.class, "USER-1").setBase(true))));
+        save(new_(TgPerson.class, "Person 2").setUser(coUser.save(new_(User.class, "USER-2").setBase(true))));
 
         // establish session for the above users
         final IUserProvider up = getInstance(IUserProvider.class);

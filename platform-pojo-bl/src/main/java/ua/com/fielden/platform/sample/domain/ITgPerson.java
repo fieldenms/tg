@@ -11,13 +11,13 @@ import ua.com.fielden.platform.dao.IEntityDao;
 public interface ITgPerson extends IEntityDao<TgPerson> {
 
     /** Should provide a person with default user name and password. */
-    TgPerson makeUser(final TgPerson person, final String privateKey);
+    TgPerson makeUser(final TgPerson person);
 
     /** Should remove values for user name and password properties from a person, which effectively revokes user privilege from it. */
-    TgPerson unmakeUser(final TgPerson person, final String privateKey);
+    TgPerson unmakeUser(final TgPerson person);
 
     /** Should set user password to a default value. */
-    TgPerson resetPassword(final TgPerson person, final String privateKey);
+    TgPerson resetPassword(final TgPerson person);
 
     /** Creates a new person and resets its password. */
     TgPerson populateNew(final String givenName, final String surName, final String fullName, final String userName);

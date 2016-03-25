@@ -68,9 +68,11 @@ public class AuthorisationTestCase extends AbstractDomainDrivenTestCase {
     protected void populateDomain() {
         // for testing authorisation we need a user, a role and association between that user and role, and role with designated security token
         // so, create persons that are users at the same time -- one permissive and one restrictive
-        save(new_(TgPerson.class, "Permissive Person").setUsername(permissiveUsername).setBase(true));
-        save(new_(TgPerson.class, "Restrictive Person").setUsername(restrictiveUsername).setBase(true));
+        final IUser coUser = ao(User.class);
+        save(new_(TgPerson.class, "Permissive Person").setUser(coUser.save(new_(User.class, permissiveUsername).setBase(true))));
+        save(new_(TgPerson.class, "Restrictive Person").setUser(coUser.save(new_(User.class, restrictiveUsername).setBase(true))));
 
+        
         // now create a user role
         final UserRole adminRole = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies."));
         // ... and associate it with our user

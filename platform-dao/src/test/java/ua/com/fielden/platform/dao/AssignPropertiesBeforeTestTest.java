@@ -83,8 +83,11 @@ public class AssignPropertiesBeforeTestTest extends AbstractDomainDrivenTestCase
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2014-11-23 02:47:00"));
 
-        save(new_(TgPerson.class, loggedInUser).setUsername(loggedInUser).setBase(true));
-        save(new_(TgPerson.class, otherUser).setUsername(otherUser).setBase(true));
+        final IUser coUser = ao(User.class);
+        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true));
+        save(new_(TgPerson.class, loggedInUser).setUser(lUser));
+        final User oUser = coUser.save(new_(User.class, otherUser).setBase(true));
+        save(new_(TgPerson.class, otherUser).setUser(oUser));
 
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUsername(loggedInUser, getInstance(IUser.class));
