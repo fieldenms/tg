@@ -129,7 +129,7 @@
                             detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
                             detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
                                 //Send postal message that save was completed if it was succefull
-                                if (potentiallySavedOrNewEntity.isValid()) {
+                                if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
                                     postal.publish({
                                         channel: "master",
                                         topic: "save.start",

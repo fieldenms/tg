@@ -343,6 +343,30 @@
         Entity.prototype.isValid = function () {
             return this.firstFailure() === null;
         }
+        
+        /**
+         * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occured during saving.
+         *
+         */
+        Entity.prototype.isValidWithoutSavingException = function () {
+            return this.isValid() && !this.exceptionOccured();
+        }
+        
+        /**
+         * Determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occured (e.g. saving exception).
+         *
+         */
+        Entity.prototype.exceptionOccured = function () {
+            return (typeof this['@@___exception-occured'] === 'undefined') ? null : this['@@___exception-occured'];
+        }
+        
+        /**
+         * Provides a value 'exceptionOccured' flag, which determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occured (e.g. saving exception).
+         *
+         */
+        Entity.prototype._setExceptionOccured = function (exceptionOccured) {
+            return this['@@___exception-occured'] = exceptionOccured;
+        }
 
         /**
          * Finds the first failure for the properties of this entity, if any.
@@ -1174,27 +1198,42 @@
         /**
          * Discards all requests of 'ajaxElement' if any.
          *
-         * Returns the number of aborted requests
+         * @param exceptLastOne -- if 'true' disacrds all requests except the last one and returns that last request
+         * Returns the number of aborted requests (or last undiscarded request in case of exceptLastOne === 'true')
          */
-        discardAllRequests: function (ajaxElement) {
+        discardAllRequests: function (ajaxElement, exceptLastOne) {
         	var number = 0;
-        	if (ajaxElement.loading && ajaxElement.activeRequests.length > 0) { // need to ensure that activeRequests are not empty; if they are empty, 'loading' property of 'ajaxElement' can still be true. 
-        		// get oldest request and discard it
-        		var oldestRequest = ajaxElement.activeRequests[0];
-        		// there is a need to explicitly abort iron-request instance since _discardRequest() does not perform that action:
-        		oldestRequest.abort();
-        		number = number + 1;
-        		
-        		// discards oldest request in terms of 'iron-ajax' element -- after that the request is not 'active' 
-        		//   and is removed from consideration (for e.g., 'loading' property could be recalculated) -- but this
-        		//   request is not aborted!
-        		// TODO maybe, the private API usage should be removed, and 'debouncing' should be used instead -- please, consider
-        		ajaxElement._discardRequest(oldestRequest);
-        		
-        		// discard all other requests if there are any:
-        		number = number + this.discardAllRequests(ajaxElement);
+        	if (ajaxElement.loading && ajaxElement.activeRequests.length > 0) { // need to ensure that activeRequests are not empty; if they are empty, 'loading' property of 'ajaxElement' can still be true.
+        		if (exceptLastOne === true && ajaxElement.activeRequests.length === 1) {
+        		    return number;
+        		} else {
+					// get oldest request and discard it
+					var oldestRequest = ajaxElement.activeRequests[0];
+					// there is a need to explicitly abort iron-request instance since _discardRequest() does not perform that action:
+					oldestRequest.abort();
+					number = number + 1;
+					
+					// discards oldest request in terms of 'iron-ajax' element -- after that the request is not 'active' 
+					//   and is removed from consideration (for e.g., 'loading' property could be recalculated) -- but this
+					//   request is not aborted!
+					// TODO maybe, the private API usage should be removed, and 'debouncing' should be used instead -- please, consider
+					ajaxElement._discardRequest(oldestRequest);
+					
+					// discard all other requests if there are any:
+					number = number + this.discardAllRequests(ajaxElement, exceptLastOne);
+        		}
         	}
         	return number;
+        },
+        
+    	/**
+    	 * Returns milliseconds from 1-st Jan 1970 in current locale, defined in momentjs.
+    	 * 
+    	 * Please, use this function only in environment with moment(...) function defined.
+    	 * Currently it is used in date-specific unit testing.
+    	 */
+        _millis: function (fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.SSS' format 
+            return moment(fullDateString, 'DD/MM/YYYY HH:mm:ss.SSS', true).valueOf();
         }
     });
 })();    

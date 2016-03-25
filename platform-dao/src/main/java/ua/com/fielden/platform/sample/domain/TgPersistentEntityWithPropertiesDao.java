@@ -1,17 +1,23 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static java.lang.String.format;
+
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
+
+import org.joda.time.DateTime;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.observables.TgPersistentEntityWithPropertiesChangeSubject;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-
-import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link ITgPersistentEntityWithProperties}.
@@ -38,6 +44,21 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
     @Override
     @SessionRequired
     public TgPersistentEntityWithProperties save(final TgPersistentEntityWithProperties entity) {
+        if (!entity.isPersisted()) {
+            final Date dateValue = entity.getDateProp();
+            if (dateValue != null && new DateTime(2003, 2, 1, 6, 20).equals(new DateTime(dateValue))) {
+                throw new IllegalArgumentException(format("Creation failed: [1/2/3 6:20] date is not permitted."));
+            }
+            if (dateValue != null && new DateTime(2003, 2, 1, 6, 21).equals(new DateTime(dateValue))) {
+                entity.getProperty("dateProp").setDomainValidationResult(Result.warning(dateValue, "[1/2/3 6:21] is acceptable, but with warning."));
+            }
+        } else {
+            final Result res = entity.isValid();
+            if (!res.isSuccessful()) { // throw precise exception about the validation error
+                throw new IllegalArgumentException(format("Modification failed: %s", res.getMessage()));
+            }
+        }
+        
         final boolean wasNew = false; // !entity.isPersisted();
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);

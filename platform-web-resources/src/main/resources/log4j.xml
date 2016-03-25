@@ -81,6 +81,10 @@
 		<level value="info" />
 		<appender-ref ref="stdout" />
 	</logger>
+	<logger name="ua.com.fielden.platform.web.resources.RestServerUtil" additivity="false">
+		<level value="info" />
+		<appender-ref ref="stdout" />
+	</logger>
 	
 	<logger name="ua.com.fielden.platform.dao.QueryExecutionModel" additivity="false">
 		<level value="error" />

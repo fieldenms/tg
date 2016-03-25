@@ -117,7 +117,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                         throw e;
                     }
                     
-                    if (value != null || !excludeNulls) {
+                    if (!disregardValueSerialisation(value, prop.isEntityTyped(), excludeNulls)) {
                         // write actual property
                         generator.writeFieldName(name);
                         generator.writeObject(value);
@@ -172,5 +172,29 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         }
+    }
+    
+    /**
+     * Returns <code>true</code> in case when value serialisation should be skipped, <code>false</code> otherwise.
+     * 
+     * @param value
+     * @param isEntityTyped
+     * @param excludeNulls
+     * @return
+     */
+    private static boolean disregardValueSerialisation(final Object value, final boolean isEntityTyped, final boolean excludeNulls) {
+        return value == null && excludeNulls || 
+               value != null && isIdOnlyProxiedEntity(value, isEntityTyped);
+    }
+    
+    /**
+     * Returns <code>true</code> in case where non-null <code>value</code> represents id-only entity proxy, <code>false</code> otherwise.
+     * 
+     * @param value
+     * @param isEntityTyped -- indicates whether <code>value</code> is the value of entity-typed property, <code>false</code> otherwise
+     * @return
+     */
+    private static boolean isIdOnlyProxiedEntity(final Object value, final boolean isEntityTyped) {
+        return isEntityTyped && ((AbstractEntity<?>) value).isIdOnlyProxy();
     }
 }

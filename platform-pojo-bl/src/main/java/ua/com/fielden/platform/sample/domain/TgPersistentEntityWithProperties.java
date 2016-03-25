@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
+import ua.com.fielden.platform.sample.domain.validators.DateValidator;
 import ua.com.fielden.platform.sample.domain.validators.EntityValidator;
 import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
 import ua.com.fielden.platform.security.user.User;
@@ -71,6 +72,7 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Date prop", desc = "Date prop desc")
+    @BeforeChange(@Handler(DateValidator.class))
     private Date dateProp;
 
     @IsProperty

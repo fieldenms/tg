@@ -62,8 +62,9 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    assert.strictEqual(edProperty._editingValue, '01/01/1970 2:00 AM', "_editingValue should be non-empty on start.");
-                    assert.strictEqual(edProperty._commValue, '01/01/1970 2:00 AM', "_commValue should be non-empty on start.");
+                    var localisedMomentOf9999 = moment(9999).format('L LT'); // /* 01/01/1970 2:00 AM in Kyiv locale (UTC+02:00), 01/01/1970 4:00 AM in Tbilisi locale (UTC+04:00) */
+                    assert.strictEqual(edProperty._editingValue, localisedMomentOf9999, "_editingValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._commValue, localisedMomentOf9999, "_commValue should be non-empty on start.");
                     // TODO millis are now lost after conversion from 01/01/1970 2:00 AM editingValue representation...
                     // assert.strictEqual(edProperty._acceptedValue, 9999, "_acceptedValue should be non-empty on start.");
 
@@ -88,8 +89,9 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    assert.strictEqual(edProperty._editingValue, '01/01/1970 2:00 AM', "_editingValue should be non-empty on start.");
-                    assert.strictEqual(edProperty._commValue, '01/01/1970 2:00 AM', "_commValue should be non-empty on start.");
+                    var localisedMomentOf9999 = moment(9999).format('L LT'); // /* 01/01/1970 2:00 AM in Kyiv locale (UTC+02:00), 01/01/1970 4:00 AM in Tbilisi locale (UTC+04:00) */
+                    assert.strictEqual(edProperty._editingValue, localisedMomentOf9999, "_editingValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._commValue, localisedMomentOf9999, "_commValue should be non-empty on start.");
                     // TODO millis are now lost after conversion from 01/01/1970 2:00 AM editingValue representation...
                     // assert.strictEqual(edProperty._acceptedValue, 9999, "_acceptedValue should be non-empty on start.");
 
@@ -121,7 +123,7 @@
             });
             
             test('[09/09/2002] to [09/09/2002 11:59 PM] in case of editor with timePortionToBecomeEndOfDay as true', function (done) {
-                correctlyApproximates(done, '09/09/2002', '09/09/2002 11:59 PM', 1031605199999);
+                correctlyApproximates(done, '09/09/2002', '09/09/2002 11:59 PM', reflector._millis('09/09/2002 23:59:59.999'));
             });
             
             test('[9/09/2002] to [09/09/2002 12:00 AM]', function (done) {

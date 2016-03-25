@@ -31,6 +31,15 @@
 	</test-fixture>
 
 	<script>
+        var _editProperties = function (master, datePropEditingValue, keyPropEditingValue) {
+            master.$.editor_4_requiredValidatedProp._editingValue = '30';
+            master.$.editor_4_requiredValidatedProp.commit();
+            master.$.editor_4_key._editingValue = keyPropEditingValue ? keyPropEditingValue : 'key_to_pass_validation_before_save_' + (new Date()).getTime();
+            master.$.editor_4_key.commit();
+            master.$.editor_4_dateProp._editingValue = datePropEditingValue;
+            master.$.editor_4_dateProp.commit();
+        };
+	
 		suite('retrieval', function() {
 		    var master, reflector;
 		
@@ -469,7 +478,7 @@
 		    	// TODO at this stage whatever currency is used for setting into binding entity (to be saved), retrieval from database 
 		    	//      will return money instances with the currency, that is currently used in your OS.
 		    	// Please, adjust the currency to be the same as in your OS to make this test happy.
-		    	var expectedCurrency = 'USD'; // 'AUD'
+		    	var expectedCurrency = 'AUD'; // 'AUD'
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -836,7 +845,145 @@
 
 	            master.retrieve();
 		    });
-		    
+            
+            test('works for new entity with validation result thrown in CommonEntityDao save method', function (done) {
+                master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+                    // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
+                    // see issue https://github.com/fieldenms/tg/issues/479
+                };
+                
+                master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
+                    assert.isNull(potentiallySavedOrNewEntity.id, "Entity id should be null.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.version, 0, "Entity version should be the same.");
+                    
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, '[1/2/3 6:19] is not acceptable.', "Entity's exceptionOccured should exist.");
+                    
+                    var arrivedValue = null;
+                    
+                    // value ok?
+                    assert.notOk(potentiallySavedOrNewEntity.get("dateProp"), "Property value should be initialised.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.get("dateProp"), arrivedValue, "Property value should be correct.");
+                    
+                    // value is changed?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+                    
+                    // value validationresult?
+                    assert.isNotNull(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have empty (successful) validation result.");
+                    
+                    assert.ok(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have non-empty (unsuccessful) validation result.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult()["@resultType"], "ua.com.fielden.platform.error.Result");
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult().message, "[1/2/3 6:19] is not acceptable.");
+                    
+                    // _editingValue ok?
+                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 6:19 AM', 'Editing value should correspond to invalid value [01/02/2003 6:19 AM].');
+                    // binding value ok?
+                    assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
+                    var invalidDateValue = reflector._millis('01/02/2003 06:19:00.000');
+                    assert.strictEqual(bindingEntity.get("dateProp"), invalidDateValue, "Binding property should contain the invalid value that represents [1/2/3 6:19] date.");
+                    
+                    done();
+                };
+                
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    _editProperties(master, '1/2/3 6:19');
+                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                    MockInteractions.tap(saveButton);
+                };
+                
+                master.retrieve();
+            });
+            
+            test('works for new entity with duplicate exception thrown in CommonEntityDao save method', function (done) {
+                master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+                    // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
+                    // see issue https://github.com/fieldenms/tg/issues/479
+                };
+                
+                master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
+                    assert.isNull(potentiallySavedOrNewEntity.id, "Entity id should be null.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.version, 0, "Entity version should be the same.");
+                    
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Entity "DEMO00" of type Tg Persistent Entity With Properties already exists.', "Entity's exceptionOccured should exist.");
+                    
+                    var arrivedValue = reflector._millis('01/02/2003 06:21:00.000');
+                    
+                    // value ok?
+                    assert.ok(potentiallySavedOrNewEntity.get("dateProp"), "Property value should be initialised.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.get("dateProp"), arrivedValue, "Property value should be correct.");
+                    
+                    // value is changed?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+                    
+                    // value validationresult?
+                    assert.isNotNull(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have non-empty warning result.");
+                    
+                    assert.ok(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have non-empty warning result.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult()["@resultType"], "ua.com.fielden.platform.error.Warning");
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult().message, "[1/2/3 6:21] is acceptable, but with warning.");
+                    
+                    // _editingValue ok?
+                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 6:21 AM', 'Editing value should correspond to value [01/02/2003 6:21 AM].');
+                    // binding value ok?
+                    assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
+                    assert.strictEqual(bindingEntity.get("dateProp"), arrivedValue, "Binding property should contain the value that represents [1/2/3 6:21] date.");
+                    
+                    done();
+                };
+                
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    _editProperties(master, '1/2/3 6:21', 'DEMO00');
+                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                    MockInteractions.tap(saveButton);
+                };
+                
+                master.retrieve();
+            });
+            
+            test('works for new entity with exception thrown in companion save method', function (done) {
+                master.postValidated = function(validatedEntity, bindingEntity, customObject) {
+                    // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
+                    // see issue https://github.com/fieldenms/tg/issues/479
+                };
+                
+                master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
+                    assert.isNull(potentiallySavedOrNewEntity.id, "Entity id should be null.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.version, 0, "Entity version should be the same.");
+                    
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Creation failed: [1/2/3 6:20] date is not permitted.', "Entity's exceptionOccured should exist.");
+                    
+                    var arrivedValue = reflector._millis('01/02/2003 06:20:00.000');
+                    
+                    // value ok?
+                    assert.ok(potentiallySavedOrNewEntity.get("dateProp"), "Property value should be initialised.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.get("dateProp"), arrivedValue, "Property value should be correct.");
+                    
+                    // value is changed?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
+                    
+                    // value validationresult?
+                    assert.isNull(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have empty (successful) validation result.");
+                    
+                    // _editingValue ok?
+                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 6:20 AM', 'Editing value should correspond to valid value [01/02/2003 6:20 AM].');
+                    // binding value ok?
+                    assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
+                    assert.strictEqual(bindingEntity.get("dateProp"), arrivedValue, "Binding property should contain the valid value that represents [1/2/3 6:20] date.");
+                    
+                    done();
+                };
+                
+                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                    _editProperties(master, '1/2/3 6:20');
+                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                    MockInteractions.tap(saveButton);
+                };
+                
+                master.retrieve();
+            });
+            
 		    test('works for existing entity', function (done) {
 
 	            master.postSaved = function(potentiallySavedOrNewEntity, bindingEntity) {
@@ -987,6 +1134,68 @@
 
 	            master.retrieve();
 		    });
+		    
+            test('works for existing entity with exception thrown in companion save method', function (done) {
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
+                    // see issue https://github.com/fieldenms/tg/issues/479
+                };
+                
+                master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
+                    master.$.editor_4_dateProp._editingValue = '1/2/3 6:22';
+                    master.$.editor_4_dateProp.commit();
+                    
+                    // kick in the second save and thus the second part of this test 
+                    this.postSaved = this.postSavedForExisting;
+                    
+                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                    this.async(function () {
+                        // need to do this on async because at this stage saveButton is disabled but will be enabled very soon
+                        MockInteractions.tap(saveButton);
+                    }, 100);
+                }.bind(master);
+                
+                master.postSavedForExisting = function (potentiallySavedOrNewEntity, bindingEntity) {
+                    assert.isNotNull(potentiallySavedOrNewEntity.id, "Entity id should be not null.");
+                    
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Modification failed: [1/2/3 6:22] is not acceptable for persisted entity.', "Entity's exceptionOccured should exist.");
+                    
+                    var arrivedValue = reflector._millis('01/02/2003 00:00:00.000');
+                    
+                    // value ok?
+                    assert.ok(potentiallySavedOrNewEntity.get("dateProp"), "Property value should be initialised.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.get("dateProp"), arrivedValue, "Property value should be correct.");
+                    
+                    // value is changed?
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
+                    
+                    // value validationresult?
+                    assert.isNotNull(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have empty (successful) validation result.");
+                    
+                    assert.ok(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have non-empty (unsuccessful) validation result.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult()["@resultType"], "ua.com.fielden.platform.error.Result");
+                    assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult().message, "[1/2/3 6:22] is not acceptable for persisted entity.");
+                    
+                    // _editingValue ok?
+                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 6:22 AM', 'Editing value should correspond to invalid value [01/02/2003 6:22 AM].');
+                    // binding value ok?
+                    assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
+                    var invalidDateValue = reflector._millis('01/02/2003 06:22:00.000');
+                    assert.strictEqual(bindingEntity.get("dateProp"), invalidDateValue, "Binding property should contain the invalid value that represents [1/2/3 6:22] date.");
+                    
+                    done();
+                }.bind(master);
+                
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    _editProperties(master, '1/2/3');
+                    
+                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                    MockInteractions.tap(saveButton);
+                };
+                
+                master.retrieve();
+            });
 		});
 		
 		suite('merging', function() {

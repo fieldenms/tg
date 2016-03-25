@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
  * Finalises initialisation of the specified entity instance by traversing an object graph to execute ACE handlers and assign original property values. 
@@ -132,7 +133,7 @@ public class DefinersExecutor {
 
         // collect properties to process
         final List<Field> notProxiedPropFields = Finder.streamRealProperties(entity.getType())
-                .filter(field -> !Reflector.isPropertyProxied(entity, field.getName())) 
+                .filter(field -> !Reflector.isPropertyProxied(entity, field.getName()) && !isValueProxied(entity, field)) 
                 .collect(Collectors.toList());
 
         final boolean unionEntity = entity instanceof AbstractUnionEntity;
@@ -187,6 +188,24 @@ public class DefinersExecutor {
         }
 
         entity.endInitialising();
+    }
+    
+
+    private static boolean isValueProxied(AbstractEntity<?> entity, Field field) {
+        Object value;
+        try {
+            field.setAccessible(true);
+            value = field.get(entity);
+            field.setAccessible(false);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            throw new ReflectionException(format("Could not obrain value for property [%s] in entity [%s].", field.getName(), entity.getType().getName()));
+        }
+        
+        if (value == null || !(value instanceof AbstractEntity)) {
+            return false;
+        }
+        
+        return ((AbstractEntity<?>) value).isIdOnlyProxy();
     }
 
     private static void handleOriginalValueAndACE(final MetaProperty metaProp, final Object propertyValue, final boolean isEntityPersisted) {

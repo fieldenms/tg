@@ -47,6 +47,16 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         this(type, module, mapper, factory, entityTypeInfoGetter, false);
     }
 
+    /**
+     * Creates {@link EntitySerialiser} instance based on the specified <code>type</code>.
+     * 
+     * @param type
+     * @param module
+     * @param mapper
+     * @param factory
+     * @param entityTypeInfoGetter
+     * @param excludeNulls -- the special switch that indicate whether <code>null</code> properties should be fully disregarded during serialisation into JSON
+     */
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls) {
         this.type = type;
         this.factory = factory;
@@ -217,6 +227,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     public final static class CachedProperty {
         private final Field field;
         private Class<?> propertyType;
+        private boolean entityTyped = false;
 
         CachedProperty(final Field field) {
             this.field = field;
@@ -228,6 +239,11 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
         public void setPropertyType(final Class<?> type) {
             this.propertyType = type;
+            this.entityTyped = EntityUtils.isEntityType(this.propertyType);
+        }
+        
+        public boolean isEntityTyped() {
+            return entityTyped;
         }
 
         public Field field() {

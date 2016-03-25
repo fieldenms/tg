@@ -10,6 +10,7 @@ import java.util.Set;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -91,7 +92,9 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
             final Object value = mp.getValue();
             if (value != null && 
                 ActivatableAbstractEntity.class.isAssignableFrom(mp.getType()) &&
+                !((AbstractEntity<?>) value).isIdOnlyProxy() &&
                 !entity.equals(value)) {
+                
                 result.add((MetaProperty<? extends ActivatableAbstractEntity<?>>) mp);
             }
         });

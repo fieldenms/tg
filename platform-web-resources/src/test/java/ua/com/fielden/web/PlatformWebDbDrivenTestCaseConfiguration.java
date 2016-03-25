@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
@@ -87,6 +88,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(InspectedEntity.class);
             domainTypes.add(Attachment.class);
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
+            final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
             cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
 
             cfg.setProperty("hibernate.current_session_context_class", "thread");
@@ -99,7 +101,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             cfg.setProperty("hibernate.connection.password", "");
 
             hibernateUtil = new HibernateUtil(interceptor, cfg);
-            hibernateModule = new WebHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata, serialisationClassProvider);
+            hibernateModule = new WebHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata, idOnlyProxiedEntityTypeCache, serialisationClassProvider);
             injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
             entityFactory = injector.getInstance(EntityFactory.class);
             interceptor.setFactory(entityFactory);

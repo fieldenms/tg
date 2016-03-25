@@ -341,8 +341,9 @@
                 }).bind(self);
 
                 self._processSaverResponse = function (e) {
-                    self.$.selection_criteria._processResponse(e, "save", function (entityAndCustomObject) {
+                    self.$.selection_criteria._processResponse(e, "save", function (entityAndCustomObject, exceptionOccured) {
                         console.log("CENTRE SAVED", entityAndCustomObject);
+                        self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
                         self.$.selection_criteria._postValidatedDefault(entityAndCustomObject);
                     });
                 };
@@ -355,8 +356,9 @@
                 };
 
                 self._processDiscarderResponse = function (e) {
-                    self.$.selection_criteria._processResponse(e, "discard", function (entityAndCustomObject) {
+                    self.$.selection_criteria._processResponse(e, "discard", function (entityAndCustomObject, exceptionOccured) {
                         console.log("CENTRE DISCARDED", entityAndCustomObject);
+                        self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
                         self.$.selection_criteria._postValidatedDefault(entityAndCustomObject);
                     });
                 };
@@ -465,8 +467,8 @@
                     return null;
                 }).bind(self);
 
-                self._postFunctionalEntitySaved = (function (potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
-                    if (potentiallySavedOrNewEntity.isValid() && shouldRefreshParentCentreAfterSave === true) {
+                self._postFunctionalEntitySaved = (function (savingException, potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
+                    if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
                         // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
                         this.refreshEntities(selectedEntitiesInContext);
                     }
@@ -597,7 +599,7 @@
                     channel: "centre_" + self.$.selection_criteria.uuid,
                     topic: "detail.saved",
                     callback: function (data, envelope) {
-                        self._postFunctionalEntitySaved(data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
+                        self._postFunctionalEntitySaved(data.savingException, data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
                     }
                 });
 
