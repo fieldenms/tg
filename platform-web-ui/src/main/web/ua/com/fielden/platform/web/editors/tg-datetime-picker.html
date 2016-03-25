@@ -132,6 +132,9 @@
                     value: function () {
                         return [
                             'L LTS',
+                            'D/M/YYYY h:m:ss.SSSa',
+                            'D/M/YY h:m:ss.SSSa',
+                            'D/M/Y h:m:ss.SSSa',
                             'L LT',
                             'D/M/YYYY hmma',
                             'D/M/YY hmma',
@@ -323,7 +326,7 @@
                     var firstFormat = formats[0];
                     var tryingMoment = moment(stringValue, firstFormat, true);
                     if (tryingMoment.isValid()) {
-                        if (['D/M/Y', 'D/M/Y hmma', 'D/M/Y hmm', 'D/M/Y h:ma', 'D/M/Y h:m', 'D/M/Y ha', 'D/M/Y h'].indexOf(firstFormat) !== -1) {
+                        if (['D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y hmm', 'D/M/Y h:ma', 'D/M/Y h:m', 'D/M/Y ha', 'D/M/Y h', 'D/M/Y'].indexOf(firstFormat) !== -1) {
                             tryingMoment = moment(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true);
                         }
                         
