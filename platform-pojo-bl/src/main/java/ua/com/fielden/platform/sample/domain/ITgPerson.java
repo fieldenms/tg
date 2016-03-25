@@ -20,7 +20,7 @@ public interface ITgPerson extends IEntityDao<TgPerson> {
     TgPerson resetPassword(final TgPerson person, final String privateKey);
 
     /** Creates a new person and resets its password. */
-    TgPerson populateNew(final String givenName, final String surName, final String fullName, final String userName, final String privateKey);
+    TgPerson populateNew(final String givenName, final String surName, final String fullName, final String userName);
 
     /** Retrieves current person. */
     TgPerson currentPerson();

@@ -139,7 +139,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("reports.path")).to("");
         bindConstant().annotatedWith(Names.named("domain.path")).to(props.getProperty("domain.path"));
         bindConstant().annotatedWith(Names.named("domain.package")).to(props.getProperty("domain.package"));
-        bindConstant().annotatedWith(Names.named("private-key")).to(props.getProperty("private-key"));
         bindConstant().annotatedWith(Names.named("tokens.path")).to(props.getProperty("tokens.path"));
         bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
         bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));

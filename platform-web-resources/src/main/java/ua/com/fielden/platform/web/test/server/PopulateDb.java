@@ -82,8 +82,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
     protected void populateDomain() {
         System.out.println("Creating and populating the development database...");
         final ITgPerson aoPerson = (ITgPerson) ao(TgPerson.class);
-        aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name(), IDomainDrivenTestCaseConfiguration.hbc.getProperty("private-key"));
-        aoPerson.populateNew("Demo", "User", "Demo User", "DEMO", IDomainDrivenTestCaseConfiguration.hbc.getProperty("private-key"));
+        aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());
+        aoPerson.populateNew("Demo", "User", "Demo User", "DEMO");
 
         final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies."));
         System.out.println("admin.getId() == " + admin.getId());

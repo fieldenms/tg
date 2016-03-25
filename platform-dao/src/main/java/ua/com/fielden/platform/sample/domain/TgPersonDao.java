@@ -6,16 +6,16 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import org.apache.log4j.Logger;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-
-import com.google.inject.Inject;
 
 /**
  * DAO for {@link TgPersonDao}
@@ -26,15 +26,15 @@ import com.google.inject.Inject;
 @EntityType(TgPerson.class)
 public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson {
 
-    private final IUserEx userDao;
+    private final IUser coUser;
     private final EntityFactory entityFactory;
     private final Logger logger = Logger.getLogger(getClass());
 
     @Inject
-    protected TgPersonDao(final IFilter filter, final EntityFactory entityFactory, final IUserEx userDao) {
+    protected TgPersonDao(final IFilter filter, final EntityFactory entityFactory, final IUser coUser) {
         super(filter);
         this.entityFactory = entityFactory;
-        this.userDao = userDao;
+        this.coUser = coUser;
     }
 
     @Override
@@ -44,7 +44,7 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
         }
 
         final TgPerson latestPerson = findById(person.getId(), fetchAll(TgPerson.class));
-        final User su = userDao.findByKey("SU");
+        final User su = coUser.findByKey("SU");
         latestPerson.setBasedOnUser(su);
         latestPerson.setUsername(person.getKey());
         resetPasswd(latestPerson, privateKey);
@@ -63,7 +63,6 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
         final TgPerson latestPerson = findById(person.getId(), fetchAll(TgPerson.class));
         latestPerson.setUsername(null);
         latestPerson.setPassword(null);
-        latestPerson.setPublicKey(null);
         latestPerson.setBasedOnUser(null);
         return save(latestPerson);
     }
@@ -91,21 +90,19 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
     }
 
     @Override
-    public TgPerson populateNew(final String givenName, final String surName, final String fullName, final String userName, final String privateKey) {
+    public TgPerson populateNew(final String givenName, final String surName, final String fullName, final String userName) {
         // generate "personCode" and "description" for creating a new person:
         final TgPerson newPerson = User.system_users.SU.name().equals(userName) ? entityFactory.newEntity(TgPerson.class, userName, "Super User")
                 : entityFactory.newEntity(TgPerson.class, generateUniquePersonCode(givenName, surName, userName), generatePersonDesc(givenName, surName, fullName));
         newPerson.setUsername(userName);
         // "based on user" is required. SU is the base user and thus has no "based on user".
-        newPerson.setBasedOnUser(User.system_users.SU.name().equals(userName) ? null : userDao.findByKey("SU"));
+        newPerson.setBasedOnUser(User.system_users.SU.name().equals(userName) ? null : coUser.findByKey("SU"));
         newPerson.setBase(User.system_users.SU.name().equals(userName));
 
         final TgPerson p = save(newPerson);
         try {
-            final User user = userDao.findByKey(userName);
-            final Cypher cypher = new Cypher();
-            user.setPassword(cypher.encrypt(user.getKey(), privateKey));
-            userDao.save(user);
+            final User user = coUser.findByKey(userName);
+            coUser.resetPasswd(user);
         } catch (final Exception e) {
             throw new IllegalStateException("A password reset for a new user [" + userName + "] failed. " + e.getMessage());
         }

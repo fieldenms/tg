@@ -156,10 +156,15 @@ public class UserDao extends CommonEntityDao<User> implements IUserEx {
     }
 
     @Override
+    public final String hashPasswd(final String passwd) throws Exception {
+        return crypto.calculateRFC2104HMAC(passwd, hashingKey);
+    }
+    
+    @Override
     @SessionRequired
     public User resetPasswd(final User user) {
         try {
-            user.setPassword(crypto.calculateRFC2104HMAC(user.getKey(), hashingKey));
+            user.setPassword(hashPasswd(user.getKey()));
         } catch (Exception ex) {
             logger.warn("Could not reset password for user [%s].", ex);
             throw new SecurityException("Could not reset user password.", ex);

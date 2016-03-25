@@ -44,11 +44,6 @@ public class TgPerson extends ActivatableAbstractEntity<String> {
     private String username;
 
     @IsProperty
-    @Invisible
-    @MapTo("USER_PUBLIC_KEY")
-    private String publicKey;
-
-    @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether person is a base user, which is used for application configuration and creation of other application users.")
     @MapTo("IS_BASE")
     private boolean base = false;
@@ -79,16 +74,6 @@ public class TgPerson extends ActivatableAbstractEntity<String> {
     @Observable
     public TgPerson setPassword(final String password) {
         this.password = password;
-        return this;
-    }
-
-    public String getPublicKey() {
-        return publicKey;
-    }
-
-    @Observable
-    public TgPerson setPublicKey(final String publicKey) {
-        this.publicKey = publicKey;
         return this;
     }
 

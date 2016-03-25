@@ -21,7 +21,5 @@ public interface IApplicationSettings {
 
     String securityTokensPackageName();
 
-    String privateKey();
-
     String workflow();
 }

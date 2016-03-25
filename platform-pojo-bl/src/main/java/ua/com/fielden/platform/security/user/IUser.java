@@ -51,4 +51,14 @@ public interface IUser extends IEntityDao<User> {
      * @param user
      */
     User resetPasswd(final User user);
+    
+    /**
+     * A convenient method for hashing the passed in user password.
+     * 
+     * @param passwd
+     * @return
+     */
+    default String hashPasswd(final String passwd) throws Exception {
+        throw new UnsupportedOperationException();
+    }
 }

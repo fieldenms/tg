@@ -138,7 +138,7 @@ public class LoginResource extends ServerResource {
 
             final Result authResult = authenticationModel.authenticate(credo.getUsername(), credo.getPasswd());
             if (!authResult.isSuccessful()) {
-                logger.debug(format("Unsuccessful login request (%s)", credo));
+                logger.warn(format("Unsuccessful login request (%s)", credo));
                 getResponse().setEntity(restUtil.errorJSONRepresentation("Invalid credentials."));
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             } else {
