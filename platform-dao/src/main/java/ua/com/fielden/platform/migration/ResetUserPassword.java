@@ -2,8 +2,7 @@ package ua.com.fielden.platform.migration;
 
 import java.util.List;
 
-import ua.com.fielden.platform.cypher.Cypher;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -18,25 +17,21 @@ import ua.com.fielden.platform.security.user.User;
  * 
  */
 public class ResetUserPassword {
-    private final IUserEx controller;
+    private final IUser coUser;
 
-    public ResetUserPassword(final IUserEx controller) {
-        this.controller = controller;
+    public ResetUserPassword(final IUser coUser) {
+        this.coUser = coUser;
     }
 
     /**
-     * Resets password for all users. The new passwords are encoded with the provided private key before being stored.
+     * Resets password for all users.
      * 
-     * @param privateKey
      * @throws Exception
      */
-    public void resetAll(final String privateKey) throws Exception {
-        final List<User> users = controller.findAllUsers();
-        final Cypher cypher = new Cypher();
+    public void resetAll() {
+        final List<User> users = coUser.findAllUsers();
         for (final User user : users) {
-            final String newPassword = cypher.encrypt(user.getKey(), privateKey);
-            user.setPassword(newPassword);
-            controller.save(user);
+            coUser.resetPasswd(user);
         }
     }
 
@@ -47,10 +42,8 @@ public class ResetUserPassword {
      * @param privateKey
      * @throws Exception
      */
-    public void reset(final String username, final String privateKey) throws Exception {
-        final User user = controller.findByKey(username);
-        final Cypher cypher = new Cypher();
-        user.setPassword(cypher.encrypt(user.getKey(), privateKey));
-        controller.save(user);
+    public void reset(final String username) {
+        final User user = coUser.findByKey(username);
+        coUser.resetPasswd(user);
     }
 }
