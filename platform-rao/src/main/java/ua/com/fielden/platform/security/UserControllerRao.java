@@ -120,4 +120,9 @@ public class UserControllerRao extends CommonEntityRao<User> implements IUserEx 
     public User findUser(final String username) {
         return findByKeyAndFetch(fetchAll(User.class), username);
     }
+
+    @Override
+    public User resetPasswd(User user) {
+        throw new UnsupportedOperationException();
+    }
 }

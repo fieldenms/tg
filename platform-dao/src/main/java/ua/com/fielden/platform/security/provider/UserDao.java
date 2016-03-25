@@ -5,13 +5,17 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.security.SignatureException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
@@ -23,6 +27,8 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.security.annotations.PasswordHashingKey;
+import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -37,18 +43,35 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 @EntityType(User.class)
 public class UserDao extends CommonEntityDao<User> implements IUserEx {
 
+    private transient final Logger logger = Logger.getLogger(UserDao.class);
+    
+    
+    private final String hashingKey;
+    private final SessionIdentifierGenerator crypto;
+    private final IUserSession coUserSession;
     private final IUserRoleDao userRoleDao;
     private final IUserAndRoleAssociationDao userAssociationDao;
 
     private final fetch<User> fetchModel = fetch(User.class).with("roles", fetch(UserAndRoleAssociation.class));
 
     @Inject
-    public UserDao(final IUserRoleDao userRoleDao, final IUserAndRoleAssociationDao userAssociationDao, final IFilter filter) {
+    public UserDao(
+            final @PasswordHashingKey String hashingKey,
+            final SessionIdentifierGenerator crypto,
+            final IUserSession coUserSession,
+            final IUserRoleDao userRoleDao, 
+            final IUserAndRoleAssociationDao userAssociationDao, 
+            final IFilter filter) {
         super(filter);
+
+        this.hashingKey = hashingKey;
+        this.crypto = crypto;
+        this.coUserSession = coUserSession;
+        
         this.userRoleDao = userRoleDao;
         this.userAssociationDao = userAssociationDao;
     }
-
+    
     @Override
     public List<? extends UserRole> findAllUserRoles() {
         return userRoleDao.findAll();
@@ -130,5 +153,23 @@ public class UserDao extends CommonEntityDao<User> implements IUserEx {
         return super.createFetchProvider()
                 .with("key") // this property is "required" (necessary during saving) -- should be declared as fetching property
                 .with("base", "basedOnUser.base", "roles"); //
+    }
+
+    @Override
+    @SessionRequired
+    public User resetPasswd(final User user) {
+        try {
+            user.setPassword(crypto.calculateRFC2104HMAC(user.getKey(), hashingKey));
+        } catch (Exception ex) {
+            logger.warn("Could not reset password for user [%s].", ex);
+            throw new SecurityException("Could not reset user password.", ex);
+        }
+        
+        final User savedUser = save(user);
+        
+        // clear all the current user sessions
+        coUserSession.clearAll(savedUser);
+        return savedUser;
+        
     }
 }

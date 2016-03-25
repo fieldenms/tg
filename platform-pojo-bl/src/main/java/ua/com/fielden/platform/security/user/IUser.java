@@ -45,4 +45,10 @@ public interface IUser extends IEntityDao<User> {
      */
     User findUserByKeyWithRoles(String key);
 
+    /**
+     * Resets the user password.
+     * 
+     * @param user
+     */
+    User resetPasswd(final User user);
 }

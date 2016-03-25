@@ -184,7 +184,6 @@ public class User extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(User.class)
     public User setBasedOnUser(final User basedOnUser) {
         if (basedOnUser == this) {
             throw new Result(this, new IllegalArgumentException("Self reference is not permitted."));
