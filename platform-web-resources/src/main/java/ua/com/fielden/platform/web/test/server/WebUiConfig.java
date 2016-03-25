@@ -155,6 +155,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
      */
     @Override
     public void initConfiguration() {
+        configApp().setTimeFormat("HH:mm").setTimeWithMillisFormat("HH:mm:ss.SSS");
         // Add entity centres.
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
