@@ -221,4 +221,9 @@ public class UserControllerForTestPurposes implements IUserEx {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public User resetPasswd(User user) {
+        throw new UnsupportedOperationException();
+    }
 }

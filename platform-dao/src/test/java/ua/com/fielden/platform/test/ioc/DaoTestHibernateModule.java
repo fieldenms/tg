@@ -35,11 +35,19 @@ import ua.com.fielden.platform.sample.domain.TgVehicleDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleMakeDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleModelDao;
 import ua.com.fielden.platform.sample.domain.TgWorkorderDao;
+import ua.com.fielden.platform.security.annotations.PasswordHashingKey;
+import ua.com.fielden.platform.security.annotations.SessionCache;
+import ua.com.fielden.platform.security.annotations.SessionHashingKey;
+import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
+import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
 import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.provider.UserDao;
+import ua.com.fielden.platform.security.session.IUserSession;
+import ua.com.fielden.platform.security.session.UserSession;
+import ua.com.fielden.platform.security.session.UserSessionDao;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
@@ -56,6 +64,7 @@ import ua.com.fielden.platform.test.domain.entities.daos.IWorkshopDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WagonDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WagonSlotDao;
 import ua.com.fielden.platform.test.domain.entities.daos.WorkshopDao;
+import ua.com.fielden.platform.test.ioc.PlatformTestServerModule.TestSessionCacheBuilder;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
@@ -72,7 +81,10 @@ import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigController
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityControllerDao;
 import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
+import com.google.common.base.Ticker;
+import com.google.common.cache.Cache;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 
@@ -149,5 +161,18 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         });
         bind(ISerialiser0.class).to(Serialiser0.class).in(Scopes.SINGLETON);
         bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON);
+        
+        bind(IUserSession.class).to(UserSessionDao.class);
+        bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data in unit tests.");
+        bindConstant().annotatedWith(PasswordHashingKey.class).to("This is a hasing key, which is used to hash user passwords in unit tests.");
+        bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
+        bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(5); // 5 minutes
+
+        bind(Ticker.class).to(TickerForSessionCache.class).in(Scopes.SINGLETON);
+        bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
+        bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
+
     }
+    
+    
 }
