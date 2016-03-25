@@ -131,6 +131,13 @@
                     type: Array,
                     value: function () {
                         return [
+                            'L LTS',
+                            'D/M/YYYY h:m:ss.SSSa',
+                            'D/M/YY h:m:ss.SSSa',
+                            'D/M/Y h:m:ss.SSSa',
+                            'D/M/YYYY h:m:ss.SSS',
+                            'D/M/YY h:m:ss.SSS',
+                            'D/M/Y h:m:ss.SSS',
                             'L LT',
                             'D/M/YYYY hmma',
                             'D/M/YY hmma',
@@ -189,7 +196,7 @@
                 if (value === null) {
                     return "";
                 } else {
-                    return moment(value).format("L LT");
+                    return this.reflector().millisDateRepresentation(value);
                 }
             },
 
@@ -221,10 +228,10 @@
            		
             	domBind._acceptDateBind = function() {
                     self._isAcceptingDateFromPicker = true;
-                    self._editingValue = moment(this.$.datePicker.selectedDate)
+                    var acceptedMoment = moment(this.$.datePicker.selectedDate)
                         .hour(this.$.datePicker.selectedHour)
-                        .minute(this.$.datePicker.selectedMinute)
-                        .format("L LT");
+                        .minute(this.$.datePicker.selectedMinute);
+                    self._editingValue = self.reflector().millisDateRepresentation(acceptedMoment.valueOf());
                     self.decoratedInput().focus();
            		}.bind(domBind);
            		
@@ -235,13 +242,10 @@
                 	datePicker.selectedHour = 0;
                 	datePicker.selectedMinute = 0;
                 	
-                    if (self._editingValue  !== '') {
-                        var selectedMoment = moment(self._editingValue.trim(), "L LT", true);
-                        if (selectedMoment.isValid()) {
-                            datePicker.selectedDate = selectedMoment.valueOf();
-                            datePicker.selectedHour = selectedMoment.hour();
-                            datePicker.selectedMinute = selectedMoment.minute();
-                        }
+                    if (self._validMoment !== null) {
+                        datePicker.selectedDate = selectedMoment.valueOf();
+                        datePicker.selectedHour = selectedMoment.hour();
+                        datePicker.selectedMinute = selectedMoment.minute();
                     }
            			
                     Polymer.dom(document.body).appendChild(dialog);
@@ -305,7 +309,7 @@
                         if (value) {
                             this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
                             if (this._validMoment !== null) {
-                                return moment(this._validMoment.valueOf()).format('L LT');
+                                return this.reflector().millisDateRepresentation(this._validMoment.valueOf());
                             }
                         }
                     }
@@ -325,7 +329,7 @@
                     var firstFormat = formats[0];
                     var tryingMoment = moment(stringValue, firstFormat, true);
                     if (tryingMoment.isValid()) {
-                        if (['D/M/Y', 'D/M/Y hmma', 'D/M/Y hmm', 'D/M/Y h:ma', 'D/M/Y h:m', 'D/M/Y ha', 'D/M/Y h'].indexOf(firstFormat) !== -1) {
+                        if (['D/M/Y h:m:ss.SSS', 'D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y hmm', 'D/M/Y h:ma', 'D/M/Y h:m', 'D/M/Y ha', 'D/M/Y h', 'D/M/Y'].indexOf(firstFormat) !== -1) {
                             tryingMoment = moment(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true);
                         }
                         

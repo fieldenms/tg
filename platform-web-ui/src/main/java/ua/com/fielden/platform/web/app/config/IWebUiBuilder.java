@@ -40,20 +40,28 @@ public interface IWebUiBuilder {
     IWebUiBuilder setLocale(String locale);
 
     /**
-     * Set the time format for the web application.
-     *
-     * @param timeFormat
-     * @return
-     */
-    IWebUiBuilder setTimeFormat(String timeFormat);
-
-    /**
      * Set the date format for the web application.
      *
      * @param dateFormat
      * @return
      */
     IWebUiBuilder setDateFormat(String dateFormat);
+
+    /**
+     * Set the time format for the web application.
+     *
+     * @param timeFormat
+     * @return
+     */
+    IWebUiBuilder setTimeFormat(String timeFormat);
+    
+    /**
+     * Set the time with millis format for the web application.
+     *
+     * @param timeWithMillisFormat
+     * @return
+     */
+    IWebUiBuilder setTimeWithMillisFormat(String timeWithMillisFormat);
 
     /**
      * Adds the entity master to web application configuration object.

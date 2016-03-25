@@ -1470,7 +1470,7 @@
                 } else if (this.$.reflector.findTypeByName(type)) {
                     return this.$.reflector.convert(this._get(entity, property));
                 } else if (type === 'Date') {
-                    return moment(entity.get(property)).format("L LT");
+                    return this.$.reflector.millisDateRepresentation(entity.get(property));
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
                         return entity.get(property).toLocaleString(this.$.appConfig.locale, {
