@@ -7,7 +7,6 @@ import static org.junit.Assert.fail;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,13 +16,11 @@ import org.restlet.routing.Router;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchActionRao;
 import ua.com.fielden.platform.security.UserControllerRao;
 import ua.com.fielden.platform.security.UserRoleRao;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -35,7 +32,7 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 public class UserAndRoleAssociationBatchActionTest extends WebBasedTestCase {
 
     private final IUserRoleDao userRoleRao = new UserRoleRao(config.restClientUtil());
-    private final IUserEx userControllerRao = new UserControllerRao(userRoleRao, config.restClientUtil());
+    private final IUser userControllerRao = new UserControllerRao(userRoleRao, config.restClientUtil());
     private final IUserAndRoleAssociationBatchAction associationRao = new UserAndRoleAssociationBatchActionRao(config.restClientUtil());
 
     @Test

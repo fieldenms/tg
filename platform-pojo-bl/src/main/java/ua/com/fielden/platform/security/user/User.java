@@ -78,21 +78,6 @@ public class User extends AbstractEntity<String> {
     @MapTo
     private User basedOnUser;
 
-    protected User() {
-        this(null, null);
-    }
-    
-    /**
-     * Principle constructor.
-     *
-     * @param name
-     *            -- is user's key
-     * @param desc
-     */
-    protected User(final String name, final String desc) {
-        super(null, name, desc);
-    }
-
     @Observable
     @Override
     public User setKey(final String value) {

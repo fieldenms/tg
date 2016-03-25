@@ -2,6 +2,10 @@ package ua.com.fielden.platform.client.ioc;
 
 import java.util.Properties;
 
+import com.google.inject.Injector;
+import com.google.inject.Scopes;
+import com.google.inject.name.Names;
+
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -24,7 +28,6 @@ import ua.com.fielden.platform.security.SecurityTokenControllerRao;
 import ua.com.fielden.platform.security.UserControllerRao;
 import ua.com.fielden.platform.security.UserRoleRao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
@@ -50,10 +53,6 @@ import ua.com.fielden.platform.ui.config.api.MainMenuItemControllerRao;
 import ua.com.fielden.platform.ui.config.api.MainMenuItemInvisibilityControllerRao;
 import ua.com.fielden.platform.update.IReferenceDependancyController;
 import ua.com.fielden.platform.update.ReferenceDependancyController;
-
-import com.google.inject.Injector;
-import com.google.inject.Scopes;
-import com.google.inject.name.Names;
 
 /**
  * Basic IoC module for client web applications, which should be enhanced by the application specific IoC module.
@@ -114,7 +113,6 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
         // security and user management
         bind(IUser.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
         bind(IUserRoleDao.class).to(UserRoleRao.class).in(Scopes.SINGLETON);
-        bind(IUserEx.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
         bind(ISecurityTokenController.class).to(SecurityTokenControllerRao.class).in(Scopes.SINGLETON);
         bind(IAuthorisationModel.class).to(RestAuthorisationModel.class).in(Scopes.SINGLETON);
 
@@ -147,6 +145,6 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
     public void setInjector(final Injector injector) {
         super.setInjector(injector);
         restUtil.initSerialiser(injector.getInstance(ISerialiser.class));
-        restUtil.setUserController(injector.getInstance(IUserEx.class));
+        restUtil.setUserController(injector.getInstance(IUser.class));
     }
 }

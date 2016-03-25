@@ -5,15 +5,15 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.AttachmentInstanceResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-
-import com.google.inject.Injector;
 
 /**
  * Factory for instantiating {@link Attachment} instance specific resource.
@@ -41,7 +41,7 @@ public class AttachmentInstanceResourceFactory extends Restlet {
         final IAttachment dao = injector.getInstance(IAttachment.class);
 
         final String username = (String) request.getAttributes().get("username");
-        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
+        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUser.class));
 
         final AttachmentInstanceResource resource = new AttachmentInstanceResource(location, dao, factory, restUtil, getContext(), request, response);
         if (Method.GET == request.getMethod() || Method.HEAD == request.getMethod() || Method.POST == request.getMethod() || Method.DELETE == request.getMethod()) {

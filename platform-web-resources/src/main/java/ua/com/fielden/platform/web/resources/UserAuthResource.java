@@ -15,7 +15,7 @@ import org.restlet.resource.ServerResource;
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -24,7 +24,7 @@ import ua.com.fielden.platform.security.user.User;
  * @author TG Team
  */
 public class UserAuthResource extends ServerResource {
-    private final IUserEx coUserEx;
+    private final IUser coUserEx;
     private final RestServerUtil restUtil;
     private final String token;
     private final String publicKey;
@@ -48,7 +48,7 @@ public class UserAuthResource extends ServerResource {
      * @param response
      * @throws Exception
      */
-    public UserAuthResource(final IUserEx controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public UserAuthResource(final IUser controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         init(context, request, response);
         setNegotiated(false);
         getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));

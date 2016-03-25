@@ -17,6 +17,8 @@ import org.restlet.Response;
 import org.restlet.data.Method;
 import org.restlet.representation.Representation;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -26,14 +28,12 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.CommonEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Inject;
 
 /**
  * RAO implementation of the {@link IUserEx}.
@@ -43,7 +43,7 @@ import com.google.inject.Inject;
  */
 
 @EntityType(User.class)
-public class UserControllerRao extends CommonEntityRao<User> implements IUserEx {
+public class UserControllerRao extends CommonEntityRao<User> implements IUser {
     private final fetch<User> fetchModel = fetch(User.class).with("basedOnUser").with("roles", fetchAll(UserAndRoleAssociation.class));//.with("userRole").with("user")
 
     private final IUserRoleDao userRoleDao;

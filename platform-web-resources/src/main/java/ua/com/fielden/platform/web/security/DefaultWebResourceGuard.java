@@ -2,11 +2,11 @@ package ua.com.fielden.platform.web.security;
 
 import org.restlet.Context;
 
-import ua.com.fielden.platform.security.provider.IUserEx;
+import com.google.inject.Injector;
+
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-
-import com.google.inject.Injector;
 
 /**
  * The default implementation of {@link AbstractWebResourceGuard}, which should be applicable in all foreseeable scenarios.
@@ -26,9 +26,9 @@ public class DefaultWebResourceGuard extends AbstractWebResourceGuard {
 
     @Override
     protected User getUser(final String username) {
-        final IUserEx coUserEx = injector.getInstance(IUserEx.class);
+        final IUser coUser = injector.getInstance(IUser.class);
         final IUserProvider up = injector.getInstance(IUserProvider.class);
-        up.setUsername(username, coUserEx);
+        up.setUsername(username, coUser);
         return up.getUser();
     }
 

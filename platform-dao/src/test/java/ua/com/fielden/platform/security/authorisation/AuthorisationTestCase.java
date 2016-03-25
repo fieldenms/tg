@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.security.authorisation;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.util.List;
 
@@ -13,8 +16,8 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.security_tokens.DeleteFuelTypeToken;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
@@ -41,7 +44,7 @@ public class AuthorisationTestCase extends AbstractDomainDrivenTestCase {
     @Test
     public void restrictive_user_should_not_be_able_to_delete_fuel_types() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername(restrictiveUsername, getInstance(IUserEx.class));
+        up.setUsername(restrictiveUsername, getInstance(IUser.class));
 
         final TgFuelType ft = ao(TgFuelType.class).findByKey(fuelType);
         assertNotNull(ft);
@@ -58,7 +61,7 @@ public class AuthorisationTestCase extends AbstractDomainDrivenTestCase {
     public void setUp() {
         // set permissive user as the current user before each test
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername(permissiveUsername, getInstance(IUserEx.class));
+        up.setUsername(permissiveUsername, getInstance(IUser.class));
     }
 
     @Override

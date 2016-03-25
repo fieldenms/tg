@@ -5,7 +5,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import java.security.SignatureException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +28,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.annotations.PasswordHashingKey;
 import ua.com.fielden.platform.security.session.IUserSession;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -41,7 +41,7 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
  * 
  */
 @EntityType(User.class)
-public class UserDao extends CommonEntityDao<User> implements IUserEx {
+public class UserDao extends CommonEntityDao<User> implements IUser {
 
     private transient final Logger logger = Logger.getLogger(UserDao.class);
     

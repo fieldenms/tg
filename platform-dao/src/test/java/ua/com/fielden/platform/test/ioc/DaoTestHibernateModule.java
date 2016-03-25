@@ -5,6 +5,11 @@ import java.util.List;
 
 import org.hibernate.SessionFactory;
 
+import com.google.common.base.Ticker;
+import com.google.common.cache.Cache;
+import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
+
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -44,7 +49,6 @@ import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDurati
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.provider.UserDao;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
@@ -84,11 +88,6 @@ import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityCont
 import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
-import com.google.common.base.Ticker;
-import com.google.common.cache.Cache;
-import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
-
 /**
  * Guice injector module for Hibernate related injections for testing purposes.
  *
@@ -125,7 +124,6 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
 
         bind(IUser.class).to(UserDao.class);
-        bind(IUserEx.class).to(UserDao.class);
         // bind IUserProvider
         bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
 

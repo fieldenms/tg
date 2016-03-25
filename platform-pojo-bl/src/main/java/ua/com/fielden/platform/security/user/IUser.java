@@ -4,8 +4,11 @@
 package ua.com.fielden.platform.security.user;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.pagination.IPage;
 
 /**
  * Contract for DAO handling user instances.
@@ -61,4 +64,37 @@ public interface IUser extends IEntityDao<User> {
     default String hashPasswd(final String passwd) throws Exception {
         throw new UnsupportedOperationException();
     }
+    
+    /**
+     * Returns all available user roles
+     *
+     * @return
+     */
+    List<? extends UserRole> findAllUserRoles();
+
+    /**
+     * Returns the first page of users fetched with user roles. The page will have less or equal number of items specified by the capacity parameter.
+     *
+     * @param capacity
+     *            - the number of users in the page. (Notice that page may have less then the value specified by the capacity parameter).
+     * @return
+     */
+    IPage<? extends User> firstPageOfUsersWithRoles(int capacity);
+
+    /**
+     * Updates association between user and a list of roles. Once completer user should be associated strictly with the specified list of roles.
+     *
+     * @param user
+     * @param userRoles
+     */
+    void updateUsers(Map<User, Set<UserRole>> userRolesMap);
+
+    /**
+     * Finds user by name.
+     *
+     * @param username
+     * @return
+     */
+    User findUser(String username);
+
 }

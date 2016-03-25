@@ -10,12 +10,12 @@ import java.util.Properties;
 
 import org.hibernate.Transaction;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
-import ua.com.fielden.platform.security.provider.IUserEx;
-
-import com.google.inject.Injector;
+import ua.com.fielden.platform.security.user.IUser;
 
 public class MigrateDb {
 
@@ -215,7 +215,7 @@ public class MigrateDb {
         // reset passwords
         if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {
             System.out.println("Resetting user passwords...");
-            final ResetUserPassword passwordReset = new ResetUserPassword(injector.getInstance(IUserEx.class));
+            final ResetUserPassword passwordReset = new ResetUserPassword(injector.getInstance(IUser.class));
             passwordReset.resetAll();
         }
 

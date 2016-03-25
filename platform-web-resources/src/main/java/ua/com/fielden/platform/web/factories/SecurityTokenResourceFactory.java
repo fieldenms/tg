@@ -5,14 +5,14 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.SecurityTokenResource;
-
-import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct instantiation of {@link SecurityTokenResource}.
@@ -43,7 +43,7 @@ public class SecurityTokenResourceFactory extends Restlet {
         final IUserRoleDao userRoleDao = injector.getInstance(IUserRoleDao.class);
 
         final String username = (String) request.getAttributes().get("username");
-        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
+        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUser.class));
 
         if (Method.GET.equals(request.getMethod()) || Method.POST.equals(request.getMethod()) || Method.HEAD.equals(request.getMethod())) {
             new SecurityTokenResource(controller, userRoleDao, restUtil, getContext(), request, response).handle();

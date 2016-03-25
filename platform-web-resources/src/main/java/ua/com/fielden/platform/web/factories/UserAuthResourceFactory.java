@@ -5,11 +5,11 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.security.provider.IUserEx;
+import com.google.inject.Injector;
+
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.UserAuthResource;
-
-import com.google.inject.Injector;
 
 /**
  * A restlet responsible for handling user authentication requests.
@@ -42,12 +42,12 @@ public class UserAuthResourceFactory extends Restlet {
      * @param response
      */
     protected void handleGet(final Request request, final Response response) {
-        final IUserEx controller = getController();
+        final IUser controller = getController();
         new UserAuthResource(controller, restUtil, getContext(), request, response).handle();
     }
 
-    protected IUserEx getController() {
-        return injector.getInstance(IUserEx.class);
+    protected IUser getController() {
+        return injector.getInstance(IUser.class);
     }
 
     protected RestServerUtil getRestUtil() {

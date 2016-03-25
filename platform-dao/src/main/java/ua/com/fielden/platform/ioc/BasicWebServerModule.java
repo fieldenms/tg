@@ -41,7 +41,6 @@ import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
 import ua.com.fielden.platform.security.provider.SecurityTokenInfoDao;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
@@ -178,7 +177,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         // user security related bindings
         bind(IUser.class).to(UserDao.class);
-        bind(IUserEx.class).to(UserDao.class);
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
         
         bind(IUserRoleDao.class).to(UserRoleDao.class);

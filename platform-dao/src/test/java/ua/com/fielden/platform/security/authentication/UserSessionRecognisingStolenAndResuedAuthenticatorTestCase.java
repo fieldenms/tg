@@ -11,19 +11,19 @@ import java.util.Optional;
 
 import org.junit.Test;
 
+import com.google.common.base.Ticker;
+
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.TickerForSessionCache;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-
-import com.google.common.base.Ticker;
 
 /**
  * A test case to cover very specific situation of a successfully stolen authenticator from a trusted device, which was reused by an adversary from
@@ -42,7 +42,7 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
     public void should_recognise_situation_with_stolen_and_used_authenticator_upon_a_legitimate_attempt_to_use_that_authenticator_by_valid_user() throws SignatureException {
         // establish a new sessions for user TEST
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserEx.class));
+        up.setUsername("TEST", getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         constants.setNow(dateTime("2015-04-23 13:00:00"));
@@ -95,7 +95,7 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
 
         // establish session for the above users
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("USER-1", getInstance(IUserEx.class));
+        up.setUsername("USER-1", getInstance(IUser.class));
         final User user1 = up.getUser();
 
         // trusted session for User-1
@@ -104,7 +104,7 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
 
         coSession.newSession(user1, true); // from work
 
-        up.setUsername("USER-2", getInstance(IUserEx.class));
+        up.setUsername("USER-2", getInstance(IUser.class));
         final User user2 = up.getUser();
 
         // trusted session for User-2
