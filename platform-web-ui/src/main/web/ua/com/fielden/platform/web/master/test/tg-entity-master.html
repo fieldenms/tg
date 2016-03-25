@@ -876,7 +876,7 @@
                     assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult().message, "[1/2/3 6:19] is not acceptable.");
                     
                     // _editingValue ok?
-                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 6:19 AM', 'Editing value should correspond to invalid value [01/02/2003 6:19 AM].');
+                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 06:19', 'Editing value should correspond to invalid value [01/02/2003 06:19].');
                     // binding value ok?
                     assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
                     var invalidDateValue = reflector._millis('01/02/2003 06:19:00.000');
@@ -924,7 +924,7 @@
                     assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult().message, "[1/2/3 6:21] is acceptable, but with warning.");
                     
                     // _editingValue ok?
-                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 6:21 AM', 'Editing value should correspond to value [01/02/2003 6:21 AM].');
+                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 06:21', 'Editing value should correspond to value [01/02/2003 06:21].');
                     // binding value ok?
                     assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
                     assert.strictEqual(bindingEntity.get("dateProp"), arrivedValue, "Binding property should contain the value that represents [1/2/3 6:21] date.");
@@ -967,7 +967,7 @@
                     assert.isNull(potentiallySavedOrNewEntity.prop("dateProp").validationResult(), "Instance meta-prop should have empty (successful) validation result.");
                     
                     // _editingValue ok?
-                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 6:20 AM', 'Editing value should correspond to valid value [01/02/2003 6:20 AM].');
+                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 06:20', 'Editing value should correspond to valid value [01/02/2003 06:20].');
                     // binding value ok?
                     assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
                     assert.strictEqual(bindingEntity.get("dateProp"), arrivedValue, "Binding property should contain the valid value that represents [1/2/3 6:20] date.");
@@ -1178,7 +1178,7 @@
                     assert.strictEqual(potentiallySavedOrNewEntity.prop("dateProp").validationResult().message, "[1/2/3 6:22] is not acceptable for persisted entity.");
                     
                     // _editingValue ok?
-                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 6:22 AM', 'Editing value should correspond to invalid value [01/02/2003 6:22 AM].');
+                    assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 06:22', 'Editing value should correspond to invalid value [01/02/2003 06:22].');
                     // binding value ok?
                     assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
                     var invalidDateValue = reflector._millis('01/02/2003 06:22:00.000');
