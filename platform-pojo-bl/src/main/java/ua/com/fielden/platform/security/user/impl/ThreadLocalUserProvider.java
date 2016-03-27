@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.security.user.impl;
 
-import ua.com.fielden.platform.security.provider.IUserEx;
+import static java.lang.String.format;
+
+import ua.com.fielden.platform.security.exceptions.SecurityException;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 
@@ -19,10 +22,10 @@ public class ThreadLocalUserProvider implements IUserProvider {
         return users.get();
     }
 
-    public void setUsername(final String username, final IUserEx controller) {
-        final User user = controller.findUser(username);
+    public void setUsername(final String username, final IUser coUser) {
+        final User user = coUser.findUser(username);
         if (user == null) {
-            throw new IllegalArgumentException("Could not find user '" + username + "'.");
+            throw new SecurityException(format("Could not find user [%s].", username));
         }
         this.users.set(user);
     }

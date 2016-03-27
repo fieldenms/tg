@@ -22,8 +22,9 @@ import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 
@@ -213,9 +214,12 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
     protected void populateDomain() {
         // set up logged in person, which is needed for TgSubSystem
         final String loggedInUser = "LOGGED IN USER";
-        save(new_(TgPerson.class, loggedInUser).setUsername(loggedInUser).setBase(true));
+        final IUser coUser = ao(User.class);
+        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true));
+        save(new_(TgPerson.class, loggedInUser).setUser(lUser));
+
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername(loggedInUser, getInstance(IUserEx.class));
+        up.setUsername(loggedInUser, getInstance(IUser.class));
 
         // now the test data
         TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));

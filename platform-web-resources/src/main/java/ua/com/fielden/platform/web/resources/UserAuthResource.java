@@ -15,7 +15,7 @@ import org.restlet.resource.ServerResource;
 import ua.com.fielden.platform.cypher.Cypher;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -24,7 +24,7 @@ import ua.com.fielden.platform.security.user.User;
  * @author TG Team
  */
 public class UserAuthResource extends ServerResource {
-    private final IUserEx coUserEx;
+    private final IUser coUserEx;
     private final RestServerUtil restUtil;
     private final String token;
     private final String publicKey;
@@ -48,7 +48,7 @@ public class UserAuthResource extends ServerResource {
      * @param response
      * @throws Exception
      */
-    public UserAuthResource(final IUserEx controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public UserAuthResource(final IUser controller, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
         init(context, request, response);
         setNegotiated(false);
         getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
@@ -84,10 +84,10 @@ public class UserAuthResource extends ServerResource {
     private Representation login() {
         try {
             // Decipher security token, which should have the structure of <username>::<password>.
-            final String[] values = new Cypher().decrypt(token, restUtil.getAppWidePublicKey()).split("::");
+            final String[] values = new Cypher().decrypt(token, "").split("::");
             final String username = values[0];
             // Encrypt the password with application wide private key in order for it to be matched against an encrypted password retrieved using controller
-            final String password = new Cypher().encrypt(values[1], restUtil.getAppWidePrivateKey());
+            final String password = new Cypher().encrypt(values[1], "");
             // Find user data by the provided username.
             final User user;
             try {
@@ -99,7 +99,6 @@ public class UserAuthResource extends ServerResource {
             }
             // If user was found and password matches then it can be updated and returned to the client
             if (user != null && password.equals(user.getPassword())) {
-                user.setPublicKey(publicKey);
                 coUserEx.save(user);
                 return restUtil.singleRepresentation(coUserEx.findUserByIdWithRoles(user.getId()));
             } else { // otherwise the provided authentication information is invalid
@@ -123,20 +122,16 @@ public class UserAuthResource extends ServerResource {
                 getResponse().setStatus(Status.CLIENT_ERROR_UNAUTHORIZED);
                 return restUtil.errorRepresentation(e.getMessage());
             }
-            if (user != null && !StringUtils.isEmpty(user.getPublicKey())) {
+            if (user != null) {
                 // user and public key are present... try to decrypt the provided secrete with the public key...
                 try {
-                    final String descrypteSecrete = new Cypher().decrypt(secrete, user.getPublicKey());
+                    final String descrypteSecrete = new Cypher().decrypt(secrete, "");
                     // if the decrypted value matches username then credentials are considered to be correct
                     if (username.equals(descrypteSecrete)) {
                         return restUtil.resultRepresentation(new Result(CREDENTIALS_ARE_VALID));
                     }
                 } catch (final Exception e) {
-                    // in case of exception, which could happen during decryption, try to match the current user public key with the application-wide public key
-                    // if it matches then user password was reset
-                    if (user.getPublicKey().equals(restUtil.getAppWidePublicKey())) {
-                        return restUtil.errorRepresentation(PASSWORD_RESET);
-                    }
+                    return restUtil.errorRepresentation(PASSWORD_RESET);
                 }
             } else { // either user was not found or its private key is empty -- in both cases credentials are considered to be invalid
                 getResponse().setStatus(Status.CLIENT_ERROR_UNAUTHORIZED);

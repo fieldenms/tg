@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
@@ -83,11 +83,14 @@ public class AssignPropertiesBeforeTestTest extends AbstractDomainDrivenTestCase
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2014-11-23 02:47:00"));
 
-        save(new_(TgPerson.class, loggedInUser).setUsername(loggedInUser).setBase(true));
-        save(new_(TgPerson.class, otherUser).setUsername(otherUser).setBase(true));
+        final IUser coUser = ao(User.class);
+        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true));
+        save(new_(TgPerson.class, loggedInUser).setUser(lUser));
+        final User oUser = coUser.save(new_(User.class, otherUser).setBase(true));
+        save(new_(TgPerson.class, otherUser).setUser(oUser));
 
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername(loggedInUser, getInstance(IUserEx.class));
+        up.setUsername(loggedInUser, getInstance(IUser.class));
 
         save(new_(TgSubSystem.class, "SS1"));
     }

@@ -5,14 +5,14 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.snappy.ISnappyDao;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.SnappyQueryResource;
-
-import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct snappy query oriented resource instantiation. Specifically, it should be used to instantiate
@@ -39,7 +39,7 @@ public class SnappyQueryRestlet<T extends AbstractEntity> extends Restlet {
 
         final ISnappyDao dao = injector.getInstance(ISnappyDao.class);
         final String username = (String) request.getAttributes().get("username");
-        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
+        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUser.class));
 
         if (Method.GET.equals(request.getMethod())) {
         } else if (Method.HEAD.equals(request.getMethod())) {

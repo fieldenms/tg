@@ -5,14 +5,14 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.file_reports.IReportDaoFactory;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.ReportResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 /**
  * Factory for producing {@link ReportResource}s.
@@ -41,7 +41,7 @@ public class ReportResourceFactory extends Restlet {
 
         if (Method.POST.equals(request.getMethod())) {
             final String username = (String) request.getAttributes().get("username");
-            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUser.class));
 
             new ReportResource(reportDaoFactory.createReportDao(), restServerUtil, getContext(), request, response).handle();
         }

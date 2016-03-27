@@ -49,10 +49,6 @@ import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
 public class RestServerUtil {
 
     private final ISerialiser serialiser;
-    /** An application wide public key */
-    private String appWidePublicKey;
-    /** An application wide private key */
-    private String appWidePrivateKey;
 
     @Inject
     public RestServerUtil(final ISerialiser serialiser) {
@@ -487,22 +483,6 @@ public class RestServerUtil {
         }
     }
     
-    public String getAppWidePublicKey() {
-        return appWidePublicKey;
-    }
-
-    public void setAppWidePublicKey(final String publicKey) {
-        this.appWidePublicKey = publicKey;
-    }
-
-    public String getAppWidePrivateKey() {
-        return appWidePrivateKey;
-    }
-
-    public void setAppWidePrivateKey(final String privateKey) {
-        this.appWidePrivateKey = privateKey;
-    }
-
     public ISerialiser getSerialiser() {
         return serialiser;
     }

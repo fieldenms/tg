@@ -5,14 +5,14 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.EntityAggregatesQueryExportResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-
-import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for instantiation of EntityAggregatesQueryExportResource.
@@ -43,7 +43,7 @@ public class EntityAggregatesQueryExportResourceFactory extends Restlet {
             final IEntityAggregatesDao dao = injector.getInstance(IEntityAggregatesDao.class);
 
             final String username = (String) request.getAttributes().get("username");
-            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUser.class));
 
             new EntityAggregatesQueryExportResource(dao, restUtil, getContext(), request, response).handle();
         }

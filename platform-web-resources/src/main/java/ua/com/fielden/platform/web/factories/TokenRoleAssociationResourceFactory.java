@@ -5,13 +5,13 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.TokenRoleAssociationResource;
-
-import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct instantiation of {@link TokenRoleAssociationResource}.
@@ -41,7 +41,7 @@ public class TokenRoleAssociationResourceFactory extends Restlet {
         final ISecurityTokenController controller = injector.getInstance(ISecurityTokenController.class);
 
         final String username = (String) request.getAttributes().get("username");
-        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
+        injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUser.class));
 
         if (Method.GET.equals(request.getMethod())) {
             new TokenRoleAssociationResource(controller, restUtil, getContext(), request, response).handle();

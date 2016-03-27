@@ -1,21 +1,23 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.cypher.Cypher;
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-
-import com.google.inject.Inject;
 
 /**
  * DAO for {@link TgPersonDao}
@@ -26,92 +28,78 @@ import com.google.inject.Inject;
 @EntityType(TgPerson.class)
 public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson {
 
-    private final IUserEx userDao;
+    private final IUser coUser;
     private final EntityFactory entityFactory;
     private final Logger logger = Logger.getLogger(getClass());
 
     @Inject
-    protected TgPersonDao(final IFilter filter, final EntityFactory entityFactory, final IUserEx userDao) {
+    protected TgPersonDao(final IFilter filter, final EntityFactory entityFactory, final IUser coUser) {
         super(filter);
         this.entityFactory = entityFactory;
-        this.userDao = userDao;
+        this.coUser = coUser;
     }
 
     @Override
-    public TgPerson makeUser(final TgPerson person, final String privateKey) {
+    @SessionRequired
+    public TgPerson makeUser(final TgPerson person) {
         if (person.isUser()) {
-            throw new IllegalArgumentException("Person " + person.getKey() + " is already an application user.");
+            throw Result.failure(format("Person [%s] is already an application user.", person.getKey()));
         }
 
+        final User user = entityFactory.newByKey(User.class, person.getKey());
+        user.setDesc(format("User for person [%s].", person.getDesc()));
+        final User su = coUser.findByKeyAndFetch(fetchAll(User.class), User.system_users.SU.name());
+        user.setBasedOnUser(su);
+        final User savedUser = coUser.resetPasswd(user);
+        
         final TgPerson latestPerson = findById(person.getId(), fetchAll(TgPerson.class));
-        final User su = userDao.findByKey("SU");
-        latestPerson.setBasedOnUser(su);
-        latestPerson.setUsername(person.getKey());
-        resetPasswd(latestPerson, privateKey);
+        latestPerson.setUser(savedUser);
         return save(latestPerson);
     }
 
     @Override
-    public TgPerson unmakeUser(final TgPerson person, final String privateKey) {
+    @SessionRequired
+    public TgPerson unmakeUser(final TgPerson person) {
         if (!person.isUser()) {
-            throw new IllegalArgumentException("Person " + person.getKey() + " is not a application user.");
+            throw new SecurityException(format("Person [%s] is not an application user.", person.getKey()));
         }
-        if (User.system_users.isOneOf(person.getUsername())) {
-            throw new IllegalArgumentException("Person " + person.getKey() + " is an application built-in user account and cannot changed.");
+        
+        if (User.system_users.isOneOf(person.getUser().getKey())) {
+            throw new SecurityException(format("Person [%s] is an application built-in user account and cannot be changed.", person.getKey()));
         }
 
-        final TgPerson latestPerson = findById(person.getId(), fetchAll(TgPerson.class));
-        latestPerson.setUsername(null);
-        latestPerson.setPassword(null);
-        latestPerson.setPublicKey(null);
-        latestPerson.setBasedOnUser(null);
-        return save(latestPerson);
+        final User user = person.getUser();
+        person.setUser(null);
+        final TgPerson savedPerson = save(person);
+        coUser.delete(user);
+        
+        return savedPerson;
     }
 
     @Override
-    public TgPerson resetPassword(final TgPerson person, final String privateKey) {
-        final TgPerson latestPerson = findById(person.getId(), fetchAll(TgPerson.class));
-        try {
-            resetPasswd(latestPerson, privateKey);
-            return save(latestPerson);
-        } catch (final Exception e) {
-            throw new IllegalStateException("Could not reset user password.", e);
-        }
-    }
-
-    private void resetPasswd(final TgPerson person, final String privateKey) {
-        if (!person.isUser()) {
-            throw new IllegalArgumentException("Cannot reset password -- person " + person.getKey() + " is not an application user.");
-        }
-        try {
-            person.setPassword(new Cypher().encrypt(person.getUsername(), privateKey));
-        } catch (final Exception e) {
-            throw new IllegalStateException("Could not reset user password.", e);
-        }
+    @SessionRequired
+    public TgPerson resetPassword(final TgPerson person) {
+        // reset the user password
+        coUser.resetPasswd(person.getUser());
+        // return person now pointing to an updated user
+        return findById(person.getId(), fetchAll(TgPerson.class));
     }
 
     @Override
-    public TgPerson populateNew(final String givenName, final String surName, final String fullName, final String userName, final String privateKey) {
+    @SessionRequired
+    public TgPerson populateNew(final String givenName, final String surName, final String fullName, final String userName) {
         // generate "personCode" and "description" for creating a new person:
         final TgPerson newPerson = User.system_users.SU.name().equals(userName) ? entityFactory.newEntity(TgPerson.class, userName, "Super User")
                 : entityFactory.newEntity(TgPerson.class, generateUniquePersonCode(givenName, surName, userName), generatePersonDesc(givenName, surName, fullName));
-        newPerson.setUsername(userName);
-        // "based on user" is required. SU is the base user and thus has no "based on user".
-        newPerson.setBasedOnUser(User.system_users.SU.name().equals(userName) ? null : userDao.findByKey("SU"));
-        newPerson.setBase(User.system_users.SU.name().equals(userName));
-
+        // according to LDAP integration business logic, a new user should be "sector user".
         final TgPerson p = save(newPerson);
-        try {
-            final User user = userDao.findByKey(userName);
-            final Cypher cypher = new Cypher();
-            user.setPassword(cypher.encrypt(user.getKey(), privateKey));
-            userDao.save(user);
-        } catch (final Exception e) {
-            throw new IllegalStateException("A password reset for a new user [" + userName + "] failed. " + e.getMessage());
+        
+        if (User.system_users.SU.name().equals(userName)) {
+            p.setUser(coUser.findByKeyAndFetch(fetchAll(User.class), User.system_users.SU.name()));
+            return save(p);
+        } else {
+            return makeUser(p);
         }
-
-        logger.info("A new user [" + p.getKey() + " -- " + p.getDesc() + "] with username [" + userName + "] has been created. Its password has been resetted.");
-        return p;
     }
 
     /**

@@ -103,7 +103,7 @@ public class DomainMetadataPPIsTest extends BaseEntQueryTCase {
         final SortedSet<PropertyMetadata> expected = new TreeSet<PropertyMetadata>();
         expected.add(ppi("id", LONG, false, H_LONG, "_ID", PRIMITIVE));
         expected.add(ppi("version", LONG, false, H_LONG, "_VERSION", PRIMITIVE));
-        expected.add(ppi("key", STRING, false, H_STRING, "USER_NAME", PRIMITIVE));
+        expected.add(ppi("key", STRING, false, H_STRING, "KEY_", PRIMITIVE));
         expected.add(ppi("roles", UserAndRoleAssociation.class, true, null, Collections.<PropertyColumn> emptyList(), COLLECTIONAL));
 
         final SortedSet<PropertyMetadata> actual = new TreeSet<PropertyMetadata>();

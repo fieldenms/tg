@@ -18,18 +18,16 @@ public class ApplicationSettings implements IApplicationSettings {
     private final String packagePath;
     private final String pathToSecurityTokens;
     private final String securityTokensPackageName;
-    private final String privateKey;
     private final String workflow;
 
     @Inject
     protected ApplicationSettings(//
-    final @Named("app.home") String appHome, //
+            final @Named("app.home") String appHome, //
             final @Named("reports.path") String pathToStorage, //
             final @Named("domain.path") String classPath,//
             final @Named("domain.package") String packagePath,//
             final @Named("tokens.path") String pathToSecurityTokens,//
             final @Named("tokens.package") String securityTokensPackageName,//
-            final @Named("private-key") String privateKey,//
             final @Named("workflow") String workflow) {
         this.appHome = prepareSettings(appHome);
         this.pathToStorage = prepareSettings(pathToStorage);
@@ -37,7 +35,6 @@ public class ApplicationSettings implements IApplicationSettings {
         this.packagePath = packagePath;
         this.pathToSecurityTokens = pathToSecurityTokens;
         this.securityTokensPackageName = securityTokensPackageName;
-        this.privateKey = privateKey;
         this.workflow = workflow;
     }
 
@@ -92,11 +89,6 @@ public class ApplicationSettings implements IApplicationSettings {
             dir.mkdirs();
         }
         return reportsPath;
-    }
-
-    @Override
-    public String privateKey() {
-        return privateKey;
     }
 
     @Override

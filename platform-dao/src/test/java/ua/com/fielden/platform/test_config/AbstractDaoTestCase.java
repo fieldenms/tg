@@ -6,8 +6,9 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
@@ -35,9 +36,11 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         constants.setNow(new DateTime());
 
         // some tests require current person, thus, need to persist a person who would be a user at the same time
-        save(new_(TgPerson.class, "Person who is a user").setUsername("TEST").setBase(true));
+        final IUser coUser = ao(User.class);
+        final User user1 = coUser.save(new_(User.class, "TEST").setBase(true));
+        save(new_(TgPerson.class, "Person who is a user").setUser(user1));
 
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserEx.class));
+        up.setUsername("TEST", getInstance(IUser.class));
     }
 }

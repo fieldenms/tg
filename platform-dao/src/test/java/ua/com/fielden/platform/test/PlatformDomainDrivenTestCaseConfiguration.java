@@ -40,7 +40,6 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
             props.setProperty("reports.path", "");
             props.setProperty("domain.path", "../platform-pojo-bl/target/classes");
             props.setProperty("domain.package", "ua.com.fielden.platform");
-            props.setProperty("private-key", "");
             props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
             props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
             props.setProperty("workflow", "development");

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
+import static java.lang.String.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,24 +14,17 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.error.Result;
 
 /**
  * Represents the system-wide concept of a user. So, this is a system user, which should be used by system security as well as for implementing any specific customer personnel
  * requirements.
- * <p>
- * It is recommended that user password is encoded before setting it. It is envisaged that user password are encoded with application wide RSA private key, and thus can be decoded
- * using application wide public key.
- * <p>
- * If provided, user specific public key is used by the authentication mechanism to ensure authenticity of the request. This key cannot be used for decoding user password, because
- * a corresponding private key is not known at the application server end.
  *
  * @author TG Team
  */
 @KeyTitle("Application User")
 @KeyType(String.class)
-@MapEntityTo(value = "CRAFT", keyColumn = "USER_NAME")
+@MapEntityTo
 @CompanionObject(IUser.class)
 public class User extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
@@ -66,7 +60,7 @@ public class User extends AbstractEntity<String> {
 
     @IsProperty
     @Invisible
-    @MapTo(value = "USER_PASSWORD", length = 255)
+    @MapTo(length = 255)
     @Title(desc = "A hash code of the actual password that only the user should know")
     private String password;
 
@@ -75,40 +69,20 @@ public class User extends AbstractEntity<String> {
     private Set<UserAndRoleAssociation> roles = new HashSet<UserAndRoleAssociation>();
 
     @IsProperty
-    @Invisible
-    @MapTo("USER_PUBLIC_KEY")
-    private String publicKey;
-
-    @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")
-    @MapTo("IS_BASE")
+    @MapTo
     private boolean base = false;
 
     @IsProperty
     @Title(value = "Base user", desc = "A user on which the current user is based. This mainly relates to the application configuration and security user roles.")
-    @MapTo("ID_BASE_CRAFT")
+    @MapTo
     private User basedOnUser;
-
-    protected User() {
-        this(null, null);
-    }
-
-    /**
-     * Principle constructor.
-     *
-     * @param name
-     *            -- is user's key
-     * @param desc
-     */
-    protected User(final String name, final String desc) {
-        super(null, name, desc);
-    }
 
     @Observable
     @Override
     public User setKey(final String value) {
         if (isPersisted() && (system_users.SU.matches(getKey()) && !system_users.SU.matches(value))) {
-            throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and cannot be renamed."));
+            throw Result.failure(format("User %s is an application built-in account and cannot be renamed.", getKey()));
         }
 
         super.setKey(value);
@@ -153,16 +127,6 @@ public class User extends AbstractEntity<String> {
         return this;
     }
 
-    public String getPublicKey() {
-        return publicKey;
-    }
-
-    @Observable
-    public User setPublicKey(final String publicKey) {
-        this.publicKey = publicKey;
-        return this;
-    }
-
     public boolean isBase() {
         return base;
     }
@@ -173,7 +137,7 @@ public class User extends AbstractEntity<String> {
         if (base) {
             setBasedOnUser(null);
         } else if (system_users.isOneOf(this)) {
-            throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and should remain a base user."));
+            throw Result.failure(format("User %s is an application built-in account and should remain a base user.", getKey()));
         }
         getProperty("basedOnUser").setRequired(!base);
         return this;
@@ -184,18 +148,17 @@ public class User extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(User.class)
     public User setBasedOnUser(final User basedOnUser) {
         if (basedOnUser == this) {
             throw new Result(this, new IllegalArgumentException("Self reference is not permitted."));
         }
 
         if (basedOnUser != null && system_users.isOneOf(this)) {
-            throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and cannot have a base user."));
+            throw Result.failure(format("User %s is an application built-in account and cannot have a base user.", getKey()));
         }
 
         if (basedOnUser != null && !basedOnUser.isBase()) {
-            throw new Result(this, new IllegalArgumentException("User " + basedOnUser.getKey() + " is not a base user and thus cannot be used for inheritance."));
+            throw Result.failure(format("User %s is not a base user and thus cannot be used for inheritance.", basedOnUser.getKey()));
         }
 
         this.basedOnUser = basedOnUser;

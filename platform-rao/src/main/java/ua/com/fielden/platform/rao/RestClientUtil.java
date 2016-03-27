@@ -38,7 +38,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -77,7 +77,7 @@ public final class RestClientUtil implements IUserProvider {
     private String privateKey;
 
     /** User controller is required to be able to retrieve user by it name to ensure correct user association upon username change. */
-    private IUserEx userController;
+    private IUser userController;
     private User user;
 
     public RestClientUtil(final Protocol protocol, final String host, final int port, final String version, final String user) {
@@ -602,12 +602,12 @@ public final class RestClientUtil implements IUserProvider {
         user = null;
     }
 
-    public void setUserController(final IUserEx controller) {
+    public void setUserController(final IUser coUser) {
         if (userController != null) {
             throw new IllegalStateException("User controller should be assigned only once.");
         }
 
-        userController = controller;
+        userController = coUser;
     }
 
     @Override
@@ -625,8 +625,8 @@ public final class RestClientUtil implements IUserProvider {
     }
 
     @Override
-    public void setUsername(final String username, final IUserEx controller) {
-        setUserController(controller);
+    public void setUsername(final String username, final IUser coUser) {
+        setUserController(coUser);
         setUsername(username);
     }
 

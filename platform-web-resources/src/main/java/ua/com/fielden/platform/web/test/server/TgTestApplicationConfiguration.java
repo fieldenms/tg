@@ -33,8 +33,6 @@ public class TgTestApplicationConfiguration extends Component {
 
             // create and configure REST server utility
             final RestServerUtil serverRestUtil = injector.getInstance(RestServerUtil.class);
-            serverRestUtil.setAppWidePrivateKey(props.getProperty("private-key"));
-            serverRestUtil.setAppWidePublicKey(props.getProperty("public-key"));
 
             // //////////////////////////////////////////////////////////////
             // ///// Create a component with an HTTP server connector ///////

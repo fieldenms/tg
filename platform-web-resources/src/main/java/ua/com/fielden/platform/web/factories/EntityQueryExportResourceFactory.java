@@ -6,14 +6,14 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 import org.restlet.routing.Router;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.security.provider.IUserEx;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.EntityQueryExportResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-
-import com.google.inject.Injector;
 
 /**
  * This is {@link Restlet} implementation that provides logic for correct entity export resource instantiation. Specifically, it should be used to instantiate
@@ -46,7 +46,7 @@ public class EntityQueryExportResourceFactory<T extends AbstractEntity<?>, DAO e
             final DAO dao = injector.getInstance(daoType);
 
             final String username = (String) request.getAttributes().get("username");
-            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUserEx.class));
+            injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUser.class));
 
             new EntityQueryExportResource<T>(router, injector, dao, restUtil, getContext(), request, response).handle();
         }

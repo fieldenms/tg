@@ -41,7 +41,6 @@ import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.provider.SecurityTokenController;
 import ua.com.fielden.platform.security.provider.SecurityTokenInfoDao;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
@@ -139,7 +138,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("reports.path")).to("");
         bindConstant().annotatedWith(Names.named("domain.path")).to(props.getProperty("domain.path"));
         bindConstant().annotatedWith(Names.named("domain.package")).to(props.getProperty("domain.package"));
-        bindConstant().annotatedWith(Names.named("private-key")).to(props.getProperty("private-key"));
         bindConstant().annotatedWith(Names.named("tokens.path")).to(props.getProperty("tokens.path"));
         bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
         bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));
@@ -179,7 +177,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         // user security related bindings
         bind(IUser.class).to(UserDao.class);
-        bind(IUserEx.class).to(UserDao.class);
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
         
         bind(IUserRoleDao.class).to(UserRoleDao.class);
