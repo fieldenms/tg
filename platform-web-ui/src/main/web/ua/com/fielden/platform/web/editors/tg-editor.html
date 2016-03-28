@@ -5,7 +5,6 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-error.html">
 <link rel="import" href="/resources/polymer/paper-input/paper-input-char-counter.html">
-<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 
@@ -22,33 +21,6 @@
         
         #input-container {
             @apply(--layout-flex);
-        }
-        
-        /* Styles for boolean property editors. */
-        paper-checkbox {
-            -moz-user-select: none;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -o-user-select: none;
-            font-family: 'Roboto', 'Noto', sans-serif;
-            --paper-checkbox-checked-color: #0288D1;
-            --paper-checkbox-checked-ink-color: #0288D1;
-            height: 1.8rem;
-        }
-        
-        paper-checkbox::shadow #checkboxContainer {
-            flex-shrink: 0;
-        }
-        paper-checkbox::shadow #checkboxLabel {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-size: 0.9rem;
-            font-weight: 400;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-            color: #757575 !important;
         }
         
         paper-input-container::shadow .add-on-content {
@@ -153,8 +125,6 @@
 
                     <content select=".custom-input"></content>
 
-                    <paper-checkbox id="input" class="boolean-input" hidden$="[[!_isBooleanEditor(_editorKind)]]" checked="[[_isBooleanCheckedIfExists(_editingValue)]]" disabled$="[[_disabled]]" on-change="_onChange" class="layout horizontal center">[[propTitle]]</paper-checkbox>
-
                     <input id="input" class="entity-input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
                     
                     <input id="input" class="colour-input" is="iron-input" hidden$="[[!_isColourEditor(_editorKind)]]" bind-value="{{_editingValue}}" style$="[[_calcColourTextStyleIfExists(_editingValue)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
@@ -208,18 +178,13 @@
             debug: Boolean,
             _editorKind: String,
             _autocompleterBlurEventHandler: Function,
-            _calcColourTextStyle: Function,
-            _isBooleanChecked: Function
+            _calcColourTextStyle: Function
         },
         
         behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
         
         _isMultilineText: function (editorKind) {
             return 'MULTILINE_TEXT' === editorKind;
-        },
-
-        _isBooleanEditor: function (editorKind) {
-            return "BOOLEAN" === editorKind;
         },
 
         _isAutocompleter: function (editorKind) {
@@ -257,10 +222,6 @@
                 style += "opacity: 0.6;"
             }
             return style;
-        },
-        
-        _isBooleanCheckedIfExists: function (editingValue) {
-            return this._isBooleanChecked ? this._isBooleanChecked(editingValue) : false;
         },
         
         _calcColourTextStyleIfExists: function (editingValue) {
