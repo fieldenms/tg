@@ -138,11 +138,11 @@
 		    });
 		    
 		    test('works for new persisted entity', function(done) {
-		    	master.entityId = '4';
+		    	master.entityId = '7';
 		    	
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
 	                assert.strictEqual(entity.type().fullClassName(), "ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties", "The type of entity response is not correct.");
-	                assert.strictEqual(entity.id, 4, "The id of entity response is not correct.");
+	                assert.strictEqual(entity.id, 7, "The id of entity response is not correct.");
 	                assert.strictEqual(entity.version, 0, "The version of entity response is not correct.");
 
 	                // properties:
@@ -202,7 +202,7 @@
 		    });
 		
 		    test('works for property', function(done) {
-		    	master.entityId = '4';
+		    	master.entityId = '7';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -248,7 +248,7 @@
 		    });
 		    
 		    test('works for integer property', function (done) {
-		    	master.entityId = '4';
+		    	master.entityId = '7';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -293,7 +293,7 @@
 		    });
 		    
 		    test('works for bigDecimal property', function (done) {
-		    	master.entityId = '8';
+		    	master.entityId = '11';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -338,7 +338,7 @@
 		    });
 		    
 		    test('works for boolean property', function (done) {
-		    	master.entityId = '10';
+		    	master.entityId = '13';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -381,7 +381,7 @@
 		    });
 		    
 		    test('works for date property', function (done) {
-		    	master.entityId = '11';
+		    	master.entityId = '14';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -426,7 +426,7 @@
 		    });
 		    
 		    test('works for entity property', function (done) {
-		    	master.entityId = '5';
+		    	master.entityId = '8';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -474,7 +474,7 @@
 		    });
 		    
 		    test('works for money property', function (done) {
-		    	master.entityId = '7';
+		    	master.entityId = '10';
 		    	// TODO at this stage whatever currency is used for setting into binding entity (to be saved), retrieval from database 
 		    	//      will return money instances with the currency, that is currently used in your OS.
 		    	// Please, adjust the currency to be the same as in your OS to make this test happy.
@@ -531,7 +531,7 @@
 		    });
 		    
 		    test('works for string property', function (done) {
-		    	master.entityId = '9';
+		    	master.entityId = '12';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -576,7 +576,7 @@
 		    });
 		    
 		    test('works for uppercased property editor', function (done) {
-		    	master.entityId = '9';
+		    	master.entityId = '12';
 		        var edProperty = master.$.editor_4_stringProp;
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
@@ -654,7 +654,7 @@
 		    });
 		    
 		    test('works for any property into missing value', function (done) {
-		    	master.entityId = '11';
+		    	master.entityId = '14';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                // value ok?
@@ -697,7 +697,7 @@
 		    });
 		    
 		    test('works for any property simultaneously', function (done) {
-		    	master.entityId = '9';
+		    	master.entityId = '12';
 		    	
 	            var postValidatedCount = 0;
 
@@ -1207,7 +1207,7 @@
 		    });
 		    
 		    test('works for stale entity', function (done) {
-		    	master.entityId = '13';
+		    	master.entityId = '16';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                assert.strictEqual(validatedEntity.version, 1, "Entity version should be increased.");
@@ -1296,7 +1296,7 @@
 		    });
 		    
 		    test('works for stale entity with conflict', function (done) {
-		    	master.entityId = '13';
+		    	master.entityId = '16';
 		    	
 	            master.postValidated = function(validatedEntity, bindingEntity, customObject) {
 	                assert.strictEqual(validatedEntity.version, 1, "Entity version should be increased.");
