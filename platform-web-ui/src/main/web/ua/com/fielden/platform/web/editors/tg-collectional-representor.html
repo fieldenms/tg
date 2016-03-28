@@ -3,10 +3,9 @@
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
 
-<dom-module id="tg-collectional-representor">
-    <style>
-    </style>
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 
+<dom-module id="tg-collectional-representor">
     <template>
     	<tg-editor 
     		id="editorDom" 
@@ -17,10 +16,16 @@
     		_error="[[_error]]" 
     		_comm-value="[[_commValue]]" 
     		_accepted-value="[[_acceptedValue]]" 
-    		debug="[[debug]]" 
-    		_on-change="[[_onChange]]"
-    		_on-input="[[_onInput]]"
-    		_on-keydown="[[_onKeydown]]">
+    		debug="[[debug]]">
+			<input
+    			id="input"
+    			class="custom-input collectional-representor-input"
+    			is="iron-input"
+    			bind-value="{{_editingValue}}"
+    			on-change="_onChange"
+    			on-input="_onInput"
+    			on-keydown="_onKeydown"
+    			disabled$="[[_disabled]]"/>
         	<content class=".property-action"></content>
     	</tg-editor>
     </template>
@@ -30,10 +35,6 @@
     Polymer({
     	is: 'tg-collectional-representor',
     	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
-    	
-    	ready: function () {
-    		this.$.editorDom._editorKind = "SINGLELINE_TEXT";
-    	},
     	
         /**
          * Converts the value into string representation (which is used in edititing / comm values).

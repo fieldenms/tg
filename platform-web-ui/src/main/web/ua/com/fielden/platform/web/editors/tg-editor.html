@@ -158,8 +158,6 @@
 
                     <content select=".custom-input"></content>
 
-                    <input id="input" class="text-or-date-input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
-
                     <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
                         <!--  flex -->
                         <textarea id="input" class="multiline-text-input" disabled$="[[_disabled]]"></textarea>
@@ -227,10 +225,6 @@
         
         behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
         
-        _isSinglelineTextOrDate: function (editorKind) {
-            return 'SINGLELINE_TEXT' === editorKind || 'DATE' === editorKind;
-        },
-
         _isMultilineText: function (editorKind) {
             return 'MULTILINE_TEXT' === editorKind;
         },

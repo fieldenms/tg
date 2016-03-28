@@ -61,7 +61,7 @@
             
             test('singleline [stringProp] is correct one', function (done) {
                 var targetProperty = 'stringProp';
-                var expectedDecoratedInputClass = 'text-or-date-input';
+                var expectedDecoratedInputClass = 'singleline-text-input';
                 var edProperty = master.querySelector('tg-singleline-text-editor#editor_4_' + targetProperty);
                 assert.ok(edProperty.decoratedInput(), 'Editor"s decoratedInput() for [' + targetProperty + '] should exist.');
                 console.debug(edProperty.decoratedInput().classList);
@@ -70,7 +70,7 @@
             });
             
             test('[dateProp] is correct one', function (done) {
-                assertDecoratedInput(done, 'dateProp', 'text-or-date-input');
+                assertDecoratedInput(done, 'dateProp', 'date-input');
             });
             
             test('multiline [stringProp] is correct one', function (done) {
