@@ -119,10 +119,16 @@ public class SourceControllerImpl implements ISourceController {
         final int endOfURIIndex = doubleQuote ? nextCurr.indexOf("\"") : nextCurr.indexOf("'");
         final String importURI = nextCurr.substring(0, endOfURIIndex);
         final LinkedHashSet<String> set = new LinkedHashSet<String>(currentRootDependencies);
-        set.add(importURI);
+        if (isImportHref(source, start)) {
+            set.add(importURI);
+        }
         return getRootDependencies(nextCurr.substring(endOfURIIndex), set);
     }
-
+    
+    private static boolean isImportHref(final String source, final int start) {
+        return start - 3 < 0 || !source.substring(start - 3, start - 1).equalsIgnoreCase("<a");
+    }
+    
     /**
      * Returns dependent resources URIs for the specified resource's 'resourceURI'.
      *
