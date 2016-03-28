@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/layout/tg-tile-layout.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
@@ -14,12 +15,15 @@
             overflow: hidden;
             --paper-toolbar-background: #0288D1;
             --paper-toolbar-color: white;
-            --paper-toolbar: {
-                height: 44px;
-                font-size: 18px;
-            }
-            ;
+            --paper-toolbar-height: 44px;
         }
+        
+        a paper-icon-button,
+		a:active paper-icon-button,
+		a:visited paper-icon-button {
+    		color: white;
+  		}
+        
         .item-name {
             height: 48px;
             min-height: 48px;
@@ -53,6 +57,10 @@
 
         <paper-toolbar id="toolbar">
             <!-- TODO: need to get the user information from somewhere (from cookies?) and represent it in application (maybe in 'logout' area?) -->
+        	<span class="title"></span>
+            <a href="/logout" tabIndex="-1">
+  				<paper-icon-button icon="icons:exit-to-app"></paper-icon-button>
+  			</a>
         </paper-toolbar>
 
         <div class="items">
