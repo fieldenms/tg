@@ -3,6 +3,8 @@
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
 
+<link rel="import" href="/resources/polymer/iron-autogrow-textarea/iron-autogrow-textarea.html">
+
 <dom-module id="tg-multiline-text-editor"> <!-- TODO layout vertical -->
     <style>
         #input.upper-case {
@@ -20,11 +22,19 @@
     		_error="[[_error]]" 
     		_comm-value="[[_commValue]]" 
     		_accepted-value="[[_acceptedValue]]" 
-    		debug="[[debug]]" 
-    		_on-change="[[_onChange]]"
-    		_on-input="[[_onInput]]"
-    		_on-keydown="[[_onKeydown]]"
-    		_max-length="[[maxLength]]">
+    		debug="[[debug]]">
+            <iron-autogrow-textarea
+            	class="custom-input"
+            	max-rows="5"
+            	bind-value="{{_editingValue}}"
+            	max-length="[[maxLength]]"
+            	on-change="_onChange"
+            	on-input="_onInput"
+            	on-keydown="_onKeydown"
+            	disabled$="[[_disabled]]"/>
+                <!--  flex -->
+                <textarea id="input" class="multiline-text-input" disabled$="[[_disabled]]"></textarea>
+            </iron-autogrow-textarea>
     		<content class=".property-action"></content>
     	</tg-editor>
     </template>
