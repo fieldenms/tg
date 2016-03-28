@@ -158,8 +158,6 @@
 
                     <content select=".custom-input"></content>
 
-                    <input id="input" class="decimal-input" is="iron-input" hidden$="[[!_isDecimal(_editorKind)]]" type="number" step="any" prevent-invalid-input bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled}}"/>
-
                     <input id="input" class="text-or-date-input" is="iron-input" hidden$="[[!_isSinglelineTextOrDate(_editorKind)]]" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
 
                     <iron-autogrow-textarea hidden$="[[!_isMultilineText(_editorKind)]]" max-rows="5" bind-value="{{_editingValue}}" max-length="[[_maxLength]]" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
@@ -230,10 +228,6 @@
         
         behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
         
-        _isDecimal: function (editorKind) {
-            return 'DECIMAL' === editorKind;
-        },
-
         _isSinglelineTextOrDate: function (editorKind) {
             return 'SINGLELINE_TEXT' === editorKind || 'DATE' === editorKind;
         },
