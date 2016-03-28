@@ -57,12 +57,7 @@ public class LoginResource extends ServerResource {
     private final IUniversalConstants constants;
 
     /**
-     * Creates {@link LoginResource} and initialises it with centre instance.
-     *
-     * @param centre
-     * @param context
-     * @param request
-     * @param response
+     * Creates {@link LoginResource}.
      */
     public LoginResource(//
     final String domainName,
