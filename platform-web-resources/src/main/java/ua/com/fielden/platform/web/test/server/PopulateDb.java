@@ -81,6 +81,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
     @Override
     protected void populateDomain() {
         System.out.println("Creating and populating the development database...");
+        final User su = ao(User.class).save(new_(User.class, User.system_users.SU.name()).setBase(true));
+        final User demo = ao(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su));
+        
         final ITgPerson aoPerson = (ITgPerson) ao(TgPerson.class);
         aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());
         aoPerson.populateNew("Demo", "User", "Demo User", "DEMO");
@@ -88,7 +91,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies."));
         System.out.println("admin.getId() == " + admin.getId());
 
-        final User su = ((IUser) ao(User.class)).findByKey(User.system_users.SU.name());
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
         // populate testing entities
@@ -157,7 +159,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgEntityWithPropertyDependency entWithPropDependency = save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS"));
         System.out.println("entWithPropDependency.getId() == " + entWithPropDependency.getId());
 
-        final User demo = ((IUser) ao(User.class)).findByKey("DEMO");
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
 
         final UserRole stationMgr = save(new_(UserRole.class, "STATION_MGR", "A role, which has access to the the station managing functionality."));
