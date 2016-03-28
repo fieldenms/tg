@@ -14,9 +14,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+
+import com.google.common.cache.Cache;
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -31,9 +33,6 @@ import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDurati
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-
-import com.google.common.cache.Cache;
-import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link IUserSession}.
@@ -72,6 +71,13 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     }
 
     @Override
+    public void clearSession(final UserSession session) {
+        final Authenticator auth = session.getAuthenticator().get();
+        cache.invalidate(auth.toString());
+        defaultDelete(session);
+    }
+    
+    @Override
     public int clearAll(final User user) {
         final EntityResultQueryModel<UserSession> q = select(UserSession.class).where().prop("user").eq().val(user).model();
 
@@ -91,13 +97,15 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                         .prop("user").eq().val(user)
                         .and().prop("trusted").eq().val(false)
                         .model();
-        super.defaultDelete(query);
+        defaultBatchDelete(query);
+        
+        
     }
 
     @Override
     public void clearAll() {
-        super.defaultDelete(select(UserSession.class).model());
-
+        defaultBatchDelete(select(UserSession.class).model());
+        cache.invalidateAll();
     }
 
     @Override
@@ -107,7 +115,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                         .where()
                         .prop("trusted").eq().val(false)
                         .model();
-        super.defaultDelete(query);
+        defaultBatchDelete(query);
     }
 
     @Override
@@ -118,7 +126,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                         .prop("user").eq().val(user)
                         .and().prop("expiryTime").lt().now()
                         .model();
-        super.defaultDelete(query);
+        defaultBatchDelete(query);
     }
 
     @Override
@@ -128,7 +136,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                         .where()
                         .prop("expiryTime").lt().now()
                         .model();
-        super.defaultDelete(query);
+        defaultBatchDelete(query);
     }
 
     /**

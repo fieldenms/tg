@@ -62,6 +62,13 @@ public interface IUserSession extends IEntityDao<UserSession> {
     UserSession newSession(final User user, final boolean isDeviceTrusted);
 
     /**
+     * Invalidates the specified user session. 
+     * 
+     * @param session
+     */
+    void clearSession(final UserSession session);
+    
+    /**
      * Delete all sessions associated with the specified uses.
      * Having no current sessions, enforces user to login explicitly.
      * Therefore, this method should really be used by the system only in the event when a security threat is suspected or user account needs to be disabled.
