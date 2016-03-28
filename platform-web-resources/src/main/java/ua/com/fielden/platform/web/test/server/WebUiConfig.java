@@ -396,6 +396,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .longDesc("Creates new status and assignes it back to the Status property")
                         .build())
                 .also()
+                .addProp("colourProp").asColour()
+                .also()
 
                 .addAction(MasterActions.REFRESH)
                     .icon("highlight-off")
@@ -425,14 +427,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         "      ['padding:20px', "
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
-                        + format("[['flex']],")
+                        + format("[[%s], ['flex']],", fmr)
                         + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
-                        + "[['flex'], ['flex']],"
+                        + "[[fmr], ['flex'], ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]")
                         .replace("fmr", fmr)
@@ -443,7 +445,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
-                        + "[['flex']],"
+                        + "[[fmr], ['flex']],"
                         + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]")
                         .replace("fmr", fmr)

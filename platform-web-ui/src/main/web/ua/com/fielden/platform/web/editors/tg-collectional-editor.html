@@ -82,8 +82,8 @@
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]"
             current-state="[[currentState]]">
-            <input is="iron-input"  placeholder="Search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
-            <iron-list id="input" class="custom-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
+            <input is="iron-input" class="custom-input" placeholder="Search..." bind-value="{{_phraseForSearching}}" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
+            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]">

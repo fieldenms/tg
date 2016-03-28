@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>tg-datetime-picker tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+    
+    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+    
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+</head>
+
+<body>
+    <tg-reflector id="reflector"></tg-reflector>
+    <test-fixture id="MasterFixture">
+        <template>
+            <tg-TgPersistentEntityWithProperties-master 
+                id="master" 
+                entity-type="ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties" 
+                entity-id="new" 
+                current-state="EDIT">
+            </tg-TgPersistentEntityWithProperties-master>
+        </template>
+    </test-fixture>
+
+    <script>
+        suite('decorated input for', function() {
+            var master, reflector;
+            
+            setup(function() {
+                master = fixture('MasterFixture');
+                reflector = document.querySelector('#reflector');
+            });
+            
+            var assertDecoratedInput = function (done, targetProperty, expectedDecoratedInputClass) {
+                var edProperty = master.$['editor_4_' + targetProperty];
+                assert.ok(edProperty.decoratedInput(), 'Editor"s decoratedInput() for [' + targetProperty + '] should exist.');
+                console.debug(edProperty.decoratedInput().classList);
+                assert.strictEqual(edProperty.decoratedInput().classList.contains(expectedDecoratedInputClass), true, 'Editor"s decoratedInput() for [' + targetProperty + '] should contain class [' + expectedDecoratedInputClass + '].');
+                done();
+            };
+            
+            test('[requiredValidatedProp] is correct one', function (done) {
+                assertDecoratedInput(done, 'requiredValidatedProp', 'integer-input');
+            });
+            
+            test('[bigDecimalProp] is correct one', function (done) {
+                assertDecoratedInput(done, 'bigDecimalProp', 'decimal-input');
+            });
+            
+            test('singleline [stringProp] is correct one', function (done) {
+                var targetProperty = 'stringProp';
+                var expectedDecoratedInputClass = 'text-or-date-input';
+                var edProperty = master.querySelector('tg-singleline-text-editor#editor_4_' + targetProperty);
+                assert.ok(edProperty.decoratedInput(), 'Editor"s decoratedInput() for [' + targetProperty + '] should exist.');
+                console.debug(edProperty.decoratedInput().classList);
+                assert.strictEqual(edProperty.decoratedInput().classList.contains(expectedDecoratedInputClass), true, 'Editor"s decoratedInput() for [' + targetProperty + '] should contain class [' + expectedDecoratedInputClass + '].');
+                done();
+            });
+            
+            test('[dateProp] is correct one', function (done) {
+                assertDecoratedInput(done, 'dateProp', 'text-or-date-input');
+            });
+            
+            test('multiline [stringProp] is correct one', function (done) {
+                assertDecoratedInput(done, 'stringProp', 'multiline-text-input');
+            });
+            
+            test('[booleanProp] is correct one', function (done) {
+                assertDecoratedInput(done, 'booleanProp', 'boolean-input');
+            });
+            
+            test('[entityProp] is correct one', function (done) {
+                assertDecoratedInput(done, 'entityProp', 'entity-input');
+            });
+            
+            test('[colourProp] is correct one', function (done) {
+                assertDecoratedInput(done, 'colourProp', 'colour-input');
+            });
+            
+        });
+    </script>
+</body>
+</html>
