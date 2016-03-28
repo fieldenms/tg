@@ -66,11 +66,18 @@
     		_error="[[_error]]" 
     		_comm-value="[[_commValue]]" 
     		_accepted-value="[[_acceptedValue]]" 
-    		debug="[[debug]]" 
-    		_on-change="[[_onChange]]" 
-    		_on-input="[[_onInput]]"
-    		_on-keydown="[[_onKeydown]]"
-    		_autocompleter-blur-event-handler="[[_blurEventHandler]]">
+    		debug="[[debug]]">
+            <input
+            	id="input"
+            	class="custom-input entity-input"
+            	is="iron-input"
+            	type="text"
+            	on-blur="_blurEventHandler"
+            	bind-value="{{_editingValue}}"
+            	on-change="_onChange"
+            	on-input="_onInput"
+            	on-keydown="_onKeydown"
+            	disabled$="[[_disabled]]"/>
 	    	<paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
@@ -351,8 +358,6 @@
                 	// There is no need to proceed with search if user moved out of the search field
                 	this._cancelSearch();
                 }).bind(this);
-                
-                this.$.editorDom._editorKind = "AUTOCOMPLETER";
             },
             
             attached: function () {

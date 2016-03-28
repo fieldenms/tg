@@ -124,8 +124,6 @@
                     <!-- allowed-pattern="[0-9]" on-input="inputEventHandler" on-blur="focusLostEventHandler" on-focus="focusGotEventHandler" -->
 
                     <content select=".custom-input"></content>
-
-                    <input id="input" class="entity-input" is="iron-input" hidden$="[[!_isAutocompleter(_editorKind)]]" type="text" on-blur="_autocompleterBlurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]" />
                     
                     <input id="input" class="colour-input" is="iron-input" hidden$="[[!_isColourEditor(_editorKind)]]" bind-value="{{_editingValue}}" style$="[[_calcColourTextStyleIfExists(_editingValue)]]" prevent-invalid-input allowed-pattern="[0-9, A-F, a-f]" maxlength="6" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" disabled$="[[_disabled]]"/>
                 </div>
@@ -177,7 +175,6 @@
             _acceptedValue: String,
             debug: Boolean,
             _editorKind: String,
-            _autocompleterBlurEventHandler: Function,
             _calcColourTextStyle: Function
         },
         
@@ -185,10 +182,6 @@
         
         _isMultilineText: function (editorKind) {
             return 'MULTILINE_TEXT' === editorKind;
-        },
-
-        _isAutocompleter: function (editorKind) {
-            return "AUTOCOMPLETER" === editorKind;
         },
         
         _isColourEditor : function(editorKind) {
