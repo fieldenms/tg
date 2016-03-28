@@ -60,7 +60,7 @@
          }
     </style>
     <template>
-        <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" _on-change="[[_onChange]]" current-state="[[currentState]]" _calc-colour-text-style="[[_calcColourTextStyle]]">
+        <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" _on-change="[[_onChange]]" _calc-colour-text-style="[[_calcColourTextStyle]]">
             <div class="layout horizontal prefix-custom-attributes" style$="[[_calcDecoratorPartStyle(_disabled)]]">
                 <div on-tap="_openColourPicker" class="small-box prefix-custom-attributes" style$="[[_calcColourBoxStyle(_editingValue)]]">
                     <iron-icon class$="[[_calcColourSmallIconClass(_editingValue)]]" icon="close"></iron-icon>
