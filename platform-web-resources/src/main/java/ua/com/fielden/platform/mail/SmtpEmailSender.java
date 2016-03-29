@@ -24,7 +24,7 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.mail.exceptions.EmailException;
 
-public class SendEmails {
+public class SmtpEmailSender {
 
     private static enum EmailType {
         PLAIN {
@@ -35,7 +35,7 @@ public class SendEmails {
 
             @Override
             public void setBodyText(BodyPart bodyPart, String body) throws Exception {
-                bodyPart.setText(body);
+                bodyPart.setText(body + "\n\n");
                 
             }
         }, 
@@ -57,11 +57,15 @@ public class SendEmails {
         public abstract void setBodyText(final BodyPart bodyPart, final String body) throws Exception;
     }
     
-    private final Logger logger = Logger.getLogger(SendEmails.class);
-
-    public Session getNewMailSession() {
+    private final Logger logger = Logger.getLogger(SmtpEmailSender.class);
+    private final String host;
+    
+    public SmtpEmailSender(final String host) {
+        this.host = host;
+    }
+    
+    public Session newEmailSession() {
         final Properties props = new Properties();
-        final String host = "192.168.1.8";
         props.put("mail.smtp.host", host);
         final Session session = Session.getDefaultInstance(props, null);
         return session;
@@ -142,7 +146,7 @@ public class SendEmails {
             final String body,
             final EmailType type) {
         try {
-            final Session session = getNewMailSession();
+            final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(fromAddress));
             assignToAddresses(csvToAddresses, message);
@@ -168,7 +172,7 @@ public class SendEmails {
         }
         
         try {
-            final Session session = getNewMailSession();
+            final Session session = newEmailSession();
             final MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(fromAddress));
             assignToAddresses(csvToAddresses, message);
@@ -234,12 +238,11 @@ public class SendEmails {
 
     
     public static void main(String[] args) {
-        final SendEmails sender = new SendEmails();
+        final SmtpEmailSender sender = new SmtpEmailSender("192.168.1.8");
         Path path1 = Paths.get("pom.xml");
         Path path2 = Paths.get("desktop-script.sh");
-        System.out.println(path1.toFile().exists());
-        sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "\toles@fielden.com.au  ", "Plain text with text mime type", "Plain text, but HTML mime type", path1, path2);
-        sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "\toles@fielden.com.au  ", "Html text with HTML mime type", "Html text, but HTML mime type", path1, path2);
+        sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com", "Plain text with text mime type", "Plain text, but HTML mime type", path1, path2);
+        sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com ", "Html text with HTML mime type", "Html text, but HTML mime type</br></br>", path1, path2);
         sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au  ", "Plain text with HTML mime type", "Plain text, but HTML mime type");
         sender.sendPlainMessage("oles@fielden.com.au", "oles@fielden.com.au", "HTML text with TXT mime type", "<html>Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.</html>");
         sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au", "HTML text with HTML mime type, not <html> block", "Please open the <a href='https://tgdev.com:8092/login'>link</a> to reset you password.");
