@@ -452,7 +452,7 @@ This element is `display:block` by default, but you can set the `inline` attribu
     },
 
     get _inputElement() {
-      return Polymer.dom(this).querySelector(this._inputSelector);
+      return Polymer.dom(this).querySelector(this._inputSelector) || this.querySelector(this._inputSelector);
     },
 
     get _inputElementValue() {
