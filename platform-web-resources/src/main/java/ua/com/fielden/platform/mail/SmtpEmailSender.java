@@ -24,6 +24,13 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.mail.exceptions.EmailException;
 
+/**
+ * A utility class for sending emails via SMTP. 
+ * Public methods in this class can be used to send email in HTML or plain format with/o attachments.
+ * 
+ * @author TG Team
+ *
+ */
 public class SmtpEmailSender {
 
     private static enum EmailType {
@@ -64,7 +71,7 @@ public class SmtpEmailSender {
         this.host = host;
     }
     
-    public Session newEmailSession() {
+    private Session newEmailSession() {
         final Properties props = new Properties();
         props.put("mail.smtp.host", host);
         final Session session = Session.getDefaultInstance(props, null);
