@@ -48,7 +48,7 @@
         	debug="[[debug]]">
         	<paper-checkbox
         		id="input"
-        		class="custom-input boolean-input layout horizontal center"
+        		class="paper-input-input custom-input boolean-input layout horizontal center"
         		checked="[[_isBooleanChecked(_editingValue)]]"
         		disabled$="[[_disabled]]"
         		on-change="_onChange">[[propTitle]]</paper-checkbox>
@@ -72,6 +72,8 @@
         },
 
         ready: function () {
+            this.$.editorDom._editorKind = "BOOLEAN";
+            
             this._onChange = (function (e) {
                 console.log("_onChange:", e);
                 var target = e.target || e.srcElement;
