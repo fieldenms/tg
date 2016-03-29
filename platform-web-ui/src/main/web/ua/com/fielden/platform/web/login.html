@@ -138,7 +138,9 @@
             var trustedDeviceMock = document.querySelector('#in-trusted-device-mock');
 
             var inUserName = document.querySelector('#in-username');
-            inUserName.focus();
+            window.addEventListener('WebComponentsReady', function(e) {
+                inUserName.focus();
+            });
             
             submit.onclick = function () {
                 // need to transfer value from a paper-checkbox that does not get submitted in the from
