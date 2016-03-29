@@ -24,6 +24,7 @@
     		_accepted-value="[[_acceptedValue]]" 
     		debug="[[debug]]">
             <iron-autogrow-textarea
+            	id="textarea_wrapper"
             	class="custom-input"
             	max-rows="5"
             	bind-value="{{_editingValue}}"
@@ -33,7 +34,8 @@
             	on-keydown="_onKeydown"
             	disabled$="[[_disabled]]"/>
                 <!--  flex -->
-                <textarea id="input" class="multiline-text-input" disabled$="[[_disabled]]"></textarea>
+                <!--  FIXME: Following textarea is disregarded fully -- need to use iron-autogrow-textarea properties to control inner textarea behaviour -->
+                <!-- textarea id="input" class="multiline-text-input" disabled$="[[_disabled]]"></textarea -->
             </iron-autogrow-textarea>
     		<content class=".property-action"></content>
     	</tg-editor>

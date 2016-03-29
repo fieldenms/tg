@@ -300,7 +300,7 @@
             },
             
             decoratedInput: function () {
-                return this.$.input;
+                return this.$.input || (this.$.textarea_wrapper ? this.$.textarea_wrapper.textarea : null);
             },
             
             /**

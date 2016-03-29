@@ -115,7 +115,7 @@
     </style>
 
     <template>
-        <paper-input-container id="decorator" attr-for-value="editing-value" always-float-label>
+        <paper-input-container id="decorator" always-float-label>
             <!-- flex auto  for textarea! -->
             <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]">[[propTitle]]</label>
             <div class="main-container">
@@ -126,9 +126,9 @@
                 <content select=".custom-icon-buttons"></content>
 				<content select=".property-action"></content>
             </div>
-
+            <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
             <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]">[[_error]]</paper-input-error>
-
+            <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]"></paper-input-char-counter>
         </paper-input-container>
         
@@ -174,12 +174,16 @@
         
         behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
         
-        _isMultilineText: function (editorKind) {
-            return 'MULTILINE_TEXT' === editorKind;
+        attached: function () {
+            this.async((function () {
+                if (!this._editorKind) {
+                    this._editorKind = 'NOT_MULTILINETEXT_OR_BOOLEAN';
+                }
+            }).bind(this), 1);
         },
         
-        _isCollectional: function (editorKind) {
-            return "COLLECTIONAL" === editorKind;
+        _isMultilineText: function (editorKind) {
+            return 'MULTILINE_TEXT' === editorKind;
         },
         
         /**

@@ -82,7 +82,7 @@
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]">
             <input is="iron-input" class="custom-input" placeholder="Search..." bind-value="{{_phraseForSearching}}" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
-            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
+            <iron-list id="input" class="paper-input-input custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]">
@@ -187,7 +187,6 @@
         ],
         
         ready: function () {
-            this.$.editorDom._editorKind = "COLLECTIONAL";
             this._eventHandler = (function(e) {
             	// There is no need to proceed with search if user moved out of the search field
             	this._cancelSearch();
