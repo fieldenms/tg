@@ -38,6 +38,9 @@ public final class Validators {
     private Validators() {
     }
 
+    
+    public static final String emailRegex = "^\\S+@\\S+$";
+    
     /**
      * Identifies whether the provided entity overlaps with any of the existing entities.
      *
