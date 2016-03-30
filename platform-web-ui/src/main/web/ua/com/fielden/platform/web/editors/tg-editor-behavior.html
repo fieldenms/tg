@@ -230,6 +230,8 @@
                 	type: Function,
                 	value: function () {
                 		return (function (event) {
+                		    // console.debug("_onKeydown:", event);
+                		    
                     		if (event.keyCode === 13 && !this.reflector().equalsEx(this._editingValue, this._commValue)) { // 'Enter' has been pressed
                     			this.commit();
                     		}
@@ -300,7 +302,7 @@
             },
             
             decoratedInput: function () {
-                return this.$.input || (this.$.textarea_wrapper ? this.$.textarea_wrapper.textarea : null);
+                return this.$.input;
             },
             
             /**

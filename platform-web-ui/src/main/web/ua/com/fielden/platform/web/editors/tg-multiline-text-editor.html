@@ -7,8 +7,13 @@
 
 <dom-module id="tg-multiline-text-editor"> <!-- TODO layout vertical -->
     <style>
-        #input.upper-case {
-            text-transform: uppercase;
+        iron-autogrow-textarea {
+            overflow: initial;
+        }
+        .upper-case {
+            --iron-autogrow-textarea: {
+                text-transform: uppercase;
+            };
         }
     </style>
 
@@ -24,8 +29,8 @@
     		_accepted-value="[[_acceptedValue]]" 
     		debug="[[debug]]">
             <iron-autogrow-textarea
-            	id="textarea_wrapper"
-            	class="custom-input"
+            	id="input"
+            	class="paper-input-input custom-input multiline-text-input"
             	max-rows="5"
             	bind-value="{{_editingValue}}"
             	max-length="[[maxLength]]"
@@ -33,9 +38,6 @@
             	on-input="_onInput"
             	on-keydown="_onKeydown"
             	disabled$="[[_disabled]]"/>
-                <!--  flex -->
-                <!--  FIXME: Following textarea is disregarded fully -- need to use iron-autogrow-textarea properties to control inner textarea behaviour -->
-                <!-- textarea id="input" class="multiline-text-input" disabled$="[[_disabled]]"></textarea -->
             </iron-autogrow-textarea>
     		<content class=".property-action"></content>
     	</tg-editor>
