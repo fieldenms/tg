@@ -130,9 +130,11 @@
             </paper-input-container>
 
             <!-- there seems still to be a problem with paper-checkbox not being submitted, hence the hack -->
-            <paper-checkbox id="in-trusted-device-mock">Trusted device?</paper-checkbox>
-            <input id="in-trusted-device" type="hidden" name="trustedDevice">
-        	<a href="/forgotten">Forgotten password?</a>    
+            <div style="display: flex; justify-content: space-between;">
+	            <paper-checkbox id="in-trusted-device-mock">Trusted device?</paper-checkbox>
+	            <input id="in-trusted-device" type="hidden" name="trustedDevice">
+	        	<a href="/forgotten">Forgot password?</a>
+        	</div>    
         </div>
         <paper-button id="submitButton" style="width:100%; margin: 0px" class="submit-normal" raised>
             <span id="submitLabel">Login</span>
