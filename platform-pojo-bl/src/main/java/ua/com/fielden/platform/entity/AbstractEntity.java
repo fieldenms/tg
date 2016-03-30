@@ -50,6 +50,7 @@ import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.annotation.factory.EntityExistsAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
@@ -957,6 +958,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         // try to obtain setter
         propertyValidationAnotations.addAll(extractSetterAnnotations(field, type));
         propertyValidationAnotations.addAll(extractFieldBeforeChangeAnnotations(field));
+        propertyValidationAnotations.addAll(extractFieldUniqueAnnotations(field));
 
         // if field represents a collectional property then it may have other mutators
         if (isCollectional) {
@@ -1047,11 +1049,27 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param entityType
      * @return
      */
-    private List<Annotation> extractFieldBeforeChangeAnnotations(final Field field) {
+    private static List<Annotation> extractFieldBeforeChangeAnnotations(final Field field) {
         final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
         final BeforeChange bce = AnnotationReflector.getAnnotation(field, BeforeChange.class);
         if (bce != null) {
             propertyValidationAnotations.add(bce);
+        }
+        return propertyValidationAnotations;
+    }
+    
+    /**
+     * Looks for {@link Unique} annotation.
+     *
+     * @param field
+     * @param entityType
+     * @return
+     */
+    private static List<Annotation> extractFieldUniqueAnnotations(final Field field) {
+        final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
+        final Unique uniqueAnnotation = AnnotationReflector.getAnnotation(field, Unique.class);
+        if (uniqueAnnotation != null) {
+            propertyValidationAnotations.add(uniqueAnnotation);
         }
         return propertyValidationAnotations;
     }

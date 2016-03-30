@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.entity.meta;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -11,6 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.joda.time.DateTime;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
@@ -33,6 +35,7 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
 import ua.com.fielden.platform.entity.validation.MaxValueValidator;
 import ua.com.fielden.platform.entity.validation.RangePropertyValidator;
+import ua.com.fielden.platform.entity.validation.UniqueValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
@@ -43,8 +46,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.StringConverter;
-
-import com.google.inject.Injector;
 
 /**
  * Base implementation for {@link IMetaPropertyFactory}.
@@ -124,6 +125,8 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
             return new IBeforeChangeEventHandler[] { domainConfig.getValidator(entity.getType(), propertyName) };
         case BEFORE_CHANGE:
             return createBeforeChange(entity, propertyName, (BeforeChange) annotation);
+        case UNIQUE:
+            return new IBeforeChangeEventHandler[] { injector.getInstance(UniqueValidator.class) };
         default:
             throw new IllegalArgumentException(UNSUPPORTED_VALIDATION_ANNOTATION);
         }
