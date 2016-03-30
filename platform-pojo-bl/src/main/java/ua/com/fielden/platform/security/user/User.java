@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.security.user;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
+import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
+import static ua.com.fielden.platform.utils.Validators.emailRegex;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,7 +17,12 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.Unique;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.property.validator.StringValidator;
 
 /**
  * Represents the system-wide concept of a user. So, this is a system user, which should be used by system security as well as for implementing any specific customer personnel
@@ -78,6 +86,23 @@ public class User extends AbstractEntity<String> {
     @MapTo
     private User basedOnUser;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Email", desc = "User email, which is used for password resets")
+    @Unique
+    @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = emailRegex)}))
+    private String email;
+
+    @Observable
+    public User setEmail(final String email) {
+        this.email = email;
+        return this;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+    
     @Observable
     @Override
     public User setKey(final String value) {
