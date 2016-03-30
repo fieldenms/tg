@@ -160,9 +160,10 @@ public final class AnnotationReflector {
         return newCached;
     }
 
+    private static final Empty emptyAnnotation = new Empty();
     private static <T extends Annotation> Annotation cacheAnnotation(final AccessibleObject accesibleObject, final Class<T> annotationClass, final Map<Class<? extends Annotation>, Annotation> annByAccObjectNotNull) {
         final T ann = accesibleObject.getAnnotation(annotationClass);
-        final Annotation annNotNull = ann == null ? new Empty() : ann; // TODO a singleton object for Empty?!
+        final Annotation annNotNull = ann == null ? emptyAnnotation : ann;
         annByAccObjectNotNull.put(annotationClass, annNotNull);
         return annNotNull;
     }
