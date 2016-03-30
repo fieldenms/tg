@@ -33,6 +33,7 @@
             margin-bottom: 25px;
             
             @apply(--paper-font-body1);
+            @apply(--layout-vertical)
         }
         body {
             font-family: 'Roboto', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif';
@@ -82,6 +83,18 @@
             border: none;
             width: 100%;
         }
+        
+        a {
+        	text-decoration: none;
+		  	color: #aaaaaa;
+		  	transition: all ease-in-out 200ms;
+		  	align-self:flex-end;
+		}
+		
+		a:hover {
+		  	color: #4285f4;
+		  	
+		}
 
 	    #bg-svg {
 		  position:fixed; 
@@ -119,9 +132,8 @@
             <!-- there seems still to be a problem with paper-checkbox not being submitted, hence the hack -->
             <paper-checkbox id="in-trusted-device-mock">Trusted device?</paper-checkbox>
             <input id="in-trusted-device" type="hidden" name="trustedDevice">
-            
+        	<a href="/forgotten">Forgotten password?</a>    
         </div>
-
         <paper-button id="submitButton" style="width:100%; margin: 0px" class="submit-normal" raised>
             <span id="submitLabel">Login</span>
         </paper-button>

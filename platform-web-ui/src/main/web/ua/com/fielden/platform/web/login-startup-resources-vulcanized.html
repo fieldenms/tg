@@ -7263,6 +7263,2129 @@ this.fire('dom-change');
 }
 });</script>
 <!--
+`iron-meta` is a generic element you can use for sharing information across the DOM tree.
+It uses [monostate pattern](http://c2.com/cgi/wiki?MonostatePattern) such that any
+instance of iron-meta has access to the shared
+information. You can use `iron-meta` to share whatever you want (or create an extension
+[like x-meta] for enhancements).
+
+The `iron-meta` instances containing your actual data can be loaded in an import,
+or constructed in any way you see fit. The only requirement is that you create them
+before you try to access them.
+
+Examples:
+
+If I create an instance like this:
+
+    <iron-meta key="info" value="foo/bar"></iron-meta>
+
+Note that value="foo/bar" is the metadata I've defined. I could define more
+attributes or use child nodes to define additional metadata.
+
+Now I can access that element (and it's metadata) from any iron-meta instance
+via the byKey method, e.g.
+
+    meta.byKey('info').getAttribute('value');
+
+Pure imperative form would be like:
+
+    document.createElement('iron-meta').byKey('info').getAttribute('value');
+
+Or, in a Polymer element, you can include a meta in your template:
+
+    <iron-meta id="meta"></iron-meta>
+    ...
+    this.$.meta.byKey('info').getAttribute('value');
+
+@group Iron Elements
+@demo demo/index.html
+@hero hero.svg
+@element iron-meta
+-->
+
+<script>
+
+  (function() {
+
+    // monostate data
+    var metaDatas = {};
+    var metaArrays = {};
+    var singleton = null;
+
+    Polymer.IronMeta = Polymer({
+
+      is: 'iron-meta',
+
+      properties: {
+
+        /**
+         * The type of meta-data.  All meta-data of the same type is stored
+         * together.
+         */
+        type: {
+          type: String,
+          value: 'default',
+          observer: '_typeChanged'
+        },
+
+        /**
+         * The key used to store `value` under the `type` namespace.
+         */
+        key: {
+          type: String,
+          observer: '_keyChanged'
+        },
+
+        /**
+         * The meta-data to store or retrieve.
+         */
+        value: {
+          type: Object,
+          notify: true,
+          observer: '_valueChanged'
+        },
+
+        /**
+         * If true, `value` is set to the iron-meta instance itself.
+         */
+         self: {
+          type: Boolean,
+          observer: '_selfChanged'
+        },
+
+        /**
+         * Array of all meta-data values for the given type.
+         */
+        list: {
+          type: Array,
+          notify: true
+        }
+
+      },
+
+      hostAttributes: {
+        hidden: true
+      },
+
+      /**
+       * Only runs if someone invokes the factory/constructor directly
+       * e.g. `new Polymer.IronMeta()`
+       *
+       * @param {{type: (string|undefined), key: (string|undefined), value}=} config
+       */
+      factoryImpl: function(config) {
+        if (config) {
+          for (var n in config) {
+            switch(n) {
+              case 'type':
+              case 'key':
+              case 'value':
+                this[n] = config[n];
+                break;
+            }
+          }
+        }
+      },
+
+      created: function() {
+        // TODO(sjmiles): good for debugging?
+        this._metaDatas = metaDatas;
+        this._metaArrays = metaArrays;
+      },
+
+      _keyChanged: function(key, old) {
+        this._resetRegistration(old);
+      },
+
+      _valueChanged: function(value) {
+        this._resetRegistration(this.key);
+      },
+
+      _selfChanged: function(self) {
+        if (self) {
+          this.value = this;
+        }
+      },
+
+      _typeChanged: function(type) {
+        this._unregisterKey(this.key);
+        if (!metaDatas[type]) {
+          metaDatas[type] = {};
+        }
+        this._metaData = metaDatas[type];
+        if (!metaArrays[type]) {
+          metaArrays[type] = [];
+        }
+        this.list = metaArrays[type];
+        this._registerKeyValue(this.key, this.value);
+      },
+
+      /**
+       * Retrieves meta data value by key.
+       *
+       * @method byKey
+       * @param {string} key The key of the meta-data to be returned.
+       * @return {*}
+       */
+      byKey: function(key) {
+        return this._metaData && this._metaData[key];
+      },
+
+      _resetRegistration: function(oldKey) {
+        this._unregisterKey(oldKey);
+        this._registerKeyValue(this.key, this.value);
+      },
+
+      _unregisterKey: function(key) {
+        this._unregister(key, this._metaData, this.list);
+      },
+
+      _registerKeyValue: function(key, value) {
+        this._register(key, value, this._metaData, this.list);
+      },
+
+      _register: function(key, value, data, list) {
+        if (key && data && value !== undefined) {
+          data[key] = value;
+          list.push(value);
+        }
+      },
+
+      _unregister: function(key, data, list) {
+        if (key && data) {
+          if (key in data) {
+            var value = data[key];
+            delete data[key];
+            this.arrayDelete(list, value);
+          }
+        }
+      }
+
+    });
+
+    Polymer.IronMeta.getIronMeta = function getIronMeta() {
+       if (singleton === null) {
+         singleton = new Polymer.IronMeta();
+       }
+       return singleton;
+     };
+
+    /**
+    `iron-meta-query` can be used to access infomation stored in `iron-meta`.
+
+    Examples:
+
+    If I create an instance like this:
+
+        <iron-meta key="info" value="foo/bar"></iron-meta>
+
+    Note that value="foo/bar" is the metadata I've defined. I could define more
+    attributes or use child nodes to define additional metadata.
+
+    Now I can access that element (and it's metadata) from any `iron-meta-query` instance:
+
+         var value = new Polymer.IronMetaQuery({key: 'info'}).value;
+
+    @group Polymer Iron Elements
+    @element iron-meta-query
+    */
+    Polymer.IronMetaQuery = Polymer({
+
+      is: 'iron-meta-query',
+
+      properties: {
+
+        /**
+         * The type of meta-data.  All meta-data of the same type is stored
+         * together.
+         */
+        type: {
+          type: String,
+          value: 'default',
+          observer: '_typeChanged'
+        },
+
+        /**
+         * Specifies a key to use for retrieving `value` from the `type`
+         * namespace.
+         */
+        key: {
+          type: String,
+          observer: '_keyChanged'
+        },
+
+        /**
+         * The meta-data to store or retrieve.
+         */
+        value: {
+          type: Object,
+          notify: true,
+          readOnly: true
+        },
+
+        /**
+         * Array of all meta-data values for the given type.
+         */
+        list: {
+          type: Array,
+          notify: true
+        }
+
+      },
+
+      /**
+       * Actually a factory method, not a true constructor. Only runs if
+       * someone invokes it directly (via `new Polymer.IronMeta()`);
+       *
+       * @param {{type: (string|undefined), key: (string|undefined)}=} config
+       */
+      factoryImpl: function(config) {
+        if (config) {
+          for (var n in config) {
+            switch(n) {
+              case 'type':
+              case 'key':
+                this[n] = config[n];
+                break;
+            }
+          }
+        }
+      },
+
+      created: function() {
+        // TODO(sjmiles): good for debugging?
+        this._metaDatas = metaDatas;
+        this._metaArrays = metaArrays;
+      },
+
+      _keyChanged: function(key) {
+        this._setValue(this._metaData && this._metaData[key]);
+      },
+
+      _typeChanged: function(type) {
+        this._metaData = metaDatas[type];
+        this.list = metaArrays[type];
+        if (this.key) {
+          this._keyChanged(this.key);
+        }
+      },
+
+      /**
+       * Retrieves meta data value by key.
+       * @param {string} key The key of the meta-data to be returned.
+       * @return {*}
+       */
+      byKey: function(key) {
+        return this._metaData && this._metaData[key];
+      }
+
+    });
+
+  })();
+</script>
+<script>
+
+  /**
+   * `Use Polymer.IronValidatableBehavior` to implement an element that validates user input.
+   * Use the related `Polymer.IronValidatorBehavior` to add custom validation logic to an iron-input.
+   *
+   * By default, an `<iron-form>` element validates its fields when the user presses the submit button.
+   * To validate a form imperatively, call the form's `validate()` method, which in turn will
+   * call `validate()` on all its children. By using `Polymer.IronValidatableBehavior`, your
+   * custom element will get a public `validate()`, which
+   * will return the validity of the element, and a corresponding `invalid` attribute,
+   * which can be used for styling.
+   *
+   * To implement the custom validation logic of your element, you must override
+   * the protected `_getValidity()` method of this behaviour, rather than `validate()`.
+   * See [this](https://github.com/PolymerElements/iron-form/blob/master/demo/simple-element.html)
+   * for an example.
+   *
+   * ### Accessibility
+   *
+   * Changing the `invalid` property, either manually or by calling `validate()` will update the
+   * `aria-invalid` attribute.
+   *
+   * @demo demo/index.html
+   * @polymerBehavior
+   */
+  Polymer.IronValidatableBehavior = {
+
+    properties: {
+
+      /**
+       * Namespace for this validator.
+       */
+      validatorType: {
+        type: String,
+        value: 'validator'
+      },
+
+      /**
+       * Name of the validator to use.
+       */
+      validator: {
+        type: String
+      },
+
+      /**
+       * True if the last call to `validate` is invalid.
+       */
+      invalid: {
+        notify: true,
+        reflectToAttribute: true,
+        type: Boolean,
+        value: false
+      },
+
+      _validatorMeta: {
+        type: Object
+      }
+
+    },
+
+    observers: [
+      '_invalidChanged(invalid)'
+    ],
+
+    get _validator() {
+      return this._validatorMeta && this._validatorMeta.byKey(this.validator);
+    },
+
+    ready: function() {
+      this._validatorMeta = new Polymer.IronMeta({type: this.validatorType});
+    },
+
+    _invalidChanged: function() {
+      if (this.invalid) {
+        this.setAttribute('aria-invalid', 'true');
+      } else {
+        this.removeAttribute('aria-invalid');
+      }
+    },
+
+    /**
+     * @return {boolean} True if the validator `validator` exists.
+     */
+    hasValidator: function() {
+      return this._validator != null;
+    },
+
+    /**
+     * Returns true if the `value` is valid, and updates `invalid`. If you want
+     * your element to have custom validation logic, do not override this method;
+     * override `_getValidity(value)` instead.
+
+     * @param {Object} value The value to be validated. By default, it is passed
+     * to the validator's `validate()` function, if a validator is set.
+     * @return {boolean} True if `value` is valid.
+     */
+    validate: function(value) {
+      this.invalid = !this._getValidity(value);
+      return !this.invalid;
+    },
+
+    /**
+     * Returns true if `value` is valid.  By default, it is passed
+     * to the validator's `validate()` function, if a validator is set. You
+     * should override this method if you want to implement custom validity
+     * logic for your element.
+     *
+     * @param {Object} value The value to be validated.
+     * @return {boolean} True if `value` is valid.
+     */
+
+    _getValidity: function(value) {
+      if (this.hasValidator()) {
+        return this._validator.validate(value);
+      }
+      return true;
+    }
+  };
+
+</script>
+<script>
+
+/*
+`<iron-input>` adds two-way binding and custom validators using `Polymer.IronValidatorBehavior`
+to `<input>`.
+
+### Two-way binding
+
+By default you can only get notified of changes to an `input`'s `value` due to user input:
+
+    <input value="{{myValue::input}}">
+
+`iron-input` adds the `bind-value` property that mirrors the `value` property, and can be used
+for two-way data binding. `bind-value` will notify if it is changed either by user input or by script.
+
+    <input is="iron-input" bind-value="{{myValue}}">
+
+### Custom validators
+
+You can use custom validators that implement `Polymer.IronValidatorBehavior` with `<iron-input>`.
+
+    <input is="iron-input" validator="my-custom-validator">
+
+### Stopping invalid input
+
+It may be desirable to only allow users to enter certain characters. You can use the
+`prevent-invalid-input` and `allowed-pattern` attributes together to accomplish this. This feature
+is separate from validation, and `allowed-pattern` does not affect how the input is validated.
+
+    <!-- only allow characters that match [0-9] -->
+    <input is="iron-input" prevent-invalid-input allowed-pattern="[0-9]">
+
+@hero hero.svg
+@demo demo/index.html
+*/
+
+  Polymer({
+
+    is: 'iron-input',
+
+    extends: 'input',
+
+    behaviors: [
+      Polymer.IronValidatableBehavior
+    ],
+
+    properties: {
+
+      /**
+       * Use this property instead of `value` for two-way data binding.
+       */
+      bindValue: {
+        observer: '_bindValueChanged',
+        type: String
+      },
+
+      /**
+       * Set to true to prevent the user from entering invalid input. The new input characters are
+       * matched with `allowedPattern` if it is set, otherwise it will use the `pattern` attribute if
+       * set, or the `type` attribute (only supported for `type=number`).
+       */
+      preventInvalidInput: {
+        type: Boolean
+      },
+
+      /**
+       * Regular expression to match valid input characters.
+       */
+      allowedPattern: {
+        type: String,
+        observer: "_allowedPatternChanged"
+      },
+
+      _previousValidInput: {
+        type: String,
+        value: ''
+      },
+
+      _patternAlreadyChecked: {
+        type: Boolean,
+        value: false
+      }
+
+    },
+
+    listeners: {
+      'input': '_onInput',
+      'keypress': '_onKeypress'
+    },
+
+    get _patternRegExp() {
+      var pattern;
+      if (this.allowedPattern) {
+        pattern = new RegExp(this.allowedPattern);
+      } else if (this.pattern) {
+        pattern = new RegExp(this.pattern);
+      } else {
+        switch (this.type) {
+          case 'number':
+            pattern = /[0-9.,e-]/;
+            break;
+        }
+      }
+      return pattern;
+    },
+
+    ready: function() {
+      this.bindValue = this.value;
+    },
+
+    /**
+     * @suppress {checkTypes}
+     */
+    _bindValueChanged: function() {
+      if (this.value !== this.bindValue) {
+        this.value = !(this.bindValue || this.bindValue === 0) ? '' : this.bindValue;
+      }
+      // manually notify because we don't want to notify until after setting value
+      this.fire('bind-value-changed', {value: this.bindValue});
+    },
+
+    _allowedPatternChanged: function() {
+      // Force to prevent invalid input when an `allowed-pattern` is set
+      this.preventInvalidInput = this.allowedPattern ? true : false;
+    },
+
+    _onInput: function() {
+      // Need to validate each of the characters pasted if they haven't
+      // been validated inside `_onKeypress` already.
+      if (this.preventInvalidInput && !this._patternAlreadyChecked) {
+        var valid = this._checkPatternValidity();
+        if (!valid) {
+          this.value = this._previousValidInput;
+        }
+      }
+
+      this.bindValue = this.value;
+      this._previousValidInput = this.value;
+      this._patternAlreadyChecked = false;
+    },
+
+    _isPrintable: function(event) {
+      // What a control/printable character is varies wildly based on the browser.
+      // - most control characters (arrows, backspace) do not send a `keypress` event
+      //   in Chrome, but the *do* on Firefox
+      // - in Firefox, when they do send a `keypress` event, control chars have
+      //   a charCode = 0, keyCode = xx (for ex. 40 for down arrow)
+      // - printable characters always send a keypress event.
+      // - in Firefox, printable chars always have a keyCode = 0. In Chrome, the keyCode
+      //   always matches the charCode.
+      // None of this makes any sense.
+
+      // For these keys, ASCII code == browser keycode.
+      var anyNonPrintable =
+        (event.keyCode == 8)   ||  // backspace
+        (event.keyCode == 9)   ||  // tab
+        (event.keyCode == 13)  ||  // enter
+        (event.keyCode == 27);     // escape
+
+      // For these keys, make sure it's a browser keycode and not an ASCII code.
+      var mozNonPrintable =
+        (event.keyCode == 19)  ||  // pause
+        (event.keyCode == 20)  ||  // caps lock
+        (event.keyCode == 45)  ||  // insert
+        (event.keyCode == 46)  ||  // delete
+        (event.keyCode == 144) ||  // num lock
+        (event.keyCode == 145) ||  // scroll lock
+        (event.keyCode > 32 && event.keyCode < 41)   || // page up/down, end, home, arrows
+        (event.keyCode > 111 && event.keyCode < 124); // fn keys
+
+      return !anyNonPrintable && !(event.charCode == 0 && mozNonPrintable);
+    },
+
+    _onKeypress: function(event) {
+      if (!this.preventInvalidInput && this.type !== 'number') {
+        return;
+      }
+      var regexp = this._patternRegExp;
+      if (!regexp) {
+        return;
+      }
+
+      // Handle special keys and backspace
+      if (event.metaKey || event.ctrlKey || event.altKey)
+        return;
+
+      // Check the pattern either here or in `_onInput`, but not in both.
+      this._patternAlreadyChecked = true;
+
+      var thisChar = String.fromCharCode(event.charCode);
+      if (this._isPrintable(event) && !regexp.test(thisChar)) {
+        event.preventDefault();
+      }
+    },
+
+    _checkPatternValidity: function() {
+      var regexp = this._patternRegExp;
+      if (!regexp) {
+        return true;
+      }
+      for (var i = 0; i < this.value.length; i++) {
+        if (!regexp.test(this.value[i])) {
+          return false;
+        }
+      }
+      return true;
+    },
+
+    /**
+     * Returns true if `value` is valid. The validator provided in `validator` will be used first,
+     * then any constraints.
+     * @return {boolean} True if the value is valid.
+     */
+    validate: function() {
+      // Empty, non-required input is valid.
+      if (!this.required && this.value == '') {
+        this.invalid = false;
+        return true;
+      }
+
+      var valid;
+      if (this.hasValidator()) {
+        valid = Polymer.IronValidatableBehavior.validate.call(this, this.value);
+      } else {
+        this.invalid = !this.validity.valid;
+        valid = this.validity.valid;
+      }
+      this.fire('iron-input-validate');
+      return valid;
+    }
+
+  });
+
+  /*
+  The `iron-input-validate` event is fired whenever `validate()` is called.
+  @event iron-input-validate
+  */
+
+</script>
+<script>function MakePromise (asap) {
+  function Promise(fn) {
+		if (typeof this !== 'object' || typeof fn !== 'function') throw new TypeError();
+		this._state = null;
+		this._value = null;
+		this._deferreds = []
+
+		doResolve(fn, resolve.bind(this), reject.bind(this));
+	}
+
+	function handle(deferred) {
+		var me = this;
+		if (this._state === null) {
+			this._deferreds.push(deferred);
+			return
+		}
+		asap(function() {
+			var cb = me._state ? deferred.onFulfilled : deferred.onRejected
+			if (typeof cb !== 'function') {
+				(me._state ? deferred.resolve : deferred.reject)(me._value);
+				return;
+			}
+			var ret;
+			try {
+				ret = cb(me._value);
+			}
+			catch (e) {
+				deferred.reject(e);
+				return;
+			}
+			deferred.resolve(ret);
+		})
+	}
+
+	function resolve(newValue) {
+		try { //Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
+			if (newValue === this) throw new TypeError();
+			if (newValue && (typeof newValue === 'object' || typeof newValue === 'function')) {
+				var then = newValue.then;
+				if (typeof then === 'function') {
+					doResolve(then.bind(newValue), resolve.bind(this), reject.bind(this));
+					return;
+				}
+			}
+			this._state = true;
+			this._value = newValue;
+			finale.call(this);
+		} catch (e) { reject.call(this, e); }
+	}
+
+	function reject(newValue) {
+		this._state = false;
+		this._value = newValue;
+		finale.call(this);
+	}
+
+	function finale() {
+		for (var i = 0, len = this._deferreds.length; i < len; i++) {
+			handle.call(this, this._deferreds[i]);
+		}
+		this._deferreds = null;
+	}
+
+	/**
+	 * Take a potentially misbehaving resolver function and make sure
+	 * onFulfilled and onRejected are only called once.
+	 *
+	 * Makes no guarantees about asynchrony.
+	 */
+	function doResolve(fn, onFulfilled, onRejected) {
+		var done = false;
+		try {
+			fn(function (value) {
+				if (done) return;
+				done = true;
+				onFulfilled(value);
+			}, function (reason) {
+				if (done) return;
+				done = true;
+				onRejected(reason);
+			})
+		} catch (ex) {
+			if (done) return;
+			done = true;
+			onRejected(ex);
+		}
+	}
+
+	Promise.prototype['catch'] = function (onRejected) {
+		return this.then(null, onRejected);
+	};
+
+	Promise.prototype.then = function(onFulfilled, onRejected) {
+		var me = this;
+		return new Promise(function(resolve, reject) {
+      handle.call(me, {
+        onFulfilled: onFulfilled,
+        onRejected: onRejected,
+        resolve: resolve,
+        reject: reject
+      });
+		})
+	};
+
+	Promise.resolve = function (value) {
+		if (value && typeof value === 'object' && value.constructor === Promise) {
+			return value;
+		}
+
+		return new Promise(function (resolve) {
+			resolve(value);
+		});
+	};
+
+	Promise.reject = function (value) {
+		return new Promise(function (resolve, reject) {
+			reject(value);
+		});
+	};
+
+	
+  return Promise;
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = MakePromise;
+}
+
+
+</script>
+<script>
+if (!window.Promise) {
+  window.Promise = MakePromise(Polymer.Base.async);
+}
+</script>
+<!--
+iron-request can be used to perform XMLHttpRequests.
+
+    <iron-request id="xhr"></iron-request>
+    ...
+    this.$.xhr.send({url: url, params: params});
+-->
+<script>
+  'use strict'
+
+  Polymer({
+    is: 'iron-request',
+
+    hostAttributes: {
+      hidden: true
+    },
+
+    properties: {
+
+      /**
+       * A reference to the XMLHttpRequest instance used to generate the
+       * network request.
+       *
+       * @type {XMLHttpRequest}
+       */
+      xhr: {
+        type: Object,
+        notify: true,
+        readOnly: true,
+        value: function() {
+          return new XMLHttpRequest();
+        }
+      },
+
+      /**
+       * A reference to the parsed response body, if the `xhr` has completely
+       * resolved.
+       *
+       * @type {*}
+       * @default null
+       */
+      response: {
+        type: Object,
+        notify: true,
+        readOnly: true,
+        value: function() {
+          return null;
+        }
+      },
+
+      /**
+       * A reference to the status code, if the `xhr` has completely resolved.
+       */
+      status: {
+        type: Number,
+        notify: true,
+        readOnly: true,
+        value: 0
+      },
+
+      /**
+       * A reference to the status text, if the `xhr` has completely resolved.
+       */
+      statusText: {
+        type: String,
+        notify: true,
+        readOnly: true,
+        value: ''
+      },
+
+      /**
+       * A promise that resolves when the `xhr` response comes back, or rejects
+       * if there is an error before the `xhr` completes.
+       *
+       * @type {Promise}
+       */
+      completes: {
+        type: Object,
+        readOnly: true,
+        notify: true,
+        value: function() {
+          return new Promise(function (resolve, reject) {
+            this.resolveCompletes = resolve;
+            this.rejectCompletes = reject;
+          }.bind(this));
+        }
+      },
+
+      /**
+       * An object that contains progress information emitted by the XHR if
+       * available.
+       *
+       * @default {}
+       */
+      progress: {
+        type: Object,
+        notify: true,
+        readOnly: true,
+        value: function() {
+          return {};
+        }
+      },
+
+      /**
+       * Aborted will be true if an abort of the request is attempted.
+       */
+      aborted: {
+        type: Boolean,
+        notify: true,
+        readOnly: true,
+        value: false,
+      },
+
+      /**
+       * Errored will be true if the browser fired an error event from the
+       * XHR object (mainly network errors).
+       */
+      errored: {
+        type: Boolean,
+        notify: true,
+        readOnly: true,
+        value: false
+      },
+
+      /**
+       * TimedOut will be true if the XHR threw a timeout event.
+       */
+      timedOut: {
+        type: Boolean,
+        notify: true,
+        readOnly: true,
+        value: false
+      }
+    },
+
+    /**
+     * Succeeded is true if the request succeeded. The request succeeded if it
+     * loaded without error, wasn't aborted, and the status code is ≥ 200, and
+     * < 300, or if the status code is 0.
+     *
+     * The status code 0 is accepted as a success because some schemes - e.g.
+     * file:// - don't provide status codes.
+     *
+     * @return {boolean}
+     */
+    get succeeded() {
+      if (this.errored || this.aborted || this.timedOut) {
+        return false;
+      }
+      var status = this.xhr.status || 0;
+
+      // Note: if we are using the file:// protocol, the status code will be 0
+      // for all outcomes (successful or otherwise).
+      return status === 0 ||
+        (status >= 200 && status < 300);
+    },
+
+    /**
+     * Sends an HTTP request to the server and returns the XHR object.
+     *
+     * @param {{
+     *   url: string,
+     *   method: (string|undefined),
+     *   async: (boolean|undefined),
+     *   body: (ArrayBuffer|ArrayBufferView|Blob|Document|FormData|null|string|undefined|Object),
+     *   headers: (Object|undefined),
+     *   handleAs: (string|undefined),
+     *   jsonPrefix: (string|undefined),
+     *   withCredentials: (boolean|undefined)}} options -
+     *     url The url to which the request is sent.
+     *     method The HTTP method to use, default is GET.
+     *     async By default, all requests are sent asynchronously. To send synchronous requests,
+     *         set to true.
+     *     body The content for the request body for POST method.
+     *     headers HTTP request headers.
+     *     handleAs The response type. Default is 'text'.
+     *     withCredentials Whether or not to send credentials on the request. Default is false.
+     *   timeout: (Number|undefined)
+     * @return {Promise}
+     */
+    send: function (options) {
+      var xhr = this.xhr;
+
+      if (xhr.readyState > 0) {
+        return null;
+      }
+
+      xhr.addEventListener('progress', function (progress) {
+        this._setProgress({
+          lengthComputable: progress.lengthComputable,
+          loaded: progress.loaded,
+          total: progress.total
+        });
+      }.bind(this))
+
+      xhr.addEventListener('error', function (error) {
+        this._setErrored(true);
+        this._updateStatus();
+        this.rejectCompletes(error);
+      }.bind(this));
+
+      xhr.addEventListener('timeout', function (error) {
+        this._setTimedOut(true);
+        this._updateStatus();
+        this.rejectCompletes(error);
+      }.bind(this));
+
+      xhr.addEventListener('abort', function () {
+        this._updateStatus();
+        this.rejectCompletes(new Error('Request aborted.'));
+      }.bind(this));
+
+
+      // Called after all of the above.
+      xhr.addEventListener('loadend', function () {
+        this._updateStatus();
+
+        if (!this.succeeded) {
+          this.rejectCompletes(new Error('The request failed with status code: ' + this.xhr.status));
+          return;
+        }
+
+        this._setResponse(this.parseResponse());
+        this.resolveCompletes(this);
+      }.bind(this));
+
+      this.url = options.url;
+      xhr.open(
+        options.method || 'GET',
+        options.url,
+        options.async !== false
+      );
+
+      var acceptType = {
+        'json': 'application/json',
+        'text': 'text/plain',
+        'html': 'text/html',
+        'xml': 'application/xml',
+        'arraybuffer': 'application/octet-stream'
+      }[options.handleAs];
+      var headers = options.headers || Object.create(null);
+      var newHeaders = Object.create(null);
+      for (var key in headers) {
+        newHeaders[key.toLowerCase()] = headers[key];
+      }
+      headers = newHeaders;
+
+      if (acceptType && !headers['accept']) {
+        headers['accept'] = acceptType;
+      }
+      Object.keys(headers).forEach(function (requestHeader) {
+        if (/[A-Z]/.test(requestHeader)) {
+          console.error('Headers must be lower case, got', requestHeader);
+        }
+        xhr.setRequestHeader(
+          requestHeader,
+          headers[requestHeader]
+        );
+      }, this);
+
+      if (options.async !== false) {
+        var handleAs = options.handleAs;
+
+        // If a JSON prefix is present, the responseType must be 'text' or the
+        // browser won’t be able to parse the response.
+        if (!!options.jsonPrefix || !handleAs) {
+          handleAs = 'text';
+        }
+
+        // In IE, `xhr.responseType` is an empty string when the response
+        // returns. Hence, caching it as `xhr._responseType`.
+        xhr.responseType = xhr._responseType = handleAs;
+
+        // Cache the JSON prefix, if it exists.
+        if (!!options.jsonPrefix) {
+          xhr._jsonPrefix = options.jsonPrefix;
+        }
+      }
+
+      xhr.withCredentials = !!options.withCredentials;
+      xhr.timeout = options.timeout;
+
+      var body = this._encodeBodyObject(options.body, headers['content-type']);
+
+      xhr.send(
+        /** @type {ArrayBuffer|ArrayBufferView|Blob|Document|FormData|
+                   null|string|undefined} */
+        (body));
+
+      return this.completes;
+    },
+
+    /**
+     * Attempts to parse the response body of the XHR. If parsing succeeds,
+     * the value returned will be deserialized based on the `responseType`
+     * set on the XHR.
+     *
+     * @return {*} The parsed response,
+     * or undefined if there was an empty response or parsing failed.
+     */
+    parseResponse: function () {
+      var xhr = this.xhr;
+      var responseType = xhr.responseType || xhr._responseType;
+      var preferResponseText = !this.xhr.responseType;
+      var prefixLen = (xhr._jsonPrefix && xhr._jsonPrefix.length) || 0;
+
+      try {
+        switch (responseType) {
+          case 'json':
+            // If the xhr object doesn't have a natural `xhr.responseType`,
+            // we can assume that the browser hasn't parsed the response for us,
+            // and so parsing is our responsibility. Likewise if response is
+            // undefined, as there's no way to encode undefined in JSON.
+            if (preferResponseText || xhr.response === undefined) {
+              // Try to emulate the JSON section of the response body section of
+              // the spec: https://xhr.spec.whatwg.org/#response-body
+              // That is to say, we try to parse as JSON, but if anything goes
+              // wrong return null.
+              try {
+                return JSON.parse(xhr.responseText);
+              } catch (_) {
+                return null;
+              }
+            }
+
+            return xhr.response;
+          case 'xml':
+            return xhr.responseXML;
+          case 'blob':
+          case 'document':
+          case 'arraybuffer':
+            return xhr.response;
+          case 'text':
+          default: {
+            // If `prefixLen` is set, it implies the response should be parsed
+            // as JSON once the prefix of length `prefixLen` is stripped from
+            // it. Emulate the behavior above where null is returned on failure
+            // to parse.
+            if (prefixLen) {
+              try {
+                return JSON.parse(xhr.responseText.substring(prefixLen));
+              } catch (_) {
+                return null;
+              }
+            }
+            return xhr.responseText;
+          }
+        }
+      } catch (e) {
+        this.rejectCompletes(new Error('Could not parse response. ' + e.message));
+      }
+    },
+
+    /**
+     * Aborts the request.
+     */
+    abort: function () {
+      this._setAborted(true);
+      this.xhr.abort();
+    },
+
+    /**
+     * @param {*} body The given body of the request to try and encode.
+     * @param {?string} contentType The given content type, to infer an encoding
+     *     from.
+     * @return {*} Either the encoded body as a string, if successful,
+     *     or the unaltered body object if no encoding could be inferred.
+     */
+    _encodeBodyObject: function(body, contentType) {
+      if (typeof body == 'string') {
+        return body;  // Already encoded.
+      }
+      var bodyObj = /** @type {Object} */ (body);
+      switch(contentType) {
+        case('application/json'):
+          return JSON.stringify(bodyObj);
+        case('application/x-www-form-urlencoded'):
+          return this._wwwFormUrlEncode(bodyObj);
+      }
+      return body;
+    },
+
+    /**
+     * @param {Object} object The object to encode as x-www-form-urlencoded.
+     * @return {string} .
+     */
+    _wwwFormUrlEncode: function(object) {
+      if (!object) {
+        return '';
+      }
+      var pieces = [];
+      Object.keys(object).forEach(function(key) {
+        // TODO(rictic): handle array values here, in a consistent way with
+        //   iron-ajax params.
+        pieces.push(
+            this._wwwFormUrlEncodePiece(key) + '=' +
+            this._wwwFormUrlEncodePiece(object[key]));
+      }, this);
+      return pieces.join('&');
+    },
+
+    /**
+     * @param {*} str A key or value to encode as x-www-form-urlencoded.
+     * @return {string} .
+     */
+    _wwwFormUrlEncodePiece: function(str) {
+      // Spec says to normalize newlines to \r\n and replace %20 spaces with +.
+      // jQuery does this as well, so this is likely to be widely compatible.
+      return encodeURIComponent(str.toString().replace(/\r?\n/g, '\r\n'))
+          .replace(/%20/g, '+');
+    },
+
+    /**
+     * Updates the status code and status text.
+     */
+    _updateStatus: function() {
+      this._setStatus(this.xhr.status);
+      this._setStatusText((this.xhr.statusText === undefined) ? '' : this.xhr.statusText);
+    }
+  });
+</script>
+
+<!--
+The `iron-ajax` element exposes network request functionality.
+
+    <iron-ajax
+        auto
+        url="http://gdata.youtube.com/feeds/api/videos/"
+        params='{"alt":"json", "q":"chrome"}'
+        handle-as="json"
+        on-response="handleResponse"
+        debounce-duration="300"></iron-ajax>
+
+With `auto` set to `true`, the element performs a request whenever
+its `url`, `params` or `body` properties are changed. Automatically generated
+requests will be debounced in the case that multiple attributes are changed
+sequentially.
+
+Note: The `params` attribute must be double quoted JSON.
+
+You can trigger a request explicitly by calling `generateRequest` on the
+element.
+
+@demo demo/index.html
+@hero hero.svg
+-->
+
+<script>
+  'use strict';
+
+  Polymer({
+
+    is: 'iron-ajax',
+
+    /**
+     * Fired when a request is sent.
+     *
+     * @event request
+     */
+
+    /**
+     * Fired when a response is received.
+     *
+     * @event response
+     */
+
+    /**
+     * Fired when an error is received.
+     *
+     * @event error
+     */
+
+    hostAttributes: {
+      hidden: true
+    },
+
+    properties: {
+      /**
+       * The URL target of the request.
+       */
+      url: {
+        type: String
+      },
+
+      /**
+       * An object that contains query parameters to be appended to the
+       * specified `url` when generating a request. If you wish to set the body
+       * content when making a POST request, you should use the `body` property
+       * instead.
+       */
+      params: {
+        type: Object,
+        value: function() {
+          return {};
+        }
+      },
+
+      /**
+       * The HTTP method to use such as 'GET', 'POST', 'PUT', or 'DELETE'.
+       * Default is 'GET'.
+       */
+      method: {
+        type: String,
+        value: 'GET'
+      },
+
+      /**
+       * HTTP request headers to send.
+       *
+       * Example:
+       *
+       *     <iron-ajax
+       *         auto
+       *         url="http://somesite.com"
+       *         headers='{"X-Requested-With": "XMLHttpRequest"}'
+       *         handle-as="json"></iron-ajax>
+       *
+       * Note: setting a `Content-Type` header here will override the value
+       * specified by the `contentType` property of this element.
+       */
+      headers: {
+        type: Object,
+        value: function() {
+          return {};
+        }
+      },
+
+      /**
+       * Content type to use when sending data. If the `contentType` property
+       * is set and a `Content-Type` header is specified in the `headers`
+       * property, the `headers` property value will take precedence.
+       */
+      contentType: {
+        type: String,
+        value: null
+      },
+
+      /**
+       * Body content to send with the request, typically used with "POST"
+       * requests.
+       *
+       * If body is a string it will be sent unmodified.
+       *
+       * If Content-Type is set to a value listed below, then
+       * the body will be encoded accordingly.
+       *
+       *    * `content-type="application/json"`
+       *      * body is encoded like `{"foo":"bar baz","x":1}`
+       *    * `content-type="application/x-www-form-urlencoded"`
+       *      * body is encoded like `foo=bar+baz&x=1`
+       *
+       * Otherwise the body will be passed to the browser unmodified, and it
+       * will handle any encoding (e.g. for FormData, Blob, ArrayBuffer).
+       *
+       * @type (ArrayBuffer|ArrayBufferView|Blob|Document|FormData|null|string|undefined|Object)
+       */
+      body: {
+        type: Object,
+        value: null
+      },
+
+      /**
+       * Toggle whether XHR is synchronous or asynchronous. Don't change this
+       * to true unless You Know What You Are Doing™.
+       */
+      sync: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Specifies what data to store in the `response` property, and
+       * to deliver as `event.detail.response` in `response` events.
+       *
+       * One of:
+       *
+       *    `text`: uses `XHR.responseText`.
+       *
+       *    `xml`: uses `XHR.responseXML`.
+       *
+       *    `json`: uses `XHR.responseText` parsed as JSON.
+       *
+       *    `arraybuffer`: uses `XHR.response`.
+       *
+       *    `blob`: uses `XHR.response`.
+       *
+       *    `document`: uses `XHR.response`.
+       */
+      handleAs: {
+        type: String,
+        value: 'json'
+      },
+
+      /**
+       * Set the withCredentials flag on the request.
+       */
+      withCredentials: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Set the timeout flag on the request.
+       */
+      timeout: {
+        type: Number,
+        value: 0
+      },
+
+      /**
+       * If true, automatically performs an Ajax request when either `url` or
+       * `params` changes.
+       */
+      auto: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * If true, error messages will automatically be logged to the console.
+       */
+      verbose: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * The most recent request made by this iron-ajax element.
+       */
+      lastRequest: {
+        type: Object,
+        notify: true,
+        readOnly: true
+      },
+
+      /**
+       * True while lastRequest is in flight.
+       */
+      loading: {
+        type: Boolean,
+        notify: true,
+        readOnly: true
+      },
+
+      /**
+       * lastRequest's response.
+       *
+       * Note that lastResponse and lastError are set when lastRequest finishes,
+       * so if loading is true, then lastResponse and lastError will correspond
+       * to the result of the previous request.
+       *
+       * The type of the response is determined by the value of `handleAs` at
+       * the time that the request was generated.
+       *
+       * @type {Object}
+       */
+      lastResponse: {
+        type: Object,
+        notify: true,
+        readOnly: true
+      },
+
+      /**
+       * lastRequest's error, if any.
+       *
+       * @type {Object}
+       */
+      lastError: {
+        type: Object,
+        notify: true,
+        readOnly: true
+      },
+
+      /**
+       * An Array of all in-flight requests originating from this iron-ajax
+       * element.
+       */
+      activeRequests: {
+        type: Array,
+        notify: true,
+        readOnly: true,
+        value: function() {
+          return [];
+        }
+      },
+
+      /**
+       * Length of time in milliseconds to debounce multiple automatically generated requests.
+       */
+      debounceDuration: {
+        type: Number,
+        value: 0,
+        notify: true
+      },
+
+      /**
+       * Prefix to be stripped from a JSON response before parsing it.
+       *
+       * In order to prevent an attack using CSRF with Array responses
+       * (http://haacked.com/archive/2008/11/20/anatomy-of-a-subtle-json-vulnerability.aspx/)
+       * many backends will mitigate this by prefixing all JSON response bodies
+       * with a string that would be nonsensical to a JavaScript parser.
+       *
+       */
+      jsonPrefix: {
+        type: String,
+        value: ''
+      },
+
+      _boundHandleResponse: {
+        type: Function,
+        value: function() {
+          return this._handleResponse.bind(this);
+        }
+      }
+    },
+
+    observers: [
+      '_requestOptionsChanged(url, method, params.*, headers, contentType, ' +
+          'body, sync, handleAs, jsonPrefix, withCredentials, timeout, auto)'
+    ],
+
+    /**
+     * The query string that should be appended to the `url`, serialized from
+     * the current value of `params`.
+     *
+     * @return {string}
+     */
+    get queryString () {
+      var queryParts = [];
+      var param;
+      var value;
+
+      for (param in this.params) {
+        value = this.params[param];
+        param = window.encodeURIComponent(param);
+
+        if (Array.isArray(value)) {
+          for (var i = 0; i < value.length; i++) {
+            queryParts.push(param + '=' + window.encodeURIComponent(value[i]));
+          }
+        } else if (value !== null) {
+          queryParts.push(param + '=' + window.encodeURIComponent(value));
+        } else {
+          queryParts.push(param);
+        }
+      }
+
+      return queryParts.join('&');
+    },
+
+    /**
+     * The `url` with query string (if `params` are specified), suitable for
+     * providing to an `iron-request` instance.
+     *
+     * @return {string}
+     */
+    get requestUrl() {
+      var queryString = this.queryString;
+
+      if (queryString) {
+        var bindingChar = this.url.indexOf('?') >= 0 ? '&' : '?';
+        return this.url + bindingChar + queryString;
+      }
+
+      return this.url;
+    },
+
+    /**
+     * An object that maps header names to header values, first applying the
+     * the value of `Content-Type` and then overlaying the headers specified
+     * in the `headers` property.
+     *
+     * @return {Object}
+     */
+    get requestHeaders() {
+      var headers = {};
+      var contentType = this.contentType;
+      if (contentType == null && (typeof this.body === 'string')) {
+        contentType = 'application/x-www-form-urlencoded';
+      }
+      if (contentType) {
+        headers['content-type'] = contentType;
+      }
+      var header;
+
+      if (this.headers instanceof Object) {
+        for (header in this.headers) {
+          headers[header] = this.headers[header].toString();
+        }
+      }
+
+      return headers;
+    },
+
+    /**
+     * Request options suitable for generating an `iron-request` instance based
+     * on the current state of the `iron-ajax` instance's properties.
+     *
+     * @return {{
+     *   url: string,
+     *   method: (string|undefined),
+     *   async: (boolean|undefined),
+     *   body: (ArrayBuffer|ArrayBufferView|Blob|Document|FormData|null|string|undefined|Object),
+     *   headers: (Object|undefined),
+     *   handleAs: (string|undefined),
+     *   jsonPrefix: (string|undefined),
+     *   withCredentials: (boolean|undefined)}}
+     */
+    toRequestOptions: function() {
+      return {
+        url: this.requestUrl || '',
+        method: this.method,
+        headers: this.requestHeaders,
+        body: this.body,
+        async: !this.sync,
+        handleAs: this.handleAs,
+        jsonPrefix: this.jsonPrefix,
+        withCredentials: this.withCredentials,
+        timeout: this.timeout
+      };
+    },
+
+    /**
+     * Performs an AJAX request to the specified URL.
+     *
+     * @return {!IronRequestElement}
+     */
+    generateRequest: function() {
+      var request = /** @type {!IronRequestElement} */ (document.createElement('iron-request'));
+      var requestOptions = this.toRequestOptions();
+
+      this.activeRequests.push(request);
+
+      request.completes.then(
+        this._boundHandleResponse
+      ).catch(
+        this._handleError.bind(this, request)
+      ).then(
+        this._discardRequest.bind(this, request)
+      );
+
+      request.send(requestOptions);
+
+      this._setLastRequest(request);
+      this._setLoading(true);
+
+      this.fire('request', {
+        request: request,
+        options: requestOptions
+      }, {bubbles: false});
+
+      return request;
+    },
+
+    _handleResponse: function(request) {
+      if (request === this.lastRequest) {
+        this._setLastResponse(request.response);
+        this._setLastError(null);
+        this._setLoading(false);
+      }
+      this.fire('response', request, {bubbles: false});
+    },
+
+    _handleError: function(request, error) {
+      if (this.verbose) {
+        console.error(error);
+      }
+
+      if (request === this.lastRequest) {
+        this._setLastError({
+          request: request,
+          error: error
+        });
+        this._setLastResponse(null);
+        this._setLoading(false);
+      }
+      this.fire('error', {
+        request: request,
+        error: error
+      }, {bubbles: false});
+    },
+
+    _discardRequest: function(request) {
+      var requestIndex = this.activeRequests.indexOf(request);
+
+      if (requestIndex > -1) {
+        this.activeRequests.splice(requestIndex, 1);
+      }
+    },
+
+    _requestOptionsChanged: function() {
+      this.debounce('generate-request', function() {
+        if (this.url == null) {
+          return;
+        }
+
+        if (this.auto) {
+          this.generateRequest();
+        }
+      }, this.debounceDuration);
+    },
+
+  });
+</script>
+<script>
+/*
+`<iron-form>` is an HTML `<form>` element that can validate and submit any custom
+elements that implement `Polymer.IronFormElementBehavior`, as well as any
+native HTML elements.
+
+It supports both `get` and `post` methods, and uses an `iron-ajax` element to
+submit the form data to the action URL.
+
+  Example:
+
+    <form is="iron-form" id="form" method="post" action="/form/handler">
+      <paper-input name="name" label="name"></paper-input>
+      <input name="address">
+      ...
+    </form>
+
+By default, a native `<button>` element will submit this form. However, if you
+want to submit it from a custom element's click handler, you need to explicitly
+call the form's `submit` method.
+
+  Example:
+
+    <paper-button raised onclick="submitForm()">Submit</paper-button>
+
+    function submitForm() {
+      document.getElementById('form').submit();
+    }
+
+To customize the request sent to the server, you can listen to the `iron-form-presubmit`
+event, and modify the form's[`iron-ajax`](https://elements.polymer-project.org/elements/iron-ajax)
+object. However, If you want to not use `iron-ajax` at all, you can cancel the
+event and do your own custom submission:
+
+  Example of modifying the request, but still using the build-in form submission:
+
+    form.addEventListener('iron-form-presubmit', function() {
+      this.request.method = 'put';
+      this.request.params = someCustomParams;
+    });
+
+  Example of bypassing the build-in form submission:
+
+    form.addEventListener('iron-form-presubmit', function(event) {
+      event.preventDefault();
+      var firebase = new Firebase(form.getAttribute('action'));
+      firebase.set(form.serialize());
+    });
+
+@demo demo/index.html
+*/
+
+  Polymer({
+
+    is: 'iron-form',
+
+    extends: 'form',
+
+    properties: {
+      /**
+       * Content type to use when sending data.
+       */
+      contentType: {
+        type: String,
+        value: "application/x-www-form-urlencoded"
+      },
+
+      /**
+       * By default, the form will display the browser's native validation
+       * UI (i.e. popup bubbles and invalid styles on invalid fields). You can
+       * manually disable this; however, if you do, note that you will have to
+       * manually style invalid *native* HTML fields yourself, as you are
+       * explicitly preventing the native form from doing so.
+       */
+      disableNativeValidationUi: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+      * Set the withCredentials flag when sending data.
+      */
+      withCredentials: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+      * HTTP request headers to send
+      *
+      * Note: setting a `Content-Type` header here will override the value
+      * specified by the `contentType` property of this element.
+      */
+      headers: {
+        type: Object,
+        value: function() {
+          return {};
+        }
+      },
+
+      /**
+      * iron-ajax request object used to submit the form.
+      */
+      request: {
+        type: Object,
+      }
+    },
+
+    /**
+     * Fired if the form cannot be submitted because it's invalid.
+     *
+     * @event iron-form-invalid
+     */
+
+    /**
+     * Fired before the form is submitted.
+     *
+     * @event iron-form-presubmit
+     */
+
+    /**
+     * Fired after the form is submitted.
+     *
+     * @event iron-form-submit
+     */
+
+     /**
+      * Fired after the form is reset.
+      *
+      * @event iron-form-reset
+      */
+
+    /**
+    * Fired after the form is submitted and a response is received. An
+    * IronRequestElement is included as the event.detail object.
+    *
+    * @event iron-form-response
+    */
+
+    /**
+     * Fired after the form is submitted and an error is received. An
+     * IronRequestElement is included as the event.detail object.
+     *
+     * @event iron-form-error
+     */
+    listeners: {
+      'iron-form-element-register': '_registerElement',
+      'iron-form-element-unregister': '_unregisterElement',
+      'submit': '_onSubmit',
+      'reset': '_onReset'
+    },
+
+    ready: function() {
+      // Object that handles the ajax form submission request.
+      this.request = document.createElement('iron-ajax');
+      this.request.addEventListener('response', this._handleFormResponse.bind(this));
+      this.request.addEventListener('error', this._handleFormError.bind(this));
+
+      // Holds all the custom elements registered with this form.
+      this._customElements = [];
+      // Holds the initial values of the custom elements registered with this form.
+      this._customElementsInitialValues = [];
+    },
+
+    /**
+     * Submits the form.
+     */
+    submit: function() {
+      if (!this.noValidate && !this.validate()) {
+        // In order to trigger the native browser invalid-form UI, we need
+        // to do perform a fake form submit.
+        if (!this.disableNativeValidationUi) {
+          this._doFakeSubmitForValidation();
+        }
+        this.fire('iron-form-invalid');
+        return;
+      }
+
+      var json = this.serialize();
+
+      // Native forms can also index elements magically by their name (can't make
+      // this up if I tried) so we need to get the correct attributes, not the
+      // elements with those names.
+      this.request.url = this.getAttribute('action');
+      this.request.method = this.getAttribute('method');
+      this.request.contentType = this.contentType;
+      this.request.withCredentials = this.withCredentials;
+      this.request.headers = this.headers;
+
+      if (this.method.toUpperCase() === 'POST') {
+        this.request.body = json;
+      } else {
+        this.request.params = json;
+      }
+
+      // Allow for a presubmit hook
+      var event = this.fire('iron-form-presubmit', {}, {cancelable: true});
+      if(!event.defaultPrevented) {
+        this.request.generateRequest();
+        this.fire('iron-form-submit', json);
+      }
+    },
+
+    /**
+     * Handler that is called when the native form fires a `submit` event
+     *
+     * @param {Event} event A `submit` event.
+     */
+    _onSubmit: function(event) {
+      this.submit();
+
+      // Don't perform a page refresh.
+      if (event) {
+        event.preventDefault();
+      }
+
+      return false;
+    },
+
+    /**
+     * Handler that is called when the native form fires a `reset` event
+     *
+     * @param {Event} event A `reset` event.
+     */
+    _onReset: function(event) {
+      this._resetCustomElements();
+    },
+
+    /**
+     * Returns a json object containing name/value pairs for all the registered
+     * custom components and native elements of the form. If there are elements
+     * with duplicate names, then their values will get aggregated into an
+     * array of values.
+     *
+     * @return {!Object}
+     */
+    serialize: function() {
+      var json = {};
+
+      function addSerializedElement(el) {
+        // If the name doesn't exist, add it. Otherwise, serialize it to
+        // an array,
+        if (!json[el.name]) {
+          json[el.name] = el.value;
+        } else {
+          if (!Array.isArray(json[el.name])) {
+            json[el.name] = [json[el.name]];
+          }
+          json[el.name].push(el.value);
+        }
+      }
+
+      // Go through all of the registered custom components.
+      for (var el, i = 0; el = this._customElements[i], i < this._customElements.length; i++) {
+        if (this._useValue(el)) {
+          addSerializedElement(el);
+        }
+      }
+
+      // Also go through the form's native elements.
+      for (var el, i = 0; el = this.elements[i], i < this.elements.length; i++) {
+        // Checkboxes and radio buttons should only use their value if they're checked.
+        // Also, custom elements that extend native elements (like an
+        // `<input is="fancy-input">`) will appear in both lists. Since they
+        // were already added as a custom element, they don't need
+        // to be re-added.
+        if (!this._useValue(el) ||
+            (el.hasAttribute('is') && json[el.name])) {
+          continue;
+        }
+        addSerializedElement(el);
+      }
+
+      return json;
+    },
+
+    _handleFormResponse: function (event) {
+      this.fire('iron-form-response', event.detail);
+    },
+
+    _handleFormError: function (event) {
+      this.fire('iron-form-error', event.detail);
+    },
+
+    _registerElement: function(e) {
+      var element = e.target;
+      element._parentForm = this;
+      this._customElements.push(element);
+
+      // Save the original value of this input.
+      this._customElementsInitialValues.push(
+          this._usesCheckedInsteadOfValue(element) ? element.checked : element.value);
+    },
+
+    _unregisterElement: function(e) {
+      var target = e.detail.target;
+      if (target) {
+        var index = this._customElements.indexOf(target);
+        if (index > -1) {
+          this._customElements.splice(index, 1);
+          this._customElementsInitialValues.splice(index, 1);
+        }
+      }
+    },
+
+    /**
+     * Validates all the required elements (custom and native) in the form.
+     * @return {boolean} True if all the elements are valid.
+     */
+    validate: function() {
+      var valid = true;
+
+      // Validate all the custom elements.
+      var validatable;
+      for (var el, i = 0; el = this._customElements[i], i < this._customElements.length; i++) {
+        if (el.required && !el.disabled) {
+          validatable = /** @type {{validate: (function() : boolean)}} */ (el);
+          // Some elements may not have correctly defined a validate method.
+          if (validatable.validate)
+            valid = !!validatable.validate() && valid;
+        }
+      }
+
+      // Validate the form's native elements.
+      for (var el, i = 0; el = this.elements[i], i < this.elements.length; i++) {
+        // Custom elements that extend a native element will also appear in
+        // this list, but they've already been validated.
+        if (!el.hasAttribute('is') && el.willValidate && el.checkValidity && el.name) {
+          valid = el.checkValidity() && valid;
+        }
+      }
+
+      return valid;
+    },
+
+    /**
+     * Returns whether the given element is a radio-button or a checkbox.
+     * @return {boolean} True if the element has a `checked` property.
+     */
+    _usesCheckedInsteadOfValue: function(el) {
+      if (el.type == 'checkbox' ||
+          el.type == 'radio' ||
+          el.getAttribute('role') == 'checkbox' ||
+          el.getAttribute('role') == 'radio' ||
+          el._hasIronCheckedElementBehavior) {
+        return true;
+      }
+      return false;
+    },
+
+    _useValue: function(el) {
+      // Skip disabled elements or elements that don't have a `name` attribute.
+      if (el.disabled || !el.name) {
+        return false;
+      }
+
+      // Checkboxes and radio buttons should only use their value if they're
+      // checked. Custom paper-checkbox and paper-radio-button elements
+      // don't have a type, but they have the correct role set.
+      if (this._usesCheckedInsteadOfValue(el))
+        return el.checked;
+      return true;
+    },
+
+    _doFakeSubmitForValidation: function() {
+      var fakeSubmit = document.createElement('input');
+      fakeSubmit.setAttribute('type', 'submit');
+      fakeSubmit.style.display = 'none';
+      this.appendChild(fakeSubmit);
+
+      fakeSubmit.click();
+
+      this.removeChild(fakeSubmit);
+    },
+
+    /**
+     * Resets all non-disabled form custom elements to their initial values.
+     */
+    _resetCustomElements: function() {
+      // Reset all the registered custom components. We need to do this after
+      // the native reset, since programmatically changing the `value` of some
+      // native elements (iron-input in particular) does not notify its
+      // parent `paper-input`, which will now display the wrong value.
+      this.async(function() {
+        for (var el, i = 0; el = this._customElements[i], i < this._customElements.length; i++) {
+          if (el.disabled)
+            continue;
+
+          if (this._usesCheckedInsteadOfValue(el)) {
+            el.checked = this._customElementsInitialValues[i];
+          } else {
+            el.value = this._customElementsInitialValues[i];
+          }
+        }
+
+        this.fire('iron-form-reset');
+      }, 1);
+    }
+
+  });
+
+</script>
+<!--
 The `<iron-flex-layout>` component provides simple ways to use [CSS flexible box layout](https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Flexible_boxes), also known as flexbox. This component provides two different ways to use flexbox:
 
 1. [Layout classes](https://github.com/PolymerElements/iron-flex-layout/tree/master/classes). The layout class stylesheet provides a simple set of class-based flexbox rules. Layout classes let you specify layout properties directly in markup.
@@ -8819,1448 +10942,6 @@ available in each ones, rather than the aggregated `paper-styles.html` as a whol
   }
 
 </style>
-<script>function MakePromise (asap) {
-  function Promise(fn) {
-		if (typeof this !== 'object' || typeof fn !== 'function') throw new TypeError();
-		this._state = null;
-		this._value = null;
-		this._deferreds = []
-
-		doResolve(fn, resolve.bind(this), reject.bind(this));
-	}
-
-	function handle(deferred) {
-		var me = this;
-		if (this._state === null) {
-			this._deferreds.push(deferred);
-			return
-		}
-		asap(function() {
-			var cb = me._state ? deferred.onFulfilled : deferred.onRejected
-			if (typeof cb !== 'function') {
-				(me._state ? deferred.resolve : deferred.reject)(me._value);
-				return;
-			}
-			var ret;
-			try {
-				ret = cb(me._value);
-			}
-			catch (e) {
-				deferred.reject(e);
-				return;
-			}
-			deferred.resolve(ret);
-		})
-	}
-
-	function resolve(newValue) {
-		try { //Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
-			if (newValue === this) throw new TypeError();
-			if (newValue && (typeof newValue === 'object' || typeof newValue === 'function')) {
-				var then = newValue.then;
-				if (typeof then === 'function') {
-					doResolve(then.bind(newValue), resolve.bind(this), reject.bind(this));
-					return;
-				}
-			}
-			this._state = true;
-			this._value = newValue;
-			finale.call(this);
-		} catch (e) { reject.call(this, e); }
-	}
-
-	function reject(newValue) {
-		this._state = false;
-		this._value = newValue;
-		finale.call(this);
-	}
-
-	function finale() {
-		for (var i = 0, len = this._deferreds.length; i < len; i++) {
-			handle.call(this, this._deferreds[i]);
-		}
-		this._deferreds = null;
-	}
-
-	/**
-	 * Take a potentially misbehaving resolver function and make sure
-	 * onFulfilled and onRejected are only called once.
-	 *
-	 * Makes no guarantees about asynchrony.
-	 */
-	function doResolve(fn, onFulfilled, onRejected) {
-		var done = false;
-		try {
-			fn(function (value) {
-				if (done) return;
-				done = true;
-				onFulfilled(value);
-			}, function (reason) {
-				if (done) return;
-				done = true;
-				onRejected(reason);
-			})
-		} catch (ex) {
-			if (done) return;
-			done = true;
-			onRejected(ex);
-		}
-	}
-
-	Promise.prototype['catch'] = function (onRejected) {
-		return this.then(null, onRejected);
-	};
-
-	Promise.prototype.then = function(onFulfilled, onRejected) {
-		var me = this;
-		return new Promise(function(resolve, reject) {
-      handle.call(me, {
-        onFulfilled: onFulfilled,
-        onRejected: onRejected,
-        resolve: resolve,
-        reject: reject
-      });
-		})
-	};
-
-	Promise.resolve = function (value) {
-		if (value && typeof value === 'object' && value.constructor === Promise) {
-			return value;
-		}
-
-		return new Promise(function (resolve) {
-			resolve(value);
-		});
-	};
-
-	Promise.reject = function (value) {
-		return new Promise(function (resolve, reject) {
-			reject(value);
-		});
-	};
-
-	
-  return Promise;
-}
-
-if (typeof module !== 'undefined') {
-  module.exports = MakePromise;
-}
-
-
-</script>
-<script>
-if (!window.Promise) {
-  window.Promise = MakePromise(Polymer.Base.async);
-}
-</script>
-<!--
-iron-request can be used to perform XMLHttpRequests.
-
-    <iron-request id="xhr"></iron-request>
-    ...
-    this.$.xhr.send({url: url, params: params});
--->
-<script>
-  'use strict'
-
-  Polymer({
-    is: 'iron-request',
-
-    hostAttributes: {
-      hidden: true
-    },
-
-    properties: {
-
-      /**
-       * A reference to the XMLHttpRequest instance used to generate the
-       * network request.
-       *
-       * @type {XMLHttpRequest}
-       */
-      xhr: {
-        type: Object,
-        notify: true,
-        readOnly: true,
-        value: function() {
-          return new XMLHttpRequest();
-        }
-      },
-
-      /**
-       * A reference to the parsed response body, if the `xhr` has completely
-       * resolved.
-       *
-       * @type {*}
-       * @default null
-       */
-      response: {
-        type: Object,
-        notify: true,
-        readOnly: true,
-        value: function() {
-          return null;
-        }
-      },
-
-      /**
-       * A reference to the status code, if the `xhr` has completely resolved.
-       */
-      status: {
-        type: Number,
-        notify: true,
-        readOnly: true,
-        value: 0
-      },
-
-      /**
-       * A reference to the status text, if the `xhr` has completely resolved.
-       */
-      statusText: {
-        type: String,
-        notify: true,
-        readOnly: true,
-        value: ''
-      },
-
-      /**
-       * A promise that resolves when the `xhr` response comes back, or rejects
-       * if there is an error before the `xhr` completes.
-       *
-       * @type {Promise}
-       */
-      completes: {
-        type: Object,
-        readOnly: true,
-        notify: true,
-        value: function() {
-          return new Promise(function (resolve, reject) {
-            this.resolveCompletes = resolve;
-            this.rejectCompletes = reject;
-          }.bind(this));
-        }
-      },
-
-      /**
-       * An object that contains progress information emitted by the XHR if
-       * available.
-       *
-       * @default {}
-       */
-      progress: {
-        type: Object,
-        notify: true,
-        readOnly: true,
-        value: function() {
-          return {};
-        }
-      },
-
-      /**
-       * Aborted will be true if an abort of the request is attempted.
-       */
-      aborted: {
-        type: Boolean,
-        notify: true,
-        readOnly: true,
-        value: false,
-      },
-
-      /**
-       * Errored will be true if the browser fired an error event from the
-       * XHR object (mainly network errors).
-       */
-      errored: {
-        type: Boolean,
-        notify: true,
-        readOnly: true,
-        value: false
-      },
-
-      /**
-       * TimedOut will be true if the XHR threw a timeout event.
-       */
-      timedOut: {
-        type: Boolean,
-        notify: true,
-        readOnly: true,
-        value: false
-      }
-    },
-
-    /**
-     * Succeeded is true if the request succeeded. The request succeeded if it
-     * loaded without error, wasn't aborted, and the status code is ≥ 200, and
-     * < 300, or if the status code is 0.
-     *
-     * The status code 0 is accepted as a success because some schemes - e.g.
-     * file:// - don't provide status codes.
-     *
-     * @return {boolean}
-     */
-    get succeeded() {
-      if (this.errored || this.aborted || this.timedOut) {
-        return false;
-      }
-      var status = this.xhr.status || 0;
-
-      // Note: if we are using the file:// protocol, the status code will be 0
-      // for all outcomes (successful or otherwise).
-      return status === 0 ||
-        (status >= 200 && status < 300);
-    },
-
-    /**
-     * Sends an HTTP request to the server and returns the XHR object.
-     *
-     * @param {{
-     *   url: string,
-     *   method: (string|undefined),
-     *   async: (boolean|undefined),
-     *   body: (ArrayBuffer|ArrayBufferView|Blob|Document|FormData|null|string|undefined|Object),
-     *   headers: (Object|undefined),
-     *   handleAs: (string|undefined),
-     *   jsonPrefix: (string|undefined),
-     *   withCredentials: (boolean|undefined)}} options -
-     *     url The url to which the request is sent.
-     *     method The HTTP method to use, default is GET.
-     *     async By default, all requests are sent asynchronously. To send synchronous requests,
-     *         set to true.
-     *     body The content for the request body for POST method.
-     *     headers HTTP request headers.
-     *     handleAs The response type. Default is 'text'.
-     *     withCredentials Whether or not to send credentials on the request. Default is false.
-     *   timeout: (Number|undefined)
-     * @return {Promise}
-     */
-    send: function (options) {
-      var xhr = this.xhr;
-
-      if (xhr.readyState > 0) {
-        return null;
-      }
-
-      xhr.addEventListener('progress', function (progress) {
-        this._setProgress({
-          lengthComputable: progress.lengthComputable,
-          loaded: progress.loaded,
-          total: progress.total
-        });
-      }.bind(this))
-
-      xhr.addEventListener('error', function (error) {
-        this._setErrored(true);
-        this._updateStatus();
-        this.rejectCompletes(error);
-      }.bind(this));
-
-      xhr.addEventListener('timeout', function (error) {
-        this._setTimedOut(true);
-        this._updateStatus();
-        this.rejectCompletes(error);
-      }.bind(this));
-
-      xhr.addEventListener('abort', function () {
-        this._updateStatus();
-        this.rejectCompletes(new Error('Request aborted.'));
-      }.bind(this));
-
-
-      // Called after all of the above.
-      xhr.addEventListener('loadend', function () {
-        this._updateStatus();
-
-        if (!this.succeeded) {
-          this.rejectCompletes(new Error('The request failed with status code: ' + this.xhr.status));
-          return;
-        }
-
-        this._setResponse(this.parseResponse());
-        this.resolveCompletes(this);
-      }.bind(this));
-
-      this.url = options.url;
-      xhr.open(
-        options.method || 'GET',
-        options.url,
-        options.async !== false
-      );
-
-      var acceptType = {
-        'json': 'application/json',
-        'text': 'text/plain',
-        'html': 'text/html',
-        'xml': 'application/xml',
-        'arraybuffer': 'application/octet-stream'
-      }[options.handleAs];
-      var headers = options.headers || Object.create(null);
-      var newHeaders = Object.create(null);
-      for (var key in headers) {
-        newHeaders[key.toLowerCase()] = headers[key];
-      }
-      headers = newHeaders;
-
-      if (acceptType && !headers['accept']) {
-        headers['accept'] = acceptType;
-      }
-      Object.keys(headers).forEach(function (requestHeader) {
-        if (/[A-Z]/.test(requestHeader)) {
-          console.error('Headers must be lower case, got', requestHeader);
-        }
-        xhr.setRequestHeader(
-          requestHeader,
-          headers[requestHeader]
-        );
-      }, this);
-
-      if (options.async !== false) {
-        var handleAs = options.handleAs;
-
-        // If a JSON prefix is present, the responseType must be 'text' or the
-        // browser won’t be able to parse the response.
-        if (!!options.jsonPrefix || !handleAs) {
-          handleAs = 'text';
-        }
-
-        // In IE, `xhr.responseType` is an empty string when the response
-        // returns. Hence, caching it as `xhr._responseType`.
-        xhr.responseType = xhr._responseType = handleAs;
-
-        // Cache the JSON prefix, if it exists.
-        if (!!options.jsonPrefix) {
-          xhr._jsonPrefix = options.jsonPrefix;
-        }
-      }
-
-      xhr.withCredentials = !!options.withCredentials;
-      xhr.timeout = options.timeout;
-
-      var body = this._encodeBodyObject(options.body, headers['content-type']);
-
-      xhr.send(
-        /** @type {ArrayBuffer|ArrayBufferView|Blob|Document|FormData|
-                   null|string|undefined} */
-        (body));
-
-      return this.completes;
-    },
-
-    /**
-     * Attempts to parse the response body of the XHR. If parsing succeeds,
-     * the value returned will be deserialized based on the `responseType`
-     * set on the XHR.
-     *
-     * @return {*} The parsed response,
-     * or undefined if there was an empty response or parsing failed.
-     */
-    parseResponse: function () {
-      var xhr = this.xhr;
-      var responseType = xhr.responseType || xhr._responseType;
-      var preferResponseText = !this.xhr.responseType;
-      var prefixLen = (xhr._jsonPrefix && xhr._jsonPrefix.length) || 0;
-
-      try {
-        switch (responseType) {
-          case 'json':
-            // If the xhr object doesn't have a natural `xhr.responseType`,
-            // we can assume that the browser hasn't parsed the response for us,
-            // and so parsing is our responsibility. Likewise if response is
-            // undefined, as there's no way to encode undefined in JSON.
-            if (preferResponseText || xhr.response === undefined) {
-              // Try to emulate the JSON section of the response body section of
-              // the spec: https://xhr.spec.whatwg.org/#response-body
-              // That is to say, we try to parse as JSON, but if anything goes
-              // wrong return null.
-              try {
-                return JSON.parse(xhr.responseText);
-              } catch (_) {
-                return null;
-              }
-            }
-
-            return xhr.response;
-          case 'xml':
-            return xhr.responseXML;
-          case 'blob':
-          case 'document':
-          case 'arraybuffer':
-            return xhr.response;
-          case 'text':
-          default: {
-            // If `prefixLen` is set, it implies the response should be parsed
-            // as JSON once the prefix of length `prefixLen` is stripped from
-            // it. Emulate the behavior above where null is returned on failure
-            // to parse.
-            if (prefixLen) {
-              try {
-                return JSON.parse(xhr.responseText.substring(prefixLen));
-              } catch (_) {
-                return null;
-              }
-            }
-            return xhr.responseText;
-          }
-        }
-      } catch (e) {
-        this.rejectCompletes(new Error('Could not parse response. ' + e.message));
-      }
-    },
-
-    /**
-     * Aborts the request.
-     */
-    abort: function () {
-      this._setAborted(true);
-      this.xhr.abort();
-    },
-
-    /**
-     * @param {*} body The given body of the request to try and encode.
-     * @param {?string} contentType The given content type, to infer an encoding
-     *     from.
-     * @return {*} Either the encoded body as a string, if successful,
-     *     or the unaltered body object if no encoding could be inferred.
-     */
-    _encodeBodyObject: function(body, contentType) {
-      if (typeof body == 'string') {
-        return body;  // Already encoded.
-      }
-      var bodyObj = /** @type {Object} */ (body);
-      switch(contentType) {
-        case('application/json'):
-          return JSON.stringify(bodyObj);
-        case('application/x-www-form-urlencoded'):
-          return this._wwwFormUrlEncode(bodyObj);
-      }
-      return body;
-    },
-
-    /**
-     * @param {Object} object The object to encode as x-www-form-urlencoded.
-     * @return {string} .
-     */
-    _wwwFormUrlEncode: function(object) {
-      if (!object) {
-        return '';
-      }
-      var pieces = [];
-      Object.keys(object).forEach(function(key) {
-        // TODO(rictic): handle array values here, in a consistent way with
-        //   iron-ajax params.
-        pieces.push(
-            this._wwwFormUrlEncodePiece(key) + '=' +
-            this._wwwFormUrlEncodePiece(object[key]));
-      }, this);
-      return pieces.join('&');
-    },
-
-    /**
-     * @param {*} str A key or value to encode as x-www-form-urlencoded.
-     * @return {string} .
-     */
-    _wwwFormUrlEncodePiece: function(str) {
-      // Spec says to normalize newlines to \r\n and replace %20 spaces with +.
-      // jQuery does this as well, so this is likely to be widely compatible.
-      return encodeURIComponent(str.toString().replace(/\r?\n/g, '\r\n'))
-          .replace(/%20/g, '+');
-    },
-
-    /**
-     * Updates the status code and status text.
-     */
-    _updateStatus: function() {
-      this._setStatus(this.xhr.status);
-      this._setStatusText((this.xhr.statusText === undefined) ? '' : this.xhr.statusText);
-    }
-  });
-</script>
-
-<!--
-The `iron-ajax` element exposes network request functionality.
-
-    <iron-ajax
-        auto
-        url="http://gdata.youtube.com/feeds/api/videos/"
-        params='{"alt":"json", "q":"chrome"}'
-        handle-as="json"
-        on-response="handleResponse"
-        debounce-duration="300"></iron-ajax>
-
-With `auto` set to `true`, the element performs a request whenever
-its `url`, `params` or `body` properties are changed. Automatically generated
-requests will be debounced in the case that multiple attributes are changed
-sequentially.
-
-Note: The `params` attribute must be double quoted JSON.
-
-You can trigger a request explicitly by calling `generateRequest` on the
-element.
-
-@demo demo/index.html
-@hero hero.svg
--->
-
-<script>
-  'use strict';
-
-  Polymer({
-
-    is: 'iron-ajax',
-
-    /**
-     * Fired when a request is sent.
-     *
-     * @event request
-     */
-
-    /**
-     * Fired when a response is received.
-     *
-     * @event response
-     */
-
-    /**
-     * Fired when an error is received.
-     *
-     * @event error
-     */
-
-    hostAttributes: {
-      hidden: true
-    },
-
-    properties: {
-      /**
-       * The URL target of the request.
-       */
-      url: {
-        type: String
-      },
-
-      /**
-       * An object that contains query parameters to be appended to the
-       * specified `url` when generating a request. If you wish to set the body
-       * content when making a POST request, you should use the `body` property
-       * instead.
-       */
-      params: {
-        type: Object,
-        value: function() {
-          return {};
-        }
-      },
-
-      /**
-       * The HTTP method to use such as 'GET', 'POST', 'PUT', or 'DELETE'.
-       * Default is 'GET'.
-       */
-      method: {
-        type: String,
-        value: 'GET'
-      },
-
-      /**
-       * HTTP request headers to send.
-       *
-       * Example:
-       *
-       *     <iron-ajax
-       *         auto
-       *         url="http://somesite.com"
-       *         headers='{"X-Requested-With": "XMLHttpRequest"}'
-       *         handle-as="json"></iron-ajax>
-       *
-       * Note: setting a `Content-Type` header here will override the value
-       * specified by the `contentType` property of this element.
-       */
-      headers: {
-        type: Object,
-        value: function() {
-          return {};
-        }
-      },
-
-      /**
-       * Content type to use when sending data. If the `contentType` property
-       * is set and a `Content-Type` header is specified in the `headers`
-       * property, the `headers` property value will take precedence.
-       */
-      contentType: {
-        type: String,
-        value: null
-      },
-
-      /**
-       * Body content to send with the request, typically used with "POST"
-       * requests.
-       *
-       * If body is a string it will be sent unmodified.
-       *
-       * If Content-Type is set to a value listed below, then
-       * the body will be encoded accordingly.
-       *
-       *    * `content-type="application/json"`
-       *      * body is encoded like `{"foo":"bar baz","x":1}`
-       *    * `content-type="application/x-www-form-urlencoded"`
-       *      * body is encoded like `foo=bar+baz&x=1`
-       *
-       * Otherwise the body will be passed to the browser unmodified, and it
-       * will handle any encoding (e.g. for FormData, Blob, ArrayBuffer).
-       *
-       * @type (ArrayBuffer|ArrayBufferView|Blob|Document|FormData|null|string|undefined|Object)
-       */
-      body: {
-        type: Object,
-        value: null
-      },
-
-      /**
-       * Toggle whether XHR is synchronous or asynchronous. Don't change this
-       * to true unless You Know What You Are Doing™.
-       */
-      sync: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Specifies what data to store in the `response` property, and
-       * to deliver as `event.detail.response` in `response` events.
-       *
-       * One of:
-       *
-       *    `text`: uses `XHR.responseText`.
-       *
-       *    `xml`: uses `XHR.responseXML`.
-       *
-       *    `json`: uses `XHR.responseText` parsed as JSON.
-       *
-       *    `arraybuffer`: uses `XHR.response`.
-       *
-       *    `blob`: uses `XHR.response`.
-       *
-       *    `document`: uses `XHR.response`.
-       */
-      handleAs: {
-        type: String,
-        value: 'json'
-      },
-
-      /**
-       * Set the withCredentials flag on the request.
-       */
-      withCredentials: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Set the timeout flag on the request.
-       */
-      timeout: {
-        type: Number,
-        value: 0
-      },
-
-      /**
-       * If true, automatically performs an Ajax request when either `url` or
-       * `params` changes.
-       */
-      auto: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * If true, error messages will automatically be logged to the console.
-       */
-      verbose: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * The most recent request made by this iron-ajax element.
-       */
-      lastRequest: {
-        type: Object,
-        notify: true,
-        readOnly: true
-      },
-
-      /**
-       * True while lastRequest is in flight.
-       */
-      loading: {
-        type: Boolean,
-        notify: true,
-        readOnly: true
-      },
-
-      /**
-       * lastRequest's response.
-       *
-       * Note that lastResponse and lastError are set when lastRequest finishes,
-       * so if loading is true, then lastResponse and lastError will correspond
-       * to the result of the previous request.
-       *
-       * The type of the response is determined by the value of `handleAs` at
-       * the time that the request was generated.
-       *
-       * @type {Object}
-       */
-      lastResponse: {
-        type: Object,
-        notify: true,
-        readOnly: true
-      },
-
-      /**
-       * lastRequest's error, if any.
-       *
-       * @type {Object}
-       */
-      lastError: {
-        type: Object,
-        notify: true,
-        readOnly: true
-      },
-
-      /**
-       * An Array of all in-flight requests originating from this iron-ajax
-       * element.
-       */
-      activeRequests: {
-        type: Array,
-        notify: true,
-        readOnly: true,
-        value: function() {
-          return [];
-        }
-      },
-
-      /**
-       * Length of time in milliseconds to debounce multiple automatically generated requests.
-       */
-      debounceDuration: {
-        type: Number,
-        value: 0,
-        notify: true
-      },
-
-      /**
-       * Prefix to be stripped from a JSON response before parsing it.
-       *
-       * In order to prevent an attack using CSRF with Array responses
-       * (http://haacked.com/archive/2008/11/20/anatomy-of-a-subtle-json-vulnerability.aspx/)
-       * many backends will mitigate this by prefixing all JSON response bodies
-       * with a string that would be nonsensical to a JavaScript parser.
-       *
-       */
-      jsonPrefix: {
-        type: String,
-        value: ''
-      },
-
-      _boundHandleResponse: {
-        type: Function,
-        value: function() {
-          return this._handleResponse.bind(this);
-        }
-      }
-    },
-
-    observers: [
-      '_requestOptionsChanged(url, method, params.*, headers, contentType, ' +
-          'body, sync, handleAs, jsonPrefix, withCredentials, timeout, auto)'
-    ],
-
-    /**
-     * The query string that should be appended to the `url`, serialized from
-     * the current value of `params`.
-     *
-     * @return {string}
-     */
-    get queryString () {
-      var queryParts = [];
-      var param;
-      var value;
-
-      for (param in this.params) {
-        value = this.params[param];
-        param = window.encodeURIComponent(param);
-
-        if (Array.isArray(value)) {
-          for (var i = 0; i < value.length; i++) {
-            queryParts.push(param + '=' + window.encodeURIComponent(value[i]));
-          }
-        } else if (value !== null) {
-          queryParts.push(param + '=' + window.encodeURIComponent(value));
-        } else {
-          queryParts.push(param);
-        }
-      }
-
-      return queryParts.join('&');
-    },
-
-    /**
-     * The `url` with query string (if `params` are specified), suitable for
-     * providing to an `iron-request` instance.
-     *
-     * @return {string}
-     */
-    get requestUrl() {
-      var queryString = this.queryString;
-
-      if (queryString) {
-        var bindingChar = this.url.indexOf('?') >= 0 ? '&' : '?';
-        return this.url + bindingChar + queryString;
-      }
-
-      return this.url;
-    },
-
-    /**
-     * An object that maps header names to header values, first applying the
-     * the value of `Content-Type` and then overlaying the headers specified
-     * in the `headers` property.
-     *
-     * @return {Object}
-     */
-    get requestHeaders() {
-      var headers = {};
-      var contentType = this.contentType;
-      if (contentType == null && (typeof this.body === 'string')) {
-        contentType = 'application/x-www-form-urlencoded';
-      }
-      if (contentType) {
-        headers['content-type'] = contentType;
-      }
-      var header;
-
-      if (this.headers instanceof Object) {
-        for (header in this.headers) {
-          headers[header] = this.headers[header].toString();
-        }
-      }
-
-      return headers;
-    },
-
-    /**
-     * Request options suitable for generating an `iron-request` instance based
-     * on the current state of the `iron-ajax` instance's properties.
-     *
-     * @return {{
-     *   url: string,
-     *   method: (string|undefined),
-     *   async: (boolean|undefined),
-     *   body: (ArrayBuffer|ArrayBufferView|Blob|Document|FormData|null|string|undefined|Object),
-     *   headers: (Object|undefined),
-     *   handleAs: (string|undefined),
-     *   jsonPrefix: (string|undefined),
-     *   withCredentials: (boolean|undefined)}}
-     */
-    toRequestOptions: function() {
-      return {
-        url: this.requestUrl || '',
-        method: this.method,
-        headers: this.requestHeaders,
-        body: this.body,
-        async: !this.sync,
-        handleAs: this.handleAs,
-        jsonPrefix: this.jsonPrefix,
-        withCredentials: this.withCredentials,
-        timeout: this.timeout
-      };
-    },
-
-    /**
-     * Performs an AJAX request to the specified URL.
-     *
-     * @return {!IronRequestElement}
-     */
-    generateRequest: function() {
-      var request = /** @type {!IronRequestElement} */ (document.createElement('iron-request'));
-      var requestOptions = this.toRequestOptions();
-
-      this.activeRequests.push(request);
-
-      request.completes.then(
-        this._boundHandleResponse
-      ).catch(
-        this._handleError.bind(this, request)
-      ).then(
-        this._discardRequest.bind(this, request)
-      );
-
-      request.send(requestOptions);
-
-      this._setLastRequest(request);
-      this._setLoading(true);
-
-      this.fire('request', {
-        request: request,
-        options: requestOptions
-      }, {bubbles: false});
-
-      return request;
-    },
-
-    _handleResponse: function(request) {
-      if (request === this.lastRequest) {
-        this._setLastResponse(request.response);
-        this._setLastError(null);
-        this._setLoading(false);
-      }
-      this.fire('response', request, {bubbles: false});
-    },
-
-    _handleError: function(request, error) {
-      if (this.verbose) {
-        console.error(error);
-      }
-
-      if (request === this.lastRequest) {
-        this._setLastError({
-          request: request,
-          error: error
-        });
-        this._setLastResponse(null);
-        this._setLoading(false);
-      }
-      this.fire('error', {
-        request: request,
-        error: error
-      }, {bubbles: false});
-    },
-
-    _discardRequest: function(request) {
-      var requestIndex = this.activeRequests.indexOf(request);
-
-      if (requestIndex > -1) {
-        this.activeRequests.splice(requestIndex, 1);
-      }
-    },
-
-    _requestOptionsChanged: function() {
-      this.debounce('generate-request', function() {
-        if (this.url == null) {
-          return;
-        }
-
-        if (this.auto) {
-          this.generateRequest();
-        }
-      }, this.debounceDuration);
-    },
-
-  });
-</script>
-<script>
-/*
-`<iron-form>` is an HTML `<form>` element that can validate and submit any custom
-elements that implement `Polymer.IronFormElementBehavior`, as well as any
-native HTML elements.
-
-It supports both `get` and `post` methods, and uses an `iron-ajax` element to
-submit the form data to the action URL.
-
-  Example:
-
-    <form is="iron-form" id="form" method="post" action="/form/handler">
-      <paper-input name="name" label="name"></paper-input>
-      <input name="address">
-      ...
-    </form>
-
-By default, a native `<button>` element will submit this form. However, if you
-want to submit it from a custom element's click handler, you need to explicitly
-call the form's `submit` method.
-
-  Example:
-
-    <paper-button raised onclick="submitForm()">Submit</paper-button>
-
-    function submitForm() {
-      document.getElementById('form').submit();
-    }
-
-To customize the request sent to the server, you can listen to the `iron-form-presubmit`
-event, and modify the form's[`iron-ajax`](https://elements.polymer-project.org/elements/iron-ajax)
-object. However, If you want to not use `iron-ajax` at all, you can cancel the
-event and do your own custom submission:
-
-  Example of modifying the request, but still using the build-in form submission:
-
-    form.addEventListener('iron-form-presubmit', function() {
-      this.request.method = 'put';
-      this.request.params = someCustomParams;
-    });
-
-  Example of bypassing the build-in form submission:
-
-    form.addEventListener('iron-form-presubmit', function(event) {
-      event.preventDefault();
-      var firebase = new Firebase(form.getAttribute('action'));
-      firebase.set(form.serialize());
-    });
-
-@demo demo/index.html
-*/
-
-  Polymer({
-
-    is: 'iron-form',
-
-    extends: 'form',
-
-    properties: {
-      /**
-       * Content type to use when sending data.
-       */
-      contentType: {
-        type: String,
-        value: "application/x-www-form-urlencoded"
-      },
-
-      /**
-       * By default, the form will display the browser's native validation
-       * UI (i.e. popup bubbles and invalid styles on invalid fields). You can
-       * manually disable this; however, if you do, note that you will have to
-       * manually style invalid *native* HTML fields yourself, as you are
-       * explicitly preventing the native form from doing so.
-       */
-      disableNativeValidationUi: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-      * Set the withCredentials flag when sending data.
-      */
-      withCredentials: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-      * HTTP request headers to send
-      *
-      * Note: setting a `Content-Type` header here will override the value
-      * specified by the `contentType` property of this element.
-      */
-      headers: {
-        type: Object,
-        value: function() {
-          return {};
-        }
-      },
-
-      /**
-      * iron-ajax request object used to submit the form.
-      */
-      request: {
-        type: Object,
-      }
-    },
-
-    /**
-     * Fired if the form cannot be submitted because it's invalid.
-     *
-     * @event iron-form-invalid
-     */
-
-    /**
-     * Fired before the form is submitted.
-     *
-     * @event iron-form-presubmit
-     */
-
-    /**
-     * Fired after the form is submitted.
-     *
-     * @event iron-form-submit
-     */
-
-     /**
-      * Fired after the form is reset.
-      *
-      * @event iron-form-reset
-      */
-
-    /**
-    * Fired after the form is submitted and a response is received. An
-    * IronRequestElement is included as the event.detail object.
-    *
-    * @event iron-form-response
-    */
-
-    /**
-     * Fired after the form is submitted and an error is received. An
-     * IronRequestElement is included as the event.detail object.
-     *
-     * @event iron-form-error
-     */
-    listeners: {
-      'iron-form-element-register': '_registerElement',
-      'iron-form-element-unregister': '_unregisterElement',
-      'submit': '_onSubmit',
-      'reset': '_onReset'
-    },
-
-    ready: function() {
-      // Object that handles the ajax form submission request.
-      this.request = document.createElement('iron-ajax');
-      this.request.addEventListener('response', this._handleFormResponse.bind(this));
-      this.request.addEventListener('error', this._handleFormError.bind(this));
-
-      // Holds all the custom elements registered with this form.
-      this._customElements = [];
-      // Holds the initial values of the custom elements registered with this form.
-      this._customElementsInitialValues = [];
-    },
-
-    /**
-     * Submits the form.
-     */
-    submit: function() {
-      if (!this.noValidate && !this.validate()) {
-        // In order to trigger the native browser invalid-form UI, we need
-        // to do perform a fake form submit.
-        if (!this.disableNativeValidationUi) {
-          this._doFakeSubmitForValidation();
-        }
-        this.fire('iron-form-invalid');
-        return;
-      }
-
-      var json = this.serialize();
-
-      // Native forms can also index elements magically by their name (can't make
-      // this up if I tried) so we need to get the correct attributes, not the
-      // elements with those names.
-      this.request.url = this.getAttribute('action');
-      this.request.method = this.getAttribute('method');
-      this.request.contentType = this.contentType;
-      this.request.withCredentials = this.withCredentials;
-      this.request.headers = this.headers;
-
-      if (this.method.toUpperCase() === 'POST') {
-        this.request.body = json;
-      } else {
-        this.request.params = json;
-      }
-
-      // Allow for a presubmit hook
-      var event = this.fire('iron-form-presubmit', {}, {cancelable: true});
-      if(!event.defaultPrevented) {
-        this.request.generateRequest();
-        this.fire('iron-form-submit', json);
-      }
-    },
-
-    /**
-     * Handler that is called when the native form fires a `submit` event
-     *
-     * @param {Event} event A `submit` event.
-     */
-    _onSubmit: function(event) {
-      this.submit();
-
-      // Don't perform a page refresh.
-      if (event) {
-        event.preventDefault();
-      }
-
-      return false;
-    },
-
-    /**
-     * Handler that is called when the native form fires a `reset` event
-     *
-     * @param {Event} event A `reset` event.
-     */
-    _onReset: function(event) {
-      this._resetCustomElements();
-    },
-
-    /**
-     * Returns a json object containing name/value pairs for all the registered
-     * custom components and native elements of the form. If there are elements
-     * with duplicate names, then their values will get aggregated into an
-     * array of values.
-     *
-     * @return {!Object}
-     */
-    serialize: function() {
-      var json = {};
-
-      function addSerializedElement(el) {
-        // If the name doesn't exist, add it. Otherwise, serialize it to
-        // an array,
-        if (!json[el.name]) {
-          json[el.name] = el.value;
-        } else {
-          if (!Array.isArray(json[el.name])) {
-            json[el.name] = [json[el.name]];
-          }
-          json[el.name].push(el.value);
-        }
-      }
-
-      // Go through all of the registered custom components.
-      for (var el, i = 0; el = this._customElements[i], i < this._customElements.length; i++) {
-        if (this._useValue(el)) {
-          addSerializedElement(el);
-        }
-      }
-
-      // Also go through the form's native elements.
-      for (var el, i = 0; el = this.elements[i], i < this.elements.length; i++) {
-        // Checkboxes and radio buttons should only use their value if they're checked.
-        // Also, custom elements that extend native elements (like an
-        // `<input is="fancy-input">`) will appear in both lists. Since they
-        // were already added as a custom element, they don't need
-        // to be re-added.
-        if (!this._useValue(el) ||
-            (el.hasAttribute('is') && json[el.name])) {
-          continue;
-        }
-        addSerializedElement(el);
-      }
-
-      return json;
-    },
-
-    _handleFormResponse: function (event) {
-      this.fire('iron-form-response', event.detail);
-    },
-
-    _handleFormError: function (event) {
-      this.fire('iron-form-error', event.detail);
-    },
-
-    _registerElement: function(e) {
-      var element = e.target;
-      element._parentForm = this;
-      this._customElements.push(element);
-
-      // Save the original value of this input.
-      this._customElementsInitialValues.push(
-          this._usesCheckedInsteadOfValue(element) ? element.checked : element.value);
-    },
-
-    _unregisterElement: function(e) {
-      var target = e.detail.target;
-      if (target) {
-        var index = this._customElements.indexOf(target);
-        if (index > -1) {
-          this._customElements.splice(index, 1);
-          this._customElementsInitialValues.splice(index, 1);
-        }
-      }
-    },
-
-    /**
-     * Validates all the required elements (custom and native) in the form.
-     * @return {boolean} True if all the elements are valid.
-     */
-    validate: function() {
-      var valid = true;
-
-      // Validate all the custom elements.
-      var validatable;
-      for (var el, i = 0; el = this._customElements[i], i < this._customElements.length; i++) {
-        if (el.required && !el.disabled) {
-          validatable = /** @type {{validate: (function() : boolean)}} */ (el);
-          // Some elements may not have correctly defined a validate method.
-          if (validatable.validate)
-            valid = !!validatable.validate() && valid;
-        }
-      }
-
-      // Validate the form's native elements.
-      for (var el, i = 0; el = this.elements[i], i < this.elements.length; i++) {
-        // Custom elements that extend a native element will also appear in
-        // this list, but they've already been validated.
-        if (!el.hasAttribute('is') && el.willValidate && el.checkValidity && el.name) {
-          valid = el.checkValidity() && valid;
-        }
-      }
-
-      return valid;
-    },
-
-    /**
-     * Returns whether the given element is a radio-button or a checkbox.
-     * @return {boolean} True if the element has a `checked` property.
-     */
-    _usesCheckedInsteadOfValue: function(el) {
-      if (el.type == 'checkbox' ||
-          el.type == 'radio' ||
-          el.getAttribute('role') == 'checkbox' ||
-          el.getAttribute('role') == 'radio' ||
-          el._hasIronCheckedElementBehavior) {
-        return true;
-      }
-      return false;
-    },
-
-    _useValue: function(el) {
-      // Skip disabled elements or elements that don't have a `name` attribute.
-      if (el.disabled || !el.name) {
-        return false;
-      }
-
-      // Checkboxes and radio buttons should only use their value if they're
-      // checked. Custom paper-checkbox and paper-radio-button elements
-      // don't have a type, but they have the correct role set.
-      if (this._usesCheckedInsteadOfValue(el))
-        return el.checked;
-      return true;
-    },
-
-    _doFakeSubmitForValidation: function() {
-      var fakeSubmit = document.createElement('input');
-      fakeSubmit.setAttribute('type', 'submit');
-      fakeSubmit.style.display = 'none';
-      this.appendChild(fakeSubmit);
-
-      fakeSubmit.click();
-
-      this.removeChild(fakeSubmit);
-    },
-
-    /**
-     * Resets all non-disabled form custom elements to their initial values.
-     */
-    _resetCustomElements: function() {
-      // Reset all the registered custom components. We need to do this after
-      // the native reset, since programmatically changing the `value` of some
-      // native elements (iron-input in particular) does not notify its
-      // parent `paper-input`, which will now display the wrong value.
-      this.async(function() {
-        for (var el, i = 0; el = this._customElements[i], i < this._customElements.length; i++) {
-          if (el.disabled)
-            continue;
-
-          if (this._usesCheckedInsteadOfValue(el)) {
-            el.checked = this._customElementsInitialValues[i];
-          } else {
-            el.value = this._customElementsInitialValues[i];
-          }
-        }
-
-        this.fire('iron-form-reset');
-      }, 1);
-    }
-
-  });
-
-</script>
 <!--
 `<paper-input-container>` is a container for a `<label>`, an `<input is="iron-input">` or
 `<iron-autogrow-textarea>` and optional add-on elements such as an error message or character
@@ -10338,687 +11019,6 @@ Custom property | Description | Default
 This element is `display:block` by default, but you can set the `inline` attribute to make it
 `display:inline-block`.
 -->
-<!--
-`iron-meta` is a generic element you can use for sharing information across the DOM tree.
-It uses [monostate pattern](http://c2.com/cgi/wiki?MonostatePattern) such that any
-instance of iron-meta has access to the shared
-information. You can use `iron-meta` to share whatever you want (or create an extension
-[like x-meta] for enhancements).
-
-The `iron-meta` instances containing your actual data can be loaded in an import,
-or constructed in any way you see fit. The only requirement is that you create them
-before you try to access them.
-
-Examples:
-
-If I create an instance like this:
-
-    <iron-meta key="info" value="foo/bar"></iron-meta>
-
-Note that value="foo/bar" is the metadata I've defined. I could define more
-attributes or use child nodes to define additional metadata.
-
-Now I can access that element (and it's metadata) from any iron-meta instance
-via the byKey method, e.g.
-
-    meta.byKey('info').getAttribute('value');
-
-Pure imperative form would be like:
-
-    document.createElement('iron-meta').byKey('info').getAttribute('value');
-
-Or, in a Polymer element, you can include a meta in your template:
-
-    <iron-meta id="meta"></iron-meta>
-    ...
-    this.$.meta.byKey('info').getAttribute('value');
-
-@group Iron Elements
-@demo demo/index.html
-@hero hero.svg
-@element iron-meta
--->
-
-<script>
-
-  (function() {
-
-    // monostate data
-    var metaDatas = {};
-    var metaArrays = {};
-    var singleton = null;
-
-    Polymer.IronMeta = Polymer({
-
-      is: 'iron-meta',
-
-      properties: {
-
-        /**
-         * The type of meta-data.  All meta-data of the same type is stored
-         * together.
-         */
-        type: {
-          type: String,
-          value: 'default',
-          observer: '_typeChanged'
-        },
-
-        /**
-         * The key used to store `value` under the `type` namespace.
-         */
-        key: {
-          type: String,
-          observer: '_keyChanged'
-        },
-
-        /**
-         * The meta-data to store or retrieve.
-         */
-        value: {
-          type: Object,
-          notify: true,
-          observer: '_valueChanged'
-        },
-
-        /**
-         * If true, `value` is set to the iron-meta instance itself.
-         */
-         self: {
-          type: Boolean,
-          observer: '_selfChanged'
-        },
-
-        /**
-         * Array of all meta-data values for the given type.
-         */
-        list: {
-          type: Array,
-          notify: true
-        }
-
-      },
-
-      hostAttributes: {
-        hidden: true
-      },
-
-      /**
-       * Only runs if someone invokes the factory/constructor directly
-       * e.g. `new Polymer.IronMeta()`
-       *
-       * @param {{type: (string|undefined), key: (string|undefined), value}=} config
-       */
-      factoryImpl: function(config) {
-        if (config) {
-          for (var n in config) {
-            switch(n) {
-              case 'type':
-              case 'key':
-              case 'value':
-                this[n] = config[n];
-                break;
-            }
-          }
-        }
-      },
-
-      created: function() {
-        // TODO(sjmiles): good for debugging?
-        this._metaDatas = metaDatas;
-        this._metaArrays = metaArrays;
-      },
-
-      _keyChanged: function(key, old) {
-        this._resetRegistration(old);
-      },
-
-      _valueChanged: function(value) {
-        this._resetRegistration(this.key);
-      },
-
-      _selfChanged: function(self) {
-        if (self) {
-          this.value = this;
-        }
-      },
-
-      _typeChanged: function(type) {
-        this._unregisterKey(this.key);
-        if (!metaDatas[type]) {
-          metaDatas[type] = {};
-        }
-        this._metaData = metaDatas[type];
-        if (!metaArrays[type]) {
-          metaArrays[type] = [];
-        }
-        this.list = metaArrays[type];
-        this._registerKeyValue(this.key, this.value);
-      },
-
-      /**
-       * Retrieves meta data value by key.
-       *
-       * @method byKey
-       * @param {string} key The key of the meta-data to be returned.
-       * @return {*}
-       */
-      byKey: function(key) {
-        return this._metaData && this._metaData[key];
-      },
-
-      _resetRegistration: function(oldKey) {
-        this._unregisterKey(oldKey);
-        this._registerKeyValue(this.key, this.value);
-      },
-
-      _unregisterKey: function(key) {
-        this._unregister(key, this._metaData, this.list);
-      },
-
-      _registerKeyValue: function(key, value) {
-        this._register(key, value, this._metaData, this.list);
-      },
-
-      _register: function(key, value, data, list) {
-        if (key && data && value !== undefined) {
-          data[key] = value;
-          list.push(value);
-        }
-      },
-
-      _unregister: function(key, data, list) {
-        if (key && data) {
-          if (key in data) {
-            var value = data[key];
-            delete data[key];
-            this.arrayDelete(list, value);
-          }
-        }
-      }
-
-    });
-
-    Polymer.IronMeta.getIronMeta = function getIronMeta() {
-       if (singleton === null) {
-         singleton = new Polymer.IronMeta();
-       }
-       return singleton;
-     };
-
-    /**
-    `iron-meta-query` can be used to access infomation stored in `iron-meta`.
-
-    Examples:
-
-    If I create an instance like this:
-
-        <iron-meta key="info" value="foo/bar"></iron-meta>
-
-    Note that value="foo/bar" is the metadata I've defined. I could define more
-    attributes or use child nodes to define additional metadata.
-
-    Now I can access that element (and it's metadata) from any `iron-meta-query` instance:
-
-         var value = new Polymer.IronMetaQuery({key: 'info'}).value;
-
-    @group Polymer Iron Elements
-    @element iron-meta-query
-    */
-    Polymer.IronMetaQuery = Polymer({
-
-      is: 'iron-meta-query',
-
-      properties: {
-
-        /**
-         * The type of meta-data.  All meta-data of the same type is stored
-         * together.
-         */
-        type: {
-          type: String,
-          value: 'default',
-          observer: '_typeChanged'
-        },
-
-        /**
-         * Specifies a key to use for retrieving `value` from the `type`
-         * namespace.
-         */
-        key: {
-          type: String,
-          observer: '_keyChanged'
-        },
-
-        /**
-         * The meta-data to store or retrieve.
-         */
-        value: {
-          type: Object,
-          notify: true,
-          readOnly: true
-        },
-
-        /**
-         * Array of all meta-data values for the given type.
-         */
-        list: {
-          type: Array,
-          notify: true
-        }
-
-      },
-
-      /**
-       * Actually a factory method, not a true constructor. Only runs if
-       * someone invokes it directly (via `new Polymer.IronMeta()`);
-       *
-       * @param {{type: (string|undefined), key: (string|undefined)}=} config
-       */
-      factoryImpl: function(config) {
-        if (config) {
-          for (var n in config) {
-            switch(n) {
-              case 'type':
-              case 'key':
-                this[n] = config[n];
-                break;
-            }
-          }
-        }
-      },
-
-      created: function() {
-        // TODO(sjmiles): good for debugging?
-        this._metaDatas = metaDatas;
-        this._metaArrays = metaArrays;
-      },
-
-      _keyChanged: function(key) {
-        this._setValue(this._metaData && this._metaData[key]);
-      },
-
-      _typeChanged: function(type) {
-        this._metaData = metaDatas[type];
-        this.list = metaArrays[type];
-        if (this.key) {
-          this._keyChanged(this.key);
-        }
-      },
-
-      /**
-       * Retrieves meta data value by key.
-       * @param {string} key The key of the meta-data to be returned.
-       * @return {*}
-       */
-      byKey: function(key) {
-        return this._metaData && this._metaData[key];
-      }
-
-    });
-
-  })();
-</script>
-<script>
-
-  /**
-   * `Use Polymer.IronValidatableBehavior` to implement an element that validates user input.
-   * Use the related `Polymer.IronValidatorBehavior` to add custom validation logic to an iron-input.
-   *
-   * By default, an `<iron-form>` element validates its fields when the user presses the submit button.
-   * To validate a form imperatively, call the form's `validate()` method, which in turn will
-   * call `validate()` on all its children. By using `Polymer.IronValidatableBehavior`, your
-   * custom element will get a public `validate()`, which
-   * will return the validity of the element, and a corresponding `invalid` attribute,
-   * which can be used for styling.
-   *
-   * To implement the custom validation logic of your element, you must override
-   * the protected `_getValidity()` method of this behaviour, rather than `validate()`.
-   * See [this](https://github.com/PolymerElements/iron-form/blob/master/demo/simple-element.html)
-   * for an example.
-   *
-   * ### Accessibility
-   *
-   * Changing the `invalid` property, either manually or by calling `validate()` will update the
-   * `aria-invalid` attribute.
-   *
-   * @demo demo/index.html
-   * @polymerBehavior
-   */
-  Polymer.IronValidatableBehavior = {
-
-    properties: {
-
-      /**
-       * Namespace for this validator.
-       */
-      validatorType: {
-        type: String,
-        value: 'validator'
-      },
-
-      /**
-       * Name of the validator to use.
-       */
-      validator: {
-        type: String
-      },
-
-      /**
-       * True if the last call to `validate` is invalid.
-       */
-      invalid: {
-        notify: true,
-        reflectToAttribute: true,
-        type: Boolean,
-        value: false
-      },
-
-      _validatorMeta: {
-        type: Object
-      }
-
-    },
-
-    observers: [
-      '_invalidChanged(invalid)'
-    ],
-
-    get _validator() {
-      return this._validatorMeta && this._validatorMeta.byKey(this.validator);
-    },
-
-    ready: function() {
-      this._validatorMeta = new Polymer.IronMeta({type: this.validatorType});
-    },
-
-    _invalidChanged: function() {
-      if (this.invalid) {
-        this.setAttribute('aria-invalid', 'true');
-      } else {
-        this.removeAttribute('aria-invalid');
-      }
-    },
-
-    /**
-     * @return {boolean} True if the validator `validator` exists.
-     */
-    hasValidator: function() {
-      return this._validator != null;
-    },
-
-    /**
-     * Returns true if the `value` is valid, and updates `invalid`. If you want
-     * your element to have custom validation logic, do not override this method;
-     * override `_getValidity(value)` instead.
-
-     * @param {Object} value The value to be validated. By default, it is passed
-     * to the validator's `validate()` function, if a validator is set.
-     * @return {boolean} True if `value` is valid.
-     */
-    validate: function(value) {
-      this.invalid = !this._getValidity(value);
-      return !this.invalid;
-    },
-
-    /**
-     * Returns true if `value` is valid.  By default, it is passed
-     * to the validator's `validate()` function, if a validator is set. You
-     * should override this method if you want to implement custom validity
-     * logic for your element.
-     *
-     * @param {Object} value The value to be validated.
-     * @return {boolean} True if `value` is valid.
-     */
-
-    _getValidity: function(value) {
-      if (this.hasValidator()) {
-        return this._validator.validate(value);
-      }
-      return true;
-    }
-  };
-
-</script>
-<script>
-
-/*
-`<iron-input>` adds two-way binding and custom validators using `Polymer.IronValidatorBehavior`
-to `<input>`.
-
-### Two-way binding
-
-By default you can only get notified of changes to an `input`'s `value` due to user input:
-
-    <input value="{{myValue::input}}">
-
-`iron-input` adds the `bind-value` property that mirrors the `value` property, and can be used
-for two-way data binding. `bind-value` will notify if it is changed either by user input or by script.
-
-    <input is="iron-input" bind-value="{{myValue}}">
-
-### Custom validators
-
-You can use custom validators that implement `Polymer.IronValidatorBehavior` with `<iron-input>`.
-
-    <input is="iron-input" validator="my-custom-validator">
-
-### Stopping invalid input
-
-It may be desirable to only allow users to enter certain characters. You can use the
-`prevent-invalid-input` and `allowed-pattern` attributes together to accomplish this. This feature
-is separate from validation, and `allowed-pattern` does not affect how the input is validated.
-
-    <!-- only allow characters that match [0-9] -->
-    <input is="iron-input" prevent-invalid-input allowed-pattern="[0-9]">
-
-@hero hero.svg
-@demo demo/index.html
-*/
-
-  Polymer({
-
-    is: 'iron-input',
-
-    extends: 'input',
-
-    behaviors: [
-      Polymer.IronValidatableBehavior
-    ],
-
-    properties: {
-
-      /**
-       * Use this property instead of `value` for two-way data binding.
-       */
-      bindValue: {
-        observer: '_bindValueChanged',
-        type: String
-      },
-
-      /**
-       * Set to true to prevent the user from entering invalid input. The new input characters are
-       * matched with `allowedPattern` if it is set, otherwise it will use the `pattern` attribute if
-       * set, or the `type` attribute (only supported for `type=number`).
-       */
-      preventInvalidInput: {
-        type: Boolean
-      },
-
-      /**
-       * Regular expression to match valid input characters.
-       */
-      allowedPattern: {
-        type: String,
-        observer: "_allowedPatternChanged"
-      },
-
-      _previousValidInput: {
-        type: String,
-        value: ''
-      },
-
-      _patternAlreadyChecked: {
-        type: Boolean,
-        value: false
-      }
-
-    },
-
-    listeners: {
-      'input': '_onInput',
-      'keypress': '_onKeypress'
-    },
-
-    get _patternRegExp() {
-      var pattern;
-      if (this.allowedPattern) {
-        pattern = new RegExp(this.allowedPattern);
-      } else if (this.pattern) {
-        pattern = new RegExp(this.pattern);
-      } else {
-        switch (this.type) {
-          case 'number':
-            pattern = /[0-9.,e-]/;
-            break;
-        }
-      }
-      return pattern;
-    },
-
-    ready: function() {
-      this.bindValue = this.value;
-    },
-
-    /**
-     * @suppress {checkTypes}
-     */
-    _bindValueChanged: function() {
-      if (this.value !== this.bindValue) {
-        this.value = !(this.bindValue || this.bindValue === 0) ? '' : this.bindValue;
-      }
-      // manually notify because we don't want to notify until after setting value
-      this.fire('bind-value-changed', {value: this.bindValue});
-    },
-
-    _allowedPatternChanged: function() {
-      // Force to prevent invalid input when an `allowed-pattern` is set
-      this.preventInvalidInput = this.allowedPattern ? true : false;
-    },
-
-    _onInput: function() {
-      // Need to validate each of the characters pasted if they haven't
-      // been validated inside `_onKeypress` already.
-      if (this.preventInvalidInput && !this._patternAlreadyChecked) {
-        var valid = this._checkPatternValidity();
-        if (!valid) {
-          this.value = this._previousValidInput;
-        }
-      }
-
-      this.bindValue = this.value;
-      this._previousValidInput = this.value;
-      this._patternAlreadyChecked = false;
-    },
-
-    _isPrintable: function(event) {
-      // What a control/printable character is varies wildly based on the browser.
-      // - most control characters (arrows, backspace) do not send a `keypress` event
-      //   in Chrome, but the *do* on Firefox
-      // - in Firefox, when they do send a `keypress` event, control chars have
-      //   a charCode = 0, keyCode = xx (for ex. 40 for down arrow)
-      // - printable characters always send a keypress event.
-      // - in Firefox, printable chars always have a keyCode = 0. In Chrome, the keyCode
-      //   always matches the charCode.
-      // None of this makes any sense.
-
-      // For these keys, ASCII code == browser keycode.
-      var anyNonPrintable =
-        (event.keyCode == 8)   ||  // backspace
-        (event.keyCode == 9)   ||  // tab
-        (event.keyCode == 13)  ||  // enter
-        (event.keyCode == 27);     // escape
-
-      // For these keys, make sure it's a browser keycode and not an ASCII code.
-      var mozNonPrintable =
-        (event.keyCode == 19)  ||  // pause
-        (event.keyCode == 20)  ||  // caps lock
-        (event.keyCode == 45)  ||  // insert
-        (event.keyCode == 46)  ||  // delete
-        (event.keyCode == 144) ||  // num lock
-        (event.keyCode == 145) ||  // scroll lock
-        (event.keyCode > 32 && event.keyCode < 41)   || // page up/down, end, home, arrows
-        (event.keyCode > 111 && event.keyCode < 124); // fn keys
-
-      return !anyNonPrintable && !(event.charCode == 0 && mozNonPrintable);
-    },
-
-    _onKeypress: function(event) {
-      if (!this.preventInvalidInput && this.type !== 'number') {
-        return;
-      }
-      var regexp = this._patternRegExp;
-      if (!regexp) {
-        return;
-      }
-
-      // Handle special keys and backspace
-      if (event.metaKey || event.ctrlKey || event.altKey)
-        return;
-
-      // Check the pattern either here or in `_onInput`, but not in both.
-      this._patternAlreadyChecked = true;
-
-      var thisChar = String.fromCharCode(event.charCode);
-      if (this._isPrintable(event) && !regexp.test(thisChar)) {
-        event.preventDefault();
-      }
-    },
-
-    _checkPatternValidity: function() {
-      var regexp = this._patternRegExp;
-      if (!regexp) {
-        return true;
-      }
-      for (var i = 0; i < this.value.length; i++) {
-        if (!regexp.test(this.value[i])) {
-          return false;
-        }
-      }
-      return true;
-    },
-
-    /**
-     * Returns true if `value` is valid. The validator provided in `validator` will be used first,
-     * then any constraints.
-     * @return {boolean} True if the value is valid.
-     */
-    validate: function() {
-      // Empty, non-required input is valid.
-      if (!this.required && this.value == '') {
-        this.invalid = false;
-        return true;
-      }
-
-      var valid;
-      if (this.hasValidator()) {
-        valid = Polymer.IronValidatableBehavior.validate.call(this, this.value);
-      } else {
-        this.invalid = !this.validity.valid;
-        valid = this.validity.valid;
-      }
-      this.fire('iron-input-validate');
-      return valid;
-    }
-
-  });
-
-  /*
-  The `iron-input-validate` event is fired whenever `validate()` is called.
-  @event iron-input-validate
-  */
-
-</script>
 <!--
 Material design: [Cards](https://www.google.com/design/spec/components/cards.html)
 
