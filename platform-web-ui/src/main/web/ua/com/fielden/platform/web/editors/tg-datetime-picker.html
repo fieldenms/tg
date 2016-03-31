@@ -247,10 +247,10 @@
                 	datePicker.selectedHour = 0;
                 	datePicker.selectedMinute = 0;
                 	
-                    if (self._validMoment !== null) {
-                        datePicker.selectedDate = selectedMoment.valueOf();
-                        datePicker.selectedHour = selectedMoment.hour();
-                        datePicker.selectedMinute = selectedMoment.minute();
+                    if (self._editingValue && self._editingValue.trim() !== '' && self._validMoment !== null) {
+                        datePicker.selectedDate = self._validMoment.valueOf();
+                        datePicker.selectedHour = self._validMoment.hour();
+                        datePicker.selectedMinute = self._validMoment.minute();
                     }
            			
                     Polymer.dom(document.body).appendChild(dialog);
