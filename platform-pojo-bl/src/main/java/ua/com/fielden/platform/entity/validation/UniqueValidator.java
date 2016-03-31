@@ -59,7 +59,7 @@ public class UniqueValidator<E extends AbstractEntity<?>, T> implements IBeforeC
 
         int count = co.count(query);
         if (count > 0) {
-            return Result.failure(format(validationErrorTemplate, newValue, property.getName(), type.getSimpleName()));
+            return Result.failure(format(validationErrorTemplate, newValue, property.getName(), type.getName()));
         }
         
         return Result.successful(entity);

@@ -46,7 +46,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         user2.setEmail("user1@company.com");
         assertFalse(user2.isValid().isSuccessful());
         assertFalse(user2.getProperty("email").isValid());
-        assertEquals(format(UniqueValidator.validationErrorTemplate, "user1@company.com", "email", "User"), user2.getProperty("email").getFirstFailure().getMessage());
+        assertEquals(format(UniqueValidator.validationErrorTemplate, "user1@company.com", "email", User.class.getName()), user2.getProperty("email").getFirstFailure().getMessage());
     }
 
     @Test
