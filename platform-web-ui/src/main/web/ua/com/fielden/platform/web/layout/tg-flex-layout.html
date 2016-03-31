@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
 <link rel="import" href="/app/tg-app-config.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <dom-module id="tg-flex-layout">
 
@@ -31,9 +32,8 @@
                         this.componentsToLayout.push(item);
                     }.bind(this));
                 }
-                while (Polymer.dom(this).firstChild) {
-                    Polymer.dom(this).removeChild(Polymer.dom(this).firstChild);
-                }
+                // removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
+                _removeAllLightDOMChildrenFrom(this);
                 Polymer.dom.flush();
                 removeStylesAndClasses.bind(this)(this);
                 this.toggleClass("layout", true);

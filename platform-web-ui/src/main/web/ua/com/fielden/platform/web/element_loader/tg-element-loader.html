@@ -1,7 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <dom-module id="tg-element-loader">
-    <template><content></content></template>
+    <template>
+        <content></content>
+    </template>
 </dom-module>
 <script>
     (function () {
@@ -126,12 +129,8 @@
 
             /** Inserts the provided element with prior removal of any existing children. */
             insert: function (element) {
-                // remove all childrent before appending a new element
-                var child = Polymer.dom(this).firstChild;
-                while (child) {
-                    Polymer.dom(this).removeChild(child);
-                    child = Polymer.dom(this).firstChild;
-                }
+                // remove all children before appending a new element
+                _removeAllLightDOMChildrenFrom(this);
                 
                 // append the provided element
                 Polymer.dom(this).appendChild(element);
