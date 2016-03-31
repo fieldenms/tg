@@ -119,21 +119,21 @@
 
     <form id="form" is="iron-form" action="login" method="post">
         <div class="vertical-section">
-            <paper-input-container id="decorator">
+            <paper-input-container id="in-username-container">
                 <label>User name</label>
-                <input id="in-username" is="iron-input" type="text" name="username" required prevent-invalid-input/>
+                <input id="in-username" is="iron-input" type="text" name="username" required prevent-invalid-input></input>
             </paper-input-container>
 
-            <paper-input-container id="decorator">
+            <paper-input-container id="in-passwd-container">
                 <label>Password</label>
-                <input id="in-passwd" is="iron-input" type="password" name="passwd" required prevent-invalid-input/>
+                <input id="in-passwd" is="iron-input" type="password" name="passwd" required prevent-invalid-input></input>
             </paper-input-container>
 
             <!-- there seems still to be a problem with paper-checkbox not being submitted, hence the hack -->
             <div style="display: flex; justify-content: space-between;">
 	            <paper-checkbox id="in-trusted-device-mock">Trusted device?</paper-checkbox>
 	            <input id="in-trusted-device" type="hidden" name="trustedDevice">
-	        	<a href="/forgotten">Forgot password?</a>
+	        	<a href="/forgotten" tabIndex="-1">Forgot password?</a>
         	</div>    
         </div>
         <paper-button id="submitButton" style="width:100%; margin: 0px" class="submit-normal" raised>
@@ -152,6 +152,16 @@
             var trustedDeviceMock = document.querySelector('#in-trusted-device-mock');
 
             var inUserName = document.querySelector('#in-username');
+            var inUserNameContainer = document.querySelector('#in-username-container');
+            var inPasswd = document.querySelector('#in-passwd');
+            var inPasswdContainer = document.querySelector('#in-passwd-container');
+
+            inUserName.oninput = function() {
+                inUserNameContainer.invalid = false;
+                inPasswdContainer.invalid = false;
+            }
+            inPasswd.oninput = inUserName.oninput;
+            
             window.addEventListener('WebComponentsReady', function(e) {
                 inUserName.focus();
             });
@@ -180,18 +190,17 @@
                 }
             );
 
-
             form.addEventListener('iron-form-error',
                 function (event) {
                 	inUserName.focus();
                     if (event.detail.request.status === 400) {
-                        console.log('Server response: ', event.detail.request.xhr.response.message);
+                        inUserNameContainer.invalid = true;
+                        inPasswdContainer.invalid = true;
                         submit.classList.add("submit-error");
                         submitLabel.innerHTML = "Access Denied"
                         submit.disabled = false;
                     } else {
-                        console.log('Server response: ', event.detail.request.xhr.response.message);
-                        // JSON.parse(xml.responseText)
+                     	// event.detail.request.xhr.response is a JSON object
                         submit.classList.add("submit-error");
                         submitLabel.innerHTML = "Try Again"
                         submit.disabled = false;
