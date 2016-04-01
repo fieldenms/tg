@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extr
 import java.io.ByteArrayInputStream;
 import java.util.Optional;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -39,14 +40,14 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
- * A web resource handling explicit user logins.
+ * A web resource handling user login reset requests.
  *
  * @author TG Team
  *
  */
-public class LoginResource extends ServerResource {
+public class LoginResetResource extends ServerResource {
 
-    private final Logger logger = Logger.getLogger(LoginResource.class);
+    private final Logger logger = Logger.getLogger(LoginResetResource.class);
 
     private final String domainName;
     private final String path;
@@ -57,11 +58,13 @@ public class LoginResource extends ServerResource {
     private final RestServerUtil restUtil;
     private final IUniversalConstants constants;
 
+    private final String uuid;
+
     /**
-     * Creates {@link LoginResource}.
+     * Creates {@link LoginResetResource}.
      */
-    public LoginResource(//
-            final String domainName,
+    public LoginResetResource(//
+    final String domainName,
             final String path,
             final IUniversalConstants constants,
             final IAuthenticationModel authenticationModel,
@@ -81,7 +84,8 @@ public class LoginResource extends ServerResource {
         this.coUser = coUser;
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
-
+        this.uuid = (String) request.getAttributes().get("uuid");
+        System.out.println("UUID " + uuid + "  " + System.identityHashCode(this));
     }
 
     @Override
@@ -90,32 +94,36 @@ public class LoginResource extends ServerResource {
             // check if there is a valid authenticator
             // if there is then should respond with redirection to root /.
 
-            final Optional<Authenticator> oAuth = extractAuthenticator(getRequest());
-            if (oAuth.isPresent()) {
-                final Authenticator auth = oAuth.get();
-                userProvider.setUsername(auth.username, coUser);
-                final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
-                if (session.isPresent()) {
-                    // response needs to be provided with an authenticating cookie
-                    assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
-                    // response needs to provide redirection instructions
-                    getResponse().redirectSeeOther("/");
-                    return new EmptyRepresentation();
-                }
+            if (StringUtils.isEmpty(this.uuid)) {
+                return loginResetRequestPage();
+            } else {
+                // TODO validate uuid and if valid then proceed to to the submission page 
+                return loginResetSubmitPage(this.uuid);
             }
-
-            // otherwise just load the login page for user to login in explicitly
-            return loginPage();
         } catch (final Exception ex) {
             // in case of an exception try try return a login page.
             logger.fatal(ex);
-            return loginPage();
+            return loginResetRequestPage(); // TODO what else could we return?
         }
     }
 
-    public Representation loginPage() {
+    private Representation loginResetRequestPage() {
         try {
-            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login.html").replaceAll("@title", "Login").getBytes("UTF-8");
+            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-reset-request.html")
+                    .replace("@title", "Login Reset Request").getBytes("UTF-8");
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
+        } catch (final Exception ex) {
+            logger.fatal(ex);
+            throw new IllegalStateException(ex);
+        }
+    }
+    
+    private Representation loginResetSubmitPage(final String uuid) {
+        try {
+            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-reset-submit.html")
+                    .replace("@title", "Login Reset Submit")
+                    .replace("@uuid", uuid)
+                    .getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
         } catch (final Exception ex) {
             logger.fatal(ex);
@@ -127,25 +135,25 @@ public class LoginResource extends ServerResource {
     public void login(final Representation entity) throws ResourceException {
         try {
             final Form form = new Form(entity);
-            final Credentials credo = new Credentials();
-            credo.setUsername(form.getValues("username"));
-            credo.setPasswd(form.getValues("passwd"));
-            credo.setTrustedDevice(Boolean.parseBoolean(form.getValues("trustedDevice")));
-
-            final Result authResult = authenticationModel.authenticate(credo.getUsername(), credo.getPasswd());
-            if (!authResult.isSuccessful()) {
-                logger.warn(format("Unsuccessful login request (%s)", credo));
-                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Invalid credentials.\"}"));
-                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            } else {
-                // create a new session for an authenticated user...
-                final User user = (User) authResult.getInstance();
-                final UserSession session = coUserSession.newSession(user, credo.isTrustedDevice());
-
-                // ...and provide the response with an authenticating cookie
-                assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
-                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
-            }
+            final String usernameOrEmail = form.getValues("username"); 
+            System.out.println(usernameOrEmail);
+            getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Not yet supported.\"}"));
+            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            
+//            final Result authResult = authenticationModel.authenticate(credo.getUsername(), credo.getPasswd());
+//            if (!authResult.isSuccessful()) {
+//                logger.warn(format("Unsuccessful login request (%s)", credo));
+//                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Invalid credentials.\"}"));
+//                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+//            } else {
+//                // create a new session for an authenticated user...
+//                final User user = (User) authResult.getInstance();
+//                final UserSession session = coUserSession.newSession(user, credo.isTrustedDevice());
+//
+//                // ...and provide the response with an authenticating cookie
+//                assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
+//                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
+//            }
         } catch (final Exception ex) {
             logger.fatal(ex);
             getResponse().setEntity(restUtil.errorJSONRepresentation(ex.getMessage()));

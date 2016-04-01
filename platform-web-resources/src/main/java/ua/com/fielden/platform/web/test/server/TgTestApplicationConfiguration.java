@@ -8,6 +8,7 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.factories.webui.LoginResetResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LogoutResourceFactory;
 import ua.com.fielden.platform.web.resources.OldVersionResource;
@@ -45,6 +46,9 @@ public class TgTestApplicationConfiguration extends Component {
             // attach system resources, which should be beyond the version scope
             // the interactive login page resource is considered one of the system resources, which does not require guarding
             getDefaultHost().attach("/login", new LoginResourceFactory(injector.getInstance(RestServerUtil.class), injector));
+            final LoginResetResourceFactory loginResetResourceFactory = new LoginResetResourceFactory(injector.getInstance(RestServerUtil.class), injector);
+            getDefaultHost().attach("/forgotten", loginResetResourceFactory);
+            getDefaultHost().attach("/forgotten/{uuid}", loginResetResourceFactory);
             getDefaultHost().attach("/logout", new LogoutResourceFactory(injector));
             
             // FIXME The old resources need to be completely removed from the platform
