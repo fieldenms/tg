@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.security.provider;
 
+import static java.lang.String.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.security.SignatureException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +15,8 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
+import com.nulabinc.zxcvbn.Strength;
+import com.nulabinc.zxcvbn.Zxcvbn;
 
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -176,5 +180,42 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         coUserSession.clearAll(savedUser);
         return savedUser;
         
+    }
+    
+    
+    public static void main(String[] args) throws Exception {
+        final Zxcvbn zxcvbn = new Zxcvbn();
+        final String passwd = "Ambulance services save many lives.";
+        final Strength strength = zxcvbn.measure(passwd);
+        
+        final double strengthTarget = 1 /* years */ * 365 /* days */ * 24 /* hours*/ * 60 /* minutes */ * 60 /* seconds */; 
+        
+        final double secondsToCrack = strength.getCrackTimeSeconds().getOfflineFastHashing1e10PerSecond();
+        
+        final SessionIdentifierGenerator crypto = new SessionIdentifierGenerator();
+        final String hashingKey = "This is a hasing key, which is used to hash user passwords for Trident Fleet server. We also need to make sure this key is very long and strong.";
+        final String hash = crypto.calculateRFC2104HMAC(passwd, hashingKey);
+        
+        System.out.println(format("Acceptable: %s, Score: %s, Estimated crack time: %s, [%s second(s)],\nHash: %s (%s characters)",
+                strengthTarget < secondsToCrack, 
+                strength.getScore(), 
+                strength.getCrackTimesDisplay().getOfflineFastHashing1e10PerSecond(),
+                secondsToCrack,
+                hash,
+                hash.length()));
+
+    }
+
+    @Override
+    public boolean isPasswordStrong(final String passwd) {
+        if ("Cows are animals that produce milk.".equalsIgnoreCase(passwd)) {
+            return false;
+        }
+        
+        final Zxcvbn zxcvbn = new Zxcvbn();
+        final Strength strength = zxcvbn.measure(passwd);
+        final double strengthTarget = 1 /* years */ * 365 /* days */ * 24 /* hours*/ * 60 /* minutes */ * 60 /* seconds */; 
+        final double secondsToCrack = strength.getCrackTimeSeconds().getOfflineFastHashing1e10PerSecond();
+        return strengthTarget <= secondsToCrack;
     }
 }

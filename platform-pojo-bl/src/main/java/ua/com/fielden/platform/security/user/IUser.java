@@ -56,6 +56,14 @@ public interface IUser extends IEntityDao<User> {
     User resetPasswd(final User user);
     
     /**
+     * Estimates password's strength returing <code>true</code> if the presented password is acceptable.
+     * 
+     * @param passwd
+     * @return
+     */
+    boolean isPasswordStrong(final String passwd);
+    
+    /**
      * A convenient method for hashing the passed in user password.
      * 
      * @param passwd

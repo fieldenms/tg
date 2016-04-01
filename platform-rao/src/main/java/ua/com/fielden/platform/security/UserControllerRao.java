@@ -125,4 +125,9 @@ public class UserControllerRao extends CommonEntityRao<User> implements IUser {
     public User resetPasswd(User user) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public boolean isPasswordStrong(String passwd) {
+        throw new UnsupportedOperationException();
+    }
 }
