@@ -100,6 +100,23 @@ public class User extends AbstractEntity<String> {
     @Title(value = "Reset UUID", desc = "The hash of the password reset request UUID")
     private String resetUuid;
 
+    @IsProperty
+    @MapTo
+    @Invisible
+    @Unique // salt gets generated randomly for every user and needs to be unique
+    @Title(value = "Salt", desc = "Random password hashing salt to protect agains the rainbow table attack.")
+    private String salt;
+
+    @Observable
+    public User setSalt(final String salt) {
+        this.salt = salt;
+        return this;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+    
     @Observable
     public User setResetUuid(final String resetUuid) {
         this.resetUuid = resetUuid;
