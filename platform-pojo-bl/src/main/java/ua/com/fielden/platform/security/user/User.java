@@ -93,6 +93,23 @@ public class User extends AbstractEntity<String> {
     @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = emailRegex)}))
     private String email;
 
+    @IsProperty
+    @MapTo
+    @Invisible
+    @Unique // UUID gets generated and hashed, thus should be algorithmically unique, but just in case let's enforce it at the model level
+    @Title(value = "Reset UUID", desc = "The hash of the password reset request UUID")
+    private String resetUuid;
+
+    @Observable
+    public User setResetUuid(final String resetUuid) {
+        this.resetUuid = resetUuid;
+        return this;
+    }
+
+    public String getResetUuid() {
+        return resetUuid;
+    }
+    
     @Observable
     public User setEmail(final String email) {
         this.email = email;
