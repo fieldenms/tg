@@ -46,8 +46,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     properties: {
 
       /**
-       * If you want to use the attribute value of an element for `selected` instead of the index,
-       * set this to the name of the attribute.
+       * If you want to use an attribute value or property of an element for
+       * `selected` instead of the index, set this to the name of the attribute
+       * or property. Hyphenated values are converted to camel case when used to
+       * look up the property of a selectable element. Camel cased values are
+       * *not* converted to hyphenated values for attribute lookup. It's
+       * recommended that you provide the hyphenated form of the name so that
+       * selection works in both cases. (Use `attr-or-property-name` instead of
+       * `attrOrPropertyName`.)
        */
       attrForSelected: {
         type: String,
@@ -56,6 +62,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       /**
        * Gets or sets the selected element. The default is to use the index of the item.
+       * @type {string|number}
        */
       selected: {
         type: String,
@@ -112,6 +119,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       items: {
         type: Array,
         readOnly: true,
+        notify: true,
         value: function() {
           return [];
         }
@@ -134,7 +142,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     observers: [
-      '_updateSelected(attrForSelected, selected)'
+      '_updateAttrForSelected(attrForSelected)',
+      '_updateSelected(selected)'
     ],
 
     created: function() {
@@ -146,7 +155,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       this._observer = this._observeItems(this);
       this._updateItems();
       if (!this._shouldUpdateSelection) {
-        this._updateSelected(this.attrForSelected,this.selected)
+        this._updateSelected();
       }
       this._addListener(this.activateEvent);
     },
@@ -173,7 +182,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
      * Selects the given value.
      *
      * @method select
-     * @param {string} value the value to select.
+     * @param {string|number} value the value to select.
      */
     select: function(value) {
       this.selected = value;
@@ -200,6 +209,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       this.selected = this._indexToValue(index);
     },
 
+    /**
+     * Force a synchronous update of the `items` property.
+     *
+     * NOTE: Consider listening for the `iron-items-changed` event to respond to
+     * updates to the set of selectable items after updates to the DOM list and
+     * selection state have been made.
+     *
+     * WARNING: If you are using this method, you should probably consider an
+     * alternate approach. Synchronously querying for items is potentially
+     * slow for many use cases. The `items` property will update asynchronously
+     * on its own to reflect selectable items in the DOM.
+     */
+    forceSynchronousItemUpdate: function() {
+      this._updateItems();
+    },
+
     get _shouldUpdateSelection() {
       return this.selected != null;
     },
@@ -221,6 +246,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var nodes = Polymer.dom(this).queryDistributedElements(this.selectable || '*');
       nodes = Array.prototype.filter.call(nodes, this._bindFilterItem);
       this._setItems(nodes);
+    },
+
+    _updateAttrForSelected: function() {
+      if (this._shouldUpdateSelection) {
+        this.selected = this._indexToValue(this.indexOf(this.selectedItem));        
+      }
     },
 
     _updateSelected: function() {
@@ -263,7 +294,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
 
     _valueForItem: function(item) {
-      return item[this.attrForSelected] || item.getAttribute(this.attrForSelected);
+      var propValue = item[Polymer.CaseMap.dashToCamelCase(this.attrForSelected)];
+      return propValue != undefined ? propValue : item.getAttribute(this.attrForSelected);
     },
 
     _applySelection: function(item, isSelected) {
@@ -284,18 +316,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     // observe items change under the given node.
     _observeItems: function(node) {
       return Polymer.dom(node).observeNodes(function(mutations) {
-        // Let other interested parties know about the change so that
-        // we don't have to recreate mutation observers everywher.
-        this.fire('iron-items-changed', mutations, {
-          bubbles: false,
-          cancelable: false
-        });
-
         this._updateItems();
 
         if (this._shouldUpdateSelection) {
           this._updateSelected();
         }
+
+        // Let other interested parties know about the change so that
+        // we don't have to recreate mutation observers everywhere.
+        this.fire('iron-items-changed', mutations, {
+          bubbles: false,
+          cancelable: false
+        });
       });
     },
 
