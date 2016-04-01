@@ -377,8 +377,11 @@
 
             _animationFinished: function (e, detail, source) {
                 var viewToLoad;
+                // console.debug('_animationFinished:', this.$.menu.selected);
                 if (this.$.menu.selected != '__empty__') {
                     viewToLoad = detail.toPage;
+                    // console.debug('_animationFinished: viewToLoad', viewToLoad);
+                    // && viewToLoad.wasLoaded
                     if (viewToLoad && !viewToLoad.wasLoaded()) {
                         viewToLoad.load();
                     }
