@@ -55,10 +55,6 @@
                 assertDecoratedInput(done, 'bigDecimalProp', 'decimal-input');
             });
             
-            test('[moneyProp] is correct one', function (done) {
-                assertDecoratedInput(done, 'moneyProp', 'money-input');
-            });
-            
             test('singleline [stringProp] is correct one', function (done) {
                 var targetProperty = 'stringProp';
                 var expectedDecoratedInputClass = 'singleline-text-input';
