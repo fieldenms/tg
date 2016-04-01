@@ -1,12 +1,10 @@
 package ua.com.fielden.platform.security.provider;
 
-import static java.lang.String.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import java.security.SignatureException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +23,7 @@ import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -50,7 +49,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     private transient final Logger logger = Logger.getLogger(UserDao.class);
     
     
-    private final String hashingKey;
+    private final String hashingKey; // FIXME needs to be removed
     private final SessionIdentifierGenerator crypto;
     private final IUserSession coUserSession;
     private final IUserRoleDao userRoleDao;
@@ -160,15 +159,29 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     }
 
     @Override
-    public final String hashPasswd(final String passwd) throws Exception {
-        return crypto.calculateRFC2104HMAC(passwd, hashingKey);
+    public final String hashPasswd(final String passwd, final String salt) throws Exception {
+        return crypto.calculatePBKDF2WithHmacSHA1(passwd, salt);
     }
     
     @Override
     @SessionRequired
     public User resetPasswd(final User user) {
         try {
-            user.setPassword(hashPasswd(user.getKey()));
+            // salt needs to be unique... at least amongst the users
+            // it should be unique algorithmically, but let's be defensive and regenerate the salt if it conflicts with existing values
+            user.setSalt(crypto.genSalt());
+            final MetaProperty<Object> saltProp = user.getProperty("salt");
+            final int maxTries = 1000;
+            int tries = 1;
+            while (!saltProp.isValid() && tries < maxTries) {
+                user.setSalt(crypto.genSalt());
+                tries++;
+            }
+            // we've tried hard, so if the salt is still not unique than bad luck...
+            if (!saltProp.isValid()) {
+                throw saltProp.getFirstFailure();
+            }
+            user.setPassword(hashPasswd(user.getKey(), user.getSalt()));
         } catch (Exception ex) {
             logger.warn("Could not reset password for user [%s].", ex);
             throw new SecurityException("Could not reset user password.", ex);
@@ -182,30 +195,6 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         
     }
     
-    
-    public static void main(String[] args) throws Exception {
-        final Zxcvbn zxcvbn = new Zxcvbn();
-        final String passwd = "Ambulance services save many lives.";
-        final Strength strength = zxcvbn.measure(passwd);
-        
-        final double strengthTarget = 1 /* years */ * 365 /* days */ * 24 /* hours*/ * 60 /* minutes */ * 60 /* seconds */; 
-        
-        final double secondsToCrack = strength.getCrackTimeSeconds().getOfflineFastHashing1e10PerSecond();
-        
-        final SessionIdentifierGenerator crypto = new SessionIdentifierGenerator();
-        final String hashingKey = "This is a hasing key, which is used to hash user passwords for Trident Fleet server. We also need to make sure this key is very long and strong.";
-        final String hash = crypto.calculateRFC2104HMAC(passwd, hashingKey);
-        
-        System.out.println(format("Acceptable: %s, Score: %s, Estimated crack time: %s, [%s second(s)],\nHash: %s (%s characters)",
-                strengthTarget < secondsToCrack, 
-                strength.getScore(), 
-                strength.getCrackTimesDisplay().getOfflineFastHashing1e10PerSecond(),
-                secondsToCrack,
-                hash,
-                hash.length()));
-
-    }
-
     @Override
     public boolean isPasswordStrong(final String passwd) {
         if ("Cows are animals that produce milk.".equalsIgnoreCase(passwd)) {
@@ -218,4 +207,5 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         final double secondsToCrack = strength.getCrackTimeSeconds().getOfflineFastHashing1e10PerSecond();
         return strengthTarget <= secondsToCrack;
     }
+    
 }

@@ -64,12 +64,13 @@ public interface IUser extends IEntityDao<User> {
     boolean isPasswordStrong(final String passwd);
     
     /**
-     * A convenient method for hashing the passed in user password.
+     * A method for hashing the user password before storing it into the database.
      * 
      * @param passwd
+     * @param salt
      * @return
      */
-    default String hashPasswd(final String passwd) throws Exception {
+    default String hashPasswd(final String passwd, final String salt) throws Exception {
         throw new UnsupportedOperationException();
     }
     
