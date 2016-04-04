@@ -68,7 +68,7 @@ public final class SessionIdentifierGenerator {
      * @return
      * @throws NoSuchAlgorithmException
      */
-    public String genHmacSha1Key() throws NoSuchAlgorithmException {
+    public static String genHmacSha256Key() throws NoSuchAlgorithmException {
         // Generate a key for the HMAC-SHA1 keyed-hashing algorithm
         final KeyGenerator keyGen = KeyGenerator.getInstance(HMAC_SHA256_ALGORITHM);
         keyGen.init(4096);
