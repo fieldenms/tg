@@ -69,6 +69,7 @@ import ua.com.fielden.platform.update.ReferenceDependancyController;
  * @author TG Team
  *
  */
+@Deprecated
 public class BasicWebClientModule extends CommonRestFactoryModule {
     protected final Properties props;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
