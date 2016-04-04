@@ -141,4 +141,9 @@ public class UserControllerRao extends CommonEntityRao<User> implements IUser {
     public Optional<User> assignPasswordResetUuid(String usernameOrEmail) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public boolean isPasswordResetUuidValid(String uuid) {
+        throw new UnsupportedOperationException();
+    }
 }

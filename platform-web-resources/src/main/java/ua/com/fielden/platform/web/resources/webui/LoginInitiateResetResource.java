@@ -76,13 +76,13 @@ public class LoginInitiateResetResource extends ServerResource {
 
     @Override
     protected Representation get() {
-        return pageToProvideUsernameForPasswordReset(logger);
+        return pageToProvideUsernameForPasswordReset("Login Reset Request", logger);
     }
 
-    public static Representation pageToProvideUsernameForPasswordReset(final Logger logger) {
+    private static Representation pageToProvideUsernameForPasswordReset(final String title, final Logger logger) {
         try {
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-initiate-reset.html")
-                    .replace("@title", "Login Reset Request").getBytes("UTF-8");
+                    .replace("@title", title).getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
         } catch (final Exception ex) {
             logger.fatal(ex);

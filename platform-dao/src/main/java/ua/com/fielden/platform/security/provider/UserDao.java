@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -211,9 +212,15 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         return strengthTarget <= secondsToCrack;
     }
 
+    private static final String passwordResetUuidSeperator = "-";
+    
     @Override
     public Optional<User> findUserByResetUuid(final String uuid) {
-        final String[] uuidParts = uuid.split("-");
+        if (StringUtils.isEmpty(uuid)) {
+            throw new SecurityException("User password resetting UUID cannot be empty.");
+        }
+        
+        final String[] uuidParts = uuid.split(passwordResetUuidSeperator);
         if (uuidParts.length != 3) {
             throw new SecurityException(format("Invalid UUID [%s].", uuid));
         }
@@ -238,11 +245,31 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // if the user was found then a password reset request UUID needs to be generated
         // and associated wit the identified user
         if (user != null) {
-            final String uuid = format("%s-%s-%s", user.getKey(), crypto.nextSessionId(), constants.now().getMillis());
+            final String uuid = format("%s%s%s%s%s", user.getKey(), passwordResetUuidSeperator, crypto.nextSessionId(), passwordResetUuidSeperator, constants.now().plusHours(24).getMillis());
             return Optional.of(save(user.setResetUuid(uuid)));
         }
 
         return Optional.empty();
+    }
+    
+    @Override
+    public boolean isPasswordResetUuidValid(final String uuid) {
+        final Optional<User> user = findUserByResetUuid(uuid);
+        // if there is no user associated with UUID then it cannot be valid
+        if (!user.isPresent()) {
+            return false;
+        } else {
+            // if a corresponding user was found then UUID is valid if it is not expired
+            final String[] uuidParts = uuid.split(passwordResetUuidSeperator);
+            final long expirationTime = Long.valueOf(uuidParts[2]);
+            final boolean expired = constants.now().getMillis() >= expirationTime;
+            // dissociation UUID form user if has expired
+            if (expired) {
+                save(user.get().setResetUuid(null));
+            }
+            
+            return !expired;
+        }
     }
    
 }

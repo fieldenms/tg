@@ -83,11 +83,9 @@ public class LoginCompleteResetResource extends ServerResource {
     @Override
     protected Representation get() throws ResourceException {
         try {
-            // check if there is a valid authenticator
-            // if there is then should respond with redirection to root /.
-
-            if (StringUtils.isEmpty(this.uuid)) {
-                return LoginInitiateResetResource.pageToProvideUsernameForPasswordReset(logger);
+            // if the UUID is invalid then redirect the user to the password reset resource
+            if (StringUtils.isEmpty(this.uuid) || !coUser.isPasswordResetUuidValid(this.uuid)) {
+                return pageToReportResetSessionExpiration(logger);
             } else {
                 final Optional<User> user = coUser.findUserByResetUuid(uuid);
                 if (user.isPresent()) {
@@ -105,6 +103,16 @@ public class LoginCompleteResetResource extends ServerResource {
             } else {
                 throw new SecurityException("Could not reset the password.", ex);
             }
+        }
+    }
+
+    private static Representation pageToReportResetSessionExpiration(final Logger logger) {
+        try {
+            final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-expired-reset.html").getBytes("UTF-8");
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
+        } catch (final Exception ex) {
+            logger.fatal(ex);
+            throw new IllegalStateException(ex);
         }
     }
 

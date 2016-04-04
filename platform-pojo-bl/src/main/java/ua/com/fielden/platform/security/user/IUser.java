@@ -94,6 +94,14 @@ public interface IUser extends IEntityDao<User> {
     Optional<User> assignPasswordResetUuid(final String usernameOrEmail);
     
     /**
+     * Returns <code>true</code> if the provided <code>uuid</code> is associated with a user and has not yet expired.
+     * 
+     * @param uuid
+     * @return
+     */
+    boolean isPasswordResetUuidValid(final String uuid);
+    
+    /**
      * Estimates password's strength returing <code>true</code> if the presented password is acceptable.
      * 
      * @param passwd
