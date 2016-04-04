@@ -18,6 +18,7 @@ import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAmountType;
 import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAndExTaxAmountType;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 /**
  * Guice injector module for binding between custom hibernate types and their interfaces-markers.
@@ -29,6 +30,10 @@ public class HibernateUserTypesModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bindConstant().annotatedWith(Names.named("app.name")).to("Test");
+        bindConstant().annotatedWith(Names.named("email.smtp")).to("192.168.1.8");
+        bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tg@fielden.com.au");
+
         bind(ISecurityTokenType.class).to(SecurityTokenType.class);
         bind(IPropertyDescriptorType.class).to(PropertyDescriptorType.class);
         bind(IColourType.class).to(ColourType.class);
