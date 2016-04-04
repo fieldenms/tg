@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.security.provider;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -20,6 +21,7 @@ import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -29,13 +31,13 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.security.annotations.PasswordHashingKey;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
  * Implementation of the user controller, which should be used managing system user information.
@@ -49,27 +51,28 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     private transient final Logger logger = Logger.getLogger(UserDao.class);
     
     
-    private final String hashingKey; // FIXME needs to be removed
     private final SessionIdentifierGenerator crypto;
     private final IUserSession coUserSession;
     private final IUserRoleDao userRoleDao;
     private final IUserAndRoleAssociationDao userAssociationDao;
+    private final IUniversalConstants constants;
 
     private final fetch<User> fetchModel = fetch(User.class).with("roles", fetch(UserAndRoleAssociation.class));
 
     @Inject
     public UserDao(
-            final @PasswordHashingKey String hashingKey,
             final SessionIdentifierGenerator crypto,
             final IUserSession coUserSession,
             final IUserRoleDao userRoleDao, 
-            final IUserAndRoleAssociationDao userAssociationDao, 
+            final IUserAndRoleAssociationDao userAssociationDao,
+            final IUniversalConstants constants,
             final IFilter filter) {
         super(filter);
 
-        this.hashingKey = hashingKey;
         this.crypto = crypto;
         this.coUserSession = coUserSession;
+        
+        this.constants = constants;
         
         this.userRoleDao = userRoleDao;
         this.userAssociationDao = userAssociationDao;
@@ -207,5 +210,39 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         final double secondsToCrack = strength.getCrackTimeSeconds().getOfflineFastHashing1e10PerSecond();
         return strengthTarget <= secondsToCrack;
     }
+
+    @Override
+    public Optional<User> findUserByResetUuid(final String uuid) {
+        final String[] uuidParts = uuid.split("::");
+        if (uuidParts.length != 3) {
+            throw new SecurityException(format("Invalid UUID [%s].", uuid));
+        }
+        final String userName = uuidParts[0];
+        final EntityResultQueryModel<User> query = select(User.class)
+                .where().prop("key").eq().val(userName)
+                .and().prop("resetUuid").eq().val(uuid)
+                .model();
+        final User user = getEntity(from(query).with(fetchAll(User.class)).model());
+        return Optional.ofNullable(user);
+    }
     
+    @Override
+    public Optional<User> assignPasswordResetUuid(final String usernameOrEmail) {
+        // let's try to find a user by username or email
+        final EntityResultQueryModel<User> query = select(User.class)
+                .where().prop("key").eq().val(usernameOrEmail)
+                .or().prop("email").eq().val(usernameOrEmail).model();
+        
+        final User user = getEntity(from(query).with(fetchAll(User.class)).model());
+
+        // if the user was found then a password reset request UUID needs to be generated
+        // and associated wit the identified user
+        if (user != null) {
+            final String uuid = format("%s::%s::%s", user.getKey(), crypto.nextSessionId(), constants.now().getMillis());
+            return Optional.of(save(user.setResetUuid(uuid)));
+        }
+
+        return Optional.empty();
+    }
+   
 }
