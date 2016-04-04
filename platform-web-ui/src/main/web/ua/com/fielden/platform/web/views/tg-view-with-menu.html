@@ -72,7 +72,7 @@
     </style>
     <template>
         <tg-app-config id="app_config"></tg-app-config>
-        <paper-drawer-panel id="drawerPanel" disable-swipe force-narrow>
+        <paper-drawer-panel id="drawerPanel" force-narrow <!--disable-swipe -->>
 
             <div class="layout vertical" drawer>
 
@@ -101,9 +101,7 @@
                 <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
                     <div class="menu-item-view" name="__empty__"></div>
                     <template is="dom-repeat" items="[[menuItem.menu]]">
-                        <!--<div class="menu-item-view" name$="[[item.title]]">-->
-                            <tg-menu-item-view class="menu-item-view" name$="[[item.title]]" menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
-                        <!--</div>-->
+                        <tg-menu-item-view class="menu-item-view" name$="[[item.title]]" menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
                     </template>
                 </neon-animated-pages>
 
@@ -126,21 +124,17 @@
                         return {
                             'entry': [
                                 {
-                                    name: 'slide-down-animation',
+                                    name: 'slide-from-top-animation',
                                     node: this.$.menuToolBar
                                 }, {
-                                    name: 'slide-down-animation',
+                                    name: 'slide-from-top-animation',
                                     node: this.$.viewToolBar
                                 }, {
-                                    name: 'transform-animation',
-                                    node: this.$.menu,
-                                    transformFrom: "translateY(100%)",
-                                    tranformTo: "none"
+                                    name: 'slide-from-bottom-animation',
+                                    node: this.$.menu
                                 }, {
-                                    name: 'transform-animation',
-                                    node: this.$.pages,
-                                    transformFrom: "translateY(100%)",
-                                    tranformTo: "none"
+                                    name: 'slide-from-bottom-animation',
+                                    node: this.$.pages
                                 }, {
                                     name: 'scale-up-animation',
                                     node: this.$.fab,
@@ -157,15 +151,11 @@
                                     name: 'slide-up-animation',
                                     node: this.$.viewToolBar
                                 }, {
-                                    name: 'transform-animation',
-                                    node: this.$.menu,
-                                    transformFrom: "none",
-                                    transformTo: "translateY(100%)"
+                                    name: 'slide-down-animation',
+                                    node: this.$.menu
                                 }, {
-                                    name: 'transform-animation',
-                                    node: this.$.pages,
-                                    transformFrom: "none",
-                                    transformTo: "translateY(100%)"
+                                    name: 'slide-down-animation',
+                                    node: this.$.pages
                                 }, {
                                     name: 'scale-down-animation',
                                     node: this.$.fab
@@ -175,12 +165,13 @@
                     }
                 },
 
-                //Private memebers those starts with underscore
+                //Private members those starts with underscore
 
                 _selectedPage: {
                     type: String,
                     observer: '_selectedPageChanged'
                 }
+
             },
 
             behaviors: [
@@ -194,7 +185,7 @@
             ready: function () {
                 var self = this,
                     masterCounter = 1;
-                self.startUp = true;
+                //self.startUp = true;
                 self.$.menu.selected = "__empty__";
                 ////////////////// State related events ///////////////////////////
                 postal.subscribe({
@@ -216,114 +207,118 @@
                         });
                     }
                 });
-                postal.subscribe({
-                    channel: self.menuItem.title,
-                    topic: "state.pop",
-                    callback: function (data, envelope) {
-                        if (data.state[1] === self.$.menu.selected) {
-                            postal.publish({
-                                channel: "app",
-                                topic: "state.poped",
-                                data: data
-                            });
-                        } else {
-                            self.restoringState = true;
-                            self.$.menu.selected = data.state[1];
-                        }
-                        self._initDrawerPanel();
-                    }
-                });
-                postal.subscribe({
-                    channel: self.menuItem.title,
-                    topic: "state.select",
-                    callback: function (data, envelop) {
-                        if (data.state[1] === self.$.menu.selected) {
-                            history.pushState(data.state, "");
-                        } else {
-                            self.$.menu.selected = data.state[1];
-                        }
-                        self._initDrawerPanel();
-                        postal.publish({
-                            channel: "app",
-                            topic: "state.pushed",
-                            data: data
-                        });
-                    }
-                });
+                //                postal.subscribe({
+                //                    channel: self.menuItem.title,
+                //                    topic: "state.pop",
+                //                    callback: function (data, envelope) {
+                //                        if (data.state[1] === self.$.menu.selected) {
+                //                            postal.publish({
+                //                                channel: "app",
+                //                                topic: "state.poped",
+                //                                data: data
+                //                            });
+                //                        } else {
+                //                            self.restoringState = true;
+                //                            self.$.menu.selected = data.state[1];
+                //                        }
+                //                        self._initDrawerPanel();
+                //                    }
+                //                });
+                //                postal.subscribe({
+                //                    channel: self.menuItem.title,
+                //                    topic: "state.select",
+                //                    callback: function (data, envelop) {
+                //                        if (data.state[1] === self.$.menu.selected) {
+                //                            history.pushState(data.state, "");
+                //                        } else {
+                //                            self.$.menu.selected = data.state[1];
+                //                        }
+                //                        self._initDrawerPanel();
+                //                        postal.publish({
+                //                            channel: "app",
+                //                            topic: "state.pushed",
+                //                            data: data
+                //                        });
+                //                    }
+                //                });
                 //////////////////////////Edit actions//////////////////////////////////
-                postal.subscribe({
-                    channel: "manager_" + self.menuItem.title,
-                    topic: "master.edit.create",
-                    callback: function (data, envelope) {
-                        var idArray = data.view.attrs.uuid.split('/');
-                        self.push("menuItem.menu", data);
-                        self.async(function () {
-                            self.$.menu.selected = idArray[1];
-                        }, 1);
-                    }
-                });
-
-                postal.subscribe({
-                    channel: "manager_" + self.menuItem.title,
-                    topic: "master.show",
-                    callback: function (data, envelope) {
-                        var idArray = data.item.view.attrs.uuid.split('/');
-                        if (idArray[0] !== self.menuItem.title) {
-                            postal.publish({
-                                channel: idArray[0],
-                                topic: "state.select",
-                                data: {
-                                    state: idArray
-                                }
-                            })
-                        } else {
-                            self.$.menu.selected = idArray[1];
-                        }
-                        postal.publish({
-                            channel: "view",
-                            topic: "master.shown",
-                            data: data
-                        });
-                    }
-                });
-                /////////////////New Actions//////////////////////////////
-                postal.subscribe({
-                    channel: "manager_" + self.menuItem.title,
-                    topic: "master.new.create",
-                    callback: function (data, envelope) {
-                        var centreUuid = data.view.attrs.centreUuid.split('/');
-                        centreUuid[centreUuid.length - 1] = "New Master #" + masterCounter;
-                        data.title = "New Master #" + masterCounter;
-                        data.description = "New Master #" + masterCounter;
-                        data.view.attrs.uuid = centreUuid.join('/');
-                        masterCounter += 1;
-                        self.push("menuItem.menu", data);
-                        self.async(function () {
-                            self.$.menu.selected = centreUuid[1];
-                        }, 1);
-                    }
-                });
-                //////////////Master save acation////////////////////////////
-                postal.subscribe({
-                    channel: "manager_" + self.menuItem.title,
-                    topic: "master.saved",
-                    callback: function (data, envelope) {
-                        var centreUuid = data.centreUuid.split('/');
-                        postal.publish({
-                            channel: "view",
-                            topic: "master.saved",
-                            data: data
-                        });
-                        self.$.menu.selected = centreUuid[1];
-                    }
-                });
+                //                postal.subscribe({
+                //                    channel: "manager_" + self.menuItem.title,
+                //                    topic: "master.edit.create",
+                //                    callback: function (data, envelope) {
+                //                        var idArray = data.view.attrs.uuid.split('/');
+                //                        self.push("menuItem.menu", data);
+                //                        self.async(function () {
+                //                            self.$.menu.selected = idArray[1];
+                //                        }, 1);
+                //                    }
+                //                });
+                //
+                //                postal.subscribe({
+                //                    channel: "manager_" + self.menuItem.title,
+                //                    topic: "master.show",
+                //                    callback: function (data, envelope) {
+                //                        var idArray = data.item.view.attrs.uuid.split('/');
+                //                        if (idArray[0] !== self.menuItem.title) {
+                //                            postal.publish({
+                //                                channel: idArray[0],
+                //                                topic: "state.select",
+                //                                data: {
+                //                                    state: idArray
+                //                                }
+                //                            })
+                //                        } else {
+                //                            self.$.menu.selected = idArray[1];
+                //                        }
+                //                        postal.publish({
+                //                            channel: "view",
+                //                            topic: "master.shown",
+                //                            data: data
+                //                        });
+                //                    }
+                //                });
+                //                /////////////////New Actions//////////////////////////////
+                //                postal.subscribe({
+                //                    channel: "manager_" + self.menuItem.title,
+                //                    topic: "master.new.create",
+                //                    callback: function (data, envelope) {
+                //                        var centreUuid = data.view.attrs.centreUuid.split('/');
+                //                        centreUuid[centreUuid.length - 1] = "New Master #" + masterCounter;
+                //                        data.title = "New Master #" + masterCounter;
+                //                        data.description = "New Master #" + masterCounter;
+                //                        data.view.attrs.uuid = centreUuid.join('/');
+                //                        masterCounter += 1;
+                //                        self.push("menuItem.menu", data);
+                //                        self.async(function () {
+                //                            self.$.menu.selected = centreUuid[1];
+                //                        }, 1);
+                //                    }
+                //                });
+                //                //////////////Master save acation////////////////////////////
+                //                postal.subscribe({
+                //                    channel: "manager_" + self.menuItem.title,
+                //                    topic: "master.saved",
+                //                    callback: function (data, envelope) {
+                //                        var centreUuid = data.centreUuid.split('/');
+                //                        postal.publish({
+                //                            channel: "view",
+                //                            topic: "master.saved",
+                //                            data: data
+                //                        });
+                //                        self.$.menu.selected = centreUuid[1];
+                //                    }
+                //                });
             },
 
             _initDrawerPanel: function () {
                 if (this.$.menu.selected === '__empty__') {
-                    this.$.drawerPanel.selected = 'drawer';
+                    if (this.$.drawerPanel._isMainSelected()) {
+                        this.$.drawerPanel.openDrawer();
+                    }
                 } else {
-                    this.$.drawerPanel.selected = 'main';
+                    if (!this.$.drawerPanel._isMainSelected()) {
+                        this.$.drawerPanel.closeDrawer();
+                    }
                 }
             },
 
@@ -335,14 +330,6 @@
                 this._selectedPage = detail.value;
             },
 
-            _calcSelectedView: function (selectedPage) {
-                if (selectedPage == '__empty__') {
-                    return 'drawer';
-                } else {
-                    return 'main';
-                }
-            },
-
             _togglePanel: function (e, detail, source) {
                 this.$.drawerPanel.togglePanel();
             },
@@ -351,9 +338,9 @@
                 return page === '__empty__' ? '' : page;
             },
 
-            _calcUuid: function (item) {
-                return this.menuItem.title + '/' + item.title;
-            },
+            //            _calcUuid: function (item) {
+            //                return this.menuItem.title + '/' + item.title;
+            //            },
 
             _selectedPageChanged: function (e, detail, source) {
                 var state;
