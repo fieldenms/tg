@@ -17,12 +17,12 @@
     "tests"
   ],
   "dependencies": {
-    "iron-elements": "PolymerElements/iron-elements#~1.0.4",
+    "iron-elements": "PolymerElements/iron-elements#^1.0.9",
     "iron-form": "PolymerElements/iron-form#^1.0.16",
     "iron-icons": "PolymerElements/iron-icons#^1.1.3",
     "paper-button": "PolymerElements/paper-button#^1.0.11",
     "paper-checkbox": "PolymerElements/paper-checkbox#^1.1.3",
-    "paper-elements": "PolymerElements/paper-elements#~1.0.6",
+    "paper-elements": "PolymerElements/paper-elements#^1.0.7",
     "paper-input": "PolymerElements/paper-input#^1.1.10",
     "web-component-tester": "Polymer/web-component-tester#^4.2.2"
   }
