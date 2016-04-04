@@ -72,7 +72,7 @@
     </style>
     <template>
         <tg-app-config id="app_config"></tg-app-config>
-        <paper-drawer-panel id="drawerPanel" force-narrow <!--disable-swipe -->>
+        <paper-drawer-panel id="drawerPanel" disable-swipe force-narrow>
 
             <div class="layout vertical" drawer>
 
@@ -185,7 +185,7 @@
             ready: function () {
                 var self = this,
                     masterCounter = 1;
-                //self.startUp = true;
+                self.startUp = true;
                 self.$.menu.selected = "__empty__";
                 ////////////////// State related events ///////////////////////////
                 postal.subscribe({
@@ -207,117 +207,117 @@
                         });
                     }
                 });
-                //                postal.subscribe({
-                //                    channel: self.menuItem.title,
-                //                    topic: "state.pop",
-                //                    callback: function (data, envelope) {
-                //                        if (data.state[1] === self.$.menu.selected) {
-                //                            postal.publish({
-                //                                channel: "app",
-                //                                topic: "state.poped",
-                //                                data: data
-                //                            });
-                //                        } else {
-                //                            self.restoringState = true;
-                //                            self.$.menu.selected = data.state[1];
-                //                        }
-                //                        self._initDrawerPanel();
-                //                    }
-                //                });
-                //                postal.subscribe({
-                //                    channel: self.menuItem.title,
-                //                    topic: "state.select",
-                //                    callback: function (data, envelop) {
-                //                        if (data.state[1] === self.$.menu.selected) {
-                //                            history.pushState(data.state, "");
-                //                        } else {
-                //                            self.$.menu.selected = data.state[1];
-                //                        }
-                //                        self._initDrawerPanel();
-                //                        postal.publish({
-                //                            channel: "app",
-                //                            topic: "state.pushed",
-                //                            data: data
-                //                        });
-                //                    }
-                //                });
+                postal.subscribe({
+                    channel: self.menuItem.title,
+                    topic: "state.pop",
+                    callback: function (data, envelope) {
+                        if (data.state[1] === self.$.menu.selected) {
+                            postal.publish({
+                                channel: "app",
+                                topic: "state.poped",
+                                data: data
+                            });
+                        } else {
+                            self.restoringState = true;
+                            self.$.menu.selected = data.state[1];
+                        }
+                        self._initDrawerPanel();
+                    }
+                });
+                postal.subscribe({
+                    channel: self.menuItem.title,
+                    topic: "state.select",
+                    callback: function (data, envelop) {
+                        if (data.state[1] === self.$.menu.selected) {
+                            history.pushState(data.state, "");
+                        } else {
+                            self.$.menu.selected = data.state[1];
+                        }
+                        self._initDrawerPanel();
+                        postal.publish({
+                            channel: "app",
+                            topic: "state.pushed",
+                            data: data
+                        });
+                    }
+                });
                 //////////////////////////Edit actions//////////////////////////////////
-                //                postal.subscribe({
-                //                    channel: "manager_" + self.menuItem.title,
-                //                    topic: "master.edit.create",
-                //                    callback: function (data, envelope) {
-                //                        var idArray = data.view.attrs.uuid.split('/');
-                //                        self.push("menuItem.menu", data);
-                //                        self.async(function () {
-                //                            self.$.menu.selected = idArray[1];
-                //                        }, 1);
-                //                    }
-                //                });
-                //
-                //                postal.subscribe({
-                //                    channel: "manager_" + self.menuItem.title,
-                //                    topic: "master.show",
-                //                    callback: function (data, envelope) {
-                //                        var idArray = data.item.view.attrs.uuid.split('/');
-                //                        if (idArray[0] !== self.menuItem.title) {
-                //                            postal.publish({
-                //                                channel: idArray[0],
-                //                                topic: "state.select",
-                //                                data: {
-                //                                    state: idArray
-                //                                }
-                //                            })
-                //                        } else {
-                //                            self.$.menu.selected = idArray[1];
-                //                        }
-                //                        postal.publish({
-                //                            channel: "view",
-                //                            topic: "master.shown",
-                //                            data: data
-                //                        });
-                //                    }
-                //                });
-                //                /////////////////New Actions//////////////////////////////
-                //                postal.subscribe({
-                //                    channel: "manager_" + self.menuItem.title,
-                //                    topic: "master.new.create",
-                //                    callback: function (data, envelope) {
-                //                        var centreUuid = data.view.attrs.centreUuid.split('/');
-                //                        centreUuid[centreUuid.length - 1] = "New Master #" + masterCounter;
-                //                        data.title = "New Master #" + masterCounter;
-                //                        data.description = "New Master #" + masterCounter;
-                //                        data.view.attrs.uuid = centreUuid.join('/');
-                //                        masterCounter += 1;
-                //                        self.push("menuItem.menu", data);
-                //                        self.async(function () {
-                //                            self.$.menu.selected = centreUuid[1];
-                //                        }, 1);
-                //                    }
-                //                });
-                //                //////////////Master save acation////////////////////////////
-                //                postal.subscribe({
-                //                    channel: "manager_" + self.menuItem.title,
-                //                    topic: "master.saved",
-                //                    callback: function (data, envelope) {
-                //                        var centreUuid = data.centreUuid.split('/');
-                //                        postal.publish({
-                //                            channel: "view",
-                //                            topic: "master.saved",
-                //                            data: data
-                //                        });
-                //                        self.$.menu.selected = centreUuid[1];
-                //                    }
-                //                });
+                postal.subscribe({
+                    channel: "manager_" + self.menuItem.title,
+                    topic: "master.edit.create",
+                    callback: function (data, envelope) {
+                        var idArray = data.view.attrs.uuid.split('/');
+                        self.push("menuItem.menu", data);
+                        self.async(function () {
+                            self.$.menu.selected = idArray[1];
+                        }, 1);
+                    }
+                });
+
+                postal.subscribe({
+                    channel: "manager_" + self.menuItem.title,
+                    topic: "master.show",
+                    callback: function (data, envelope) {
+                        var idArray = data.item.view.attrs.uuid.split('/');
+                        if (idArray[0] !== self.menuItem.title) {
+                            postal.publish({
+                                channel: idArray[0],
+                                topic: "state.select",
+                                data: {
+                                    state: idArray
+                                }
+                            })
+                        } else {
+                            self.$.menu.selected = idArray[1];
+                        }
+                        postal.publish({
+                            channel: "view",
+                            topic: "master.shown",
+                            data: data
+                        });
+                    }
+                });
+                /////////////////New Actions//////////////////////////////
+                postal.subscribe({
+                    channel: "manager_" + self.menuItem.title,
+                    topic: "master.new.create",
+                    callback: function (data, envelope) {
+                        var centreUuid = data.view.attrs.centreUuid.split('/');
+                        centreUuid[centreUuid.length - 1] = "New Master #" + masterCounter;
+                        data.title = "New Master #" + masterCounter;
+                        data.description = "New Master #" + masterCounter;
+                        data.view.attrs.uuid = centreUuid.join('/');
+                        masterCounter += 1;
+                        self.push("menuItem.menu", data);
+                        self.async(function () {
+                            self.$.menu.selected = centreUuid[1];
+                        }, 1);
+                    }
+                });
+                //////////////Master save acation////////////////////////////
+                postal.subscribe({
+                    channel: "manager_" + self.menuItem.title,
+                    topic: "master.saved",
+                    callback: function (data, envelope) {
+                        var centreUuid = data.centreUuid.split('/');
+                        postal.publish({
+                            channel: "view",
+                            topic: "master.saved",
+                            data: data
+                        });
+                        self.$.menu.selected = centreUuid[1];
+                    }
+                });
             },
 
             _initDrawerPanel: function () {
                 if (this.$.menu.selected === '__empty__') {
                     if (this.$.drawerPanel._isMainSelected()) {
-                        this.$.drawerPanel.openDrawer();
+                        // this.$.drawerPanel.openDrawer();
                     }
                 } else {
                     if (!this.$.drawerPanel._isMainSelected()) {
-                        this.$.drawerPanel.closeDrawer();
+                        // this.$.drawerPanel.closeDrawer();
                     }
                 }
             },
@@ -338,9 +338,9 @@
                 return page === '__empty__' ? '' : page;
             },
 
-            //            _calcUuid: function (item) {
-            //                return this.menuItem.title + '/' + item.title;
-            //            },
+            _calcUuid: function (item) {
+                return this.menuItem.title + '/' + item.title;
+            },
 
             _selectedPageChanged: function (e, detail, source) {
                 var state;
