@@ -157,8 +157,8 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     @Override
     public IFetchProvider<User> createFetchProvider() {
         return super.createFetchProvider()
-                .with("key") // this property is "required" (necessary during saving) -- should be declared as fetching property
-                .with("base", "basedOnUser.base", "roles"); //
+                .with("key", "email") // this property is "required" (necessary during saving) -- should be declared as fetching property
+                .with("base", "basedOnUser.base"); //
     }
 
     @Override
@@ -213,7 +213,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public Optional<User> findUserByResetUuid(final String uuid) {
-        final String[] uuidParts = uuid.split("::");
+        final String[] uuidParts = uuid.split("-");
         if (uuidParts.length != 3) {
             throw new SecurityException(format("Invalid UUID [%s].", uuid));
         }
@@ -238,7 +238,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // if the user was found then a password reset request UUID needs to be generated
         // and associated wit the identified user
         if (user != null) {
-            final String uuid = format("%s::%s::%s", user.getKey(), crypto.nextSessionId(), constants.now().getMillis());
+            final String uuid = format("%s-%s-%s", user.getKey(), crypto.nextSessionId(), constants.now().getMillis());
             return Optional.of(save(user.setResetUuid(uuid)));
         }
 

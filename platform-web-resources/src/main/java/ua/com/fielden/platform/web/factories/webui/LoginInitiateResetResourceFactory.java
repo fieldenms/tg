@@ -15,7 +15,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-import ua.com.fielden.platform.web.resources.webui.LoginResetResource;
+import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
 
 /**
  * A factory for a login web resource.
@@ -23,12 +23,12 @@ import ua.com.fielden.platform.web.resources.webui.LoginResetResource;
  * @author TG Team
  *
  */
-public class LoginResetResourceFactory extends Restlet {
+public class LoginInitiateResetResourceFactory extends Restlet {
 
     private final RestServerUtil util;
     private final Injector injector;
 
-    public LoginResetResourceFactory(final RestServerUtil util, final Injector injector) {
+    public LoginInitiateResetResourceFactory(final RestServerUtil util, final Injector injector) {
         this.util = util;
         this.injector = injector;
     }
@@ -38,15 +38,9 @@ public class LoginResetResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET.equals(request.getMethod()) || Method.POST.equals(request.getMethod())) {
-            final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
 
-            if (StringUtils.isEmpty(webUiConfig.getDomainName()) || StringUtils.isEmpty(webUiConfig.getPath())) {
-                throw new IllegalStateException("Both the domain name and the applicatin binding path should be provided.");
-            }
-
-            new LoginResetResource(
-                    webUiConfig.getDomainName(),
-                    webUiConfig.getPath(),
+            new LoginInitiateResetResource(
+                    injector.getInstance(IWebUiConfig.class),
                     injector.getInstance(IUniversalConstants.class),
                     injector.getInstance(IAuthenticationModel.class),
                     injector.getInstance(IUserProvider.class),

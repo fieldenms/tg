@@ -130,13 +130,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
     private final String domainName;
     private final String path;
+    private final int port;
 
-    public WebUiConfig(final String domainName, final Workflows workflow, final String path) {
+    public WebUiConfig(final String domainName, final int port, final Workflows workflow, final String path) {
         super("TG Test and Demo Application", workflow, new String[0]);
         if (StringUtils.isEmpty(domainName) || StringUtils.isEmpty(path)) {
             throw new IllegalArgumentException("Both the domain name and application binding path should be specified.");
         }
         this.domainName = domainName;
+        this.port = port;
         this.path = path;
     }
 
@@ -1384,5 +1386,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
             return centre;
         });
         return entityCentre;
+    }
+
+    @Override
+    public int getPort() {
+        return port;
     }
 }

@@ -24,6 +24,7 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
 
     private final String domainName;
     private final String path;
+    private final int port;
     private final Workflows workflow;
 
     public TgTestWebApplicationServerModule(
@@ -36,13 +37,14 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
         super(defaultHibernateTypes, applicationDomainProvider, domainTypes, serialisationClassProviderType, automaticDataFilterType, props);
         this.domainName = props.getProperty("web.domain");
         this.path = props.getProperty("web.path");
+        this.port = Integer.valueOf(props.getProperty("port"));
         this.workflow = Workflows.valueOf(props.getProperty("workflow"));
     }
 
     @Override
     protected void configure() {
         super.configure();
-        bindWebAppResources(new WebUiConfig(domainName, workflow, path));
+        bindWebAppResources(new WebUiConfig(domainName, port, workflow, path));
     }
 
     @Override

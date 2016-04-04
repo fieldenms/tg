@@ -114,12 +114,12 @@
     
     <hgroup>
         <h1>Application Login Reset</h1>
-        <h3>Please enter valid user name or email.</h3>
+        <h3>Please enter a valid user name or email.</h3>
     </hgroup>
 
     <form id="form" is="iron-form" action="forgotten" method="post">
         <div class="vertical-section">
-            <paper-input-container id="decorator">
+            <paper-input-container id="in-username-container">
                 <label>User name or email</label>
                 <input id="in-username" is="iron-input" type="text" name="username_or_email" required prevent-invalid-input/>
             </paper-input-container>
@@ -138,9 +138,14 @@
             var submitLabel = document.getElementById('submitLabel');
 
             var inUserName = document.querySelector('#in-username');
+            var inUserNameContainer = document.querySelector('#in-username-container');
             window.addEventListener('WebComponentsReady', function(e) {
                 inUserName.focus();
             });
+
+            inUserName.oninput = function() {
+                inUserNameContainer.invalid = false;
+            }
             
             submit.onclick = function () {
                 console.log("about to start submitting...");
@@ -159,7 +164,7 @@
 
                     submit.classList.remove("submit-error");
                     submitLabel.innerHTML = "Redirecting...";
-                    window.location.href = "/login"
+                    window.location.href = "/resources/login-initiated-reset.html"
                 }
             );
 
@@ -168,6 +173,7 @@
                 	inUserName.focus();
                     if (event.detail.request.status === 400) {
                         console.log('Server response: ', event.detail.request.xhr.response.message);
+                        inUserNameContainer.invalid = true;
                         submit.classList.add("submit-error");
                         submitLabel.innerHTML = "Reset Failed"
                         submit.disabled = false;

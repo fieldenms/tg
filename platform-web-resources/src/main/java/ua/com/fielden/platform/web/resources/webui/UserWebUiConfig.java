@@ -83,28 +83,22 @@ public class UserWebUiConfig {
         final String fmrLast = "'flex'";
         final String actionButton = "'margin: 10px', 'width: 110px'";
         
-        final String layout = "['padding:20px', "
-        + format("[[%s], [%s], [%s]], ", fmr, fmr, fmrLast)
-               + "[['flex']],"
-        + format(" ['horizontal', 'margin-top: 20px', 'justify-content: center', [%s], [%s]]", actionButton, actionButton)
-        + "    ]";
+        final String layout = 
+            "['padding:20px', "
+            + format("[[%s], [%s]], ", fmr, fmrLast)
+            + format("[[%s], [%s]], ", fmr, fmrLast)
+            + format(" ['horizontal', 'margin-top: 20px', 'justify-content: center', [%s], [%s]]", actionButton, actionButton)
+            + "]";
         
         final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
                 .forEntity(User.class)
                 .addProp("key").asSinglelineText()
                 .also()
+                .addProp("email").asSinglelineText()
+                .also()                
                 .addProp("base").asCheckbox()
                 .also()
                 .addProp("basedOnUser").asAutocompleter()
-                .also()
-                .addProp("roles").asCollectionalRepresentor()
-                    .withAction(
-                        action(UserRolesUpdater.class)
-                        .withContext(context().withMasterEntity().build())
-                        .icon("add-circle")
-                        .shortDesc("Add / Remove roles")
-                        .longDesc("Add / Remove roles")
-                        .build())
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)

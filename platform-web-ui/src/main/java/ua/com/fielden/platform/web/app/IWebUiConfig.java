@@ -21,6 +21,13 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public interface IWebUiConfig {
 
     /**
+     * Should return a port that an application server is listening to for incoming requests.
+     * 
+     * @return
+     */
+    int getPort();
+    
+    /**
      * Should return a domain name of a server like <code>tgdev.com</code> where the application is to be deployed.
      *
      * @return
