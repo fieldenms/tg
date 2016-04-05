@@ -124,7 +124,7 @@ public class LoginInitiateResetResource extends ServerResource {
         builder.append(format("%sreset_password/%s\n\n", baseUri, user.getResetUuid()));
         builder.append(format("If you don’t use this link within 24 hours, it will expire. To get a new password reset link, visit %sforgotten\n\n", baseUri));
         builder.append("Thanks,\n");
-        builder.append("Your support team at Fielden");
+        builder.append("Your support team");
 
         return builder.toString();
     }
