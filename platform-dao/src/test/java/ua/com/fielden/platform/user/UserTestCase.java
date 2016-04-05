@@ -16,6 +16,7 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.UniqueValidator;
+import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -81,15 +82,19 @@ public class UserTestCase extends AbstractDaoTestCase {
         
         user1.setEmail("user1@");
         assertFalse(user1.getProperty("email").isValid());
-        assertEquals(format(StringValidator.validationErrorTemplate, "user1@", "email", "User") ,user1.getProperty("email").getFirstFailure().getMessage());
+        assertEquals(format(EmailValidator.validationErrorTemplate, "user1@", "email", "User") ,user1.getProperty("email").getFirstFailure().getMessage());
         
         user1.setEmail("@company.com");
         assertFalse(user1.getProperty("email").isValid());
-        assertEquals(format(StringValidator.validationErrorTemplate, "@company.com", "email", "User") ,user1.getProperty("email").getFirstFailure().getMessage());
+        assertEquals(format(EmailValidator.validationErrorTemplate, "@company.com", "email", "User") ,user1.getProperty("email").getFirstFailure().getMessage());
 
         user1.setEmail("user1@company . com");
         assertFalse(user1.getProperty("email").isValid());
-        assertEquals(format(StringValidator.validationErrorTemplate, "user1@company . com", "email", "User") ,user1.getProperty("email").getFirstFailure().getMessage());
+        assertEquals(format(EmailValidator.validationErrorTemplate, "user1@company . com", "email", "User") ,user1.getProperty("email").getFirstFailure().getMessage());
+        
+        user1.setEmail("user1@company@la.com");
+        assertFalse(user1.getProperty("email").isValid());
+        assertEquals(format(EmailValidator.validationErrorTemplate, "user1@company@la.com", "email", "User") ,user1.getProperty("email").getFirstFailure().getMessage());
         
         user1.setEmail("user1@company.com");
         assertTrue(user1.getProperty("email").isValid());

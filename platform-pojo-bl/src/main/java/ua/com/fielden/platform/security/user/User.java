@@ -2,7 +2,6 @@ package ua.com.fielden.platform.security.user;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
-import static ua.com.fielden.platform.utils.Validators.emailRegex;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -22,6 +21,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
 
 /**
@@ -98,7 +98,7 @@ public class User extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Email", desc = "User email, which is used for password resets")
     @Unique
-    @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = emailRegex)}))
+    @BeforeChange(@Handler(EmailValidator.class))
     private String email;
 
     @IsProperty

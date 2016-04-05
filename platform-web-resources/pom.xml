@@ -129,13 +129,6 @@
 
 		<!-- end of RESTlet and Jetty libraries -->
 
-		<!-- begin of Java Mail libraries -->
-		<dependency>
-			<groupId>javax.mail</groupId>
-			<artifactId>mail</artifactId>
-			<version>1.5.0-b01</version>
-		</dependency>
-		<!-- end of Java Mail libraries -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
