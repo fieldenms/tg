@@ -60,7 +60,8 @@ public class UserWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), critLayout)
                 .addProp("this").width(200).also()
                 .addProp("basedOnUser").width(200).also()
-                .addProp("base").minWidth(80)
+                .addProp("base").width(80).also()
+                .addProp("email").minWidth(150)
                 .addPrimaryAction(EntityActionConfig.createMasterInDialogInvocationActionConfig()).also()
                 .addSecondaryAction(
                     action(UserRolesUpdater.class)
@@ -81,7 +82,7 @@ public class UserWebUiConfig {
     private static EntityMaster<User> createMaster(final Injector injector) {
         final String fmr = "'flex', 'margin-right: 20px'";
         final String fmrLast = "'flex'";
-        final String actionButton = "'margin: 10px', 'width: 110px'";
+        final String actionButton = "'margin: 10px', 'width: 200px'";
         
         final String layout = 
             "['padding:20px', "
