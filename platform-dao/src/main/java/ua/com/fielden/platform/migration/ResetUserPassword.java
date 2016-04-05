@@ -31,7 +31,7 @@ public class ResetUserPassword {
     public void resetAll() {
         final List<User> users = coUser.findAllUsers();
         for (final User user : users) {
-            coUser.resetPasswd(user);
+            coUser.resetPasswd(user, user.getKey());
         }
     }
 
@@ -44,6 +44,6 @@ public class ResetUserPassword {
      */
     public void reset(final String username) {
         final User user = coUser.findByKey(username);
-        coUser.resetPasswd(user);
+        coUser.resetPasswd(user, user.getKey());
     }
 }

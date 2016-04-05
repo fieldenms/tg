@@ -169,7 +169,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     
     @Override
     @SessionRequired
-    public User resetPasswd(final User user) {
+    public User resetPasswd(final User user, final String passwd) {
         try {
             // salt needs to be unique... at least amongst the users
             // it should be unique algorithmically, but let's be defensive and regenerate the salt if it conflicts with existing values
@@ -185,7 +185,8 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             if (!saltProp.isValid()) {
                 throw saltProp.getFirstFailure();
             }
-            user.setPassword(hashPasswd(user.getKey(), user.getSalt()));
+            user.setPassword(hashPasswd(passwd, user.getSalt()));
+            user.setResetUuid(null);
         } catch (Exception ex) {
             logger.warn("Could not reset password for user [%s].", ex);
             throw new SecurityException("Could not reset user password.", ex);
@@ -201,10 +202,6 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     
     @Override
     public boolean isPasswordStrong(final String passwd) {
-        if ("Cows are animals that produce milk.".equalsIgnoreCase(passwd)) {
-            return false;
-        }
-        
         final Zxcvbn zxcvbn = new Zxcvbn();
         final Strength strength = zxcvbn.measure(passwd);
         final double strengthTarget = 1 /* years */ * 365 /* days */ * 24 /* hours*/ * 60 /* minutes */ * 60 /* seconds */; 

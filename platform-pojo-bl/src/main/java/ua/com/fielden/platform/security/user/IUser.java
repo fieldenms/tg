@@ -71,8 +71,9 @@ public interface IUser extends IEntityDao<User> {
      * Resets the user password.
      * 
      * @param user
+     * @param passwd
      */
-    User resetPasswd(final User user);
+    User resetPasswd(final User user, final String passwd);
     
     /**
      * Tries to find a user by its password reset UUID.

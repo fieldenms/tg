@@ -50,7 +50,7 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
         user.setDesc(format("User for person [%s].", person.getDesc()));
         final User su = coUser.findByKeyAndFetch(fetchAll(User.class), User.system_users.SU.name());
         user.setBasedOnUser(su);
-        final User savedUser = coUser.resetPasswd(user);
+        final User savedUser = coUser.resetPasswd(user, user.getKey());
         
         final TgPerson latestPerson = findById(person.getId(), fetchAll(TgPerson.class));
         latestPerson.setUser(savedUser);
@@ -80,7 +80,7 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
     @SessionRequired
     public TgPerson resetPassword(final TgPerson person) {
         // reset the user password
-        coUser.resetPasswd(person.getUser());
+        coUser.resetPasswd(person.getUser(), person.getUser().getKey());
         // return person now pointing to an updated user
         return findById(person.getId(), fetchAll(TgPerson.class));
     }

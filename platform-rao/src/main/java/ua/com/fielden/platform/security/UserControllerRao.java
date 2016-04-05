@@ -123,27 +123,27 @@ public class UserControllerRao extends CommonEntityRao<User> implements IUser {
     }
 
     @Override
-    public User resetPasswd(User user) {
+    public User resetPasswd(final User user, final String passwd) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean isPasswordStrong(String passwd) {
+    public boolean isPasswordStrong(final String passwd) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Optional<User> findUserByResetUuid(String uuid) {
+    public Optional<User> findUserByResetUuid(final String uuid) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Optional<User> assignPasswordResetUuid(String usernameOrEmail) {
+    public Optional<User> assignPasswordResetUuid(final String usernameOrEmail) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean isPasswordResetUuidValid(String uuid) {
+    public boolean isPasswordResetUuidValid(final String uuid) {
         throw new UnsupportedOperationException();
     }
 }
