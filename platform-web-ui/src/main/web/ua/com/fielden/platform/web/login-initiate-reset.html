@@ -175,7 +175,16 @@
                         console.log('Server response: ', event.detail.request.xhr.response.message);
                         inUserNameContainer.invalid = true;
                         submit.classList.add("submit-error");
-                        submitLabel.innerHTML = "Reset Failed"
+                        
+                        var msg = event.detail.request.xhr.response.msg;
+                        if (msg === '@unidentifiedUser') {
+                            submitLabel.innerHTML = "UNIDENTIFIED USER";
+                        } else if (msg === '@missingEmail') {
+                            submitLabel.innerHTML = "MISSING EMAIL ADDRESS";
+                        } else {
+	                        submitLabel.innerHTML = "UNRECOGNISED ERROR";
+                        }
+
                         submit.disabled = false;
                     } else {
                         console.log('Server response: ', event.detail.request.xhr.response.message);

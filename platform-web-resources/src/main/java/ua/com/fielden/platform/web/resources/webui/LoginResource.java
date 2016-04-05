@@ -45,7 +45,9 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class LoginResource extends ServerResource {
-
+    
+    public static final String BINDING_PATH = "/login";
+    
     private final Logger logger = Logger.getLogger(LoginResource.class);
 
     private final String domainName;

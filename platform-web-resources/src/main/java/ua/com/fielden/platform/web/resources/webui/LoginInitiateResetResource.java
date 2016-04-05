@@ -22,32 +22,29 @@ import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.mail.SmtpEmailSender;
-import ua.com.fielden.platform.security.session.IUserSession;
-import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
- * A web resource handling user login reset requests.
+ * A web resource to initiate user login recovery procedure.
  *
  * @author TG Team
  *
  */
 public class LoginInitiateResetResource extends ServerResource {
+    
+    public static final String BINDING_PATH = "/forgotten";
+
+    private static final String unidentifiedUserError = "Could not identify an application user.";
+    private static final String missingEmailError = "User is missing email address.";
 
     private final Logger logger = Logger.getLogger(LoginInitiateResetResource.class);
 
     private final IWebUiConfig webConfig;
-    private final IAuthenticationModel authenticationModel;
-    private final IUserProvider userProvider;
     private final IUser coUser;
-    private final IUserSession coUserSession;
-    private final RestServerUtil restUtil;
     private final IUniversalConstants constants;
 
     /**
@@ -56,22 +53,14 @@ public class LoginInitiateResetResource extends ServerResource {
     public LoginInitiateResetResource(//
             final IWebUiConfig webConfig,
             final IUniversalConstants constants,
-            final IAuthenticationModel authenticationModel,
-            final IUserProvider userProvider,
             final IUser coUser,
-            final IUserSession coUserSession,//
-            final RestServerUtil restUtil,//
             final Context context, //
             final Request request, //
             final Response response) {
         init(context, request, response);
         this.webConfig = webConfig;
         this.constants = constants;
-        this.authenticationModel = authenticationModel;
-        this.userProvider = userProvider;
         this.coUser = coUser;
-        this.coUserSession = coUserSession;
-        this.restUtil = restUtil;
     }
 
     @Override
@@ -82,7 +71,10 @@ public class LoginInitiateResetResource extends ServerResource {
     private static Representation pageToProvideUsernameForPasswordReset(final String title, final Logger logger) {
         try {
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-initiate-reset.html")
-                    .replace("@title", title).getBytes("UTF-8");
+                    .replace("@title", title)
+                    .replace("@unidentifiedUser", unidentifiedUserError)
+                    .replace("@missingEmail", missingEmailError)
+                    .getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
         } catch (final Exception ex) {
             logger.fatal(ex);
@@ -101,7 +93,7 @@ public class LoginInitiateResetResource extends ServerResource {
             if (opUser.isPresent()) {
                 final User user = opUser.get(); 
                 if (StringUtils.isEmpty(user.getEmail())) {
-                    getResponse().setEntity(new JsonRepresentation("{\"msg\": \"User is missing email address.\"}"));
+                    getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s\"}", missingEmailError)));
                     getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
                 } else {
                     final String baseUri = format("https://%s:%s%s", webConfig.getDomainName(), webConfig.getPort(), webConfig.getPath());
@@ -111,10 +103,10 @@ public class LoginInitiateResetResource extends ServerResource {
                                             user.getEmail(), 
                                             format("[%s] Please reset your password", constants.appName()), 
                                             emailBody);
-                    getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
+                    getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Reset password email is sent.\"}"));
                 }
             } else {
-                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Could not identify an application user.\"}"));
+                getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s\"}", unidentifiedUserError)));
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             }
             

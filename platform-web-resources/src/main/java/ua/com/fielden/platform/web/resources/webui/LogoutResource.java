@@ -20,12 +20,9 @@ import org.restlet.resource.ServerResource;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
-import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * A web resource handling explicit user logins.
@@ -35,6 +32,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class LogoutResource extends ServerResource {
 
+    public static final String BINDING_PATH = "/logout";
+    
     private final Logger logger = Logger.getLogger(LogoutResource.class);
 
     private final IUserProvider userProvider;

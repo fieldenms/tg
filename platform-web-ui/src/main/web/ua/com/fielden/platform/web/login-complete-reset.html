@@ -121,21 +121,23 @@
     <hgroup>
         <h1>Application Login Reset</h1>
         <h3>Enter strong and memorable passwords</h3>
-        <h4>"Ambulance services save many lives." takes centuries to crack!</h4>
+        <h4>"@demoPassword" takes centuries to crack!</h4>
         <h4>(but don't use it as your own password)</h4>
     </hgroup>
 
-    <form id="form" is="iron-form" action="forgotten/@uuid" method="post">
+    <form id="form" is="iron-form" action="reset_password" method="post">
         <div class="vertical-section">
-            <paper-input-container id="decorator">
+            <paper-input-container id="in-passwd-container">
                 <label>New password</label>
                 <input id="in-passwd" is="iron-input" type="password" name="passwd" required prevent-invalid-input onCopy="return false" onDrag="return false" onDrop="return false" onPaste="return false"/>
             </paper-input-container>
 
-            <paper-input-container id="decorator">
+            <paper-input-container id="in-passwd-confirm-container">
                 <label>Confirm new password</label>
-                <input id="in-passwd-confirm" is="iron-input" type="password" name="passwd" required prevent-invalid-input onCopy="return false" onDrag="return false" onDrop="return false" onPaste="return false"/>
+                <input id="in-passwd-confirm" is="iron-input" type="password" name="passwd-confirmed" required prevent-invalid-input onCopy="return false" onDrag="return false" onDrop="return false" onPaste="return false"/>
             </paper-input-container>
+            
+            <input name='uuid' type='hidden' value='@uuid'/>
         </div>
         <paper-button id="submitButton" style="width:100%; margin: 0px" class="submit-normal" raised>
             <span id="submitLabel">Submit</span>
@@ -151,14 +153,21 @@
             var submitLabel = document.getElementById('submitLabel');
 
             var inPassword = document.querySelector('#in-passwd');
+            var inPasswordContainer = document.querySelector('#in-passwd-container');
+            var inPasswordConfirm = document.querySelector('#in-passwd-confirm');
+            var inPasswordConfirmContainer = document.querySelector('#in-passwd-confirm-container');
+            
             window.addEventListener('WebComponentsReady', function(e) {
                 inPassword.focus();
             });
             
+            inPassword.oninput = function() {
+                inPasswordConfirm.value = "";
+                inPasswordConfirmContainer.invalid = false;
+                inPasswordContainer.invalid = false;
+            }
+            
             submit.onclick = function () {
-                // need to transfer value from a paper-checkbox that does not get submitted in the from
-                // to a hidden input that does
-                trustedDevice.value = trustedDeviceMock.checked;
                 console.log("about to start submitting...");
                 submit.disabled = true;
                 form.submit();
@@ -182,15 +191,34 @@
 
             form.addEventListener('iron-form-error',
                 function (event) {
-                	inPassword.focus();
                     if (event.detail.request.status === 400) {
                         submit.classList.add("submit-error");
-                        submitLabel.innerHTML = "PASSWORD IS NOT ACCEPTED"
+                        
+                        var msg = event.detail.request.xhr.response.msg;
+                        if (msg === '@uuidExpired') {
+                            submitLabel.innerHTML = "RESET SESSION EXPIRED";
+                        } else if (msg === '@demoPasswdError') {
+                            inPassword.focus();
+                            inPasswordContainer.invalid = true;
+                            submitLabel.innerHTML = "DO NOT USE DEMO PASSWORD";
+                        } else if (msg === '@weakPassword') {
+                            inPassword.focus();
+                            inPasswordContainer.invalid = true;
+                            submitLabel.innerHTML = "PASSWORD IS TOO WEAK";
+                        } else if (msg === '@passwordMismatch') {
+                            inPasswordConfirm.focus();
+                            inPasswordConfirmContainer.invalid = true;
+                            submitLabel.innerHTML = "PASSWORD MISMATCH";
+                        } else {
+                            inPassword.focus();
+	                        submitLabel.innerHTML = "UNRECOGNISED ERROR";
+                        }
+
                         submit.disabled = false;
                     } else {
                         // event.detail.request.xhr.response is a JSON object
                         submit.classList.add("submit-error");
-                        submitLabel.innerHTML = "RESET ERROR"
+                        submitLabel.innerHTML = "SERVER ERROR"
                         submit.disabled = false;
                     }
                 }

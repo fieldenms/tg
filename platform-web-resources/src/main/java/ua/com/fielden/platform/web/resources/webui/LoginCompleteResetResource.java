@@ -17,20 +17,14 @@ import org.restlet.engine.application.EncodeRepresentation;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
-import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.security.exceptions.SecurityException;
-import ua.com.fielden.platform.security.session.IUserSession;
-import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * A web resource handling user login reset requests.
@@ -39,59 +33,45 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class LoginCompleteResetResource extends ServerResource {
+    
+    public static final String BINDING_PATH = "/reset_password/{uuid}";
+
+    private static final String uuidExpiredError = "Password reset session has expired.";
+    private static final String weakPasswordError = "Password is not strong enough.";
+    private static final String passwordMismatchError = "The new and confirmed passwords do not match.";
+    private static final String demoPasswordError = "Demo password should not be used.";
+    private static final String demoPassword = "Ambulance services save many lives.";
 
     private final Logger logger = Logger.getLogger(LoginCompleteResetResource.class);
 
-    private final String domainName;
-    private final String path;
-    private final IAuthenticationModel authenticationModel;
-    private final IUserProvider userProvider;
     private final IUser coUser;
-    private final IUserSession coUserSession;
-    private final RestServerUtil restUtil;
-    private final IUniversalConstants constants;
-
-    private final String uuid;
-
+    
     /**
      * Creates {@link LoginCompleteResetResource}.
      */
     public LoginCompleteResetResource(//
-    final String domainName,
-            final String path,
-            final IUniversalConstants constants,
-            final IAuthenticationModel authenticationModel,
-            final IUserProvider userProvider,
             final IUser coUser,
-            final IUserSession coUserSession,//
-            final RestServerUtil restUtil,//
             final Context context, //
             final Request request, //
             final Response response) {
         init(context, request, response);
-        this.domainName = domainName;
-        this.path = path;
-        this.constants = constants;
-        this.authenticationModel = authenticationModel;
-        this.userProvider = userProvider;
         this.coUser = coUser;
-        this.coUserSession = coUserSession;
-        this.restUtil = restUtil;
-        this.uuid = (String) request.getAttributes().get("uuid");
     }
 
     @Override
     protected Representation get() throws ResourceException {
         try {
+            final String uuid = (String) getRequest().getAttributes().get("uuid");
+
             // if the UUID is invalid then redirect the user to the password reset resource
-            if (StringUtils.isEmpty(this.uuid) || !coUser.isPasswordResetUuidValid(this.uuid)) {
+            if (StringUtils.isEmpty(uuid) || !coUser.isPasswordResetUuidValid(uuid)) {
                 return pageToReportResetSessionExpiration(logger);
             } else {
                 final Optional<User> user = coUser.findUserByResetUuid(uuid);
                 if (user.isPresent()) {
-                    return pageToProvideNewPassword(this.uuid);
+                    return pageToProvideNewPassword(uuid, logger);
                 } else {
-                    final SecurityException securityException = new SecurityException(format("Could not find a user matching requested UUID [%s].", this.uuid));
+                    final SecurityException securityException = new SecurityException(format("Could not find a user matching requested UUID [%s].", uuid));
                     throw securityException;
                 }
             }
@@ -116,10 +96,15 @@ public class LoginCompleteResetResource extends ServerResource {
         }
     }
 
-    private Representation pageToProvideNewPassword(final String uuid) {
+    private static Representation pageToProvideNewPassword(final String uuid, final Logger logger) {
         try {
             final byte[] body = ResourceLoader.getText("ua/com/fielden/platform/web/login-complete-reset.html")
                     .replace("@title", "Login Complete Reset")
+                    .replace("@demoPassword", demoPassword)
+                    .replace("@demoPasswdError", demoPasswordError)
+                    .replace("@uuidExpired", uuidExpiredError)
+                    .replace("@weakPassword", weakPasswordError)
+                    .replace("@passwordMismatch", passwordMismatchError)
                     .replace("@uuid", uuid)
                     .getBytes("UTF-8");
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body)));
@@ -133,28 +118,38 @@ public class LoginCompleteResetResource extends ServerResource {
     public void resetLogin(final Representation entity) throws ResourceException {
         try {
             final Form form = new Form(entity);
-            final String usernameOrEmail = form.getValues("username"); 
-            System.out.println(usernameOrEmail);
-            getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Not yet supported.\"}"));
-            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            
-//            final Result authResult = authenticationModel.authenticate(credo.getUsername(), credo.getPasswd());
-//            if (!authResult.isSuccessful()) {
-//                logger.warn(format("Unsuccessful login request (%s)", credo));
-//                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Invalid credentials.\"}"));
-//                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-//            } else {
-//                // create a new session for an authenticated user...
-//                final User user = (User) authResult.getInstance();
-//                final UserSession session = coUserSession.newSession(user, credo.isTrustedDevice());
-//
-//                // ...and provide the response with an authenticating cookie
-//                assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
-//                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
-//            }
+            final String uuid = form.getValues("uuid");
+            // if the UUID is invalid then redirect the user to the password reset resource
+            if (StringUtils.isEmpty(uuid) || !coUser.isPasswordResetUuidValid(uuid)) {
+                getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s\"}", uuidExpiredError)));
+                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            } else {
+                final Optional<User> user = coUser.findUserByResetUuid(uuid);
+                if (user.isPresent()) {
+                    final String passwd = form.getValues("passwd"); 
+                    final String passwdConfirmed = form.getValues("passwd-confirmed");
+                    // validate the password
+                    if (demoPassword.equalsIgnoreCase(passwd)) {
+                        getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s\"}", demoPasswordError)));
+                        getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                    } else if (!coUser.isPasswordStrong(passwd)) {
+                        getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s\"}", weakPasswordError)));
+                        getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                    } else if (!passwd.equals(passwdConfirmed)) {
+                        getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s\"}", passwordMismatchError)));
+                        getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                    } else {
+                        // the password has passed the validation, so it can be associated with the user
+                        coUser.resetPasswd(user.get(), passwd);
+                    }
+                } else {
+                    final SecurityException securityException = new SecurityException(format("Could not find a user matching requested UUID [%s].", uuid));
+                    throw securityException;
+                }
+            }
         } catch (final Exception ex) {
             logger.fatal(ex);
-            getResponse().setEntity(restUtil.errorJSONRepresentation(ex.getMessage()));
+            getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s.\"}", ex.getMessage())));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         }
     }
