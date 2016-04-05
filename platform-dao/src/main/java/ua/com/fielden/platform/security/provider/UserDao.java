@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.security.provider;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
-
-import ua.com.fielden.platform.security.exceptions.SecurityException;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.HashSet;
 import java.util.List;
@@ -22,7 +25,6 @@ import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
 import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -32,6 +34,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
@@ -204,22 +207,20 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public boolean isPasswordStrong(final String passwd) {
         final Zxcvbn zxcvbn = new Zxcvbn();
         final Strength strength = zxcvbn.measure(passwd);
-        final double strengthTarget = 1 /* years */ * 365 /* days */ * 24 /* hours*/ * 60 /* minutes */ * 60 /* seconds */; 
-        final double secondsToCrack = strength.getCrackTimeSeconds().getOfflineFastHashing1e10PerSecond();
+        final double strengthTarget = 1 /* years */ * 90 /* days */ * 24 /* hours*/ * 60 /* minutes */ * 60 /* seconds */; 
+        final double secondsToCrack = strength.getCrackTimeSeconds().getOnlineNoThrottling10perSecond();
         return strengthTarget <= secondsToCrack;
     }
 
-    private static final String passwordResetUuidSeperator = "-";
-    
     @Override
     public Optional<User> findUserByResetUuid(final String uuid) {
         if (StringUtils.isEmpty(uuid)) {
             throw new SecurityException("User password resetting UUID cannot be empty.");
         }
         
-        final String[] uuidParts = uuid.split(passwordResetUuidSeperator);
+        final String[] uuidParts = uuid.split(User.passwordResetUuidSeperator);
         if (uuidParts.length != 3) {
-            throw new SecurityException(format("Invalid UUID [%s].", uuid));
+            return Optional.empty();
         }
         final String userName = uuidParts[0];
         final EntityResultQueryModel<User> query = select(User.class)
@@ -234,15 +235,15 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public Optional<User> assignPasswordResetUuid(final String usernameOrEmail) {
         // let's try to find a user by username or email
         final EntityResultQueryModel<User> query = select(User.class)
-                .where().prop("key").eq().val(usernameOrEmail)
-                .or().prop("email").eq().val(usernameOrEmail).model();
+                .where().lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail)
+                .or().lowerCase().prop("email").eq().lowerCase().val(usernameOrEmail).model();
         
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
 
         // if the user was found then a password reset request UUID needs to be generated
         // and associated wit the identified user
         if (user != null) {
-            final String uuid = format("%s%s%s%s%s", user.getKey(), passwordResetUuidSeperator, crypto.nextSessionId(), passwordResetUuidSeperator, constants.now().plusHours(24).getMillis());
+            final String uuid = format("%s%s%s%s%s", user.getKey(), User.passwordResetUuidSeperator, crypto.nextSessionId(), User.passwordResetUuidSeperator, constants.now().plusHours(24).getMillis());
             return Optional.of(save(user.setResetUuid(uuid)));
         }
 
@@ -257,7 +258,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             return false;
         } else {
             // if a corresponding user was found then UUID is valid if it is not expired
-            final String[] uuidParts = uuid.split(passwordResetUuidSeperator);
+            final String[] uuidParts = uuid.split(User.passwordResetUuidSeperator);
             final long expirationTime = Long.valueOf(uuidParts[2]);
             final boolean expired = constants.now().getMillis() >= expirationTime;
             // dissociation UUID form user if has expired

@@ -65,7 +65,15 @@ public class User extends AbstractEntity<String> {
             return SU.matches(username);
         }
     }
-
+    
+    public static final String passwordResetUuidSeperator = "-";
+    public static final String usernameRegex = "^[^-]+$"; // passwordResetUuidSeperator should not be permitted for user names
+    
+    @IsProperty
+    @MapTo
+    @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = usernameRegex)}))
+    private String key;
+    
     @IsProperty
     @Invisible
     @MapTo(length = 255)
@@ -137,6 +145,11 @@ public class User extends AbstractEntity<String> {
         return email;
     }
     
+    
+    public String getKey() {
+        return key;
+    }
+
     @Observable
     @Override
     public User setKey(final String value) {
@@ -144,7 +157,7 @@ public class User extends AbstractEntity<String> {
             throw Result.failure(format("User %s is an application built-in account and cannot be renamed.", getKey()));
         }
 
-        super.setKey(value);
+        this.key = value;
 
         if (system_users.isOneOf(value)) {
             setBase(true);
