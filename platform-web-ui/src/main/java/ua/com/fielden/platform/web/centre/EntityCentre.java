@@ -868,11 +868,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer bottomInsertionPointsDom = new DomContainer();
         for (final FunctionalActionElement el : insertionPointActionsElements) {
             if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.LEFT) {
-                leftInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction));
+                leftInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "[[retrievedEntities]]").attr("retrieved-totals", "[[retrievedTotals]]"));
             } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.RIGHT) {
-                rightInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction));
+                rightInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "[[retrievedEntities]]").attr("retrieved-totals", "[[retrievedTotals]]"));
             } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.BOTTOM) {
-                bottomInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction));
+                bottomInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "[[retrievedEntities]]").attr("retrieved-totals", "[[retrievedTotals]]"));
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }

@@ -22,7 +22,18 @@
                 entityType: {
                     type: String
                 },
-
+                /**
+                 * The entities retrieved when running this centre
+                 */
+                retrievedEntities: {
+                    type: Array
+                },
+                /**
+                 * Summary entity retrieved when running this centre.
+                 */
+                retrievedTotals: {
+                    type: Object
+                },
                 /**
                  * The menu item type, that identifies this entity centre.
                  */
@@ -320,11 +331,13 @@
                     if (criteriaEntity === null || criteriaEntity.isValid()) {
                         if (typeof summary !== 'undefined') {
                             this.$.egi.totals = summary;
+                            this.retrievedTotals = summary;
                         }
                         if (isRefreshingConcreteEntities) {
                             this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this._entitiesThatShouldBeUpdated);
                         } else {
                             this.$.egi.entities = resultEntities;
+                            this.retrievedEntities = resultEntities;
                             this.$.egi.renderingHints = renderingHints;
                             if (this._triggerRun && this._selectedView === 0) {
                                 this.async(function () {
