@@ -38,15 +38,15 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
     private final EntityFactory factory = getInstance(EntityFactory.class);
 
     private User getBaseUser() {
-        return userDao.findByKeyAndFetch(fetchAll(User.class), "B-USER");
+        return userDao.findByKeyAndFetch(fetchAll(User.class), "BUSER");
     }
 
     private User getBaseUserOther() {
-        return userDao.findByKeyAndFetch(fetchAll(User.class), "B-USER-OTHER");
+        return userDao.findByKeyAndFetch(fetchAll(User.class), "BUSEROTHER");
     }
 
     private User getDescendantUser() {
-        return userDao.findByKeyAndFetch(fetchAll(User.class), "D-USER");
+        return userDao.findByKeyAndFetch(fetchAll(User.class), "DUSER");
     }
 
     /**
@@ -876,9 +876,9 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
 
     @Override
     protected void populateDomain() {
-        final User baseUser = save(new_(User.class, "B-USER").setBase(true)); // base user
-        final User baseUserOther = save(new_(User.class, "B-USER-OTHER").setBase(true)); // base user
-        save(new_(User.class, "D-USER").setBase(false).setBasedOnUser(baseUser)); // descendant user
+        final User baseUser = save(new_(User.class, "BUSER").setBase(true)); // base user
+        final User baseUserOther = save(new_(User.class, "BUSEROTHER").setBase(true)); // base user
+        save(new_(User.class, "DUSER").setBase(false).setBasedOnUser(baseUser)); // descendant user
 
         // populate main menu items
         final MainMenuItem root_1 = save(new_(MainMenuItem.class, "type1").setTitle("Root 1").setOrder(1));
