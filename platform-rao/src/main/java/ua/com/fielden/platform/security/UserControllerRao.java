@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.restlet.Request;
@@ -122,7 +123,27 @@ public class UserControllerRao extends CommonEntityRao<User> implements IUser {
     }
 
     @Override
-    public User resetPasswd(User user) {
+    public User resetPasswd(final User user, final String passwd) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isPasswordStrong(final String passwd) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Optional<User> findUserByResetUuid(final String uuid) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Optional<User> assignPasswordResetUuid(final String usernameOrEmail) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isPasswordResetUuidValid(final String uuid) {
         throw new UnsupportedOperationException();
     }
 }

@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.test;
 
+import com.google.inject.Injector;
+
+import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 
@@ -11,14 +15,24 @@ import ua.com.fielden.platform.entity.ioc.EntityModule;
  * 
  * @author TG Team
  */
-public class CommonTestEntityModuleWithPropertyFactory extends EntityModuleWithPropertyFactory {
+public final class CommonTestEntityModuleWithPropertyFactory extends EntityModuleWithPropertyFactory {
 
+    protected final DefaultCompanionObjectFinderImpl defaultControllerProvider;
+    
     public CommonTestEntityModuleWithPropertyFactory() {
+        defaultControllerProvider = new DefaultCompanionObjectFinderImpl();
     }
 
     @Override
     protected void configure() {
         super.configure();
-
+        // bind provider for default entity controller
+        bind(ICompanionObjectFinder.class).toInstance(defaultControllerProvider);
+    }
+    
+    @Override
+    public void setInjector(final Injector injector) {
+        super.setInjector(injector);
+        defaultControllerProvider.setInjector(injector);
     }
 }

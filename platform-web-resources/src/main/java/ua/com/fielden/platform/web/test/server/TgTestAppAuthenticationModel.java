@@ -34,24 +34,22 @@ public class TgTestAppAuthenticationModel implements IAuthenticationModel {
 
     @Override
     public Result authenticate(final String username, final String password) {
-        String hashPasswd;
         try {
-            hashPasswd = coUser.hashPasswd(password);
-        } catch (Exception e) {
-            throw Result.failure(e);
-        }
-        
-        final EntityResultQueryModel<User> matchUserQuery = select(User.class).where()
-                .prop("key").eq().val(username)
-                .and().prop("password").eq().allOfValues(hashPasswd) 
-                .model();
-        final User user = coUser.getEntity(from(matchUserQuery).with(fetchAll(User.class)).model());
-
-        if (user != null) {
+            final Result result = Result.failure("The presented login credentials are not recognized.");
+            final User user = coUser.findByKeyAndFetch(fetchAll(User.class), username);
+            if (user != null) {
+                final String hashPasswd = coUser.hashPasswd(password, user.getSalt());
+                if (!hashPasswd.equals(user.getPassword())) {
+                    return result;
+                }
+            
+            } else {
+                return result;
+            }
             return Result.successful(user);
+        } catch (final Exception ex) {
+            return Result.failure(ex);
         }
-        
-        return Result.failure("The presented login credentials are not recognized.");
     }
 
 }

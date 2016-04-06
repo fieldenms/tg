@@ -15,6 +15,7 @@ import org.restlet.data.Encoding;
 import org.restlet.data.Form;
 import org.restlet.data.Status;
 import org.restlet.engine.application.EncodeRepresentation;
+import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
@@ -44,7 +45,9 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class LoginResource extends ServerResource {
-
+    
+    public static final String BINDING_PATH = "/login";
+    
     private final Logger logger = Logger.getLogger(LoginResource.class);
 
     private final String domainName;
@@ -60,7 +63,7 @@ public class LoginResource extends ServerResource {
      * Creates {@link LoginResource}.
      */
     public LoginResource(//
-    final String domainName,
+            final String domainName,
             final String path,
             final IUniversalConstants constants,
             final IAuthenticationModel authenticationModel,
@@ -134,7 +137,7 @@ public class LoginResource extends ServerResource {
             final Result authResult = authenticationModel.authenticate(credo.getUsername(), credo.getPasswd());
             if (!authResult.isSuccessful()) {
                 logger.warn(format("Unsuccessful login request (%s)", credo));
-                getResponse().setEntity(restUtil.errorJSONRepresentation("Invalid credentials."));
+                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Invalid credentials.\"}"));
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             } else {
                 // create a new session for an authenticated user...
@@ -143,7 +146,7 @@ public class LoginResource extends ServerResource {
 
                 // ...and provide the response with an authenticating cookie
                 assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
-                getResponse().setEntity(restUtil.errorJSONRepresentation("Credentials are valid."));
+                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
             }
         } catch (final Exception ex) {
             logger.fatal(ex);

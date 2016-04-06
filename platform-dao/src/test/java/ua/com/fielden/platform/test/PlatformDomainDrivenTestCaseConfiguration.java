@@ -15,6 +15,7 @@ import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassP
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
 
 import com.google.inject.Injector;
+import com.google.inject.name.Names;
 
 /**
  * Provides Platform specific implementation of {@link IDomainDrivenTestCaseConfiguration} for testing purposes, which is mainly related to construction of appropriate IoC modules.
@@ -36,7 +37,7 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
             DOMConfigurator.configure("src/test/resources/log4j.xml");
             final Properties props = new Properties(hbc);
             // application properties
-            props.setProperty("app.home", "");
+            props.setProperty("app.name", "TG Test");
             props.setProperty("reports.path", "");
             props.setProperty("domain.path", "../platform-pojo-bl/target/classes");
             props.setProperty("domain.package", "ua.com.fielden.platform");
@@ -47,6 +48,9 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
             props.setProperty("hibernate.show_sql", "false");
             props.setProperty("hibernate.format_sql", "true");
             props.setProperty("attachments.location", ".");
+            props.setProperty("email.smtp", "192.168.1.8");
+            props.setProperty("email.fromAddress", "trident.fleet@fielden.com.au");
+
 
             final PlatformTestDomainTypes domainProvider = new PlatformTestDomainTypes();
 

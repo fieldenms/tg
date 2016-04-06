@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.security.user;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
+import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,7 +16,13 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.Unique;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.property.validator.EmailValidator;
+import ua.com.fielden.platform.property.validator.StringValidator;
 
 /**
  * Represents the system-wide concept of a user. So, this is a system user, which should be used by system security as well as for implementing any specific customer personnel
@@ -57,7 +65,15 @@ public class User extends AbstractEntity<String> {
             return SU.matches(username);
         }
     }
-
+    
+    public static final String passwordResetUuidSeperator = "-";
+    public static final String usernameRegex = "^[^-]+$"; // passwordResetUuidSeperator should not be permitted for user names
+    
+    @IsProperty
+    @MapTo
+    @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = usernameRegex)}))
+    private String key;
+    
     @IsProperty
     @Invisible
     @MapTo(length = 255)
@@ -78,6 +94,62 @@ public class User extends AbstractEntity<String> {
     @MapTo
     private User basedOnUser;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Email", desc = "User email, which is used for password resets")
+    @Unique
+    @BeforeChange(@Handler(EmailValidator.class))
+    private String email;
+
+    @IsProperty
+    @MapTo
+    @Invisible
+    @Unique // UUID gets generated and hashed, thus should be algorithmically unique, but just in case let's enforce it at the model level
+    @Title(value = "Reset UUID", desc = "The hash of the password reset request UUID")
+    private String resetUuid;
+
+    @IsProperty
+    @MapTo
+    @Invisible
+    @Unique // salt gets generated randomly for every user and needs to be unique
+    @Title(value = "Salt", desc = "Random password hashing salt to protect agains the rainbow table attack.")
+    private String salt;
+
+    @Observable
+    public User setSalt(final String salt) {
+        this.salt = salt;
+        return this;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+    
+    @Observable
+    public User setResetUuid(final String resetUuid) {
+        this.resetUuid = resetUuid;
+        return this;
+    }
+
+    public String getResetUuid() {
+        return resetUuid;
+    }
+    
+    @Observable
+    public User setEmail(final String email) {
+        this.email = email;
+        return this;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+    
+    
+    public String getKey() {
+        return key;
+    }
+
     @Observable
     @Override
     public User setKey(final String value) {
@@ -85,7 +157,7 @@ public class User extends AbstractEntity<String> {
             throw Result.failure(format("User %s is an application built-in account and cannot be renamed.", getKey()));
         }
 
-        super.setKey(value);
+        this.key = value;
 
         if (system_users.isOneOf(value)) {
             setBase(true);

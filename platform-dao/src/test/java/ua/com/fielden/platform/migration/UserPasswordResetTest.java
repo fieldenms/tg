@@ -23,7 +23,7 @@ public class UserPasswordResetTest extends DbDrivenTestCase {
 
         final List<User> users = coUser.findAllUsers();
         for (final User user : users) {
-            assertEquals("Incorrect password.", user.getPassword(),  coUser.hashPasswd(user.getKey()));
+            assertEquals("Incorrect password.", user.getPassword(),  coUser.hashPasswd(user.getKey(), user.getSalt()));
         }
     }
 
@@ -33,7 +33,7 @@ public class UserPasswordResetTest extends DbDrivenTestCase {
         hibernateUtil.getSessionFactory().getCurrentSession().close();
 
         final User user = coUser.findByKey("USER-1");
-        assertEquals("Incorrect password.", user.getPassword(),  coUser.hashPasswd(user.getKey()));
+        assertEquals("Incorrect password.", user.getPassword(),  coUser.hashPasswd(user.getKey(), user.getSalt()));
     }
 
     @Override

@@ -124,9 +124,9 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
 
         // add more users
         final IUser coUser = ao(User.class);
-        final User user1 = coUser.save(new_(User.class, "USER-1").setBase(true));
+        final User user1 = coUser.save(new_(User.class, "USER1").setBase(true));
         save(new_(TgPerson.class, "Person 1").setUser(user1));
-        final User user2 = coUser.save(new_(User.class, "USER-2").setBase(true));
+        final User user2 = coUser.save(new_(User.class, "USER2").setBase(true));
         save(new_(TgPerson.class, "Person 2").setUser(user2));
 
         final User currUser = getInstance(IUserProvider.class).getUser();
@@ -144,15 +144,15 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-24 07:30:00"));
         coSession.newSession(currUser, false);
 
-        // set some sessions for User-1
+        // set some sessions for USER1
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("USER-1", getInstance(IUser.class));
+        up.setUsername("USER1", getInstance(IUser.class));
 
-        // trusted session for User-1
+        // trusted session for USER1
         constants.setNow(dateTime("2015-04-23 16:26:00"));
         coSession.newSession(user1, true); // from work
 
-        // untrusted sessions for User-1
+        // untrusted sessions for USER1
         constants.setNow(dateTime("2015-04-23 19:30:00"));
         coSession.newSession(user1, false);
         constants.setNow(dateTime("2015-04-24 07:32:00"));

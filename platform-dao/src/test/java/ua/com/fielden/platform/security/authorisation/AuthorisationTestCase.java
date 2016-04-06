@@ -28,8 +28,8 @@ import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 
 public class AuthorisationTestCase extends AbstractDomainDrivenTestCase {
     private static final String fuelType = "U";
-    private final String permissiveUsername = "TEST-USER";
-    private final String restrictiveUsername = "TEST-USER-RESTRICTIVE";
+    private final String permissiveUsername = "TESTUSER";
+    private final String restrictiveUsername = "TESTUSERRESTRICTIVE";
 
     @Test
     public void permissive_user_should_be_able_to_delete_fuel_types() {

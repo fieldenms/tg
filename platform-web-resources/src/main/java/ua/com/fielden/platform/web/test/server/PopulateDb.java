@@ -83,9 +83,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         System.out.println("Creating and populating the development database...");
         final IUser coUser = ao(User.class);
         final User _su = coUser.save(new_(User.class, User.system_users.SU.name()).setBase(true));
-        final User su = coUser.resetPasswd(_su);
+        final User su = coUser.resetPasswd(_su, _su.getKey());
         final User _demo = ao(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su));
-        final User demo = coUser.resetPasswd(_demo);
+        final User demo = coUser.resetPasswd(_demo, _demo.getKey());
         
         final ITgPerson aoPerson = (ITgPerson) ao(TgPerson.class);
         aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());

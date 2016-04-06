@@ -27,6 +27,8 @@ import ua.com.fielden.platform.error.Result;
  */
 public class UniqueValidator<E extends AbstractEntity<?>, T> implements IBeforeChangeEventHandler<T> {
 
+    public static final String validationErrorTemplate = "Value [%s] must be unique for property [%s] in entity [%s].";
+    
     private final ICompanionObjectFinder coFinder;
 
     @Inject
@@ -57,7 +59,7 @@ public class UniqueValidator<E extends AbstractEntity<?>, T> implements IBeforeC
 
         int count = co.count(query);
         if (count > 0) {
-            return Result.failure(format("Value [%s] must be unique for property [%s] in entity [%s].", newValue, property.getName(), type.getSimpleName()));
+            return Result.failure(format(validationErrorTemplate, newValue, property.getName(), type.getName()));
         }
         
         return Result.successful(entity);

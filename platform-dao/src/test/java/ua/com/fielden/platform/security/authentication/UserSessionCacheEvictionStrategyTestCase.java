@@ -215,9 +215,9 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
 
         // add more users
         final IUser coUser = ao(User.class);
-        final User user1 = coUser.save(new_(User.class, "USER-1").setBase(true));
+        final User user1 = coUser.save(new_(User.class, "USER1").setBase(true));
         save(new_(TgPerson.class, "Person 1").setUser(user1));
-        final User user2 = coUser.save(new_(User.class, "USER-2").setBase(true));
+        final User user2 = coUser.save(new_(User.class, "USER2").setBase(true));
         save(new_(TgPerson.class, "Person 2").setUser(user2));
 
         // ensure that TEST is the current user

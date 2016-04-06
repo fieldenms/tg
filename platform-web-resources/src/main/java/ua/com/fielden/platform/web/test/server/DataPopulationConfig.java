@@ -12,6 +12,7 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 
 import com.google.inject.Injector;
+import com.google.inject.name.Named;
 
 /**
  * Provides Web UI Testing Server specific implementation of {@link IDomainDrivenTestCaseConfiguration} to be used for creation and population of the target development database
@@ -33,13 +34,15 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
         try {
             final Properties props = hbc;
             // application properties
-            props.setProperty("app.home", "");
+            props.setProperty("app.name", "TG Test App");
             props.setProperty("reports.path", "");
             props.setProperty("domain.path", "../platform-pojo-bl/target/classes");
             props.setProperty("domain.package", "ua.com.fielden.platform.sample.domain");
             props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
             props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
             props.setProperty("workflow", "development");
+            props.setProperty("email.smtp", "192.168.1.8");
+            props.setProperty("email.fromAddress", "tg@fielden.com.au");
 
             final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
             module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
