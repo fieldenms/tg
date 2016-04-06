@@ -38,6 +38,7 @@ public final class Validators {
     private Validators() {
     }
 
+    
     /**
      * Identifies whether the provided entity overlaps with any of the existing entities.
      *

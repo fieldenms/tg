@@ -8,10 +8,16 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.factories.webui.LoginCompleteResetResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.LoginInitiateResetResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LogoutResourceFactory;
 import ua.com.fielden.platform.web.resources.OldVersionResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.LoginCompleteResetResource;
+import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
+import ua.com.fielden.platform.web.resources.webui.LoginResource;
+import ua.com.fielden.platform.web.resources.webui.LogoutResource;
 
 /**
  * Configuration point for Web UI Testing Server.
@@ -44,8 +50,10 @@ public class TgTestApplicationConfiguration extends Component {
 
             // attach system resources, which should be beyond the version scope
             // the interactive login page resource is considered one of the system resources, which does not require guarding
-            getDefaultHost().attach("/login", new LoginResourceFactory(injector.getInstance(RestServerUtil.class), injector));
-            getDefaultHost().attach("/logout", new LogoutResourceFactory(injector));
+            getDefaultHost().attach(LoginResource.BINDING_PATH, new LoginResourceFactory(injector.getInstance(RestServerUtil.class), injector));
+            getDefaultHost().attach(LoginInitiateResetResource.BINDING_PATH, new LoginInitiateResetResourceFactory(injector));
+            getDefaultHost().attach(LoginCompleteResetResource.BINDING_PATH, new LoginCompleteResetResourceFactory(injector));
+            getDefaultHost().attach(LogoutResource.BINDING_PATH, new LogoutResourceFactory(injector));
             
             // FIXME The old resources need to be completely removed from the platform
 //            getDefaultHost().attach(

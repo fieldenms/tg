@@ -12,30 +12,36 @@ import com.google.inject.name.Named;
  * 
  */
 public class ApplicationSettings implements IApplicationSettings {
-    private final String appHome;
+    private final String appName;
     private final String pathToStorage;
     private final String classPath;
     private final String packagePath;
     private final String pathToSecurityTokens;
     private final String securityTokensPackageName;
     private final String workflow;
+    private final String smtpServer;
+    private final String fromAddress;
 
     @Inject
     protected ApplicationSettings(//
-            final @Named("app.home") String appHome, //
+            final @Named("app.name") String appName, //
             final @Named("reports.path") String pathToStorage, //
             final @Named("domain.path") String classPath,//
             final @Named("domain.package") String packagePath,//
             final @Named("tokens.path") String pathToSecurityTokens,//
             final @Named("tokens.package") String securityTokensPackageName,//
-            final @Named("workflow") String workflow) {
-        this.appHome = prepareSettings(appHome);
+            final @Named("workflow") String workflow,
+            final @Named("email.smtp") String smtpServer,
+            final @Named("email.fromAddress") String fromAddress) {
+        this.appName = appName;
         this.pathToStorage = prepareSettings(pathToStorage);
         this.classPath = classPath;
         this.packagePath = packagePath;
         this.pathToSecurityTokens = pathToSecurityTokens;
         this.securityTokensPackageName = securityTokensPackageName;
         this.workflow = workflow;
+        this.smtpServer = smtpServer;
+        this.fromAddress = fromAddress;
     }
 
     @Override
@@ -70,7 +76,7 @@ public class ApplicationSettings implements IApplicationSettings {
 
     @Override
     public String appHome() {
-        return appHome;
+        return appName;
     }
 
     /** A helper method for correct processing of user home portion specified in the path. */
@@ -94,6 +100,14 @@ public class ApplicationSettings implements IApplicationSettings {
     @Override
     public String workflow() {
         return workflow;
+    }
+
+    public String getSmtpServer() {
+        return smtpServer;
+    }
+
+    public String getFromAddress() {
+        return fromAddress;
     }
 
 }

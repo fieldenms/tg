@@ -15,6 +15,9 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public class UniversalConstantsForTesting implements IUniversalConstants {
 
     private DateTime now;
+    private String smtpServer;
+    private String fromEmailAddress;
+    private String appName;
 
     @Override
     public DateTime now() {
@@ -32,6 +35,33 @@ public class UniversalConstantsForTesting implements IUniversalConstants {
 
     public void setNow(final DateTime now) {
         this.now = now;
+    }
+
+    @Override
+    public String smptServer() {
+        return smtpServer != null ? smtpServer : "192.168.1.8";
+    }
+
+    @Override
+    public String fromEmailAddress() {
+        return fromEmailAddress != null ? fromEmailAddress : "tg@fielden.com.au";
+    }
+
+    public void setSmtpServer(String smtpServer) {
+        this.smtpServer = smtpServer;
+    }
+
+    public void setFromEmailAddress(String fromEmailAddress) {
+        this.fromEmailAddress = fromEmailAddress;
+    }
+
+    @Override
+    public String appName() {
+        return appName != null ? appName : "TG Test";
+    }
+
+    public void setAppName(String appName) {
+        this.appName = appName;
     }
 
 }

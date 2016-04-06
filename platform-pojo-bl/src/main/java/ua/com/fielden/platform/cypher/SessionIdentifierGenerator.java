@@ -11,6 +11,8 @@ import java.util.Set;
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.joda.time.DateTime;
@@ -30,7 +32,7 @@ import org.joda.time.format.PeriodFormatterBuilder;
  *
  */
 public final class SessionIdentifierGenerator {
-    private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";
+    private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
     private SecureRandom random = new SecureRandom();
 
     /**
@@ -50,16 +52,25 @@ public final class SessionIdentifierGenerator {
     public String nextPin() {
         return new BigInteger(32, random).toString(32);
     }
+    
+    /**
+     * Generates cryptographically random salt that can be used with various hashing algorithms to strengthen the hashing result.
+     *
+     * @return
+     */
+    public String genSalt() {
+        return new BigInteger(128, random).toString(32);
+    }
 
     /**
-     * Generates a 4096 bit key using the HMAC-SHA1 algorithm.
+     * Generates a 4096 bit key using the HMAC-SHA256 algorithm.
      *
      * @return
      * @throws NoSuchAlgorithmException
      */
-    public String genHmacSha1Key() throws NoSuchAlgorithmException {
+    public static String genHmacSha256Key() throws NoSuchAlgorithmException {
         // Generate a key for the HMAC-SHA1 keyed-hashing algorithm
-        final KeyGenerator keyGen = KeyGenerator.getInstance(HMAC_SHA1_ALGORITHM);
+        final KeyGenerator keyGen = KeyGenerator.getInstance(HMAC_SHA256_ALGORITHM);
         keyGen.init(4096);
         final SecretKey key = keyGen.generateKey();
         return HexString.bufferToHex(key.getEncoded());
@@ -78,10 +89,10 @@ public final class SessionIdentifierGenerator {
         try {
 
             // get an hmac_sha1 key from the raw key bytes
-            final SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA1_ALGORITHM);
+            final SecretKeySpec signingKey = new SecretKeySpec(key.getBytes(), HMAC_SHA256_ALGORITHM);
 
             // get an hmac_sha1 Mac instance and initialize with the signing key
-            final Mac mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);
+            final Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
             mac.init(signingKey);
 
             // compute the hmac on input data bytes
@@ -96,6 +107,43 @@ public final class SessionIdentifierGenerator {
         return result;
     }
 
+    /**
+     * Calculates a hash code for a given data using algorithm HMAC-SHA1 with the provided key.
+     * Good <a href="http://security.stackexchange.com/questions/41617/do-salts-have-to-be-random-or-just-unique-and-unknown">read</a> about salt.
+     * Hashing algorithm used is <a href="https://en.wikipedia.org/wiki/PBKDF2">PBKDF2</a>.
+     * <a href="https://adambard.com/blog/3-wrong-ways-to-store-a-password/">This</a> article was used to implement this method.
+     * Also, refer <a href="https://crackstation.net/hashing-security.htm">this</a>.
+     * 
+     * @param data
+     * @param salt
+     * @return
+     * @throws SignatureException
+     */
+    public String calculatePBKDF2WithHmacSHA1(final String data, final String salt) throws SignatureException {
+        final int ITERATIONS = 100000;
+        final int KEY_LENGTH = 192; // bits
+
+        final String result;
+        try {
+            final char[] passwordChars = data.toCharArray();
+            final PBEKeySpec spec = new PBEKeySpec(
+                    passwordChars,
+                    salt.getBytes(),
+                    ITERATIONS,
+                    KEY_LENGTH
+                );
+            
+            final SecretKeyFactory signingKey = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+            final byte[] hashedPassword = signingKey.generateSecret(spec).getEncoded();
+            
+            // base64-encode the hmac
+            result = HexString.bufferToHex(hashedPassword);
+
+        } catch (final Exception e) {
+            throw new SignatureException("Failed to generate HMAC : " + e.getMessage());
+        }
+        return result;
+    }
 
     public static void main(final String[] args) throws Exception {
         final SessionIdentifierGenerator gen = new SessionIdentifierGenerator();

@@ -48,7 +48,7 @@ public class StartSecure {
         final Component component = new TgTestApplicationConfiguration(props);
         //component.getServers().add(Protocol.HTTP, Integer.parseInt(props.getProperty("port")));
 
-        final org.restlet.Server server = component.getServers().add(Protocol.HTTPS, 9999);
+        final org.restlet.Server server = component.getServers().add(Protocol.HTTPS, Integer.parseInt(props.getProperty("port")));
         final Series<Parameter> parameters = server.getContext().getParameters();
 
         parameters.add("sslContextFactory", "org.restlet.engine.ssl.DefaultSslContextFactory");

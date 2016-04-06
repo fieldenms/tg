@@ -134,14 +134,16 @@ public class BasicWebServerModule extends CommonFactoryModule {
     protected void configure() {
         super.configure();
         // bind application specific constants
-        bindConstant().annotatedWith(Names.named("app.home")).to("");
+        bindConstant().annotatedWith(Names.named("app.name")).to(props.getProperty("app.name"));
         bindConstant().annotatedWith(Names.named("reports.path")).to("");
         bindConstant().annotatedWith(Names.named("domain.path")).to(props.getProperty("domain.path"));
         bindConstant().annotatedWith(Names.named("domain.package")).to(props.getProperty("domain.package"));
         bindConstant().annotatedWith(Names.named("tokens.path")).to(props.getProperty("tokens.path"));
         bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
         bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));
-        bindConstant().annotatedWith(Names.named("attachments.location")).to(props.getProperty("attachments.location")); // server only
+        bindConstant().annotatedWith(Names.named("attachments.location")).to(props.getProperty("attachments.location"));
+        bindConstant().annotatedWith(Names.named("email.smtp")).to(props.getProperty("email.smtp"));
+        bindConstant().annotatedWith(Names.named("email.fromAddress")).to(props.getProperty("email.fromAddress"));
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Scopes.SINGLETON);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);

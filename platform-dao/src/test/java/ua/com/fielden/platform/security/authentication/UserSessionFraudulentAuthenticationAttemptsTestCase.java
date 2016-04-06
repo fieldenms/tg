@@ -90,7 +90,7 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
         // now let's move the clock 30 minutes forward to emulate a time change
         // adversary tries to reuse a completely valid and not yet expired authenticator to access the system under a different username
         constants.setNow(dateTime("2015-04-23 13:30:00"));
-        up.setUsername("USER-1", getInstance(IUser.class));
+        up.setUsername("USER1", getInstance(IUser.class));
         final User differentUser = getInstance(IUserProvider.class).getUser();
 
         final Optional<UserSession> session = coSession.currentSession(differentUser, authenticator);
@@ -111,22 +111,22 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
 
         // add more users
         final IUser coUser = ao(User.class);
-        save(new_(TgPerson.class, "Person 1").setUser(coUser.save(new_(User.class, "USER-1").setBase(true))));
-        save(new_(TgPerson.class, "Person 2").setUser(coUser.save(new_(User.class, "USER-2").setBase(true))));
+        save(new_(TgPerson.class, "Person 1").setUser(coUser.save(new_(User.class, "USER1").setBase(true))));
+        save(new_(TgPerson.class, "Person 2").setUser(coUser.save(new_(User.class, "USER2").setBase(true))));
 
         // establish session for the above users
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("USER-1", getInstance(IUser.class));
+        up.setUsername("USER1", getInstance(IUser.class));
         final User user1 = up.getUser();
 
-        // trusted session for User-1
+        // trusted session for USER1
         constants.setNow(dateTime("2015-04-23 16:26:00"));
         coSession.newSession(user1, true); // from work
 
-        up.setUsername("USER-2", getInstance(IUser.class));
+        up.setUsername("USER2", getInstance(IUser.class));
         final User user2 = up.getUser();
 
-        // trusted session for User-2
+        // trusted session for USER2
         constants.setNow(dateTime("2015-04-23 16:30:00"));
         coSession.newSession(user2, true); // from work
     }
