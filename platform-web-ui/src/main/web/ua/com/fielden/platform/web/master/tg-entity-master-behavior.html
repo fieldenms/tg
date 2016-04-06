@@ -201,9 +201,24 @@
                  */
                 _showDialog: {
                 	type: Function
+                },
+                
+                /**
+                 * The entities retrieved when running centre that has this insertion point
+                 */
+                retrievedEntities: {
+                    type: Array,
+                    notify: true
+                },
+                /**
+                 * Summary entity retrieved when running centre that has this insertion point.
+                 */
+                retrievedTotals: {
+                    type: Object,
+                    notify: true
                 }
-        	},
-
+            },
+            
             /**
              * Initialisation block. It has all children web components already initialised.
              */

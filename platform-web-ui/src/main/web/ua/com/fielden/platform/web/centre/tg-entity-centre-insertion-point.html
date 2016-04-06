@@ -39,14 +39,16 @@
                  */
                 retrievedEntities: {
                     type: Array,
-                    observer: '_updateElementWithRetrievedEntities'
+                    observer: '_updateElementWithRetrievedEntities',
+                    notify: true
                 },
                 /**
                  * Summary entity retrieved when running centre that has this insertion point.
                  */
                 retrievedTotals: {
                     type: Object,
-                    observer: '_updateElementWithRetrievedTotals'
+                    observer: '_updateElementWithRetrievedTotals',
+                    notify: true
                 },
                 _element: {
                     type: Object,
@@ -77,6 +79,7 @@
                     this._element.retrievedTotals = newValue;
                 }
             },
+            
             /**
              * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
              */
@@ -92,7 +95,13 @@
                            .then(function (element) {
                                self.activated = true;
                                self._element = element;
+                               self._element.addEventListener("retrieved-entities-changed", function (ev) {
+                                   self.retrievedEntities = this.retrievedEntities;
+                               });
                                self._element.retrievedEntities = self.retrievedEntities;
+                               self._element.addEventListener("retrieved-totals-changed", function (ev) {
+                                   self.retrievedTotals = this.retrievedTotals;
+                               });
                                self._element.retrievedTotals = self.retrievedTotals;
                                
                                var promise = customAction._onExecuted(null, element, null);
