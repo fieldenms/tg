@@ -34,7 +34,22 @@
                     type: Boolean,
                     value: false
                 },
-                
+                /**
+                 * The entities retrieved when running centre that has this insertion point
+                 */
+                retrievedEntities: {
+                    type: Array,
+                    observer: '_updateElementWithRetrievedEntities',
+                    notify: true
+                },
+                /**
+                 * Summary entity retrieved when running centre that has this insertion point.
+                 */
+                retrievedTotals: {
+                    type: Object,
+                    observer: '_updateElementWithRetrievedTotals',
+                    notify: true
+                },
                 _element: {
                     type: Object,
                     value: null
@@ -53,6 +68,18 @@
             	}
             },
 
+            _updateElementWithRetrievedEntities: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.retrievedEntities = newValue;
+                }
+            },
+            
+            _updateElementWithRetrievedTotals: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.retrievedTotals = newValue;
+                }
+            },
+            
             /**
              * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
              */
@@ -66,9 +93,17 @@
                 } else { // else need to first load and create the element to be inserted
                    	self._getElement(customAction)
                            .then(function (element) {
-                            self.activated = true;
-                           	self._element = element;
-                           	
+                               self.activated = true;
+                               self._element = element;
+                               self._element.addEventListener("retrieved-entities-changed", function (ev) {
+                                   self.retrievedEntities = this.retrievedEntities;
+                               });
+                               self._element.retrievedEntities = self.retrievedEntities;
+                               self._element.addEventListener("retrieved-totals-changed", function (ev) {
+                                   self.retrievedTotals = this.retrievedTotals;
+                               });
+                               self._element.retrievedTotals = self.retrievedTotals;
+                               
                                var promise = customAction._onExecuted(null, element, null);
                                if (promise) {
                                	return promise
