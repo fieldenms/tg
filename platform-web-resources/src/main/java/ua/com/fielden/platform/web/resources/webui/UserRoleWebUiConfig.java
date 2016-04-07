@@ -29,6 +29,9 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  *
  */
 public class UserRoleWebUiConfig {
+    private static final String actionButton = "'margin: 10px', 'width: 110px'";
+    private static final String bottomButtonPanel = "['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
+    
     public final EntityMaster<UserRoleTokensUpdater> tokensUpdater;
     public final EntityCentre<UserRole> centre;
     public final EntityMaster<UserRole> master;
@@ -80,7 +83,6 @@ public class UserRoleWebUiConfig {
      */
     private static EntityMaster<UserRole> createMaster(final Injector injector) {
         final String fmr = "'flex', 'margin-right: 20px'";
-        final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
 
         final IMaster<UserRole> masterConfigForUserRole = new SimpleMasterBuilder<UserRole>()
                 .forEntity(UserRole.class)
@@ -94,7 +96,7 @@ public class UserRoleWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
                         + format("[[%s], ['flex']],", fmr)
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + format(bottomButtonPanel, actionButton, actionButton)
                         + "    ]"))
                 .done();
         return new EntityMaster<UserRole>(
@@ -110,7 +112,6 @@ public class UserRoleWebUiConfig {
      * @return
      */
     private static EntityMaster<UserRoleTokensUpdater> createTokensUpdater(final Injector injector) {
-        final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
         final IMaster<UserRoleTokensUpdater> masterConfig = new SimpleMasterBuilder<UserRoleTokensUpdater>()
                 .forEntity(UserRoleTokensUpdater.class)
                 .addProp("tokens").asCollectionalEditor().maxVisibleRows(5).withHeader("title")
@@ -121,7 +122,7 @@ public class UserRoleWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', 'width:500px', "
                         + format("['flex', ['flex']],")
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr)
+                        + format(bottomButtonPanel, actionButton, actionButton)
                         + "    ]"))
                 .done();
         return new EntityMaster<UserRoleTokensUpdater>(

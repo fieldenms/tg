@@ -29,6 +29,9 @@ import com.google.inject.Injector;
  *
  */
 public class UserWebUiConfig {
+    private static final String actionButton = "'margin: 10px', 'width: 110px'";
+    private static final String bottomButtonPanel = "['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
+    
     public final EntityMaster<UserRolesUpdater> rolesUpdater;
     public final EntityCentre<User> centre;
     public final EntityMaster<User> master;
@@ -82,13 +85,12 @@ public class UserWebUiConfig {
     private static EntityMaster<User> createMaster(final Injector injector) {
         final String fmr = "'flex', 'margin-right: 20px'";
         final String fmrLast = "'flex'";
-        final String actionButton = "'margin: 10px', 'width: 200px'";
         
         final String layout = 
             "['padding:20px', "
             + format("[[%s], [%s]], ", fmr, fmrLast)
             + format("[[%s], [%s]], ", fmr, fmrLast)
-            + format(" ['horizontal', 'margin-top: 20px', 'justify-content: center', [%s], [%s]]", actionButton, actionButton)
+            + format(bottomButtonPanel, actionButton, actionButton)
             + "]";
         
         final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
@@ -118,7 +120,6 @@ public class UserWebUiConfig {
      * @return
      */
     private static EntityMaster<UserRolesUpdater> createRolesUpdater(final Injector injector) {
-        final String actionMr = "'margin-top: 20px', 'margin-left: 20px', 'width: 110px'";
         final IMaster<UserRolesUpdater> masterConfig = new SimpleMasterBuilder<UserRolesUpdater>()
                 .forEntity(UserRolesUpdater.class)
                 .addProp("roles").asCollectionalEditor().maxVisibleRows(5)
@@ -129,7 +130,7 @@ public class UserWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', 'width:750px', "
                         + format("['flex', ['flex']],")
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s]]", actionMr, actionMr)
+                        + format(bottomButtonPanel, actionButton, actionButton)
                         + "    ]"))
                 .done();
         return new EntityMaster<UserRolesUpdater>(
