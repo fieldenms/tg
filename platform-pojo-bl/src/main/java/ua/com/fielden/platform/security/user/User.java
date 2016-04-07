@@ -3,8 +3,10 @@ package ua.com.fielden.platform.security.user;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -82,7 +84,7 @@ public class User extends AbstractEntity<String> {
 
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
     @Title(value = "Roles", desc = "The associated with this user roles.")
-    private Set<UserAndRoleAssociation> roles = new HashSet<UserAndRoleAssociation>();
+    private final Set<UserAndRoleAssociation> roles = new HashSet<UserAndRoleAssociation>();
 
     @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")
@@ -177,7 +179,14 @@ public class User extends AbstractEntity<String> {
     }
 
     public Set<UserAndRoleAssociation> getRoles() {
-        return roles;
+        return Collections.unmodifiableSet(roles);
+    }
+
+    @Observable
+    public User setRoles(final Set<UserAndRoleAssociation> roles) {
+        this.roles.clear();
+        this.roles.addAll(roles);
+        return this;
     }
 
     /**
@@ -186,19 +195,10 @@ public class User extends AbstractEntity<String> {
      * @return
      */
     public Set<UserRole> roles() {
-        final Set<UserRole> result = new HashSet<UserRole>();
-        for (final UserAndRoleAssociation assoc : roles) {
-            result.add(assoc.getUserRole());
-        }
-        return result;
+        return this.roles.stream().map(item -> item.getUserRole()).collect(Collectors.toSet());
     }
 
-    @Observable
-    public User setRoles(final Set<UserAndRoleAssociation> roles) {
-        this.roles = roles;
-        return this;
-    }
-
+    
     public boolean isBase() {
         return base;
     }
