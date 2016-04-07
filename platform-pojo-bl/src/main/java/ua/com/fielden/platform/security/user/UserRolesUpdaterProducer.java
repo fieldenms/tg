@@ -3,6 +3,7 @@ package ua.com.fielden.platform.security.user;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
@@ -39,10 +40,7 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityProducerFo
         entity.setRoles(roles);
         entity.getProperty("roles").resetState();
         
-        final Set<Long> chosenRoleIds = new LinkedHashSet<>();
-        for (final UserAndRoleAssociation association: masterEntity.getRoles()) {
-            chosenRoleIds.add(association.getUserRole().getId());
-        }
+        final Set<Long> chosenRoleIds = new LinkedHashSet<>(masterEntity.getRoles().stream().map(item -> item.getUserRole().getId()).collect(Collectors.toList()));
         entity.setChosenIds(chosenRoleIds);
         return entity;
     }
@@ -55,6 +53,6 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityProducerFo
 
     @Override
     protected fetch<User> fetchModelForMasterEntity() {
-        return coUser.getFetchProvider().fetchModel();
+        return coUser.getFetchProvider().with("roles").fetchModel();
     }
 }
