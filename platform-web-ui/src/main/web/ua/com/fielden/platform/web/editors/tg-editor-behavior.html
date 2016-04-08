@@ -213,10 +213,14 @@
                 	value: function () {
                 		return (function (event) {
                     		// console.debug("_onChange:", event);
-                    		
-                    		if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
-                    			this.commit();
-                    		}
+	      		            if (this['_onChange_handler']) {
+    				    		this.cancelAsync(this['_onChange_handler']);
+        					}
+            				this['_onChange_handler'] = this.async(function() {
+                        		if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
+                        			this.commit();
+                        		}
+            				}.bind(this), 50);
                     	}).bind(this);
                 	}
                 },
