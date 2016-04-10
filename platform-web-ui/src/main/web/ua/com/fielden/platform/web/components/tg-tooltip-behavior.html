@@ -11,7 +11,7 @@ mark element with tooltip-text attribute.
          * Returns the element in hierarchy that has tooltip-id attribute set otherwise returns null.
          */
         var extractActiveElement = function (currentElement, thisElement) {
-            if (currentElement !== thisElement.parentElement) {
+            if (currentElement && currentElement !== thisElement.parentElement) {
                 if (currentElement.hasAttribute("tooltip-text")) {
                     return currentElement;
                 } else {
