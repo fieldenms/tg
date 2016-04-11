@@ -1421,11 +1421,11 @@
             },
 
             _calculateTopLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft) {
-                return "top:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
+                return "top:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
             },
 
             _calculateBottomLockPanelStyle: function (checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft) {
-                return "bottom:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
+                return "bottom:0;left:calc(" + this._calculateCheckboxWidth(checkboxVisible, checkboxesFixed || checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculatePrimaryActionWidth(primaryAction, checkboxesWithPrimaryActionsFixed || numOfFixedCols > 0) + " + " + this._calculateFixedColsWidth(numOfFixedCols) + " - " + _scrollLeft + "px);right:calc(" + this._calculateSecondaryActionWidth(secondaryActions, secondaryActionsFixed) + " + " + _scrollLeft + "px)";
             },
 
             _calculateCheckboxWidth: function (checkboxVisible, fixed) {
@@ -1437,11 +1437,14 @@
             },
 
             _calculateFixedColsWidth: function (numOfFixedCols) {
-                var colIndex, fixedColsWidth = 0;
+                var colIndex, fixedColsWidth = 0, numOfFixedPaddings = 0;
                 for (colIndex = 0; colIndex < numOfFixedCols; colIndex++) {
-                    fixedColsWidth += this.columns[colIndex].width;
+                    if (this.columns[colIndex].width > 0) {
+                        fixedColsWidth += this.columns[colIndex].width;
+                        numOfFixedPaddings++;
+                    }
                 }
-                return fixedColsWidth + "px + " + this._cellPadding + " * " + numOfFixedCols;
+                return fixedColsWidth + "px + " + this._cellPadding + " * " + numOfFixedPaddings;
             },
 
             _calculateSecondaryActionWidth: function (secondaryActions, fixed) {

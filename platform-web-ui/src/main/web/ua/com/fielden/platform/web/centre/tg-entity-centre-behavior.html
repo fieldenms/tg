@@ -22,7 +22,20 @@
                 entityType: {
                     type: String
                 },
-
+                /**
+                 * The entities retrieved when running this centre
+                 */
+                retrievedEntities: {
+                    type: Array,
+                    observer: '_retrievedEntitiesChanged'
+                },
+                /**
+                 * Summary entity retrieved when running this centre.
+                 */
+                retrievedTotals: {
+                    type: Object,
+                    observer: '_retrievedTotalsChanged'
+                },
                 /**
                  * The menu item type, that identifies this entity centre.
                  */
@@ -305,7 +318,15 @@
             _computeViewerDisabled: function (_criteriaLoaded) {
                 return _criteriaLoaded === false;
             },
-
+            
+            _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
+                this.$.egi.entities = retrievedEntities;
+            },
+            
+            _retrievedTotalsChanged: function (retrievedTotals, oldValue) {
+                this.$.egi.totals = retrievedTotals;
+            },
+            
             /**
              * Initialisation block. It has all children web components already initialised.
              */
@@ -319,12 +340,12 @@
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
                     if (criteriaEntity === null || criteriaEntity.isValid()) {
                         if (typeof summary !== 'undefined') {
-                            this.$.egi.totals = summary;
+                            this.retrievedTotals = summary;
                         }
                         if (isRefreshingConcreteEntities) {
                             this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this._entitiesThatShouldBeUpdated);
                         } else {
-                            this.$.egi.entities = resultEntities;
+                            this.retrievedEntities = resultEntities;
                             this.$.egi.renderingHints = renderingHints;
                             if (this._triggerRun && this._selectedView === 0) {
                                 this.async(function () {
