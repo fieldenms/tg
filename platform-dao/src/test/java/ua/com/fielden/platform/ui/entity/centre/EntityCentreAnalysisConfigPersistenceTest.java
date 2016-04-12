@@ -11,8 +11,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.security.provider.UserDao;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
@@ -30,7 +30,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * @author TG Team
  * 
  */
-public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDomainDrivenTestCase {
+public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDaoTestCase {
     private final IEntityCentreConfigController daoECC = getInstance(EntityCentreConfigControllerDao.class);
     private final IEntityCentreAnalysisConfig dao = getInstance(EntityCentreAnalysisConfigDao.class);
     private final IMainMenuItemController menuDao = getInstance(MainMenuItemControllerDao.class);
@@ -52,6 +52,8 @@ public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDomainDri
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         save(new_(User.class, "USER", "DESC").setBase(true).setPassword("PASSWD"));
         save(new_(MainMenuItem.class, "type", "desc").setOrder(1));
     }

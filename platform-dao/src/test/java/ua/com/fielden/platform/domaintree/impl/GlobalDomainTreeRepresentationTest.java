@@ -76,6 +76,11 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
             @Override
             public void setUsername(final String username, final IUser coUser) {
             }
+
+            @Override
+            public void setUser(User user) {
+                
+            }
         };
         return baseUserProvider;
     }

@@ -42,7 +42,7 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
     public void should_recognise_situation_with_stolen_and_used_authenticator_upon_a_legitimate_attempt_to_use_that_authenticator_by_valid_user() throws SignatureException {
         // establish a new sessions for user TEST
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUser.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         constants.setNow(dateTime("2015-04-23 13:00:00"));

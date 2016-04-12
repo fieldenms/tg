@@ -220,9 +220,6 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         final User user2 = coUser.save(new_(User.class, "USER2").setBase(true));
         save(new_(TgPerson.class, "Person 2").setUser(user2));
 
-        // ensure that TEST is the current user
-        final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUser.class));
     }
 
 }

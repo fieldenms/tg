@@ -46,7 +46,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
     @Before
     public void startUp() {
         coSession.getCache().invalidateAll();
-        webApp.setCurrUser(coUser.findByKey("TEST"));
+        webApp.setCurrUser(coUser.findByKey(User.system_users.UNIT_TEST_USER.name()));
         WebBasedTestCase.attachWebApplication("/v1", webApp);
     }
 
@@ -57,7 +57,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
 
     @Test
     public void unauthenticated_request_should_be_refused_with_code_403_forbidden() throws SignatureException {
-        final Request request = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
+        final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         final Response response = client.handle(request);
 
         assertEquals(403, response.getStatus().getCode());
@@ -71,7 +71,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         final UserSession session = coSession.newSession(currUser, true);
         final String authenticator = session.getAuthenticator().get().toString();
 
-        final Request request = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
+        final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, currUser.getKey(), TgPerson.class.getSimpleName(), 12L));
         final CookieSetting newCookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
         newCookie.setAccessRestricted(true);
         request.getCookies().add(newCookie);
@@ -89,7 +89,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         final UserSession session = coSession.newSession(currUser, true);
         final String authenticator = session.getAuthenticator().get().toString();
 
-        final Request request = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
+        final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         final CookieSetting newCookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
         newCookie.setAccessRestricted(true);
         request.getCookies().add(newCookie);
@@ -115,12 +115,12 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         // the authenticator is still valid, but not in cache, which should lead to its regeneration
         // meanwhile, requests that followed the first one triggering re-authentication, should also be accepted...
         constants.setNow(dateTime("2015-04-23 18:26:00"));
-        final Request request1 = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
+        final Request request1 = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         final CookieSetting cookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
         cookie.setAccessRestricted(true);
         request1.getCookies().add(cookie);
 
-        final Request request2 = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
+        final Request request2 = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         request2.getCookies().add(cookie);
 
         final Response response1 = client.handle(request1);
@@ -153,12 +153,12 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         // therefore, the authenticator is still valid, but not in cache, which should lead to its regeneration
         // meanwhile, requests that followed the first one triggering re-authentication, should also be accepted...
         constants.setNow(dateTime("2015-04-23 17:30:00"));
-        final Request request1 = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
+        final Request request1 = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         final CookieSetting cookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
         cookie.setAccessRestricted(true);
         request1.getCookies().add(cookie);
 
-        final Request request2 = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
+        final Request request2 = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         request2.getCookies().add(cookie);
 
         final Response response1 = client.handle(request1);
@@ -190,7 +190,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
 
         // sufficient time passes by to invalidate the authenticator
         constants.setNow(dateTime("2015-04-23 17:33:00"));
-        final Request request = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
+        final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         final CookieSetting newCookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, authenticator, "/", null);
         newCookie.setAccessRestricted(true);
         request.getCookies().add(newCookie);
@@ -212,7 +212,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         // the authenticator is still valid, but not in cache, which should lead to its regeneration
         // any subsequent requests with the stolen authenticator post the cache eviction time after regeneration should lead to a recognition of the authenticator theft
         constants.setNow(dateTime("2015-04-23 18:26:00"));
-        final Request request1 = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
+        final Request request1 = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         final CookieSetting cookie = new CookieSetting(1, AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME, stolenAuthenticator, "/", null);
         cookie.setAccessRestricted(true);
         request1.getCookies().add(cookie);
@@ -228,14 +228,14 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
 
         // request by a legitimate user with the stolen authenticator
         constants.setNow(dateTime("2015-04-23 18:40:00"));
-        final Request request2 = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
+        final Request request2 = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         request2.getCookies().add(cookie);
         final Response response2 = client.handle(request2);
         assertEquals(403, response2.getStatus().getCode());
 
         // another request by an adversary with what is thought a valid authenticator
         constants.setNow(dateTime("2015-04-23 18:41:00"));
-        final Request request3 = new Request(Method.GET, format("%s/users/TEST/%s/%s", baseUri, TgPerson.class.getSimpleName(), 12L));
+        final Request request3 = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         request3.getCookies().add(returnedCookie1);
         final Response response3 = client.handle(request3);
         assertEquals(403, response3.getStatus().getCode());

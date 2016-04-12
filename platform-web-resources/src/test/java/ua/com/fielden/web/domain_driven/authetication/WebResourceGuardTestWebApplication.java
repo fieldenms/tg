@@ -6,16 +6,15 @@ import org.restlet.Application;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.EntityInstanceResourceFactory;
 import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 /**
  * This is a web application specific to testing of {@link AbstractWebResourceGuard};

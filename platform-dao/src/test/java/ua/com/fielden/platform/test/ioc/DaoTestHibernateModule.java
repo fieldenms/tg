@@ -19,6 +19,7 @@ import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
@@ -41,6 +42,8 @@ import ua.com.fielden.platform.sample.domain.TgVehicleDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleMakeDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleModelDao;
 import ua.com.fielden.platform.sample.domain.TgWorkorderDao;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -169,6 +172,28 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
 
+        bind(IAuthorisationModel.class).toInstance(new IAuthorisationModel() {
+            @Override
+            public Result authorise(final Class<? extends ISecurityToken> token) {
+                return Result.successful("always permitted");
+            }
+
+            @Override
+            public void start() {
+                
+            }
+
+            @Override
+            public void stop() {
+                
+            }
+
+            @Override
+            public boolean isStarted() {
+                return false;
+            }
+            
+        });
     }
     
     

@@ -21,8 +21,8 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
  * Test case for the {@link IUserRoleDao}, {@link IUserAndRoleAssociationDao}, and {@link SecurityRoleAssociationDao} classes
@@ -30,7 +30,7 @@ import ua.com.fielden.platform.test.PlatformTestDomainTypes;
  * @author TG Team
  * 
  */
-public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
+public class UserUserRoleTestCase extends AbstractDaoTestCase {
     private final IUserRoleDao coUserRole = getInstance(IUserRoleDao.class);
     private final IUserAndRoleAssociationDao coUserAndRoleAssociation = getInstance(IUserAndRoleAssociationDao.class);
     private final ISecurityRoleAssociationDao coSecurityRoleAssociation = getInstance(ISecurityRoleAssociationDao.class);
@@ -39,18 +39,22 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
     @Test
     public void test_retrieval_of_user_role_associations() {
         final EntityResultQueryModel<UserAndRoleAssociation> associationModel = select(UserAndRoleAssociation.class).model();
-        assertEquals("Incorrect number of user role associations.", 8, coUserAndRoleAssociation.firstPage(from(associationModel).with(fetch(UserAndRoleAssociation.class).with("user", fetch(User.class))).model(), 10).data().size());
+        assertEquals("Incorrect number of user role associations.", 9, coUserAndRoleAssociation.firstPage(from(associationModel).with(fetch(UserAndRoleAssociation.class).with("user", fetch(User.class))).model(), 10).data().size());
     }
 
     @Test
     public void test_retrieval_of_users() {
         final List<User> users = coUser.findAllUsersWithRoles();
-        assertEquals("the number of retrieved persons is incorrect. Please check the testThatTheUsersWereRetrievedCorrectly", 4, users.size());
+        assertEquals("the number of retrieved persons is incorrect. Please check the testThatTheUsersWereRetrievedCorrectly", 5, users.size());
 
         for (int userIndex = 0; userIndex < 4; userIndex++) {
             final User user = users.get(userIndex);
-            assertEquals("incorrect key of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "user" + Integer.toString(userIndex + 1), user.getKey());
-            assertEquals("incorrect password of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "userpass" + Integer.toString(userIndex + 1), user.getPassword());
+            if (UNIT_TEST_USER.equals(user.getKey())) {
+                continue;
+            }
+            
+            assertEquals("incorrect key of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "user" + Integer.toString(userIndex), user.getKey());
+            assertEquals("incorrect password of the " + userIndex + "-th person in the testThatTheUsersWereRetrievedCorrectly", "userpass" + Integer.toString(userIndex), user.getPassword());
 
             final Set<UserAndRoleAssociation> userRolesAssociation = user.getRoles();
             final Set<UserRole> userRoles = new HashSet<UserRole>();
@@ -60,7 +64,7 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
             assertEquals("the " + userIndex + "-th person has wrong number of user roles, please check the testThatTheUsersWereRetrievedCorrectly", 2, userRoles.size());
             for (int userRoleIndex = 0; userRoleIndex < 2; userRoleIndex++) {
                 final int userRoleGlobalIndex = 2 * userIndex + userRoleIndex;
-                final UserRole userRole = new UserRole("role" + Integer.toString(userRoleGlobalIndex + 1), "");
+                final UserRole userRole = new UserRole("role" + Integer.toString(userRoleGlobalIndex - 1), "");
                 assertTrue("the " + userIndex + "-th person doesn't have the " + Integer.toString(userRoleGlobalIndex + 1) + "-th user role", userRoles.contains(userRole));
             }
         }
@@ -69,13 +73,14 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
     @Test
     public void test_user_role_retrieval() {
         final List<UserRole> userRoles = coUserRole.findAll();
-        assertEquals("the number of retrieved user roles is incorrect. Please check the testThatUserRolesWereRetrievedCorrectly", 8, userRoles.size());
+        assertEquals("the number of retrieved user roles is incorrect. Please check the testThatUserRolesWereRetrievedCorrectly", 9, userRoles.size());
 
-        for (int userRoleIndex = 0; userRoleIndex < 8; userRoleIndex++) {
+        for (int userRoleIndex = 0; userRoleIndex < 9; userRoleIndex++) {
             final UserRole userRole = userRoles.get(userRoleIndex);
-            assertEquals("incorrect key of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", "role" + Integer.toString(userRoleIndex + 1), userRole.getKey());
-            assertEquals("incorrect description of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", "role desc "
-                    + Integer.toString(userRoleIndex + 1), userRole.getDesc());
+            if (!UNIT_TEST_ROLE.equals(userRole.getKey())) {
+                assertEquals("incorrect key of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", "role" + Integer.toString(userRoleIndex), userRole.getKey());
+                assertEquals("incorrect description of the " + userRoleIndex + "-th user role in the testThatUserRolesWereRetrievedCorrectly", "role desc " + Integer.toString(userRoleIndex), userRole.getDesc());
+            }
         }
     }
 
@@ -143,7 +148,7 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
     public void test_that_security_associations_can_be_retrieved() {
         final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
         final List<SecurityRoleAssociation> associations = coSecurityRoleAssociation.firstPage(from(model).with(fetch(SecurityRoleAssociation.class).with("role")).model(), Integer.MAX_VALUE).data();
-        assertEquals("incorrect number of security token - role associations", 12, associations.size());
+        assertEquals("incorrect number of security token - role associations", 16, associations.size());
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
         assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());
         UserRole role = new_(UserRole.class, "role1");
@@ -172,13 +177,16 @@ public class UserUserRoleTestCase extends AbstractDomainDrivenTestCase {
 
     @Test
     public void test_count_association_between_user_and_token() {
-        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countAssociations("user1", FirstLevelSecurityToken1.class));
-        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countAssociations("user1", ThirdLevelSecurityToken1.class));
-        assertEquals("Incorrect number of associations between user and token.", 0, coSecurityRoleAssociation.countAssociations("user1", ThirdLevelSecurityToken2.class));
+        final IUser coUser = ao(User.class);
+        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), FirstLevelSecurityToken1.class));
+        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken1.class));
+        assertEquals("Incorrect number of associations between user and token.", 0, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken2.class));
     }
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         final UserRole role1 = save(new_(UserRole.class, "role1", "role desc 1"));
         final UserRole role2 = save(new_(UserRole.class, "role2", "role desc 2"));
         final UserRole role3 = save(new_(UserRole.class, "role3", "role desc 3"));

@@ -15,6 +15,8 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -23,11 +25,10 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-
-import com.google.inject.Inject;
 
 /**
  * DbDriven implementation of the {@link ISecurityRoleAssociationDao}
@@ -83,8 +84,8 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     @Override
     @SessionRequired
-    public int countAssociations(final String username, final Class<? extends ISecurityToken> token) {
-        final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class).where().prop("user.key").eq().val(username).and().prop("userRole.id").eq().prop("sra.role.id").model();
+    public int countAssociations(final User user, final Class<? extends ISecurityToken> token) {
+        final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class).where().prop("user").eq().val(user).and().prop("userRole.id").eq().prop("sra.role.id").model();
         final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).as("sra").where().prop("sra.securityToken").eq().val(token.getName()).and().exists(slaveModel).model();
         return count(model, Collections.<String, Object> emptyMap());
     }
