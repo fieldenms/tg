@@ -52,7 +52,7 @@
 	            --paper-spinner-layer-4-color: var(--paper-blue-500);
 	        }    	
     	</style>
-        <paper-toast id="toast" class="paper-toast" text="[[_text]]"> <!-- TODO responsive-width="250px" -->
+        <paper-toast id="toast" class="paper-toast" text="[[_text]]"> <!-- always-on-top TODO responsive-width="250px" -->
             <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
             <div hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">MORE</div>
         </paper-toast>
@@ -204,6 +204,20 @@
             },
             
             show: function () {
+                if (this.$.toast && this.$.toast._fitInfo && this.$.toast._fitInfo.positionedBy) {
+                    if (this.$.toast._fitInfo.positionedBy.css === 'static') {
+                        this.$.toast._fitInfo.positionedBy.css = 'fixed';
+                    }
+                    /* if (!this.$.toast._fitInfo.positionedBy.vertically) {
+                        this.$.toast._fitInfo.positionedBy.vertically = 'bottom';
+                    }
+                    if (!this.$.toast._fitInfo.positionedBy.horizontally) {
+                        this.$.toast._fitInfo.positionedBy.horizontally = 'left';
+                    }*/
+                }
+                /* if (this.$.toast && this.$.toast._fitInfo) {
+                    this.$.toast._fitInfo = null;
+                } */
                 // console.debug('toast show(): [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
                 var previousToast = this._getPreviousToast();
                 if (!previousToast) {
@@ -227,15 +241,47 @@
                 } else {
                     this.$.toast.duration = 3000; //3 seconds
                 }
-                this.$.toast.style['z-index'] = 1000;
+                // this.$.toast.style['z-index'] = 993;
+                // this.$.toast.updateStyles();
+                
                 // var clonedToast = this.$.toast.cloneNode(true);
                 // console.debug('cloned toast', clonedToast);
                 this.$.toast.error = this._hasMore;
                 Polymer.dom(document.body).appendChild(this.$.toast);
                 Polymer.dom().flush();
                 this.$.toast.show();
+                
+                /* if (this.$.toast && this.$.toast._fitInfo && this.$.toast._fitInfo.positionedBy) {
+	                if (this.$.toast._fitInfo.positionedBy.css === 'static') {
+	                    this.$.toast._fitInfo.positionedBy.css = 'fixed';
+	                }
+	                if (!this.$.toast._fitInfo.positionedBy.vertically) {
+	                    this.$.toast._fitInfo.positionedBy.vertically = 'bottom';
+	                }
+	                if (!this.$.toast._fitInfo.positionedBy.horizontally) {
+	                    this.$.toast._fitInfo.positionedBy.horizontally = 'left';
+	                }
+                } */
+                
+                // this.$.toast.style.bottom = '54px'; // null; 
+                // this.$.toast.updateStyles();
                 // console.debug('toast show() ended : [', this._text + ':' + this._msgText, '] hasMore = ', this._hasMore);
-            }
+            }/* , 
+            
+            ready: function () {
+                this.$.toast._discoverInfo();
+                if (this.$.toast && this.$.toast._fitInfo && this.$.toast._fitInfo.positionedBy) {
+	                if (this.$.toast._fitInfo.positionedBy.css === 'static') {
+	                    this.$.toast._fitInfo.positionedBy.css = 'fixed';
+	                }
+	                if (!this.$.toast._fitInfo.positionedBy.vertically) {
+	                    this.$.toast._fitInfo.positionedBy.vertically = 'bottom';
+	                }
+	                if (!this.$.toast._fitInfo.positionedBy.horizontally) {
+	                    this.$.toast._fitInfo.positionedBy.horizontally = 'left';
+	                }
+                } 
+            } */
         })
     })();
 </script>
