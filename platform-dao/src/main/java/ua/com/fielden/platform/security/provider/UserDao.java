@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.security.provider;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,8 +35,11 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.IUserSession;
+import ua.com.fielden.platform.security.tokens.user.UserDeleteToken;
+import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -80,6 +84,24 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         
         this.userRoleDao = userRoleDao;
         this.userAssociationDao = userAssociationDao;
+    }
+    
+    @Override
+    @SessionRequired
+    @Authorise(UserSaveToken.class)
+    public User save(final User user) {
+        // if a new user is being created then lets try activate it 
+        // this is possible only if an email address is associated with the user
+        // there could also be a situation there an existing user that was not activated (password is blank) had
+        // their email address assigned... this should also lead to user activation
+        if (!user.isPersisted() && !StringUtils.isEmpty(user.getEmail()) || 
+             user.isPersisted() && !StringUtils.isEmpty(user.getEmail()) && user.getProperty("email").isDirty() && StringUtils.isEmpty(findById(user.getId(), fetchAll(User.class)).getPassword())) {
+            // TODO implement initial user activation
+            System.out.println("TODO: User activation is !in order!");
+        }
+        
+        
+        return super.save(user);
     }
     
     @Override
@@ -269,5 +291,11 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             return !expired;
         }
     }
-   
+ 
+    @Override
+    @SessionRequired
+    @Authorise(UserDeleteToken.class)
+    public int batchDelete(Collection<Long> entitiesIds) {
+        return defaultBatchDelete(entitiesIds);
+    }
 }

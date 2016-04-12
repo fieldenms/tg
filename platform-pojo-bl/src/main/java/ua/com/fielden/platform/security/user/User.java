@@ -43,7 +43,7 @@ public class User extends AbstractEntity<String> {
      * This is an enumeration for listing all system in-built accounts.
      */
     public enum system_users {
-        SU;
+        SU, UNIT_TEST_USER;
 
         public boolean matches(final User user) {
             if (user == null) {
@@ -60,11 +60,11 @@ public class User extends AbstractEntity<String> {
         }
 
         public static boolean isOneOf(final User user) {
-            return SU.matches(user);
+            return SU.matches(user) || UNIT_TEST_USER.matches(user);
         }
 
         public static boolean isOneOf(final String username) {
-            return SU.matches(username);
+            return SU.matches(username) || UNIT_TEST_USER.matches(username);
         }
     }
     
