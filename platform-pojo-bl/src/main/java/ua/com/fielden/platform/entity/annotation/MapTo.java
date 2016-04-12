@@ -22,10 +22,12 @@ public @interface MapTo {
      * @return
      */
     String value() default "";
+    
+    String defaultValue() default "";
 
-    long length() default 0;
+    int length() default 0;
 
-    long precision() default -1;
+    int precision() default -1;
 
-    long scale() default -1;
+    int scale() default -1;
 }

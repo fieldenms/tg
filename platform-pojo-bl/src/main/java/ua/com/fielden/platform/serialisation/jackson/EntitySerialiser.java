@@ -139,15 +139,15 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 }
                 final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, name);
                 if (mapTo != null) {
-                    final Long length = mapTo.length();
+                    final Long length = Long.valueOf(mapTo.length());
                     if (!isLengthDefault(length)) {
                         entityTypeProp.set_length(length);
                     }
-                    final Long precision = mapTo.precision();
+                    final Long precision = Long.valueOf(mapTo.precision());
                     if (!isPrecisionDefault(precision)) {
                         entityTypeProp.set_precision(precision);
                     }
-                    final Long scale = mapTo.scale();
+                    final Long scale = Long.valueOf(mapTo.scale());
                     if (!isScaleDefault(scale)) {
                         entityTypeProp.set_scale(scale);
                     }
