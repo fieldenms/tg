@@ -38,6 +38,5 @@
   },
   "_source": "git://github.com/GoogleWebComponents/google-chart.git",
   "_target": "^1.0.4",
-  "_originalSource": "GoogleWebComponents/google-chart",
-  "_direct": true
+  "_originalSource": "GoogleWebComponents/google-chart"
 }
