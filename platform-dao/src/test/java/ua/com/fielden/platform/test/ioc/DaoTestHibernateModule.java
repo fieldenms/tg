@@ -55,8 +55,10 @@ import ua.com.fielden.platform.security.provider.UserDao;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
+import ua.com.fielden.platform.security.user.INewUserNotifier;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
@@ -128,7 +130,13 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IUser.class).to(UserDao.class);
         // bind IUserProvider
         bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
-
+        bind(INewUserNotifier.class).toInstance(new INewUserNotifier() {
+            @Override
+            public void notify(User user) {
+            }
+            
+        });
+        
         bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
         bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);

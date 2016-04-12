@@ -40,6 +40,7 @@ import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.tokens.user.UserDeleteToken;
 import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
+import ua.com.fielden.platform.security.user.INewUserNotifier;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -58,7 +59,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     private transient final Logger logger = Logger.getLogger(UserDao.class);
     
-    
+    private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
     private final IUserSession coUserSession;
     private final IUserRoleDao userRoleDao;
@@ -69,6 +70,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Inject
     public UserDao(
+            final INewUserNotifier newUserNotifier,
             final SessionIdentifierGenerator crypto,
             final IUserSession coUserSession,
             final IUserRoleDao userRoleDao, 
@@ -76,6 +78,8 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             final IUniversalConstants constants,
             final IFilter filter) {
         super(filter);
+        
+        this.newUserNotifier = newUserNotifier;
 
         this.crypto = crypto;
         this.coUserSession = coUserSession;
@@ -96,7 +100,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // their email address assigned... this should also lead to user activation
         if (!user.isPersisted() && !StringUtils.isEmpty(user.getEmail()) || 
              user.isPersisted() && !StringUtils.isEmpty(user.getEmail()) && user.getProperty("email").isDirty() && StringUtils.isEmpty(findById(user.getId(), fetchAll(User.class)).getPassword())) {
-            // TODO implement initial user activation
+            newUserNotifier.notify(user);
             System.out.println("TODO: User activation is !in order!");
         }
         
