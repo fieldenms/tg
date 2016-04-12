@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.security.provider;
+package ua.com.fielden.platform.security.user;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;

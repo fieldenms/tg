@@ -51,7 +51,6 @@ import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDurati
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
-import ua.com.fielden.platform.security.provider.UserDao;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
@@ -59,6 +58,7 @@ import ua.com.fielden.platform.security.user.INewUserNotifier;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
