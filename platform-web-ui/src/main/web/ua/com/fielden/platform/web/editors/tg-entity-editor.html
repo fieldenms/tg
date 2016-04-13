@@ -78,7 +78,7 @@
             	on-keydown="_onKeydown"
             	disabled$="[[_disabled]]"/>
 	    	<paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
-            <paper-icon-button hidden$="[[searchingOrClosed]]" on-tap="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
+            <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
             <content class=".property-action"></content>
     	</tg-editor>
