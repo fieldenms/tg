@@ -9,6 +9,6 @@ import ua.com.fielden.platform.ui.config.EntityMasterConfig;
  * @author TG Team
  * 
  */
-public interface IEntityMasterConfigController extends IEntityDao<EntityMasterConfig> {
+public interface IEntityMasterConfig extends IEntityDao<EntityMasterConfig> {
 
 }

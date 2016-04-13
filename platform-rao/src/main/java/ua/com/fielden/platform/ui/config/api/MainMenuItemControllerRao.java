@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 public class MainMenuItemControllerRao extends CommonEntityRao<MainMenuItem> implements IMainMenuItemController {
 
     @Inject
-    public MainMenuItemControllerRao(final RestClientUtil restUtil, final IEntityCentreConfigController eccController) {
+    public MainMenuItemControllerRao(final RestClientUtil restUtil, final IEntityCentreConfig eccController) {
         super(restUtil);
     }
 

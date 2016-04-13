@@ -22,9 +22,9 @@ import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 
 /**
  * A test case for main application menu composition, persistence and management.
@@ -34,7 +34,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
  */
 public class MenuAndConfigurationTestCase extends AbstractDaoTestCase {
     private final IUser userDao = getInstance(IUser.class);
-    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenu.class), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IMainMenuItemInvisibilityController.class), getInstance(EntityFactory.class));
+    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenu.class), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfig.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IMainMenuItemInvisibility.class), getInstance(EntityFactory.class));
 
     private User getBaseUser() {
         return userDao.findByKeyAndFetch(fetchAll(User.class), "BUSER");

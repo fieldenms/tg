@@ -24,7 +24,7 @@ import com.nulabinc.zxcvbn.Zxcvbn;
 
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
+import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -41,12 +41,15 @@ import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
 import ua.com.fielden.platform.security.tokens.user.UserDeleteToken;
 import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
-import ua.com.fielden.platform.security.user.INewUserNotifier;
-import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.EntityMasterConfig;
+import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 /**
@@ -64,9 +67,15 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     private final SessionIdentifierGenerator crypto;
     private final IUserSession coUserSession;
     private final IUserRoleDao userRoleDao;
-    private final IUserAndRoleAssociationDao userAssociationDao;
+    private final IUserAndRoleAssociation userAssociationDao;
     private final IUniversalConstants constants;
-
+    
+    private final IUserAndRoleAssociation coUserAndRoleAssocation;
+    private final IMainMenuItemInvisibility coMainMenuItemInvisibility;
+    private final IEntityLocatorConfig coEntityLocatorConfig;
+    private final IEntityMasterConfig coEntityMasterConfig;
+    private final IEntityCentreConfig coEntityCentreConfig;
+    
     private final fetch<User> fetchModel = fetch(User.class).with("roles", fetch(UserAndRoleAssociation.class));
 
     @Inject
@@ -75,8 +84,13 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             final SessionIdentifierGenerator crypto,
             final IUserSession coUserSession,
             final IUserRoleDao userRoleDao, 
-            final IUserAndRoleAssociationDao userAssociationDao,
+            final IUserAndRoleAssociation userAssociationDao,
             final IUniversalConstants constants,
+            final IUserAndRoleAssociation coUserAndRoleAssocation,
+            final IMainMenuItemInvisibility coMainMenuItemInvisibility,
+            final IEntityLocatorConfig coEntityLocatorConfig,
+            final IEntityMasterConfig coEntityMasterConfig,
+            final IEntityCentreConfig coEntityCentreConfig,
             final IFilter filter) {
         super(filter);
         
@@ -89,6 +103,12 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         
         this.userRoleDao = userRoleDao;
         this.userAssociationDao = userAssociationDao;
+        
+        this.coUserAndRoleAssocation = coUserAndRoleAssocation;
+        this.coMainMenuItemInvisibility = coMainMenuItemInvisibility;
+        this.coEntityLocatorConfig = coEntityLocatorConfig;
+        this.coEntityMasterConfig = coEntityMasterConfig;
+        this.coEntityCentreConfig = coEntityCentreConfig;
     }
     
     @Override
@@ -302,7 +322,32 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     @Override
     @SessionRequired
     @Authorise(UserDeleteToken.class)
-    public int batchDelete(Collection<Long> entitiesIds) {
-        return defaultBatchDelete(entitiesIds);
+    public int batchDelete(Collection<Long> userIds) {
+        // first clear and remove all user sessions
+        for (final Long userId: userIds) {
+            final User user = findById(userId, fetchAll(User.class));
+            coUserSession.clearAll(user);
+        }
+        
+        // then let's remove all user related configurations
+        final Long[] ids = userIds.toArray(new Long[]{});
+        
+        final EntityResultQueryModel<UserAndRoleAssociation> qUserRoleAssociations = select(UserAndRoleAssociation.class).where().prop("user.id").in().values(ids).model();
+        this.coUserAndRoleAssocation.batchDelete(qUserRoleAssociations);
+
+        final EntityResultQueryModel<MainMenuItemInvisibility> qMainMenuItemInvisibility = select(MainMenuItemInvisibility.class).where().prop("owner.id").in().values(ids).model();
+        this.coMainMenuItemInvisibility.batchDelete(qMainMenuItemInvisibility);
+        
+        final EntityResultQueryModel<EntityLocatorConfig> qEntityLocatorConfig = select(EntityLocatorConfig.class).where().prop("owner.id").in().values(ids).model();
+        this.coEntityLocatorConfig.batchDelete(qEntityLocatorConfig);
+        
+        final EntityResultQueryModel<EntityMasterConfig> qEntityMasterConfig = select(EntityMasterConfig.class).where().prop("owner.id").in().values(ids).model();
+        this.coEntityMasterConfig.batchDelete(qEntityMasterConfig);
+        
+        final EntityResultQueryModel<EntityCentreConfig> qEntityCentreConfig = select(EntityCentreConfig.class).where().prop("owner.id").in().values(ids).model();
+        this.coEntityCentreConfig.batchDelete(qEntityCentreConfig);
+        
+        // and only now can we delete users
+        return defaultBatchDelete(userIds);
     }
 }

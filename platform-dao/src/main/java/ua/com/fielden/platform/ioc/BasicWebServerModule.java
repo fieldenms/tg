@@ -18,7 +18,7 @@ import ua.com.fielden.platform.dao.EntityAttachmentAssociationDao;
 import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
-import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
+import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
@@ -62,17 +62,17 @@ import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuDao;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
-import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigControllerDao;
-import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigControllerDao;
-import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigControllerDao;
+import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
+import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
+import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityControllerDao;
+import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityDao;
 import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
 
 /**
@@ -162,12 +162,12 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         // configuration related binding
         bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
-        bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerDao.class);
+        bind(IMainMenuItemInvisibility.class).to(MainMenuItemInvisibilityDao.class);
         bind(IMainMenu.class).to(MainMenuDao.class);
         bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
-        bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);
-        bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
-        bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
+        bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);
+        bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
+        bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
         bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
         bind(IGeneratedEntityController.class).to(GeneratedEntityDao.class).in(Scopes.SINGLETON);
@@ -185,7 +185,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
 
-        bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
+        bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
         bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
         bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);

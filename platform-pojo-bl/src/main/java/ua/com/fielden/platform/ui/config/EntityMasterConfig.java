@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 
 /**
  *
@@ -27,7 +27,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity master configuration")
-@CompanionObject(IEntityMasterConfigController.class)
+@CompanionObject(IEntityMasterConfig.class)
 @MapEntityTo("ENTITY_MASTER_CONFIG")
 public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;

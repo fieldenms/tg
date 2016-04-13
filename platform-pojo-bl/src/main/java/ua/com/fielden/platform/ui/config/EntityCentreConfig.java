@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 
 /**
  * A type designed for storing entity centres in a binary format, which can be used for storing configurations in databases, files etc.
@@ -39,7 +39,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Configuration key")
-@CompanionObject(IEntityCentreConfigController.class)
+@CompanionObject(IEntityCentreConfig.class)
 @MapEntityTo("ENTITY_CENTRE_CONFIG")
 public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;

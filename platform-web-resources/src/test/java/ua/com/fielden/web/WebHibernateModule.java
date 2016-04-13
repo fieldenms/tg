@@ -12,7 +12,7 @@ import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.dao.AttachmentDao;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
-import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
+import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
@@ -92,7 +92,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IUserRoleDao.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
-        bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
+        bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
         bind(IUser.class).to(UserDao.class);
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
