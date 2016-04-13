@@ -82,7 +82,7 @@ public class UserRoleWebUiConfig {
      * @return
      */
     private static EntityMaster<UserRole> createMaster(final Injector injector) {
-        final String fmr = "'flex', 'margin-right: 20px'";
+        final String fmr = "'flex'";
 
         final IMaster<UserRole> masterConfigForUserRole = new SimpleMasterBuilder<UserRole>()
                 .forEntity(UserRole.class)
@@ -90,12 +90,13 @@ public class UserRoleWebUiConfig {
                 .also()
                 .addProp("desc").asSinglelineText()
                 .also()
-                .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel changes")
+                .addAction(MasterActions.SAVE).longDesc("Save changes")
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
-                        + format("[[%s], ['flex']],", fmr)
+                        + format("[%s],", fmr)
+                        + format("[%s],", fmr)
                         + format(bottomButtonPanel, actionButton, actionButton)
                         + "    ]"))
                 .done();
