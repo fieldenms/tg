@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
-import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
+import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("USER_ROLE_ASSOCIATION")
-@CompanionObject(IUserAndRoleAssociationDao.class)
+@CompanionObject(IUserAndRoleAssociation.class)
 public class UserAndRoleAssociation extends AbstractEntity<DynamicEntityKey> {
 
     private static final long serialVersionUID = 1L;

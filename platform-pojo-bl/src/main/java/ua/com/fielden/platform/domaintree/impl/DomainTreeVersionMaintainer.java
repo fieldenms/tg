@@ -24,9 +24,9 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -48,11 +48,11 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
 
     // private final ISerialiser serialiser = getSerialiser();
     private final ISerialiser0 serialiser0;
-    private final IEntityLocatorConfigController elcController;
-    private final IEntityCentreConfigController eccController;
-    private final IEntityMasterConfigController emcController;
+    private final IEntityLocatorConfig elcController;
+    private final IEntityCentreConfig eccController;
+    private final IEntityMasterConfig emcController;
 
-    public DomainTreeVersionMaintainer(final ISerialiser serialiser, final ISerialiser0 serialiser0, final IEntityLocatorConfigController entityLocatorConfigController, final IEntityCentreConfigController entityCentreConfigController, final IEntityMasterConfigController entityMasterConfigController) {
+    public DomainTreeVersionMaintainer(final ISerialiser serialiser, final ISerialiser0 serialiser0, final IEntityLocatorConfig entityLocatorConfigController, final IEntityCentreConfig entityCentreConfigController, final IEntityMasterConfig entityMasterConfigController) {
         super(serialiser);
         this.serialiser0 = serialiser0;
 

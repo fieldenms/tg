@@ -25,6 +25,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.UserRole;
 
 /**
@@ -42,6 +43,7 @@ public class SecurityTokenResource extends ServerResource {
 
     private final ISecurityTokenController controller;
     private final IUserRoleDao userRoleDao;
+    private final IUser coUser;
     private final RestServerUtil restUtil;
 
     private final Class<? extends ISecurityToken> token;
@@ -49,7 +51,14 @@ public class SecurityTokenResource extends ServerResource {
     /**
      * Principle constructor.
      */
-    public SecurityTokenResource(final ISecurityTokenController controller, final IUserRoleDao userRoleDao, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public SecurityTokenResource(
+            final ISecurityTokenController controller, 
+            final IUserRoleDao userRoleDao,
+            final IUser coUser,
+            final RestServerUtil restUtil, 
+            final Context context, 
+            final Request request, 
+            final Response response) {
         init(context, request, response);
         setNegotiated(false);
         getVariants().add(new Variant(MediaType.APPLICATION_OCTET_STREAM));
@@ -57,7 +66,8 @@ public class SecurityTokenResource extends ServerResource {
         this.userRoleDao = userRoleDao;
         this.restUtil = restUtil;
         this.username = (String) request.getAttributes().get("username");
-
+        this.coUser = coUser;
+        
         final String tokenName = (String) request.getAttributes().get("token");
         try {
             token = (Class<? extends ISecurityToken>) (StringUtils.isEmpty(tokenName) ? null : Class.forName(tokenName));
@@ -74,7 +84,7 @@ public class SecurityTokenResource extends ServerResource {
     // instead of HEAD
     @Override
     public Representation head() {
-        restUtil.setHeaderEntry(getResponse(), HttpHeaders.AUTHORIZED, controller.canAccess(username, token) ? "true" : "false");
+        restUtil.setHeaderEntry(getResponse(), HttpHeaders.AUTHORIZED, controller.canAccess(coUser.findByKey(username), token) ? "true" : "false");
         return new EmptyRepresentation();
     }
 

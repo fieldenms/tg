@@ -27,7 +27,7 @@ public class UserRoleTokensUpdater extends AbstractFunctionalEntityForCollection
     private static final long serialVersionUID = 1L;
     
     @IsProperty(SecurityTokenInfo.class)
-    @Title(value = "A list of applicable tokens", desc = "A list of applicable tokens")
+    @Title(value = "Security Tokens", desc = "A list of security tokens")
     private Set<SecurityTokenInfo> tokens = new LinkedHashSet<SecurityTokenInfo>();
 
     @Observable

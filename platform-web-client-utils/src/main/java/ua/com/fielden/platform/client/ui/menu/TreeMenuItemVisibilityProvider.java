@@ -3,15 +3,15 @@ package ua.com.fielden.platform.client.ui.menu;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.swing.menu.ITreeMenuItemVisibilityProvider;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 
 public class TreeMenuItemVisibilityProvider implements ITreeMenuItemVisibilityProvider {
 
     private final MainMenuItem menuItem;
     private final User owner;
-    private final IMainMenuItemInvisibilityController mmiController;
+    private final IMainMenuItemInvisibility mmiController;
 
-    public TreeMenuItemVisibilityProvider(final MainMenuItem menuItem, final User owner, final IMainMenuItemInvisibilityController mmiController) {
+    public TreeMenuItemVisibilityProvider(final MainMenuItem menuItem, final User owner, final IMainMenuItemInvisibility mmiController) {
         this.menuItem = menuItem;
         this.owner = owner;
         this.mmiController = mmiController;

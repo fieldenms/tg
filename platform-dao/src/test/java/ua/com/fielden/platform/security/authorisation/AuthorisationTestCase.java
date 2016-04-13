@@ -23,10 +23,10 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-public class AuthorisationTestCase extends AbstractDomainDrivenTestCase {
+public class AuthorisationTestCase extends AbstractDaoTestCase {
     private static final String fuelType = "U";
     private final String permissiveUsername = "TESTUSER";
     private final String restrictiveUsername = "TESTUSERRESTRICTIVE";
@@ -52,7 +52,7 @@ public class AuthorisationTestCase extends AbstractDomainDrivenTestCase {
             ao(TgFuelType.class).delete(ft);
             fail();
         } catch (final Result ex) {
-            assertEquals("Permission denied due to token Delete Fuel Type restriction.", ex.getMessage());
+            assertEquals("Permission denied due to token [Delete Fuel Type] restriction.", ex.getMessage());
         }
 
     }
@@ -66,6 +66,7 @@ public class AuthorisationTestCase extends AbstractDomainDrivenTestCase {
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
         // for testing authorisation we need a user, a role and association between that user and role, and role with designated security token
         // so, create persons that are users at the same time -- one permissive and one restrictive
         final IUser coUser = ao(User.class);

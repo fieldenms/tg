@@ -8,19 +8,19 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.security.provider.UserDao;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigControllerDao;
+import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -30,8 +30,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * @author TG Team
  * 
  */
-public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDomainDrivenTestCase {
-    private final IEntityCentreConfigController daoECC = getInstance(EntityCentreConfigControllerDao.class);
+public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDaoTestCase {
+    private final IEntityCentreConfig daoECC = getInstance(EntityCentreConfigDao.class);
     private final IEntityCentreAnalysisConfig dao = getInstance(EntityCentreAnalysisConfigDao.class);
     private final IMainMenuItemController menuDao = getInstance(MainMenuItemControllerDao.class);
     private final IUser userDao = getInstance(UserDao.class);
@@ -52,6 +52,8 @@ public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDomainDri
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         save(new_(User.class, "USER", "DESC").setBase(true).setPassword("PASSWD"));
         save(new_(MainMenuItem.class, "type", "desc").setOrder(1));
     }

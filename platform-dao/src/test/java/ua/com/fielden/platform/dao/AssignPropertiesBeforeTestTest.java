@@ -19,12 +19,12 @@ import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
-public class AssignPropertiesBeforeTestTest extends AbstractDomainDrivenTestCase {
+public class AssignPropertiesBeforeTestTest extends AbstractDaoTestCase {
     private final String loggedInUser = "LOGGED IN USER";
     private final String otherUser = "OTHER USER";
 
@@ -80,6 +80,8 @@ public class AssignPropertiesBeforeTestTest extends AbstractDomainDrivenTestCase
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2014-11-23 02:47:00"));
 

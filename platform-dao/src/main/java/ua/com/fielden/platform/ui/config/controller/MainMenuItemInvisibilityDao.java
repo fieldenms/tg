@@ -11,25 +11,25 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 
 import com.google.inject.Inject;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 /**
- * DAO implementation of {@link IMainMenuItemInvisibilityController}.
+ * DAO implementation of {@link IMainMenuItemInvisibility}.
  * 
  * @author TG Team
  * 
  */
 @EntityType(MainMenuItemInvisibility.class)
-public class MainMenuItemInvisibilityControllerDao extends CommonEntityDao<MainMenuItemInvisibility> implements IMainMenuItemInvisibilityController {
+public class MainMenuItemInvisibilityDao extends CommonEntityDao<MainMenuItemInvisibility> implements IMainMenuItemInvisibility {
 
     private final EntityFactory factory;
 
     @Inject
-    protected MainMenuItemInvisibilityControllerDao(final IFilter filter, final EntityFactory factory) {
+    protected MainMenuItemInvisibilityDao(final IFilter filter, final EntityFactory factory) {
         super(filter);
         this.factory = factory;
     }
@@ -60,5 +60,11 @@ public class MainMenuItemInvisibilityControllerDao extends CommonEntityDao<MainM
         .prop("menuItem").eq().val(menuItem).model();
 
         delete(model);
+    }
+    
+    @Override
+    @SessionRequired
+    public int batchDelete(EntityResultQueryModel<MainMenuItemInvisibility> model) {
+        return defaultBatchDelete(model);
     }
 }

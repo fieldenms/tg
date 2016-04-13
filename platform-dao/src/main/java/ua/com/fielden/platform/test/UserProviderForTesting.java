@@ -32,4 +32,9 @@ public class UserProviderForTesting implements IUserProvider {
         user.setDesc("test user");
     }
 
+    @Override
+    public void setUser(final User user) {
+        this.user = user;
+    }
+
 }

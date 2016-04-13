@@ -6,7 +6,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
 /**
@@ -41,7 +41,7 @@ public interface ISecurityRoleAssociationDao extends IEntityDao<SecurityRoleAsso
     void removeAssociationsFor(final Class<? extends ISecurityToken> securityToken);
 
     /** Returns a total number of user roles associated with the token. */
-    int countAssociations(String username, final Class<? extends ISecurityToken> securityTokenClass);
+    int countAssociations(final User user, final Class<? extends ISecurityToken> securityTokenClass);
     
     /**
      * Removes the set of {@link SecurityRoleAssociation}s.

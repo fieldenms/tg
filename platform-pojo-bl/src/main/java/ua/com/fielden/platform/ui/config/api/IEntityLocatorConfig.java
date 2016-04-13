@@ -9,6 +9,6 @@ import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
  * @author TG Team
  * 
  */
-public interface IEntityLocatorConfigController extends IEntityDao<EntityLocatorConfig> {
+public interface IEntityLocatorConfig extends IEntityDao<EntityLocatorConfig> {
 
 }

@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.security;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
+
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.user.IUserProvider;
-
-import com.google.inject.Inject;
+import ua.com.fielden.platform.security.user.User;
 
 /**
  * Server authorisation model, which controlls access to methods with annotation {@link Authorise}.
@@ -27,8 +29,9 @@ public class ServerAuthorisationModel extends AbstractAuthorisationModel {
 
     @Override
     public Result authorise(final Class<? extends ISecurityToken> token) {
-        return controller.canAccess(userProvider.getUser().getKey(), token) ? Result.successful("Authorised")
-                : Result.failure(new IllegalStateException(format("Permission denied due to token %s restriction.", token.getAnnotation(KeyTitle.class).value())));
+        return User.system_users.UNIT_TEST_USER.matches(userProvider.getUser()) ||
+               controller.canAccess(userProvider.getUser(), token) ? Result.successful("Authorised")
+                : Result.failure(format("Permission denied due to token [%s] restriction.", token.getAnnotation(KeyTitle.class).value()));
     }
 
 }

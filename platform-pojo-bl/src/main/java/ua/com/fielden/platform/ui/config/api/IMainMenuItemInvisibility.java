@@ -11,7 +11,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
  * @author TG Team
  * 
  */
-public interface IMainMenuItemInvisibilityController extends IEntityDao<MainMenuItemInvisibility> {
+public interface IMainMenuItemInvisibility extends IEntityDao<MainMenuItemInvisibility> {
 
     /**
      * Should make the provided menu item invisible for the specified user.

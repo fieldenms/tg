@@ -36,7 +36,7 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
     public void should_recognize_if_adversary_obtained_authenticator_from_untrusted_device_and_tried_to_change_expiry_date() throws SignatureException {
         // establish a new sessions for user TEST
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUser.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         // first session is from trusted device
@@ -74,7 +74,7 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
     public void should_recognize_if_adversary_obtained_authenticator_from_trusted_device_and_tried_connect_under_a_different_user() throws SignatureException {
         // establish a new sessions for user TEST
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUser.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         // first session is from trusted device

@@ -7,6 +7,8 @@ import java.util.Set;
 
 import org.hibernate.Session;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.IUserRoleDao;
@@ -14,9 +16,8 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
-
-import com.google.inject.Inject;
 
 /**
  * Provides the simplest controller for retrieving data for the {@link SecurityTreeTableModel}. Implemented for testing purpose
@@ -81,12 +82,12 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
     }
 
     @Override
-    public boolean canAccess(final String username, final Class<? extends ISecurityToken> securityTokenClass) {
+    public boolean canAccess(final User user, final Class<? extends ISecurityToken> securityTokenClass) {
         if (securityTokenClass == AlwaysAccessibleToken.class) {
             return true;
         }
 
-        return securityAssociationDao.countAssociations(username, securityTokenClass) > 0;
+        return securityAssociationDao.countAssociations(user, securityTokenClass) > 0;
     }
 
     @Override
