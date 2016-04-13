@@ -38,6 +38,7 @@ import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.IUserSession;
+import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
 import ua.com.fielden.platform.security.tokens.user.UserDeleteToken;
 import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
 import ua.com.fielden.platform.security.user.INewUserNotifier;
@@ -100,12 +101,13 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // their email address assigned... this should also lead to user activation
         if (!user.isPersisted() && !StringUtils.isEmpty(user.getEmail()) || 
              user.isPersisted() && !StringUtils.isEmpty(user.getEmail()) && user.getProperty("email").isDirty() && StringUtils.isEmpty(findById(user.getId(), fetchAll(User.class)).getPassword())) {
-            newUserNotifier.notify(user);
-            System.out.println("TODO: User activation is !in order!");
+            final User savedUser = super.save(user);
+            final Optional<User> opUser = assignPasswordResetUuid(savedUser.getKey());
+            newUserNotifier.notify(opUser.get());
+            return opUser.get();
+        } else {        
+            return super.save(user);
         }
-        
-        
-        return super.save(user);
     }
     
     @Override
@@ -198,6 +200,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     
     @Override
     @SessionRequired
+    @Authorise(AlwaysAccessibleToken.class)
     public User resetPasswd(final User user, final String passwd) {
         try {
             // salt needs to be unique... at least amongst the users
