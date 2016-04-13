@@ -52,6 +52,14 @@ import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule.TestSessionCacheBuilder;
 import ua.com.fielden.platform.test.ioc.TickerForSessionCache;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
+import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
+import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
+import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
+import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityDao;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntityDao;
@@ -101,7 +109,10 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IAttachment.class).to(AttachmentDao.class);
         bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
         bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
-        
+        bind(IMainMenuItemInvisibility.class).to(MainMenuItemInvisibilityDao.class);
+        bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
+        bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
+        bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);
         bind(IUserSession.class).to(UserSessionDao.class);
         bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data in unit tests.");
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
