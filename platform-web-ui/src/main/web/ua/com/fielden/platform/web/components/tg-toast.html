@@ -204,29 +204,26 @@
             },
             
             show: function () {
-                if (this.$.toast && this.$.toast._fitInfo && this.$.toast._fitInfo.positionedBy) {
-                    if (this.$.toast._fitInfo.positionedBy.css === 'static') {
-                        this.$.toast._fitInfo.positionedBy.css = 'fixed';
-                    }
-                    /* if (!this.$.toast._fitInfo.positionedBy.vertically) {
-                        this.$.toast._fitInfo.positionedBy.vertically = 'bottom';
-                    }
-                    if (!this.$.toast._fitInfo.positionedBy.horizontally) {
-                        this.$.toast._fitInfo.positionedBy.horizontally = 'left';
-                    }*/
-                }
-                /* if (this.$.toast && this.$.toast._fitInfo) {
-                    this.$.toast._fitInfo = null;
-                } */
                 // console.debug('toast show(): [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
                 var previousToast = this._getPreviousToast();
                 if (!previousToast) {
+                    Polymer.dom(document.body).appendChild(this.$.toast);
+                    Polymer.dom().flush();
                     this._showNewToast();
                 } else if (previousToast.error === true && previousToast.visible) {
                     console.debug('toast show() discarded: [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
                 } else {
-                    Polymer.dom(document.body).removeChild(previousToast);
-                    this._showNewToast();
+                    // 'dataHost' is used to detemine 'tg-toast' instance from 'previousToast' found on body (parent of 'previousToast' is body, that is why there is a need to use other accessing method).
+                    // WARNING: 'dataHost' is not a public Polymer API.
+                    var previousTgToast = previousToast.dataHost;
+                    
+                    if (previousTgToast !== this) {
+                        previousTgToast.text = this.text;
+                        previousTgToast.msgText = this.msgText;
+                        previousTgToast.showProgress = this.showProgress;
+                        previousTgToast.hasMore = this.hasMore;
+                    }
+                    previousTgToast._showNewToast();
                 }
             },
             
@@ -236,52 +233,25 @@
                 this._showProgress = this.showProgress;
                 this._hasMore = this.hasMore;
                 
+                var oldDuration = this.$.toast.duration;
                 if (this._showProgress && !this._hasMore) {
                     this.$.toast.duration = 3600000; //1 hour
                 } else {
                     this.$.toast.duration = 3000; //3 seconds
                 }
-                // this.$.toast.style['z-index'] = 993;
-                // this.$.toast.updateStyles();
+                // due to the fact, that current version of paper-toast does not react to 'duration' changes (reaction is performed only on _openedChanged), there is a need to react manually:
+                if (this.$.toast.duration !== oldDuration) { // if duration changed
+                    if (this.$.toast._autoClose !== null) {
+                        this.$.toast.cancelAsync(this.$.toast._autoClose);
+                        this.$.toast._autoClose = null;
+                    }
+                    this.$.toast._autoClose = this.$.toast.async(this.$.toast.close, this.$.toast.duration);
+                }
                 
-                // var clonedToast = this.$.toast.cloneNode(true);
-                // console.debug('cloned toast', clonedToast);
                 this.$.toast.error = this._hasMore;
-                Polymer.dom(document.body).appendChild(this.$.toast);
-                Polymer.dom().flush();
                 this.$.toast.show();
-                
-                /* if (this.$.toast && this.$.toast._fitInfo && this.$.toast._fitInfo.positionedBy) {
-	                if (this.$.toast._fitInfo.positionedBy.css === 'static') {
-	                    this.$.toast._fitInfo.positionedBy.css = 'fixed';
-	                }
-	                if (!this.$.toast._fitInfo.positionedBy.vertically) {
-	                    this.$.toast._fitInfo.positionedBy.vertically = 'bottom';
-	                }
-	                if (!this.$.toast._fitInfo.positionedBy.horizontally) {
-	                    this.$.toast._fitInfo.positionedBy.horizontally = 'left';
-	                }
-                } */
-                
-                // this.$.toast.style.bottom = '54px'; // null; 
-                // this.$.toast.updateStyles();
                 // console.debug('toast show() ended : [', this._text + ':' + this._msgText, '] hasMore = ', this._hasMore);
-            }/* , 
-            
-            ready: function () {
-                this.$.toast._discoverInfo();
-                if (this.$.toast && this.$.toast._fitInfo && this.$.toast._fitInfo.positionedBy) {
-	                if (this.$.toast._fitInfo.positionedBy.css === 'static') {
-	                    this.$.toast._fitInfo.positionedBy.css = 'fixed';
-	                }
-	                if (!this.$.toast._fitInfo.positionedBy.vertically) {
-	                    this.$.toast._fitInfo.positionedBy.vertically = 'bottom';
-	                }
-	                if (!this.$.toast._fitInfo.positionedBy.horizontally) {
-	                    this.$.toast._fitInfo.positionedBy.horizontally = 'left';
-	                }
-                } 
-            } */
+            }
         })
     })();
 </script>
