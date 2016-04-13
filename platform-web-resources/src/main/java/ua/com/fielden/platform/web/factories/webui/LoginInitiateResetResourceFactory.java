@@ -6,10 +6,11 @@ import org.restlet.Restlet;
 import org.restlet.data.Method;
 
 import com.google.inject.Injector;
+import com.google.inject.Key;
 
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.annotations.AppUri;
 import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
 
 /**
@@ -33,7 +34,7 @@ public class LoginInitiateResetResourceFactory extends Restlet {
         if (Method.GET.equals(request.getMethod()) || Method.POST.equals(request.getMethod())) {
 
             new LoginInitiateResetResource(
-                    injector.getInstance(IWebUiConfig.class),
+                    injector.getInstance(Key.get(String.class, AppUri.class)),
                     injector.getInstance(IUniversalConstants.class),
                     injector.getInstance(IUser.class),
                     getContext(),

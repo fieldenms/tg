@@ -26,7 +26,7 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.annotations.AppUri;
 
 /**
  * A web resource to initiate user login recovery procedure.
@@ -43,7 +43,7 @@ public class LoginInitiateResetResource extends ServerResource {
 
     private final Logger logger = Logger.getLogger(LoginInitiateResetResource.class);
 
-    private final IWebUiConfig webConfig;
+    private final String appUri;
     private final IUser coUser;
     private final IUniversalConstants constants;
 
@@ -51,14 +51,14 @@ public class LoginInitiateResetResource extends ServerResource {
      * Creates {@link LoginInitiateResetResource}.
      */
     public LoginInitiateResetResource(//
-            final IWebUiConfig webConfig,
+            final @AppUri String appUri,
             final IUniversalConstants constants,
             final IUser coUser,
             final Context context, //
             final Request request, //
             final Response response) {
         init(context, request, response);
-        this.webConfig = webConfig;
+        this.appUri = appUri;
         this.constants = constants;
         this.coUser = coUser;
     }
@@ -96,8 +96,7 @@ public class LoginInitiateResetResource extends ServerResource {
                     getResponse().setEntity(new JsonRepresentation(format("{\"msg\": \"%s\"}", missingEmailError)));
                     getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
                 } else {
-                    final String baseUri = format("https://%s:%s%s", webConfig.getDomainName(), webConfig.getPort(), webConfig.getPath());
-                    final String emailBody = makePasswordRestEmail(constants.appName(), baseUri, user);
+                    final String emailBody = makePasswordRestEmail(constants.appName(), appUri, user);
                     final SmtpEmailSender sender = new SmtpEmailSender(constants.smptServer());
                     sender.sendPlainMessage(constants.fromEmailAddress(), 
                                             user.getEmail(), 
@@ -117,12 +116,12 @@ public class LoginInitiateResetResource extends ServerResource {
         }
     }
 
-    private String makePasswordRestEmail(final String appName, final String baseUri, final User user) {
+    private String makePasswordRestEmail(final String appName, final String appUri, final User user) {
         final StringBuilder builder = new StringBuilder();
         builder.append(format("We heard that you lost your %s password. Sorry about that!\n\n", appName));
         builder.append("But don’t worry! You can use the following link within the next day to reset your password:\n\n");
-        builder.append(format("%sreset_password/%s\n\n", baseUri, user.getResetUuid()));
-        builder.append(format("If you don’t use this link within 24 hours, it will expire. To get a new password reset link, visit %sforgotten\n\n", baseUri));
+        builder.append(format("%sreset_password/%s\n\n", appUri, user.getResetUuid()));
+        builder.append(format("If you don’t use this link within 24 hours, it will expire. To get a new password reset link, visit %sforgotten\n\n", appUri));
         builder.append("Thanks,\n");
         builder.append("Your support team");
 
