@@ -13,6 +13,8 @@ import org.restlet.data.Method;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.rao.RestClientUtil;
@@ -20,10 +22,9 @@ import ua.com.fielden.platform.rao.WebResourceType;
 import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Inject;
 
 /**
  * A REST implementation of {@link ISecurityTokenController} contract.
@@ -31,6 +32,7 @@ import com.google.inject.Inject;
  * @author TG Team
  * 
  */
+@Deprecated
 public class SecurityTokenControllerRao implements ISecurityTokenController {
 
     private final RestClientUtil restUtil;
@@ -102,9 +104,9 @@ public class SecurityTokenControllerRao implements ISecurityTokenController {
     }
 
     @Override
-    public boolean canAccess(final String username, final Class<? extends ISecurityToken> token) {
-        if (StringUtils.isEmpty(restUtil.getUsername()) || !restUtil.getUsername().equals(username)) {
-            throw new IllegalArgumentException("The passed in used " + username + " does not match application user " + restUtil.getUsername() + ".");
+    public boolean canAccess(final User user, final Class<? extends ISecurityToken> token) {
+        if (StringUtils.isEmpty(restUtil.getUsername()) || !restUtil.getUsername().equals(user.getKey())) {
+            throw new IllegalArgumentException("The passed in used " + user.getKey() + " does not match application user " + restUtil.getUsername() + ".");
         }
         if (token == AlwaysAccessibleToken.class) {
             return true;

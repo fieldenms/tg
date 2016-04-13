@@ -30,4 +30,9 @@ public class ThreadLocalUserProvider implements IUserProvider {
         this.users.set(user);
     }
 
+    @Override
+    public void setUser(final User user) {
+        this.users.set(user);
+    }
+
 }

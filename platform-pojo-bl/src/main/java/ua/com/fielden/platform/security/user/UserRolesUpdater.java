@@ -29,7 +29,7 @@ public class UserRolesUpdater extends AbstractFunctionalEntityForCollectionModif
     private static final long serialVersionUID = 1L;
     
     @IsProperty(UserRole.class)
-    @Title(value = "A list of applicable roles", desc = "A list of applicable roles")
+    @Title(value = "User Roles", desc = "A list of user roles roles")
     private Set<UserRole> roles = new LinkedHashSet<UserRole>();
 
     @Observable

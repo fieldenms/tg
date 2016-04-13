@@ -44,11 +44,11 @@ import ua.com.fielden.platform.ui.config.MainMenuRao;
 import ua.com.fielden.platform.ui.config.api.EntityCentreConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityLocatorConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityMasterConfigControllerRao;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.MainMenuItemControllerRao;
 import ua.com.fielden.platform.ui.config.api.MainMenuItemInvisibilityControllerRao;
 import ua.com.fielden.platform.update.IReferenceDependancyController;
@@ -128,11 +128,11 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
         ////////////////////////////////////////////////////////////////////////
         bind(IMainMenuItemController.class).to(MainMenuItemControllerRao.class).in(Scopes.SINGLETON);
         bind(IMainMenu.class).to(MainMenuRao.class).in(Scopes.SINGLETON);
-        bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerRao.class).in(Scopes.SINGLETON);
-        bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
-        bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
+        bind(IEntityMasterConfig.class).to(EntityMasterConfigControllerRao.class).in(Scopes.SINGLETON);
+        bind(IEntityLocatorConfig.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
+        bind(IEntityCentreConfig.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigRao.class).in(Scopes.SINGLETON);
-        bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
+        bind(IMainMenuItemInvisibility.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
         //////////////////////////////////////////////////////////////////////////////
         bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
     }

@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 
 /**
  * This type controls visibility of the main menu items to users based on the specified base user, who is the <code>owner</code> of a {@link MainMenuItemInvisibility} instance. <br>
@@ -26,7 +26,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
  *
  */
 @KeyType(DynamicEntityKey.class)
-@CompanionObject(IMainMenuItemInvisibilityController.class)
+@CompanionObject(IMainMenuItemInvisibility.class)
 @MapEntityTo("MAIN_MENU_INVISIBLE")
 public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
 /**
@@ -47,5 +48,5 @@ public interface ISecurityTokenController {
     List<UserRole> findUserRoles();
 
     /** Checks whether the passed in user and token are associated, indicating ability for the user to access annotated with this token methods. */
-    boolean canAccess(final String username, final Class<? extends ISecurityToken> securityTokenClass);
+    boolean canAccess(final User user, final Class<? extends ISecurityToken> securityTokenClass);
 }

@@ -46,9 +46,9 @@ import ua.com.fielden.platform.swing.view.BaseFrame;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuItemMixin;
 import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
@@ -367,9 +367,9 @@ public class WebClientStartupUtility {
         final IApplicationSettings settings = injector.getInstance(IApplicationSettings.class);
         final IMainMenu mmController = injector.getInstance(IMainMenu.class);
         final IMainMenuItemController mmiController = injector.getInstance(IMainMenuItemController.class);
-        final IEntityCentreConfigController eccController = injector.getInstance(IEntityCentreConfigController.class);
+        final IEntityCentreConfig eccController = injector.getInstance(IEntityCentreConfig.class);
         final IEntityCentreAnalysisConfig ecacController = injector.getInstance(IEntityCentreAnalysisConfig.class);
-        final IMainMenuItemInvisibilityController mmiiController = injector.getInstance(IMainMenuItemInvisibilityController.class);
+        final IMainMenuItemInvisibility mmiiController = injector.getInstance(IMainMenuItemInvisibility.class);
         final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
         if (Workflows.development.equals(Workflows.valueOf(settings.workflow()))) {

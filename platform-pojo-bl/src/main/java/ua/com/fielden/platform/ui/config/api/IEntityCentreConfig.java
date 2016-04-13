@@ -9,5 +9,5 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
  * @author TG Team
  * 
  */
-public interface IEntityCentreConfigController extends IEntityDao<EntityCentreConfig> {
+public interface IEntityCentreConfig extends IEntityDao<EntityCentreConfig> {
 }

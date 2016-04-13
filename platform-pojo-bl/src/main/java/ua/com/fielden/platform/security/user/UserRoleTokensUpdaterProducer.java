@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
@@ -51,15 +52,7 @@ public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityProdu
         entity.setTokens(linearisedTokens);
         entity.getProperty("tokens").resetState();
         
-        final Set<String> chosenRoleIds = new LinkedHashSet<>();
-        final List<SecurityRoleAssociation> associations = associationCompanion.getAllEntities(
-                from(select(SecurityRoleAssociation.class).where().prop("role").eq().val(masterEntity).model())
-                .with(fetchAll(SecurityRoleAssociation.class)).model()
-        );
-        
-        for (final SecurityRoleAssociation association: associations) {
-            chosenRoleIds.add(association.getSecurityToken().getName());
-        }
+        final Set<String> chosenRoleIds = new LinkedHashSet<>(masterEntity.getTokens().stream().map(item -> item.getSecurityToken().getName()).collect(Collectors.toList()));
         entity.setChosenIds(chosenRoleIds);
         return entity;
     }
@@ -92,6 +85,6 @@ public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityProdu
 
     @Override
     protected fetch<UserRole> fetchModelForMasterEntity() {
-        return coUserRole.getFetchProvider().fetchModel();
+        return coUserRole.getFetchProvider().with("tokens").fetchModel();
     }
 }

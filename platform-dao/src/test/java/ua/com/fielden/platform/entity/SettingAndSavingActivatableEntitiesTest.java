@@ -25,11 +25,10 @@ import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrivenTestCase {
-
+public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase {
 
     @Test
     public void active_entity_with_active_references_should_not_be_allowed_to_become_inactive() {
@@ -212,6 +211,7 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDomainDrive
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
         // set up logged in person, which is needed for TgSubSystem
         final String loggedInUser = "LOGGED IN USER";
         final IUser coUser = ao(User.class);

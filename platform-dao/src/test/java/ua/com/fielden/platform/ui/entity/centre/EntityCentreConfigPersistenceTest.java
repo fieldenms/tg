@@ -6,16 +6,16 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.security.provider.UserDao;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigControllerDao;
+import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
  *
  */
 public class EntityCentreConfigPersistenceTest extends AbstractDomainDrivenTestCase {
-    private final IEntityCentreConfigController dao = getInstance(EntityCentreConfigControllerDao.class);
+    private final IEntityCentreConfig dao = getInstance(EntityCentreConfigDao.class);
     private final IMainMenuItemController menuDao = getInstance(MainMenuItemControllerDao.class);
     private final IUser userDao = getInstance(UserDao.class);
 
