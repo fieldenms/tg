@@ -201,4 +201,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // TODO is this binding really needed for the server side???
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
     }
+
+    public Properties getProps() {
+        return props;
+    }
 }
