@@ -52,7 +52,7 @@
 	            --paper-spinner-layer-4-color: var(--paper-blue-500);
 	        }    	
     	</style>
-        <paper-toast id="toast" class="paper-toast" text="[[_text]]"> <!-- always-on-top TODO responsive-width="250px" -->
+        <paper-toast id="toast" class="paper-toast" text="[[_text]]" always-on-top> <!-- TODO responsive-width="250px" -->
             <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
             <div hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">MORE</div>
         </paper-toast>
