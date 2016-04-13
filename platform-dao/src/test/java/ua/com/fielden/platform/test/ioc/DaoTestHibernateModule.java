@@ -14,11 +14,12 @@ import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
-import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
+import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
@@ -41,6 +42,8 @@ import ua.com.fielden.platform.sample.domain.TgVehicleDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleMakeDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleModelDao;
 import ua.com.fielden.platform.sample.domain.TgWorkorderDao;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -48,12 +51,14 @@ import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDurati
 import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserAndRoleAssociationDao;
 import ua.com.fielden.platform.security.dao.UserRoleDao;
-import ua.com.fielden.platform.security.provider.UserDao;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
+import ua.com.fielden.platform.security.user.INewUserNotifier;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
@@ -73,17 +78,17 @@ import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuDao;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
-import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigControllerDao;
-import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigControllerDao;
-import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigControllerDao;
+import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
+import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
+import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityControllerDao;
+import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityDao;
 import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
@@ -119,22 +124,28 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         //	bind(IAdviceDao.class).to(AdviceDao.class);
         //	bind(IRotableClassDao.class).to(RotableClassDao.class);
         bind(IUserRoleDao.class).to(UserRoleDao.class);
-        bind(IUserAndRoleAssociationDao.class).to(UserAndRoleAssociationDao.class);
+        bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
 
         bind(IUser.class).to(UserDao.class);
         // bind IUserProvider
         bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
-
-        bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerDao.class);
+        bind(INewUserNotifier.class).toInstance(new INewUserNotifier() {
+            @Override
+            public void notify(User user) {
+            }
+            
+        });
+        
+        bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
-        bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerDao.class);
-        bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerDao.class);
+        bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);
+        bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
         bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
         bind(IMainMenu.class).to(MainMenuDao.class);
         bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
 
-        bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerDao.class);
+        bind(IMainMenuItemInvisibility.class).to(MainMenuItemInvisibilityDao.class);
 
         bind(ITgTimesheet.class).to(TgTimesheetDao.class);
         bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
@@ -169,6 +180,28 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
 
+        bind(IAuthorisationModel.class).toInstance(new IAuthorisationModel() {
+            @Override
+            public Result authorise(final Class<? extends ISecurityToken> token) {
+                return Result.successful("always permitted");
+            }
+
+            @Override
+            public void start() {
+                
+            }
+
+            @Override
+            public void stop() {
+                
+            }
+
+            @Override
+            public boolean isStarted() {
+                return false;
+            }
+            
+        });
     }
     
     

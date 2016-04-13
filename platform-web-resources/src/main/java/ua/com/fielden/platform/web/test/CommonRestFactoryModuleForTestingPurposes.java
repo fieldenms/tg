@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.test;
 
+import com.google.inject.Scopes;
+
 import ua.com.fielden.platform.ioc.CommonRestFactoryModule;
 import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
@@ -7,8 +9,6 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
-
-import com.google.inject.Scopes;
 
 /**
  * Module for REST test clients.

@@ -25,7 +25,7 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntityForGlobalDomainTre
 import ua.com.fielden.platform.domaintree.testing.MiMasterEntityForGlobalDomainTree;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -185,7 +185,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         baseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
 
         final QueryExecutionModel<EntityCentreConfig, EntityResultQueryModel<EntityCentreConfig>> model = from(GlobalDomainTreeManager.modelForCurrentAndBaseUsers(MENU_ITEM_TYPE.getName(), GlobalDomainTreeManager.title(MENU_ITEM_TYPE, null), baseMgr.getUserProvider().getUser())).with(fetchOnly(EntityCentreConfig.class).with("principal")).model();
-        final EntityCentreConfig centre = getInstance(IEntityCentreConfigController.class).getEntity(model);
+        final EntityCentreConfig centre = getInstance(IEntityCentreConfig.class).getEntity(model);
         assertNull("Initialised entity centre should not be saved (for base user).", centre);
     }
 
@@ -195,7 +195,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
 
         final QueryExecutionModel<EntityCentreConfig, EntityResultQueryModel<EntityCentreConfig>> model = from(GlobalDomainTreeManager.modelForCurrentAndBaseUsers(MENU_ITEM_TYPE.getName(), GlobalDomainTreeManager.title(MENU_ITEM_TYPE, null), nonBaseMgr.getUserProvider().getUser())).with(fetchOnly(EntityCentreConfig.class).with("principal")).model();
-        final EntityCentreConfig centre = getInstance(IEntityCentreConfigController.class).getEntity(model);
+        final EntityCentreConfig centre = getInstance(IEntityCentreConfig.class).getEntity(model);
         assertNull("Initialised entity centre should not be saved (for non-base user).", centre);
     }
 
@@ -208,7 +208,7 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         baseMgr.saveEntityCentreManager(MENU_ITEM_TYPE, null);
 
         final QueryExecutionModel<EntityCentreConfig, EntityResultQueryModel<EntityCentreConfig>> model = from(GlobalDomainTreeManager.modelForCurrentAndBaseUsers(MENU_ITEM_TYPE.getName(), GlobalDomainTreeManager.title(MENU_ITEM_TYPE, null), baseMgr.getUserProvider().getUser())).with(fetchOnly(EntityCentreConfig.class).with("principal")).model();
-        final EntityCentreConfig centre = getInstance(IEntityCentreConfigController.class).getEntity(model);
+        final EntityCentreConfig centre = getInstance(IEntityCentreConfig.class).getEntity(model);
         assertNotNull("Initialised entity centre should not be saved (for base user).", centre);
         assertTrue("Initialised entity centre should not be saved (for base user).", centre.isPrincipal());
     }

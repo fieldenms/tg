@@ -10,4 +10,6 @@ public interface IUserProvider {
     User getUser();
 
     void setUsername(final String username, final IUser coUser);
+    
+    void setUser(final User user);
 }

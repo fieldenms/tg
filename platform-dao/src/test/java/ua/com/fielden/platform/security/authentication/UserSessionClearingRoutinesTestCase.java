@@ -39,7 +39,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
     @Test
     public void only_expired_user_session_should_have_been_removed() throws SignatureException {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUser.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
         // let's try to clear all expired sessions and check if they're indeed cleared
         constants.setNow(dateTime("2015-04-24 07:31:00"));
@@ -58,7 +58,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
     @Test
     public void all_user_sessions_should_have_been_removed() throws SignatureException {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUser.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         coSession.clearAll(currUser);
@@ -70,7 +70,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
     @Test
     public void all_user_untrusted_sessions_should_have_been_removed() throws SignatureException {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUser.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         constants.setNow(dateTime("2015-04-24 07:31:00"));

@@ -630,4 +630,9 @@ public final class RestClientUtil implements IUserProvider {
         setUsername(username);
     }
 
+    @Override
+    public void setUser(final User user) {
+        setUsername(user.getKey());
+    }
+
 }

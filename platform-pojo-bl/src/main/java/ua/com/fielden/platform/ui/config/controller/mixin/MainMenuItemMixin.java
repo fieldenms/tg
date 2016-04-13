@@ -23,9 +23,9 @@ import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.ui.config.MainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 
 import com.google.inject.Inject;
@@ -39,15 +39,15 @@ import com.google.inject.Inject;
 public final class MainMenuItemMixin {
     private final IMainMenu mmController;
     private final IMainMenuItemController mmiController;
-    private final IEntityCentreConfigController eccController;
+    private final IEntityCentreConfig eccController;
     private final IEntityCentreAnalysisConfig ecacController;
-    private final IMainMenuItemInvisibilityController mmiiController;
+    private final IMainMenuItemInvisibility mmiiController;
     private final EntityFactory factory;
     private User user; // should be set upon user successful login.
     private final Logger logger = Logger.getLogger(getClass());
 
     @Inject
-    public MainMenuItemMixin(final IMainMenu mmController, final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController, final IEntityCentreAnalysisConfig ecacController, final IMainMenuItemInvisibilityController mmiiController, final EntityFactory factory) {
+    public MainMenuItemMixin(final IMainMenu mmController, final IMainMenuItemController mmiController, final IEntityCentreConfig eccController, final IEntityCentreAnalysisConfig ecacController, final IMainMenuItemInvisibility mmiiController, final EntityFactory factory) {
         this.mmController = mmController;
         this.mmiController = mmiController;
         this.eccController = eccController;

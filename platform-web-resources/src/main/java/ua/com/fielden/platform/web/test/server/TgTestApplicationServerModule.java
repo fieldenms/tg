@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static java.lang.String.format;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -23,10 +25,13 @@ import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
+import ua.com.fielden.platform.security.user.INewUserNotifier;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.NewUserNotifierByEmail;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.annotations.AppUri;
 
 /**
  * Guice injector module for TG Testing Server.
@@ -108,6 +113,9 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
         bindConstant().annotatedWith(UntrustedDeviceSessionDuration.class).to(2); // five minutes
         bind(new TypeLiteral<Cache<String, UserSession>>() {
         }).annotatedWith(SessionCache.class).toProvider(SessionCacheBuilder.class).in(Scopes.SINGLETON);
+        
+        bindConstant().annotatedWith(AppUri.class).to(format("https://%s:%s%s", getProps().get("web.domain"), getProps().get("port"), getProps().get("web.path")));
+        bind(INewUserNotifier.class).to(NewUserNotifierByEmail.class);
     }
 
     private static class SessionCacheBuilder implements Provider<Cache<String, UserSession>> {

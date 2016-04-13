@@ -13,16 +13,16 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 
 /**
@@ -32,9 +32,9 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
  * @author TG Team
  * 
  */
-public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainDrivenTestCase {
+public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDaoTestCase {
     private final IUser userDao = getInstance(IUser.class);
-    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenu.class), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IMainMenuItemInvisibilityController.class), getInstance(EntityFactory.class));
+    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenu.class), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfig.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IMainMenuItemInvisibility.class), getInstance(EntityFactory.class));
     private final EntityFactory factory = getInstance(EntityFactory.class);
 
     private User getBaseUser() {
@@ -876,6 +876,8 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         final User baseUser = save(new_(User.class, "BUSER").setBase(true)); // base user
         final User baseUserOther = save(new_(User.class, "BUSEROTHER").setBase(true)); // base user
         save(new_(User.class, "DUSER").setBase(false).setBasedOnUser(baseUser)); // descendant user

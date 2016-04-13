@@ -36,6 +36,11 @@ public class TgTestAppAuthenticationModel implements IAuthenticationModel {
     public Result authenticate(final String username, final String password) {
         try {
             final Result result = Result.failure("The presented login credentials are not recognized.");
+            // check attempts to login in with UNIT_TEST_USER and fail those
+            if (User.system_users.UNIT_TEST_USER.matches(username)) {
+                return result;
+            }
+            
             final User user = coUser.findByKeyAndFetch(fetchAll(User.class), username);
             if (user != null) {
                 final String hashPasswd = coUser.hashPasswd(password, user.getSalt());

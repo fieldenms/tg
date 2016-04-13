@@ -94,7 +94,9 @@ import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.session.UserSession;
+import ua.com.fielden.platform.security.user.INewUserNotifier;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -137,7 +139,12 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
-        // bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
+        bind(INewUserNotifier.class).toInstance(new INewUserNotifier() {
+            @Override
+            public void notify(User user) {
+            }
+            
+        });
 
         // bind DAO
         //	bind(IWheelsetDao.class).to(WheelsetDao.class);

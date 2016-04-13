@@ -12,6 +12,9 @@ import java.util.TreeSet;
 
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.tokens.user.UserDeleteToken;
+import ua.com.fielden.platform.security.tokens.user.UserReviewToken;
+import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
 
 /**
  * Searches for all available security tokens in the application based on the provided path and package name. The result is presented as as a tree-like structure containing all
@@ -36,8 +39,11 @@ public class SecurityTokenProvider {
      *            -- a package name containing security tokens (sub-packages are traversed automatically).
      * @throws Exception
      */
-    public SecurityTokenProvider(final String path, final String packageName) throws Exception {
+    public SecurityTokenProvider(final String path, final String packageName) {
         final List<Class<?>> allTokens = ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class);
+        allTokens.add(UserReviewToken.class);
+        allTokens.add(UserSaveToken.class);
+        allTokens.add(UserDeleteToken.class);
         topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
     }
 

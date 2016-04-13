@@ -17,7 +17,6 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
@@ -44,11 +43,11 @@ import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
-public class EntityProxyLoadingTest extends AbstractDomainDrivenTestCase {
+public class EntityProxyLoadingTest extends AbstractDaoTestCase {
 
     private final ITgBogie coBogie = getInstance(ITgBogie.class);
     private final ITgVehicle coVehicle = getInstance(ITgVehicle.class);
@@ -224,6 +223,8 @@ public class EntityProxyLoadingTest extends AbstractDomainDrivenTestCase {
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
         final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
 

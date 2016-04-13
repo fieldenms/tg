@@ -44,9 +44,9 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -63,9 +63,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final IUserProvider userProvider;
     private final IGlobalDomainTreeRepresentation gdtr;
     private final IMainMenuItemController mainMenuItemController;
-    private final IEntityCentreConfigController entityCentreConfigController;
+    private final IEntityCentreConfig entityCentreConfigController;
     private final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController;
-    private final IEntityMasterConfigController entityMasterConfigController;
+    private final IEntityMasterConfig entityMasterConfigController;
     private final DomainTreeVersionMaintainer versionMaintainer;
 
     private final EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> persistentCentres;
@@ -79,7 +79,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private Map<Class<?>, Map<String, List<String>>> initialCacheOfNonPrincipleItems = null;
 
     @Inject
-    public GlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfigController entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {
+    public GlobalDomainTreeManager(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IMainMenuItemController mainMenuItemController, final IEntityCentreConfig entityCentreConfigController, final IEntityCentreAnalysisConfig entityCentreAnalysisConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController) {
         super(serialiser);
         this.factory = factory;
         this.userProvider = userProvider;

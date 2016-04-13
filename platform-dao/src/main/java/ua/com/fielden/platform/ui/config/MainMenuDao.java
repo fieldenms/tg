@@ -26,11 +26,11 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -45,18 +45,18 @@ import com.google.inject.Inject;
 @EntityType(MainMenu.class)
 public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu {
     private final IMainMenuItemController mmiController;
-    private final IEntityCentreConfigController eccController;
-    private final IEntityLocatorConfigController elcController;
-    private final IEntityMasterConfigController emcController;
+    private final IEntityCentreConfig eccController;
+    private final IEntityLocatorConfig elcController;
+    private final IEntityMasterConfig emcController;
     private final IEntityCentreAnalysisConfig ecacController;
-    private final IMainMenuItemInvisibilityController mmiiController;
+    private final IMainMenuItemInvisibility mmiiController;
     private final EntityFactory factory;
     private final Logger logger = Logger.getLogger(getClass());
 
     private final DomainTreeVersionMaintainer versionMaintainer;
 
     @Inject
-    public MainMenuDao(final IFilter filter, final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController, final IEntityLocatorConfigController elcController, final IEntityMasterConfigController emcController, final IEntityCentreAnalysisConfig ecacController, final IMainMenuItemInvisibilityController mmiiController, final EntityFactory factory, final ISerialiser serialiser, final ISerialiser0 serialiser0) {
+    public MainMenuDao(final IFilter filter, final IMainMenuItemController mmiController, final IEntityCentreConfig eccController, final IEntityLocatorConfig elcController, final IEntityMasterConfig emcController, final IEntityCentreAnalysisConfig ecacController, final IMainMenuItemInvisibility mmiiController, final EntityFactory factory, final ISerialiser serialiser, final ISerialiser0 serialiser0) {
         super(filter);
         this.mmiController = mmiController;
         this.eccController = eccController;

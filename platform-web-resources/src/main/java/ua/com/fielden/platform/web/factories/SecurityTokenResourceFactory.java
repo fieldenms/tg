@@ -41,12 +41,13 @@ public class SecurityTokenResourceFactory extends Restlet {
 
         final ISecurityTokenController controller = injector.getInstance(ISecurityTokenController.class);
         final IUserRoleDao userRoleDao = injector.getInstance(IUserRoleDao.class);
+        final IUser coUser = injector.getInstance(IUser.class);
 
         final String username = (String) request.getAttributes().get("username");
         injector.getInstance(IUserProvider.class).setUsername(username, injector.getInstance(IUser.class));
 
         if (Method.GET.equals(request.getMethod()) || Method.POST.equals(request.getMethod()) || Method.HEAD.equals(request.getMethod())) {
-            new SecurityTokenResource(controller, userRoleDao, restUtil, getContext(), request, response).handle();
+            new SecurityTokenResource(controller, userRoleDao, coUser, restUtil, getContext(), request, response).handle();
         }
     }
 }

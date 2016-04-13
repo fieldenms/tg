@@ -226,10 +226,6 @@ public class UserTestCase extends AbstractDaoTestCase {
         // add users with email
         coUser.save(new_(User.class, "USER3").setBase(true).setEmail("user3@company.com"));
         coUser.save(new_(User.class, "USER4").setBase(true).setEmail("user4@company.com"));
-        
-        // ensure that TEST is the current user
-        final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUser.class));
     }
 
 }
