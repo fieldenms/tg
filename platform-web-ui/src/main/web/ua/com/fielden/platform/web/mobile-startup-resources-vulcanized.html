@@ -12778,6 +12778,7 @@ is separate from validation, and `allowed-pattern` does not affect how the input
       'keypress': '_onKeypress'
     },
 
+    /** @suppress {checkTypes} */
     registered: function() {
       // Feature detect whether we need to patch dispatchEvent (i.e. on FF and IE).
       if (!this._canDispatchEventOnDisabled()) {
@@ -17902,6 +17903,18 @@ focus as well by setting its tabindex to -1.
       <paper-item raised>Polymer Project</paper-item>
     </a>
 
+If you are concerned about performance and want to use `paper-item` in a `paper-listbox`
+with many items, you can just use a native `button` with the `paper-item` class
+applied (provided you have correctly included the shared styles):
+
+    <style is="custom-style" include="paper-item-shared-styles"></style>
+
+    <paper-listbox>
+      <button class="paper-item" role="option">Inbox</button>
+      <button class="paper-item" role="option">Starred</button>
+      <button class="paper-item" role="option">Sent mail</button>
+    </paper-listbox>
+
 ### Styling
 
 The following custom properties and mixins are available for styling:
@@ -19821,6 +19834,13 @@ In order to apply the `Roboto` font to this element, make sure you've imported `
             overflow: hidden;
             text-overflow: ellipsis;
         }
+	    .toast-dialog paper-button {
+	        color: var(--paper-light-blue-500);
+	        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+	    }
+	    .toast-dialog paper-button:hover {
+	        background: var(--paper-light-blue-50);
+	    }
     </style>
 
 <script>
@@ -28320,40 +28340,51 @@ Example:
 })();
 
 </script>
+<llink rel="import" href="/resources/polymer/paper-styles/typography.html">
+
 <dom-module id="paper-item-shared-styles" assetpath="/resources/polymer/paper-item/">
   <template>
     <style>
-      :host {
+      :host, .paper-item {
         display: block;
         position: relative;
         min-height: var(--paper-item-min-height, 48px);
         padding: 0px 16px;
       }
 
-      :host([hidden]) {
+      .paper-item {
+        @apply(--paper-font-subhead);
+        border:none;
+        outline: none;
+        background: white;
+        width: 100%;
+        text-align: left;
+      }
+
+      :host([hidden]), .paper-item[hidden] {
         display: none !important;
       }
 
-      :host(.iron-selected) {
+      :host(.iron-selected), .paper-item.iron-selected {
         font-weight: var(--paper-item-selected-weight, bold);
 
         @apply(--paper-item-selected);
       }
 
-      :host([disabled]) {
+      :host([disabled]), .paper-item[disabled] {
         color: var(--paper-item-disabled-color, --disabled-text-color);
 
         @apply(--paper-item-disabled);
       }
 
-      :host(:focus) {
+      :host(:focus), .paper-item:focus {
         position: relative;
         outline: 0;
 
         @apply(--paper-item-focused);
       }
 
-      :host(:focus):before {
+      :host(:focus):before, .paper-item:focus:before {
         @apply(--layout-fit);
 
         background: currentColor;
@@ -28366,7 +28397,7 @@ Example:
     </style>
   </template>
 </dom-module>
-<dom-module id="paper-item" assetpath="/resources/polymer/paper-item/">
+</llink><dom-module id="paper-item" assetpath="/resources/polymer/paper-item/">
   <template>
     <style include="paper-item-shared-styles"></style>
     <style>
@@ -33346,6 +33377,7 @@ Example:
                     }.bind(domBind);
                     
                     var paperDialog = domBind.content.ownerDocument.createElement('paper-dialog');
+                    Polymer.dom(paperDialog).setAttribute("class", "toast-dialog");
                     Polymer.dom(paperDialog).setAttribute("id", "msgDialog");
                     Polymer.dom(paperDialog).setAttribute("on-iron-overlay-closed", "_dialogClosed");
                     Polymer.dom(paperDialog).setAttribute("with-backdrop", "true");
@@ -33419,6 +33451,8 @@ Example:
                 // console.debug('toast show(): [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
                 var previousToast = this._getPreviousToast();
                 if (!previousToast) {
+                    // Override refit function for paper-toast which behaves really weird (Maybe next releas of paper-toast iron-fit-behavior and iron-overlay-behavior will change this weird behaviour).
+                    this.$.toast.refit = function () {};
                     Polymer.dom(document.body).appendChild(this.$.toast);
                     Polymer.dom().flush();
                     this._showNewToast();
@@ -36494,7 +36528,7 @@ postActionError: function (functionalEntity) {
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
-                                <div id="bottomLockPanel" class="absolute layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
+                                <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
                                     <div class="layout vertical flex" style="background-color:white;">
                                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                             <div class="layout horizontal table-footer-row">
