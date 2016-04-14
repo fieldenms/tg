@@ -32,6 +32,13 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+	    .toast-dialog paper-button {
+	        color: var(--paper-light-blue-500);
+	        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+	    }
+	    .toast-dialog paper-button:hover {
+	        background: var(--paper-light-blue-50);
+	    }
     </style>
 
 <dom-module id="tg-toast">
@@ -134,6 +141,7 @@
                     }.bind(domBind);
                     
                     var paperDialog = domBind.content.ownerDocument.createElement('paper-dialog');
+                    Polymer.dom(paperDialog).setAttribute("class", "toast-dialog");
                     Polymer.dom(paperDialog).setAttribute("id", "msgDialog");
                     Polymer.dom(paperDialog).setAttribute("on-iron-overlay-closed", "_dialogClosed");
                     Polymer.dom(paperDialog).setAttribute("with-backdrop", "true");
