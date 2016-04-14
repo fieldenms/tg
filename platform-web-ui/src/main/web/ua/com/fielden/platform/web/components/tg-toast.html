@@ -249,6 +249,11 @@
                 }
                 
                 this.$.toast.error = this._hasMore;
+                if (this.$.toast && this.$.toast._fitInfo && this.$.toast._fitInfo.positionedBy) {
+                    if (this.$.toast._fitInfo.positionedBy.css === 'static') {
+                        this.$.toast._fitInfo.positionedBy.css = 'fixed';
+                    }
+                }
                 this.$.toast.show();
                 // console.debug('toast show() ended : [', this._text + ':' + this._msgText, '] hasMore = ', this._hasMore);
             }
