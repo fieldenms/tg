@@ -12,9 +12,9 @@ thing! https://github.com/PolymerLabs/tedium/issues
 
 -->
 
-[![Build Status](https://travis-ci.org/PolymerElements/paper-dropdown-menu.svg?branch=master)](https://travis-ci.org/PolymerElements/paper-dropdown-menu)
+[![Build status](https://travis-ci.org/PolymerElements/paper-dropdown-menu.svg?branch=master)](https://travis-ci.org/PolymerElements/paper-dropdown-menu)
 
-_[Demo and API Docs](https://elements.polymer-project.org/elements/paper-dropdown-menu)_
+_[Demo and API docs](https://elements.polymer-project.org/elements/paper-dropdown-menu)_
 
 
 ##&lt;paper-dropdown-menu&gt;
@@ -26,27 +26,33 @@ Material design: [Dropdown menus](https://www.google.com/design/spec/components/
 item is displayed in the control. If no item is selected, the `label` is
 displayed instead.
 
-The child element with the class `dropdown-content` will be used as the dropdown
-menu. It could be a `paper-menu` or element that triggers `iron-select` when
-selecting its children.
-
 Example:
 
 ```html
 <paper-dropdown-menu label="Your favourite pastry">
-  <paper-menu class="dropdown-content">
+  <paper-listbox class="dropdown-content">
     <paper-item>Croissant</paper-item>
     <paper-item>Donut</paper-item>
     <paper-item>Financier</paper-item>
     <paper-item>Madeleine</paper-item>
-  </paper-menu>
+  </paper-listbox>
 </paper-dropdown-menu>
 ```
 
 This example renders a dropdown menu with 4 options.
 
-Similarly to using `iron-select`, `iron-deselect` events will cause the
-current selection of the `paper-dropdown-menu` to be cleared.
+The child element with the class `dropdown-content` is used as the dropdown
+menu. This can be a [`paper-listbox`](paper-listbox), or any other or
+element that acts like an [`iron-selector`](iron-selector).
+
+Specifically, the menu child must fire an
+[`iron-select`](iron-selector#event-iron-select) event when one of its
+children is selected, and an [`iron-deselect`](iron-selector#event-iron-deselect)
+event when a child is deselected. The selected or deselected item must
+be passed as the event's `detail.item` property.
+
+Applications can listen for the `iron-select` and `iron-deselect` events
+to react when options are selected and deselected.
 
 ### Styling
 

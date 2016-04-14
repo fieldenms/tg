@@ -11,7 +11,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>paper-dropdown-menu basic tests</title>
+  <title>paper-dropdown-menu-light basic tests</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
   <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
@@ -22,30 +22,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <link rel="import" href="../../paper-listbox/paper-listbox.html">
   <link rel="import" href="../../paper-item/paper-item.html">
   <link rel="import" href="../../test-fixture/test-fixture.html">
-  <link rel="import" href="../paper-dropdown-menu.html">
-
+  <link rel="import" href="../paper-dropdown-menu-light.html">
 </head>
 <body>
 
   <test-fixture id="TrivialDropdownMenu">
     <template>
-      <paper-dropdown-menu no-animations>
+      <paper-dropdown-menu-light no-animations>
         <paper-listbox class="dropdown-content">
           <paper-item>Foo</paper-item>
           <paper-item>Bar</paper-item>
         </paper-listbox>
-      </paper-dropdown-menu>
+      </paper-dropdown-menu-light>
     </template>
   </test-fixture>
 
   <test-fixture id="PreselectedDropdownMenu">
     <template>
-      <paper-dropdown-menu no-animations>
+      <paper-dropdown-menu-light no-animations>
         <paper-listbox class="dropdown-content" selected="1">
           <paper-item>Foo</paper-item>
           <paper-item>Bar</paper-item>
         </paper-listbox>
-      </paper-dropdown-menu>
+      </paper-dropdown-menu-light>
     </template>
   </test-fixture>
 
@@ -58,7 +57,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       MockInteractions.tap(menu);
     }
 
-    suite('<paper-dropdown-menu>', function() {
+    suite('<paper-dropdown-menu-light>', function() {
       var dropdownMenu;
 
       setup(function() {
