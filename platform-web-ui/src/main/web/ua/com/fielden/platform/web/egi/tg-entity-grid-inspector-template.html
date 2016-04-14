@@ -544,7 +544,7 @@
                                 </div>
                             </template>
                             <template is="dom-if" if="[[_isSummaryPresentAndFixed(totals, summaryFixed)]]">
-                                <div id="bottomLockPanel" class="absolute layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
+                                <div id="bottomLockPanel" class="absolutelyWhite layout horizontal" style$="[[_calculateBottomLockPanelStyle(checkboxVisible, primaryAction, checkboxesFixed, checkboxesWithPrimaryActionsFixed, secondaryActions, secondaryActionsFixed, numOfFixedCols, _scrollLeft)]]">
                                     <div class="layout vertical flex" style="background-color:white;">
                                         <template is="dom-repeat" items="[[_calcGridSummary(columns)]]" as="summaryRow" index-as="summaryRowIndex">
                                             <div class="layout horizontal table-footer-row">
