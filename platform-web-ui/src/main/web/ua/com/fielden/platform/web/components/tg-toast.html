@@ -207,6 +207,8 @@
                 // console.debug('toast show(): [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
                 var previousToast = this._getPreviousToast();
                 if (!previousToast) {
+                    // Override refit function for paper-toast which behaves really weird (Maybe next releas of paper-toast iron-fit-behavior and iron-overlay-behavior will change this weird behaviour).
+                    this.$.toast.refit = function () {};
                     Polymer.dom(document.body).appendChild(this.$.toast);
                     Polymer.dom().flush();
                     this._showNewToast();
@@ -249,11 +251,6 @@
                 }
                 
                 this.$.toast.error = this._hasMore;
-                if (this.$.toast && this.$.toast._fitInfo && this.$.toast._fitInfo.positionedBy) {
-                    if (this.$.toast._fitInfo.positionedBy.css === 'static') {
-                        this.$.toast._fitInfo.positionedBy.css = 'fixed';
-                    }
-                }
                 this.$.toast.show();
                 // console.debug('toast show() ended : [', this._text + ':' + this._msgText, '] hasMore = ', this._hasMore);
             }
