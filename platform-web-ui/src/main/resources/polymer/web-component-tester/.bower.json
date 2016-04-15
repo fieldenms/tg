@@ -43,6 +43,5 @@
   },
   "_source": "git://github.com/Polymer/web-component-tester.git",
   "_target": "^4.2.2",
-  "_originalSource": "Polymer/web-component-tester",
-  "_direct": true
+  "_originalSource": "Polymer/web-component-tester"
 }

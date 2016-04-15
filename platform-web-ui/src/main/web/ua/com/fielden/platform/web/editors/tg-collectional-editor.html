@@ -10,6 +10,9 @@
 
 <dom-module id="tg-collectional-editor">
     <style>
+        iron-list {
+            overflow: auto;
+        }
         .item-disabled {
             pointer-events: none;
         }
@@ -79,10 +82,9 @@
             debug="[[debug]]" 
             _on-change="[[_onChange]]"
             _on-input="[[_onInput]]"
-            _on-keydown="[[_onKeydown]]"
-            current-state="[[currentState]]">
-            <input is="iron-input"  placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
-            <iron-list id="input" class="custom-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
+            _on-keydown="[[_onKeydown]]">
+            <input is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
+            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]">
@@ -187,7 +189,6 @@
         ],
         
         ready: function () {
-            this.$.editorDom._editorKind = "COLLECTIONAL";
             this._eventHandler = (function(e) {
             	// There is no need to proceed with search if user moved out of the search field
             	this._cancelSearch();

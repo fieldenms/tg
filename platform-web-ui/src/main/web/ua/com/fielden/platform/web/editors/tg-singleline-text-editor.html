@@ -3,10 +3,14 @@
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
 
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+
 <dom-module id="tg-singleline-text-editor">
     <style>
+        #input.upper-case {
+            text-transform: uppercase;
+        }
     </style>
-
     <template>
     	<tg-editor 
     		id="editorDom" 
@@ -17,11 +21,16 @@
     		_error="[[_error]]" 
     		_comm-value="[[_commValue]]" 
     		_accepted-value="[[_acceptedValue]]" 
-    		debug="[[debug]]" 
-    		_on-change="[[_onChange]]"
-    		_on-input="[[_onInput]]"
-    		_on-keydown="[[_onKeydown]]"
-        	current-state="[[currentState]]">
+    		debug="[[debug]]">
+    		<input
+    			id="input"
+    			class="custom-input singleline-text-input"
+    			is="iron-input"
+    			bind-value="{{_editingValue}}"
+    			on-change="_onChange"
+    			on-input="_onInput"
+    			on-keydown="_onKeydown"
+    			disabled$="[[_disabled]]"/>
         	<content class=".property-action"></content>
     	</tg-editor>
     </template>
@@ -29,20 +38,16 @@
 
 <script>
     Polymer({
-    	is: 'tg-singleline-text-editor',
-    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
-    	
-    	ready: function () {
-    		this.$.editorDom._editorKind = "SINGLELINE_TEXT";
-    	},
-    	
+        is: 'tg-singleline-text-editor',
+        behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+        
         /**
          * Converts the value into string representation (which is used in edititing / comm values).
          */
         convertToString: function (value) {
             return value === null ? "" : "" + value;
         },
-
+        
         /**
          * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
          */

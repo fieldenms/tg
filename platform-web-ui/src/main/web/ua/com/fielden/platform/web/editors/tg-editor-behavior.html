@@ -234,6 +234,8 @@
                 	type: Function,
                 	value: function () {
                 		return (function (event) {
+                		    // console.debug("_onKeydown:", event);
+                		    
                     		if (event.keyCode === 13 && !this.reflector().equalsEx(this._editingValue, this._commValue)) { // 'Enter' has been pressed
                     			this.commit();
                     		}
@@ -304,28 +306,7 @@
             },
             
             decoratedInput: function () {
-            	// var contentEl = Polymer.dom(this.decorator()).querySelector('content');            	
-            	// return Polymer.dom(contentEl).getDistributedNodes()[0]; // Polymer.dom(this.$.editorDom)    // .$.input;
-            	
-            	// currently there are multiple input fields
-            	// simply addressing this.$.editorDom.$.input would most likely return an invalid input
-            	// however, there should be only a single not hiddent input
-            	// so, let's try locating it by enumerating possible input field types
-            	
-            	// start with ordinary input
-            	var input = this.$.editorDom.querySelector('input:not([hidden])');
-            	if (input) {
-            	    return input;
-            	} 
-            	
-            	// if there was no matching input then maybe it is a checkbox...
-            	var input = this.$.editorDom.querySelector('paper-checkbox:not([hidden])');
-            	if (input) {
-            	    return input;
-            	}
-            	
-            	// if this is not a checkbox then return a textarea, which does not get marked as hidden, instead its parent control does
-            	return this.$.editorDom.querySelector('textarea');
+                return this.$.input;
             },
             
             /**
@@ -506,7 +487,7 @@
              * Commits editing value.
              */
             commit: function () {
-                console.debug('COMMIT: start.');
+                // console.debug('COMMIT: start.');
                 if (this.reflector().isEntity(this.entity)) {
                     if (typeof this.entity["@" + this.propertyName + "_uppercase"] !== 'undefined') {
                         var upperCased = this._editingValue.toLocaleUpperCase();
@@ -518,7 +499,7 @@
                     }
                     this._commitForDescendants();
                 }
-                console.debug("COMMIT: [", this._editingValue, "] value.");
+                // console.debug("COMMIT: [", this._editingValue, "] value.");
    	            this._commValue = this._editingValue;
             },
             
