@@ -3,7 +3,20 @@
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
 
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+
 <dom-module id="tg-money-editor">
+    <style>
+        /* Styles for integer and decimal property editors. */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
     <template>
         <tg-editor 
     		id="editorDom" 
@@ -14,11 +27,19 @@
     		_error="[[_error]]" 
     		_comm-value="[[_commValue]]" 
     		_accepted-value="[[_acceptedValue]]" 
-    		debug="[[debug]]" 
-    		_on-change="[[_onChange]]"
-            _on-input="[[_onInput]]"
-    		_on-keydown="[[_onKeydown]]"
-    		current-state="[[currentState]]">
+    		debug="[[debug]]">
+    		<input
+    			id="input"
+    			class="custom-input money-input"
+    			is="iron-input"
+    			type="number"
+    			step="any"
+    			prevent-invalid-input
+    			bind-value="{{_editingValue}}"
+    			on-change="_onChange"
+    			on-input="_onInput"
+    			on-keydown="_onKeydown"
+    			disabled$="[[_disabled}}"/>
     		<content class=".property-action"></content>
     	</tg-editor>
     </template>
@@ -26,21 +47,17 @@
 <script>
     (function(){
         Polymer({
-	    	is: 'tg-money-editor',
-	    	behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
-	    	
-	    	ready: function () {
-	    		// in effect editor for money is of the decimal kind... at least at this stage
-	    		this.$.editorDom._editorKind = "DECIMAL";
-	    	},
-    	
-    	    /**
+            is: 'tg-money-editor',
+            behaviors: [ Polymer.TgBehaviors.TgEditorBehavior ],
+            
+            
+            /**
              * Converts the value into string representation (which is used in editing / comm values).
              */
             convertToString: function (value) {
                 return value === null ? "" : "" + value.amount;
             },
-
+            
             /**
              * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
              */
@@ -58,6 +75,6 @@
                 var amount = (+strValue) 
                 return {'amount': amount};
             }
-	    });
+        });
     })()
 </script>

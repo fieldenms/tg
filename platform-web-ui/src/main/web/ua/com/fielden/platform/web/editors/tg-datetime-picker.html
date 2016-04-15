@@ -7,6 +7,8 @@
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
 
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -77,11 +79,16 @@
         	action="[[action]]" _error="[[_error]]" 
         	_comm-value="[[_commValue]]" 
         	_accepted-value="[[_acceptedValue]]" 
-        	debug="[[debug]]" 
-        	_on-change="[[_onChange]]" 
-        	_on-input="[[_onInput]]" 
-        	_on-keydown="[[_onKeydown]]" 
-        	current-state="[[currentState]]">
+        	debug="[[debug]]">
+        	<input
+    			id="input"
+    			class="custom-input date-input"
+    			is="iron-input"
+    			bind-value="{{_editingValue}}"
+    			on-change="_onChange"
+    			on-input="_onInput"
+    			on-keydown="_onKeydown"
+    			disabled$="[[_disabled]]"/>
             <content class=".property-action"></content>
             <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
         </tg-editor>
@@ -95,8 +102,6 @@
             behaviors: [Polymer.TgBehaviors.TgEditorBehavior, Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
             ready: function () {
-                this.$.editorDom._editorKind = 'DATE';
-                
                 moment.parseTwoDigitYear = function (input) {
                     var currYear = moment().year();
                     console.debug('parseTwoDigitYear: [', input, '] currYear ', currYear);
