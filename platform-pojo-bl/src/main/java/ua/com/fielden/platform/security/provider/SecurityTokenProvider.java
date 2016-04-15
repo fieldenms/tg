@@ -14,6 +14,9 @@ import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.user.UserDeleteToken;
 import ua.com.fielden.platform.security.tokens.user.UserReviewToken;
+import ua.com.fielden.platform.security.tokens.user.UserRoleDeleteToken;
+import ua.com.fielden.platform.security.tokens.user.UserRoleReviewToken;
+import ua.com.fielden.platform.security.tokens.user.UserRoleSaveToken;
 import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
 
 /**
@@ -44,6 +47,9 @@ public class SecurityTokenProvider {
         allTokens.add(UserReviewToken.class);
         allTokens.add(UserSaveToken.class);
         allTokens.add(UserDeleteToken.class);
+        allTokens.add(UserRoleReviewToken.class);
+        allTokens.add(UserRoleSaveToken.class);
+        allTokens.add(UserRoleDeleteToken.class);
         topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
     }
 

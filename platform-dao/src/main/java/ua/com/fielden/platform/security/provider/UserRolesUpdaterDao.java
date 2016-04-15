@@ -11,8 +11,10 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
 import ua.com.fielden.platform.security.user.IUserRolesUpdater;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -40,6 +42,7 @@ public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> imple
     
     @Override
     @SessionRequired
+    @Authorise(UserSaveToken.class)
     public UserRolesUpdater save(final UserRolesUpdater action) {
         final UserRolesUpdater actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getRoles(), this, factory, Long.class);
         
