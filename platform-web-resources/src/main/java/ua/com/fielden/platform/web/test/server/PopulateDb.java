@@ -29,6 +29,7 @@ import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -81,7 +82,14 @@ public class PopulateDb extends DomainDrivenDataPopulation {
     @Override
     protected void populateDomain() {
         System.out.println("Creating and populating the development database...");
+        
+        // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
+        // It should always be used as the current user for data population activities
         final IUser coUser = ao(User.class);
+        final User u = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
+        final IUserProvider up = getInstance(IUserProvider.class);
+        up.setUser(u);
+        
         final User _su = coUser.save(new_(User.class, User.system_users.SU.name()).setBase(true));
         final User su = coUser.resetPasswd(_su, _su.getKey());
         final User _demo = ao(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su));

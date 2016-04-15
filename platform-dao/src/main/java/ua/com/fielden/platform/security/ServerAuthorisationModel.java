@@ -29,7 +29,7 @@ public class ServerAuthorisationModel extends AbstractAuthorisationModel {
 
     @Override
     public Result authorise(final Class<? extends ISecurityToken> token) {
-        return User.system_users.UNIT_TEST_USER.matches(userProvider.getUser()) ||
+        return User.system_users.VIRTUAL_USER.matches(userProvider.getUser()) ||
                controller.canAccess(userProvider.getUser(), token) ? Result.successful("Authorised")
                 : Result.failure(format("Permission denied due to token [%s] restriction.", token.getAnnotation(KeyTitle.class).value()));
     }

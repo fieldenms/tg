@@ -6,6 +6,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
@@ -18,8 +19,8 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.UniqueValidator;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -214,6 +215,18 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertFalse(coUser.isPasswordResetUuidValid(uuid));
     }
 
+    @Test 
+    public void unit_test_user_cannot_be_persisted() {
+        final IUser coUser = ao(User.class);
+        final User user = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
+        
+        try {
+            coUser.save(user);
+            fail();
+        } catch (final SecurityException ex) {
+            assertEquals("VIRTUAL_USER cannot be persisted.", ex.getMessage());
+        }
+    }
     
     @Override
     protected void populateDomain() {

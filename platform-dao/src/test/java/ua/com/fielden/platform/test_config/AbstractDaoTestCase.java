@@ -49,12 +49,15 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(new DateTime());
 
-        // some tests require current person, thus, need to persist a person who would be a user at the same time
+        // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
+        // It should always be used as the current user for data population activities
         final IUser coUser = ao(User.class);
-        final User u = new_(User.class, UNIT_TEST_USER).setBase(true);
+        final User vu = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUser(u);
-        final User testUser = coUser.save(u);
+        up.setUser(vu);
+        
+        // some tests require current person, thus, need to persist a person who would be a user at the same time
+        final User testUser = coUser.save(new_(User.class, UNIT_TEST_USER).setBase(true));
         save(new_(TgPerson.class, "Person who is a user").setUser(testUser));
 
         // add a test user role

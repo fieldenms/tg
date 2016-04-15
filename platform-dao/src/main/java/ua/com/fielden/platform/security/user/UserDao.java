@@ -115,6 +115,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     @SessionRequired
     @Authorise(UserSaveToken.class)
     public User save(final User user) {
+        if (User.system_users.VIRTUAL_USER.matches(user)) {
+            throw new SecurityException("VIRTUAL_USER cannot be persisted.");
+        }
         // if a new user is being created then lets try activate it 
         // this is possible only if an email address is associated with the user
         // there could also be a situation there an existing user that was not activated (password is blank) had
