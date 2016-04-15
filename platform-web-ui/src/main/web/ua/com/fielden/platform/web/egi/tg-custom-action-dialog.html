@@ -242,18 +242,21 @@
                     // let's open the dialog with magical async...
                     // this ensures that the dialog is opened after its relocation to body and after all layouting is done
                     this.async(function () {
-                        this.addEventListener('binding-entity-appeared', this._focus.bind(this));
-                        this._focus(); // this is a legacy support
+                        this.addEventListener('binding-entity-appeared', this._focusAndRefit.bind(this));
+                        this._focusAndRefit(); // this is a legacy support
                         this.open();
                     }.bind(this), 200);
                 }
             },
 
             /** 
-             * A convenience function acting as event listener for 'binding-entity-appeared' to focus the opened dialog only after the entity is bound. 
+             * A convenience function acting as event listener for 'binding-entity-appeared' to focus and refit the opened dialog only after the entity is bound. 
              * A named function was used in favoir of an anonymous one in order to avoid accumulation of event listeners.
              */
-            _focus: function() {
+            _focusAndRefit: function() {
+                this.async(function () {
+                    this.refit();
+                }.bind(this), 50);
                 if (this._lastElement.focusFirstInput) {
                     this._lastElement.focusFirstInput();
                 }                            
@@ -261,9 +264,13 @@
 
             
             _dialogOpened: function (e, detail, source) {
+                // the following refit does not always result in proper dialog centering due to the fact that UI is still being constructed at the time of opening
+                // a more appropriate place for refitting is post entity binding
+                // however, entity binding might not occure due to, for example, user authorisation restriction
+                // that is why there is a need to perfrom refitting here as well as on entity binding
                 this.async(function () {
                     this.refit();
-                }.bind(this), 1);
+                }.bind(this), 100);
                 this._setIsRunning(false);
             },
 
