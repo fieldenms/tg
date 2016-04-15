@@ -398,6 +398,7 @@
                 }).bind(self);
                 
                 self.retrieve = (function (context) {
+                    this.currentState = 'VIEW';
                     // cancel previous validation before starting refreshing process!
                     this._validator().abortValidationIfAny();
                     
@@ -431,6 +432,7 @@
                     // console.timeEnd('criteria-entity-retrieval');
                     console.timeEnd('loading-all');
                     
+                    this.currentState = 'EDIT';
                     return true;
                 }).bind(self);
                 
