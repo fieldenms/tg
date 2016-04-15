@@ -14,6 +14,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.security.tokens.user.UserReviewToken;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -34,6 +36,7 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityProducerFo
     }
     
     @Override
+    @Authorise(UserReviewToken.class)
     protected UserRolesUpdater provideCurrentlyAssociatedValues(final UserRolesUpdater entity, final User masterEntity) {
         final List<UserRole> allAvailableRoles = coUserRole.findAll();
         final Set<UserRole> roles = new LinkedHashSet<>(allAvailableRoles);
