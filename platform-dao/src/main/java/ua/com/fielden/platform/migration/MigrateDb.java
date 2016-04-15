@@ -189,7 +189,7 @@ public class MigrateDb {
         }
     }
 
-    public void migrate(final String[] args, final Properties props, final List<String> ddl, final Class[] retrieversClassesSequence, final Injector injector, final Class<? extends AbstractEntity<?>> personClass)
+    public void migrate(final String[] args, final Properties props, final List<String> ddl, final Class[] retrieversClassesSequence, final Injector injector, final Class<? extends AbstractEntity<?>> userClass)
             throws Exception {
         final Map<CmdParams, String> cmdParams = retrieveCommandLineParams(args);
         final String limitToParamArgument = cmdParams.get(CmdParams.LIMIT_TO);
@@ -210,7 +210,7 @@ public class MigrateDb {
                 System.out.println(ddlStmt);
             }
         } else {
-            new DataMigrator(injector, hibernateUtil, factory, cmdParams.containsKey(CmdParams.SKIP_VALIDATIONS), cmdParams.containsKey(CmdParams.DETAILS), personClass, limitToRetrievers);//.populateData();
+            new DataMigrator(injector, hibernateUtil, factory, cmdParams.containsKey(CmdParams.SKIP_VALIDATIONS), cmdParams.containsKey(CmdParams.DETAILS), userClass, limitToRetrievers);//.populateData();
         }
         // reset passwords
         if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {

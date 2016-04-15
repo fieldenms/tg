@@ -20,6 +20,8 @@ import org.hibernate.Transaction;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.DynamicEntityDao;
@@ -28,8 +30,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.migration.RetrieverPropsValidator.RetrievedPropValidationError;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.security.user.User;
-
-import com.google.inject.Injector;
 
 public class DataMigrator {
     private final Logger logger = Logger.getLogger(this.getClass());
@@ -51,7 +51,7 @@ public class DataMigrator {
     }
 
     public DataMigrator(final Injector injector, final HibernateUtil hiberUtil, final EntityFactory factory, //
-            final boolean skipValidations, final boolean includeDetails, final Class<? extends AbstractEntity<?>> personClass, final Class... retrieversClasses) throws Exception {
+            final boolean skipValidations, final boolean includeDetails, final Class<? extends AbstractEntity<?>> userClass, final Class... retrieversClasses) throws Exception {
         final DateTime start = new DateTime();
         this.injector = injector;
         this.factory = factory;
@@ -83,7 +83,7 @@ public class DataMigrator {
         }
 
         final Integer initialId = getLastId();
-        final Integer finalId = batchInsert(dma, conn, initialId, personClass);
+        final Integer finalId = batchInsert(dma, conn, initialId, userClass);
         final Period pd = new Period(start, new DateTime());
 
         runSql(new ArrayList<String>() {
@@ -98,7 +98,7 @@ public class DataMigrator {
 
     /**
      * Checks the correctness of the legacy data retrieval sql syntax and column aliases.
-     * 
+     *
      * @return
      * @throws Exception
      */
@@ -127,7 +127,7 @@ public class DataMigrator {
 
     /**
      * Checks the correctness of the legacy data retrieval sql syntax and column aliases.
-     * 
+     *
      * @return
      * @throws Exception
      */
@@ -176,7 +176,7 @@ public class DataMigrator {
         return result;
     }
 
-    
+
     private boolean checkEmptyStrings(final DomainMetadataAnalyser dma, final Connection conn) throws Exception {
         final Set<String> stmts = new RetrieverEmptyStringsChecker(dma).getSqls(retrievers);
         final Statement st = conn.createStatement();
@@ -276,7 +276,7 @@ public class DataMigrator {
         }
     }
 
-    private Integer batchInsert(final DomainMetadataAnalyser dma, final Connection legacyConn, final int startingId, final Class<? extends AbstractEntity<?>> personClass)
+    private Integer batchInsert(final DomainMetadataAnalyser dma, final Connection legacyConn, final int startingId, final Class<? extends AbstractEntity<?>> userClass)
             throws Exception {
         final RetrieverSqlProducer rsp = new RetrieverSqlProducer(dma);
         Integer id = startingId;
@@ -289,7 +289,7 @@ public class DataMigrator {
             if (retriever.isUpdater()) {
                 performBatchUpdates(new RetrieverBatchUpdateStmtGenerator(dma, retriever), legacyRs);
             } else {
-                id = performBatchInserts(new RetrieverBatchInsertStmtGenerator(dma, retriever), legacyRs, id, personClass, userTypeCache);
+                id = performBatchInserts(new RetrieverBatchInsertStmtGenerator(dma, retriever), legacyRs, id, userClass, userTypeCache);
             }
 
             legacyRs.close();
@@ -345,7 +345,7 @@ public class DataMigrator {
 
     }
 
-    private Integer performBatchInserts(final RetrieverBatchInsertStmtGenerator rbsg, final ResultSet legacyRs, final int startingId, final Class<? extends AbstractEntity<?>> personClass, final Map<Object, Integer> userTypeCache)
+    private Integer performBatchInserts(final RetrieverBatchInsertStmtGenerator rbsg, final ResultSet legacyRs, final int startingId, final Class<? extends AbstractEntity<?>> userClass, final Map<Object, Integer> userTypeCache)
             throws Exception {
         final String insertSql = rbsg.getInsertStmt();
         final List<Integer> indexFields = rbsg.produceKeyFieldsIndices();
@@ -367,8 +367,8 @@ public class DataMigrator {
                 keyValue.add(legacyRs.getObject(keyIndex.intValue()));
             }
             typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
-            if (rbsg.getRetriever().type().equals(personClass)) {
-                userTypeCache.put(legacyRs.getObject("username"), id);
+            if (rbsg.getRetriever().type().equals(userClass)) {
+                userTypeCache.put(legacyRs.getObject("key"), id);
             }
             int index = 1;
             final List<Object> currTransformedValues = rbsg.transformValuesForInsert(legacyRs, cache, id);
