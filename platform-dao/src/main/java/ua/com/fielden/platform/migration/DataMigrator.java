@@ -51,7 +51,7 @@ public class DataMigrator {
     }
 
     public DataMigrator(final Injector injector, final HibernateUtil hiberUtil, final EntityFactory factory, //
-            final boolean skipValidations, final boolean includeDetails, final Class<? extends AbstractEntity<?>> userClass, final Class... retrieversClasses) throws Exception {
+            final boolean skipValidations, final boolean includeDetails, final Class... retrieversClasses) throws Exception {
         final DateTime start = new DateTime();
         this.injector = injector;
         this.factory = factory;
@@ -83,7 +83,7 @@ public class DataMigrator {
         }
 
         final Integer initialId = getLastId();
-        final Integer finalId = batchInsert(dma, conn, initialId, userClass);
+        final Integer finalId = batchInsert(dma, conn, initialId);
         final Period pd = new Period(start, new DateTime());
 
         runSql(new ArrayList<String>() {
@@ -276,7 +276,7 @@ public class DataMigrator {
         }
     }
 
-    private Integer batchInsert(final DomainMetadataAnalyser dma, final Connection legacyConn, final int startingId, final Class<? extends AbstractEntity<?>> userClass)
+    private Integer batchInsert(final DomainMetadataAnalyser dma, final Connection legacyConn, final int startingId)
             throws Exception {
         final RetrieverSqlProducer rsp = new RetrieverSqlProducer(dma);
         Integer id = startingId;
@@ -289,7 +289,7 @@ public class DataMigrator {
             if (retriever.isUpdater()) {
                 performBatchUpdates(new RetrieverBatchUpdateStmtGenerator(dma, retriever), legacyRs);
             } else {
-                id = performBatchInserts(new RetrieverBatchInsertStmtGenerator(dma, retriever), legacyRs, id, userClass, userTypeCache);
+                id = performBatchInserts(new RetrieverBatchInsertStmtGenerator(dma, retriever), legacyRs, id, userTypeCache);
             }
 
             legacyRs.close();
@@ -345,7 +345,7 @@ public class DataMigrator {
 
     }
 
-    private Integer performBatchInserts(final RetrieverBatchInsertStmtGenerator rbsg, final ResultSet legacyRs, final int startingId, final Class<? extends AbstractEntity<?>> userClass, final Map<Object, Integer> userTypeCache)
+    private Integer performBatchInserts(final RetrieverBatchInsertStmtGenerator rbsg, final ResultSet legacyRs, final int startingId, final Map<Object, Integer> userTypeCache)
             throws Exception {
         final String insertSql = rbsg.getInsertStmt();
         final List<Integer> indexFields = rbsg.produceKeyFieldsIndices();
@@ -367,7 +367,7 @@ public class DataMigrator {
                 keyValue.add(legacyRs.getObject(keyIndex.intValue()));
             }
             typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
-            if (rbsg.getRetriever().type().equals(userClass)) {
+            if (rbsg.getRetriever().type().equals(User.class)) {
                 userTypeCache.put(legacyRs.getObject("key"), id);
             }
             int index = 1;
