@@ -155,7 +155,8 @@
 
             properties: {
                 isRunning: {
-                    type: Boolean
+                    type: Boolean,
+                    observer: '_isRunningChanged'
                 },
                 _handleScroll: {
                     type: Function
@@ -258,6 +259,14 @@
                 }, 1);
             },
             
+            _isRunningChanged: function (newValue, oldValue) {
+                if (newValue) {
+                    this.disableView();
+                } else {
+                    this.enableView();
+                }
+            },
+            
             confirm: function (message, buttons) {
                 return this._dom()._confirmationDialog()._showConfirmationDialog(message, buttons);
             },
@@ -278,7 +287,7 @@
              */
             _ajaxSaver: function () {
                 return this._dom()._ajaxSaver();
-            },
+            }
         });
     })();
 </script>
