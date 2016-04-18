@@ -252,6 +252,11 @@
                  */
                 _mobileLayout: {
                 	type: Array
+                },
+                
+                _disablementCounter: {
+                    type: Number,
+                    value: 0
                 }
     		},
     		
@@ -398,7 +403,7 @@
                 }).bind(self);
                 
                 self.retrieve = (function (context) {
-                    this.currentState = 'VIEW';
+                    this.disableView();
                     // cancel previous validation before starting refreshing process!
                     this._validator().abortValidationIfAny();
                     
@@ -432,7 +437,7 @@
                     // console.timeEnd('criteria-entity-retrieval');
                     console.timeEnd('loading-all');
                     
-                    this.currentState = 'EDIT';
+                    this.enableView();
                     return true;
                 }).bind(self);
                 
@@ -445,7 +450,7 @@
                 	if (this.postRetrievedError) {
 	                    this.postRetrievedError(errorResult);
                     }
-                	
+                	this.enableView();
                 }).bind(self);
              	// 				validation:
                 self._postValidatedDefault = (function (entityAndCustomObject) {
@@ -797,6 +802,25 @@
             	var editor = this.$.masterDom.querySelector('[id=editor_4_' + propNameToBeAssigned + ']');
                 editor.assignConcreteValue(value, editor.reflector().convert.bind(editor.reflector()));
                 editor.commit();
+            },
+            
+            disableView: function () {
+                this._disablementCounter += 1;
+                if (this._disablementCounter > 0 && this.currentState !== 'VIEW') { 
+                    this.disableViewForDescendants();
+                }
+            },
+            disableViewForDescendants: function () {
+                this.currentState = 'VIEW';
+            },
+            enableView: function () {
+                this._disablementCounter -= 1;
+                if (this._disablementCounter === 0 && this.currentState !== 'EDIT') {
+                    this.enableViewForDescendants();
+                }
+            },
+            enableViewForDescendants: function () {
+                this.currentState = 'EDIT';
             }
         };
     })();

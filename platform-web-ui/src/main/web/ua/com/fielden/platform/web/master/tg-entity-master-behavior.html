@@ -299,6 +299,7 @@
                         }).bind(this);
                     }
                     
+                    this.enableView();
                     return potentiallySavedOrNewEntity.isValidWithoutSavingException();
 				}).bind(self);
 				
@@ -311,13 +312,14 @@
                 	if (this.postSavedError) {
 				    	this.postSavedError(errorResult);
 				    }
+                    this.enableView();
                 }).bind(self);
                 
                 self.edit = (function () {
                     if (this.currentState === 'EDIT') {
                         console.warn("The master is already in EDIT state. state == ", this.currentState);
                     } else {
-                        this.currentState = 'EDIT';
+                        this.enableView();
                     }
                 }).bind(self);
                 
@@ -325,7 +327,7 @@
                     if (this.currentState === 'VIEW') {
                         console.warn("The master is already in VIEW state. state == ", this.currentState);
                     } else {
-                        this.currentState = 'VIEW';
+                        this.disableView();
                     }
                 }).bind(self);
                 
@@ -344,6 +346,7 @@
                 }).bind(self);
                 
                 self.save = (function () {
+                    this.disableView();
                     var self = this;
                     if (self._savingInProgress()) {
                         var SimultaneousSaveException = self._getSimultaneousSaveExceptionType();
