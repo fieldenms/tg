@@ -1099,8 +1099,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         action(ExportAction.class).
                                 withContext(context().withSelectionCrit().withSelectedEntities().build())
                                 .preAction(yesNo("Would you like to proceed with data export?"))
+                                // {type:'application/vnd.ms-excel'}
                                 .postActionSuccess(new PostActionSuccess(""
                                         + "console.log('EXPORT POST-ACTION: ', functionalEntity);\n"
+                                        + "var byteCharacters = atob(functionalEntity.data);"
+                                        + "var byteNumbers = new Uint8Array(byteCharacters.length);\n"
+                                        + "for (var i = 0; i < byteCharacters.length; i++) {\n"
+                                        + "     byteNumbers[i] = byteCharacters.charCodeAt(i);\n"
+                                        + "}\n"
+                                        + "console.log('EXPORT POST-ACTION ARRAY: ', byteNumbers);\n"
+                                        + "var data = new Blob([byteNumbers]);\n"
+                                        + "saveAs(data, 'file.html');\n"
                                         ))
                                 .icon("icons:save")
                                 .shortDesc("Export Data")

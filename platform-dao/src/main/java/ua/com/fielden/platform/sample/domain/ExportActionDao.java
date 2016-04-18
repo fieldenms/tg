@@ -43,9 +43,10 @@ public class ExportActionDao extends CommonEntityDao<ExportAction> implements IE
         //co.firstPage(qem, entity.getCount());
 
         try {
-            byte[] data = co.export(qem, new String[] {"key", "desc"}, new String[] {"key", "desc"});
+            String html = "<html><body>HELLO EXPORTED!</body></html>";
+            byte[] data = html.getBytes(); //co.export(qem, new String[] {"key", "desc"}, new String[] {"key", "desc"});
             entity.setData(data);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         
