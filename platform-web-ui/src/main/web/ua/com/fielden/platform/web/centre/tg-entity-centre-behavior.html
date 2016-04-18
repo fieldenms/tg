@@ -284,6 +284,16 @@
                  */
                 _activateResultSetView: {
                     type: Function
+                },
+                
+                _disablementCounter: {
+                    type: Number,
+                    value: 0
+                },
+                
+                currentState: {
+                    type: String,
+                    value: 'EDIT'
                 }
             },
 
@@ -784,6 +794,31 @@
                         }, 1);
                     });
                 }
+            },
+            
+            disableView: function () {
+                this._disablementCounter += 1;
+                if (this._disablementCounter > 0 && this.currentState !== 'VIEW') { 
+                    this.disableViewForDescendants();
+                }
+            },
+            disableViewForDescendants: function () {
+                this.currentState = 'VIEW';
+                this.$.selection_criteria.disableView();
+                this.$.egi.lock = true;
+            },
+            enableView: function () {
+                if (this._disablementCounter > 0) {
+                    this._disablementCounter -= 1;
+                    if (this._disablementCounter === 0 && this.currentState !== 'EDIT') {
+                        this.enableViewForDescendants();
+                    }
+                }
+            },
+            enableViewForDescendants: function () {
+                this.currentState = 'EDIT';
+                this.$.selection_criteria.enableView();
+                this.$.egi.lock = false;
             }
         };
 
