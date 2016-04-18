@@ -6,6 +6,7 @@ import java.util.List;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
@@ -66,6 +67,7 @@ public class TgTestApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityWithPropertyDependency.class);
         add(DumpCsvTxtProcessor.class);
         add(NewEntityAction.class);
+        add(ExportAction.class);
    }
 
     @Override
