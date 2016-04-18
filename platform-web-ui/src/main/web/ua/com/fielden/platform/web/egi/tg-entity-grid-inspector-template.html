@@ -36,6 +36,14 @@
 <dom-module id="tg-@miType-grid-inspector">
     <style>
         /*miscellanea styles*/
+        .lock-layer {
+            opacity:0.5;
+            display: none;
+            background-color: white;
+        }
+        .lock-layer[lock] {
+            display: initial;
+        }
         .no-flexible {
             flex-grow: 0;
             flex-shrink: 0;
@@ -79,6 +87,7 @@
         .data-table {
             background-color: white;
             border-radius: 2px;
+            position: relative;
         }
         .table-header-row {
             font-size: 0.9rem;
@@ -655,6 +664,8 @@
                             <div id="tbShadow" class="absolute" hidden$="[[_isHeaderFixed(headerFixed)]]" style$="[[_calcTBShadowStyle(_showTopShadow)]]"></div>
                         </div>
                     </div>
+                    <!-- table lock layer -->
+                    <div class="lock-layer fit" lock$="[[lock]]"></div>
                 </div>
             </paper-material>
         </template>
@@ -754,6 +765,10 @@
                     observer: "_entitiesChanged"
                 },
                 totals: Object,
+                lock: {
+                    type: Boolean,
+                    value: false
+                },
                 renderingHints: Array,
                 shortLayout: Object,
                 longLayout: Object,

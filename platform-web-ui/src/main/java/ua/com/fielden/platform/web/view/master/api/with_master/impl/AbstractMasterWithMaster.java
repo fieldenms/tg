@@ -29,18 +29,6 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "   if (_currBindingEntity !== null) {\n" +
                         "       return " + getAttributes(embededMasterType, "_currBindingEntity") +
                         "   };\n" +
-                        "}).bind(this);\n" +
-                        "this.disableViewForDescendants = (function() {\n" +
-                        "   this.currentState = 'VIEW';\n" +
-                        "   if (this.$.loader.loadedElement) {\n" +
-                        "       this.$.loader.loadedElement.disableView();\n" +
-                        "   }\n" +
-                        "}).bind(this);\n" +
-                        "this.enableViewForDescendants = (function() {\n" +
-                        "   this.currentState = 'EDIT';\n" +
-                        "   if (this.$.loader.loadedElement) {\n" +
-                        "       this.$.loader.loadedElement.enableView();\n" +
-                        "   }\n" +
                         "}).bind(this);\n")
                 .replace("//@attached-callback",
                           "this.canLeave = function () {"

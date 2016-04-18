@@ -812,15 +812,23 @@
             },
             disableViewForDescendants: function () {
                 this.currentState = 'VIEW';
+                if (this.$.loader && this.$.loader.loadedElement) {
+                    this.$.loader.loadedElement.disableView();
+                }
             },
             enableView: function () {
-                this._disablementCounter -= 1;
-                if (this._disablementCounter === 0 && this.currentState !== 'EDIT') {
-                    this.enableViewForDescendants();
+                if (this._disablementCounter > 0) {
+                    this._disablementCounter -= 1;
+                    if (this._disablementCounter === 0 && this.currentState !== 'EDIT') {
+                        this.enableViewForDescendants();
+                    }
                 }
             },
             enableViewForDescendants: function () {
                 this.currentState = 'EDIT';
+                if (this.$.loader && this.$.loader.loadedElement) {
+                    this.$.loader.loadedElement.enableView();
+                }
             }
         };
     })();
