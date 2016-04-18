@@ -912,7 +912,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // run the query and iterate through result exporting the data
         final List<T> result = getEntitiesOnPage(query, null, null);
 
-        return WorkbookExporter.convertToByteArray(WorkbookExporter.export(result, propertyNames, propertyTitles));
+        return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(result, propertyNames, propertyTitles));
     }
 
     /**
