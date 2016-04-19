@@ -35,6 +35,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.ExportAction;
+import ua.com.fielden.platform.sample.domain.ExportActionProducer;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
@@ -158,7 +159,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String actionButton = "'margin: 10px', 'width: 110px'";
         final IMaster<ExportAction> masterConfig = new SimpleMasterBuilder<ExportAction>()
                 .forEntity(ExportAction.class)
-                .addProp("count").asSinglelineText()
+                .addProp("count").asSpinner()
                 .also()
                 .addAction(MasterActions.REFRESH)
                 /*      */.shortDesc("CANCEL")
@@ -172,7 +173,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .done();
         final EntityMaster<ExportAction> master = new EntityMaster<ExportAction>(
                 ExportAction.class,
-                null,
+                ExportActionProducer.class,
                 masterConfig,
                 injector());
         
@@ -1107,9 +1108,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                         + "for (var i = 0; i < byteCharacters.length; i++) {\n"
                                         + "     byteNumbers[i] = byteCharacters.charCodeAt(i);\n"
                                         + "}\n"
-                                        + "console.log('EXPORT POST-ACTION ARRAY: ', byteNumbers);\n"
-                                        + "var data = new Blob([byteNumbers]);\n"
-                                        + "saveAs(data, 'file.html');\n"
+                                        + "var data = new Blob([byteNumbers], {type: functionalEntity.mime});\n"
+                                        + "saveAs(data, functionalEntity.fileName);\n"
                                         ))
                                 .icon("icons:save")
                                 .shortDesc("Export Data")

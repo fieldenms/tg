@@ -22,13 +22,43 @@ public class ExportAction extends AbstractFunctionalEntityWithCentreContext<Stri
     private static final long serialVersionUID = 1L;
 
     @IsProperty
+    @MapTo
+    @Title(value = "MIME", desc = "File MIME Type")
+    private String mime;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "File Name", desc = "The name of file for the data to be saved into")
+    private String fileName;
+
+    @IsProperty
     @Title(value = "Data", desc = "Raw binary data that needs to be persisted.")
     private byte[] data;
 
     @IsProperty
     @MapTo
     @Title(value = "First # to export", desc = "The number of first matching instances to export.")
-    private Integer count = 10;
+    private Integer count;
+
+    @Observable
+    public ExportAction setFileName(final String fileName) {
+        this.fileName = fileName;
+        return this;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+    
+    @Observable
+    public ExportAction setMime(final String mime) {
+        this.mime = mime;
+        return this;
+    }
+
+    public String getMime() {
+        return mime;
+    }
 
     @Observable
     public ExportAction setCount(final Integer count) {
@@ -49,7 +79,5 @@ public class ExportAction extends AbstractFunctionalEntityWithCentreContext<Stri
     public byte[] getData() {
         return data;
     }
-
-    
 
 }
