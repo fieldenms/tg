@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.centre.api.actions;
+package ua.com.fielden.platform.web.action.pre;
 
 import java.util.ArrayList;
 import java.util.List;

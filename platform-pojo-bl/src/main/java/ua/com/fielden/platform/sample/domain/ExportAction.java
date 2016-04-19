@@ -24,7 +24,7 @@ public class ExportAction extends AbstractFunctionalEntityWithCentreContext<Stri
     @IsProperty
     @MapTo
     @Title(value = "MIME", desc = "File MIME Type")
-    private String mime;
+    private String mime; // application/pdf, application/vnd.ms-excel, text/plain, text/html
 
     @IsProperty
     @MapTo

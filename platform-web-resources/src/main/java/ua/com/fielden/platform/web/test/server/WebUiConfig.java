@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.centre.api.actions.ConfirmationPreAction.yesNo;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
@@ -89,6 +89,7 @@ import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -1100,17 +1101,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         action(ExportAction.class).
                                 withContext(context().withSelectionCrit().withSelectedEntities().build())
                                 .preAction(yesNo("Would you like to proceed with data export?"))
-                                // {type:'application/vnd.ms-excel'}
-                                .postActionSuccess(new PostActionSuccess(""
-                                        + "console.log('EXPORT POST-ACTION: ', functionalEntity);\n"
-                                        + "var byteCharacters = atob(functionalEntity.data);"
-                                        + "var byteNumbers = new Uint8Array(byteCharacters.length);\n"
-                                        + "for (var i = 0; i < byteCharacters.length; i++) {\n"
-                                        + "     byteNumbers[i] = byteCharacters.charCodeAt(i);\n"
-                                        + "}\n"
-                                        + "var data = new Blob([byteNumbers], {type: functionalEntity.mime});\n"
-                                        + "saveAs(data, functionalEntity.fileName);\n"
-                                        ))
+                                .postActionSuccess(new FileSaverPostAction())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")
                                 .build()
