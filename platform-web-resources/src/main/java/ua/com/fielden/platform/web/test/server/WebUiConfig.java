@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.centre.api.actions.ConfirmationPreAction.yesNo;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
@@ -34,6 +34,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.sample.domain.ExportAction;
+import ua.com.fielden.platform.sample.domain.ExportActionProducer;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
@@ -87,6 +89,7 @@ import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -152,6 +155,32 @@ public class WebUiConfig extends AbstractWebUiConfig {
         return path;
     }
 
+    private EntityMaster<ExportAction> createExportActionMaster() {
+        final String bottomButtonPanel = "['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
+        final String actionButton = "'margin: 10px', 'width: 110px'";
+        final IMaster<ExportAction> masterConfig = new SimpleMasterBuilder<ExportAction>()
+                .forEntity(ExportAction.class)
+                .addProp("count").asSpinner()
+                .also()
+                .addAction(MasterActions.REFRESH)
+                /*      */.shortDesc("CANCEL")
+                /*      */.longDesc("Cancel action")
+                .addAction(MasterActions.SAVE)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
+                        " ['padding:20px', "
+                        + " [['flex']],"
+                        + format(bottomButtonPanel, actionButton, actionButton)
+                        + "]"))
+                .done();
+        final EntityMaster<ExportAction> master = new EntityMaster<ExportAction>(
+                ExportAction.class,
+                ExportActionProducer.class,
+                masterConfig,
+                injector());
+        
+        return master;
+    }
+    
     /**
      * Configures the {@link WebUiConfig} with custom centres and masters.
      */
@@ -602,6 +631,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
             addMaster(NewEntityAction.class, functionalMasterWithEmbeddedPersistentMaster).
+            addMaster(ExportAction.class, createExportActionMaster()).
             addMaster(TgEntityWithPropertyDependency.class, new EntityMaster<TgEntityWithPropertyDependency>(
                     TgEntityWithPropertyDependency.class,
                     TgEntityWithPropertyDependencyProducer.class,
@@ -1065,6 +1095,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 shortDesc("Function 3").
                                 longDesc("Functional context-dependent action 3").
                                 build()
+                )
+                .also()
+                .addTopAction(
+                        action(ExportAction.class).
+                                withContext(context().withSelectionCrit().withSelectedEntities().build())
+                                .preAction(yesNo("Would you like to proceed with data export?"))
+                                .postActionSuccess(new FileSaverPostAction())
+                                .icon("icons:save")
+                                .shortDesc("Export Data")
+                                .build()
                 )
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
                 .withMatcher(KeyPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())

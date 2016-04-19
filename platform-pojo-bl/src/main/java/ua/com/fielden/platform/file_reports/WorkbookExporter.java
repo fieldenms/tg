@@ -20,35 +20,46 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.serialisation.xstream.GZipOutputStreamEx;
 import ua.com.fielden.platform.utils.Pair;
 
+/**
+ * A set of utility methods for exporting data into MS Excel.
+ * 
+ * @author TG Team
+ *
+ */
 public class WorkbookExporter {
 
     public static <M extends AbstractEntity<?>> HSSFWorkbook export(final List<M> entities, final String[] propertyNames, final String[] propertyTitles) {
-        List<Pair<String, String>> propNamesAndTitles = new ArrayList<>();
+        final List<Pair<String, String>> propNamesAndTitles = new ArrayList<>();
         
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
             propNamesAndTitles.add(new Pair<String, String>(propertyNames[index], propertyTitles[index]));
         }
-        DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<M>("Exported data", entities, propNamesAndTitles);
-        List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
+        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<M>("Exported data", entities, propNamesAndTitles);
+        final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
         sheetsData.add(dataForWorkbookSheet);
         return export(sheetsData);
     }
 
-    public static byte[] convertToByteArray(final HSSFWorkbook workbook) throws IOException {
+    public static byte[] convertToGZipByteArray(final HSSFWorkbook workbook) throws IOException {
         final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
         final GZipOutputStreamEx zOut = new GZipOutputStreamEx(oStream, Deflater.BEST_COMPRESSION);
-
         workbook.write(zOut);
-
         zOut.flush();
         zOut.close();
         oStream.flush();
         oStream.close();
-
+        return oStream.toByteArray();
+    }
+    
+    public static byte[] convertToByteArray(final HSSFWorkbook workbook) throws IOException {
+        final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
+        workbook.write(oStream);
+        oStream.flush();
+        oStream.close();
         return oStream.toByteArray();
     }
 
-    public static HSSFWorkbook export(List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData) {
+    public static HSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData) {
         final HSSFWorkbook wb = new HSSFWorkbook();
         for (DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
             addSheetWithData(wb, sheetData);
@@ -56,7 +67,7 @@ public class WorkbookExporter {
         return wb;
     }
     
-    private static <M extends AbstractEntity<?>> void addSheetWithData(HSSFWorkbook wb, DataForWorkbookSheet<M> sheetData) {
+    private static <M extends AbstractEntity<?>> void addSheetWithData(final HSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData) {
         final HSSFSheet sheet = wb.createSheet(sheetData.getSheetTitle());
         // Create a header row.
         final HSSFRow headerRow = sheet.createRow(0);

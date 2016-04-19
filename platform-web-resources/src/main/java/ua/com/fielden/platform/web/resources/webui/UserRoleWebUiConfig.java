@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.web.centre.api.actions.ConfirmationPreAction.okCancel;
+import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
