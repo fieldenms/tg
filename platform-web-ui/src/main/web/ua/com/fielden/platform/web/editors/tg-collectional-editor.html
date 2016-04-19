@@ -40,6 +40,11 @@
             background-color: var(--google-grey-100);
         }
         
+        .ordering-number {
+            font-size: 8pt;
+            width: 1.5rem;
+        }
+        
         .pad {
             @apply(--layout-vertical);
             padding-left: 16px;
@@ -88,12 +93,15 @@
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]">
-                        <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
-                        <iron-icon icon$="[[sortingIconForItem(item)]]" hidden$="[[sortingIconHidden(item)]]" class="arrow-drop-down"></iron-icon>
-                        <div class="pad" tooltip-text$="[[_calcItemTooltip(item)]]">
-                          <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                          <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                        </div>
+                          <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
+                          <div class="layout horizontal" hidden$="[[_sortingIconHidden(item)]]">
+                              <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
+                              <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
+                          </div>
+                          <div class="pad" tooltip-text$="[[_calcItemTooltip(item)]]">
+                              <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                              <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                          </div>
                       </div>
                       <div class="border"></div>
                     </div>
@@ -290,12 +298,65 @@
             return isSelected ? 'star' : 'star-border';
         },
         
-        sortingIconForItem: function (item) {
-            return item.sorting === true ? 'arrow-drop-up' : (item.sorting === false ? 'arrow-drop-down' : 'star-border');
+        _sortingIconForItem: function (sorting) {
+            return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
         },
         
-        sortingIconHidden: function (item) {
+        _sortingIconHidden: function (item) {
             return typeof item.sorting === 'undefined';
+        },
+        
+        _caclulateSortingIconStyle: function (sorting)  {
+            var style = sorting !== null ? 'color: black;' : 'color: grey;';
+            style += sorting === true ? 'align-self:flex-start' : (sorting === false ? 'align-self:flex-end' : 'align-self:flex-start');
+            return style;
+        },
+        
+        _calculateOrder: function (sortingNumber) {
+            return sortingNumber >= 0 ? sortingNumber + 1 + "" : "";
+        },
+        
+        _changeOrdering: function (e) {
+            e.stopPropagation( );
+            this._toggleOrdering(e.model.item, e.model.index);
+        },
+        
+        _toggleOrdering: function (item, index) {
+            if (item.sorting === true) {
+                this.set("_entities." + index + ".sorting", false);
+            } else if (item.sorting === false) {
+                this.set("_entities." + index + ".sorting", null);
+                this._turnOffOrdering(item.sortingNumber);
+            } else {
+                this.set("_entities." + index + ".sorting", true);
+                this._turnOnOrdering(index);
+            }
+        },
+        
+        _turnOnOrdering: function (index) {
+            var itemIndex, item;
+            var maxSortingNumber= this._entities[0].sortingNumber;
+            for (itemIndex = 1; itemIndex < this._entities.length; itemIndex++) {
+                item = this._entities[itemIndex];
+                if (item.sortingNumber > maxSortingNumber) {
+                    maxSortingNumber = item.sortingNumber;
+                }
+            }
+            this.set("_entities." + index + ".sortingNumber", maxSortingNumber + 1);
+        },
+        
+        _turnOffOrdering: function (sortingNumber) {
+            var itemIndex, item;
+            for (itemIndex = 0; itemIndex < this._entities.length; itemIndex++) {
+                item = this._entities[itemIndex];
+                if (item.sortingNumber >= 0) {
+                    if (item.sortingNumber > sortingNumber) {
+                        this.set("_entities." + itemIndex + ".sortingNumber", item.sortingNumber - 1);
+                    } else if (item.sortingNumber === sortingNumber) {
+                        this.set("_entities." + itemIndex + ".sortingNumber", -1);
+                    }
+                }
+            }
         },
         
         _makeId: function(id) {
