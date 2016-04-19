@@ -89,6 +89,7 @@
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]">
                         <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
+                        <iron-icon icon$="[[sortingIconForItem(item)]]" hidden$="[[sortingIconHidden(item)]]" class="arrow-drop-down"></iron-icon>
                         <div class="pad" tooltip-text$="[[_calcItemTooltip(item)]]">
                           <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
                           <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
@@ -287,6 +288,14 @@
         
         iconForItem: function (isSelected) {
             return isSelected ? 'star' : 'star-border';
+        },
+        
+        sortingIconForItem: function (item) {
+            return item.sorting === true ? 'arrow-drop-up' : (item.sorting === false ? 'arrow-drop-down' : 'star-border');
+        },
+        
+        sortingIconHidden: function (item) {
+            return typeof item.sorting === 'undefined';
         },
         
         _makeId: function(id) {
