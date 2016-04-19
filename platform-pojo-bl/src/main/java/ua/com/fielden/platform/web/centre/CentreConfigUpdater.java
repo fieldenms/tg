@@ -29,6 +29,21 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     @IsProperty(SortingProperty.class)
     @Title(value = "Sorting Properties", desc = "A list of sorting properties")
     private Set<SortingProperty> sortingProperties = new LinkedHashSet<SortingProperty>();
+    
+    @IsProperty(value = String.class) 
+    @Title(value = "Sorting values", desc = "Values of sorting properties -- 'asc', 'desc' or 'none' (the order is important and should be strictly the same as in 'sortingIds' property)")
+    private Set<String> sortingVals = new LinkedHashSet<>();
+    
+    @Observable
+    public CentreConfigUpdater setSortingVals(final Set<String> sortingVals) {
+        this.sortingVals.clear();
+        this.sortingVals.addAll(sortingVals);
+        return this;
+    }
+
+    public Set<String> getSortingVals() {
+        return Collections.unmodifiableSet(sortingVals);
+    }
 
     @Observable
     protected CentreConfigUpdater setSortingProperties(final Set<SortingProperty> sortingProperties) {

@@ -376,6 +376,8 @@
 	                        } else {
 	                            throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
 	                        }
+	                        
+	                        self.provideRandomSorting(self.entity.sortingVals);
 	                    }
 	                });
 	                
@@ -402,6 +404,19 @@
 	                    }
 	                }
 	            }, self);
+            }
+        },
+        
+        provideRandomSorting: function (sortingVals) {
+            if (typeof sortingVals !== 'undefined') {
+                while (sortingVals.length > 0) {
+                    sortingVals.pop();
+                }
+                
+                var chosenIds = this.entity.get('chosenIds');
+                for (var index = 0; index < chosenIds.length; index++) {
+                    sortingVals.push(chosenIds[index] + ':' + 'asc');
+                }
             }
         }
     });

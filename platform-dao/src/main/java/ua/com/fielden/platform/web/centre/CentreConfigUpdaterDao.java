@@ -43,6 +43,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         final EnhancedCentreEntityQueryCriteria criteriaEntityBeingUpdated = action.getKey();
         final Map<Object, SortingProperty> availableSortingProperties = AbstractFunctionalEntityProducerForCollectionModification.mapById(action.getSortingProperties(), String.class);
         logger.error("availableSortingProperties == " + availableSortingProperties);
+        logger.error("sortingVals == " + action.getSortingVals());
         
 //        final Set<SecurityRoleAssociation> addedAssociations = new LinkedHashSet<>();
 //        for (final String addedId : action.getAddedIds()) {
