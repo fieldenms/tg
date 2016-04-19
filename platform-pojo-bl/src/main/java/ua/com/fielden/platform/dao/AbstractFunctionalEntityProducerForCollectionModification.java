@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Function;
 
 import com.google.inject.Inject;
@@ -71,7 +72,10 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         if (masterEntityFromContext.isDirty()) {
             throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
         }
-        final MASTER_TYPE masterEntity = companionFinder.find(masterEntityType).findById(masterEntityFromContext.getId(), fetchModelForMasterEntity());
+        // TODO
+        // TODO There is a need to have more customizable way to re-retrieve masterEntity, in some cases, without re-retrieval at all
+        // TODO
+        final MASTER_TYPE masterEntity = (MASTER_TYPE) masterEntityFromContext; // companionFinder.find(masterEntityType).findById(masterEntityFromContext.getId(), fetchModelForMasterEntity());
         if (masterEntity == null) {
             throw Result.failure("The master entity has been deleted. " + TRY_AGAIN_MSG);
         }
@@ -82,12 +86,16 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         entity.setKey(masterEntity);
         entity.getProperty(AbstractEntity.KEY).resetState();
         
-        final T previouslyPersistedAction = retrieveActionFor(masterEntity, companion, entityType);
+        // TODO
+        // TODO There is a need to have ability to use non-persistent master functional entities, without surrogate ids:
+        // TODO
+        // final T previouslyPersistedAction = retrieveActionFor(masterEntity, companion, entityType);
         
         // IMPORTANT: it is necessary not to reset state for "surrogateVersion" property after its change.
         //   This is necessary to leave the property marked as 'changed from original' (origVal == null) to be able to apply afterwards
         //   the initial value against '"surrogateVersion", that was possibly changed by another user'
-        entity.setSurrogateVersion(surrogateVersion(previouslyPersistedAction));
+        // entity.setSurrogateVersion(surrogateVersion(previouslyPersistedAction));
+        entity.setSurrogateVersion(new Random().nextLong());
 
         return provideCurrentlyAssociatedValues(entity, masterEntity);
     }
