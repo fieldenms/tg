@@ -140,7 +140,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final ICriteriaGenerator critGenerator
                     ) {
         return restUtil.rawListJSONRepresentation(
-                CentreResourceUtils.createCriteriaValidationPrototype(miType, cdtmae, critGenerator, -1L),
+                CentreResourceUtils.createCriteriaValidationPrototype(miType, cdtmae, critGenerator, -1L, gdtm),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
                         CentreResourceUtils.createCriteriaMetaValues(cdtmae, CentreResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(miType, gdtm)
@@ -158,7 +158,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final String staleCriteriaMessage
                     ) {
         return restUtil.rawListJSONRepresentation(
-                CentreResourceUtils.createCriteriaValidationPrototype(miType, cdtmae, critGenerator, -1L),
+                CentreResourceUtils.createCriteriaValidationPrototype(miType, cdtmae, critGenerator, -1L, gdtm),
                 CentreResourceUtils.createCriteriaMetaValuesCustomObject(
                         CentreResourceUtils.createCriteriaMetaValues(cdtmae, CentreResourceUtils.getEntityType(miType)),
                         CentreResourceUtils.isFreshCentreChanged(miType, gdtm),

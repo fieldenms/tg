@@ -71,12 +71,13 @@ public class CentreConfigurationWebUiConfig {
                         .postActionSuccess(new IPostAction() {
                             @Override
                             public JsCode build() {
-                                return new JsCode("    return self.run();\n");
+                                return new JsCode("   return self.retrieve().then(function () { self.run(); }); \n");
                             }
                         })
                         .icon("av:playlist-add-check")
                         .shortDesc("Change Sorting")
                         .longDesc("Change sorting properties for this centre.")
+                        .withNoParentCentreRefresh()
                         .build();
             }
             

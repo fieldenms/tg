@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -30,12 +31,14 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
     private final Logger logger = Logger.getLogger(getClass());
     // private final ISecurityRoleAssociationBatchAction coSecurityRoleAssociationBatchAction;
     private final EntityFactory factory;
+    private final IGlobalDomainTreeManager gdtm;
     
     @Inject
-    public CentreConfigUpdaterDao(final IFilter filter, /* final ISecurityRoleAssociationBatchAction coSecurityRoleAssociationBatchAction, */ final EntityFactory factory) {
+    public CentreConfigUpdaterDao(final IFilter filter, /* final ISecurityRoleAssociationBatchAction coSecurityRoleAssociationBatchAction, */ final EntityFactory factory, final IGlobalDomainTreeManager gdtm) {
         super(filter);
         // this.coSecurityRoleAssociationBatchAction = coSecurityRoleAssociationBatchAction;
         this.factory = factory;
+        this.gdtm = gdtm;
     }
     
     @Override
@@ -69,7 +72,8 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
 //        batchAction.setRemoveEntities(removedAssociations);
 //        coSecurityRoleAssociationBatchAction.save(batchAction);
         
-        final ICentreDomainTreeManagerAndEnhancer cdtmae = criteriaEntityBeingUpdated.getCentreDomainTreeMangerAndEnhancer();
+        //final ICentreDomainTreeManagerAndEnhancer cdtmae = criteriaEntityBeingUpdated.getCentreDomainTreeMangerAndEnhancer();
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = (ICentreDomainTreeManagerAndEnhancer) criteriaEntityBeingUpdated.getFreshCentre.get();
         final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
         final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(cdtmae.getSecondTick().orderedProperties(root));
         for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
