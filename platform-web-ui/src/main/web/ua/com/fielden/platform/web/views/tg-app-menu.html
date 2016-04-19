@@ -5,6 +5,7 @@
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/views/tg-app-animation-behavior.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
@@ -30,6 +31,7 @@
             padding: 0 16px;
             font-size: 12px;
             color: white;
+            cursor: pointer;
         }
         .item-icon-bg {
             width: 100%;
@@ -79,7 +81,7 @@
 
                             <div class="item-name layout horizontal center" style$="[[_calcCaptionStyleForItem(item)]]">
                                 <div class="flex">
-                                    <span>[[item.title]]</span>
+                                    <span tooltip-text$="[[item.description]]">[[item.title]]</span>
                                 </div>
                                 <iron-icon icon="av:play-arrow"></iron-icon>
                             </div>
@@ -114,9 +116,10 @@
             behaviors: [
                 Polymer.NeonAnimatableBehavior,
                 Polymer.TgBehaviors.TgAppAnimationBehavior,
-                Polymer.IronResizableBehavior
+                Polymer.IronResizableBehavior,
+                Polymer.TgBehaviors.TgTooltipBehavior
             ],
-
+            
             ready: function () {
                 postal.subscribe({
                     channel: "menu",
