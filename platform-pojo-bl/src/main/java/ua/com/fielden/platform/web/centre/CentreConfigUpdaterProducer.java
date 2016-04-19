@@ -89,11 +89,9 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityProduce
         // this producer is suitable for property actions on User Role master and for actions on User Role centre
         return context.getSelectionCrit();
     }
-
+    
     @Override
-    protected fetch<EnhancedCentreEntityQueryCriteria> fetchModelForMasterEntity() {
-        // TODO need to be somehow removed....
-        return null;
-        // return EnhancedCentreEntityQueryCriteria.getFetchProvider().with("tokens").fetchModel();
+    protected EnhancedCentreEntityQueryCriteria refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext) {
+        return (EnhancedCentreEntityQueryCriteria) masterEntityFromContext;
     }
 }

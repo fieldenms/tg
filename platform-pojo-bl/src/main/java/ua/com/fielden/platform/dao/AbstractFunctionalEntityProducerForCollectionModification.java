@@ -55,7 +55,13 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
      */
     protected abstract AbstractEntity<?> getMasterEntityFromContext(final CentreContext<?, ?> context);
     
-    protected abstract fetch<MASTER_TYPE> fetchModelForMasterEntity();
+    protected fetch<MASTER_TYPE> fetchModelForMasterEntity() {
+        throw new CollectionModificationException("Method 'fetchModelForMasterEntity' is not implemented.");
+    }
+    
+    protected MASTER_TYPE refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext) {
+        return companionFinder.find(masterEntityType).findById(masterEntityFromContext.getId(), fetchModelForMasterEntity());
+    }
     
     @Override
     protected final T provideDefaultValues(final T entity) {
@@ -72,10 +78,7 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         if (masterEntityFromContext.isDirty()) {
             throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
         }
-        // TODO
-        // TODO There is a need to have more customizable way to re-retrieve masterEntity, in some cases, without re-retrieval at all
-        // TODO
-        final MASTER_TYPE masterEntity = (MASTER_TYPE) masterEntityFromContext; // companionFinder.find(masterEntityType).findById(masterEntityFromContext.getId(), fetchModelForMasterEntity());
+        final MASTER_TYPE masterEntity = refetchMasterEntity(masterEntityFromContext);
         if (masterEntity == null) {
             throw Result.failure("The master entity has been deleted. " + TRY_AGAIN_MSG);
         }
