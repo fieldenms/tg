@@ -11,7 +11,6 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 
@@ -21,7 +20,7 @@ import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQuer
  * @author Developers
  *
  */
-@EntityType(UserRoleTokensUpdater.class)
+@EntityType(CentreConfigUpdater.class)
 public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater> implements ICentreConfigUpdater {
     private final Logger logger = Logger.getLogger(getClass());
     // private final ISecurityRoleAssociationBatchAction coSecurityRoleAssociationBatchAction;

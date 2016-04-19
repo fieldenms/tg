@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.function.Function;
 
 import com.google.inject.Inject;

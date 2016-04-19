@@ -61,6 +61,10 @@ import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityDao;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
+import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.ISortingProperty;
+import ua.com.fielden.platform.web.centre.SortingPropertyDao;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntityDao;
 
@@ -89,7 +93,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
         bind(INewUserNotifier.class).toInstance(new INewUserNotifier() {
             @Override
-            public void notify(User user) {
+            public void notify(final User user) {
             }
         });
         bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
@@ -100,6 +104,8 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IUserRoleDao.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
+        bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
+        bind(ISortingProperty.class).to(SortingPropertyDao.class);
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
         bind(IUser.class).to(UserDao.class);
