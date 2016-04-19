@@ -12,6 +12,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
  * <li>data -- base64 string representing a binary array
  * </ul>
  * 
+ * See also an alternative implementation {@link FileDownloadPostAction}.
+ * 
  * @author TG Team
  *
  */
