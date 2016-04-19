@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -9,10 +11,13 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.utils.Pair;
 
 /** 
  * DAO implementation for companion object {@link ICentreConfigUpdater}.
@@ -63,6 +68,24 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
 //        batchAction.setSaveEntities(addedAssociations);
 //        batchAction.setRemoveEntities(removedAssociations);
 //        coSecurityRoleAssociationBatchAction.save(batchAction);
+        
+        final ICentreDomainTreeManagerAndEnhancer cdtmae = criteriaEntityBeingUpdated.getCentreDomainTreeMangerAndEnhancer();
+        final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
+        final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(cdtmae.getSecondTick().orderedProperties(root));
+        for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
+            if (Ordering.ASCENDING == orderedProperty.getValue()) {
+                cdtmae.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
+            }
+            cdtmae.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
+        }
+        
+        for (final String sortingVal: action.getSortingVals()) {
+            final String[] splitted = sortingVal.split(":");
+            cdtmae.getSecondTick().toggleOrdering(root, splitted[0]);
+            if ("desc".equals(splitted[1])) {
+                cdtmae.getSecondTick().toggleOrdering(root, splitted[0]);
+            }
+        }
         
         // after the association changes were successfully saved, the action should also be saved:
         return super.save(actionToSave);
