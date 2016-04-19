@@ -89,16 +89,12 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         entity.setKey(masterEntity);
         entity.getProperty(AbstractEntity.KEY).resetState();
         
-        // TODO
-        // TODO There is a need to have ability to use non-persistent master functional entities, without surrogate ids:
-        // TODO
-        // final T previouslyPersistedAction = retrieveActionFor(masterEntity, companion, entityType);
+        final T previouslyPersistedAction = retrieveActionFor(masterEntity, companion, entityType, entity.isPersistent());
         
         // IMPORTANT: it is necessary not to reset state for "surrogateVersion" property after its change.
         //   This is necessary to leave the property marked as 'changed from original' (origVal == null) to be able to apply afterwards
         //   the initial value against '"surrogateVersion", that was possibly changed by another user'
-        // entity.setSurrogateVersion(surrogateVersion(previouslyPersistedAction));
-        entity.setSurrogateVersion(new Random().nextLong());
+        entity.setSurrogateVersion(surrogateVersion(previouslyPersistedAction));
 
         return provideCurrentlyAssociatedValues(entity, masterEntity);
     }
@@ -122,8 +118,8 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         return persistedEntity == null ? 99L : (persistedEntity.getVersion() + 100L);
     }
     
-    private static <MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE, ?>> T retrieveActionFor(final MASTER_TYPE masterEntity, final IEntityDao<T> companion, final Class<T> actionType) {
-        return companion.getEntity(
+    private static <MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE, ?>> T retrieveActionFor(final MASTER_TYPE masterEntity, final IEntityDao<T> companion, final Class<T> actionType, final boolean isActionEntityPersistent) {
+        return !isActionEntityPersistent ? null : companion.getEntity(
                 from(select(actionType).where().prop(AbstractEntity.KEY).eq().val(masterEntity).model())
                 .with(fetchAndInstrument(actionType).with(AbstractEntity.KEY)).model()
         );
@@ -162,7 +158,7 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         }
         
         final Class<T> actionType = (Class<T>) action.getType();
-        final T persistedEntity = retrieveActionFor(masterEntityBeingUpdated, companion, actionType);
+        final T persistedEntity = retrieveActionFor(masterEntityBeingUpdated, companion, actionType, action.isPersistent());
         
         if (surrogateVersion(persistedEntity) > action.getSurrogateVersion()) {
             throw Result.failure("Another user has changed the chosen items. " + TRY_AGAIN_MSG);
