@@ -331,6 +331,7 @@
                 this.set("_entities." + index + ".sorting", true);
                 this._turnOnOrdering(index);
             }
+            this.provideSorting(this.entity.sortingVals, this._entities);
         },
         
         _turnOnOrdering: function (index) {
@@ -437,8 +438,6 @@
 	                        } else {
 	                            throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
 	                        }
-	                        
-	                        self.provideRandomSorting(self.entity.sortingVals);
 	                    }
 	                });
 	                
@@ -468,16 +467,17 @@
             }
         },
         
-        provideRandomSorting: function (sortingVals) {
+        provideSorting: function (sortingVals, sortingProperties) {
             if (typeof sortingVals !== 'undefined') {
                 while (sortingVals.length > 0) {
                     sortingVals.pop();
                 }
-                
-                var chosenIds = this.entity.get('chosenIds');
-                for (var index = 0; index < chosenIds.length; index++) {
-                    sortingVals.push(chosenIds[index] + ':' + 'asc');
-                }
+                for (var index = 0; index < sortingProperties.length; index++) {
+                    var sortingProperty = sortingProperties[index];
+                    if (sortingProperty.sortingNumber >= 0) {
+                        sortingVals[sortingProperty.sortingNumber] = sortingProperty.get('key') + ':' + (sortingProperty.sorting === true ? 'asc' : 'desc');
+                    }
+                } 
             }
         }
     });
