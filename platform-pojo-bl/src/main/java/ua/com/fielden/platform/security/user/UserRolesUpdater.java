@@ -8,12 +8,9 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModif
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserRole;
 
 /** 
  * Master entity object.
@@ -22,10 +19,9 @@ import ua.com.fielden.platform.security.user.UserRole;
  *
  */
 @CompanionObject(IUserRolesUpdater.class)
-@KeyType(User.class)
 @MapEntityTo
-@KeyTitle(value = "User", desc = "User, whose 'roles' collection modifies by this functional action.")
-public class UserRolesUpdater extends AbstractFunctionalEntityForCollectionModification<User, Long> {
+@KeyTitle(value = "User Id", desc = "Id of user, whose 'roles' collection modifies by this functional action.")
+public class UserRolesUpdater extends AbstractFunctionalEntityForCollectionModification<Long> {
     private static final long serialVersionUID = 1L;
     
     @IsProperty(UserRole.class)

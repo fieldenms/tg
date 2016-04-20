@@ -7,11 +7,8 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 
 /** 
  * Master entity object.
@@ -20,10 +17,8 @@ import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQuer
  *
  */
 @CompanionObject(ICentreConfigUpdater.class)
-@KeyType(EnhancedCentreEntityQueryCriteria.class)
-// @MapEntityTo
-@KeyTitle(value = "Criteria Entity", desc = "Criteria entity, whose 'sortingProperties' collection modifies by this functional action.")
-public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionModification<EnhancedCentreEntityQueryCriteria, String> {
+// !@MapEntityTo -- here the entity is not persistent intentionally
+public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
     private static final long serialVersionUID = 1L;
     
     @IsProperty(SortingProperty.class)

@@ -47,7 +47,7 @@ public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> imple
         final UserRolesUpdater actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getRoles(), this, factory, Long.class);
         
         // after all validations have passed -- the association changes could be saved:
-        final User userBeingUpdated = action.getKey();
+        final User userBeingUpdated = (User) action.refetchedMasterEntity();
         final Map<Object, UserRole> availableRoles = AbstractFunctionalEntityProducerForCollectionModification.mapById(action.getRoles(), Long.class);
         
         final Set<UserAndRoleAssociation> addedAssociations = new LinkedHashSet<>();

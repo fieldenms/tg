@@ -48,7 +48,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         final CentreConfigUpdater actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getSortingProperties(), this, factory, String.class);
         
         // after all validations have passed -- the association changes could be saved:
-        final EnhancedCentreEntityQueryCriteria criteriaEntityBeingUpdated = action.getKey();
+        final EnhancedCentreEntityQueryCriteria criteriaEntityBeingUpdated = (EnhancedCentreEntityQueryCriteria) action.refetchedMasterEntity();
         final Map<Object, SortingProperty> availableSortingProperties = AbstractFunctionalEntityProducerForCollectionModification.mapById(action.getSortingProperties(), String.class);
         logger.error("availableSortingProperties == " + availableSortingProperties);
         logger.error("sortingVals == " + action.getSortingVals());

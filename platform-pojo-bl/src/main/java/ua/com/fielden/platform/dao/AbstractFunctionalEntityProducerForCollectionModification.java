@@ -17,7 +17,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -33,16 +32,14 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  *
  */
-public abstract class AbstractFunctionalEntityProducerForCollectionModification<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE, ?>> extends DefaultEntityProducerWithContext<T, T> implements IEntityProducer<T> {
+public abstract class AbstractFunctionalEntityProducerForCollectionModification<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<?>> extends DefaultEntityProducerWithContext<T, T> implements IEntityProducer<T> {
     private final IEntityDao<T> companion;
     private final ICompanionObjectFinder companionFinder;
-    private final Class<MASTER_TYPE> masterEntityType;
     private static final String TRY_AGAIN_MSG = "Please cancel this action and try again!";
     
     @Inject
     public AbstractFunctionalEntityProducerForCollectionModification(final EntityFactory factory, final Class<T> actionType, final ICompanionObjectFinder companionFinder) {
         super(factory, actionType, companionFinder);
-        this.masterEntityType = (Class<MASTER_TYPE>) PropertyTypeDeterminator.determinePropertyType(actionType, AbstractEntity.KEY);
         this.companion = companionFinder.find(actionType);
         this.companionFinder = companionFinder;
     }
@@ -59,7 +56,7 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
     }
     
     protected MASTER_TYPE refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext) {
-        return companionFinder.find(masterEntityType).findById(masterEntityFromContext.getId(), fetchModelForMasterEntity());
+        return companionFinder.find((Class<MASTER_TYPE>) masterEntityFromContext.getDerivedFromType()).findById(masterEntityFromContext.getId(), fetchModelForMasterEntity());
     }
     
     @Override
@@ -77,25 +74,26 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
         if (masterEntityFromContext.isDirty()) {
             throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
         }
-        final MASTER_TYPE masterEntity = refetchMasterEntity(masterEntityFromContext);
-        if (masterEntity == null) {
+        final MASTER_TYPE refetchedMasterEntity = refetchMasterEntity(masterEntityFromContext);
+        if (refetchedMasterEntity == null) {
             throw Result.failure("The master entity has been deleted. " + TRY_AGAIN_MSG);
         }
         
+        entity.setRefetchedMasterEntity(refetchedMasterEntity);
         // IMPORTANT: it is necessary to reset state for "key" property after its change.
         //   This is necessary to make the property marked as 'not changed from original' (origVal == val == 'DEMO') to be able not to re-apply afterwards
         //   the initial value against "key" property
-        entity.setKey(masterEntity);
+        entity.setKey(refetchedMasterEntity.getId());
         entity.getProperty(AbstractEntity.KEY).resetState();
         
-        final T previouslyPersistedAction = retrieveActionFor(masterEntity, companion, entityType, entity.isPersistent());
+        final T previouslyPersistedAction = retrieveActionFor(refetchedMasterEntity, companion, entityType, entity.isPersistent());
         
         // IMPORTANT: it is necessary not to reset state for "surrogateVersion" property after its change.
         //   This is necessary to leave the property marked as 'changed from original' (origVal == null) to be able to apply afterwards
         //   the initial value against '"surrogateVersion", that was possibly changed by another user'
         entity.setSurrogateVersion(surrogateVersion(previouslyPersistedAction));
 
-        return provideCurrentlyAssociatedValues(entity, masterEntity);
+        return provideCurrentlyAssociatedValues(entity, refetchedMasterEntity);
     }
     
     /**
@@ -107,19 +105,19 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
      * 'all available entities' property should be filled in with the fully-fledged entities (with their keys and descriptions etc), that can be chosen as collection items.
      * 
      * @param entity
-     * @param masterEntity
+     * @param refetchedMasterEntity
      * 
      * @return
      */
-    protected abstract T provideCurrentlyAssociatedValues(final T entity, final MASTER_TYPE masterEntity);
+    protected abstract T provideCurrentlyAssociatedValues(final T entity, final MASTER_TYPE refetchedMasterEntity);
     
     private static <T extends AbstractEntity<?>> Long surrogateVersion(final T persistedEntity) {
         return persistedEntity == null ? 99L : (persistedEntity.getVersion() + 100L);
     }
     
-    private static <MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE, ?>> T retrieveActionFor(final MASTER_TYPE masterEntity, final IEntityDao<T> companion, final Class<T> actionType, final boolean isActionEntityPersistent) {
+    private static <MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<?>> T retrieveActionFor(final MASTER_TYPE masterEntity, final IEntityDao<T> companion, final Class<T> actionType, final boolean isActionEntityPersistent) {
         return !isActionEntityPersistent ? null : companion.getEntity(
-                from(select(actionType).where().prop(AbstractEntity.KEY).eq().val(masterEntity).model())
+                from(select(actionType).where().prop(AbstractEntity.KEY).eq().val(masterEntity.getId()).model())
                 .with(fetchAndInstrument(actionType).with(AbstractEntity.KEY)).model()
         );
     }
@@ -134,14 +132,14 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
      * @param factory
      * @return
      */
-    public static <MASTER_TYPE extends AbstractEntity<?>, ITEM extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<MASTER_TYPE, ID_TYPE>, ID_TYPE> T validateAction(final T action, final Function<T, Collection<ITEM>> availableEntitiesGetter, final IEntityDao<T> companion, final EntityFactory factory, final Class<ID_TYPE> idType) {
+    public static <MASTER_TYPE extends AbstractEntity<?>, ITEM extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<ID_TYPE>, ID_TYPE> T validateAction(final T action, final Function<T, Collection<ITEM>> availableEntitiesGetter, final IEntityDao<T> companion, final EntityFactory factory, final Class<ID_TYPE> idType) {
         final Result res = action.isValid();
         // throw validation result of the action if it is not successful:
         if (!res.isSuccessful()) {
             throw res;
         }
         
-        final MASTER_TYPE masterEntityBeingUpdated = action.getKey(); // existence of master entity is checked during "producing" of functional action
+        final MASTER_TYPE masterEntityBeingUpdated = (MASTER_TYPE) action.refetchedMasterEntity(); // existence of master entity is checked during "producing" of functional action
         
         final Map<Object, ITEM> availableEntities = mapById(availableEntitiesGetter.apply(action), idType);
         
@@ -170,7 +168,8 @@ public abstract class AbstractFunctionalEntityProducerForCollectionModification<
             entityToSave.setSurrogateVersion(persistedEntity.getVersion() + 1L);
         } else {
             entityToSave = factory.newEntity(actionType, null);
-            entityToSave.setKey(masterEntityBeingUpdated);
+            entityToSave.setRefetchedMasterEntity(masterEntityBeingUpdated);
+            entityToSave.setKey(masterEntityBeingUpdated.getId());
         }
         return entityToSave;
     }

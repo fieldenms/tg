@@ -49,7 +49,7 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
         final UserRoleTokensUpdater actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getTokens(), this, factory, String.class);
         
         // after all validations have passed -- the association changes could be saved:
-        final UserRole userRoleBeingUpdated = action.getKey();
+        final UserRole userRoleBeingUpdated = (UserRole) action.refetchedMasterEntity();
         final Map<Object, SecurityTokenInfo> availableTokens = AbstractFunctionalEntityProducerForCollectionModification.mapById(action.getTokens(), String.class);
         
         final Set<SecurityRoleAssociation> addedAssociations = new LinkedHashSet<>();
