@@ -74,7 +74,7 @@ public class CentreConfigurationWebUiConfig {
                                 return new JsCode("   return self.retrieve().then(function () { self.run(); }); \n");
                             }
                         })
-                        .icon("av:playlist-add-check")
+                        .icon("av:sort-by-alpha")
                         .shortDesc("Change Sorting")
                         .longDesc("Change sorting properties for this centre.")
                         .withNoParentCentreRefresh()
