@@ -13,8 +13,10 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CustomProp;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
@@ -58,7 +60,8 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final LinkedHashSet<SortingProperty> result = new LinkedHashSet<>();
         int sortingNumber = 0;
         for (final String checkedProp: checkedProperties) {
-            if (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION)) {
+            if (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) && 
+                    !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp)) {
                 final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(checkedProp, managedType);
                 final SortingProperty sortingProperty = factory.newEntity(SortingProperty.class, null, checkedProp, titleAndDesc.getValue());
                 sortingProperty.setTitle(titleAndDesc.getKey());
