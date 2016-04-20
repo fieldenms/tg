@@ -3,19 +3,21 @@ package ua.com.fielden.platform.web.centre;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
+import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Inject;
 
 /**
  * A producer for new instances of entity {@link CentreConfigUpdater}.
@@ -56,17 +58,19 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final LinkedHashSet<SortingProperty> result = new LinkedHashSet<>();
         int sortingNumber = 0;
         for (final String checkedProp: checkedProperties) {
-            final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(checkedProp, managedType);
-            final SortingProperty sortingProperty = factory.newEntity(SortingProperty.class, null, checkedProp, titleAndDesc.getValue());
-            sortingProperty.setTitle(titleAndDesc.getKey());
-
-            final Ordering ordering = getOrdering(orderedProperties, checkedProp);
-            if (ordering != null) {
-                sortingProperty.setSorting(Ordering.ASCENDING == ordering); // 'null' is by default, means no sorting exist
-                sortingProperty.setSortingNumber(sortingNumber);
-                sortingNumber++;
+            if (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION)) {
+                final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(checkedProp, managedType);
+                final SortingProperty sortingProperty = factory.newEntity(SortingProperty.class, null, checkedProp, titleAndDesc.getValue());
+                sortingProperty.setTitle(titleAndDesc.getKey());
+    
+                final Ordering ordering = getOrdering(orderedProperties, checkedProp);
+                if (ordering != null) {
+                    sortingProperty.setSorting(Ordering.ASCENDING == ordering); // 'null' is by default, means no sorting exist
+                    sortingProperty.setSortingNumber(sortingNumber);
+                    sortingNumber++;
+                }
+                result.add(sortingProperty);
             }
-            result.add(sortingProperty);
         }
         return result;
     }
