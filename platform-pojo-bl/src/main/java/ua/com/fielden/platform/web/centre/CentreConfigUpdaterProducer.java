@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityForCollectionModificationProducer;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -27,7 +28,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria, CentreConfigUpdater> implements IEntityProducer<CentreConfigUpdater> {
+public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, CentreConfigUpdater> implements IEntityProducer<CentreConfigUpdater> {
 
     @Inject
     public CentreConfigUpdaterProducer(
@@ -39,8 +40,8 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
 
     @Override
     // @Authorise(UserRoleReviewToken.class)
-    protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria masterEntity) {
-        final LinkedHashSet<SortingProperty> sortingProperties = createSortingProperties((ICentreDomainTreeManagerAndEnhancer) masterEntity.freshCentreSupplier().get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
+    protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
+        final LinkedHashSet<SortingProperty> sortingProperties = createSortingProperties(masterEntity.freshCentreSupplier().get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
         entity.setSortingProperties(sortingProperties);
         entity.getProperty("sortingProperties").resetState();
 
@@ -89,7 +90,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
     }
 
     @Override
-    protected EnhancedCentreEntityQueryCriteria refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext) {
-        return (EnhancedCentreEntityQueryCriteria) masterEntityFromContext;
+    protected EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> refetchMasterEntity(final AbstractEntity<?> masterEntityFromContext) {
+        return (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>) masterEntityFromContext;
     }
 }
