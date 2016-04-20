@@ -47,7 +47,7 @@ public class CentreConfigurationWebUiConfig {
                 .addProp("sortingProperties").asCollectionalEditor().maxVisibleRows(5).withHeader("title")
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.SAVE).shortDesc("SORT").longDesc("Sorting action")
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', 'width:500px', "
@@ -63,7 +63,7 @@ public class CentreConfigurationWebUiConfig {
     }
     
     public static enum CentreConfigActions {
-        MANAGE_SORTING_ACTION {
+        SORT_ACTION {
             @Override
             public EntityActionConfig mkAction() {
                 return action(CentreConfigUpdater.class)
