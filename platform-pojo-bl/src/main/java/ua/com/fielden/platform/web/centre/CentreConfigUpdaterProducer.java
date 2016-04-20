@@ -4,7 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
-import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
+import ua.com.fielden.platform.dao.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -23,7 +23,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityProducerForCollectionModification<EnhancedCentreEntityQueryCriteria, CentreConfigUpdater> implements IEntityProducer<CentreConfigUpdater> {
+public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria, CentreConfigUpdater> implements IEntityProducer<CentreConfigUpdater> {
     // private final IUserRoleDao coUserRole;
     // private final SecurityTokenProvider securityTokenProvider;
 

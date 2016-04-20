@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
+import ua.com.fielden.platform.dao.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -45,11 +45,11 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
     @SessionRequired
     // @Authorise(UserRoleSaveToken.class)
     public CentreConfigUpdater save(final CentreConfigUpdater action) {
-        final CentreConfigUpdater actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getSortingProperties(), this, factory, String.class);
+        final CentreConfigUpdater actionToSave = AbstractFunctionalEntityForCollectionModificationProducer.validateAction(action, a -> a.getSortingProperties(), this, factory, String.class);
         
         // after all validations have passed -- the association changes could be saved:
         final EnhancedCentreEntityQueryCriteria criteriaEntityBeingUpdated = (EnhancedCentreEntityQueryCriteria) action.refetchedMasterEntity();
-        final Map<Object, SortingProperty> availableSortingProperties = AbstractFunctionalEntityProducerForCollectionModification.mapById(action.getSortingProperties(), String.class);
+        final Map<Object, SortingProperty> availableSortingProperties = AbstractFunctionalEntityForCollectionModificationProducer.mapById(action.getSortingProperties(), String.class);
         logger.error("availableSortingProperties == " + availableSortingProperties);
         logger.error("sortingVals == " + action.getSortingVals());
         

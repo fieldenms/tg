@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.dao;
 
 /**
- * Runtime exception that should be thrown from within {@link AbstractFunctionalEntityProducerForCollectionModification} implementation (and also in other logic pertaining collection
+ * Runtime exception that should be thrown from within {@link AbstractFunctionalEntityForCollectionModificationProducer} implementation (and also in other logic pertaining collection
  * modification).
  * 
  * @author TG Team

@@ -32,13 +32,13 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  *
  */
-public abstract class AbstractFunctionalEntityProducerForCollectionModification<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<?>> extends DefaultEntityProducerWithContext<T, T> implements IEntityProducer<T> {
+public abstract class AbstractFunctionalEntityForCollectionModificationProducer<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<?>> extends DefaultEntityProducerWithContext<T, T> implements IEntityProducer<T> {
     private final IEntityDao<T> companion;
     private final ICompanionObjectFinder companionFinder;
     private static final String TRY_AGAIN_MSG = "Please cancel this action and try again!";
     
     @Inject
-    public AbstractFunctionalEntityProducerForCollectionModification(final EntityFactory factory, final Class<T> actionType, final ICompanionObjectFinder companionFinder) {
+    public AbstractFunctionalEntityForCollectionModificationProducer(final EntityFactory factory, final Class<T> actionType, final ICompanionObjectFinder companionFinder) {
         super(factory, actionType, companionFinder);
         this.companion = companionFinder.find(actionType);
         this.companionFinder = companionFinder;
