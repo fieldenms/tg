@@ -626,7 +626,7 @@
                 });
 
                 ///////////////////////// Detail postSaved listener //////////////////////////////////////
-                postal.subscribe({
+                this.masterSavedListener = postal.subscribe({
                     channel: "centre_" + self.$.selection_criteria.uuid,
                     topic: "detail.saved",
                     callback: function (data, envelope) {
@@ -644,6 +644,7 @@
                 this.masterCreatedListener.unsubscribe();
                 this.masterShowListener.unsubscribe();
                 this.masterNewListener.unsubscribe();
+                this.masterSavedListener.unsubscribe();
             },
 
             /**
