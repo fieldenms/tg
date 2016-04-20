@@ -25,7 +25,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     private static final long serialVersionUID = -5189571197523084383L;
     
-    public Supplier<ICentreDomainTreeManagerAndEnhancer> getFreshCentre;
+    private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
 
     /**
      * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
@@ -37,5 +37,13 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     @Inject
     protected EnhancedCentreEntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider) {
         super(valueMatcherFactory, generatedEntityController, serialiser, controllerProvider);
+    }
+    
+    public void setFreshCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier) {
+        this.freshCentreSupplier = freshCentreSupplier;
+    }
+    
+    public Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier() {
+        return freshCentreSupplier;
     }
 }

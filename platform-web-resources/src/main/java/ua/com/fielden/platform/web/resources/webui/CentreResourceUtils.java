@@ -342,7 +342,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IGlobalDomainTreeManager gdtm) {
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, createMiTypeAnnotation(miType));
-        validationPrototype.getFreshCentre = () -> CentreUtils.getFreshCentre(gdtm, miType);
+        validationPrototype.setFreshCentreSupplier( () -> CentreUtils.getFreshCentre(gdtm, miType) );
 
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);
         final boolean idAccessible = idField.isAccessible();

@@ -28,24 +28,19 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<EnhancedCentreEntityQueryCriteria, CentreConfigUpdater> implements IEntityProducer<CentreConfigUpdater> {
-    // private final IUserRoleDao coUserRole;
-    // private final SecurityTokenProvider securityTokenProvider;
 
     @Inject
     public CentreConfigUpdaterProducer(
             final EntityFactory factory,
             final ICompanionObjectFinder companionFinder,
-            /* final IUserRoleDao coUserRole, */
             final IApplicationSettings applicationSettings) throws Exception {
         super(factory, CentreConfigUpdater.class, companionFinder);
-        // this.coUserRole = coUserRole;
-        // this.securityTokenProvider = new SecurityTokenProvider(applicationSettings.pathToSecurityTokens(), applicationSettings.securityTokensPackageName());
     }
 
     @Override
     // @Authorise(UserRoleReviewToken.class)
     protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria masterEntity) {
-        final LinkedHashSet<SortingProperty> sortingProperties = createSortingProperties((ICentreDomainTreeManagerAndEnhancer) masterEntity.getFreshCentre.get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
+        final LinkedHashSet<SortingProperty> sortingProperties = createSortingProperties((ICentreDomainTreeManagerAndEnhancer) masterEntity.freshCentreSupplier().get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
         entity.setSortingProperties(sortingProperties);
         entity.getProperty("sortingProperties").resetState();
 

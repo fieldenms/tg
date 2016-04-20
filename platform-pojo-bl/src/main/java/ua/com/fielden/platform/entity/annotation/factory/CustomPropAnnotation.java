@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.entity.annotation.factory;
 
-import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CustomProp;
 
 /**
- * A factory for convenient instantiation of {@link Calculated} annotations, which mainly should be used for dynamic property creation.
+ * A factory for convenient instantiation of {@link CustomProp} annotations, which mainly should be used for dynamic property creation.
  * 
  * @author TG Team
  * 
