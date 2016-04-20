@@ -89,11 +89,11 @@
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]">
             <input is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
-            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
+            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_entities)]]" multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]">
-                          <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
+                          <iron-icon icon$="[[iconForItem(selected)]]" hidden$="[[!_sortingIconHidden(item)]]" class="star"></iron-icon>
                           <div class="layout horizontal" hidden$="[[_sortingIconHidden(item)]]">
                               <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                               <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
@@ -304,6 +304,10 @@
         
         _sortingIconHidden: function (item) {
             return typeof item.sorting === 'undefined';
+        },
+        
+        _isSelectionEnabled: function (_entities) {
+            return _entities.length > 0 && this._sortingIconHidden(_entities[0]);
         },
         
         _caclulateSortingIconStyle: function (sorting)  {
