@@ -45,7 +45,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityProduce
     @Override
     // @Authorise(UserRoleReviewToken.class)
     protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria masterEntity) {
-        final LinkedHashSet<SortingProperty> sortingProperties = createSortingProperties(masterEntity.getCentreDomainTreeMangerAndEnhancer(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
+        final LinkedHashSet<SortingProperty> sortingProperties = createSortingProperties((ICentreDomainTreeManagerAndEnhancer) masterEntity.getFreshCentre.get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
         entity.setSortingProperties(sortingProperties);
         entity.getProperty("sortingProperties").resetState();
         
