@@ -370,6 +370,9 @@
                 var newEditingValue = this.convertToString(propValue);
                 if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
                 	this._refreshCycleStarted = false;
+                } else if (newEditingValue !== this._editingValue && (this._refreshCycleStarted === true) && this._commValue !== this._editingValue) {
+                	this._refreshCycleStarted = false;
+                	return;
                 }
                 this._editingValue = newEditingValue;
             },
