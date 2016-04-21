@@ -478,7 +478,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
             }
             if (config.withMasterEntity) {
-                context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder));
+                context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, 0));
             }
             return Optional.of(context);
         } else {
@@ -504,12 +504,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IUserProvider userProvider, 
             final ICriteriaGenerator critGenerator, 
             final EntityFactory entityFactory, 
-            final CentreContextHolder centreContextHolder, 
+            final AbstractEntity<?> masterContext,
+            final ArrayList<AbstractEntity<?>> selectedEntities,
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
-        context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
-        context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder));
+        context.setSelectedEntities((List<T>) selectedEntities);
+        context.setMasterEntity(masterContext);
         return context;
     }
 

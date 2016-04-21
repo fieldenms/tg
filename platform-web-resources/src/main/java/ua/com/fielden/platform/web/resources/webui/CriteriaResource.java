@@ -208,6 +208,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
     @Override
     public Representation put(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+            logger.debug("CRITERIA_RESOURCE: run started.");
             //            // NOTE: the following line can be the example how 'centre running' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during centre running.");
             final Class<? extends MiWithConfigurationSupport<?>> miType = centre.getMenuItemType();
@@ -246,6 +247,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             }
             
             if (pair.getValue() == null) {
+                logger.debug("CRITERIA_RESOURCE: run finished.");
                 return restUtil.rawListJSONRepresentation(isRunning ? appliedCriteriaEntity : null, pair.getKey());
             }
 
@@ -274,6 +276,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
 
             // NOTE: the following line can be the example how 'criteria running' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during criteria running.");
+            logger.debug("CRITERIA_RESOURCE: run finished.");
             return restUtil.rawListJSONRepresentation(list.toArray());
         }, restUtil);
     }

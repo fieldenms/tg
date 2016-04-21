@@ -17,7 +17,6 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -90,6 +89,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
     @Override
     public Representation post(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+            logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search started.");
             //            // NOTE: the following line can be the example how 'entity search' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during criteria entity searching.");
             final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
@@ -153,6 +153,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
 
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
 
+            logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
             return restUtil.listJSONRepresentation(entities);
         }, restUtil);
     }
