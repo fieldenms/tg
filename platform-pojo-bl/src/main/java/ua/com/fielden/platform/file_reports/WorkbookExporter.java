@@ -7,13 +7,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.zip.Deflater;
 
-import org.apache.log4j.helpers.DateTimeDateFormat;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -30,7 +31,7 @@ public class WorkbookExporter {
 
     public static <M extends AbstractEntity<?>> HSSFWorkbook export(final List<M> entities, final String[] propertyNames, final String[] propertyTitles) {
         final List<Pair<String, String>> propNamesAndTitles = new ArrayList<>();
-        
+
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
             propNamesAndTitles.add(new Pair<String, String>(propertyNames[index], propertyTitles[index]));
         }
@@ -50,7 +51,7 @@ public class WorkbookExporter {
         oStream.close();
         return oStream.toByteArray();
     }
-    
+
     public static byte[] convertToByteArray(final HSSFWorkbook workbook) throws IOException {
         final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
         workbook.write(oStream);
@@ -66,30 +67,36 @@ public class WorkbookExporter {
         }
         return wb;
     }
-    
+
     private static <M extends AbstractEntity<?>> void addSheetWithData(final HSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData) {
         final HSSFSheet sheet = wb.createSheet(sheetData.getSheetTitle());
         // Create a header row.
         final HSSFRow headerRow = sheet.createRow(0);
         // Create a new font and alter it
         final HSSFFont font = wb.createFont();
-        font.setFontHeightInPoints((short) 12);
+        font.setFontHeightInPoints((short) 11);
         font.setFontName("Courier New");
         font.setBoldweight((short) 1000);
         // Fonts are set into a style so create a new one to use
         final HSSFCellStyle headerCellStyle = wb.createCellStyle();
         headerCellStyle.setFont(font);
         headerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
+        headerCellStyle.setWrapText(true);
         final HSSFCellStyle headerInnerCellStyle = wb.createCellStyle();
         headerInnerCellStyle.setFont(font);
         headerInnerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
         headerInnerCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
+        headerInnerCellStyle.setWrapText(true);
         // Create cells and put column names there
         for (int index = 0; index < sheetData.getPropTitles().size(); index++) {
             final HSSFCell cell = headerRow.createCell(index);
             cell.setCellValue(sheetData.getPropTitles().get(index));
             cell.setCellStyle(index < sheetData.getPropTitles().size() - 1 ? headerInnerCellStyle : headerCellStyle);
         }
+
+        CellStyle dateCellStyle = wb.createCellStyle();
+        CreationHelper createHelper = wb.getCreationHelper();
+        dateCellStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
 
         // let's make cell style to handle borders
         final HSSFCellStyle dataCellStyle = wb.createCellStyle();
@@ -104,8 +111,12 @@ public class WorkbookExporter {
                 }
                 final Object value = sheetData.getEntities().get(index).get(sheetData.getPropNames().get(propIndex)); // get the value
                 // need to try to do the best job with types
-                if (value instanceof Date || value instanceof DateTime) {
-                    cell.setCellValue(DateTimeDateFormat.getDateTimeInstance().format(value));
+                if (value instanceof Date) {
+                    cell.setCellValue((Date) value);
+                    cell.setCellStyle(dateCellStyle);
+                } else if (value instanceof DateTime) {
+                    cell.setCellValue(((DateTime) value).toDate());
+                    cell.setCellStyle(dateCellStyle);
                 } else if (value instanceof Number) {
                     cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
                     cell.setCellValue(((Number) value).doubleValue());
@@ -120,5 +131,17 @@ public class WorkbookExporter {
                 }
             }
         }
+
+        // adjusting columns widths
+        for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
+            sheet.autoSizeColumn(propIndex);
+            sheet.setColumnWidth(propIndex, (int) (sheet.getColumnWidth(propIndex) * 1.05));
+        }
+
+        // tripling first row height
+        sheet.getRow(0).setHeight((short) (sheet.getRow(0).getHeight() * 3));
+
+        // freezing first row
+        sheet.createFreezePane(0, 1);
     }
 }
