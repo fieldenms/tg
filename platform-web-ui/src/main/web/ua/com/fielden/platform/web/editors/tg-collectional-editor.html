@@ -19,7 +19,6 @@
         
         .item {
             @apply(--layout-horizontal);
-            cursor: pointer;
             padding: 16px 22px;
             border-bottom: 1px solid #DDD;
         }
@@ -72,6 +71,9 @@
             text-overflow: ellipsis;
         }
         
+        .sorting-group {
+            cursor: pointer;
+        }
     </style>
 
     <template>
@@ -92,9 +94,9 @@
             <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_entities)]]" multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
-                      <div tabindex="0" class$="[[_computedClass(selected)]]">
+                      <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(item.sorting)]]">
                           <iron-icon icon$="[[iconForItem(selected)]]" hidden$="[[!_sortingIconHidden(item)]]" class="star"></iron-icon>
-                          <div class="layout horizontal" hidden$="[[_sortingIconHidden(item)]]">
+                          <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(item)]]">
                               <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                               <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
                           </div>
@@ -314,6 +316,10 @@
             var style = sorting !== null ? 'color: black;' : 'color: grey;';
             style += sorting === true ? 'align-self:flex-start' : (sorting === false ? 'align-self:flex-end' : 'align-self:flex-start');
             return style;
+        },
+        
+        _calculateItemStyle: function (sorting) {
+            return typeof sorting === 'undefined' ? 'cursor: pointer;' : 'cursor: default;';
         },
         
         _calculateOrder: function (sortingNumber) {
