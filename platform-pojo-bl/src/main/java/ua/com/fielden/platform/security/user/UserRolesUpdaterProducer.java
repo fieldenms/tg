@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
+import ua.com.fielden.platform.dao.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -24,7 +24,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  *
  */
-public class UserRolesUpdaterProducer extends AbstractFunctionalEntityProducerForCollectionModification<User, UserRolesUpdater> implements IEntityProducer<UserRolesUpdater> {
+public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<User, UserRolesUpdater> implements IEntityProducer<UserRolesUpdater> {
     private final IUserRoleDao coUserRole;
     private final IUser coUser;
     

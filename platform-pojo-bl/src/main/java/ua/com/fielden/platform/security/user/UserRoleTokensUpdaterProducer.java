@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
-import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
+import ua.com.fielden.platform.dao.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  *
  */
-public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityProducerForCollectionModification<UserRole, UserRoleTokensUpdater> implements IEntityProducer<UserRoleTokensUpdater> {
+public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCollectionModificationProducer<UserRole, UserRoleTokensUpdater> implements IEntityProducer<UserRoleTokensUpdater> {
     private final IUserRoleDao coUserRole;
     private final SecurityTokenProvider securityTokenProvider;
     

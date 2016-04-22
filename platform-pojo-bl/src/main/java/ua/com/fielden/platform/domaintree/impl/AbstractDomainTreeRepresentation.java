@@ -1003,7 +1003,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param types
      * @return
      */
-    protected static boolean isCalculatedAndOfTypes(final Class<?> root, final String property, final CalculatedPropertyCategory... types) {
+    public static boolean isCalculatedAndOfTypes(final Class<?> root, final String property, final CalculatedPropertyCategory... types) {
         final Calculated ca = AnnotationReflector.getPropertyAnnotation(Calculated.class, root, property);
         if (ca != null) {
             for (final CalculatedPropertyCategory type : types) {

@@ -23,8 +23,8 @@ import ua.com.fielden.platform.security.user.SecurityTokenInfo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
+import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
@@ -32,6 +32,8 @@ import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import ua.com.fielden.platform.ui.config.MainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.SortingProperty;
 
 public class PlatformDomainTypes {
     public static final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<Class<? extends AbstractEntity<?>>>();
@@ -46,6 +48,8 @@ public class PlatformDomainTypes {
         types.add(UserRole.class);
         types.add(UserRoleTokensUpdater.class);
         types.add(SecurityTokenInfo.class);
+        types.add(CentreConfigUpdater.class);
+        types.add(SortingProperty.class);
         types.add(UserAndRoleAssociation.class);
         types.add(SecurityRoleAssociation.class);
         types.add(EntityCentreConfig.class);

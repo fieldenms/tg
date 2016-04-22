@@ -92,6 +92,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
@@ -110,6 +111,7 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.config.EntityManipulationWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -621,9 +623,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityMaster<EntityEditAction> entityEditActionMaster = EntityManipulationWebUiConfig.createEntityEditMaster(injector());
         final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
 
-
+        final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
+        
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
-
+        
         configApp().
             addMaster(EntityNewAction.class, entityNewActionMaster).
             addMaster(EntityEditAction.class, entityEditActionMaster).
@@ -646,6 +649,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
             addMaster(UserRolesUpdater.class, userWebUiConfig.rolesUpdater).
             addMaster(UserRole.class, userRoleWebUiConfig.master).
             addMaster(UserRoleTokensUpdater.class, userRoleWebUiConfig.tokensUpdater).
+            // Centre configuration management
+            addMaster(CentreConfigUpdater.class, centreConfigurationWebUiConfig.centreConfigUpdater).
             addMaster(TgEntityForColourMaster.class, clourMaster).//
 
                 addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(

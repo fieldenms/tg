@@ -5,26 +5,36 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 
 /**
  * A base class for functional entities that are intended to modify entity (master entity) collectional association properties. The master entity, whose collection modifies,
  * needs to have persistent nature.
  * <p>
- * The key type for the functional entity should be the same as the master entity type. Implementors should also implement producer that is descendant of 
- * {@link AbstractFunctionalEntityProducerForCollectionModification} -- this producer will assign the key for this functional entity and will do other preparation job.
+ * Implementors should implement producer that is descendant of {@link AbstractFunctionalEntityProducerForCollectionModification} -- this producer will assign the key for this functional entity and will do other preparation job.
  * <p>
  * Concrete implementors need to be persistent (do not forget to annotate with @MapEntityTo annotation).
+ * <p>
+ * Note, that there exists {@link CentreConfigUpdater} implementor that deviate from above rules. Its master entity (centre criteria entity) is not persistent, and {@link CentreConfigUpdater} is not persistent too.
+ * This is legal, because no versioning is required for centre configuration updating process (no other user is able to change centre configuration of current user). But, the above rules are applicable for application development
+ * during implementation of 'collection updater' functional entities.
  *
  * @author TG Team
  *
- * @param <K> -- the type of the master entity, whose collection modifies
  * @param <ID_TYPE> -- the type of identificators for collection items (usually Long.class for persisted entities, otherwise it should be equal to key type).
  */
-public abstract class AbstractFunctionalEntityForCollectionModification<K extends AbstractEntity<?>, ID_TYPE> extends AbstractFunctionalEntityWithCentreContext<K> {
+@KeyType(Long.class)
+public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE> extends AbstractFunctionalEntityWithCentreContext<Long> {
     private static final long serialVersionUID = 1L;
+    
+    /**
+     * This is to be used for internal validation for versioning -- this is not needed to be send to the client application, that is why it was made as non-property (no {@link IsProperty} annotation).
+     */
+    private AbstractEntity<?> refetchedMasterEntity;
     
     @IsProperty(value = Long.class) 
     @Title(value = "Chosen ids", desc = "IDs of chosen entities (added and / or remained chosen)")
@@ -44,7 +54,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
     private Long surrogateVersion;
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<K, ID_TYPE> setSurrogateVersion(final Long surrogateVersion) {
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setSurrogateVersion(final Long surrogateVersion) {
         this.surrogateVersion = surrogateVersion;
         return this;
     }
@@ -54,7 +64,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
     }
 
     @Observable
-    protected AbstractFunctionalEntityForCollectionModification<K, ID_TYPE> setAddedIds(final Set<ID_TYPE> addedIds) {
+    protected AbstractFunctionalEntityForCollectionModification<ID_TYPE> setAddedIds(final Set<ID_TYPE> addedIds) {
         this.addedIds.clear();
         this.addedIds.addAll(addedIds);
         return this;
@@ -65,7 +75,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
     }
 
     @Observable
-    protected AbstractFunctionalEntityForCollectionModification<K, ID_TYPE> setRemovedIds(final Set<ID_TYPE> removedIds) {
+    protected AbstractFunctionalEntityForCollectionModification<ID_TYPE> setRemovedIds(final Set<ID_TYPE> removedIds) {
         this.removedIds.clear();
         this.removedIds.addAll(removedIds);
         return this;
@@ -76,7 +86,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
     }
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<K, ID_TYPE> setChosenIds(final Set<ID_TYPE> chosenIds) {
+    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setChosenIds(final Set<ID_TYPE> chosenIds) {
         this.chosenIds.clear();
         this.chosenIds.addAll(chosenIds);
         return this;
@@ -105,5 +115,14 @@ public abstract class AbstractFunctionalEntityForCollectionModification<K extend
         } else {
             return false;
         }
+    }
+    
+    public void setRefetchedMasterEntity(final AbstractEntity<?> refetchedMasterEntity) {
+        // to be initialised early in base producer of functional entity (AbstractFunctionalEntityForCollectionModificationProducer)
+        this.refetchedMasterEntity = refetchedMasterEntity;
+    }
+    
+    public AbstractEntity<?> refetchedMasterEntity() {
+        return refetchedMasterEntity;
     }
 }
