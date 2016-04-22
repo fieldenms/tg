@@ -455,10 +455,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 throw Result.failure(new IllegalStateException(String.format("The AnnotatedSuperclass's Type %s of functional entity %s (for collection modification) is somehow not ParameterizedType.", type.getAnnotatedSuperclass().getType(), type.getSimpleName())));
             }
             final ParameterizedType parameterizedEntityType = (ParameterizedType) type.getAnnotatedSuperclass().getType();
-            if (parameterizedEntityType.getActualTypeArguments().length != 2 || !(parameterizedEntityType.getActualTypeArguments()[1] instanceof Class)) {
+            if (parameterizedEntityType.getActualTypeArguments().length != 1 || !(parameterizedEntityType.getActualTypeArguments()[0] instanceof Class)) {
                 throw Result.failure(new IllegalStateException(String.format("The type parameters %s of functional entity %s (for collection modification) is malformed.", Arrays.asList(parameterizedEntityType.getActualTypeArguments()), type.getSimpleName())));
             }
-            propertyType = (Class) parameterizedEntityType.getActualTypeArguments()[1];
+            propertyType = (Class) parameterizedEntityType.getActualTypeArguments()[0];
         } else {
             propertyType = PropertyTypeDeterminator.determinePropertyType(type, propertyName);
         }

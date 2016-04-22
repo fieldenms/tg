@@ -338,9 +338,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Class<? extends MiWithConfigurationSupport<?>> miType,
             final ICentreDomainTreeManagerAndEnhancer cdtmae,
             final ICriteriaGenerator critGenerator,
-            final Long previousVersion) {
+            final Long previousVersion,
+            final IGlobalDomainTreeManager gdtm) {
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, createMiTypeAnnotation(miType));
+        validationPrototype.setFreshCentreSupplier( () -> CentreUtils.getFreshCentre(gdtm, miType) );
 
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);
         final boolean idAccessible = idField.isAccessible();
@@ -549,7 +551,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         CentreResourceUtils.getFreshCentre(gdtm, miType);
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.previouslyRunCentre(gdtm, miType);
     
-        return createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, 0L);
+        return createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, 0L, gdtm);
     }
     
     /**
@@ -568,7 +570,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         CentreResourceUtils.getFreshCentre(gdtm, miType);
         final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.freshCentre(gdtm, miType);
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
-        final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder));
+        final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder), gdtm);
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
                 modifiedPropertiesHolder,
                 validationPrototype,

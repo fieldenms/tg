@@ -6,7 +6,7 @@ import java.util.Set;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
+import ua.com.fielden.platform.dao.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -46,11 +46,11 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
     @SessionRequired
     @Authorise(UserRoleSaveToken.class)
     public UserRoleTokensUpdater save(final UserRoleTokensUpdater action) {
-        final UserRoleTokensUpdater actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getTokens(), this, factory, String.class);
+        final UserRoleTokensUpdater actionToSave = AbstractFunctionalEntityForCollectionModificationProducer.validateAction(action, a -> a.getTokens(), this, factory, String.class);
         
         // after all validations have passed -- the association changes could be saved:
-        final UserRole userRoleBeingUpdated = action.getKey();
-        final Map<Object, SecurityTokenInfo> availableTokens = AbstractFunctionalEntityProducerForCollectionModification.mapById(action.getTokens(), String.class);
+        final UserRole userRoleBeingUpdated = (UserRole) action.refetchedMasterEntity();
+        final Map<Object, SecurityTokenInfo> availableTokens = AbstractFunctionalEntityForCollectionModificationProducer.mapById(action.getTokens(), String.class);
         
         final Set<SecurityRoleAssociation> addedAssociations = new LinkedHashSet<>();
         for (final String addedId : action.getAddedIds()) {

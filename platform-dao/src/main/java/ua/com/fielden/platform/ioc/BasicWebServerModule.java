@@ -74,6 +74,10 @@ import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityDao;
 import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
+import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.ISortingProperty;
+import ua.com.fielden.platform.web.centre.SortingPropertyDao;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -184,6 +188,9 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IUserRoleDao.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
+        
+        bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
+        bind(ISortingProperty.class).to(SortingPropertyDao.class);
 
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
