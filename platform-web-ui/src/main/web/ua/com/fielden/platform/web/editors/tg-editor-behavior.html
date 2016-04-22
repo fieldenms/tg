@@ -360,7 +360,25 @@
                     // (to be precise it is done for every case when _currBindingEntity is changed for this editor)
                     this._refreshCycleStarted = true;
                     
-                	this.assignValue(newValue, this.propertyName, this.reflector().getBindingValue.bind(this.reflector()));
+                    var convertedValue = this.reflector().getBindingValue.bind(this.reflector())(newValue, this.propertyName);
+                    var newEditingValue = this.convertToString(convertedValue);
+                    if (newEditingValue === this._editingValue) {
+                        this._refreshCycleStarted = false;
+                    } else {
+                        var editingValueAfterPreviousRefreshCycleChanged = oldValue 
+                            ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(oldValue, this.propertyName)) !== newEditingValue 
+                            : true;
+                        
+                        if (!editingValueAfterPreviousRefreshCycleChanged) {
+                            if (!newValue["@" + this.propertyName + "_editable"]) {
+                                this._editingValue = newEditingValue;
+                            } else {
+                                this._refreshCycleStarted = false;
+                            }
+                        } else {
+                            this._editingValue = newEditingValue;
+                        }
+                    }
                 } else {
                     // console.debug("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
                 }
@@ -370,9 +388,6 @@
                 var newEditingValue = this.convertToString(propValue);
                 if (newEditingValue === this._editingValue && (this._refreshCycleStarted === true) ) {
                 	this._refreshCycleStarted = false;
-                } else if (newEditingValue !== this._editingValue && (this._refreshCycleStarted === true) && this._commValue !== this._editingValue) {
-                	this._refreshCycleStarted = false;
-                	return;
                 }
                 this._editingValue = newEditingValue;
             },
