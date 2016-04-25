@@ -525,7 +525,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
-        if (centreContextHolder.getCustomObject().get("@@miType") == null) {
+        if (centreContextHolder.getCustomObject().get("@@miType") == null || isEmpty(centreContextHolder.getModifHolder())) {
             return null;
         }
         final Class<? extends MiWithConfigurationSupport<?>> miType;
@@ -534,6 +534,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         } catch (final ClassNotFoundException e) {
             throw new IllegalStateException(e);
         }
+        
         return createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm);
     }
     
