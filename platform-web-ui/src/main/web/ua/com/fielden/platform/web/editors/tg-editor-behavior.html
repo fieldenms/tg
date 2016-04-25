@@ -140,7 +140,16 @@
                  */
                 _editorValidationMsg: {
                 	type: String,
-                	value: null
+                	value: null,
+                	observer: '_editorValidationMsgChanged'
+                },
+                
+                /**
+                 * Returns 'true' in case where 'entity', 'propertyName' and '_editorValidationMsg' have been already defined, 'false' otherwise.
+                 */
+                _validationComponentsDefined: {
+                    type: Boolean,
+                    value: false
                 },
                 
                 /**
@@ -273,7 +282,7 @@
             },
             
             observers: [
-            	'_bindMessages(entity, propertyName, _editorValidationMsg)'
+            	'_recordDefinition(entity, propertyName, _editorValidationMsg)'
 			],
 
             ready: function () {
@@ -285,6 +294,13 @@
                 // The following 'commit' call synchronises '_commValue' with '_editingValue' after default editing value population.
                 //  Please, also note that this call also triggers '_acceptedValue' population, as per '_commValueChanged' method.
                 this.commit();
+            },
+            
+            _recordDefinition: function (entity, propertyName, _editorValidationMsg) {
+                if (this._validationComponentsDefined === false) {
+                    this._bindMessages(entity, propertyName, _editorValidationMsg);
+                    this._validationComponentsDefined = true;
+                }
             },
             
             /**
@@ -364,6 +380,7 @@
                     var newEditingValue = this.convertToString(convertedValue);
                     if (newEditingValue === this._editingValue) {
                         this._refreshCycleStarted = false;
+                        this._updateMessagesForEntity(newValue);
                     } else {
                         var editingValueAfterPreviousRefreshCycleChanged = oldValue 
                             ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(oldValue, this.propertyName)) !== newEditingValue 
@@ -372,15 +389,24 @@
                         if (!editingValueAfterPreviousRefreshCycleChanged) {
                             if (!newValue["@" + this.propertyName + "_editable"]) {
                                 this._editingValue = newEditingValue;
+                                this._updateMessagesForEntity(newValue);
                             } else {
                                 this._refreshCycleStarted = false;
                             }
                         } else {
                             this._editingValue = newEditingValue;
+                            this._updateMessagesForEntity(newValue);
                         }
                     }
                 } else {
                     // console.debug("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
+                    this._updateMessagesForEntity(newValue);
+                }
+            },
+            
+            _updateMessagesForEntity: function (newEntity) {
+                if (this._validationComponentsDefined === true) {
+                    this._bindMessages(newEntity, this.propertyName, this._editorValidationMsg);
                 }
             },
             
@@ -527,34 +553,40 @@
             _commitForDescendants: function () {
             },
 
-            _bindMessages: function (entity, property, _editorValidationMsg) {
-            	// console.log("_bindMessages: ", entity, property, _editorValidationMsg);
+            _bindMessages: function (entity, propertyName, _editorValidationMsg) {
+            	// console.log("_bindMessages: ", entity, propertyName, _editorValidationMsg);
                 if (_editorValidationMsg !== null) {
                     this._bindError(_editorValidationMsg);
                 } else if (this.reflector().isEntity(entity)) {
                 	// please, note that dot-notated property will not have any errors / warnings / requiredness
                 	//     - for these props it does not make sense to propagate such meta-information from
                 	//     parent property -- the parent prop (if added in master) will show that errors concisely
-                    if (typeof entity["@" + property + "_error"] !== 'undefined') {
-                        this._bindError(entity["@" + property + "_error"].message);
-                    } else if (typeof entity["@" + property + "_warning"] !== 'undefined') {
-                        this._bindWarning(entity["@" + property + "_warning"].message);
-                    } else if (typeof entity["@" + property + "_required"] !== 'undefined') {
-                        this._bindRequired(entity["@" + property + "_required"]);
+                    if (typeof entity["@" + propertyName + "_error"] !== 'undefined') {
+                        this._bindError(entity["@" + propertyName + "_error"].message);
+                    } else if (typeof entity["@" + propertyName + "_warning"] !== 'undefined') {
+                        this._bindWarning(entity["@" + propertyName + "_warning"].message);
+                    } else if (typeof entity["@" + propertyName + "_required"] !== 'undefined') {
+                        this._bindRequired(entity["@" + propertyName + "_required"]);
                     } else {
                         this._resetMessages();
                     }
 
-                    this._bindUppercase(entity, property);
+                    this._bindUppercase(entity, propertyName);
 
                 } else {
                     this._resetMessages();
                     this._resetMetaPropDecorations();
                 }
             },
+            
+            _editorValidationMsgChanged: function (newValue, oldValue) {
+                if (this._validationComponentsDefined === true) {
+                    this._bindMessages(this.entity, this.propertyName, newValue);
+                }
+            },
 
-            _bindUppercase: function (entity, property) {
-                if (typeof entity["@" + property + "_uppercase"] !== 'undefined') {
+            _bindUppercase: function (entity, propertyName) {
+                if (typeof entity["@" + propertyName + "_uppercase"] !== 'undefined') {
                     this.decoratedInput().classList.add("upper-case");
                 } else {
                     this.decoratedInput().classList.remove("upper-case");
