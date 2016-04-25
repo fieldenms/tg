@@ -304,7 +304,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         return entity;
     }
     
-    private static String tabs(final int tabCount) {
+    public static String tabs(final int tabCount) {
         final StringBuilder sb = new StringBuilder();
         for (int i = 0; i < tabCount; i++) {
             sb.append("  ");
@@ -355,7 +355,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     centreContext,
                     centreContextHolder.getChosenProperty(),
                     compoundMasterEntityId,
-                    masterContext
+                    masterContext, tabCount + 1
            ).getKey();
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder finished.");
         }
@@ -409,4 +409,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         }
     }
 
+    public static Logger logger() {
+        return logger;
+    }
 }

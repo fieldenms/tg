@@ -693,12 +693,17 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final CentreContext<T, AbstractEntity<?>> centreContext,
             final String chosenProperty,
             final Long compoundMasterEntityId,
-            final AbstractEntity<?> masterContext) {
+            final AbstractEntity<?> masterContext, final int tabCount) {
 
+        EntityResource.logger().debug(EntityResource.tabs(tabCount) + "constructEntity: started.");
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
-        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithContext(id, centreContext, chosenProperty, compoundMasterEntityId, masterContext), getCompanionFinder());
+        final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, centreContext, chosenProperty, compoundMasterEntityId, masterContext);
+        EntityResource.logger().debug(EntityResource.tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
+        final Pair<T, Map<String, Object>> constructed = constructEntity(modifiedPropertiesHolder, validationPrototypeWithContext, getCompanionFinder());
+        EntityResource.logger().debug(EntityResource.tabs(tabCount) + "constructEntity: finished.");
+        return constructed;
     }
 
     /**
