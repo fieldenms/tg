@@ -13,12 +13,11 @@ public class PropDefiner implements IAfterChangeEventHandler<String> {
         if (!entity.isPersisted()) {
             final String otherPropName = "dependentProp";
             if (EntityUtils.equalsEx(newValue, "IS")) {
-                try {
-                    Thread.sleep(2000);
-                } catch (final InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                // try {
+                //     Thread.sleep(2000);
+                // } catch (final InterruptedException e) {
+                //     e.printStackTrace();
+                // }
                 entity.set(otherPropName, "InService");
                 // entity.getProperty(otherPropName).setEditable(false);
             }
