@@ -286,7 +286,7 @@
 
                     // custom external action
                     if (this.postSaved) {
-                        this.postSaved(potentiallySavedOrNewEntity, newBindingEntity);
+                        this.postSaved.bind(this)(potentiallySavedOrNewEntity, newBindingEntity);
                     }
                     
                     // Context creator should assigned only after successful master entity saving.
@@ -310,7 +310,7 @@
                 	
                 	// custom external action
                 	if (this.postSavedError) {
-				    	this.postSavedError(errorResult);
+				    	this.postSavedError.bind(this)(errorResult);
 				    }
                     this.enableView();
                 }).bind(self);
@@ -430,8 +430,9 @@
              */
             _assignPostSavedHandlersForEmbeddedMaster: function(e) {
 	  	    	var embeddedMaster = e.detail;
-	  	    	embeddedMaster.postSaved = this.postSaved.bind(embeddedMaster);
-	  	    	embeddedMaster.postSavedError = this.postSavedError.bind(embeddedMaster);
+	  	    	embeddedMaster.shouldRefreshParentCentreAfterSave = true;
+	  	    	embeddedMaster.postSaved = this.postSaved;
+	  	    	embeddedMaster.postSavedError = this.postSavedError;
             },
             
             /**
