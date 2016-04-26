@@ -480,7 +480,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
             }
             if (config.withMasterEntity) {
-                context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder));
+                context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, 0));
             }
             return Optional.of(context);
         } else {
@@ -506,12 +506,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IUserProvider userProvider, 
             final ICriteriaGenerator critGenerator, 
             final EntityFactory entityFactory, 
-            final CentreContextHolder centreContextHolder, 
+            final AbstractEntity<?> masterContext,
+            final ArrayList<AbstractEntity<?>> selectedEntities,
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
-        context.setSelectedEntities((List<T>) centreContextHolder.getSelectedEntities());
-        context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder));
+        context.setSelectedEntities((List<T>) selectedEntities);
+        context.setMasterEntity(masterContext);
         return context;
     }
 
@@ -524,7 +525,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
-        if (centreContextHolder.getCustomObject().get("@@miType") == null) {
+        if (centreContextHolder.getCustomObject().get("@@miType") == null || isEmpty(centreContextHolder.getModifHolder())) {
             return null;
         }
         final Class<? extends MiWithConfigurationSupport<?>> miType;
@@ -533,6 +534,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         } catch (final ClassNotFoundException e) {
             throw new IllegalStateException(e);
         }
+        
         return createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm);
     }
     

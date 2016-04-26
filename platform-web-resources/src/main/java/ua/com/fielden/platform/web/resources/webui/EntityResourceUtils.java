@@ -2,16 +2,7 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.ParameterizedType;
@@ -50,11 +41,7 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -693,12 +680,17 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final CentreContext<T, AbstractEntity<?>> centreContext,
             final String chosenProperty,
             final Long compoundMasterEntityId,
-            final AbstractEntity<?> masterContext) {
+            final AbstractEntity<?> masterContext, final int tabCount) {
 
+        logger.debug(EntityResource.tabs(tabCount) + "constructEntity: started.");
         final Object arrivedIdVal = modifiedPropertiesHolder.get(AbstractEntity.ID);
         final Long id = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
 
-        return constructEntity(modifiedPropertiesHolder, createValidationPrototypeWithContext(id, centreContext, chosenProperty, compoundMasterEntityId, masterContext), getCompanionFinder());
+        final T validationPrototypeWithContext = createValidationPrototypeWithContext(id, centreContext, chosenProperty, compoundMasterEntityId, masterContext);
+        logger.debug(EntityResource.tabs(tabCount) + "constructEntity: validationPrototypeWithContext.");
+        final Pair<T, Map<String, Object>> constructed = constructEntity(modifiedPropertiesHolder, validationPrototypeWithContext, getCompanionFinder());
+        logger.debug(EntityResource.tabs(tabCount) + "constructEntity: finished.");
+        return constructed;
     }
 
     /**

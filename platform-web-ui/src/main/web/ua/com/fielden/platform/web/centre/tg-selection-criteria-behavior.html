@@ -585,8 +585,9 @@
              */
             createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
                 var self = this;
+                var modifHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                 return this._createContextHolder(function () {
-                    return null;
+                    return self._reset(modifHolder);
                 }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
             },
             

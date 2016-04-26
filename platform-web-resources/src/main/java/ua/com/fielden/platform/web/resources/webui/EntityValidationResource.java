@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import org.apache.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -35,6 +36,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
     private final IWebUiConfig webUiConfig;
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
+    private final Logger logger = Logger.getLogger(getClass());
 
     public EntityValidationResource(
             final Class<T> entityType,
@@ -66,12 +68,14 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Serve
     @Post
     public Representation validate(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+            logger.debug("ENTITY_VALIDATION_RESOURCE: validate started.");
             // NOTE: the following line can be the example how 'entity validation' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during entity validation.");
             final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
 
-            final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator);
+            final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
+            logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
             return restUtil.rawListJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(applied));
         }, restUtil);
     }

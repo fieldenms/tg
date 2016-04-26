@@ -63,6 +63,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
     @Override
     public Representation post(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
+            logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search started.");
             //            // NOTE: the following line can be the example how 'entity search' server errors manifest to the client application
             //            throw new IllegalStateException("Illegal state during entity searching.");
             final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
@@ -81,6 +82,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             valueMatcher.setFetch(fetch);
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%");
 
+            logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
             return restUtil.listJSONRepresentation(entities);
         }, restUtil);
     }
