@@ -399,11 +399,11 @@
                 master.postSavedError = function (errorResult) {
                 	// if action has no UI part then even failed saving indicates the completion of action's execution
                 	// otherwise, the UI would still remain open and user can apply some changes and attempt to save again (i.e. the action is still in progress)
-                	if (master.noUI === true) {
+                	if (this.noUI === true) {
                 		// action execution completed, althoug in error from saving
                     	self.isActionInProgress = false;
                 	} else {
-                        master.focusFirstInput();
+                        this.focusFirstInput();
                 	}
                 };
                 
