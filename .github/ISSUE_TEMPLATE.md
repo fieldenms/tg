@@ -1,33 +1,27 @@
-<!-- Instructions: https://github.com/PolymerElements/iron-dropdown/CONTRIBUTING.md#filing-issues -->
 ### Description
-<!-- Example: The `paper-foo` element causes the page to turn pink when clicked. -->
+
 
 ### Expected outcome
 
-<!-- Example: The page stays the same color. -->
 
-### Actual outcome
+<!-- The following sections are applicable only to bug report -->
+### Actual outcome 
 
-<!-- Example: The page turns pink. -->
-
-### Live Demo
-<!-- Example: https://jsbin.com/cagaye/edit?html,output -->
 
 ### Steps to reproduce
 
-<!-- Example
-1. Put a `paper-foo` element in the page.
-2. Open the page in a web browser.
-3. Click the `paper-foo` element.
--->
+### Client environmen
+<!-- Check all that apply, extend the description with version if applicable -->
+#### Operating systems
+- [ ] Windows
+- [ ] Linux
+- [ ] Mac OS X
+- [ ] iOS
+- [ ] Android
 
-### Browsers Affected
-<!-- Check all that apply -->
+#### Browsers
 - [ ] Chrome
 - [ ] Firefox
-- [ ] Safari 9
-- [ ] Safari 8
-- [ ] Safari 7
+- [ ] Safari
 - [ ] Edge
-- [ ] IE 11
-- [ ] IE 10
+- [ ] Opera
