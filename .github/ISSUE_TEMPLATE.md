@@ -1,13 +1,14 @@
+<!-- Problem/feature description including what needs to be implemented -->
 ### Description
 
-
+<!-- Provided the benefits of implementing this issue -->
 ### Expected outcome
 
 
 <!-- The following sections are applicable only to bug report -->
 ### Actual outcome 
 
-
+<!-- Carefully enumerate the steps to reproduce the problem -->
 ### Steps to reproduce
 
 ### Client environmen
