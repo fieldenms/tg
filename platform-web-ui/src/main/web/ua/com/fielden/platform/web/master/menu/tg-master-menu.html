@@ -194,6 +194,14 @@
 				type: String
 			},
 			
+            /**
+             * Centre UUID that gets assigned by the owning OpenCompoundMaster functional entity master in order to redirect 'detail.saved' messages from masters, embedded into menu items, 
+             * to centre, that is parent to OpenCompoundMaster functional entity master.
+             */
+            centreUuid: {
+                type: String
+            },
+            
             /* Postal subscription to events that trigger compound master entity refreshing.
              * It gets populated in attahced callback only once, even though the same master instance gets used several time.
              */
@@ -262,7 +270,7 @@
         	// refresh the master entity that is bound to the top-most functional entity that is used for compound master header and gets propagated downwards to all menu items
         	// this ensures that changes to the master entity on any embedded master are correctly reflected everywhere else on the compound master
         	var eventChannel = self.uuid;
-            var eventTopics = ['save.post.success', 'refresh.post.success'];
+            var eventTopics = ['save.post.success'];
 			// subscrive if needed
             if (self._subscriptions.length === 0) {
 	            for (var index = 0; index < eventTopics.length; index++) {
@@ -274,9 +282,23 @@
 	                    }));
 	            }
             }
-
+			
+            var centreRefreshChannel1 = 'centre_' + self.uuid;
+            var centreRefreshChannel2 = 'centre_' + self.centreUuid;
+            var centreRefreshTopic = 'detail.saved';
+            postal.subscribe({
+                channel: centreRefreshChannel1,
+                topic: centreRefreshTopic,
+                callback: function (data, envelope) {
+                    postal.publish({
+                        channel: centreRefreshChannel2,
+                        topic: centreRefreshTopic,
+                        data: data
+                    });
+                }
+            });
         },
-
+        
         _refreshCompoundMaster: function (data, envelope) {
         	this._isRefreshCycle = true;
         	

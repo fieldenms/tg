@@ -363,8 +363,16 @@
                 // NOTE: the savingContext for 'tg-entity-master' at this stage is immutable, i.e. it will never change during lifecycle of action's master 
                 master.savingContext = self._createContextHolderForAction();
                 
+                var _selectedEntitiesSupplier = function (savingContext) {
+                    if (typeof savingContext === 'undefined') {
+                        return undefined;
+                    }
+                    return typeof savingContext.selectedEntities !== 'undefined' ? savingContext.selectedEntities : 
+                        (typeof savingContext.centreContextHolder !== 'undefined' ? _selectedEntitiesSupplier(savingContext.centreContextHolder) : _selectedEntitiesSupplier(savingContext.masterEntity));
+                };
+                
                 var selectedEntitiesSupplier = function () {
-                    return master.savingContext.selectedEntities;
+                    return _selectedEntitiesSupplier(master.savingContext);
                 };
                 master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
 
