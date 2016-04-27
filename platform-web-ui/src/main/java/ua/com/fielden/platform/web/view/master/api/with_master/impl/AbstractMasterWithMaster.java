@@ -14,7 +14,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
 
     private final IRenderable renderable;
 
-    public AbstractMasterWithMaster(final Class<T> entityType, final Class<? extends AbstractEntity<?>> embededMasterType) {
+    public AbstractMasterWithMaster(final Class<T> entityType, final Class<? extends AbstractEntity<?>> embededMasterType, final boolean shouldRefreshParentCentreAfterSave) {
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", "<link rel='import' href='/app/tg-element-loader.html'>\n")
                 .replace("@entity_type", entityType.getSimpleName())
@@ -27,7 +27,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         + "</tg-element-loader>")
                 .replace("//@ready-callback", "this._calcAttrs = (function(_currBindingEntity){\n" +
                         "   if (_currBindingEntity !== null) {\n" +
-                        "       return " + getAttributes(embededMasterType, "_currBindingEntity") +
+                        "       return " + getAttributes(embededMasterType, "_currBindingEntity", shouldRefreshParentCentreAfterSave) +
                         "   };\n" +
                         "}).bind(this);\n")
                 .replace("//@attached-callback",
@@ -51,7 +51,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
         };
     }
 
-    protected abstract String getAttributes(final Class<? extends AbstractEntity<?>> entityType, String bindingEntityName);
+    protected abstract String getAttributes(final Class<? extends AbstractEntity<?>> entityType, String bindingEntityName, final boolean shouldRefreshParentCentreAfterSave);
 
     protected abstract String getElementName(final Class<? extends AbstractEntity<?>> entityType);
 

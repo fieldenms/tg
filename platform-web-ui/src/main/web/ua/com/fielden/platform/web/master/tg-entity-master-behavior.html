@@ -216,6 +216,11 @@
                 retrievedTotals: {
                     type: Object,
                     notify: true
+                },
+                
+                shouldRefreshParentCentreAfterSave: {
+                    type: Boolean,
+                    value: true
                 }
             },
             
@@ -430,7 +435,6 @@
              */
             _assignPostSavedHandlersForEmbeddedMaster: function(e) {
 	  	    	var embeddedMaster = e.detail;
-	  	    	embeddedMaster.shouldRefreshParentCentreAfterSave = true;
 	  	    	embeddedMaster.postSaved = this.postSaved;
 	  	    	embeddedMaster.postSavedError = this.postSavedError;
             },
