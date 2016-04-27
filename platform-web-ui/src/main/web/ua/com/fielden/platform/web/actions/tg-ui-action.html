@@ -362,18 +362,23 @@
                 
                 // NOTE: the savingContext for 'tg-entity-master' at this stage is immutable, i.e. it will never change during lifecycle of action's master 
                 master.savingContext = self._createContextHolderForAction();
+                
+                var selectedEntitiesSupplier = function () {
+                    return master.savingContext.selectedEntities;
+                };
+                master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
 
                 master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
-                    master.focusFirstInput();
+                    this.focusFirstInput();
                     
                     postal.publish({
-                        channel: "centre_" + master.centreUuid,
+                        channel: "centre_" + this.centreUuid,
                         topic: "detail.saved",
                         data: {
-                        	shouldRefreshParentCentreAfterSave: self.shouldRefreshParentCentreAfterSave,
+                        	shouldRefreshParentCentreAfterSave: this.shouldRefreshParentCentreAfterSave,
                             entity: potentiallySavedOrNewEntity,
                             // send selectedEntitiesInContext further to be able to update only them on EGI
-                            selectedEntitiesInContext: master.savingContext.selectedEntities
+                            selectedEntitiesInContext: selectedEntitiesSupplier()
                         }
                     });
                     
@@ -394,11 +399,11 @@
                 master.postSavedError = function (errorResult) {
                 	// if action has no UI part then even failed saving indicates the completion of action's execution
                 	// otherwise, the UI would still remain open and user can apply some changes and attempt to save again (i.e. the action is still in progress)
-                	if (master.noUI === true) {
+                	if (this.noUI === true) {
                 		// action execution completed, althoug in error from saving
                     	self.isActionInProgress = false;
                 	} else {
-                        master.focusFirstInput();
+                        this.focusFirstInput();
                 	}
                 };
                 
