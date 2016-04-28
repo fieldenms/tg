@@ -81,7 +81,7 @@
                     <div class="flex">[[menuItem.title]]</div>
                 </div>
 
-                <paper-menu id="menu" class="flex" on-selected-changed="_menuItemSelected" attr-for-selected="name">
+                <paper-menu id="menu" class="flex" selected="{{_selectedPage}}" attr-for-selected="name">
                     <template is="dom-repeat" items="[[menuItem.menu]]">
                         <paper-item name$="[[item.title]]" tooltip-text$="[[item.description]]">[[item.title]]</paper-item>
                     </template>
@@ -100,7 +100,7 @@
                 </div>
 
                 <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
-                    <div class="menu-item-view" name="__empty__"></div>
+                    <div class="menu-item-view" name="_"></div>
                     <template is="dom-repeat" items="[[menuItem.menu]]">
                         <tg-menu-item-view class="menu-item-view" name$="[[item.title]]" menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
                     </template>
@@ -120,6 +120,12 @@
 
             properties: {
                 menuItem: Object,
+                selectedModule: String,
+                submodule: {
+                    type: Object,
+                    notify: true,
+                    observer: "_submoduleChanged"
+                },
                 animationConfig: {
                     value: function () {
                         return {
@@ -187,45 +193,8 @@
             ready: function () {
                 var self = this,
                     masterCounter = 1;
-                self.startUp = true;
-                self.$.menu.selected = "__empty__";
+                this._selectedPage = "_";
                 ////////////////// State related events ///////////////////////////
-                postal.subscribe({
-                    channel: self.menuItem.title,
-                    topic: "state.push",
-                    callback: function (data, envelope) {
-                        var newState = data.state;
-                        if (self.$.menu.selected) {
-                            newState.push(self.$.menu.selected);
-                        }
-                        self._initDrawerPanel();
-                        history.pushState(newState, "");
-                        postal.publish({
-                            channel: "app",
-                            topic: "state.pushed",
-                            data: {
-                                state: newState
-                            }
-                        });
-                    }
-                });
-                postal.subscribe({
-                    channel: self.menuItem.title,
-                    topic: "state.pop",
-                    callback: function (data, envelope) {
-                        if (data.state[1] === self.$.menu.selected) {
-                            postal.publish({
-                                channel: "app",
-                                topic: "state.poped",
-                                data: data
-                            });
-                        } else {
-                            self.restoringState = true;
-                            self.$.menu.selected = data.state[1];
-                        }
-                        self._initDrawerPanel();
-                    }
-                });
                 postal.subscribe({
                     channel: self.menuItem.title,
                     topic: "state.select",
@@ -312,8 +281,22 @@
                 });
             },
 
+            getSelectedPage: function () {
+                return this._selectedPage;
+            },
+
+            _submoduleChanged: function (newValue, oldValue) {
+                var pageName;
+                if (this.menuItem && this.selectedModule && newValue.path) {
+                    pageName = decodeURIComponent(newValue.path.substring(1));
+                    if (this.menuItem.title === decodeURIComponent(this.selectedModule) && pageName !== this._selectedPage) {
+                        this.set("_selectedPage", pageName);
+                    }
+                }
+            },
+
             _initDrawerPanel: function () {
-                if (this.$.menu.selected === '__empty__') {
+                if (this._selectedPage === '_') {
                     this.$.drawerPanel.selected = 'drawer';
                 } else {
                     this.$.drawerPanel.selected = 'main';
@@ -324,45 +307,28 @@
                 this.fire("main-menu");
             },
 
-            _menuItemSelected: function (e, detail, source) {
-                this._selectedPage = detail.value;
-            },
-
             _togglePanel: function (e, detail, source) {
                 this.$.drawerPanel.togglePanel();
             },
 
             _calcSelectedPageTitle: function (page) {
-                return page === '__empty__' ? '' : page;
+                return page === '_' ? '' : page;
             },
 
             _calcUuid: function (item) {
                 return this.menuItem.title + '/' + item.title;
             },
 
-            _selectedPageChanged: function (e, detail, source) {
-                var state;
-                state = [this.menuItem.title, this.$.menu.selected];
-                if (this.startUp) {
-                    this.startUp = false;
-                } else if (this.restoringState) {
-                    this.restoringState = false;
-                    postal.publish({
-                        channel: "app",
-                        topic: "state.poped",
-                        data: {
-                            state: state
-                        }
-                    });
-                } else {
-                    history.pushState(state, "");
-                    this._initDrawerPanel();
+            _selectedPageChanged: function (newValue, oldValue) {
+                if (this.menuItem.title === decodeURIComponent(this.selectedModule)) {
+                    this.set("submodule.path", "/" + encodeURIComponent(newValue));
                 }
+                this._initDrawerPanel();
             },
 
             _animationFinished: function (e, detail, source) {
                 var viewToLoad;
-                if (this.$.menu.selected != '__empty__') {
+                if (this.$.menu.selected != '_') {
                     viewToLoad = detail.toPage;
                     if (viewToLoad && !viewToLoad.wasLoaded()) {
                         viewToLoad.load();

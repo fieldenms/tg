@@ -16,7 +16,8 @@
                 right: 16px;
                 width: 50px;
                 height: 50px;
-            };
+            }
+            ;
         }
         .tool-bar {
             padding: 0 16px;
@@ -34,26 +35,23 @@
             <div class="flex">[[menuItem.title]]</div>
         </div>
         <div id="viewContainer">
-            <tg-menu-item-view id="menuItemView" auto-load?="[[autoLoad]]" menu-item="[[menuItem]]" on-menu-item-view-loaded="_menuItemLoaded"></tg-menu-item-view>
+            <tg-menu-item-view id="menuItemView" auto-load="[[autoLoad]]" menu-item="[[menuItem]]"></tg-menu-item-view>
         </div>
         <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
     </template>
 </dom-module>
 <script>
     (function () {
-        var statePushed = function (data) {
-            postal.publish({
-                channel: "app",
-                topic: "state.pushed",
-                data: data
-            });
-        };
         Polymer({
 
             is: "tg-view",
 
             properties: {
                 menuItem: Object,
+                selectedModule: {
+                    type: String,
+                    observer: "_moduleChanged"
+                },
                 autoLoad: {
                     type: Boolean,
                     value: false,
@@ -102,37 +100,12 @@
                 "class": "layout vertical"
             },
 
-            ready: function () {
-                var self = this;
-                postal.subscribe({
-                    channel: this.menuItem.title,
-                    topic: "state.push",
-                    callback: function (data, envelope) {
-                        history.pushState(data.state, "");
-                        if (!self.$.menuItemView.wasLoaded()) {
-                            self.$.menuItemView.load();
-                        } else {
-                            statePushed(data);
-                        }
-                    }
-                });
-                postal.subscribe({
-                    channel: this.menuItem.title,
-                    topic: "state.pop",
-                    callback: function (data, envelope) {
-                        postal.publish({
-                            channel: "app",
-                            topic: "state.poped",
-                            data: data
-                        });
-                    }
-                });
+            _moduleChanged: function (newValue, oldValue) {
+                if (this.menuItem && newValue && this.menuItem.title === decodeURIComponent(newValue) && this.$.menuItemView.wasLoaded()) {
+                    this.$.menuItemView.load();
+                }
             },
-            _menuItemLoaded: function (e, detail, source) {
-                statePushed({
-                    state: [detail.title]
-                });
-            },
+
             _showMenu: function (e, detail, source) {
                 this.fire("main-menu");
             }
