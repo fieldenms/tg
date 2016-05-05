@@ -202,14 +202,24 @@
                 type: String
             },
             
-            /* Postal subscription to events that trigger compound master entity refreshing.
-             * It gets populated in attahced callback only once, even though the same master instance gets used several time.
+            /**
+             * Postal subscription to events that trigger compound master entity refreshing.
+             * It gets populated in attached callback only once, even though the same master instance gets used several time.
              */
             _subscriptions: {
                 type: Array,
                 value: function () {
                     return [];
                 }
+            },
+            
+            /**
+             * Postal subscription to 'detail.saved' events of embedded masters from master-with-master menu items.
+             * It gets populated in attached callback only once, even though the same master instance gets used several time.
+             */
+            _centreRefreshRedirector: {
+                type: Object,
+                value: null
             },
             
             /**
@@ -282,21 +292,39 @@
 	                    }));
 	            }
             }
-			
-            var centreRefreshChannel1 = 'centre_' + self.uuid;
-            var centreRefreshChannel2 = 'centre_' + self.centreUuid;
-            var centreRefreshTopic = 'detail.saved';
-            postal.subscribe({
-                channel: centreRefreshChannel1,
-                topic: centreRefreshTopic,
-                callback: function (data, envelope) {
-                    postal.publish({
-                        channel: centreRefreshChannel2,
-                        topic: centreRefreshTopic,
-                        data: data
-                    });
-                }
-            });
+            
+            // Every compound master gets opened from some centre as part of its functional action, usually 'result-set' action.
+            // This centre is needed to be refreshed in cases where some menu item embedded master has been saved and its flag 'shouldRefreshParentCentreAfterSave' is 'true'.
+            // Flag 'shouldRefreshParentCentreAfterSave' is now controlled using IMasterWithMasterBuilder API, specifically 
+            //   using methods 'withMaster' or 'withMasterAndWithNoParentCentreRefresh' on IMasterWithMaster0.
+            // Note, that centre could even be refreshed when:
+            //   1) Opening of compound master is performed; Updating of compound master header is performed;
+            //      -- need to just 'not specify' flag 'withNoParentCentreRefresh' on corresponding action, for e.g. for OpenVehicleMasterAction
+            //   2) Opening (or switching to) concrete compound master menu item;
+            //      -- need to just 'not specify' flag 'withNoParentCentreRefresh' on corresponding action, for e.g. for VehicleMaster_OpenTechDetails_MenuItem
+            // However, even if in 1) and 2) cases the centre could be refreshed, it is usually unpractical and should be avoided.
+            // TODO when Compound Master API will be implemented -- master-with-master menu item creation should hide the specification of flag 'withNoParentCentreRefresh' inside impl details.
+            
+            // The following code subscribes tg-master-menu, which holds all menu items, to the events of successful save of its embedded masters.
+            // These events arrive only from those menu items, which have embedded masters inside (embedded centres or simple functional menu item do not generate such events).
+            // The channel contains uuid of parent OpenCompoundMaster master (for e.g. 'centre_tg-openvehiclemasteraction-master/b3e1343d-dd62-491e-89f9-f46d6fdf609f')
+            // After that the event is redirected to corresponding centre with tg-master-menu's centreUuid (for e.g. 'centre_Fleet/Vehicles')
+            if (self._centreRefreshRedirector === null) {
+                var embeddedMasterPostSaveChannel = 'centre_' + self.uuid;
+                var compoundMasterCentreRefreshChannel = 'centre_' + self.centreUuid;
+                var centreRefreshTopic = 'detail.saved';
+                self._centreRefreshRedirector = postal.subscribe({
+                    channel: embeddedMasterPostSaveChannel,
+                    topic: centreRefreshTopic,
+                    callback: function (data, envelope) {
+                        postal.publish({
+                            channel: compoundMasterCentreRefreshChannel,
+                            topic: centreRefreshTopic,
+                            data: data
+                        });
+                    }
+                });
+            }
         },
         
         _refreshCompoundMaster: function (data, envelope) {
