@@ -81,7 +81,7 @@
                     <div class="flex">[[menuItem.title]]</div>
                 </div>
 
-                <paper-menu id="menu" class="flex" selected="{{_selectedPage}}" attr-for-selected="name">
+                <paper-menu id="menu" class="flex" selected="{{_selectedPage}}" on-iron-activate="_itemActivated" attr-for-selected="name">
                     <template is="dom-repeat" items="[[menuItem.menu]]">
                         <paper-item name$="[[item.title]]" tooltip-text$="[[item.description]]">[[item.title]]</paper-item>
                     </template>
@@ -96,16 +96,16 @@
                         <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
                         <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
                     </div>
-                    <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
                 </div>
 
-                <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
-                    <div class="menu-item-view" name="_"></div>
-                    <template is="dom-repeat" items="[[menuItem.menu]]">
-                        <tg-menu-item-view class="menu-item-view" name$="[[item.title]]" menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
+                <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
+                    <div class="menu-item-view" page-name="_"></div>
+                    <template is="dom-repeat" items="[[menuItem.menu]]" on-dom-change="_menuItemsRendered">
+                        <tg-menu-item-view class="menu-item-view" page-name$="[[item.title]]" menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
                     </template>
                 </neon-animated-pages>
-
+                
+                <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
             </div>
 
 
@@ -123,8 +123,7 @@
                 selectedModule: String,
                 submodule: {
                     type: Object,
-                    notify: true,
-                    observer: "_submoduleChanged"
+                    notify: true
                 },
                 animationConfig: {
                     value: function () {
@@ -173,7 +172,7 @@
                 },
 
                 //Private members those starts with underscore
-
+                _menuItemsLoaded: Boolean,
                 _selectedPage: {
                     type: String,
                     observer: '_selectedPageChanged'
@@ -190,10 +189,13 @@
                 class: "layout vertical"
             },
 
+            observers: [
+                '_updatePage(menuItem, submodule)'
+            ],
+
             ready: function () {
                 var self = this,
                     masterCounter = 1;
-                this._selectedPage = "_";
                 ////////////////// State related events ///////////////////////////
                 postal.subscribe({
                     channel: self.menuItem.title,
@@ -281,17 +283,37 @@
                 });
             },
 
+            attached: function () {
+                this.async(function () {
+                    if (!this._selectedPage) {
+                        this.set("_selectedPage", "_");
+                    }
+                });
+            },
+
             getSelectedPage: function () {
                 return this._selectedPage;
             },
 
-            _submoduleChanged: function (newValue, oldValue) {
+            _menuItemsRendered: function () {
+                this._menuItemsLoaded = true;
+            },
+
+            _updatePage(menuItem, submodule, _menuItemsLoaded) {
                 var pageName;
-                if (this.menuItem && this.selectedModule && newValue.path) {
-                    pageName = decodeURIComponent(newValue.path.substring(1));
-                    if (this.menuItem.title === decodeURIComponent(this.selectedModule) && pageName !== this._selectedPage) {
-                        this.set("_selectedPage", pageName);
-                    }
+                if (menuItem.title === decodeURIComponent(this.selectedModule)) {
+                    pageName = decodeURIComponent(submodule.path.substring(1));
+                    this.set("_selectedPage", pageName);
+                    this.async(function () {
+                        var viewToLoad;
+                        if (pageName !== '_') {
+                            viewToLoad = this.$$("[page-name='" + pageName + "']");
+                            if (viewToLoad) {
+                                //TODO must be replaced with functiona that says that this view should be loaded after it's dom will be rendered.
+                                viewToLoad.autoLoad = true;
+                            }
+                        }
+                    });
                 }
             },
 
@@ -319,16 +341,20 @@
                 return this.menuItem.title + '/' + item.title;
             },
 
+            /**
+             * The listener that listens the menu item activation on tap.
+             */
+            _itemActivated: function (e, detail) {
+                this.set("submodule.path", "/" + encodeURIComponent(detail.selected));
+            },
+
             _selectedPageChanged: function (newValue, oldValue) {
-                if (this.menuItem.title === decodeURIComponent(this.selectedModule)) {
-                    this.set("submodule.path", "/" + encodeURIComponent(newValue));
-                }
                 this._initDrawerPanel();
             },
 
             _animationFinished: function (e, detail, source) {
                 var viewToLoad;
-                if (this.$.menu.selected != '_') {
+                if (this.$.menu.selected !== '_') {
                     viewToLoad = detail.toPage;
                     if (viewToLoad && !viewToLoad.wasLoaded()) {
                         viewToLoad.load();

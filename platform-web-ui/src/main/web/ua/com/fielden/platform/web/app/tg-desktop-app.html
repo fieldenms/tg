@@ -56,18 +56,22 @@
             },
 
             _showView: function (e) {
-                var route = "/" + encodeURIComponent(e.detail), 
+                var route = "/" + encodeURIComponent(e.detail),
                     elementToSelect = this.$$("[name='" + e.detail + "']"),
                     selectedSubPage = elementToSelect.getSelectedPage();
                 if (selectedSubPage) {
                     route += "/" + encodeURIComponent(selectedSubPage);
                 }
-                this.set("_route.path", route);
+                if (this._route.path === route) {
+                    this._setSelected(e.detail);
+                } else {
+                    this.set("_route.path", route);
+                }
             },
 
             _modulesRendered: function (e) {
                 if (this.selectAfterRender) {
-                    this.async(function(){
+                    this.async(function () {
                         this._setSelected(this.selectAfterRender);
                         delete this.selectAfterRender;
                     });
