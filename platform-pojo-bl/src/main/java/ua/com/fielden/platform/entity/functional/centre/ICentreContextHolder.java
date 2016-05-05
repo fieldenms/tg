@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.functional.centre;
 
+import com.google.inject.ImplementedBy;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 
 /** 

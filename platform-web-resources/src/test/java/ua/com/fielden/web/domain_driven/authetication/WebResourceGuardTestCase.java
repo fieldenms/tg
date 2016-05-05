@@ -36,12 +36,12 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
  */
 public class WebResourceGuardTestCase extends AbstractDaoTestCase {
 
-    private final UserSessionDao coSession = (UserSessionDao) ao(UserSession.class);
+    private final UserSessionDao coSession = (UserSessionDao) co(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
     private final WebResourceGuardTestWebApplication webApp = getInstance(WebResourceGuardTestWebApplication.class);
     private final String baseUri = format("http://localhost:%s/v1", IWebDrivenTestCaseConfiguration.PORT);
     private final Client client = new Client(Protocol.HTTP);
-    private IUser coUser = ao(User.class);
+    private IUser coUser = co(User.class);
 
     @Before
     public void startUp() {

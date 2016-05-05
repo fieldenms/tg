@@ -9,6 +9,6 @@ import ua.com.fielden.platform.migration.MigrationError;
  * @author TG Team
  * 
  */
-public interface IMigrationErrorDao extends IEntityDao<MigrationError> {
+public interface IMigrationError extends IEntityDao<MigrationError> {
 
 }

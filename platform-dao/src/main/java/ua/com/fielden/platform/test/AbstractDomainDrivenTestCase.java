@@ -186,11 +186,13 @@ public abstract class AbstractDomainDrivenTestCase {
     }
 
     protected <T extends AbstractEntity<?>> T save(final T instance) {
+        @SuppressWarnings("unchecked")
         final IEntityDao<T> pp = provider.find((Class<T>) instance.getType());
         return pp.save(instance);
     }
 
-    protected <T extends IEntityDao<E>, E extends AbstractEntity<?>> T ao(final Class<E> type) {
+    @SuppressWarnings("unchecked")
+    protected <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type) {
         return (T) provider.find(type);
     }
 

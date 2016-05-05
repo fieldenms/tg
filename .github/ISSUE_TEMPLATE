@@ -1,0 +1,30 @@
+<!-- Any section or subsection that is not applicable should simply be removed -->
+
+<!-- Problem/feature description including what needs to be implemented -->
+### Description
+
+<!-- Provided the benefits of implementing this issue -->
+### Expected outcome
+
+
+<!-- The following sections are applicable only to bug report -->
+### Actual outcome 
+
+<!-- Carefully enumerate the steps to reproduce the problem -->
+### Steps to reproduce
+
+### Client environment
+<!-- Check all that apply, extend the description with version if applicable -->
+#### Operating systems
+- Windows
+- Linux
+- Mac OS X
+- iOS
+- Android
+
+#### Browsers
+- Chrome
+- Firefox
+- Safari
+- Edge
+- Opera

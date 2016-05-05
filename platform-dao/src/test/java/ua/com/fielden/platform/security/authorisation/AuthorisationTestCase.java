@@ -33,12 +33,12 @@ public class AuthorisationTestCase extends AbstractDaoTestCase {
 
     @Test
     public void permissive_user_should_be_able_to_delete_fuel_types() {
-        final TgFuelType ft = ao(TgFuelType.class).findByKey(fuelType);
+        final TgFuelType ft = co(TgFuelType.class).findByKey(fuelType);
         assertNotNull(ft);
 
-        ao(TgFuelType.class).delete(ft);
+        co(TgFuelType.class).delete(ft);
 
-        assertNull(ao(TgFuelType.class).findByKey(fuelType));
+        assertNull(co(TgFuelType.class).findByKey(fuelType));
     }
 
     @Test
@@ -46,10 +46,10 @@ public class AuthorisationTestCase extends AbstractDaoTestCase {
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUsername(restrictiveUsername, getInstance(IUser.class));
 
-        final TgFuelType ft = ao(TgFuelType.class).findByKey(fuelType);
+        final TgFuelType ft = co(TgFuelType.class).findByKey(fuelType);
         assertNotNull(ft);
         try {
-            ao(TgFuelType.class).delete(ft);
+            co(TgFuelType.class).delete(ft);
             fail();
         } catch (final Result ex) {
             assertEquals("Permission denied due to token [Delete Fuel Type] restriction.", ex.getMessage());
@@ -69,7 +69,7 @@ public class AuthorisationTestCase extends AbstractDaoTestCase {
         super.populateDomain();
         // for testing authorisation we need a user, a role and association between that user and role, and role with designated security token
         // so, create persons that are users at the same time -- one permissive and one restrictive
-        final IUser coUser = ao(User.class);
+        final IUser coUser = co(User.class);
         save(new_(TgPerson.class, "Permissive Person").setUser(coUser.save(new_(User.class, permissiveUsername).setBase(true))));
         save(new_(TgPerson.class, "Restrictive Person").setUser(coUser.save(new_(User.class, restrictiveUsername).setBase(true))));
 
@@ -77,14 +77,14 @@ public class AuthorisationTestCase extends AbstractDaoTestCase {
         // now create a user role
         final UserRole adminRole = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies."));
         // ... and associate it with our user
-        final User testUser = ao(User.class).findByKey(permissiveUsername);
+        final User testUser = co(User.class).findByKey(permissiveUsername);
         save(new_composite(UserAndRoleAssociation.class, testUser, adminRole));
 
         // now let's reuse our standard logic for associating roles and security tokens, which is the last step in this security setup process
         // please note that in this test case only a top level security token is used
         // in case of sub tokens, a tree -- not just a single node would need to be created
         final SecurityTokenNode node = SecurityTokenNode.makeTopLevelNode(DeleteFuelTypeToken.class);
-        final SecurityTokenAssociator predicate = new SecurityTokenAssociator(adminRole, ao(SecurityRoleAssociation.class));
+        final SecurityTokenAssociator predicate = new SecurityTokenAssociator(adminRole, co(SecurityRoleAssociation.class));
         predicate.eval(node);
 
         // we also need some fuel types, so that we could test whether their deletion is guarded by token

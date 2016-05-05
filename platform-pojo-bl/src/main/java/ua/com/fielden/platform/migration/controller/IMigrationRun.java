@@ -9,6 +9,6 @@ import ua.com.fielden.platform.migration.MigrationRun;
  * @author TG Team
  * 
  */
-public interface IMigrationRunDao extends IEntityDao<MigrationRun> {
+public interface IMigrationRun extends IEntityDao<MigrationRun> {
 
 }

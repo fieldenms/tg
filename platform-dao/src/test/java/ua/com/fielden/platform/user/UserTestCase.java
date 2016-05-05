@@ -34,7 +34,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class UserTestCase extends AbstractDaoTestCase {
 
-    private final IUser coUser = ao(User.class);
+    private final IUser coUser = co(User.class);
 
     @Test
     public void username_does_not_permit_password_reset_UUID_separator() {
@@ -217,7 +217,7 @@ public class UserTestCase extends AbstractDaoTestCase {
 
     @Test 
     public void unit_test_user_cannot_be_persisted() {
-        final IUser coUser = ao(User.class);
+        final IUser coUser = co(User.class);
         final User user = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
         
         try {
