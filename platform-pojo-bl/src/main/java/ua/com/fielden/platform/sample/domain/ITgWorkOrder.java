@@ -11,6 +11,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author nc
  * 
  */
-public interface ITgWorkorder extends IEntityDao<TgWorkOrder> {
+public interface ITgWorkOrder extends IEntityDao<TgWorkOrder> {
 
 }

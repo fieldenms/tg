@@ -6,7 +6,7 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.sample.domain.ITgWorkorder;
+import ua.com.fielden.platform.sample.domain.ITgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
@@ -19,10 +19,10 @@ import com.google.inject.Inject;
  * 
  */
 @EntityType(TgWorkOrder.class)
-public class TgWorkorderDao extends CommonEntityDao<TgWorkOrder> implements ITgWorkorder {
+public class TgWorkOrderDao extends CommonEntityDao<TgWorkOrder> implements ITgWorkOrder {
 
     @Inject
-    protected TgWorkorderDao(final IFilter filter) {
+    protected TgWorkOrderDao(final IFilter filter) {
         super(filter);
     }
 

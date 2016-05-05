@@ -4,6 +4,7 @@ import java.math.BigInteger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -16,6 +17,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(TgVehicleModel.class)
 @MapEntityTo
 @DescTitle("Description")
+@CompanionObject(ITgModelYearCount.class)
 public class TgModelYearCount extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 

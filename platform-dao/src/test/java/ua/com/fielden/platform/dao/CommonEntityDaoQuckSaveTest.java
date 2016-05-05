@@ -7,23 +7,20 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Date;
-import java.util.List;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
-public class CommonEntityQuckSaveTest extends AbstractDomainDrivenTestCase {
+public class CommonEntityDaoQuckSaveTest extends AbstractDaoTestCase {
 
     @Test
     public void entity_version_is_updated_after_quickSave() {
@@ -129,9 +126,10 @@ public class CommonEntityQuckSaveTest extends AbstractDomainDrivenTestCase {
         }
     }
 
-
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2016-02-19 02:47:00"));
 
@@ -142,8 +140,4 @@ public class CommonEntityQuckSaveTest extends AbstractDomainDrivenTestCase {
         save(new_ (EntityWithMoney.class, "KEY4", "desc").setMoney(new Money("50.00")).setDateTimeProperty(date("2009-03-01 10:00:00")));
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }

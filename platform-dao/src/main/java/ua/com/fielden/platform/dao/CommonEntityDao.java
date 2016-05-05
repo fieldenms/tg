@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -1167,12 +1168,30 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
-    public ICompanionObjectFinder getCoFinder() {
+    private ICompanionObjectFinder getCoFinder() {
         return coFinder;
     }
 
     public IUniversalConstants getUniversalConstants() {
         return universalConstants;
+    }
+    
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
+    
+    /**
+     * A convenient way to obtain companion instances by the types of corresponding entities.
+     * 
+     * @param type -- entity type whose companion instance needs to be obtained
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+        IEntityDao<?> co = coCache.get(type);
+        if (co == null) {
+            co = getCoFinder().find(type);
+            coCache.put(type, co);
+        }
+        return (C) co;
     }
 
 }
