@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
@@ -56,10 +57,10 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final LinkedHashSet<SortingProperty> result = new LinkedHashSet<>();
         int sortingNumber = 0;
         for (final String checkedProp: checkedProperties) {
-            if (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) && 
-                    !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp)) {
-                final Pair<String, String> titleAndDesc = TitlesDescsGetter.getTitleAndDesc(checkedProp, managedType);
-                final SortingProperty sortingProperty = factory.newEntity(SortingProperty.class, null, checkedProp, titleAndDesc.getValue());
+            if ("".equals(checkedProp) || (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) && 
+                    !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp))) {
+                final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
+                final SortingProperty sortingProperty = factory.newEntity(SortingProperty.class, null, "".equals(checkedProp) ? "this" : checkedProp, titleAndDesc.getValue());
                 sortingProperty.setTitle(titleAndDesc.getKey());
     
                 final Ordering ordering = getOrdering(orderedProperties, checkedProp);
