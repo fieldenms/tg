@@ -57,9 +57,10 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
         
         for (final String sortingVal: action.getSortingVals()) {
             final String[] splitted = sortingVal.split(":");
-            cdtmae.getSecondTick().toggleOrdering(root, splitted[0]);
+            final String name = splitted[0].equals("this") ? "" : splitted[0];
+            cdtmae.getSecondTick().toggleOrdering(root, name);
             if ("desc".equals(splitted[1])) {
-                cdtmae.getSecondTick().toggleOrdering(root, splitted[0]);
+                cdtmae.getSecondTick().toggleOrdering(root, name);
             }
         }
         
