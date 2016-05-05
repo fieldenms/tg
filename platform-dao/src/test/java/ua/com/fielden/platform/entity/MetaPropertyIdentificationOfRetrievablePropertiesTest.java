@@ -53,7 +53,7 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
 
     @Test
     public void identification_of_retrievable_properties_for_non_composite_entity_with_non_persistent_props_other_than_desc() {
-        final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
+        final TgCategory cat1 = co(TgCategory.class).findByKey("Cat1");
         assertFalse(cat1.getPropertyOptionally(ID).isPresent());
         assertFalse(cat1.getPropertyOptionally(VERSION).isPresent());
 
@@ -73,7 +73,7 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
 
     @Test
     public void identification_of_retrievable_properties_for_composite_entity_with_non_persistent_desc() {
-        final TgOrgUnit2 cat1 = ao(TgOrgUnit2.class).findByKey(ao(TgOrgUnit1.class).findByKey("Org1"), "Org1_1");
+        final TgOrgUnit2 cat1 = co(TgOrgUnit2.class).findByKey(co(TgOrgUnit1.class).findByKey("Org1"), "Org1_1");
         assertFalse(cat1.getPropertyOptionally(ID).isPresent());
         assertFalse(cat1.getPropertyOptionally(VERSION).isPresent());
 
@@ -90,7 +90,7 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
 
     @Test
     public void identifycation_of_retrievable_properties_for_entity_with_calcualted_props() {
-        final TgVehicle veh = ao(TgVehicle.class).findByKeyAndFetch(fetchAll(TgVehicle.class), "CAR2");
+        final TgVehicle veh = co(TgVehicle.class).findByKeyAndFetch(fetchAll(TgVehicle.class), "CAR2");
 
         final List<MetaProperty<?>> retrievableProps = veh.getProperties().values().stream()
                 .filter(p -> p.isRetrievable()).collect(Collectors.toList());

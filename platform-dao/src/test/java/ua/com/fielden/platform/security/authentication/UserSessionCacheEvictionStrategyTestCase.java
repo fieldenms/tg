@@ -40,7 +40,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCase {
 
-    private final UserSessionDao coSession = (UserSessionDao) ao(UserSession.class);
+    private final UserSessionDao coSession = (UserSessionDao) co(UserSession.class);
     private final Cache<String, UserSession> cache = coSession.getCache();
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
     private final TickerForSessionCache cacheTicker = (TickerForSessionCache) getInstance(Ticker.class);
@@ -214,7 +214,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         constants.setNow(dateTime("2015-04-23 15:00:00"));
 
         // add more users
-        final IUser coUser = ao(User.class);
+        final IUser coUser = co(User.class);
         final User user1 = coUser.save(new_(User.class, "USER1").setBase(true));
         save(new_(TgPerson.class, "Person 1").setUser(user1));
         final User user2 = coUser.save(new_(User.class, "USER2").setBase(true));

@@ -177,7 +177,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
 
     @Test
     public void test_count_association_between_user_and_token() {
-        final IUser coUser = ao(User.class);
+        final IUser coUser = co(User.class);
         assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), FirstLevelSecurityToken1.class));
         assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken1.class));
         assertEquals("Incorrect number of associations between user and token.", 0, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken2.class));
