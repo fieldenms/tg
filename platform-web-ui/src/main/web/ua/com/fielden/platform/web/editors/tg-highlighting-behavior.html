@@ -3,6 +3,13 @@
 <script>
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
 	Polymer.TgBehaviors.TgHighlightingBehavior = {
+	    _searchRegExp: function (str) {
+	        str = str.split('+').join('/[+]/'); // str.replace(new RegExp('/[+]/', 'g'), '/[+]/');
+	        str = str.split('(').join('/[(]/');
+	        str = str.split(')').join('/[)]/');
+	        return new RegExp(str, 'gi');
+	    },
+	    
         /* 
          * Method that identifies matching parts in the str for the searchQuery.
          * Returns an array of objects representing matched and non-matched parts of the str in sequential order.
@@ -23,7 +30,7 @@
             }
 
             // otherwise split 
-            var searchExp = new RegExp(searchQuery, 'gi');
+            var searchExp = this._searchRegExp(searchQuery);
             var match;
             var startIndex = 0;
             while ((match = searchExp.exec(text)) !== null) {
