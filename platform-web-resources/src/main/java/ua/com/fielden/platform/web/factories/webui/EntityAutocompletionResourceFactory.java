@@ -102,7 +102,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                     entityProducer = master.createEntityProducer();
                 } else { // in case when no master is registered for the type -- use default producer and value matcher
                     valueMatcher = EntityMaster.createDefaultValueMatcher(propertyName, entityType, coFinder);
-                    entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType);
+                    entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType, coFinder);
                 }
                 new EntityAutocompletionResource(
                         entityType,
