@@ -30,10 +30,10 @@ public class AssignPropertiesBeforeTestTest extends AbstractDaoTestCase {
 
     @Test
     public void assigned_before_save_user_should_be_the_logged_in_user_and_explanation_should_match_default_value() {
-        final ITgPerson coPerson = (ITgPerson) ao(TgPerson.class);
+        final ITgPerson coPerson = (ITgPerson) co(TgPerson.class);
         final User user = coPerson.getUser();
 
-        final TgSubSystem ss1 = ao(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "SS1");
+        final TgSubSystem ss1 = co(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "SS1");
 
         assertEquals(user, ss1.getUser());
         assertEquals("Default explanation", ss1.getExplanation());
@@ -41,14 +41,14 @@ public class AssignPropertiesBeforeTestTest extends AbstractDaoTestCase {
 
     @Test
     public void nulling_out_non_required_prop_explanation_should_be_permitted_and_it_should_not_get_auto_assigned_before_save_for_already_persisted_entity() {
-        final TgSubSystem ss1 = save(ao(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "SS1").setExplanation(null));
+        final TgSubSystem ss1 = save(co(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "SS1").setExplanation(null));
 
         assertNull(ss1.getExplanation());
     }
 
     @Test
     public void nulling_out_required_prop_user_should_be_permitted_for_persistent_entity_even_though_it_is_declared_as_assigned_before_save_but_saving_of_such_entity_should_not() {
-        final TgSubSystem ss1 = ao(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "SS1");
+        final TgSubSystem ss1 = co(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "SS1");
 
         // property value removal should be permitted, despite its declaration as @Required, but...
         ss1.setUser(null);
@@ -67,7 +67,7 @@ public class AssignPropertiesBeforeTestTest extends AbstractDaoTestCase {
 
     @Test
     public void nulling_out_and_saving_of_non_required_prop_explanation_should_be_permitted_for_persistent_entity_even_though_it_is_declared_as_assigned_before_save() {
-        final TgSubSystem ss1 = ao(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "SS1");
+        final TgSubSystem ss1 = co(TgSubSystem.class).findByKeyAndFetch(fetchAll(TgSubSystem.class), "SS1");
 
         ss1.setExplanation(null);
         final MetaProperty<User> propUser = ss1.getProperty("explanation");
@@ -85,7 +85,7 @@ public class AssignPropertiesBeforeTestTest extends AbstractDaoTestCase {
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2014-11-23 02:47:00"));
 
-        final IUser coUser = ao(User.class);
+        final IUser coUser = co(User.class);
         final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true));
         save(new_(TgPerson.class, loggedInUser).setUser(lUser));
         final User oUser = coUser.save(new_(User.class, otherUser).setBase(true));

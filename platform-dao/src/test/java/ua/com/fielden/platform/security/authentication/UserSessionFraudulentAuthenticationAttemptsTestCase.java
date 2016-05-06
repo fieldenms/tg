@@ -29,7 +29,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class UserSessionFraudulentAuthenticationAttemptsTestCase extends AbstractDaoTestCase {
 
-    private final IUserSession coSession = ao(UserSession.class);
+    private final IUserSession coSession = co(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
 
     @Test
@@ -110,7 +110,7 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
         super.populateDomain();
 
         // add more users
-        final IUser coUser = ao(User.class);
+        final IUser coUser = co(User.class);
         save(new_(TgPerson.class, "Person 1").setUser(coUser.save(new_(User.class, "USER1").setBase(true))));
         save(new_(TgPerson.class, "Person 2").setUser(coUser.save(new_(User.class, "USER2").setBase(true))));
 

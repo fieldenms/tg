@@ -6,6 +6,7 @@ import java.util.Date;
 import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.types.Money;
 @DescTitle("Description")
 @KeyTitle(value = "Wo No")
 @Ignore
+@CompanionObject(ITgWorkOrder.class)
 public class TgWorkOrder extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

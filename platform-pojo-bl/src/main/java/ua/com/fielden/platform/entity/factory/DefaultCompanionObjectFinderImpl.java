@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.entity.factory;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
-
-import com.google.inject.Injector;
 
 /**
  * Default implementation for {@link ICompanionObjectFinder}, which utilises injector for creating controller instances.
@@ -14,6 +15,7 @@ import com.google.inject.Injector;
  */
 public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder {
 
+    @Inject
     private Injector injector;
 
     @Override
@@ -23,6 +25,7 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
                 final Class<T> controllerType = (Class<T>) type.getAnnotation(CompanionObject.class).value();
                 return injector.getInstance(controllerType);
             } catch (final Exception e) {
+                e.printStackTrace();
                 // if controller could not be instantiated for whatever reason it can be considered non-existent
                 // thus, returning null
                 return null;

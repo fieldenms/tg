@@ -20,7 +20,7 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void assigning_existing_active_entity_to_property_with_exists_validation_should_be_possile() {
-        final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
+        final TgCategory cat1 = co(TgCategory.class).findByKey("Cat1");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat1);
 
         assertTrue(sys.isValid().isSuccessful());
@@ -28,7 +28,7 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void assigning_existing_but_inactive_entity_to_property_with_exists_validation_should_not_be_possile() {
-        final TgCategory cat2 = ao(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat2);
 
         final Result result = sys.isValid();
@@ -38,10 +38,10 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void assigning_non_existing_entity_to_property_with_exists_validation_should_not_be_possile() {
-        final TgCategory cat2 = ao(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
 
         // let's delete cat2 to make it non-existing
-        ao(TgCategory.class).delete(cat2);
+        co(TgCategory.class).delete(cat2);
 
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat2);
 
@@ -52,7 +52,7 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void assigning_non_existing_entity_to_property_with_skipped_exists_validation_should_be_possile() {
-        final TgCategory cat2 = ao(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setSecondCategory(cat2);
 
         assertTrue(sys.isValid().isSuccessful());
@@ -69,7 +69,7 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void assigning_existing_entity_to_proprty_with_skipped_exists_validation_should_be_possile() {
-        final TgCategory cat2 = ao(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setSecondCategory(cat2);
 
         assertTrue(sys.isValid().isSuccessful());
@@ -78,10 +78,10 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void assigning_non_existing_entity_to_property_with_only_active_check_skipped_should_not_be_possile() {
-        final TgCategory cat2 = ao(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
 
         // let's delete cat2 to make it non-existing
-        ao(TgCategory.class).delete(cat2);
+        co(TgCategory.class).delete(cat2);
 
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setThirdCategory(cat2);
 
@@ -92,7 +92,7 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void assigning_existing_but_inactive_entity_to_property_with_only_active_check_skipped_should_be_possile() {
-        final TgCategory cat2 = ao(TgCategory.class).findByKey("Cat2");
+        final TgCategory cat2 = co(TgCategory.class).findByKey("Cat2");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setThirdCategory(cat2);
 
         assertTrue(sys.isValid().isSuccessful());
@@ -101,7 +101,7 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
     @Test
     public void assigning_existing_and_active_entity_to_property_with_only_active_check_skipped_should_be_possile() {
-        final TgCategory cat1 = ao(TgCategory.class).findByKey("Cat1");
+        final TgCategory cat1 = co(TgCategory.class).findByKey("Cat1");
         final TgSystem sys = new_(TgSystem.class, "Sys2").setActive(true).setThirdCategory(cat1);
 
         assertTrue(sys.isValid().isSuccessful());

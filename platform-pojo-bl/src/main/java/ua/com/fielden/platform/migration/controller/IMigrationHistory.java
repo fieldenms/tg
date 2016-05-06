@@ -9,6 +9,6 @@ import ua.com.fielden.platform.migration.MigrationHistory;
  * @author TG Team
  * 
  */
-public interface IMigrationHistoryDao extends IEntityDao<MigrationHistory> {
+public interface IMigrationHistory extends IEntityDao<MigrationHistory> {
 
 }

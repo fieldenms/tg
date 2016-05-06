@@ -174,12 +174,12 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
         bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Scopes.SINGLETON);
-        bind(IGeneratedEntityController.class).to(GeneratedEntityDao.class).in(Scopes.SINGLETON);
+        bind(IGeneratedEntityController.class).to(GeneratedEntityDao.class);
 
         // bind entity manipulation controller
-        bind(IEntityNewAction.class).to(EntityNewActionDao.class).in(Scopes.SINGLETON);
-        bind(IEntityEditAction.class).to(EntityEditActionDao.class).in(Scopes.SINGLETON);
-        bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class).in(Scopes.SINGLETON);
+        bind(IEntityNewAction.class).to(EntityNewActionDao.class);
+        bind(IEntityEditAction.class).to(EntityEditActionDao.class);
+        bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
 
         // user security related bindings
         bind(IUser.class).to(UserDao.class);

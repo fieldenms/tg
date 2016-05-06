@@ -51,7 +51,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
 
         // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
         // It should always be used as the current user for data population activities
-        final IUser coUser = ao(User.class);
+        final IUser coUser = co(User.class);
         final User vu = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUser(vu);
@@ -69,7 +69,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
         final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
         final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-        final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, ao(SecurityRoleAssociation.class));
+        final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));
         final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
         for (final SecurityTokenNode securityNode : topNodes) {
             alg.search(securityNode, predicate);

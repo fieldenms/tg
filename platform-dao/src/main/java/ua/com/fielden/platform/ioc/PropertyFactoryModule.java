@@ -29,13 +29,11 @@ import com.google.inject.Scopes;
 public class PropertyFactoryModule extends TransactionalModule {
 
     protected final EntityFactory entityFactory;
-    protected final DefaultCompanionObjectFinderImpl defaultControllerProvider;
 
     public PropertyFactoryModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
             throws Exception {
         super(props, defaultHibernateTypes, applicationEntityTypes);
         entityFactory = new EntityFactory() {};
-        defaultControllerProvider = new DefaultCompanionObjectFinderImpl();
 
         initHibernateConfig(entityFactory);
     }
@@ -44,7 +42,6 @@ public class PropertyFactoryModule extends TransactionalModule {
         super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
         entityFactory = new EntityFactory() {
         };
-        defaultControllerProvider = new DefaultCompanionObjectFinderImpl();
     }
 
     @Override
@@ -52,7 +49,7 @@ public class PropertyFactoryModule extends TransactionalModule {
         super.configure();
         bind(EntityFactory.class).toInstance(entityFactory);
         // bind provider for default entity controller
-        bind(ICompanionObjectFinder.class).toInstance(defaultControllerProvider);
+        bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class);
         // bind property factory
         bind(IMetaPropertyFactory.class).to(DaoMetaPropertyFactory.class).in(Scopes.SINGLETON);
         // bind entity aggregates DAO
@@ -64,7 +61,6 @@ public class PropertyFactoryModule extends TransactionalModule {
     public void setInjector(final Injector injector) {
         super.setInjector(injector);
         entityFactory.setInjector(injector);
-        defaultControllerProvider.setInjector(injector);
         final IMetaPropertyFactory mfp = injector.getInstance(IMetaPropertyFactory.class);
         mfp.setInjector(injector);
     }
