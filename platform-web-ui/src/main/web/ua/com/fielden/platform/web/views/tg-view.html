@@ -48,10 +48,7 @@
 
             properties: {
                 menuItem: Object,
-                selectedModule: {
-                    type: String,
-                    observer: "_moduleChanged"
-                },
+                selectedModule: String,
                 autoLoad: {
                     type: Boolean,
                     value: false,
@@ -99,10 +96,14 @@
             hostAttributes: {
                 "class": "layout vertical"
             },
+            
+            observers: [
+                "_moduleChanged(menuItem, selectedModule)"
+            ],
 
-            _moduleChanged: function (newValue, oldValue) {
-                if (this.menuItem && newValue && this.menuItem.title === decodeURIComponent(newValue) && this.$.menuItemView.wasLoaded()) {
-                    this.$.menuItemView.load();
+            _moduleChanged: function (menuItem, selectedModule) {
+                if (menuItem.title === decodeURIComponent(selectedModule)) {
+                    this.$.menuItemView.loadAfterInit();
                 }
             },
 

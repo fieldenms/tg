@@ -104,7 +104,7 @@
                         <tg-menu-item-view class="menu-item-view" page-name$="[[item.title]]" menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
                     </template>
                 </neon-animated-pages>
-                
+
                 <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
             </div>
 
@@ -114,6 +114,15 @@
 </dom-module>
 <script>
     (function () {
+        var findSubmodule = function (submoduleName, menuItem) {
+            var menuItemIndex;
+            for (menuItemIndex = 0; menuItemIndex < menuItem.menu.length; menuItemIndex++) {
+                if (menuItem.menu[menuItemIndex].title === submoduleName) {
+                    return submoduleName;
+                }
+            }
+            return "_";
+        };
         Polymer({
 
             is: "tg-view-with-menu",
@@ -290,15 +299,14 @@
             _updatePage(menuItem, submodule, _menuItemsLoaded) {
                 var pageName;
                 if (menuItem.title === decodeURIComponent(this.selectedModule)) {
-                    pageName = decodeURIComponent(submodule.path.substring(1));
+                    pageName = findSubmodule(decodeURIComponent(submodule.path.substring(1)), menuItem);
                     this.set("_selectedPage", pageName);
                     this.async(function () {
                         var viewToLoad;
                         if (pageName !== '_') {
                             viewToLoad = this.$$("[page-name='" + pageName + "']");
                             if (viewToLoad) {
-                                //TODO must be replaced with functiona that says that this view should be loaded after it's dom will be rendered.
-                                viewToLoad.autoLoad = true;
+                                viewToLoad.loadAfterInit();
                             }
                         }
                     });
