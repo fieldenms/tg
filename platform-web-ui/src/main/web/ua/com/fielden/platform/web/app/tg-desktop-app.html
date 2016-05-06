@@ -15,7 +15,7 @@
     </style>
     <template>
         <tg-view-manager></tg-view-manager>
-        <carbon-location route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></carbon-location>
+        <carbon-location id="location" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></carbon-location>
         <carbon-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></carbon-route>
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
@@ -91,6 +91,11 @@
                 } else {
                     this.selectAfterRender = selected;
                 }
+            },
+            
+            ready: function() {
+                //Setting dwellTime to 0 for iron-location that is in the shadow-dom of carbon-location component. This fixes the problem of delayong the history changes.
+                 this.$.location.$$("iron-location").dwellTime = 0;
             },
 
             attached: function () {
