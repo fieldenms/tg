@@ -1053,6 +1053,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         icon("add-circle").
                         shortDesc("Add new").
                         longDesc("Start coninuous creatio of entities").
+                        withNoParentCentreRefresh().
                         build())
                 .also();
 

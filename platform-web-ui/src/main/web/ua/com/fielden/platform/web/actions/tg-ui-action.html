@@ -86,6 +86,33 @@
 </polymer-element>
 
 <script>
+(function() {
+    /**
+     * Returns 'true' in case where obj is not defined (aka 'null', 'undefined' or not undefined), 'false' otherwise. 
+     */
+    var _notDefined = function (obj) {
+        return typeof obj === 'undefined' || obj === null;
+    };
+    
+    /**
+     * Returns 'selectedEntities' from the centre, that is closest to this functional action context.
+     * 
+     * In case where 'centreContextHolder' is the context of direct centre's child action -- just returns it.
+     * In case where 'centreContextHolder' is the context of in-direct, transitive centre's child action -- finds it in parent actions.
+     * (Vehicle centre -> [OpenVehicleMasterAction=direct child] -> [VehicleMaster_OpenMain_MenuItem=in-direct child (or embedded VehicleMaster)] )
+     */
+    var _findSelectedEntitiesIn = function (centreContextHolder) {
+        if (_notDefined(centreContextHolder)) {
+            return undefined;
+        } else if (!_notDefined(centreContextHolder.selectedEntities)) {
+            return centreContextHolder.selectedEntities;
+        } else if (_notDefined(centreContextHolder.masterEntity)) {
+            return undefined;
+        } else {
+            return _findSelectedEntitiesIn(centreContextHolder.masterEntity.centreContextHolder);
+        }
+    };
+
     Polymer({
     	is: 'tg-ui-action',
     	
@@ -362,18 +389,29 @@
                 
                 // NOTE: the savingContext for 'tg-entity-master' at this stage is immutable, i.e. it will never change during lifecycle of action's master 
                 master.savingContext = self._createContextHolderForAction();
+                // the following function captures 'master.savingContext' which could be used in different contexts:
+                //   for e.g. 'tg-vehiclemaster_openmain_menuitem_master.savingContext' will be used in 'tg-vehicle-master' postSaved callback
+                //   and in 'tg-vehiclemaster_openmain_menuitem_master' postSaved callback
+                var selectedEntitiesSupplier = function () {
+                    return _findSelectedEntitiesIn(master.savingContext);
+                };
+                
+                // Every functional entity master contains it own flag 'shouldRefreshParentCentreAfterSave'.
+                // This flag is configured from 'withNoParentCentreRefresh()' function call (or from non-existence of that call) in Java API functional action configuration.
+                // One exception from that rule: embedded masters in master-with-master -- the flag is configured from MasterWithMasterBuilder API.
+                master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
 
                 master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
-                    master.focusFirstInput();
+                    this.focusFirstInput();
                     
                     postal.publish({
-                        channel: "centre_" + master.centreUuid,
+                        channel: "centre_" + this.centreUuid,
                         topic: "detail.saved",
                         data: {
-                        	shouldRefreshParentCentreAfterSave: self.shouldRefreshParentCentreAfterSave,
+                        	shouldRefreshParentCentreAfterSave: this.shouldRefreshParentCentreAfterSave,
                             entity: potentiallySavedOrNewEntity,
                             // send selectedEntitiesInContext further to be able to update only them on EGI
-                            selectedEntitiesInContext: master.savingContext.selectedEntities
+                            selectedEntitiesInContext: selectedEntitiesSupplier()
                         }
                     });
                     
@@ -394,11 +432,11 @@
                 master.postSavedError = function (errorResult) {
                 	// if action has no UI part then even failed saving indicates the completion of action's execution
                 	// otherwise, the UI would still remain open and user can apply some changes and attempt to save again (i.e. the action is still in progress)
-                	if (master.noUI === true) {
+                	if (this.noUI === true) {
                 		// action execution completed, althoug in error from saving
                     	self.isActionInProgress = false;
                 	} else {
-                        master.focusFirstInput();
+                        this.focusFirstInput();
                 	}
                 };
                 
@@ -499,4 +537,5 @@
         	return uiRole === 'ICON';
         }
     });
+})();
 </script>

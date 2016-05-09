@@ -92,6 +92,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                         + "    default-route='%s'\n"
                         + "    menu-actions='[[menuItemActions]]'\n"
                         + "    uuid='[[uuid]]'\n"
+                        + "    centre-uuid='[[centreUuid]]'\n"
                         + "    get-master-entity='[[_createContextHolderForEmbeddedViews]]'\n"
                         + "    refresh-compound-master='[[save]]'\n"
                         + "    augment-context-with-saved-entity='[[augmentContextWithSavedEntity]]'>\n"
