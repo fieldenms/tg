@@ -27,10 +27,10 @@
         <div class="flex layout vertical">
             <!--cross-fade animation here-->
             <template is="dom-if" if="[[!menuItem.menu]]">
-                <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[menuItem]]"></tg-view>
+                <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[menuItem]]" selected-module="[[selectedModule]]"></tg-view>
             </template>
             <template is="dom-if" if="[[menuItem.menu]]">
-                <tg-view-with-menu class="fit" id="view" menu-item="[[menuItem]]"></tg-view-with-menu>
+                <tg-view-with-menu class="fit" id="view" menu-item="[[menuItem]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view-with-menu>
             </template>
         </div>
 
@@ -45,6 +45,11 @@
 
             properties: {
                 menuItem: Object,
+                selectedModule: String,
+                submodule: {
+                    type: Object,
+                    notify: true
+                },
                 autoLoad: {
                     type: Boolean,
                     value: false,
@@ -116,6 +121,13 @@
                     name: 'fade-out-animation',
                     node: this
                 });
+            },
+            
+            getSelectedPage: function () {
+                var view = this.$$("#view");
+                if (view.getSelectedPage) {
+                    return view.getSelectedPage();
+                }
             },
 
             load: function () {

@@ -81,7 +81,7 @@
                     <div class="flex">[[menuItem.title]]</div>
                 </div>
 
-                <paper-menu id="menu" class="flex" on-selected-changed="_menuItemSelected" attr-for-selected="name">
+                <paper-menu id="menu" class="flex" selected="{{_selectedPage}}" on-iron-activate="_itemActivated" attr-for-selected="name">
                     <template is="dom-repeat" items="[[menuItem.menu]]">
                         <paper-item name$="[[item.title]]" tooltip-text$="[[item.description]]">[[item.title]]</paper-item>
                     </template>
@@ -96,16 +96,16 @@
                         <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
                         <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
                     </div>
-                    <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
                 </div>
 
-                <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
-                    <div class="menu-item-view" name="__empty__"></div>
-                    <template is="dom-repeat" items="[[menuItem.menu]]">
-                        <tg-menu-item-view class="menu-item-view" name$="[[item.title]]" menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
+                <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
+                    <div class="menu-item-view" page-name="_"></div>
+                    <template is="dom-repeat" items="[[menuItem.menu]]" on-dom-change="_menuItemsRendered">
+                        <tg-menu-item-view class="menu-item-view" page-name$="[[item.title]]" menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
                     </template>
                 </neon-animated-pages>
 
+                <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
             </div>
 
 
@@ -114,25 +114,33 @@
 </dom-module>
 <script>
     (function () {
+        var findSubmodule = function (submoduleName, menuItem) {
+            var menuItemIndex;
+            for (menuItemIndex = 0; menuItemIndex < menuItem.menu.length; menuItemIndex++) {
+                if (menuItem.menu[menuItemIndex].title === submoduleName) {
+                    return submoduleName;
+                }
+            }
+            return "_";
+        };
         Polymer({
 
             is: "tg-view-with-menu",
 
             properties: {
                 menuItem: Object,
+                selectedModule: String,
+                submodule: {
+                    type: Object,
+                    notify: true
+                },
                 animationConfig: {
                     value: function () {
                         return {
                             'entry': [
                                 {
                                     name: 'slide-from-top-animation',
-                                    node: this.$.menuToolBar
-                                }, {
-                                    name: 'slide-from-top-animation',
                                     node: this.$.viewToolBar
-                                }, {
-                                    name: 'slide-from-bottom-animation',
-                                    node: this.$.menu
                                 }, {
                                     name: 'slide-from-bottom-animation',
                                     node: this.$.pages
@@ -147,13 +155,7 @@
                             'exit': [
                                 {
                                     name: 'slide-up-animation',
-                                    node: this.$.menuToolBar
-                                }, {
-                                    name: 'slide-up-animation',
                                     node: this.$.viewToolBar
-                                }, {
-                                    name: 'slide-down-animation',
-                                    node: this.$.menu
                                 }, {
                                     name: 'slide-down-animation',
                                     node: this.$.pages
@@ -167,7 +169,7 @@
                 },
 
                 //Private members those starts with underscore
-
+                _menuItemsLoaded: Boolean,
                 _selectedPage: {
                     type: String,
                     observer: '_selectedPageChanged'
@@ -184,48 +186,14 @@
                 class: "layout vertical"
             },
 
+            observers: [
+                '_updatePage(menuItem, submodule)'
+            ],
+
             ready: function () {
                 var self = this,
                     masterCounter = 1;
-                self.startUp = true;
-                self.$.menu.selected = "__empty__";
                 ////////////////// State related events ///////////////////////////
-                postal.subscribe({
-                    channel: self.menuItem.title,
-                    topic: "state.push",
-                    callback: function (data, envelope) {
-                        var newState = data.state;
-                        if (self.$.menu.selected) {
-                            newState.push(self.$.menu.selected);
-                        }
-                        self._initDrawerPanel();
-                        history.pushState(newState, "");
-                        postal.publish({
-                            channel: "app",
-                            topic: "state.pushed",
-                            data: {
-                                state: newState
-                            }
-                        });
-                    }
-                });
-                postal.subscribe({
-                    channel: self.menuItem.title,
-                    topic: "state.pop",
-                    callback: function (data, envelope) {
-                        if (data.state[1] === self.$.menu.selected) {
-                            postal.publish({
-                                channel: "app",
-                                topic: "state.poped",
-                                data: data
-                            });
-                        } else {
-                            self.restoringState = true;
-                            self.$.menu.selected = data.state[1];
-                        }
-                        self._initDrawerPanel();
-                    }
-                });
                 postal.subscribe({
                     channel: self.menuItem.title,
                     topic: "state.select",
@@ -312,8 +280,41 @@
                 });
             },
 
+            attached: function () {
+                this.async(function () {
+                    if (!this._selectedPage) {
+                        this.set("_selectedPage", "_");
+                    }
+                });
+            },
+
+            getSelectedPage: function () {
+                return this._selectedPage;
+            },
+
+            _menuItemsRendered: function () {
+                this._menuItemsLoaded = true;
+            },
+
+            _updatePage(menuItem, submodule, _menuItemsLoaded) {
+                var pageName;
+                if (menuItem.title === decodeURIComponent(this.selectedModule)) {
+                    pageName = findSubmodule(decodeURIComponent(submodule.path.substring(1)), menuItem);
+                    this.set("_selectedPage", pageName);
+                    this.async(function () {
+                        var viewToLoad;
+                        if (pageName !== '_') {
+                            viewToLoad = this.$$("[page-name='" + pageName + "']");
+                            if (viewToLoad) {
+                                viewToLoad.loadAfterInit();
+                            }
+                        }
+                    });
+                }
+            },
+
             _initDrawerPanel: function () {
-                if (this.$.menu.selected === '__empty__') {
+                if (this._selectedPage === '_') {
                     this.$.drawerPanel.selected = 'drawer';
                 } else {
                     this.$.drawerPanel.selected = 'main';
@@ -324,45 +325,32 @@
                 this.fire("main-menu");
             },
 
-            _menuItemSelected: function (e, detail, source) {
-                this._selectedPage = detail.value;
-            },
-
             _togglePanel: function (e, detail, source) {
                 this.$.drawerPanel.togglePanel();
             },
 
             _calcSelectedPageTitle: function (page) {
-                return page === '__empty__' ? '' : page;
+                return page === '_' ? '' : page;
             },
 
             _calcUuid: function (item) {
                 return this.menuItem.title + '/' + item.title;
             },
 
-            _selectedPageChanged: function (e, detail, source) {
-                var state;
-                state = [this.menuItem.title, this.$.menu.selected];
-                if (this.startUp) {
-                    this.startUp = false;
-                } else if (this.restoringState) {
-                    this.restoringState = false;
-                    postal.publish({
-                        channel: "app",
-                        topic: "state.poped",
-                        data: {
-                            state: state
-                        }
-                    });
-                } else {
-                    history.pushState(state, "");
-                    this._initDrawerPanel();
-                }
+            /**
+             * The listener that listens the menu item activation on tap.
+             */
+            _itemActivated: function (e, detail) {
+                this.set("submodule.path", "/" + encodeURIComponent(detail.selected));
+            },
+
+            _selectedPageChanged: function (newValue, oldValue) {
+                this._initDrawerPanel();
             },
 
             _animationFinished: function (e, detail, source) {
                 var viewToLoad;
-                if (this.$.menu.selected != '__empty__') {
+                if (this.$.menu.selected !== '_') {
                     viewToLoad = detail.toPage;
                     if (viewToLoad && !viewToLoad.wasLoaded()) {
                         viewToLoad.load();

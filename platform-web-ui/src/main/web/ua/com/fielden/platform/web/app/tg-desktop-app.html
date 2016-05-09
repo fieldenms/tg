@@ -1,5 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
+<link rel="import" href="/resources/polymer/carbon-route/carbon-location.html">
+<link rel="import" href="/resources/polymer/carbon-route/carbon-route.html">
 <link rel="import" href="/resources/views/tg-app-menu.html">
 <link rel="import" href="/resources/views/tg-app-view.html">
 <link rel="import" href="/resources/components/postal-lib.html">
@@ -13,10 +15,12 @@
     </style>
     <template>
         <tg-view-manager></tg-view-manager>
+        <carbon-location id="location" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></carbon-location>
+        <carbon-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></carbon-route>
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
-            <template is="dom-repeat" items="[[menuConfig.items]]">
-                <tg-app-view class="fit hero-animatable" name$="[[item.title]]" menu-item="[[item]]"></tg-app-view>
+            <template is="dom-repeat" items="[[menuConfig.items]]" on-dom-change="_modulesRendered">
+                <tg-app-view class="fit hero-animatable" name$="[[item.title]]" menu-item="[[item]]" selected-module="[[_routeData.moduleName]]" submodule="{{_subroute}}"></tg-app-view>
             </template>
         </neon-animated-pages>
     </template>
@@ -24,79 +28,97 @@
 
 <script>
     (function () {
-        var pushState = function (state) {
-                if (state && Array.isArray(state) && state.length > 0) {
-                    postal.publish({
-                        channel: state[0],
-                        topic: "state.push",
-                        data: {
-                            state: state
-                        }
-                    });
+        var findModule = function (moduleName, menuConfig) {
+            var itemIndex;
+            for (itemIndex = 0; itemIndex < menuConfig.items.length; itemIndex++) {
+                if (menuConfig.items[itemIndex].title === moduleName) {
+                    return moduleName;
                 }
-            },
-            popState = function (state) {
-                if (state && Array.isArray(state) && state.length > 0) {
-                    postal.publish({
-                        channel: state[0],
-                        topic: "state.pop",
-                        data: {
-                            state: state,
-                        }
-                    });
-                }
-            };
+            }
+            return "menu";
+        };
         Polymer({
 
             is: "tg-desktop-app",
+
+            properties: {
+                _route: {
+                    type: Object,
+                    observer: "_routeChanged"
+                },
+                _routeData: Object,
+                _subroute: Object
+            },
 
             listeners: {
                 "main-menu": "_showMainMenu",
                 "menu-item-selected": "_showView"
             },
+
+            _routeChanged: function (newValue, oldValue) {
+                this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
+            },
+
             _showMainMenu: function (e) {
                 this._setSelected("menu");
             },
+
             _showView: function (e) {
-                pushState([e.detail]);
+                var route = "/" + encodeURIComponent(e.detail),
+                    elementToSelect = this.$$("[name='" + e.detail + "']"),
+                    selectedSubPage = elementToSelect.getSelectedPage();
+                if (selectedSubPage) {
+                    route += "/" + encodeURIComponent(selectedSubPage);
+                }
+                if (this._route.path === route) {
+                    this._setSelected(e.detail);
+                } else {
+                    this.set("_route.path", route);
+                }
             },
+
+            _modulesRendered: function (e) {
+                if (this.selectAfterRender) {
+                    this.async(function () {
+                        this._setSelected(this.selectAfterRender);
+                        delete this.selectAfterRender;
+                    });
+                }
+            },
+
             _setSelected: function (selected) {
-                var currentlySelected = this.$.pages.selected
-                if (currentlySelected) {
-                    this.$$("[name='" + currentlySelected + "']").configureExitAnimation(selected);
-                }
-                if (selected) {
-                    this.$$("[name='" + selected + "']").configureEntryAnimation(currentlySelected);
-                }
-                this.$.pages.selected = selected;
+                var currentlySelected, currentlySelectedElement, elementToSelect;
+                if (this.menuConfig) {
+                    currentlySelected = this.$.pages.selected;
+                    currentlySelectedElement = currentlySelected && this.$$("[name='" + currentlySelected + "']");
+                    selected = findModule(selected, this.menuConfig)
+                    elementToSelect = selected && this.$$("[name='" + selected + "']");
+                    if (currentlySelectedElement) {
+                        currentlySelectedElement.configureExitAnimation(selected);
+                    }
+                    if (elementToSelect) {
+                        elementToSelect.configureEntryAnimation(currentlySelected);
+                        this.$.pages.selected = selected;
+                        return;
+                    }
+                } 
+                this.selectAfterRender = selected;
             },
+
+            ready: function () {
+                //Setting dwellTime to 0 for iron-location that is in the shadow-dom of carbon-location component. This fixes the problem of delayong the history changes.
+                this.$.location.$$("iron-location").dwellTime = 0;
+            },
+
             attached: function () {
                 var self = this;
                 this.menuConfig = @menuConfig;
-                postal.subscribe({
-                    channel: "app",
-                    topic: "state.pushed",
-                    callback: function (data, envelope) {
-                        self._setSelected(data.state[0]);
-                        //updateHash(data.state);
-                    }
-                });
-                postal.subscribe({
-                    channel: "app",
-                    topic: "state.poped",
-                    callback: function (data, envelope) {
-                        self._setSelected(data.state[0]);
-                    }
-                });
-                //Set up listener for history events
-                window.onpopstate = function (e) {
-                    popState(e.state);
-                };
-                //Selectes the first view
+
                 this.async(function () {
-                    self._setSelected("menu");
-                    history.pushState(["menu"], "");
-                }, 1);
+                    if (!this._route.path) {
+                        this.set("_route.path", "/menu");
+                    }
+                });
             }
         });
     })();
