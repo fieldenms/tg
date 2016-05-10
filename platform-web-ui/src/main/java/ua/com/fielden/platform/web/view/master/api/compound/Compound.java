@@ -95,13 +95,20 @@ public class Compound {
             final PrefDim prefDim,
             final CentreContextConfig centreContextConfig
             ) {
-        return action(openCompoundMasterActionType)
-                .withContext(centreContextConfig)
-                .icon(icon)
-                .shortDesc(shortDesc)
-                .longDesc(longDesc)
-                .prefDimForView(prefDim)
-                .withNoParentCentreRefresh()
-                .build();
+        return icon != null ? 
+                action(openCompoundMasterActionType)
+                    .withContext(centreContextConfig)
+                    .icon(icon)
+                    .shortDesc(shortDesc)
+                    .longDesc(longDesc)
+                    .prefDimForView(prefDim)
+                    .withNoParentCentreRefresh()
+                    .build():
+                action(openCompoundMasterActionType)
+                    .withContext(centreContextConfig)
+                    .shortDesc(shortDesc)
+                    .prefDimForView(prefDim)
+                    .withNoParentCentreRefresh()
+                    .build();
     }
 }
