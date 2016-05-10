@@ -77,6 +77,7 @@ public class Compound {
             final String shortDesc, 
             final String longDesc,
             final PrefDim prefDim) {
+        // TODO here empty context will be relevant in most cases, please use it when API for empty context will be implemented (for example, context().empty().build())
         return open(openCompoundMasterActionType, icon, shortDesc, longDesc, prefDim, context().withSelectionCrit().build());
     }
     

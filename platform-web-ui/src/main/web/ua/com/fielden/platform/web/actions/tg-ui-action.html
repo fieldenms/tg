@@ -104,7 +104,7 @@
     var _findSelectedEntitiesIn = function (centreContextHolder) {
         if (_notDefined(centreContextHolder)) {
             return undefined;
-        } else if (!_notDefined(centreContextHolder.selectedEntities)) {
+        } else if (typeof centreContextHolder.selectedEntities !== 'undefined') { // could be 'null' -- this indicates empty selected entities
             return centreContextHolder.selectedEntities;
         } else if (_notDefined(centreContextHolder.masterEntity)) {
             return undefined;
