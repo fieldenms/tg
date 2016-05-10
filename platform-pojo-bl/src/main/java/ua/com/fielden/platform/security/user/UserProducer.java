@@ -14,7 +14,7 @@ import ua.com.fielden.platform.security.tokens.user.UserSaveToken;
  * @author TG Team
  *
  */
-public class UserProducer extends EntityProducerWithNewEditActions<User, User> {
+public class UserProducer extends EntityProducerWithNewEditActions<User> {
     
     @Inject
     public UserProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {

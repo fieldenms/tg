@@ -25,7 +25,6 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
-import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -51,15 +50,12 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4
 import ua.com.fielden.platform.sample.domain.MiUser;
 import ua.com.fielden.platform.sample.domain.MiUserRole;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
-import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusActionProducer;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
-import ua.com.fielden.platform.sample.domain.TgDummyActionProducer;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
-import ua.com.fielden.platform.sample.domain.TgEntityForColourMasterProducer;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependencyProducer;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
@@ -68,19 +64,14 @@ import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -621,11 +612,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityMaster<NewEntityAction> functionalMasterWithEmbeddedPersistentMaster =  NewEntityActionWebUiConfig.createMaster(injector(), entityMaster);
         final EntityMaster<EntityNewAction> entityNewActionMaster = EntityManipulationWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> entityEditActionMaster = EntityManipulationWebUiConfig.createEntityEditMaster(injector());
-        final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
+        final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, injector());
 
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
         
-        final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
+        final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, masterConfigForColour, injector());
         
         configApp().
             addMaster(EntityNewAction.class, entityNewActionMaster).
@@ -665,7 +656,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         injector())).
                 addMaster(TgCentreInvokerWithCentreContext.class, new EntityMaster<TgCentreInvokerWithCentreContext>(
                         TgCentreInvokerWithCentreContext.class,
-                        TgCentreInvokerWithCentreContextProducer.class,
                         new MasterWithCentreBuilder<TgCentreInvokerWithCentreContext>().forEntityWithSaveOnActivate(TgCentreInvokerWithCentreContext.class).withCentre(detailsCentre).done(),
                         injector())).
                 addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(
@@ -673,7 +663,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         null,
                         injector())).
                 addMaster(TgExportFunctionalEntity.class, EntityMaster.noUiFunctionalMaster(TgExportFunctionalEntity.class, TgExportFunctionalEntityProducer.class, injector())).
-                addMaster(TgDummyAction.class, EntityMaster.noUiFunctionalMaster(TgDummyAction.class, TgDummyActionProducer.class, injector())).
+                addMaster(TgDummyAction.class, EntityMaster.noUiFunctionalMaster(TgDummyAction.class, injector())).
                 addMaster(TgCreatePersistentStatusAction.class, new EntityMaster<TgCreatePersistentStatusAction>(
                         TgCreatePersistentStatusAction.class,
                         TgCreatePersistentStatusActionProducer.class,
@@ -681,27 +671,22 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         injector())).
                 addMaster(TgStatusActivationFunctionalEntity.class, new EntityMaster<TgStatusActivationFunctionalEntity>(
                         TgStatusActivationFunctionalEntity.class,
-                        TgStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(TgISStatusActivationFunctionalEntity.class, new EntityMaster<TgISStatusActivationFunctionalEntity>(
                         TgISStatusActivationFunctionalEntity.class,
-                        TgISStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(TgIRStatusActivationFunctionalEntity.class, new EntityMaster<TgIRStatusActivationFunctionalEntity>(
                         TgIRStatusActivationFunctionalEntity.class,
-                        TgIRStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(TgONStatusActivationFunctionalEntity.class, new EntityMaster<TgONStatusActivationFunctionalEntity>(
                         TgONStatusActivationFunctionalEntity.class,
-                        TgONStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 addMaster(TgSRStatusActivationFunctionalEntity.class, new EntityMaster<TgSRStatusActivationFunctionalEntity>(
                         TgSRStatusActivationFunctionalEntity.class,
-                        TgSRStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 done();

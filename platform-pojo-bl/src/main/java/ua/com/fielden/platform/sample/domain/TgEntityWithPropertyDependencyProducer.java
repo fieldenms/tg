@@ -13,18 +13,17 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgEntityWithPropertyDependencyProducer extends EntityProducerWithNewEditActions<TgEntityWithPropertyDependency, TgEntityWithPropertyDependency> implements IEntityProducer<TgEntityWithPropertyDependency> {
-    private final ITgEntityWithPropertyDependency coTgEntityWithPropertyDependency;
+public class TgEntityWithPropertyDependencyProducer extends EntityProducerWithNewEditActions<TgEntityWithPropertyDependency> implements IEntityProducer<TgEntityWithPropertyDependency> {
 
     @Inject
-    public TgEntityWithPropertyDependencyProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final ITgEntityWithPropertyDependency coTgEntityWithPropertyDependency) {
+    public TgEntityWithPropertyDependencyProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, TgEntityWithPropertyDependency.class, companionFinder);
-        this.coTgEntityWithPropertyDependency = coTgEntityWithPropertyDependency;
     }
 
     @Override
     protected TgEntityWithPropertyDependency provideDefaultValuesForNewEntity(final TgEntityWithPropertyDependency entity) {
         entity.setKey("DUMMY");
+        entity.resetMetaState();
         return entity;
     }
 }

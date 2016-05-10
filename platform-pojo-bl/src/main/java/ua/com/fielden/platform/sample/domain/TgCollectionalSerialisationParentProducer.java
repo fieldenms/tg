@@ -13,18 +13,17 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgCollectionalSerialisationParentProducer extends EntityProducerWithNewEditActions<TgCollectionalSerialisationParent, TgCollectionalSerialisationParent> implements IEntityProducer<TgCollectionalSerialisationParent> {
-    private final ITgCollectionalSerialisationParent co;
+public class TgCollectionalSerialisationParentProducer extends EntityProducerWithNewEditActions<TgCollectionalSerialisationParent> implements IEntityProducer<TgCollectionalSerialisationParent> {
 
     @Inject
-    public TgCollectionalSerialisationParentProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final ITgCollectionalSerialisationParent co) {
+    public TgCollectionalSerialisationParentProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, TgCollectionalSerialisationParent.class, companionFinder);
-        this.co = co;
     }
 
     @Override
     protected TgCollectionalSerialisationParent provideDefaultValuesForNewEntity(final TgCollectionalSerialisationParent entity) {
         entity.setKey("DUMMY");
+        entity.resetMetaState();
         return entity;
     }
 }

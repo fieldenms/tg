@@ -14,7 +14,7 @@ import ua.com.fielden.platform.security.tokens.user.UserRoleSaveToken;
  * @author TG Team
  *
  */
-public class UserRoleProducer extends EntityProducerWithNewEditActions<UserRole, UserRole> {
+public class UserRoleProducer extends EntityProducerWithNewEditActions<UserRole> {
     
     @Inject
     public UserRoleProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {

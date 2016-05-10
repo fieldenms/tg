@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
-public class EntityProducerWithNewEditActions<T extends AbstractEntity<?>, C extends AbstractEntity<?>> extends DefaultEntityProducerWithContext<T, C> {
+public class EntityProducerWithNewEditActions<T extends AbstractEntity<?>> extends DefaultEntityProducerWithContext<T> {
 
     public EntityProducerWithNewEditActions(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         super(factory, entityType, companionFinder);

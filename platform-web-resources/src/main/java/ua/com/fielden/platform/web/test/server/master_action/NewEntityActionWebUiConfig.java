@@ -11,6 +11,6 @@ public class NewEntityActionWebUiConfig {
 
     public static EntityMaster<NewEntityAction> createMaster(final Injector injector, final EntityMaster<TgPersistentEntityWithProperties> master) {
         final IMaster<NewEntityAction> masterWithMaster = new MasterWithMasterBuilder<NewEntityAction>().forEntityWithSaveOnActivate(NewEntityAction.class).withMasterAndWithNoParentCentreRefresh(master).done();
-        return new EntityMaster<NewEntityAction>(NewEntityAction.class, NewEntityActionProducer.class, masterWithMaster, injector);
+        return new EntityMaster<NewEntityAction>(NewEntityAction.class, masterWithMaster, injector);
     }
 }

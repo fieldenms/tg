@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import org.apache.commons.lang.StringUtils;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -16,13 +14,13 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  * @param <T>
  */
-public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C extends AbstractEntity<?>> implements IEntityProducer<T> {
+public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> implements IEntityProducer<T> {
 
     private final EntityFactory factory;
     protected final Class<T> entityType;
     private final IEntityDao<T> companion;
     // optional centre context for context-dependent entity producing logic
-    private CentreContext<C, AbstractEntity<?>> centreContext;
+    private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext;
     private AbstractEntity<?> masterEntity;
     private Long compoundMasterEntityId;
     private String chosenProperty;
@@ -45,22 +43,22 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
             provideProxies(entity, companion.getFetchProvider());
         }
         
-        // TODO Assignment of context and chosen property below breaks execution of compound masters
-        //      Currently it is not know as to why this is the case.
         if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
-            final AbstractFunctionalEntityWithCentreContext<?> funEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
+            final AbstractFunctionalEntityWithCentreContext<?> funcEntity = (AbstractFunctionalEntityWithCentreContext<?>) entity;
             
-            if (getCentreContext() != null) {
-                funEntity.setContext(getCentreContext());
+            if (centreContext != null) {
+                funcEntity.setContext(centreContext);
             }
             
-            if (getChosenProperty() != null) {
-                funEntity.setChosenProperty(getChosenProperty());
+            if (chosenProperty != null) {
+                funcEntity.setChosenProperty(chosenProperty);
             }
             
             if (String.class.isAssignableFrom(entity.getKeyType())) {
-                ((AbstractFunctionalEntityWithCentreContext<String>) funEntity).setKey("dummy");
+                ((AbstractFunctionalEntityWithCentreContext<String>) funcEntity).setKey("dummy");
             }
+            // resetting of meta-state makes the functional entity not dirty for the properties, changed above. This is important not to treat them as changed when going to client application.
+            funcEntity.resetMetaState();
         }
         
         return provideDefaultValues(entity);
@@ -109,33 +107,15 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
         this.masterEntity = masterEntity;
     }
 
-    /**
-     * Use this method in case when the centre context is required for entity instantiation.
-     *
-     * @return
-     */
-    protected CentreContext<C, AbstractEntity<?>> getCentreContext() {
-        return centreContext;
-    }
-
-    public void setCentreContext(final CentreContext<C, AbstractEntity<?>> centreContext) {
+    public void setCentreContext(final CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext) {
         this.centreContext = centreContext;
-    }
-
-    /**
-     * Use this method in case when the chosen property is required for entity instantiation.
-     *
-     * @return
-     */
-    protected String getChosenProperty() {
-        return chosenProperty;
     }
 
     public void setChosenProperty(final String chosenProperty) {
         this.chosenProperty = chosenProperty;
     }
 
-    public Long getCompoundMasterEntityId() {
+    protected Long getCompoundMasterEntityId() {
         return compoundMasterEntityId;
     }
 

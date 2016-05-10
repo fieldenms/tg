@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
  * @author TG Team
  *
  */
-public class TgPersistentEntityWithPropertiesProducer extends EntityProducerWithNewEditActions<TgPersistentEntityWithProperties, TgPersistentEntityWithProperties> {
+public class TgPersistentEntityWithPropertiesProducer extends EntityProducerWithNewEditActions<TgPersistentEntityWithProperties> {
     private final ITgPersistentEntityWithProperties coTgPersistentEntityWithProperties;
 
     @Inject
