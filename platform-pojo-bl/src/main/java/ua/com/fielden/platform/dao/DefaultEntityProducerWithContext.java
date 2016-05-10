@@ -40,7 +40,11 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
     @Override
     public final T newEntity() {
         final T entity = factory.newEntity(entityType);
-
+        
+        if (companion != null) {
+            provideProxies(entity, companion.getFetchProvider());
+        }
+        
         // TODO Assignment of context and chosen property below breaks execution of compound masters
         //      Currently it is not know as to why this is the case.
         if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
@@ -59,9 +63,6 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>, C ext
             }
         }
         
-        if (companion != null) {
-            provideProxies(entity, companion.getFetchProvider());
-        }
         return provideDefaultValues(entity);
     }
 
