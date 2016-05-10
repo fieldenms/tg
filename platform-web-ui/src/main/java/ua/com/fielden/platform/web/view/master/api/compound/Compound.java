@@ -8,8 +8,10 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMasterBuilder;
@@ -69,4 +71,37 @@ public class Compound {
                 .build();
     }
     
+    public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openNew(
+            final Class<OPEN_ACTION> openCompoundMasterActionType, 
+            final String icon, 
+            final String shortDesc, 
+            final String longDesc,
+            final PrefDim prefDim) {
+        return open(openCompoundMasterActionType, icon, shortDesc, longDesc, prefDim, context().withSelectionCrit().build());
+    }
+    
+    public static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig openEdit(
+            final Class<OPEN_ACTION> openCompoundMasterActionType, 
+            final String shortDesc, 
+            final PrefDim prefDim) {
+        return open(openCompoundMasterActionType, null, shortDesc, null, prefDim, context().withCurrentEntity().build());
+    }
+    
+    private static <K extends Comparable<?>, OPEN_ACTION extends AbstractFunctionalEntityWithCentreContext<K>> EntityActionConfig open(
+            final Class<OPEN_ACTION> openCompoundMasterActionType, 
+            final String icon, 
+            final String shortDesc, 
+            final String longDesc,
+            final PrefDim prefDim,
+            final CentreContextConfig centreContextConfig
+            ) {
+        return action(openCompoundMasterActionType)
+                .withContext(centreContextConfig)
+                .icon(icon)
+                .shortDesc(shortDesc)
+                .longDesc(longDesc)
+                .prefDimForView(prefDim)
+                .withNoParentCentreRefresh()
+                .build();
+    }
 }
