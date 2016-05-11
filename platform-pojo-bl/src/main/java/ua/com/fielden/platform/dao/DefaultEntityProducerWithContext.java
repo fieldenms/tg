@@ -2,6 +2,8 @@ package ua.com.fielden.platform.dao;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.EntityEditAction;
+import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -25,14 +27,10 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     private Long compoundMasterEntityId;
     private String chosenProperty;
 
-    public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType) {
-        this(factory, entityType, null);
-    }
-
     public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         this.factory = factory;
         this.entityType = entityType;
-        this.companion = companionFinder == null ? null : companionFinder.<IEntityDao<T>, T> find(this.entityType);
+        this.companion = companionFinder.<IEntityDao<T>, T> find(this.entityType);
     }
 
     @Override
@@ -61,9 +59,41 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             funcEntity.resetMetaState();
         }
         
-        return provideDefaultValues(entity);
+        if (getMasterEntity() != null && EntityEditAction.class.isAssignableFrom(getMasterEntity().getClass())) {
+            final EntityEditAction entityEditAction = (EntityEditAction) getMasterEntity();
+            final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
+            return provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
+        } else if (getMasterEntity() != null && EntityNewAction.class.isAssignableFrom(getMasterEntity().getClass())) {
+            return provideDefaultValuesForStandardNew(entity, (EntityNewAction) getMasterEntity());
+        } else {
+            return provideDefaultValues(entity);
+        }
     }
-
+    
+    /**
+     * Override this method in case where some additional initialisation is needed for the entity, edited by standard {@link EntityEditAction}.
+     * <p>
+     * Please, note that most likely it is needed to invoke super implementation. However, if the other, more specific, fetchModel needs to be specified -- the complete override 
+     * is applicable.
+     * 
+     * @param entityId - the id of the edited entity
+     * @return
+     */
+    protected T provideDefaultValuesForStandardEdit(final Long entityId, final EntityEditAction masterEntity) {
+        return companion().findById(entityId, companion().getFetchProvider().fetchModel());
+    };
+    
+    /**
+     * Override this method in case where some additional initialisation is needed for the new entity, edited by standard {@link EntityNewAction}.
+     * 
+     * @param entity
+     * @param masterEntity -- {@link EntityNewAction} instance that contains context
+     * @return
+     */
+    protected T provideDefaultValuesForStandardNew(final T entity, final EntityNewAction masterEntity) {
+        return entity;
+    };
+    
     /**
      * Provides <code>entity</code>'s proxies for the properties which do not take part in <code>fetchStrategy</code>.
      *
@@ -78,7 +108,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
 
     /**
-     * Provides domain-driven <code>entity</code>'s default values for the properties.
+     * Override this method to provide domain-driven <code>entity</code>'s default values for the properties.
      *
      * @param entity
      */

@@ -124,7 +124,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(entityType)) {
             return new DefaultEntityProducerForCompoundMenuItem(factory, entityType, coFinder);
         }
-        return new DefaultEntityProducerWithContext<T>(factory, entityType);
+        return new DefaultEntityProducerWithContext<T>(factory, entityType, coFinder);
     }
 
     /**
