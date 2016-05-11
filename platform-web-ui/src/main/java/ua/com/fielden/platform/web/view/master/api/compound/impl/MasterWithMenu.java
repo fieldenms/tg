@@ -25,6 +25,11 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
  * A compound entity master that has a menu.
+ * 
+ * TODO This type to become package private.
+ * TODO This type to become package private.
+ * TODO This type to become package private.
+ * TODO This type to become package private.
  *
  * @author TG Team
  *
@@ -40,8 +45,18 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
     private final IRenderable renderable;
     private final Logger logger = Logger.getLogger(getClass());
 
-    public MasterWithMenu(final Class<T> entityType, final Class<F> functionalEntityType, final List<EntityActionConfig> menuItemActions, final int defaultMenuItemIndex) {
-        logger.debug(format("Generating master with menu for entity %s, invoked by functional entity %s.", entityType.getSimpleName(), functionalEntityType.getSimpleName()));
+    /**
+     * TODO This constructor to become package private.
+     * TODO This constructor to become package private.
+     * TODO This constructor to become package private.
+     * TODO This constructor to become package private.
+     * 
+     * @param functionalEntityType
+     * @param menuItemActions
+     * @param defaultMenuItemIndex
+     */
+    public MasterWithMenu(final Class<F> functionalEntityType, final List<EntityActionConfig> menuItemActions, final int defaultMenuItemIndex) {
+        // logger.debug(format("Generating master with menu for entity %s, invoked by functional entity %s.", entityType.getSimpleName(), functionalEntityType.getSimpleName()));
         if (defaultMenuItemIndex < 0 || defaultMenuItemIndex >= menuItemActions.size()) {
             throw new IllegalArgumentException(format("The default menu item index %s is outside of the range for the provided menu items.", defaultMenuItemIndex));
         }
