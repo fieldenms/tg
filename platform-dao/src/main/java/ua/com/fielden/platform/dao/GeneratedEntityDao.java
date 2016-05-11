@@ -97,8 +97,7 @@ public class GeneratedEntityDao<T extends AbstractEntity<?>> implements IGenerat
 
     @Override
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> qem, final List<byte[]> binaryTypes) {
-        // TODO Auto-generated method stub
-        return null;
+        return companion.getAllEntities(qem);
     }
 
     @Override

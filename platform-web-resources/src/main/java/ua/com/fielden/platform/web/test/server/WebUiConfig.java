@@ -89,6 +89,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
+import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
@@ -622,6 +623,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityMaster<NewEntityAction> functionalMasterWithEmbeddedPersistentMaster =  NewEntityActionWebUiConfig.createMaster(injector(), entityMaster);
         final EntityMaster<EntityNewAction> entityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> entityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
+        final EntityMaster<EntityExportAction> entityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
         final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
 
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
@@ -631,6 +633,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().
             addMaster(EntityNewAction.class, entityNewActionMaster).
             addMaster(EntityEditAction.class, entityEditActionMaster).
+            addMaster(EntityExportAction.class, entityExportActionMaster).
             addMaster(EntityDeleteAction.class, entityDeleteActionMaster).
             addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
@@ -1115,19 +1118,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .also()
                 .addTopAction(
-                        action(EntityExportAction.class).
-                                withContext(context().withSelectionCrit().withSelectedEntities().build())
-                                .preAction(new IPreAction() {
-
-                                    @Override
-                                    public JsCode build() {
-                                        // TODO Auto-generated method stub
-                                        return null;
-                                    }
-                                })
+                        action(EntityExportAction.class)
+                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                                .preAction(new ExportPreAction())
                                 .postActionSuccess(new FileSaverPostAction())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")
+                                .withNoParentCentreRefresh()
                                 .build()
                 )
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
