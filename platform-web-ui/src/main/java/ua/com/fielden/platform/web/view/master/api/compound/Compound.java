@@ -9,23 +9,16 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.PrefDim;
-import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-import ua.com.fielden.platform.web.view.master.api.ICompoundMasterBuilder;
-import ua.com.fielden.platform.web.view.master.api.compound.impl.CompoundMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMasterBuilder;
 
 public class Compound {
     
-    public static <T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> ICompoundMasterBuilder<T, F> create(final Injector injector, final IWebUiBuilder builder) {
-        return new CompoundMasterBuilder<T, F>(injector, builder);
-    }
-    
-    public static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miMaster(
+    protected static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miMaster(
             final Class<MENU_ITEM> menuItemType, 
             final EntityMaster<? extends AbstractEntity<?>> embeddedMaster,
             final Injector injector) {
@@ -38,7 +31,7 @@ public class Compound {
                 injector);
     }
     
-    public static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miCentre(
+    protected static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityMaster<MENU_ITEM> miCentre(
             final Class<MENU_ITEM> menuItemType,
             final EntityCentre<? extends AbstractEntity<?>> embeddedCentre,
             final Injector injector) {
@@ -64,7 +57,7 @@ public class Compound {
                 injector);
     }
     
-    public static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityActionConfig miAction(
+    protected static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityActionConfig miAction(
             final Class<MENU_ITEM> menuItemType, 
             final String icon, 
             final String shortDesc, 

@@ -24,7 +24,7 @@ import ua.com.fielden.platform.web.view.master.api.compound.ICompoundMaster5;
 import ua.com.fielden.platform.web.view.master.api.compound.ICompoundMaster6;
 import ua.com.fielden.platform.web.view.master.api.compound.ICompoundMaster7;
 
-public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> implements ICompoundMasterBuilder<T, F>, ICompoundMaster0<T, F>, ICompoundMaster1<T, F>, ICompoundMaster2<T, F>, ICompoundMaster3<T, F>, ICompoundMaster4<T, F>, ICompoundMaster5<T, F>, ICompoundMaster6<T, F>, ICompoundMaster7<T, F> {
+public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> extends Compound implements ICompoundMasterBuilder<T, F>, ICompoundMaster0<T, F>, ICompoundMaster1<T, F>, ICompoundMaster2<T, F>, ICompoundMaster3<T, F>, ICompoundMaster4<T, F>, ICompoundMaster5<T, F>, ICompoundMaster6<T, F>, ICompoundMaster7<T, F> {
     private final Injector injector;
     private final IWebUiBuilder builder;
     private Class<F> type;
@@ -36,7 +36,11 @@ public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends Abstra
     private String currentShortDesc;
     private String currentLongDesc;
     
-    public CompoundMasterBuilder(final Injector injector, final IWebUiBuilder builder) {
+    public static <T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> ICompoundMasterBuilder<T, F> create(final Injector injector, final IWebUiBuilder builder) {
+        return new CompoundMasterBuilder<T, F>(injector, builder);
+    }
+    
+    private CompoundMasterBuilder(final Injector injector, final IWebUiBuilder builder) {
         this.injector = injector;
         this.builder = builder;
     }
@@ -57,15 +61,15 @@ public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends Abstra
 
     @Override
     public ICompoundMaster7<T, F> withView(final EntityMaster<?> embeddedMaster) {
-        register(Compound.miMaster(currentMenuItemType, register(embeddedMaster), injector));
-        menuItems.add(Compound.miAction(currentMenuItemType, currentIcon, currentShortDesc, currentLongDesc));
+        register(miMaster(currentMenuItemType, register(embeddedMaster), injector));
+        menuItems.add(miAction(currentMenuItemType, currentIcon, currentShortDesc, currentLongDesc));
         return this;
     }
 
     @Override
     public ICompoundMaster7<T, F> withView(final EntityCentre<?> embeddedCentre) {
-        register(Compound.miCentre(currentMenuItemType, register(embeddedCentre), injector));
-        menuItems.add(Compound.miAction(currentMenuItemType, currentIcon, currentShortDesc, currentLongDesc));
+        register(miCentre(currentMenuItemType, register(embeddedCentre), injector));
+        menuItems.add(miAction(currentMenuItemType, currentIcon, currentShortDesc, currentLongDesc));
         return this;
     }
 
