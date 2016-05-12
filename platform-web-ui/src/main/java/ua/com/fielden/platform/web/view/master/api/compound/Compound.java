@@ -57,6 +57,19 @@ public class Compound {
                 injector);
     }
     
+    public static <DETAILS_ACTION extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<DETAILS_ACTION> detailsMaster(
+            final Class<DETAILS_ACTION> menuItemType,
+            final EntityMaster<? extends AbstractEntity<?>> embeddedMaster,
+            final Injector injector) {
+        return new EntityMaster<DETAILS_ACTION>(
+                menuItemType,
+                new MasterWithMasterBuilder<DETAILS_ACTION>()
+                    .forEntityWithSaveOnActivate(menuItemType)
+                    .withMaster(embeddedMaster)
+                    .done(),
+                injector);
+    }
+    
     protected static <K extends Comparable<?>, MENU_ITEM extends AbstractFunctionalEntityForCompoundMenuItem<K>> EntityActionConfig miAction(
             final Class<MENU_ITEM> menuItemType, 
             final String icon, 
