@@ -219,23 +219,25 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * This is temporary solution needed for pagination support on web ui
      */
     public IPage<T> getPage(final int pageNumber, final int pageCount, final int pageCapacity) {
-        final Class<?> root = getEntityClass();
-        final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
-        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
-        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
-        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider);
-        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
-                .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
-                .with(fetchProvider.fetchModel())//
-                .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = generateQuery();
         if (getManagedType().equals(getEntityClass())) {
             return dao.getPage(resultQuery, pageNumber, pageCount, pageCapacity);
         } else {
             generatedEntityController.setEntityType(getManagedType());
             return generatedEntityController.getPage(resultQuery, pageNumber, pageCount, pageCapacity, getByteArrayForManagedType());
+        }
+    }
+
+    /**
+     * This is temporary solution needed for pagination support on web ui
+     */
+    public IPage<T> getPage(final int pageNumber, final int pageCapacity) {
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = generateQuery();
+        if (getManagedType().equals(getEntityClass())) {
+            return dao.getPage(resultQuery, pageNumber, pageCapacity);
+        } else {
+            generatedEntityController.setEntityType(getManagedType());
+            return generatedEntityController.getPage(resultQuery, pageNumber, pageCapacity, getByteArrayForManagedType());
         }
     }
 
@@ -412,19 +414,16 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     public byte[] exportAll() throws IOException {
-        final List<T> entities = getAllEntities(getQueryToExport());
+        final List<T> entities = getAllEntities(generateQuery());
         final Pair<String[], String[]> propAndTitles = generatePropTitlesToExport();
         return convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue()));
     }
 
-    public byte[] exportPages(final Integer fromPage, final Integer toPage, final Integer pageCapacity, final Integer pageCount) throws IOException {
-        if (pageCount == 0) {
-            throw new IllegalStateException("Please run centre first!");
-        }
+    public byte[] exportPages(final Integer fromPage, final Integer toPage, final Integer pageCapacity) throws IOException {
         final List<T> entities = new ArrayList<>();
         final Pair<String[], String[]> propAndTitles = generatePropTitlesToExport();
         for (int page = fromPage - 1; page < toPage; page++) {
-            entities.addAll(getPage(page, pageCount, pageCapacity).data());
+            entities.addAll(getPage(page, pageCapacity).data());
         }
         return convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue()));
     }
@@ -438,7 +437,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         return convertToByteArray(WorkbookExporter.export(getEntitesById(ids), propAndTitles.getKey(), propAndTitles.getValue()));
     }
 
-    private QueryExecutionModel<T, EntityResultQueryModel<T>> getQueryToExport() {
+    private QueryExecutionModel<T, EntityResultQueryModel<T>> generateQuery() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
         final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();

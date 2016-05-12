@@ -49,8 +49,10 @@ public class StandardMastersWebUiConfig {
         final String masterLayout = ("['vertical', 'padding:20px',"
                 //                                     all
                 + format("['horizontal', 'justified', [%s]],", outer)
-                //                                    pages     from     to
-                + format("['horizontal', 'justified', [%s],     [%s],   [%s]],", inner, inner, outer)
+                //                                    pages
+                + format("['horizontal', 'justified', 'margin-top:20px', [%s]],", outer)
+                //
+                + format("['horizontal', 'justified', 'margin-bottom:20px', 'margin-left:25px', [%s], [%s]],", inner, outer)
                 //                                  selected
                 + format("['horizontal', 'justified', [%s]],", outer)
                 //                                                               Cancel  Export

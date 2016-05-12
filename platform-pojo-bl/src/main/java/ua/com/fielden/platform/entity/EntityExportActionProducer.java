@@ -14,7 +14,7 @@ public class EntityExportActionProducer extends DefaultEntityProducerWithContext
 
     @Override
     protected EntityExportAction provideDefaultValues(final EntityExportAction entity) {
-        entity.setAll(true);
+        entity.setKey("Export");
         if (getCentreContext() != null) {
             entity.setContext(getCentreContext());
         }

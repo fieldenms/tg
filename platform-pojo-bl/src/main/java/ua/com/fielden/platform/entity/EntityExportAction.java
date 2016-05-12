@@ -8,6 +8,8 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
@@ -27,12 +29,14 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
 
     @IsProperty
     @Title(value = "Export all?", desc = "Export all entities?")
-    @AfterChange(ExportAllActionHandler.class)
-    private boolean all;
+    @BeforeChange(@Handler(ExportActionOptionValidator.class))
+    @AfterChange(ExportActionHandler.class)
+    private boolean all = true;
 
     @IsProperty
     @Title(value = "Export pages?", desc = "Export page range?")
-    @AfterChange(ExportPageRangeActionHandler.class)
+    @BeforeChange(@Handler(ExportActionOptionValidator.class))
+    @AfterChange(ExportActionHandler.class)
     private boolean pageRange;
 
     @IsProperty
@@ -47,12 +51,9 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
 
     @IsProperty
     @Title(value = "Export selected?", desc = "Export selected entities")
-    @AfterChange(ExportSelectedActionHandler.class)
+    @BeforeChange(@Handler(ExportActionOptionValidator.class))
+    @AfterChange(ExportActionHandler.class)
     private boolean selected;
-
-    @IsProperty
-    @Title(value = "Page count", desc = "Number of pages")
-    private Integer pageCount;
 
     @IsProperty
     @Title(value = "Page capacity", desc = "The number of entities on page")
@@ -69,16 +70,6 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
     }
 
     @Observable
-    public EntityExportAction setPageCount(final Integer pageCount) {
-        this.pageCount = pageCount;
-        return this;
-    }
-
-    public Integer getPageCount() {
-        return pageCount;
-    }
-
-    @Observable
     public EntityExportAction setSelected(final boolean selected) {
         this.selected = selected;
         return this;
@@ -90,7 +81,7 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
 
     @Observable
     @GeProperty("fromPage")
-    @GreaterOrEqual(0)
+    @GreaterOrEqual(1)
     public EntityExportAction setToPage(final Integer toPage) {
         this.toPage = toPage;
         return this;
@@ -102,7 +93,7 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
 
     @Observable
     @LeProperty("toPage")
-    @GreaterOrEqual(0)
+    @GreaterOrEqual(1)
     public EntityExportAction setFromPage(final Integer fromPage) {
         this.fromPage = fromPage;
         return this;

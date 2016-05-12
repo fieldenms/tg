@@ -87,7 +87,7 @@ public class GeneratedEntityDao<T extends AbstractEntity<?>> implements IGenerat
 
     @Override
     public IPage<T> getPage(final QueryExecutionModel<T, ?> qem, final int pageNo, final int pageCapacity, final List<byte[]> binaryTypes) {
-        return null;
+        return companion.getPage(qem, pageNo, pageCapacity);
     }
 
     @Override
