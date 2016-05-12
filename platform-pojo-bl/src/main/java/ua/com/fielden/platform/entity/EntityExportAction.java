@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity;
 
+import java.util.Arrays;
+
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -8,11 +10,10 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
-import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
-import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 
 /**
@@ -29,13 +30,11 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
 
     @IsProperty
     @Title(value = "Export all?", desc = "Export all entities?")
-    @BeforeChange(@Handler(ExportActionOptionValidator.class))
     @AfterChange(ExportActionHandler.class)
-    private boolean all = true;
+    private boolean all;
 
     @IsProperty
     @Title(value = "Export pages?", desc = "Export page range?")
-    @BeforeChange(@Handler(ExportActionOptionValidator.class))
     @AfterChange(ExportActionHandler.class)
     private boolean pageRange;
 
@@ -51,7 +50,6 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
 
     @IsProperty
     @Title(value = "Export selected?", desc = "Export selected entities")
-    @BeforeChange(@Handler(ExportActionOptionValidator.class))
     @AfterChange(ExportActionHandler.class)
     private boolean selected;
 
@@ -123,4 +121,16 @@ public class EntityExportAction extends AbstractFunEntityForDataExport<String> {
         return all;
     }
 
+    @Override
+    protected Result validate() {
+        final Result superResult = super.validate();
+
+        for (final String property : Arrays.asList("all", "pageRange", "selected")) {
+            if ((Boolean) get(property)) {
+                return superResult;
+            }
+        }
+
+        return superResult.isSuccessful() ? Result.failure("Nothing has been chosen for export!") : superResult;
+    }
 }
