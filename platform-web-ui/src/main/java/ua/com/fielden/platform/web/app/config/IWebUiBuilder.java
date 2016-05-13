@@ -67,12 +67,11 @@ public interface IWebUiBuilder {
 
     /**
      * Adds the entity master to web application configuration object.
-     *
-     * @param entityType
      * @param master
+     *
      * @return
      */
-    <T extends AbstractEntity<?>> IWebUiBuilder addMaster(final Class<T> entityType, final EntityMaster<T> master);
+    <T extends AbstractEntity<?>> IWebUiBuilder addMaster(final EntityMaster<T> master);
     
     /**
      * Registers entity master in web application and returns it.
@@ -101,12 +100,11 @@ public interface IWebUiBuilder {
 
     /**
      * Adds the entity centre to web application configuration object.
-     *
-     * @param menuType
      * @param centre
+     *
      * @return
      */
-    <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final Class<M> menuType, final EntityCentre<?> centre);
+    <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final EntityCentre<?> centre);
 
     /**
      * Returns an optional value with a centre instance for the specified menu item type. 

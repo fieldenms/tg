@@ -99,7 +99,7 @@ public class WebUiBuilder implements IWebUiBuilder {
     }
 
     @Override
-    public <T extends AbstractEntity<?>> IWebUiBuilder addMaster(final Class<T> entityType, final EntityMaster<T> master) {
+    public <T extends AbstractEntity<?>> IWebUiBuilder addMaster(final EntityMaster<T> master) {
         final Optional<EntityMaster<T>> masterOptional = getMaster(master.getEntityType());
         if (masterOptional.isPresent()) {
             if (masterOptional.get() != master) {
@@ -109,14 +109,14 @@ public class WebUiBuilder implements IWebUiBuilder {
                 return this;
             }
         } else {
-            mastersMap.put(entityType, master);
+            mastersMap.put(master.getEntityType(), master);
             return this;
         }
     }
     
     @Override
     public <ENTITY_TYPE extends AbstractEntity<?>> EntityMaster<ENTITY_TYPE> register(final EntityMaster<ENTITY_TYPE> master) {
-        addMaster(master.getEntityType(), master);
+        addMaster(master);
         return master;
     }
     
@@ -127,7 +127,7 @@ public class WebUiBuilder implements IWebUiBuilder {
     }
     
     @Override
-    public <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final Class<M> menuType, final EntityCentre<?> centre) {
+    public <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final EntityCentre<?> centre) {
         final Optional<EntityCentre<?>> centreOptional = getCentre(centre.getMenuItemType());
         if (centreOptional.isPresent()) {
             if (centreOptional.get() != centre) {
@@ -137,14 +137,14 @@ public class WebUiBuilder implements IWebUiBuilder {
                 return this;
             }
         } else {
-            centreMap.put(menuType, centre);
+            centreMap.put(centre.getMenuItemType(), centre);
             return this;
         }
     }
     
     @Override
     public <ENTITY_TYPE extends AbstractEntity<?>> EntityCentre<ENTITY_TYPE> register(final EntityCentre<ENTITY_TYPE> centre) {
-        addCentre(centre.getMenuItemType(), centre);
+        addCentre(centre);
         return centre;
     }
     
