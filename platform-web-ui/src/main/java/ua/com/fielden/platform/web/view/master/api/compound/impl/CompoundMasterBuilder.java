@@ -29,7 +29,7 @@ public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends Abstra
     private final IWebUiBuilder builder;
     private Class<F> type;
     private Class<? extends IEntityProducer<F>> producerType;
-    private int defaultMenuItemNumber;
+    private int defaultMenuItemNumber = 0;
     private final List<EntityActionConfig> menuItems = new ArrayList<>();
     private Class<? extends AbstractFunctionalEntityForCompoundMenuItem<T>> currentMenuItemType;
     private String currentIcon;
