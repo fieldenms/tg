@@ -166,7 +166,7 @@
 
                 _viewerDisabled: {
                     type: Boolean,
-                    computed: '_computeViewerDisabled(_criteriaLoaded)'
+                    computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun)'
                 },
 
                 _url: {
@@ -186,6 +186,13 @@
                  */
                 _postRun: {
                     type: Function
+                },
+                
+                /**
+                 * Determines whether centre was runned or not if it was runned then the value should be 'yes' otherwise value is null.
+                 */
+                _wasRun: {
+                	type: String
                 },
 
                 /**
@@ -325,8 +332,8 @@
                 return _criteriaLoaded === false;
             },
 
-            _computeViewerDisabled: function (_criteriaLoaded) {
-                return _criteriaLoaded === false;
+            _computeViewerDisabled: function (_criteriaLoaded, _wasRun) {
+                return _criteriaLoaded === false || _wasRun !== "yes";
             },
             
             _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
