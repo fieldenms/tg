@@ -52,7 +52,7 @@ public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends Abstra
 
     @Override
     public void done() {
-        register(new EntityMaster<F>(
+        builder.register(new EntityMaster<F>(
                 type, 
                 producerType,
                 new MasterWithMenu<>(type, menuItems, defaultMenuItemNumber),
@@ -61,14 +61,14 @@ public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends Abstra
 
     @Override
     public ICompoundMaster7<T, F> withView(final EntityMaster<?> embeddedMaster) {
-        register(miMaster(currentMenuItemType, register(embeddedMaster), injector));
+        builder.register(miMaster(currentMenuItemType, builder.register(embeddedMaster), injector));
         menuItems.add(miAction(currentMenuItemType, currentIcon, currentShortDesc, currentLongDesc));
         return this;
     }
 
     @Override
     public ICompoundMaster7<T, F> withView(final EntityCentre<?> embeddedCentre) {
-        register(miCentre(currentMenuItemType, register(embeddedCentre), injector));
+        builder.register(miCentre(currentMenuItemType, builder.register(embeddedCentre), injector));
         menuItems.add(miAction(currentMenuItemType, currentIcon, currentShortDesc, currentLongDesc));
         return this;
     }
@@ -116,15 +116,5 @@ public class CompoundMasterBuilder<T extends AbstractEntity<?>, F extends Abstra
     public ICompoundMaster0<T, F> forEntity(final Class<F> type) {
         this.type = type;
         return this;
-    }
-
-    public <ENTITY_TYPE extends AbstractEntity<?>> EntityMaster<ENTITY_TYPE> register(final EntityMaster<ENTITY_TYPE> master) {
-        builder.addMaster(master.getEntityType(), master);
-        return master;
-    }
-    
-    public <ENTITY_TYPE extends AbstractEntity<?>> EntityCentre<ENTITY_TYPE> register(final EntityCentre<ENTITY_TYPE> centre) {
-        builder.addCentre(centre.getMenuItemType(), centre);
-        return centre;
     }
 }

@@ -75,6 +75,14 @@ public interface IWebUiBuilder {
     <T extends AbstractEntity<?>> IWebUiBuilder addMaster(final Class<T> entityType, final EntityMaster<T> master);
     
     /**
+     * Registers entity master in web application and returns it.
+     *
+     * @param master
+     * @return
+     */
+    <ENTITY_TYPE extends AbstractEntity<?>> EntityMaster<ENTITY_TYPE> register(final EntityMaster<ENTITY_TYPE> master);
+    
+    /**
      * Returns an optional value with a master instance for the specified type. 
      * An empty optional value is returned if there is no master registered for the specified type. 
      * 
@@ -82,6 +90,14 @@ public interface IWebUiBuilder {
      * @return
      */
     <T extends AbstractEntity<?>> Optional<EntityMaster<T>> getMaster(final Class<T> entityType);
+
+    /**
+     * Registers entity centre in web application and returns it.
+     *
+     * @param centre
+     * @return
+     */
+    <ENTITY_TYPE extends AbstractEntity<?>> EntityCentre<ENTITY_TYPE> register(final EntityCentre<ENTITY_TYPE> centre);
 
     /**
      * Adds the entity centre to web application configuration object.

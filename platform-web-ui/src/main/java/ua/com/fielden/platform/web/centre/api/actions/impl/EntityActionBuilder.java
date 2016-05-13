@@ -194,25 +194,15 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
 		return this;
 	}
 
-	@Override
-	public IEntityActionBuilder0<T> withView(final EntityCentre<?> embeddedCentre) {
-	    register(Compound.detailsCentre(functionalEntity, register(embeddedCentre), injector));
+    @Override
+    public IEntityActionBuilder0<T> withView(final EntityCentre<?> embeddedCentre) {
+        builder.register(Compound.detailsCentre(functionalEntity, builder.register(embeddedCentre), injector));
         return this;
-	}
-    
-	@Override
-	public IEntityActionBuilder0<T> withView(final EntityMaster<?> embeddedMaster) {
-	    register(Compound.detailsMaster(functionalEntity, register(embeddedMaster), injector));
-        return this;
-	}
-	
-    private <ENTITY_TYPE extends AbstractEntity<?>> EntityMaster<ENTITY_TYPE> register(final EntityMaster<ENTITY_TYPE> master) {
-        builder.addMaster(master.getEntityType(), master);
-        return master;
     }
     
-    private <ENTITY_TYPE extends AbstractEntity<?>> EntityCentre<ENTITY_TYPE> register(final EntityCentre<ENTITY_TYPE> centre) {
-        builder.addCentre(centre.getMenuItemType(), centre);
-        return centre;
+    @Override
+    public IEntityActionBuilder0<T> withView(final EntityMaster<?> embeddedMaster) {
+        builder.register(Compound.detailsMaster(functionalEntity, builder.register(embeddedMaster), injector));
+        return this;
     }
 }
