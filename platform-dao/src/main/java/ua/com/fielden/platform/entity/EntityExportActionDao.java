@@ -42,6 +42,9 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             } else if (entity.getPageRange()) {
                 entity.setData(selectionCrit.exportPages(entity.getFromPage(), entity.getToPage(), entity.getPageCapacity()));
             } else if (entity.getSelected()) {
+                if (entity.getContext().getSelectedEntities().isEmpty()) {
+                    throw Result.failure("Please select at least one entity to export");
+                }
                 entity.setData(selectionCrit.exportEntities(entity.getContext().getSelectedEntities()));
             }
         } catch (final IOException e) {
