@@ -3,7 +3,7 @@ package ua.com.fielden.platform.swing.review.development;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,23 +25,23 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Provides utility methods for entity query criteria.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EntityQueryCriteriaUtils {
 
     /**
      * Separates total properties from fetch properties. The key of the pair is the list of fetch properties, the value of the pair is the list of totals.
-     * 
+     *
      * @param root
      * @param tickManager
      * @param enhancer
      * @return
      */
     public static Pair<Set<String>, Set<String>> separateFetchAndTotalProperties(final Class<?> root, final IAddToResultTickManager tickManager, final IDomainTreeEnhancer enhancer) {
-        final Set<String> fetchProperties = new HashSet<String>();
-        final Set<String> totalProperties = new HashSet<String>();
+        final Set<String> fetchProperties = new LinkedHashSet<String>();
+        final Set<String> totalProperties = new LinkedHashSet<String>();
         final Pair<List<Pair<String, Integer>>, Map<String, List<String>>> totalFetchProps = getMappedFetchAndTotals(root, tickManager, enhancer);
         for (final Pair<String, Integer> fetchProp : totalFetchProps.getKey()) {
             fetchProperties.add(fetchProp.getKey());
@@ -54,7 +54,7 @@ public class EntityQueryCriteriaUtils {
 
     /**
      * Returns the pair of fetch properties and totals map. The totals map - it is a map between fetch properties and list of total names.
-     * 
+     *
      * @param rootType
      * @param cdtme
      * @return
@@ -88,7 +88,7 @@ public class EntityQueryCriteriaUtils {
 
     /**
      * Returns the map between real property name and pair of it's values. If the second value doesn't exists then it is null.
-     * 
+     *
      * @param root
      * @param managedType
      * @param tickManager
@@ -116,7 +116,7 @@ public class EntityQueryCriteriaUtils {
 
     /**
      * Returns the not configured query property instance for the specified property.
-     * 
+     *
      * @param propertyName
      * @return
      */
@@ -126,7 +126,7 @@ public class EntityQueryCriteriaUtils {
 
     /**
      * Returns the expression for calculated property specified with propName parameter. If the property is not calculated then returns <code>null</code>.
-     * 
+     *
      * @param propName
      *            - the name of the calculated property.
      * @return

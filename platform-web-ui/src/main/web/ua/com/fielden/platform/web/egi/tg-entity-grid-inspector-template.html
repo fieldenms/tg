@@ -348,13 +348,13 @@
                                     <template is="dom-repeat" items="[[columns]]" as="column">
                                         <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
                                             <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
-                                                <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
+                                                <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                                 </div>
                                                 <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                                    <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                                    <iron-icon class="table-icon" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
                                                 </template>
                                                 <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                                    <div class="truncate relative" style="width:100%">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
+                                                    <div class="truncate relative" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
                                                 </template>
                                             </template>
                                         </div>
@@ -447,12 +447,12 @@
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column">
                                                 <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
-                                                    <div class="fit" style$="[[_calcRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
+                                                    <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
                                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                                        <iron-icon class="table-icon" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                                        <iron-icon class="table-icon" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, true)]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
                                                     </template>
                                                     <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                                        <div class="truncate relative" style="width:100%">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
+                                                        <div class="truncate relative" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, false)]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
                                                     </template>
                                                 </div>
                                             </template>
@@ -1387,9 +1387,23 @@
             /**
              * Calculates the style for cell that represents rendering hints.
              */
-            _calcRenderingHintsStyle: function (entity, entityIndex, property) {
+            _calcBackgroundRenderingHintsStyle: function (entity, entityIndex, property) {
                 var style = "opacity: 0.3;";
-                var rendHints = (this.renderingHints[entityIndex] && this.renderingHints[entityIndex][property]) || [];
+                var rendHints = (this.renderingHints[entityIndex] && this.renderingHints[entityIndex][property]) || {};
+                rendHints = rendHints.backgroundStyles || rendHints;
+                for (var property in rendHints) {
+                    if (rendHints.hasOwnProperty(property)) {
+                        style += " " + property + ": " + rendHints[property] + ";";
+                    }
+                }
+                return style;
+            },
+            /**
+             * Calculates the style for cell that contains the property value.
+             */
+            _calcValueRenderingHintsStyle: function (entity, entityIndex, property, isBoolean) {
+                var style = isBoolean === 'true' ? "" : "width: 100%;";
+                var rendHints = (this.renderingHints[entityIndex] && this.renderingHints[entityIndex][property] && this.renderingHints[entityIndex][property].valueStyles) || {};
                 for (var property in rendHints) {
                     if (rendHints.hasOwnProperty(property)) {
                         style += " " + property + ": " + rendHints[property] + ";";

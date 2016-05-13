@@ -453,7 +453,7 @@
                 	}
                 	
                     if (self.modifyFunctionalEntity) {
-                        self.modifyFunctionalEntity(master._currBindingEntity);
+                        self.modifyFunctionalEntity(master._currBindingEntity, master);
                     }
                     self._masterReferenceForTesting = master;
                     if (master.saveOnActivation === true) {
