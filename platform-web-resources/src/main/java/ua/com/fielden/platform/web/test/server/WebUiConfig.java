@@ -638,11 +638,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
             addMaster(centreConfigurationWebUiConfig.centreConfigUpdater).
             addMaster(clourMaster).//
 
-                addMaster(new EntityMaster<EntityWithInteger>(
-                        EntityWithInteger.class,
-                        null,
-                        injector())). // efs(EntityWithInteger.class).with("prop")
-                addMaster(entityMaster).
                 addMaster(new EntityMaster<TgFunctionalEntityWithCentreContext>(
                         TgFunctionalEntityWithCentreContext.class,
                         TgFunctionalEntityWithCentreContextProducer.class,
