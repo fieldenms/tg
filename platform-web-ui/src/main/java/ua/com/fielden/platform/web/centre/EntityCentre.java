@@ -627,17 +627,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
                 "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
                 "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
-                "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
-                "<div class='truncate relative'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>" +
-                "</div>" +
+                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
+                "<div class='truncate relative' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", false)]]'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>"
+                + "</div>" +
                 "</div>";
 
         final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
                 "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
                 "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
-                "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
-                "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]'></iron-icon>" +
-                "</div>" +
+                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
+                "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", true)]]'></iron-icon>"
+                + "</div>" +
                 "</div>";
         final DomContainer domContainer = new DomContainer();
         final Optional<List<ResultSetProp>> resultProps = getCustomPropertiesDefinitions();

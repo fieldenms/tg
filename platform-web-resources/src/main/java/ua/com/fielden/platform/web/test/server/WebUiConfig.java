@@ -17,8 +17,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -27,6 +25,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
 import ua.com.fielden.platform.entity.EntityEditAction;
+import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -90,6 +89,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
+import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
@@ -108,7 +108,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollCon
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
-import ua.com.fielden.platform.web.config.EntityManipulationWebUiConfig;
+import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig;
@@ -124,6 +124,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
+
+import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -179,10 +181,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 ExportActionProducer.class,
                 masterConfig,
                 injector());
-        
+
         return master;
     }
-    
+
     /**
      * Configures the {@link WebUiConfig} with custom centres and masters.
      */
@@ -619,17 +621,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 injector());
 
         final EntityMaster<NewEntityAction> functionalMasterWithEmbeddedPersistentMaster =  NewEntityActionWebUiConfig.createMaster(injector(), entityMaster);
-        final EntityMaster<EntityNewAction> entityNewActionMaster = EntityManipulationWebUiConfig.createEntityNewMaster(injector());
-        final EntityMaster<EntityEditAction> entityEditActionMaster = EntityManipulationWebUiConfig.createEntityEditMaster(injector());
+        final EntityMaster<EntityNewAction> entityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
+        final EntityMaster<EntityEditAction> entityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
+        final EntityMaster<EntityExportAction> entityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
         final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
 
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
-        
+
         final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
-        
+
         configApp().
             addMaster(EntityNewAction.class, entityNewActionMaster).
             addMaster(EntityEditAction.class, entityEditActionMaster).
+            addMaster(EntityExportAction.class, entityExportActionMaster).
             addMaster(EntityDeleteAction.class, entityDeleteActionMaster).
             addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
@@ -967,7 +971,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<AbstractEntity<?>> {
         @Override
         public void assignValues(final AbstractEntity<?> entity) {
-            // entity.set("customProp", "OK");
+            if ("DR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
+                entity.set("dR", "X");
+            } else if ("IS".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
+                entity.set("iS", "X");
+            } else if ("IR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
+                entity.set("iR", "X");
+            } else if ("ON".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
+                entity.set("oN", "X");
+            } else if ("sR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
+                entity.set("sR", "X");
+            } 
         }
     }
 
@@ -1110,6 +1124,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .postActionSuccess(new FileSaverPostAction())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")
+                                .build()
+                )
+                .also()
+                .addTopAction(
+                        action(EntityExportAction.class)
+                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                                .preAction(new ExportPreAction())
+                                .postActionSuccess(new FileSaverPostAction())
+                                .icon("icons:save")
+                                .shortDesc("Export Data")
+                                .withNoParentCentreRefresh()
                                 .build()
                 )
                 .addCrit("this").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
@@ -1288,27 +1313,27 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                        "["
                 //                                + "[['flex', 'select:property=stringProp']]"
                 //                                + "]")
-                //                .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(),
-                //                        "["
-                //                                + "[['flex', 'select:property=this'],           ['flex', 'select:property=desc'],       ['flex', 'select:property=integerProp']],"
-                //                                + "[['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']]"
-                //                                + "]")
-                //                .withExpansionLayout(
-                //                        "["
-                //                                + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
-                //                                + "[['flex', 'select:property=stringProp']]"
-                //                                + "]")
-                //                .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(),
-                //                        "["
-                //                                + "[['flex', 'select:property=this'],        ['flex', 'select:property=desc']],"
-                //                                + "[['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']]"
-                //                                + "]")
-                //                .withExpansionLayout(
-                //                        "["
-                //                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
-                //                                + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
-                //                                + "[['flex', 'select:property=stringProp']]"
-                //                                + "]")
+                .setCollapsedCardLayoutFor(Device.TABLET, Optional.empty(),
+                        "["
+                                + "[['flex', 'select:property=this'],           ['flex', 'select:property=desc'],       ['flex', 'select:property=integerProp']],"
+                                + "[['flex', 'select:property=bigDecimalProp'], ['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']]"
+                                + "]")
+                .withExpansionLayout(
+                        "["
+                                + "[['flex', 'select:property=dateProp'],['flex', 'select:property=compositeProp']],"
+                                + "[['flex', 'select:property=stringProp']]"
+                                + "]")
+                .setCollapsedCardLayoutFor(Device.MOBILE, Optional.empty(),
+                        "["
+                                + "[['flex', 'select:property=this'],        ['flex', 'select:property=desc']],"
+                                + "[['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']]"
+                                + "]")
+                .withExpansionLayout(
+                        "["
+                                + "[['flex', 'select:property=entityProp'], ['flex', 'select:property=booleanProp']],"
+                                + "[['flex', 'select:property=dateProp'],   ['flex', 'select:property=compositeProp']],"
+                                + "[['flex', 'select:property=stringProp']]"
+                                + "]")
                 //                .also()
                 //                .addProp("status")
 
