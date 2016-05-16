@@ -428,9 +428,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         return convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue()));
     }
 
-    public byte[] exportEntities(final List<T> selectedEntities) throws IOException {
+    public byte[] exportEntities(final List<AbstractEntity<?>> selectedEntities) throws IOException {
         final List<Long> ids = new ArrayList<>();
-        for (final T entity : selectedEntities) {
+        for (final AbstractEntity<?> entity : selectedEntities) {
             ids.add(entity.getId());
         }
         final Pair<String[], String[]> propAndTitles = generatePropTitlesToExport();
