@@ -23,7 +23,6 @@ import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
-import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
@@ -47,18 +46,13 @@ import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties1
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties4;
-import ua.com.fielden.platform.sample.domain.MiUser;
-import ua.com.fielden.platform.sample.domain.MiUserRole;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
-import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusActionProducer;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
-import ua.com.fielden.platform.sample.domain.TgDummyActionProducer;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
-import ua.com.fielden.platform.sample.domain.TgEntityForColourMasterProducer;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependencyProducer;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
@@ -67,24 +61,16 @@ import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesProducer;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
-import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -92,7 +78,6 @@ import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
@@ -201,7 +186,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .setFetchProvider(EntityUtils.fetch(TgFetchProviderTestEntity.class).with("additionalProperty"))
                         // .addProp("additionalProp")
                         .build(), injector(), null);
-         configApp().addCentre(MiTgFetchProviderTestEntity.class, fetchProviderTestCentre);
+         configApp().addCentre(fetchProviderTestCentre);
 
          final EntityCentre<TgCollectionalSerialisationParent> collectionalSerialisationTestCentre = new EntityCentre<>(MiTgCollectionalSerialisationParent.class, "TgCollectionalSerialisationParent",
                  EntityCentreBuilder.centreFor(TgCollectionalSerialisationParent.class)
@@ -216,7 +201,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                  longDesc("Opens master for editing this entity").
                                  build())
                          .build(), injector(), null);
-          configApp().addCentre(MiTgCollectionalSerialisationParent.class, collectionalSerialisationTestCentre);
+          configApp().addCentre(collectionalSerialisationTestCentre);
 
         final EntityCentre<TgPersistentEntityWithProperties> detailsCentre = createEntityCentre(MiDetailsCentre.class, "Details Centre", createEntityCentreConfig(false, true, true));
         final EntityCentre<TgEntityWithPropertyDependency> propDependencyCentre = new EntityCentre<>(MiTgEntityWithPropertyDependency.class, "Property Dependency Example",
@@ -266,15 +251,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector());
         final UserRoleWebUiConfig userRoleWebUiConfig = new UserRoleWebUiConfig(injector());
 
-        configApp().addCentre(MiTgPersistentEntityWithProperties.class, entityCentre);
-        configApp().addCentre(MiTgPersistentEntityWithProperties1.class, entityCentre1);
-        configApp().addCentre(MiTgPersistentEntityWithProperties2.class, entityCentre2);
-        configApp().addCentre(MiTgPersistentEntityWithProperties3.class, entityCentre3);
-        configApp().addCentre(MiTgPersistentEntityWithProperties4.class, entityCentre4);
-        configApp().addCentre(MiDetailsCentre.class, detailsCentre);
-        configApp().addCentre(MiTgEntityWithPropertyDependency.class, propDependencyCentre);
-        configApp().addCentre(MiUser.class, userWebUiConfig.centre);
-        configApp().addCentre(MiUserRole.class, userRoleWebUiConfig.centre);
+        configApp().addCentre(entityCentre);
+        configApp().addCentre(entityCentre1);
+        configApp().addCentre(entityCentre2);
+        configApp().addCentre(entityCentre3);
+        configApp().addCentre(entityCentre4);
+        configApp().addCentre(detailsCentre);
+        configApp().addCentre(propDependencyCentre);
+        configApp().addCentre(userWebUiConfig.centre);
+        configApp().addCentre(userRoleWebUiConfig.centre);
 
         //Add custom view
         final CustomTestView customView = new CustomTestView();
@@ -624,88 +609,77 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityMaster<EntityNewAction> entityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> entityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
         final EntityMaster<EntityExportAction> entityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
-        final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
+        final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, injector());
 
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
 
-        final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, TgEntityForColourMasterProducer.class, masterConfigForColour, injector());
+        final EntityMaster<TgEntityForColourMaster> clourMaster = new EntityMaster<TgEntityForColourMaster>(TgEntityForColourMaster.class, masterConfigForColour, injector());
 
         configApp().
-            addMaster(EntityNewAction.class, entityNewActionMaster).
-            addMaster(EntityEditAction.class, entityEditActionMaster).
-            addMaster(EntityExportAction.class, entityExportActionMaster).
-            addMaster(EntityDeleteAction.class, entityDeleteActionMaster).
-            addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
-            addMaster(TgPersistentEntityWithProperties.class, entityMaster).//
-            addMaster(NewEntityAction.class, functionalMasterWithEmbeddedPersistentMaster).
-            addMaster(ExportAction.class, createExportActionMaster()).
-            addMaster(TgEntityWithPropertyDependency.class, new EntityMaster<TgEntityWithPropertyDependency>(
+            addMaster(entityNewActionMaster).
+            addMaster(entityEditActionMaster).
+            addMaster(entityDeleteActionMaster).
+            addMaster(entityExportActionMaster).
+            addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
+            addMaster(entityMaster).//
+            addMaster(functionalMasterWithEmbeddedPersistentMaster).
+            addMaster(createExportActionMaster()).
+            addMaster(new EntityMaster<TgEntityWithPropertyDependency>(
                     TgEntityWithPropertyDependency.class,
                     TgEntityWithPropertyDependencyProducer.class,
                     masterConfigForPropDependencyExample,
                     injector())).
-            addMaster(TgCollectionalSerialisationParent.class, new EntityMaster<TgCollectionalSerialisationParent>(
+            addMaster(new EntityMaster<TgCollectionalSerialisationParent>(
                     TgCollectionalSerialisationParent.class,
                     TgCollectionalSerialisationParentProducer.class,
                     masterConfigForCollSerialisationTest,
                     injector())).
-            addMaster(User.class, userWebUiConfig.master).
-            addMaster(UserRolesUpdater.class, userWebUiConfig.rolesUpdater).
-            addMaster(UserRole.class, userRoleWebUiConfig.master).
-            addMaster(UserRoleTokensUpdater.class, userRoleWebUiConfig.tokensUpdater).
+            addMaster(userWebUiConfig.master).
+            addMaster(userWebUiConfig.rolesUpdater).
+            addMaster(userRoleWebUiConfig.master).
+            addMaster(userRoleWebUiConfig.tokensUpdater).
             // Centre configuration management
-            addMaster(CentreConfigUpdater.class, centreConfigurationWebUiConfig.centreConfigUpdater).
-            addMaster(TgEntityForColourMaster.class, clourMaster).//
+            addMaster(centreConfigurationWebUiConfig.centreConfigUpdater).
+            addMaster(clourMaster).//
 
-                addMaster(EntityWithInteger.class, new EntityMaster<EntityWithInteger>(
-                        EntityWithInteger.class,
-                        null,
-                        injector())). // efs(EntityWithInteger.class).with("prop")
-                addMaster(TgPersistentEntityWithProperties.class, entityMaster).
-                addMaster(TgFunctionalEntityWithCentreContext.class, new EntityMaster<TgFunctionalEntityWithCentreContext>(
+                addMaster(new EntityMaster<TgFunctionalEntityWithCentreContext>(
                         TgFunctionalEntityWithCentreContext.class,
                         TgFunctionalEntityWithCentreContextProducer.class,
                         masterConfigForFunctionalEntity,
                         injector())).
-                addMaster(TgCentreInvokerWithCentreContext.class, new EntityMaster<TgCentreInvokerWithCentreContext>(
+                addMaster(new EntityMaster<TgCentreInvokerWithCentreContext>(
                         TgCentreInvokerWithCentreContext.class,
-                        TgCentreInvokerWithCentreContextProducer.class,
                         new MasterWithCentreBuilder<TgCentreInvokerWithCentreContext>().forEntityWithSaveOnActivate(TgCentreInvokerWithCentreContext.class).withCentre(detailsCentre).done(),
                         injector())).
-                addMaster(TgPersistentCompositeEntity.class, new EntityMaster<TgPersistentCompositeEntity>(
+                addMaster(new EntityMaster<TgPersistentCompositeEntity>(
                         TgPersistentCompositeEntity.class,
                         null,
                         injector())).
-                addMaster(TgExportFunctionalEntity.class, EntityMaster.noUiFunctionalMaster(TgExportFunctionalEntity.class, TgExportFunctionalEntityProducer.class, injector())).
-                addMaster(TgDummyAction.class, EntityMaster.noUiFunctionalMaster(TgDummyAction.class, TgDummyActionProducer.class, injector())).
-                addMaster(TgCreatePersistentStatusAction.class, new EntityMaster<TgCreatePersistentStatusAction>(
+                addMaster(EntityMaster.noUiFunctionalMaster(TgExportFunctionalEntity.class, TgExportFunctionalEntityProducer.class, injector())).
+                addMaster(EntityMaster.noUiFunctionalMaster(TgDummyAction.class, injector())).
+                addMaster(new EntityMaster<TgCreatePersistentStatusAction>(
                         TgCreatePersistentStatusAction.class,
                         TgCreatePersistentStatusActionProducer.class,
                         masterConfigForTgCreatePersistentStatusAction(), // TODO need to provide functional entity master configuration
                         injector())).
-                addMaster(TgStatusActivationFunctionalEntity.class, new EntityMaster<TgStatusActivationFunctionalEntity>(
+                addMaster(new EntityMaster<TgStatusActivationFunctionalEntity>(
                         TgStatusActivationFunctionalEntity.class,
-                        TgStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
-                addMaster(TgISStatusActivationFunctionalEntity.class, new EntityMaster<TgISStatusActivationFunctionalEntity>(
+                addMaster(new EntityMaster<TgISStatusActivationFunctionalEntity>(
                         TgISStatusActivationFunctionalEntity.class,
-                        TgISStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
-                addMaster(TgIRStatusActivationFunctionalEntity.class, new EntityMaster<TgIRStatusActivationFunctionalEntity>(
+                addMaster(new EntityMaster<TgIRStatusActivationFunctionalEntity>(
                         TgIRStatusActivationFunctionalEntity.class,
-                        TgIRStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
-                addMaster(TgONStatusActivationFunctionalEntity.class, new EntityMaster<TgONStatusActivationFunctionalEntity>(
+                addMaster(new EntityMaster<TgONStatusActivationFunctionalEntity>(
                         TgONStatusActivationFunctionalEntity.class,
-                        TgONStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
-                addMaster(TgSRStatusActivationFunctionalEntity.class, new EntityMaster<TgSRStatusActivationFunctionalEntity>(
+                addMaster(new EntityMaster<TgSRStatusActivationFunctionalEntity>(
                         TgSRStatusActivationFunctionalEntity.class,
-                        TgSRStatusActivationFunctionalEntityProducer.class,
                         null,
                         injector())).
                 done();

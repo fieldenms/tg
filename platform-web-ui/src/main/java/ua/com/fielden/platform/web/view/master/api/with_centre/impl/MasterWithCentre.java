@@ -20,11 +20,11 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
  *
  * @param <T>
  */
-public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
+class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
 
     private final IRenderable renderable;
 
-    public MasterWithCentre(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre) {
+    MasterWithCentre(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre) {
         final StringBuilder attrs = new StringBuilder();
 
         //////////////////////////////////////////////////////////////////////////////////////

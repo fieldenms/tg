@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.dao.EntityProducerWithNewEditActions;
+import com.google.inject.Inject;
+
+import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-
-import com.google.inject.Inject;
 
 /**
  * A producer for new instances of entity {@link TgEntityWithPropertyDependency}.
@@ -13,18 +14,17 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgCollectionalSerialisationParentProducer extends EntityProducerWithNewEditActions<TgCollectionalSerialisationParent, TgCollectionalSerialisationParent> implements IEntityProducer<TgCollectionalSerialisationParent> {
-    private final ITgCollectionalSerialisationParent co;
+public class TgCollectionalSerialisationParentProducer extends DefaultEntityProducerWithContext<TgCollectionalSerialisationParent> implements IEntityProducer<TgCollectionalSerialisationParent> {
 
     @Inject
-    public TgCollectionalSerialisationParentProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final ITgCollectionalSerialisationParent co) {
+    public TgCollectionalSerialisationParentProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, TgCollectionalSerialisationParent.class, companionFinder);
-        this.co = co;
     }
 
     @Override
-    protected TgCollectionalSerialisationParent provideDefaultValuesForNewEntity(final TgCollectionalSerialisationParent entity) {
+    protected TgCollectionalSerialisationParent provideDefaultValuesForStandardNew(final TgCollectionalSerialisationParent entity, final EntityNewAction masterEntity) {
         entity.setKey("DUMMY");
+        entity.resetMetaState();
         return entity;
     }
 }

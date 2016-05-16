@@ -850,6 +850,8 @@
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
+                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                    MockInteractions.tap(saveButton);
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
@@ -887,8 +889,6 @@
                 
                 master.postRetrieved = function(entity, bindingEntity, customObject) {
                     _editProperties(master, '1/2/3 6:19');
-                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
-                    MockInteractions.tap(saveButton);
                 };
                 
                 master.retrieve();
@@ -898,6 +898,8 @@
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
+                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                    MockInteractions.tap(saveButton);
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
@@ -934,8 +936,6 @@
                 
                 master.postRetrieved = function(entity, bindingEntity, customObject) {
                     _editProperties(master, '1/2/3 6:21', 'DEMO00');
-                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
-                    MockInteractions.tap(saveButton);
                 };
                 
                 master.retrieve();
@@ -945,6 +945,8 @@
                 master.postValidated = function(validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
+                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                    MockInteractions.tap(saveButton);
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
@@ -977,8 +979,6 @@
                 
                 master.postRetrieved = function(entity, bindingEntity, customObject) {
                     _editProperties(master, '1/2/3 6:20');
-                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
-                    MockInteractions.tap(saveButton);
                 };
                 
                 master.retrieve();
@@ -1136,9 +1136,15 @@
 		    });
 		    
             test('works for existing entity with exception thrown in companion save method', function (done) {
+                var firstValidation = true;
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
+                    if (firstValidation) {
+                        var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                        MockInteractions.tap(saveButton);
+                        firstValidation = false;
+                    }
                 };
                 
                 master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
@@ -1189,9 +1195,6 @@
                 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
                     _editProperties(master, '1/2/3');
-                    
-                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
-                    MockInteractions.tap(saveButton);
                 };
                 
                 master.retrieve();

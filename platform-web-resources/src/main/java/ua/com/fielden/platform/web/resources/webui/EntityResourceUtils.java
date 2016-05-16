@@ -113,7 +113,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         if (id != null) {
             return co.findById(id, co.getFetchProvider().fetchModel());
         } else {
-            final DefaultEntityProducerWithContext<T, T> defProducer = (DefaultEntityProducerWithContext<T, T>) entityProducer;
+            final DefaultEntityProducerWithContext<T> defProducer = (DefaultEntityProducerWithContext<T>) entityProducer;
             defProducer.setCentreContext(centreContext);
             defProducer.setChosenProperty(chosenProperty);
             defProducer.setCompoundMasterEntityId(compoundMasterEntityId);
