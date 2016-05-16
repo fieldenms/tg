@@ -54,13 +54,22 @@ public class TestRenderingCustomiser implements IRenderingCustomiser<AbstractEnt
 
         final TgPersistentStatus currentStatus = entity.get("status");
         for (final Map.Entry<String, String> entry : statusColouringScheme.entrySet()) {
+            
+            final Map<String, Map<String, String>> propStyle = new HashMap<>();
+            res.put(entry.getKey(), propStyle);
+            
+            final Map<String, String> backgroundStyles = new HashMap<>();
+            final Map<String, String> valueStyles = new HashMap<>();
+            propStyle.put("backgroundStyles", backgroundStyles);
+            propStyle.put("valueStyles", valueStyles);
+            
+            // TODO uncomment to hide the "X" value in calculated properties, which is really needed only for data export
+            //valueStyles.put("visibility", "hidden");
             if (currentStatus != null && entry.getKey().equalsIgnoreCase(currentStatus.getKey())) {
-                res.put(entry.getKey(), new HashMap<String, String>() {
-                    {
-                        put("background-color", entry.getValue());
-                    }
-                });
+               backgroundStyles.put("background-color", entry.getValue());
             }
+            
+            
         }
         return Optional.of(res);
     };

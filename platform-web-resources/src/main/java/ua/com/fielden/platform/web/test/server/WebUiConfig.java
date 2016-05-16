@@ -971,7 +971,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<AbstractEntity<?>> {
         @Override
         public void assignValues(final AbstractEntity<?> entity) {
-            // entity.set("customProp", "OK");
+            if ("DR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
+                entity.set("dR", "X");
+            } else if ("IS".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
+                entity.set("iS", "X");
+            } else if ("IR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
+                entity.set("iR", "X");
+            } else if ("ON".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
+                entity.set("oN", "X");
+            } else if ("sR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
+                entity.set("sR", "X");
+            } 
         }
     }
 
