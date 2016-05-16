@@ -25,13 +25,22 @@ public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProdu
 
     @Override
     public TgPersistentEntityWithProperties provideDefaultValuesForStandardNew(final TgPersistentEntityWithProperties entity, final EntityNewAction masterEntity) {
-        final IFetchProvider<TgPersistentEntityWithProperties> fetchStrategy = coTgPersistentEntityWithProperties.getFetchProvider();
+        return provideProducerInitProp(coTgPersistentEntityWithProperties, entity);
+    }
+    
+    @Override
+    public TgPersistentEntityWithProperties provideDefaultValues(final TgPersistentEntityWithProperties entity) {
+        return provideProducerInitProp(coTgPersistentEntityWithProperties, entity);
+    }
+    
+    private static TgPersistentEntityWithProperties provideProducerInitProp(final ITgPersistentEntityWithProperties co, final TgPersistentEntityWithProperties entity) {
+        final IFetchProvider<TgPersistentEntityWithProperties> fetchStrategy = co.getFetchProvider();
         final TgPersistentEntityWithProperties defValue =
                 //                coTgPersistentEntityWithProperties.getEntity(from(
                 //                select(TgPersistentEntityWithProperties.class).where().prop("key").eq().val("DEFAULT_KEY").modelAsEntity(TgPersistentEntityWithProperties.class)
                 //                ).with(fetchOnly(TgPersistentEntityWithProperties.class).with("key")).model());
                 //                coTgPersistentEntityWithProperties.findById(12L, fetchOnly(TgPersistentEntityWithProperties.class).with("key"));
-                coTgPersistentEntityWithProperties.findByKeyAndFetch(fetchStrategy.<TgPersistentEntityWithProperties> fetchFor("producerInitProp").fetchModel(), "DEFAULT_KEY");
+                co.findByKeyAndFetch(fetchStrategy.<TgPersistentEntityWithProperties> fetchFor("producerInitProp").fetchModel(), "DEFAULT_KEY");
 
         entity.setProducerInitProp(defValue);
         return entity;
