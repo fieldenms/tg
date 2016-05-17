@@ -7,6 +7,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
+import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
 import ua.com.fielden.platform.persistence.types.EntityWithAutoAssignableProperties;
 import ua.com.fielden.platform.persistence.types.EntityWithExTaxAndTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -105,6 +106,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(EntityWithSimpleMoney.class);
         add(EntityWithDynamicCompositeKey.class);
         add(EntityWithAutoAssignableProperties.class);
+        add(EntityBasedOnAbstractPersistentEntity.class);
         add(TgAverageFuelUsage.class);
         add(TgSystem.class);
         add(TgSubSystem.class);

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.ioc;
 
+import static java.util.UUID.randomUUID;
+
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
@@ -58,6 +60,9 @@ public class SessionInterceptor implements MethodInterceptor {
             logger.debug("Starting new DB transaction");
             tr.begin();
             logger.debug("Started new DB transaction");
+            
+            // generate a GUID for the current transaction
+            dao.setTransactionGuid(randomUUID().toString());
         }
         try {
             final Object result = invocation.proceed(); // this invocation could also be captured by SessionInterceptor

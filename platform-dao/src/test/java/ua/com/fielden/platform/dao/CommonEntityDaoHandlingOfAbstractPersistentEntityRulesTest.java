@@ -1,0 +1,114 @@
+package ua.com.fielden.platform.dao;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+
+import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.utils.IUniversalConstants;
+
+/**
+ * Validates the assignment of basic persistent entity properties.
+ * 
+ * @author TG Team
+ *
+ */
+public class CommonEntityDaoHandlingOfAbstractPersistentEntityRulesTest extends AbstractDaoTestCase {
+
+    @Test
+    public void saving_new_entity_assinges_created_by_group_of_properties() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        final IUniversalConstants constants = getInstance(IUniversalConstants.class);
+        
+        final EntityBasedOnAbstractPersistentEntity entity = new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_1");
+        final EntityBasedOnAbstractPersistentEntity savedEntity = save(entity);
+        
+        assertNotNull(savedEntity.getCreatedBy());
+        assertEquals(up.getUser(), savedEntity.getCreatedBy());
+        assertNotNull(savedEntity.getCreatedDate());
+        assertEquals(constants.now().toDate(), savedEntity.getCreatedDate());
+        assertNotNull(savedEntity.getCreatedTransactionGuid());
+        
+        assertNull(savedEntity.getLastUpdatedBy());
+        assertNull(savedEntity.getLastUpdatedDate());
+        assertNull(savedEntity.getLastUpdatedTransactionGuid());
+    }
+
+    @Test
+    public void saving_modified_entity_assigns_last_modified_group_of_properties() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        constants.setNow(dateTime("2016-05-16 16:36:57"));
+        
+        final EntityBasedOnAbstractPersistentEntity newlySaved = save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_1"));
+        
+        // move to the future and change the current user
+        constants.setNow(dateTime("2016-05-17 13:36:57"));
+        up.setUser(co(User.class).findByKey("USER_1"));
+        
+        // perform entity modification and saving
+        final EntityBasedOnAbstractPersistentEntity savedEntity = save(newlySaved.setKey("VALUE_1_"));
+        
+        assertNotNull(savedEntity.getCreatedBy());
+        assertNotNull(savedEntity.getCreatedDate());
+        assertNotNull(savedEntity.getCreatedTransactionGuid());
+        
+        assertNotNull(savedEntity.getLastUpdatedBy());
+        assertEquals(up.getUser(), savedEntity.getLastUpdatedBy());
+        assertNotNull(savedEntity.getLastUpdatedDate());
+        assertEquals(constants.now().toDate(), savedEntity.getLastUpdatedDate());
+        assertNotNull(savedEntity.getLastUpdatedTransactionGuid());
+    }
+    
+    @Test
+    public void saving_multiple_new_entities_in_the_same_transcation_binds_them_with_by_the_same_GUID() {
+        final List<EntityBasedOnAbstractPersistentEntity> entities = new ArrayList<>();
+        entities.add(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_1"));
+        entities.add(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_2"));
+        entities.add(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_3"));
+        
+        final EntityBasedOnAbstractPersistentEntityDao co = co(EntityBasedOnAbstractPersistentEntity.class);
+        List<EntityBasedOnAbstractPersistentEntity> savedEntities = co.saveInSingleTransaction(entities);
+        
+        assertEquals(3, savedEntities.stream().filter(entity -> entity.getCreatedTransactionGuid() != null).count());
+        assertEquals(1, savedEntities.stream().map(entity -> entity.getCreatedTransactionGuid()).distinct().count());
+    }
+
+    @Test
+    public void saving_multiple_modified_entities_in_the_same_transcation_binds_them_with_by_the_same_GUID() {
+        final List<EntityBasedOnAbstractPersistentEntity> entities = new ArrayList<>();
+        entities.add(save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_1")).setKey("VALUE_1_"));
+        entities.add(save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_2")).setKey("VALUE_2_"));
+        entities.add(save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_3")).setKey("VALUE_3_"));
+        
+        final EntityBasedOnAbstractPersistentEntityDao co = co(EntityBasedOnAbstractPersistentEntity.class);
+        List<EntityBasedOnAbstractPersistentEntity> savedEntities = co.saveInSingleTransaction(entities);
+        
+        assertEquals(3, savedEntities.stream().filter(entity -> entity.getCreatedTransactionGuid() != null).count());
+        assertEquals(3, savedEntities.stream().filter(entity -> entity.getLastUpdatedTransactionGuid() != null).count());
+        
+        assertEquals(3, savedEntities.stream().map(entity -> entity.getCreatedTransactionGuid()).distinct().count());
+        assertEquals(1, savedEntities.stream().map(entity -> entity.getLastUpdatedTransactionGuid()).distinct().count());
+    }
+
+    
+    @Override
+    protected void populateDomain() {
+        super.populateDomain();
+        
+        final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        constants.setNow(dateTime("2016-05-17 16:36:57"));
+        
+        save(new_(User.class, "USER_1").setBase(true));
+    }
+
+}

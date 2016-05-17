@@ -5,6 +5,7 @@ import java.util.Date;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.security.user.User;
@@ -18,7 +19,7 @@ import ua.com.fielden.platform.security.user.User;
  * @param <K>
  */
 @SuppressWarnings("rawtypes")
-public abstract class AbstractPersistentEntity<K extends Comparable> extends AbstractEntity<K>{
+public abstract class AbstractPersistentEntity<K extends Comparable> extends AbstractEntity<K> {
     private static final long serialVersionUID = 1L;
     
     /** Convenient constants to reference properties by name */
@@ -33,36 +34,42 @@ public abstract class AbstractPersistentEntity<K extends Comparable> extends Abs
     @MapTo
     @Title(value = "Created by User", desc = "The user who originally created this entity instance.")
     @SkipEntityExistsValidation
+    @Readonly
     private User createdBy;
 
     @IsProperty
     @MapTo
     @Title(value = "Creation Date", desc = "The date/time when this entity instace was created.")
+    @Readonly
     private Date createdDate;
 
     @IsProperty
     @MapTo
     @Title(value = "Creation Transation ID", desc = "A unique identifier of the creation transation for this entity instance.")
+    @Readonly
     private String createdTransactionGuid;
 
     @IsProperty
     @MapTo
     @Title(value = "Last Updated By", desc = "The user who was the last to update this entity instance.")
     @SkipEntityExistsValidation
+    @Readonly
     private User lastUpdatedBy;
 
     @IsProperty
     @MapTo
     @Title(value = "Last Updated Date", desc = "The date/time when this entity instance was last updated.")
+    @Readonly
     private Date lastUpdatedDate;
 
     @IsProperty
     @MapTo
     @Title(value = "Last Update Transaction ID", desc = "A unique identifier of the last update transaction for this entity instance.")
+    @Readonly
     private String lastUpdatedTransactionGuid;
 
     @Observable
-    public AbstractPersistentEntity<K> setLastUpdatedTransactionGuid(final String lastUpdatedTransactionGuid) {
+    protected AbstractPersistentEntity<K> setLastUpdatedTransactionGuid(final String lastUpdatedTransactionGuid) {
         this.lastUpdatedTransactionGuid = lastUpdatedTransactionGuid;
         return this;
     }
@@ -72,7 +79,7 @@ public abstract class AbstractPersistentEntity<K extends Comparable> extends Abs
     }
     
     @Observable
-    public AbstractPersistentEntity<K> setCreatedTransactionGuid(final String createdTransactionGuid) {
+    protected AbstractPersistentEntity<K> setCreatedTransactionGuid(final String createdTransactionGuid) {
         this.createdTransactionGuid = createdTransactionGuid;
         return this;
     }

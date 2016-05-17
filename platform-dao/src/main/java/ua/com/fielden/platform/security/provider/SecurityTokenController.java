@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.Session;
 
 import com.google.inject.Inject;
@@ -32,6 +33,8 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
     private final IUserRoleDao roleDao;
 
     private Session session;
+    private String transactionGuid;
+
 
     @Override
     public Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations() {
@@ -102,4 +105,18 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
     public void setSession(final Session session) {
         this.session = session;
     }
+    
+    @Override
+    public String getTransactionGuid() {
+        if (StringUtils.isEmpty(transactionGuid)) {
+            throw new IllegalStateException("Transaction GUID is missing.");
+        }
+        return transactionGuid;
+    }
+    
+    @Override
+    public void setTransactionGuid(final String guid) {
+        this.transactionGuid = guid;
+    }
+
 }
