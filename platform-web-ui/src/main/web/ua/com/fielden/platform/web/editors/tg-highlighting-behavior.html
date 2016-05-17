@@ -1,13 +1,23 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <script>
+(function() {
+    /**
+     * Escapes the special RegExp characters to convert the specified string 
+     * to a form, suitable for matching 'as is'.
+     *
+     * This enables usage of characters like +([. to be used for exact matching.
+     * See more: http://stackoverflow.com/questions/3115150/how-to-escape-regular-expression-special-characters-using-javascript
+     *           https://github.com/benjamingr/RegExp.escape
+     */
+    RegExp.escape = function(text) {
+        return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+    };
+    
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
 	Polymer.TgBehaviors.TgHighlightingBehavior = {
 	    _searchRegExp: function (str) {
-	        str = str.split('+').join('/[+]/'); // str.replace(new RegExp('/[+]/', 'g'), '/[+]/');
-	        str = str.split('(').join('/[(]/');
-	        str = str.split(')').join('/[)]/');
-	        return new RegExp(str, 'gi');
+	        return new RegExp(RegExp.escape(str), 'gi');
 	    },
 	    
         /* 
@@ -64,4 +74,5 @@
             return parts;
         }
     };
+})();
 </script>
