@@ -979,9 +979,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 entity.set("iR", "X");
             } else if ("ON".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
                 entity.set("oN", "X");
-            } else if ("sR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
+            } else if ("SR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
                 entity.set("sR", "X");
-            } 
+            }
         }
     }
 
