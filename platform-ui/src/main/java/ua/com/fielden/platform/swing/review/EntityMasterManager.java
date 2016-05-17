@@ -169,7 +169,7 @@ public class EntityMasterManager implements IEntityMasterManager {
     @Override
     public <T extends AbstractEntity<?>> IEntityProducer<T> getEntityProducer(final Class<T> entityClass) {
         final IEntityProducer<T> entityProducer = entityProducers.get(entityClass);
-        return entityProducer != null ? entityProducer : new DefaultEntityProducerWithContext<T, T>(entityFactory, entityClass);
+        return entityProducer != null ? entityProducer : new DefaultEntityProducerWithContext<T>(entityFactory, entityClass, null);
     }
 
     /**
