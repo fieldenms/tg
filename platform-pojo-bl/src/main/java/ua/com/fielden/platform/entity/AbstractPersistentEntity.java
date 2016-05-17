@@ -5,6 +5,7 @@ import java.util.Date;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.security.user.User;
 
@@ -31,6 +32,7 @@ public abstract class AbstractPersistentEntity<K extends Comparable> extends Abs
     @IsProperty
     @MapTo
     @Title(value = "Created by User", desc = "The user who originally created this entity instance.")
+    @SkipEntityExistsValidation
     private User createdBy;
 
     @IsProperty
@@ -46,6 +48,7 @@ public abstract class AbstractPersistentEntity<K extends Comparable> extends Abs
     @IsProperty
     @MapTo
     @Title(value = "Last Updated By", desc = "The user who was the last to update this entity instance.")
+    @SkipEntityExistsValidation
     private User lastUpdatedBy;
 
     @IsProperty
