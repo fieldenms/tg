@@ -20,17 +20,17 @@
         }
     </style>
     <template>
-        <template is="dom-if" if="[[menuItem.view]]">
-            <template is="dom-if" if="[[!_isCentre(menuItem)]]">
+        <template is="dom-if" if="[[menuItem.view]]" restamp>
+            <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
                 <paper-material>
                     <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
                 </paper-material>
             </template>
-            <template is="dom-if" if="[[_isCentre(menuItem)]]">
+            <template is="dom-if" if="[[_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
                 <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
             </template>
         </template>
-        <template is="dom-if" if="[[!menuItem.view]]">
+        <template is="dom-if" if="[[!menuItem.view]]" on-dom-change="_viewWasDefined" restamp>
             <div class="view">
                 Please specify view for <span>[[menuItem.title]]</span>.
             </div>
@@ -150,12 +150,47 @@
                         }
                     }
                 },
+
+                /**
+                 * The callback that is invoked after template was defined and it's dom was changed.
+                 */
+                _viewWasDefined: function (e, detail) {
+                    var elementToLoad;
+                    if (this._afterInitLoading) {
+                        elementToLoad = this.$$("#elementToLoad");
+                        if (elementToLoad) {
+                            if (!elementToLoad.wasLoaded) {
+                                elementToLoad.load();
+                            }
+                            delete this._afterInitLoading;
+                        }
+                    }
+                },
+
+                /**
+                 * This function lets one to indicate whether this view should be loaded after the dom will be initialised. It is not the same as auto = true
+                 */
+                loadAfterInit: function () {
+                    var elementToLoad;
+                    if (!this.auto && this.menuItem.view) {
+                        elementToLoad = this.$$("#elementToLoad");
+                        if (elementToLoad) {
+                            if (!elementToLoad.wasLoaded) {
+                                elementToLoad.load();
+                            }
+                        } else {
+                            this._afterInitLoading = true;
+                        }
+                    }
+                },
+
                 load: function () {
                     var elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad && !elementToLoad.wasLoaded) {
                         elementToLoad.load();
                     }
                 },
+
                 wasLoaded: function () {
                     var elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad) {

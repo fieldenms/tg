@@ -14,4 +14,5 @@ import ua.com.fielden.platform.web.view.master.api.helpers.IComplete;
 public interface IMasterWithMaster0<T extends AbstractFunctionalEntityWithCentreContext<?>> {
     
     IComplete<T> withMaster(final EntityMaster<?> entityMaster);
+    IComplete<T> withMasterAndWithNoParentCentreRefresh(final EntityMaster<?> entityMaster);
 }

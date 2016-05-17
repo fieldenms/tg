@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.app.config;
 
+import java.util.Optional;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -65,21 +67,53 @@ public interface IWebUiBuilder {
 
     /**
      * Adds the entity master to web application configuration object.
+     * @param master
      *
-     * @param entityType
+     * @return
+     */
+    <T extends AbstractEntity<?>> IWebUiBuilder addMaster(final EntityMaster<T> master);
+    
+    /**
+     * Registers entity master in web application and returns it.
+     *
      * @param master
      * @return
      */
-    <T extends AbstractEntity<?>> IWebUiBuilder addMaster(Class<T> entityType, EntityMaster<T> master);
+    <ENTITY_TYPE extends AbstractEntity<?>> EntityMaster<ENTITY_TYPE> register(final EntityMaster<ENTITY_TYPE> master);
+    
+    /**
+     * Returns an optional value with a master instance for the specified type. 
+     * An empty optional value is returned if there is no master registered for the specified type. 
+     * 
+     * @param entityType
+     * @return
+     */
+    <T extends AbstractEntity<?>> Optional<EntityMaster<T>> getMaster(final Class<T> entityType);
 
     /**
-     * Adds the entity centre to web application configuration object.
+     * Registers entity centre in web application and returns it.
      *
-     * @param menuType
      * @param centre
      * @return
      */
-    <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(Class<M> menuType, EntityCentre<?> centre);
+    <ENTITY_TYPE extends AbstractEntity<?>> EntityCentre<ENTITY_TYPE> register(final EntityCentre<ENTITY_TYPE> centre);
+
+    /**
+     * Adds the entity centre to web application configuration object.
+     * @param centre
+     *
+     * @return
+     */
+    <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final EntityCentre<?> centre);
+
+    /**
+     * Returns an optional value with a centre instance for the specified menu item type. 
+     * An empty optional value is returned if there is no centre registered for the specified type. 
+     * 
+     * @param menuType
+     * @return
+     */
+    <M extends MiWithConfigurationSupport<?>> Optional<EntityCentre<?>> getCentre(final Class<M> menuType);
 
     /**
      * Adds the custom view to the application configuration object.
@@ -87,7 +121,7 @@ public interface IWebUiBuilder {
      * @param customView
      * @return
      */
-    IWebUiBuilder addCustomView(AbstractCustomView customView);
+    IWebUiBuilder addCustomView(final AbstractCustomView customView);
 
     /**
      * Finish to configure the web application.

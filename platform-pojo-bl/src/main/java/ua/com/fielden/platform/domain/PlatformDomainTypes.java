@@ -8,6 +8,7 @@ import ua.com.fielden.platform.attachment.EntityAttachmentAssociation;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
+import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
@@ -69,5 +70,6 @@ public class PlatformDomainTypes {
         types.add(EntityNewAction.class);
         types.add(EntityEditAction.class);
         types.add(EntityDeleteAction.class);
+        types.add(EntityExportAction.class);
     }
 }

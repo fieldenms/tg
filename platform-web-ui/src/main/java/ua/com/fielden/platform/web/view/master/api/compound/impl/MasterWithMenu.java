@@ -24,14 +24,14 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
- * A compound entity master that has a menu.
- *
+ * A compound entity master that has a menu, that extends {@link IMaster} contract.
+ * 
  * @author TG Team
  *
  * @param <T> -- a type of the main entity, which drives the logic of the master, such as Vehicle, WorkOrder.
  * @param <F> -- a type of the functional entity, which opens the compound master; its key has to be of the same type as the main entity.
  */
-public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> implements IMaster<F> {
+class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> implements IMaster<F> {
 
     /**
      * Actions that represent menu items in a compound view.
@@ -40,8 +40,15 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
     private final IRenderable renderable;
     private final Logger logger = Logger.getLogger(getClass());
 
-    public MasterWithMenu(final Class<T> entityType, final Class<F> functionalEntityType, final List<EntityActionConfig> menuItemActions, final int defaultMenuItemIndex) {
-        logger.debug(format("Generating master with menu for entity %s, invoked by functional entity %s.", entityType.getSimpleName(), functionalEntityType.getSimpleName()));
+    /**
+     * Creates master with menu.
+     * 
+     * @param functionalEntityType
+     * @param menuItemActions
+     * @param defaultMenuItemIndex
+     */
+    MasterWithMenu(final Class<F> functionalEntityType, final List<EntityActionConfig> menuItemActions, final int defaultMenuItemIndex) {
+        logger.debug(format("Generating master with menu invoked by functional entity %s.", functionalEntityType.getSimpleName()));
         if (defaultMenuItemIndex < 0 || defaultMenuItemIndex >= menuItemActions.size()) {
             throw new IllegalArgumentException(format("The default menu item index %s is outside of the range for the provided menu items.", defaultMenuItemIndex));
         }
@@ -92,6 +99,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                         + "    default-route='%s'\n"
                         + "    menu-actions='[[menuItemActions]]'\n"
                         + "    uuid='[[uuid]]'\n"
+                        + "    centre-uuid='[[centreUuid]]'\n"
                         + "    get-master-entity='[[_createContextHolderForEmbeddedViews]]'\n"
                         + "    refresh-compound-master='[[save]]'\n"
                         + "    augment-context-with-saved-entity='[[augmentContextWithSavedEntity]]'>\n"
