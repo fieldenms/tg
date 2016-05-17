@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.swing.review.development;
 
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -26,6 +29,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private static final long serialVersionUID = -5189571197523084383L;
 
     private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
+    private Function<Map<String, Object>, List<AbstractEntity<?>>> exportQueryRunner;
 
     /**
      * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
@@ -45,5 +49,13 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     public Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier() {
         return freshCentreSupplier;
+    }
+
+    public Function<Map<String, Object>, List<AbstractEntity<?>>> exportQueryRunner() {
+        return exportQueryRunner;
+    }
+
+    public void setExportQueryRunner(final Function<Map<String, Object>, List<AbstractEntity<?>>> exportQueryRunner) {
+        this.exportQueryRunner = exportQueryRunner;
     }
 }
