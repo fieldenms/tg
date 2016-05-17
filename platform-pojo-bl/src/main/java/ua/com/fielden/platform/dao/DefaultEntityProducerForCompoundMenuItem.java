@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  *
  * @param <T>
  */
-public class DefaultEntityProducerForCompoundMenuItem<T extends AbstractFunctionalEntityForCompoundMenuItem<AbstractEntity<?>> > extends DefaultEntityProducerWithContext<T, AbstractEntity<?>> implements IEntityProducer<T> {
+public class DefaultEntityProducerForCompoundMenuItem<T extends AbstractFunctionalEntityForCompoundMenuItem<AbstractEntity<?>> > extends DefaultEntityProducerWithContext<T> implements IEntityProducer<T> {
     
     public DefaultEntityProducerForCompoundMenuItem(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         super(factory, entityType, companionFinder);
@@ -32,9 +32,6 @@ public class DefaultEntityProducerForCompoundMenuItem<T extends AbstractFunction
         entity.endInitialising();
         entity.resetMetaState();
 
-        if (getCentreContext() != null) {
-            entity.setContext(getCentreContext());
-        }
         return entity;
     }
 }

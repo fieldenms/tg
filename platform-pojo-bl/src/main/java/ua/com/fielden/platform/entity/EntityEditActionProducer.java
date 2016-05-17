@@ -16,8 +16,8 @@ public class EntityEditActionProducer extends EntityManipulationActionProducer<E
     @Override
     protected EntityEditAction provideDefaultValues(final EntityEditAction entity) {
         final EntityEditAction editedEntity = super.provideDefaultValues(entity);
-        if (getCentreContext() != null) {
-            final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = getCentreContext();
+        if (editedEntity.getContext() != null) {
+            final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) editedEntity.getContext();
             final AbstractEntity<?> currEntity = context.getSelectedEntities().size() == 0 ? null : context.getCurrEntity();
             if (currEntity != null) {
                 editedEntity.setEntityId(currEntity == null ? null : currEntity.getId().toString());

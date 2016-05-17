@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.web.app.config;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
+
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
@@ -19,7 +21,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class WebUiBuilder implements IWebUiBuilder {
-
+    private final Logger logger = Logger.getLogger(getClass());
     /**
      * The {@link IWebUiConfig} instance for which this configuration object was created.
      */
@@ -97,15 +99,58 @@ public class WebUiBuilder implements IWebUiBuilder {
     }
 
     @Override
-    public <T extends AbstractEntity<?>> IWebUiBuilder addMaster(final Class<T> entityType, final EntityMaster<T> master) {
-        mastersMap.put(entityType, master);
-        return this;
+    public <T extends AbstractEntity<?>> IWebUiBuilder addMaster(final EntityMaster<T> master) {
+        final Optional<EntityMaster<T>> masterOptional = getMaster(master.getEntityType());
+        if (masterOptional.isPresent()) {
+            if (masterOptional.get() != master) {
+                throw new WebUiBuilderException(String.format("The master configuration for type [%s] has been already registered.", master.getEntityType().getSimpleName()));
+            } else {
+                logger.info(String.format("There is a try to register exactly the same master configuration instance for type [%s], that has been already registered.", master.getEntityType().getSimpleName()));
+                return this;
+            }
+        } else {
+            mastersMap.put(master.getEntityType(), master);
+            return this;
+        }
     }
-
+    
     @Override
-    public <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final Class<M> menuType, final EntityCentre<?> centre) {
-        centreMap.put(menuType, centre);
-        return this;
+    public <ENTITY_TYPE extends AbstractEntity<?>> EntityMaster<ENTITY_TYPE> register(final EntityMaster<ENTITY_TYPE> master) {
+        addMaster(master);
+        return master;
+    }
+    
+    @Override
+    public <T extends AbstractEntity<?>> Optional<EntityMaster<T>> getMaster(final Class<T> entityType) {
+        final EntityMaster<T> master = (EntityMaster<T>) mastersMap.get(entityType); // could be 'null', and type casting will not throw any exception in that case
+        return Optional.ofNullable(master);
+    }
+    
+    @Override
+    public <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final EntityCentre<?> centre) {
+        final Optional<EntityCentre<?>> centreOptional = getCentre(centre.getMenuItemType());
+        if (centreOptional.isPresent()) {
+            if (centreOptional.get() != centre) {
+                throw new WebUiBuilderException(String.format("The centre configuration for type [%s] has been already registered.", centre.getMenuItemType().getSimpleName()));
+            } else {
+                logger.info(String.format("There is a try to register exactly the same centre configuration instance for type [%s], that has been already registered.", centre.getMenuItemType().getSimpleName()));
+                return this;
+            }
+        } else {
+            centreMap.put(centre.getMenuItemType(), centre);
+            return this;
+        }
+    }
+    
+    @Override
+    public <ENTITY_TYPE extends AbstractEntity<?>> EntityCentre<ENTITY_TYPE> register(final EntityCentre<ENTITY_TYPE> centre) {
+        addCentre(centre);
+        return centre;
+    }
+    
+    @Override
+    public <M extends MiWithConfigurationSupport<?>> Optional<EntityCentre<?>> getCentre(final Class<M> menuType) {
+        return Optional.ofNullable(centreMap.get(menuType));
     }
 
     public Map<Class<? extends AbstractEntity<?>>, EntityMaster<? extends AbstractEntity<?>>> getMasters() {

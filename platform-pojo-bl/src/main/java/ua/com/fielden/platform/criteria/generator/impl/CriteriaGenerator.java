@@ -120,7 +120,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
                 generatedClasses.put(cdtme, queryCriteriaClass);
             }
 
-            final DefaultEntityProducerWithContext<EntityQueryCriteria<CDTME, T, IEntityDao<T>>, EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityProducer = new DefaultEntityProducerWithContext<>(entityFactory, (Class<EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) queryCriteriaClass);
+            final DefaultEntityProducerWithContext<EntityQueryCriteria<CDTME, T, IEntityDao<T>>> entityProducer = new DefaultEntityProducerWithContext<>(entityFactory, (Class<EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) queryCriteriaClass, coFinder);
             entityProducer.newEntity();
             final EntityQueryCriteria<CDTME, T, IEntityDao<T>> entity = entityProducer.newEntity(); // entityFactory.newByKey(queryCriteriaClass, "not required");
             entity.beginInitialising();
