@@ -73,7 +73,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     private final IServerGlobalDomainTreeManager serverGdtm;
     private final IUserProvider userProvider;
 
-
     public enum EntityIdKind {
         NEW("new"), ID("id"), FIND_OR_NEW("find_or_new");
 
@@ -165,7 +164,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
 
                     final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, utils.entityFactory(), centreContextHolder, 0);
 
-
                     final T entity = utils.createValidationPrototypeWithContext(
                             null,
                             CentreResourceUtils.createCentreContext(
@@ -182,7 +180,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                             centreContextHolder.getChosenProperty(),
                             null /* compound master entity id */,
                             masterEntity /* master context */
-                    );
+                            );
                     logger.debug("ENTITY_RESOURCE: retrieve finished.");
                     return restUtil.rawListJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(entity));
                 }
@@ -222,12 +220,16 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     }
 
     /**
-     * Restores the functional entity from the <code>savingInfoHolder</code>, that represents it. The <code>savingInfoHolder</code> could potentially contain <code>contreContextHolder</code> inside, which will be deserialised as well.
+     * Restores the functional entity from the <code>savingInfoHolder</code>, that represents it. The <code>savingInfoHolder</code> could potentially contain
+     * <code>contreContextHolder</code> inside, which will be deserialised as well.
      * <p>
-     * All parameters, except <code>savingInfoHolder</code> and <code>functionalEntityType</code>, could be taken from injector -- they are needed for centre context deserialisation.
+     * All parameters, except <code>savingInfoHolder</code> and <code>functionalEntityType</code>, could be taken from injector -- they are needed for centre context
+     * deserialisation.
      *
-     * @param savingInfoHolder -- the actual holder of information about functional entity
-     * @param functionalEntityType -- the type of functional entity to be restored into
+     * @param savingInfoHolder
+     *            -- the actual holder of information about functional entity
+     * @param functionalEntityType
+     *            -- the type of functional entity to be restored into
      * @param entityFactory
      * @param webUiConfig
      * @param companionFinder
@@ -260,7 +262,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
 
         final Object arrivedIdVal = modifHolder.get(AbstractEntity.ID);
         final Long longId = arrivedIdVal == null ? null : Long.parseLong(arrivedIdVal + "");
-
 
         final CentreContextHolder centreContextHolder = savingInfoHolder.getCentreContextHolder();
         logger.debug(tabs(tabCount) + "restoreEntityFrom (" + functionalEntityType.getSimpleName() + "): master entity restore...");
@@ -344,35 +345,37 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started.");
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity = CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, gdtm, critGenerator);
 
-            criteriaEntity.setExportQueryRunner((final Map<String, Object> customObject) -> {
-                final Class<? extends MiWithConfigurationSupport<?>> miType = CentreUtils.getMiType((Class<EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>) criteriaEntity.getClass());
-                final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(miType);
-                customObject.putAll(centreContextHolder.getCustomObject());
-                final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> appliedCriteriaEntity = criteriaEntity;
+            if (criteriaEntity != null) {
+                criteriaEntity.setExportQueryRunner((final Map<String, Object> customObject) -> {
+                    final Class<? extends MiWithConfigurationSupport<?>> miType = CentreUtils.getMiType((Class<EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>) criteriaEntity.getClass());
+                    final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(miType);
+                    customObject.putAll(centreContextHolder.getCustomObject());
+                    final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> appliedCriteriaEntity = criteriaEntity;
 
-                final Pair<Map<String, Object>, ArrayList<?>> pair =
-                        CentreResourceUtils.<T, EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> createCriteriaMetaValuesCustomObjectWithResult(
-                                customObject,
-                                appliedCriteriaEntity,
-                                centre.getAdditionalFetchProvider(),
-                                CriteriaResource.createQueryEnhancerAndContext(
-                                        webUiConfig,
-                                        companionFinder,
-                                        serverGdtm,
-                                        userProvider,
-                                        critGenerator,
-                                        utils.entityFactory(),
-                                        centreContextHolder,
-                                        centre.getQueryEnhancerConfig(),
-                                        appliedCriteriaEntity));
+                    final Pair<Map<String, Object>, ArrayList<?>> pair =
+                            CentreResourceUtils.<T, EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> createCriteriaMetaValuesCustomObjectWithResult(
+                                    customObject,
+                                    appliedCriteriaEntity,
+                                    centre.getAdditionalFetchProvider(),
+                                    CriteriaResource.createQueryEnhancerAndContext(
+                                            webUiConfig,
+                                            companionFinder,
+                                            serverGdtm,
+                                            userProvider,
+                                            critGenerator,
+                                            utils.entityFactory(),
+                                            centreContextHolder,
+                                            centre.getQueryEnhancerConfig(),
+                                            appliedCriteriaEntity));
 
-                if (pair.getValue() == null) {
-                    return new ArrayList<AbstractEntity<?>>();
-                } else {
-                    CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues(centre, centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
-                    return (List<AbstractEntity<?>>) pair.getValue();
-                }
-            });
+                    if (pair.getValue() == null) {
+                        return new ArrayList<AbstractEntity<?>>();
+                    } else {
+                        CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues(centre, centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
+                        return (List<AbstractEntity<?>>) pair.getValue();
+                    }
+                });
+            }
 
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. criteriaEntity.");
             final CentreContext<T, AbstractEntity<?>> centreContext = CentreResourceUtils.createCentreContext(
@@ -392,7 +395,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     centreContextHolder.getChosenProperty(),
                     compoundMasterEntityId,
                     masterContext, tabCount + 1
-           ).getKey();
+                    ).getKey();
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder finished.");
         }
         logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): finished.");
@@ -402,14 +405,14 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     /**
      * Performs DAO saving of <code>validatedEntity</code>.
      * <p>
-     * IMPORTANT: note that if <code>validatedEntity</code> has been mutated during saving in its concrete companion object (for example VehicleStatusChangeDao) or
-     * in {@link CommonEntityDao} saving methods -- still that entity instance will be returned in case of exceptional situation and will be bound to respective entity master.
-     * The toast message, however, will show the message, that was thrown during saving as exceptional (not first validation error of the entity).
+     * IMPORTANT: note that if <code>validatedEntity</code> has been mutated during saving in its concrete companion object (for example VehicleStatusChangeDao) or in
+     * {@link CommonEntityDao} saving methods -- still that entity instance will be returned in case of exceptional situation and will be bound to respective entity master. The
+     * toast message, however, will show the message, that was thrown during saving as exceptional (not first validation error of the entity).
      *
      * @param validatedEntity
      *
-     * @return if saving was successful -- returns saved entity with no exception
-     *         if saving was unsuccessful with exception -- returns <code>validatedEntity</code> (to be bound to appropriate entity master) and thrown exception (to be shown in toast message)
+     * @return if saving was successful -- returns saved entity with no exception if saving was unsuccessful with exception -- returns <code>validatedEntity</code> (to be bound to
+     *         appropriate entity master) and thrown exception (to be shown in toast message)
      */
     private Pair<T, Optional<Exception>> save(final T validatedEntity) {
         T savedEntity;
