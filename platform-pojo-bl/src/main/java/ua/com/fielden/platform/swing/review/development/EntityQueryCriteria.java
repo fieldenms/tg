@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.swing.review.development;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -461,18 +460,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             generatedEntityController.setEntityType(getManagedType());
             return generatedEntityController.findById(id, fetchModel, getByteArrayForManagedType());
         }
-    }
-
-    public List<T> getEntitesById(final List<Long> ids) {
-        final Class<?> root = getEntityClass();
-        final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
-        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider);
-        final EntityResultQueryModel<T> notOrderedQuery = select(getManagedType()).where().prop("id").in().values(ids.toArray(new Long[] {})).model();
-        return getAllEntities(adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
-                .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
-                .with(fetchProvider.fetchModel()).model());
     }
 
     /**
