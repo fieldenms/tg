@@ -225,21 +225,6 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         validateMenuItemTypeRootType(menuItemType);
         return currentCentres.get(key(menuItemType, name));
     }
-    
-    /**
-     * This method should not be used. It was addded only for specific edge-case, when pagination actions were needed to be done against not modified EntityCentreManager.
-     * <p>
-     * It returns the copy of original version of entity centre manager.
-     * 
-     * @param menuItemType
-     * @param name
-     * @return
-     */
-    public ICentreDomainTreeManagerAndEnhancer getEntityCentreManagerWithoutModifications(final Class<?> menuItemType, final String name) {
-        validateMenuItemType(menuItemType);
-        validateMenuItemTypeRootType(menuItemType);
-        return copyCentre(persistentCentres.get(key(menuItemType, name)));
-    }
 
     private User currentUser() {
         return userProvider.getUser();

@@ -160,7 +160,7 @@ public class CentreUtils<T extends AbstractEntity<?>> {
         if (gdtm.getEntityCentreManager(miType, PREVIOUSLY_RUN_CENTRE_NAME) == null) {
             throw new PreviouslyRunCentreNotInitialisedException("The 'previously run centre' should be initialised.");
         }
-        return ((GlobalDomainTreeManager) gdtm).getEntityCentreManagerWithoutModifications(miType, PREVIOUSLY_RUN_CENTRE_NAME);
+        return gdtm.getEntityCentreManager(miType, PREVIOUSLY_RUN_CENTRE_NAME);
     }
     
     public static class PreviouslyRunCentreNotInitialisedException extends IllegalStateException {
