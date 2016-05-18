@@ -37,6 +37,13 @@ public class UserRole extends ActivatableAbstractEntity<String> {
 
     @Override
     @Observable
+    public UserRole setKey(String key) {
+        super.setKey(key);
+        return this;
+    }
+    
+    @Override
+    @Observable
     public UserRole setActive(boolean active) {
         super.setActive(active);
         return this;
