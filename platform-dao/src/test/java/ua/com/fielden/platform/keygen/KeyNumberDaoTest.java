@@ -17,6 +17,7 @@ public class KeyNumberDaoTest extends DbDrivenTestCase {
 
     @Test
     public void test_new_keynumber_can_be_created_and_persisted_adhoc() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         final String newKey = "YET-NON-EXISTING";
         try {
             coKeyNumber.currNumber(newKey);
@@ -32,11 +33,13 @@ public class KeyNumberDaoTest extends DbDrivenTestCase {
     
     @Test
     public void test_existing_keynumber_is_retrievable_by_key() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         assertEquals("Incorrect current WO number.", new Integer("500"), coKeyNumber.currNumber("WO"));
     }
 
     @Test
     public void test_the_next_keynumber_gets_generated_and_simultaneously_persisted() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         final Integer nextNumber = 501;
         assertEquals("Incorrectly generated next WO number.", nextNumber, coKeyNumber.nextNumber("WO"));
         assertEquals("Incorrect current WO number after generating the next number.", nextNumber, coKeyNumber.currNumber("WO"));

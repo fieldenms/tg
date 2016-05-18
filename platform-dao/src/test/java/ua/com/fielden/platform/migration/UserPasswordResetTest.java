@@ -17,6 +17,7 @@ public class UserPasswordResetTest extends DbDrivenTestCase {
     private final ResetUserPassword passwordReset = new ResetUserPassword(coUser);
 
     public void test_that_utility_resets_password_for_all_users() throws Exception {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         passwordReset.resetAll();
 
         hibernateUtil.getSessionFactory().getCurrentSession().close();
@@ -28,6 +29,7 @@ public class UserPasswordResetTest extends DbDrivenTestCase {
     }
 
     public void test_that_utility_resets_password_for_an_individual_user() throws Exception {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         passwordReset.reset("USER-1");
 
         hibernateUtil.getSessionFactory().getCurrentSession().close();

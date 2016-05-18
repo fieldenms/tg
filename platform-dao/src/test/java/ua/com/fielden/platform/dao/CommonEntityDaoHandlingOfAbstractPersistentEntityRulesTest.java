@@ -28,7 +28,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public class CommonEntityDaoHandlingOfAbstractPersistentEntityRulesTest extends AbstractDaoTestCase {
 
     @Test
-    public void saving_new_entity_assinges_created_by_group_of_properties() {
+    public void saving_new_entity_assigns_created_by_group_of_properties() {
         final IUserProvider up = getInstance(IUserProvider.class);
         final IUniversalConstants constants = getInstance(IUniversalConstants.class);
         
