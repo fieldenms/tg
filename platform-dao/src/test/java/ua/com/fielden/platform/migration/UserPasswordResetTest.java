@@ -45,9 +45,4 @@ public class UserPasswordResetTest extends AbstractDaoTestCase {
         save(new_(User.class, "USER1").setPassword("PASSWORD-1").setActive(true));
         save(new_(User.class, "USER2").setPassword("PASSWORD-2").setActive(true));
     }
-    
-//    @Override
-//    protected String[] getDataSetPathsForInsert() {
-//        return new String[] { "src/test/resources/data-files/user-password-reset-test-data.flat.xml" };
-//    }
 }
