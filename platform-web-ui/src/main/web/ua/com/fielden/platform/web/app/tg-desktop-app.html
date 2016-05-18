@@ -101,13 +101,31 @@
                         this.$.pages.selected = selected;
                         return;
                     }
-                } 
+                }
                 this.selectAfterRender = selected;
+            },
+
+            _checkWeatherCanLeave: function (e) {
+                var modules = this.querySelectorAll("tg-app-view"), 
+                    masters = document.body.querySelectorAll("tg-custom-action-dialog .canLeave"),
+                    itemIndex;
+                for (itemIndex = 0; itemIndex < modules.length; itemIndex++) {
+                    if (typeof modules[itemIndex].canLeave === 'function' && modules[itemIndex].canLeave()) {
+                        e.returnValue = "There are some unsaved entity centres.";
+                    }
+                }
+                for (itemIndex = 0; itemIndex < masters.length; itemIndex++) {
+                    if (typeof masters[itemIndex].canLeave === 'function' && masters[itemIndex].canLeave()) {
+                        e.returnValue = "There are some unsaved entity masters.";
+                    }
+                }
             },
 
             ready: function () {
                 //Setting dwellTime to 0 for iron-location that is in the shadow-dom of carbon-location component. This fixes the problem of delayong the history changes.
                 this.$.location.$$("iron-location").dwellTime = 0;
+                //Binding to 'this' functions those are used outside the scope of this component.
+                this._checkWeatherCanLeave = this._checkWeatherCanLeave.bind(this);
             },
 
             attached: function () {
@@ -119,6 +137,12 @@
                         this.set("_route.path", "/menu");
                     }
                 });
+
+                window.addEventListener("beforeunload", this._checkWeatherCanLeave);
+            },
+
+            detached: function () {
+                window.removeEventListener("beforeunload", this._checkWeatherCanLeave);
             }
         });
     })();

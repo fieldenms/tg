@@ -197,6 +197,13 @@
                         return elementToLoad.wasLoaded;
                     }
                     return true;
+                },
+                
+                canLeave: function() {
+                    var elementToLoad = this.$$("#elementToLoad");
+                    if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.canLeave === 'function') {
+                        return elementToLoad.loadedElement.canLeave();
+                    }
                 }
             });
         })();
