@@ -35,8 +35,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -45,7 +44,7 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  *
  */
-public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends AbstractDomainDrivenTestCase {
+public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends AbstractDaoTestCase {
 
     @Test
     public void identification_of_retrievable_properties_for_non_composite_entity_with_non_persistent_props_other_than_desc() {
@@ -127,6 +126,8 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
 
         save(new_(TgCategory.class, "Cat1").setActive(true));
@@ -143,8 +144,4 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
         save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5));
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }

@@ -86,9 +86,9 @@ public class AssignPropertiesBeforeTestTest extends AbstractDaoTestCase {
         constants.setNow(dateTime("2014-11-23 02:47:00"));
 
         final IUser coUser = co(User.class);
-        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true));
+        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true).setActive(true));
         save(new_(TgPerson.class, loggedInUser).setUser(lUser));
-        final User oUser = coUser.save(new_(User.class, otherUser).setBase(true));
+        final User oUser = coUser.save(new_(User.class, otherUser).setBase(true).setActive(true));
         save(new_(TgPerson.class, otherUser).setUser(oUser));
 
         final IUserProvider up = getInstance(IUserProvider.class);

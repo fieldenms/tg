@@ -36,7 +36,7 @@ public class CommonEntityDaoValueAutoAssignmentTest extends AbstractDaoTestCase 
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2016-05-17 16:36:57"));
         
-        save(new_(User.class, "USER_1").setBase(true));
+        save(new_(User.class, "USER_1").setBase(true).setActive(true));
     }
 
 }

@@ -111,8 +111,8 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
 
         // add more users
         final IUser coUser = co(User.class);
-        save(new_(TgPerson.class, "Person 1").setUser(coUser.save(new_(User.class, "USER1").setBase(true))));
-        save(new_(TgPerson.class, "Person 2").setUser(coUser.save(new_(User.class, "USER2").setBase(true))));
+        save(new_(TgPerson.class, "Person 1").setUser(coUser.save(new_(User.class, "USER1").setBase(true).setActive(true))));
+        save(new_(TgPerson.class, "Person 2").setUser(coUser.save(new_(User.class, "USER2").setBase(true).setActive(true))));
 
         // establish session for the above users
         final IUserProvider up = getInstance(IUserProvider.class);

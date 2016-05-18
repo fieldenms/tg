@@ -10,8 +10,6 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
-import java.util.List;
-
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -25,7 +23,8 @@ import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase {
@@ -215,7 +214,12 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         // set up logged in person, which is needed for TgSubSystem
         final String loggedInUser = "LOGGED IN USER";
         final IUser coUser = co(User.class);
-        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true));
+        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true).setActive(true));
+        
+        // associate the admin role with lUser
+        final UserRole admin = co(UserRole.class).findByKey(UNIT_TEST_ROLE);
+        save(new_composite(UserAndRoleAssociation.class, lUser, admin));
+        
         save(new_(TgPerson.class, loggedInUser).setUser(lUser));
 
         final IUserProvider up = getInstance(IUserProvider.class);
@@ -236,11 +240,6 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         save(new_(TgSubSystem.class, "SubSys1").setFirstCategory(cat6).setSecondCategory(cat6));
 
         save(new_(TgSystem.class, "Sys2").setActive(true).setFirstCategory(cat6).setSecondCategory(cat6));
-    }
-
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
     }
 
 }

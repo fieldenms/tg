@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -36,7 +36,7 @@ import ua.com.fielden.platform.property.validator.StringValidator;
 @KeyType(String.class)
 @MapEntityTo
 @CompanionObject(IUser.class)
-public class User extends AbstractEntity<String> {
+public class User extends ActivatableAbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -117,6 +117,13 @@ public class User extends AbstractEntity<String> {
     @Title(value = "Salt", desc = "Random password hashing salt to protect agains the rainbow table attack.")
     private String salt;
 
+    @Override
+    @Observable
+    public User setActive(boolean active) {
+        super.setActive(active);
+        return this;
+    }
+    
     @Observable
     public User setSalt(final String salt) {
         this.salt = salt;
