@@ -212,9 +212,9 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
     protected void populateDomain() {
         super.populateDomain();
         // set up logged in person, which is needed for TgSubSystem
-        final String loggedInUser = "LOGGED IN USER";
+        final String loggedInUser = "LOGGED_IN_USER";
         final IUser coUser = co(User.class);
-        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true).setActive(true));
+        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true).setEmail(loggedInUser + "@unit-test.software").setActive(true));
         
         // associate the admin role with lUser
         final UserRole admin = co(UserRole.class).findByKey(UNIT_TEST_ROLE);

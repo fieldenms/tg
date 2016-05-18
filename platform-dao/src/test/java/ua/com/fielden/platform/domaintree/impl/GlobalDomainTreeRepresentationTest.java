@@ -137,9 +137,9 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDaoTestCase {
     @Override
     protected void populateDomain() {
         super.populateDomain();
-        final User baseUser1 = save(new_(User.class, "USER1").setBase(true).setActive(true));
-        save(new_(User.class, "USER2").setBase(false).setBasedOnUser(baseUser1).setActive(true));
-        save(new_(User.class, "USER3").setBase(false).setBasedOnUser(baseUser1).setActive(true));
+        final User baseUser1 = save(new_(User.class, "USER1").setBase(true).setEmail("USER1@unit-test.software").setActive(true));
+        save(new_(User.class, "USER2").setBase(false).setBasedOnUser(baseUser1).setEmail("USER2@unit-test.software").setActive(true));
+        save(new_(User.class, "USER3").setBase(false).setBasedOnUser(baseUser1).setEmail("USER3@unit-test.software").setActive(true));
         save(new_(MainMenuItem.class, "ua.com.fielden.platform.domaintree.testing.MiMasterEntityForGlobalDomainTree").setOrder(1));
     }
 }

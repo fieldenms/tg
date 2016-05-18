@@ -223,8 +223,8 @@ public class MenuAndConfigurationTestCase extends AbstractDaoTestCase {
     protected void populateDomain() {
         super.populateDomain();
         
-        final User baseUser = save(new_(User.class, "BUSER").setBase(true).setActive(true)); // base user
-        save(new_(User.class, "DUSER").setBase(false).setBasedOnUser(baseUser).setActive(true)); // descendant user
+        final User baseUser = save(new_(User.class, "BUSER").setBase(true).setEmail("BUSER@unit-test.software").setActive(true)); // base user
+        save(new_(User.class, "DUSER").setBase(false).setBasedOnUser(baseUser).setEmail("DUSER@unit-test.software").setActive(true)); // descendant user
 
         // populate main menu items
         final MainMenuItem root_1 = save(new_(MainMenuItem.class, "type1").setTitle("Root 1").setOrder(1));

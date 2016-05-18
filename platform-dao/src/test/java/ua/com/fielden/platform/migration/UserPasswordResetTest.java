@@ -42,7 +42,7 @@ public class UserPasswordResetTest extends AbstractDaoTestCase {
     protected void populateDomain() {
         super.populateDomain();
         
-        save(new_(User.class, "USER1").setPassword("PASSWORD-1").setActive(true));
-        save(new_(User.class, "USER2").setPassword("PASSWORD-2").setActive(true));
+        save(new_(User.class, "USER1").setPassword("PASSWORD-1").setEmail("USER1@unit-test.software").setActive(true));
+        save(new_(User.class, "USER2").setPassword("PASSWORD-2").setEmail("USER2@unit-test.software").setActive(true));
     }
 }
