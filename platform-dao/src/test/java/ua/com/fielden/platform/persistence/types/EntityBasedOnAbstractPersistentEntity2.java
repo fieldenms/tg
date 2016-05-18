@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.persistence.types;
 
-import ua.com.fielden.platform.dao.EntityBasedOnAbstractPersistentEntityDao;
+import ua.com.fielden.platform.dao.EntityBasedOnAbstractPersistentEntity2Dao;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -15,13 +15,13 @@ import ua.com.fielden.platform.entity.annotation.Observable;
  */
 @KeyType(String.class)
 @MapEntityTo
-@CompanionObject(EntityBasedOnAbstractPersistentEntityDao.class)
-public class EntityBasedOnAbstractPersistentEntity extends AbstractPersistentEntity<String> {
+@CompanionObject(EntityBasedOnAbstractPersistentEntity2Dao.class)
+public class EntityBasedOnAbstractPersistentEntity2 extends AbstractPersistentEntity<String> {
     private static final long serialVersionUID = 1L;
     
     @Override
     @Observable
-    public EntityBasedOnAbstractPersistentEntity setKey(String key) {
+    public EntityBasedOnAbstractPersistentEntity2 setKey(String key) {
         super.setKey(key);
         return this;
     }

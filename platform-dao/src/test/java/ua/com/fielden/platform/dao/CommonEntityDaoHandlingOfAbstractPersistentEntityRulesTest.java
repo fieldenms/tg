@@ -10,7 +10,9 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
+import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity2;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
@@ -102,7 +104,7 @@ public class CommonEntityDaoHandlingOfAbstractPersistentEntityRulesTest extends 
     }
     
     @Test
-    public void saving_a_mix_of_new_and_modified_entities_in_the_same_transcation_binds_them_with_by_the_same_GUID() {
+    public void saving_a_mix_of_new_and_modified_entities_in_the_same_transcation_binds_them_by_the_same_GUID() {
         final List<EntityBasedOnAbstractPersistentEntity> entities = new ArrayList<>();
         entities.add(save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_1")).setKey("VALUE_1_")); // modified
         entities.add(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_2")); // new
@@ -116,12 +118,41 @@ public class CommonEntityDaoHandlingOfAbstractPersistentEntityRulesTest extends 
         
         assertEquals("All three entities are inserted in different transactions.", 
                      3, savedEntities.stream().map(entity -> entity.getCreatedTransactionGuid()).distinct().count());
-        assertEquals("2 out of 3 entities are updated with 2 updated in the same transaction", 
+        assertEquals("2 out of 3 entities are updated in the same transaction, and the remaining 1 is not updated", 
                      2, savedEntities.stream().map(entity -> entity.getLastUpdatedTransactionGuid()).distinct().count());
         
         assertTrue("The insert transaction for the 2nd entity is the same as the update transaction for the 1st and 3rd entity",
                    savedEntities.get(0).getLastUpdatedTransactionGuid().equals(savedEntities.get(1).getCreatedTransactionGuid()) &&
                    savedEntities.get(2).getLastUpdatedTransactionGuid().equals(savedEntities.get(1).getCreatedTransactionGuid()));
+    }
+    
+    @Test
+    public void saving_entities_of_different_types_in_the_same_transaction_binds_them_by_the_same_GUID() {
+        final List<EntityBasedOnAbstractPersistentEntity> entities1 = new ArrayList<>();
+        entities1.add(save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_1")).setKey("VALUE_1_")); // modified
+        entities1.add(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_2")); // new
+
+        final List<EntityBasedOnAbstractPersistentEntity2> entities2 = new ArrayList<>();
+        entities2.add(save(new_(EntityBasedOnAbstractPersistentEntity2.class, "VALUE_1")).setKey("VALUE_1_")); // modified
+        entities2.add(new_(EntityBasedOnAbstractPersistentEntity2.class, "VALUE_2")); // new
+
+        
+        final EntityBasedOnAbstractPersistentEntityDao co = co(EntityBasedOnAbstractPersistentEntity.class);
+        final List<AbstractPersistentEntity<?>> savedEntities = co.nestedSaveWithDifferentCompanion(entities1, entities2);
+        
+        assertEquals("2 out of 4 entities of different types are updated", 
+                     2, savedEntities.stream().filter(entity -> entity.getLastUpdatedTransactionGuid() != null).count());
+        
+        assertEquals("2 entities of different types are inserted in the same transaction, 2 others -- in separate transactions", 
+                     3, savedEntities.stream().map(entity -> entity.getCreatedTransactionGuid()).distinct().count());
+        assertEquals("Only 2 out of 4 entities of different types are updated in the same transaction, the other 2 are inserted", 
+                     2, savedEntities.stream().map(entity -> entity.getLastUpdatedTransactionGuid()).distinct().count());
+        
+        assertTrue("The insert transaction for the 2nd and 4th entity of different types is the same as the update transaction for the 1st and 3rd entity, also of different types.",
+                   savedEntities.get(1/*2nd*/).getCreatedTransactionGuid().equals(savedEntities.get(0/*1st*/).getLastUpdatedTransactionGuid()) &&
+                   savedEntities.get(1/*2nd*/).getCreatedTransactionGuid().equals(savedEntities.get(2/*3rd*/).getLastUpdatedTransactionGuid()) &&
+                   savedEntities.get(3/*4th*/).getCreatedTransactionGuid().equals(savedEntities.get(0/*1st*/).getLastUpdatedTransactionGuid()) &&
+                   savedEntities.get(3/*4th*/).getCreatedTransactionGuid().equals(savedEntities.get(2/*3rd*/).getLastUpdatedTransactionGuid()));
     }
     
     @Override
