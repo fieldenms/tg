@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
  *
  * @param <K>
  */
-public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends AbstractEntity<K> {
+public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends AbstractPersistentEntity<K> {
     private static final long serialVersionUID = 1L;
 
     public static final String ACTIVE = "active";
