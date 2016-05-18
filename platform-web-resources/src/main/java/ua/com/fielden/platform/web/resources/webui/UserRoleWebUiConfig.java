@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
@@ -58,8 +59,9 @@ public class UserRoleWebUiConfig {
                 .addTopAction(UserRoleActions.NEW_ACTION.mkAction()).also()                
                 .addTopAction(UserRoleActions.DELETE_ACTION.mkAction())
                 .addCrit("this").asMulti().autocompleter(UserRole.class).also()
-                .addCrit("desc").asMulti().text()
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
+                .addCrit("desc").asMulti().text().also()
+                .addCrit(ActivatableAbstractEntity.ACTIVE).asMulti().bool()
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['flex'], ['flex'], ['flex']]]")
                 .addProp("this")
                     .order(1).asc()
                     .width(200)
@@ -85,11 +87,14 @@ public class UserRoleWebUiConfig {
                 .also()
                 .addProp("desc").asSinglelineText()
                 .also()
+                .addProp(ActivatableAbstractEntity.ACTIVE).asSinglelineText()
+                .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel changes")
                 .addAction(MasterActions.SAVE).longDesc("Save changes")
 
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
+                        + format("[%s],", fmr)
                         + format("[%s],", fmr)
                         + format("[%s],", fmr)
                         + format(bottomButtonPanel, actionButton, actionButton)
