@@ -28,6 +28,7 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -206,7 +207,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public User findUser(final String username) {
-        return findByKeyAndFetch(fetch(User.class), username);
+        return findByKeyAndFetch(fetch(User.class).with(AbstractPersistentEntity.LAST_UPDATED_BY), username);
     }
     
     @Override

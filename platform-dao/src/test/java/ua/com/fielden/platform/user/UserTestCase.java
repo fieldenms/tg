@@ -21,6 +21,7 @@ import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -228,13 +229,49 @@ public class UserTestCase extends AbstractDaoTestCase {
         }
     }
     
+    @Test
+    public void self_modification_of_user_instance_result_in_correct_assignment_of_the_last_updated_by_group_of_properties() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        up.setUsername(up.getUser().getKey(), co(User.class)); // refresh the user
+
+        final User currUser = up.getUser();
+        assertNotNull(currUser);
+        assertTrue(currUser.isPersisted());
+        assertEquals(2L, currUser.getVersion().longValue());
+        
+        final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        constants.setNow(dateTime("2016-05-16 16:36:57"));
+        
+        // modify and save
+        final String email = "new_email@company.com";
+        final User savedUser = save(currUser.setEmail(email));
+
+        // modification of an email leads to an additional saving of a user instance
+        // this leads to an increase of its version by 2
+        assertEquals(4L, savedUser.getVersion().longValue());
+        
+        // refresh the user instance in the provider
+        up.setUsername(currUser.getKey(), co(User.class));
+        
+        final User user = up.getUser();
+        assertTrue(user.isPersisted());
+        assertEquals(4L, savedUser.getVersion().longValue());
+        assertEquals(email, user.getEmail());
+        
+        assertNotNull(user.getLastUpdatedBy());
+        assertEquals(user, user.getLastUpdatedBy());
+        assertNotNull(user.getLastUpdatedDate());
+        assertEquals(constants.now().toDate(), user.getLastUpdatedDate());
+        assertNotNull(user.getLastUpdatedTransactionGuid());
+    }
+    
     @Override
     protected void populateDomain() {
-        super.populateDomain(); // creates the default current user TEST
+        super.populateDomain();
 
         // add users without email
-        coUser.save(new_(User.class, "USER1").setBase(true));
-        coUser.save(new_(User.class, "USER2").setBase(true));
+        coUser.save(new_(User.class, "USER1").setBase(true).setActive(true));
+        coUser.save(new_(User.class, "USER2").setBase(true).setActive(true));
 
         // add users with email
         coUser.save(new_(User.class, "USER3").setBase(true).setEmail("user3@company.com"));
