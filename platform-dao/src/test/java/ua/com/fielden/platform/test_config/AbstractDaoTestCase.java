@@ -61,7 +61,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         save(new_(TgPerson.class, "Person who is a user").setUser(testUser));
 
         // add a test user role
-        final UserRole admin = save(new_(UserRole.class, UNIT_TEST_ROLE, "Test role with access to all security tokens."));
+        final UserRole admin = save(new_(UserRole.class, UNIT_TEST_ROLE, "Test role with access to all security tokens.").setActive(true));
         // associate the test role with the test user
         save(new_composite(UserAndRoleAssociation.class, testUser, admin));
         

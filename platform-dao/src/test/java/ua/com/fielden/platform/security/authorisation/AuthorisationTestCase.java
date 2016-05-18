@@ -75,7 +75,7 @@ public class AuthorisationTestCase extends AbstractDaoTestCase {
 
         
         // now create a user role
-        final UserRole adminRole = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies."));
+        final UserRole adminRole = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
         // ... and associate it with our user
         final User testUser = co(User.class).findByKey(permissiveUsername);
         save(new_composite(UserAndRoleAssociation.class, testUser, adminRole));
@@ -91,8 +91,4 @@ public class AuthorisationTestCase extends AbstractDaoTestCase {
         save(new_(TgFuelType.class, fuelType, "Unleaded"));
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }
