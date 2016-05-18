@@ -163,6 +163,32 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
 
         final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
+        final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
+        
+        if (resultSetProps.isPresent()) {
+            for (final ResultSetProp property : resultSetProps.get()) {
+                if (property.propName.isPresent()) {
+                } else {
+                    if (property.propDef.isPresent()) { // represents the 'custom' property
+                        final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
+                        enhanceCentreManagerWithCustomProperty(cdtmae, entityType, customPropName, property.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
+                    } else {
+                        throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
+                    }
+                }
+            }
+        }
+        if (summaryExpressions.isPresent()) {
+            for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
+                final String originationProperty = treeName(entry.getKey());
+                for (final SummaryPropDef summaryProp : entry.getValue()) {
+                    cdtmae.getEnhancer().addCalculatedProperty(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, summaryProp.desc, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF"
+                            : originationProperty);
+                }
+            }
+        }
+        cdtmae.getEnhancer().apply();
+        
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp property : resultSetProps.get()) {
                 if (property.propName.isPresent()) {
@@ -172,7 +198,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 } else {
                     if (property.propDef.isPresent()) { // represents the 'custom' property
                         final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
-                        enhanceCentreManagerWithCustomProperty(cdtmae, entityType, customPropName, property.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
                         final String propertyName = treeName(customPropName);
                         cdtmae.getSecondTick().check(entityType, propertyName, true);
                         cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
@@ -185,15 +210,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
-
-        final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
         if (summaryExpressions.isPresent()) {
             for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
-                final String originationProperty = treeName(entry.getKey());
                 for (final SummaryPropDef summaryProp : entry.getValue()) {
-                    cdtmae.getEnhancer().addCalculatedProperty(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, summaryProp.desc, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF"
-                            : originationProperty);
-                    cdtmae.getEnhancer().apply();
                     cdtmae.getSecondTick().check(entityType, summaryProp.alias, true);
                 }
             }
@@ -1047,7 +1066,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      */
     private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> resultSetCustomPropAssignmentHandlerType) {
         centre.getEnhancer().addCustomProperty(root, "" /* this is the contextPath */, propName, propDef.title, propDef.desc, propDef.type);
-        centre.getEnhancer().apply();
     }
 
     /**
