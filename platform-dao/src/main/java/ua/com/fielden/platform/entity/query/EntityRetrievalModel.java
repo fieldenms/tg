@@ -4,6 +4,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_DATE;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
@@ -11,10 +14,10 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 
 import java.util.Collection;
 import java.util.Map.Entry;
@@ -25,6 +28,7 @@ import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 
 public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractRetrievalModel<T> implements IRetrievalModel<T> {
@@ -129,6 +133,15 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
                 with(ppi.getName(), skipEntities);
             }
         }
+        includeLastUpdatedByGroupOfProperties();        
+    }
+
+    void includeLastUpdatedByGroupOfProperties() {
+        if (AbstractPersistentEntity.class.isAssignableFrom(getEntityType())) {
+            with(LAST_UPDATED_BY, true);
+            with(LAST_UPDATED_DATE, true);
+            with(LAST_UPDATED_TRANSACTION_GUID, true);
+        }
     }
 
     private void includeKeyAndDescOnly() {
@@ -178,6 +191,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
             with(ACTIVE, true);
             with(REF_COUNT, true);
         }
+        includeLastUpdatedByGroupOfProperties();
     }
 
     private void with(final String propName, final boolean skipEntities) {

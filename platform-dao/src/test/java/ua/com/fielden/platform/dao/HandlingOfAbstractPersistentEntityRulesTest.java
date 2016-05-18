@@ -1,9 +1,19 @@
 package ua.com.fielden.platform.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.CREATED_BY;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +21,12 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity2;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -25,7 +41,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @author TG Team
  *
  */
-public class CommonEntityDaoHandlingOfAbstractPersistentEntityRulesTest extends AbstractDaoTestCase {
+public class HandlingOfAbstractPersistentEntityRulesTest extends AbstractDaoTestCase {
 
     @Test
     public void saving_new_entity_assigns_created_by_group_of_properties() {
@@ -152,6 +168,93 @@ public class CommonEntityDaoHandlingOfAbstractPersistentEntityRulesTest extends 
                 savedEntities.get(1/*2nd*/).getCreatedTransactionGuid().equals(savedEntities.get(2/*3rd*/).getLastUpdatedTransactionGuid()) &&
                 savedEntities.get(3/*4th*/).getCreatedTransactionGuid().equals(savedEntities.get(0/*1st*/).getLastUpdatedTransactionGuid()) &&
                 savedEntities.get(3/*4th*/).getCreatedTransactionGuid().equals(savedEntities.get(2/*3rd*/).getLastUpdatedTransactionGuid()));
+    }
+
+    @Test
+    public void saving_modified_entity_retrieved_with_fetchOnly_model_assigns_last_modified_group_of_properties() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        constants.setNow(dateTime("2016-05-16 16:36:57"));
+
+        final Long id = save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_1")).getId();
+
+        // move to the future and change the current user
+        constants.setNow(dateTime("2016-05-17 13:36:57"));
+        final User currentUser = up.getUser();
+        up.setUser(co(User.class).findByKey("USER_1"));
+
+        // perform entity fetching by excluding the last updated by group of properties, modify and save such entity
+        // successful assertion ensures correct assignment of the last updated by group of properties even though those properties are excluded from fetch
+        try {
+            final fetch<EntityBasedOnAbstractPersistentEntity> limitedFetch = fetchOnly(EntityBasedOnAbstractPersistentEntity.class).with("key");
+            
+            final EntityBasedOnAbstractPersistentEntity savedEntity = save(co(EntityBasedOnAbstractPersistentEntity.class).findById(id, limitedFetch).setKey("VALUE_1_"));
+            assertEquals("VALUE_1_", savedEntity.getKey());
+            
+            try {
+                savedEntity.getCreatedBy();
+                fail("Accessing non-fetched createdBy propery should have been restricted.");
+            } catch (final StrictProxyException ex) {
+            }
+            
+            try {
+                savedEntity.getCreatedDate();
+                fail("Accessing non-fetched createdDate propery should have been restricted.");
+            } catch (final StrictProxyException ex) {
+            }
+            try {
+                savedEntity.getCreatedTransactionGuid();
+                fail("Accessing non-fetched createdTransactionGuid propery should have been restricted.");
+            } catch (final StrictProxyException ex) {
+            }
+
+            assertNotNull(savedEntity.getLastUpdatedBy());
+            assertEquals(up.getUser(), savedEntity.getLastUpdatedBy());
+            
+            assertNotNull(savedEntity.getLastUpdatedDate());
+            assertEquals(constants.now().toDate(), savedEntity.getLastUpdatedDate());
+            assertNotNull(savedEntity.getLastUpdatedTransactionGuid());
+        } finally {
+            up.setUser(currentUser);
+        }
+
+    }
+    
+    @Test
+    public void saving_modified_entity_retrieved_with_ordinary_fetch_model_assigns_last_modified_group_of_properties() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        constants.setNow(dateTime("2016-05-16 16:36:57"));
+
+        final Long id = save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_1")).getId();
+
+        // move to the future and change the current user
+        constants.setNow(dateTime("2016-05-17 13:36:57"));
+        final User currentUser = up.getUser();
+        up.setUser(co(User.class).findByKey("USER_1"));
+
+        // perform entity fetching by excluding the last updated by group of properties, modify and save such entity
+        // successful assertion ensures correct assignment of the last updated by group of properties even though those properties are excluded from fetch
+        try {
+            final fetch<EntityBasedOnAbstractPersistentEntity> limitedFetch = fetch(EntityBasedOnAbstractPersistentEntity.class);
+            
+            final EntityBasedOnAbstractPersistentEntity savedEntity = save(co(EntityBasedOnAbstractPersistentEntity.class).findById(id, limitedFetch).setKey("VALUE_1_"));
+            assertEquals("VALUE_1_", savedEntity.getKey());
+            
+            assertNotNull(savedEntity.getCreatedBy());
+            assertNotNull(savedEntity.getCreatedDate());
+            assertNotNull(savedEntity.getCreatedTransactionGuid());
+
+            assertNotNull(savedEntity.getLastUpdatedBy());
+            assertEquals(up.getUser(), savedEntity.getLastUpdatedBy());
+            
+            assertNotNull(savedEntity.getLastUpdatedDate());
+            assertEquals(constants.now().toDate(), savedEntity.getLastUpdatedDate());
+            assertNotNull(savedEntity.getLastUpdatedTransactionGuid());
+        } finally {
+            up.setUser(currentUser);
+        }
+
     }
 
     @Override
