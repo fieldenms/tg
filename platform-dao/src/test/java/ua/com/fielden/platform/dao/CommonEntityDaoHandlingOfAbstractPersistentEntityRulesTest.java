@@ -3,6 +3,7 @@ package ua.com.fielden.platform.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,7 +92,7 @@ public class CommonEntityDaoHandlingOfAbstractPersistentEntityRulesTest extends 
         entities.add(save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_3")).setKey("VALUE_3_"));
         
         final EntityBasedOnAbstractPersistentEntityDao co = co(EntityBasedOnAbstractPersistentEntity.class);
-        List<EntityBasedOnAbstractPersistentEntity> savedEntities = co.saveInSingleTransaction(entities);
+        final List<EntityBasedOnAbstractPersistentEntity> savedEntities = co.saveInSingleTransaction(entities);
         
         assertEquals(3, savedEntities.stream().filter(entity -> entity.getCreatedTransactionGuid() != null).count());
         assertEquals(3, savedEntities.stream().filter(entity -> entity.getLastUpdatedTransactionGuid() != null).count());
@@ -99,7 +100,29 @@ public class CommonEntityDaoHandlingOfAbstractPersistentEntityRulesTest extends 
         assertEquals(3, savedEntities.stream().map(entity -> entity.getCreatedTransactionGuid()).distinct().count());
         assertEquals(1, savedEntities.stream().map(entity -> entity.getLastUpdatedTransactionGuid()).distinct().count());
     }
-
+    
+    @Test
+    public void saving_a_mix_of_new_and_modified_entities_in_the_same_transcation_binds_them_with_by_the_same_GUID() {
+        final List<EntityBasedOnAbstractPersistentEntity> entities = new ArrayList<>();
+        entities.add(save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_1")).setKey("VALUE_1_")); // modified
+        entities.add(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_2")); // new
+        entities.add(save(new_(EntityBasedOnAbstractPersistentEntity.class, "VALUE_3")).setKey("VALUE_3_")); // modified
+        
+        final EntityBasedOnAbstractPersistentEntityDao co = co(EntityBasedOnAbstractPersistentEntity.class);
+        final List<EntityBasedOnAbstractPersistentEntity> savedEntities = co.saveInSingleTransaction(entities);
+        
+        assertEquals("2 out of 3 entities are updated", 
+                     2, savedEntities.stream().filter(entity -> entity.getLastUpdatedTransactionGuid() != null).count());
+        
+        assertEquals("All three entities are inserted in different transactions.", 
+                     3, savedEntities.stream().map(entity -> entity.getCreatedTransactionGuid()).distinct().count());
+        assertEquals("2 out of 3 entities are updated with 2 updated in the same transaction", 
+                     2, savedEntities.stream().map(entity -> entity.getLastUpdatedTransactionGuid()).distinct().count());
+        
+        assertTrue("The insert transaction for the 2nd entity is the same as the update transaction for the 1st and 3rd entity",
+                   savedEntities.get(0).getLastUpdatedTransactionGuid().equals(savedEntities.get(1).getCreatedTransactionGuid()) &&
+                   savedEntities.get(2).getLastUpdatedTransactionGuid().equals(savedEntities.get(1).getCreatedTransactionGuid()));
+    }
     
     @Override
     protected void populateDomain() {

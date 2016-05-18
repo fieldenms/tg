@@ -44,9 +44,9 @@ public class SessionInterceptor implements MethodInterceptor {
 
     @Override
     public Object invoke(final MethodInvocation invocation) throws Throwable {
-        final ISessionEnabled dao = (ISessionEnabled) invocation.getThis();
+        final ISessionEnabled invocationOwner = (ISessionEnabled) invocation.getThis();
         final Session session = sessionFactory.getCurrentSession();
-        dao.setSession(session);
+        invocationOwner.setSession(session);
         final Transaction tr = session.getTransaction();
         /*
          * this variable indicates whether transaction should be handled in this method;
@@ -62,7 +62,7 @@ public class SessionInterceptor implements MethodInterceptor {
             logger.debug("Started new DB transaction");
             
             // generate a GUID for the current transaction
-            dao.setTransactionGuid(randomUUID().toString());
+            invocationOwner.setTransactionGuid(randomUUID().toString());
         }
         try {
             final Object result = invocation.proceed(); // this invocation could also be captured by SessionInterceptor
