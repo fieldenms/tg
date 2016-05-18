@@ -686,9 +686,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
     
     private void assignLastModificationInfo(final AbstractPersistentEntity<?> entity) {
-        entity.set(AbstractPersistentEntity.LAST_UPDATED_BY, getUser());
-        entity.set(AbstractPersistentEntity.LAST_UPDATED_DATE, universalConstants.now().toDate());
-        entity.set(AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID, getTransactionGuid());
+        // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes
+        // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
+        // thus, a check for VIRTUAL_USER as a current user 
+        if (!User.system_users.VIRTUAL_USER.name().equals(getUser().getKey())) {
+            entity.set(AbstractPersistentEntity.LAST_UPDATED_BY, getUser());
+            entity.set(AbstractPersistentEntity.LAST_UPDATED_DATE, universalConstants.now().toDate());
+            entity.set(AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID, getTransactionGuid());
+        }
     }
     
     /**

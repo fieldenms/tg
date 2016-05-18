@@ -19,12 +19,15 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.Unique;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
+import ua.com.fielden.platform.entity.validation.ActivePropertyValidator;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
+import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
 
 /**
  * Represents the system-wide concept of a user. So, this is a system user, which should be used by system security as well as for implementing any specific customer personnel
@@ -39,6 +42,8 @@ import ua.com.fielden.platform.property.validator.StringValidator;
 public class User extends ActivatableAbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
+    public static final String EMAIL = "email";
+    
     /**
      * This is an enumeration for listing all system in-built accounts.
      */
@@ -117,11 +122,23 @@ public class User extends ActivatableAbstractEntity<String> {
     @Title(value = "Salt", desc = "Random password hashing salt to protect agains the rainbow table attack.")
     private String salt;
 
+    @IsProperty
+    @MapTo("ACTIVE_FLAG_")
+    @Title(value = "Active?", desc = "Designates whether an entity instance is active or not.")
+    @BeforeChange(@Handler(ActivePropertyValidator.class))
+    @AfterChange(UserActivationDefiner.class)
+    private boolean active;
+
     @Override
     @Observable
     public User setActive(boolean active) {
-        super.setActive(active);
+        this.active = active;
         return this;
+    }
+    
+    @Override
+    public boolean isActive() {
+        return active;
     }
     
     @Observable

@@ -237,7 +237,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         final User currUser = up.getUser();
         assertNotNull(currUser);
         assertTrue(currUser.isPersisted());
-        assertEquals(2L, currUser.getVersion().longValue());
+        assertEquals(5L, currUser.getVersion().longValue());
         
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2016-05-16 16:36:57"));
@@ -245,17 +245,14 @@ public class UserTestCase extends AbstractDaoTestCase {
         // modify and save
         final String email = "new_email@company.com";
         final User savedUser = save(currUser.setEmail(email));
-
-        // modification of an email leads to an additional saving of a user instance
-        // this leads to an increase of its version by 2
-        assertEquals(4L, savedUser.getVersion().longValue());
+        assertEquals(6L, savedUser.getVersion().longValue());
         
         // refresh the user instance in the provider
         up.setUsername(currUser.getKey(), co(User.class));
         
         final User user = up.getUser();
         assertTrue(user.isPersisted());
-        assertEquals(4L, savedUser.getVersion().longValue());
+        assertEquals(6L, savedUser.getVersion().longValue());
         assertEquals(email, user.getEmail());
         
         assertNotNull(user.getLastUpdatedBy());
@@ -270,12 +267,12 @@ public class UserTestCase extends AbstractDaoTestCase {
         super.populateDomain();
 
         // add users without email
-        coUser.save(new_(User.class, "USER1").setBase(true).setActive(true));
-        coUser.save(new_(User.class, "USER2").setBase(true).setActive(true));
+        coUser.save(new_(User.class, "USER1").setBase(true).setEmail("USER1@unit-test.software").setActive(true));
+        coUser.save(new_(User.class, "USER2").setBase(true).setEmail("USER2@unit-test.software").setActive(true));
 
         // add users with email
-        coUser.save(new_(User.class, "USER3").setBase(true).setEmail("user3@company.com"));
-        coUser.save(new_(User.class, "USER4").setBase(true).setEmail("user4@company.com"));
+        coUser.save(new_(User.class, "USER3").setBase(true).setEmail("USER3@company.com"));
+        coUser.save(new_(User.class, "USER4").setBase(true).setEmail("USER4@company.com"));
     }
 
 }
