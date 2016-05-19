@@ -291,6 +291,18 @@
             getSelectedPage: function () {
                 return this._selectedPage;
             },
+            
+            canLeave: function () {
+                var items = this.querySelectorAll("tg-menu-item-view"),
+                    canLeaveResult,
+                    itemIndex;
+                for (itemIndex = 0; itemIndex < items.length; itemIndex++) {
+                    canLeaveResult = items[itemIndex].canLeave();
+                    if (canLeaveResult) {
+                        return canLeaveResult;
+                    }
+                }
+            },
 
             _menuItemsRendered: function () {
                 this._menuItemsLoaded = true;

@@ -43,6 +43,9 @@
             behaviors: [Polymer.TgBehaviors.TgSelectionCriteriaBehavior],
 
             ready: function () {
+                var self = this;
+                self.classList.add("canLeave");
+                
                 // LAYOUT CONFIG (GENERATED)
                 //@layoutConfig
             },
@@ -209,6 +212,8 @@
 
             ready: function () {
                 var self = this;
+                self.classList.add("canLeave");
+                
                 console.timeEnd("created-to-ready");
                 console.warn("tg-@mi_type-centre: ready");
                 console.time("ready-to-attached");
