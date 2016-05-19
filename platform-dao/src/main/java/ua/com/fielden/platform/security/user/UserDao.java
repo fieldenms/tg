@@ -295,8 +295,13 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public Optional<User> assignPasswordResetUuid(final String usernameOrEmail) {
         // let's try to find a user by username or email
         final EntityResultQueryModel<User> query = select(User.class)
-                .where().lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail)
-                .or().lowerCase().prop(EMAIL).eq().lowerCase().val(usernameOrEmail).model();
+                .where()
+                .prop(ACTIVE).eq().val(true)
+                .and()
+                .begin()
+                    .lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail)
+                    .or().lowerCase().prop(EMAIL).eq().lowerCase().val(usernameOrEmail)
+                .end().model();
         
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
 
