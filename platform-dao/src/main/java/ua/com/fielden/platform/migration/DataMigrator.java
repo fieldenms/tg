@@ -29,7 +29,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.migration.RetrieverPropsValidator.RetrievedPropValidationError;
 import ua.com.fielden.platform.persistence.HibernateUtil;
-import ua.com.fielden.platform.security.user.User;
 
 public class DataMigrator {
     private final Logger logger = Logger.getLogger(this.getClass());
@@ -280,7 +279,6 @@ public class DataMigrator {
             throws Exception {
         final RetrieverSqlProducer rsp = new RetrieverSqlProducer(dma);
         Integer id = startingId;
-        final Map<Object, Integer> userTypeCache = cache.getCacheForType(User.class);
         final Statement legacyStmt = legacyConn.createStatement();
 
         for (final IRetriever<? extends AbstractEntity<?>> retriever : retrievers) {
@@ -289,7 +287,7 @@ public class DataMigrator {
             if (retriever.isUpdater()) {
                 performBatchUpdates(new RetrieverBatchUpdateStmtGenerator(dma, retriever), legacyRs);
             } else {
-                id = performBatchInserts(new RetrieverBatchInsertStmtGenerator(dma, retriever), legacyRs, id, userTypeCache);
+                id = performBatchInserts(new RetrieverBatchInsertStmtGenerator(dma, retriever), legacyRs, id);
             }
 
             legacyRs.close();
@@ -345,7 +343,7 @@ public class DataMigrator {
 
     }
 
-    private Integer performBatchInserts(final RetrieverBatchInsertStmtGenerator rbsg, final ResultSet legacyRs, final int startingId, final Map<Object, Integer> userTypeCache)
+    private Integer performBatchInserts(final RetrieverBatchInsertStmtGenerator rbsg, final ResultSet legacyRs, final int startingId)
             throws Exception {
         final String insertSql = rbsg.getInsertStmt();
         final List<Integer> indexFields = rbsg.produceKeyFieldsIndices();
@@ -367,9 +365,7 @@ public class DataMigrator {
                 keyValue.add(legacyRs.getObject(keyIndex.intValue()));
             }
             typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
-            if (rbsg.getRetriever().type().equals(User.class)) {
-                userTypeCache.put(legacyRs.getObject("key"), id);
-            }
+
             int index = 1;
             final List<Object> currTransformedValues = rbsg.transformValuesForInsert(legacyRs, cache, id);
             batchValues.add(currTransformedValues);
