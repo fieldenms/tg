@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.google.inject.Injector;
+import com.google.inject.Scopes;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
@@ -12,6 +13,8 @@ import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
+import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.ioc.IBasicWebApplicationServerModule;
 
 /**
@@ -43,6 +46,7 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
 
     @Override
     protected void configure() {
+        bind(ISerialisationTypeEncoder.class).to(SerialisationTypeEncoder.class).in(Scopes.SINGLETON); //
         super.configure();
         bindWebAppResources(new WebUiConfig(domainName, port, workflow, path));
     }
