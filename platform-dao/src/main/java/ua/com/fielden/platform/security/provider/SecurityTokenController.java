@@ -10,7 +10,7 @@ import org.hibernate.Session;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -28,7 +28,7 @@ import ua.com.fielden.platform.security.user.UserRole;
  */
 public class SecurityTokenController implements ISecurityTokenController, ISessionEnabled {
 
-    private final ISecurityRoleAssociationDao securityAssociationDao;
+    private final ISecurityRoleAssociation securityAssociationDao;
 
     private final IUserRoleDao roleDao;
 
@@ -45,7 +45,7 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
      * Creates new instance of SecurityTokenController with twelve user roles and security tokens
      */
     @Inject
-    public SecurityTokenController(final ISecurityRoleAssociationDao securityAssociationDao, final IUserRoleDao roleDao) {
+    public SecurityTokenController(final ISecurityRoleAssociation securityAssociationDao, final IUserRoleDao roleDao) {
         this.securityAssociationDao = securityAssociationDao;
         this.roleDao = roleDao;
     }
@@ -80,7 +80,7 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
         return roleDao;
     }
 
-    public ISecurityRoleAssociationDao getSecurityAssociationDao() {
+    public ISecurityRoleAssociation getSecurityAssociationDao() {
         return securityAssociationDao;
     }
 
@@ -90,7 +90,7 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
             return true;
         }
 
-        return securityAssociationDao.countAssociations(user, securityTokenClass) > 0;
+        return securityAssociationDao.countActiveAssociations(user, securityTokenClass) > 0;
     }
 
     @Override

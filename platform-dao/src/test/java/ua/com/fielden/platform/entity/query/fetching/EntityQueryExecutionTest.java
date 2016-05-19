@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -116,7 +116,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     private final IUserAndRoleAssociation userAndRoleAssociationDao = getInstance(IUserAndRoleAssociation.class);
     private final IEntityAggregatesDao aggregateDao = getInstance(IEntityAggregatesDao.class);
     private final EntityWithMoneyDao entityWithMoneyDao = getInstance(EntityWithMoneyDao.class);
-    private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
+    private final ISecurityRoleAssociation secRolAssociationDao = getInstance(ISecurityRoleAssociation.class);
     private final ITgMakeCount makeCountDao = getInstance(ITgMakeCount.class);
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);

@@ -33,7 +33,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 public class UserUserRoleTestCase extends AbstractDaoTestCase {
     private final IUserRoleDao coUserRole = getInstance(IUserRoleDao.class);
     private final IUserAndRoleAssociation coUserAndRoleAssociation = getInstance(IUserAndRoleAssociation.class);
-    private final ISecurityRoleAssociationDao coSecurityRoleAssociation = getInstance(ISecurityRoleAssociationDao.class);
+    private final ISecurityRoleAssociation coSecurityRoleAssociation = getInstance(ISecurityRoleAssociation.class);
     private final IUser coUser = getInstance(IUser.class);
 
     @Test
@@ -179,9 +179,9 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     @Test
     public void test_count_association_between_user_and_token() {
         final IUser coUser = co(User.class);
-        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), FirstLevelSecurityToken1.class));
-        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken1.class));
-        assertEquals("Incorrect number of associations between user and token.", 0, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken2.class));
+        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), FirstLevelSecurityToken1.class));
+        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken1.class));
+        assertEquals("Incorrect number of associations between user and token.", 0, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken2.class));
     }
 
     @Override

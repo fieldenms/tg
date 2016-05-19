@@ -5,7 +5,7 @@ import java.util.Set;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.mixin.SecurityRoleAssociationBatchActionMixin;
@@ -22,10 +22,10 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
 public class SecurityRoleAssociationBatchActionDao extends CommonEntityDao<SecurityRoleAssociationBatchAction> implements ISecurityRoleAssociationBatchAction {
 
     private final SecurityRoleAssociationBatchActionMixin mixin;
-    private final ISecurityRoleAssociationDao associationDao;
+    private final ISecurityRoleAssociation associationDao;
 
     @Inject
-    public SecurityRoleAssociationBatchActionDao(final ISecurityRoleAssociationDao associationDao, final IFilter filter) {
+    public SecurityRoleAssociationBatchActionDao(final ISecurityRoleAssociation associationDao, final IFilter filter) {
         super(filter);
 
         mixin = new SecurityRoleAssociationBatchActionMixin(this);
