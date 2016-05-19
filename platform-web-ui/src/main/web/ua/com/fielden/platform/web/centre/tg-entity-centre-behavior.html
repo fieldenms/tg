@@ -789,15 +789,27 @@
              * Contract that allows one to determines whether this component can be closed/left or not.
              */
             canLeave: function () {
-                // check all the child nodes with canLeave contract if they can be left...
-                var nodesWithCanLeave = this.querySelectorAll('.canLeave');
-                for (var index = 0; index < nodesWithCanLeave.length; index++) {
-                    var reason = nodesWithCanLeave[index].canLeave();
-                    if (reason !== undefined) {
-                        return reason;
+                // Check whether selection criteria can be left.
+                var canLeaveThisCentre = this.$.selection_criteria.classList.contains('canLeave') && this.$.selection_criteria.canLeave(),
+                    insertionPoints,
+                    insPoIndex,
+                    elementWithCanLeave,
+                    canLeaveChild;
+                if (canLeaveThisCentre) {
+                    return canLeaveThisCentre;
+                }
+                // Check whether all insertion points can be left.
+                insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');
+                for (insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
+                    elementWithCanLeave = insertionPoints[insPoIndex].querySelector('.canLeave');
+                    canLeaveChild = elementWithCanLeave && elementWithCanLeave.canLeave();
+                    if (canLeaveChild) {
+                        return canLeaveChild;
                     }
                 }
             },
+
+
 
             /**
              * Computes URL for 'ajaxSaver' and 'ajaxDiscarder'.

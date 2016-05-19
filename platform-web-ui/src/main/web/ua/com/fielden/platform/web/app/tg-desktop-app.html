@@ -106,16 +106,18 @@
             },
 
             _checkWeatherCanLeave: function (e) {
-                var modules = this.querySelectorAll("tg-app-view"), 
-                    masters = document.body.querySelectorAll("tg-custom-action-dialog .canLeave"),
+                var modules = this.querySelectorAll("tg-app-view"),
+                    customDialogs = document.body.querySelectorAll("tg-custom-action-dialog"),
+                    master,
                     itemIndex;
                 for (itemIndex = 0; itemIndex < modules.length; itemIndex++) {
                     if (typeof modules[itemIndex].canLeave === 'function' && modules[itemIndex].canLeave()) {
                         e.returnValue = "There are some unsaved entity centres.";
                     }
                 }
-                for (itemIndex = 0; itemIndex < masters.length; itemIndex++) {
-                    if (typeof masters[itemIndex].canLeave === 'function' && masters[itemIndex].canLeave()) {
+                for (itemIndex = 0; itemIndex < customDialogs.length; itemIndex++) {
+                    master = customDialogs[itemIndex].querySelector(".canLeave");
+                    if (master && typeof master.canLeave === 'function' && master.canLeave()) {
                         e.returnValue = "There are some unsaved entity masters.";
                     }
                 }
