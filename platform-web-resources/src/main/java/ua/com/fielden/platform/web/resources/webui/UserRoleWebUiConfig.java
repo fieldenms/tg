@@ -79,15 +79,15 @@ public class UserRoleWebUiConfig {
      * @return
      */
     private static EntityMaster<UserRole> createMaster(final Injector injector) {
-        final String fmr = "'flex'";
+        final String fmr = "'flex', 'width: 300px'";
 
         final IMaster<UserRole> masterConfigForUserRole = new SimpleMasterBuilder<UserRole>()
                 .forEntity(UserRole.class)
                 .addProp("key").asSinglelineText()
                 .also()
-                .addProp("desc").asSinglelineText()
+                .addProp("desc").asMultilineText()
                 .also()
-                .addProp(ActivatableAbstractEntity.ACTIVE).asSinglelineText()
+                .addProp(ActivatableAbstractEntity.ACTIVE).asCheckbox()
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel changes")
                 .addAction(MasterActions.SAVE).longDesc("Save changes")
