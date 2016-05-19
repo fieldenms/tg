@@ -46,8 +46,8 @@ public class ArrayListJsonDeserialiser extends StdDeserializer<ArrayList> {
             if (el.isNull()) {
                 list.add(null);
             } else if (el.isObject() && (el.get("@id_ref") != null || el.get("@id") != null)) {
-                final String typeNumber = el.get("@id_ref") != null ? el.get("@id_ref").asText().substring(0, el.get("@id_ref").asText().indexOf("#")) : el.get("@id").asText().substring(0, el.get("@id").asText().indexOf("#"));
-                final EntityType instanceTypeInfo = entityTypeInfoGetter.get(Long.parseLong(typeNumber));
+                final String typeName = el.get("@id_ref") != null ? el.get("@id_ref").asText().substring(0, el.get("@id_ref").asText().indexOf("#")) : el.get("@id").asText().substring(0, el.get("@id").asText().indexOf("#"));
+                final EntityType instanceTypeInfo = entityTypeInfoGetter.get(typeName);
                 if (instanceTypeInfo == null) {
                     throw new RefreshApplicationException();
                 }

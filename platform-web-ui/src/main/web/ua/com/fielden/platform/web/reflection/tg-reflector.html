@@ -446,14 +446,6 @@
         EntityType.prototype.constructor = EntityType;
 
         /**
-         * Returns the number for the entity type inside the type table.
-         *
-         */
-        EntityType.prototype.number = function () {
-            return this._number;
-        }
-
-        /**
          * Returns full Java class name for the entity type.
          *
          */
@@ -797,8 +789,8 @@
             return uuid;
         },
 
-        getType: function (number) {
-            return _typeTable[number];
+        getType: function (typeName) {
+            return _typeTable[typeName];
         },
 
         /**
@@ -807,8 +799,8 @@
         registerEntityType: function (newType) {
         	var EntityType = this._getEntityTypePrototype();
             var registeredType = new EntityType(newType);
-            _typeTable[newType['_number']] = registeredType;
-            console.log("Registering new type with number ", newType['_number'], registeredType);
+            _typeTable[registeredType.fullClassName()] = registeredType;
+            console.log("Registering new type with name ", registeredType.fullClassName(), registeredType);
             return registeredType;
         },
 
@@ -816,15 +808,8 @@
          * Finds the entity type by its full class name. Returns 'null' if no registered entity type for such 'typeName' exists.
          */
         findTypeByName: function (typeName) {
-            for (var key in _typeTable) {
-                if (_typeTable.hasOwnProperty(key)) {
-                    var entityType = _typeTable[key];
-                    if (entityType.fullClassName() === typeName) {
-                        return entityType;
-                    }
-                }
-            }
-            return null;
+            var type = _typeTable[typeName];
+            return type ? type : null;
         },
 
         /**

@@ -166,12 +166,12 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         return entityTypeInfo;
     }
 
-    public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references, final Long typeNumber) {
-        return typeId(typeNumber) + "#" + newIdWithinTheType(entity, references);
+    public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references, final String typeName) {
+        return typeId(typeName) + "#" + newIdWithinTheType(entity, references);
     }
 
-    public static <M extends AbstractEntity<?>> String typeId(final Long typeNumber) {
-        return typeNumber.toString();
+    public static <M extends AbstractEntity<?>> String typeId(final String typeName) {
+        return typeName;
     }
 
     private static <M extends AbstractEntity<?>> String newIdWithinTheType(final M entity, final References references) {

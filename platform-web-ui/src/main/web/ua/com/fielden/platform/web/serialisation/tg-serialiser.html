@@ -21,14 +21,14 @@
             serialise: function (envelope) {
                 var entitiesByType = {}, // represents the array of serialised entities of concrete type (firstly serialised entities in the head of list)
                     getId = function(entity) {
-                        var array = entitiesByType[entity.type().number()];
+                        var array = entitiesByType[entity.type().fullClassName()];
                         return array ? array.indexOf(entity) : -1;
                     },
                     putId = function(entity) {
-                        var array = entitiesByType[entity.type().number()];
+                        var array = entitiesByType[entity.type().fullClassName()];
                         if (!array) {
                             array = [];
-                            entitiesByType[entity.type().number()] = array;
+                            entitiesByType[entity.type().fullClassName()] = array;
                         }
                         array.push(entity);
                         return array.length - 1;
@@ -52,13 +52,13 @@
                                 // Find the index of the obj in 'array of serialised objects'. If the index equals -1 -- the object was not serialised yet
                                 index = getId(obj);
                                 if (index >= 0) {
-                                    serialisedObj["@id_ref"] = obj.type().number() + "#" + (index + 1); // use the current number
+                                    serialisedObj["@id_ref"] = obj.type().fullClassName() + "#" + (index + 1); // use the current number
                                     return serialisedObj;
                                 } else {                                        
                                     // If obj wasn't found in object map then
                                     // create object and add property "@id" to that object, also add created object to object map with key "@id".
                                     // That object map contains entity references in order to use it later for initialising cross referenced objects. 
-                                    serialisedObj["@id"] = obj.type().number() + "#" + (putId(obj) + 1); 
+                                    serialisedObj["@id"] = obj.type().fullClassName() + "#" + (putId(obj) + 1); 
                                 }
                             }
                             // All object properties will be copied to new object. Just skip "_type" property.
@@ -131,14 +131,14 @@
                                 return objectMap[obj["@id_ref"]];
                             } else if (obj.hasOwnProperty("@id")) {
                                 // If it is an object with "@id" property then create new object with "_id" and "_type" properties and add to the object map.
-                                var typeIndex = obj["@id"].split("#")[0];
+                                var typeName = obj["@id"].split("#")[0];
 
                                 deserialisedObject = self.$.reflector.newEntityEmpty();
                                 // deserialisedObject = {};
 
-                                var foundType = self.$.reflector.getType(typeIndex);
+                                var foundType = self.$.reflector.getType(typeName);
                                 if (!foundType) {
-                                    throw "Can not find the type with number [" + typeIndex + "]";
+                                    throw "Can not find the type with name [" + typeName + "]";
                                 }
                                 deserialisedObject["_type"] = foundType;
                                 objectMap[obj["@id"]] = deserialisedObject;

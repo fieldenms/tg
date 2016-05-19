@@ -106,7 +106,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             }
             entity.beginInitialising();
 
-            final String newServerSideReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_number());
+            final String newServerSideReference = EntitySerialiser.newSerialisationId(entity, references, entityType.getKey());
             
             final JsonNode atIdNode = node.get("@id");
             final String clientSideReference = atIdNode == null ? null : atIdNode.asText();

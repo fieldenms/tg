@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -19,12 +18,12 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
@@ -171,8 +170,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
             final JsonNode idNode = idNodeSupplier.get();
             if (idNode != null && !idNode.isNull()) {
                 final String typeNumberStr = idNode.asText().split("#")[0];
-                final Long typeNumber = Long.valueOf(typeNumberStr);
-                final String concreteTypeName = entityTypeInfoGetter.get(typeNumber).getKey();
+                final String concreteTypeName = entityTypeInfoGetter.get(typeNumberStr).getKey();
                 concreteType = typeFactory.constructType(ClassesRetriever.findClass(concreteTypeName));
             } else {
                 concreteType = (JavaType) type;
@@ -233,7 +231,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         }
     }
 
-    public LinkedHashMap<Long, EntityType> getTypeTable() {
+    public LinkedHashMap<String, EntityType> getTypeTable() {
         return entityTypeInfoGetter.getTypeTable();
     }
 }

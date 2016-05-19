@@ -46,8 +46,8 @@ public class ArraysArrayListJsonDeserialiser extends StdDeserializer<List> {
             if (el.isNull()) {
                 list.add(null);
             } else if (el.isObject() && (el.get("@id_ref") != null || el.get("@id") != null)) {
-                final String typeNumber = el.get("@id_ref") != null ? el.get("@id_ref").asText().substring(0, el.get("@id_ref").asText().indexOf("#")) : el.get("@id").asText().substring(0, el.get("@id").asText().indexOf("#"));
-                final Class<?> instanceType = ClassesRetriever.findClass(entityTypeInfoGetter.get(Long.parseLong(typeNumber)).getKey());
+                final String typeName = el.get("@id_ref") != null ? el.get("@id_ref").asText().substring(0, el.get("@id_ref").asText().indexOf("#")) : el.get("@id").asText().substring(0, el.get("@id").asText().indexOf("#"));
+                final Class<?> instanceType = ClassesRetriever.findClass(entityTypeInfoGetter.get(typeName).getKey());
                 list.add(mapper.readValue(el.traverse(mapper), instanceType));
             } else {
                 throw new UnsupportedOperationException("ListJsonDeserialiser does not support node [" + el + "] with type [" + el.getNodeType() + "] at this stage."); // not supported

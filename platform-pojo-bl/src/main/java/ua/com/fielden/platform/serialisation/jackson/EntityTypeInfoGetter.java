@@ -5,60 +5,47 @@ import java.util.LinkedHashMap;
 import org.apache.log4j.Logger;
 
 /**
- * Utility to register entity types with sequential numbers (type table).
+ * Utility to register entity types by their full class names (type table).
  *
  * @author TG Team
  *
  */
 public class EntityTypeInfoGetter {
-    private final LinkedHashMap<Long, EntityType> typeTable = new LinkedHashMap<>();
-    private final LinkedHashMap<String, EntityType> typeTableByName = new LinkedHashMap<>();
-    private Long typeCount = 1L;
+    private final LinkedHashMap<String, EntityType> typeTable = new LinkedHashMap<>();
     private final Logger logger = Logger.getLogger(getClass());
 
-    public EntityType get(final Long typeNumber) {
-        return typeTable.get(typeNumber);
-    }
-
     public EntityType get(final String typeName) {
-        return typeTableByName.get(typeName);
+        return typeTable.get(typeName);
     }
 
     /**
-     * Registers the <code>entityType</code> and gives it the number.
+     * Registers the <code>entityType</code> by its full class name.
      *
      * @param entityType
      */
     public EntityType register(final EntityType entityType) {
         if (EntityType.class.getName().equals(entityType.getKey()) || EntityTypeProp.class.getName().equals(entityType.getKey())) {
-            if (EntityType.class.getName().equals(entityType.getKey())) {
-                entityType.set_number(0L);
-            } else {
-                entityType.set_number(1L);
-            }
             entityType.endInitialising();
             return entityType;
         }
 
-        if (!typeTableByName.containsKey(entityType.getKey())) {
-            typeCount = typeCount + 1;
-            typeTable.put(typeCount, entityType.set_number(typeCount)); // starting from 2 (0 and 1 are reserved for special types EntityType and EntityTypeProp)
-            typeTableByName.put(entityType.getKey(), entityType);
+        if (!typeTable.containsKey(entityType.getKey())) {
+            typeTable.put(entityType.getKey(), entityType);
             entityType.endInitialising();
 
-            logger.debug("Registering new type with number [" + entityType.get_number() + "] = " + entityType);
+            logger.debug("Registering new type with name [" + entityType.getKey() + "] = " + entityType);
         } else {
             logger.warn("Is trying to register already registered new type [" + entityType.getKey() + "]. Has disregarded.");
         }
-        return typeTableByName.get(entityType.getKey());
+        return typeTable.get(entityType.getKey());
     }
 
     /**
-     * Returns a map of numbers and corresponded entity types.
+     * Returns a map of full class names and corresponding entity types.
      *
      * @return
      */
-    public LinkedHashMap<Long, EntityType> getTypeTable() {
+    public LinkedHashMap<String, EntityType> getTypeTable() {
         return typeTable;
     }
 }

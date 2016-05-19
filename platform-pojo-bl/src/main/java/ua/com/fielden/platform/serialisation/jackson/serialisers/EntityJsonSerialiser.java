@@ -34,8 +34,8 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
     public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls) {
         super(type);
-        if (entityType.get_number() == null) {
-            throw new IllegalStateException("The number of the type [" + entityType + "] should be populated to be ready for serialisation.");
+        if (entityType.getKey() == null) {
+            throw new IllegalStateException("The name of the type [" + entityType + "] should be populated to be ready for serialisation.");
         }
 
         this.type = type;
@@ -70,7 +70,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         } else {
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_number());
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.getKey());
             references.putReference(entity, newReference);
 
             generator.writeStartObject();
