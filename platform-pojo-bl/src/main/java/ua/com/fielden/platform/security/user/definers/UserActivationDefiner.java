@@ -14,7 +14,7 @@ public class UserActivationDefiner implements IAfterChangeEventHandler<Boolean> 
 
     @Override
     public void handle(final MetaProperty<Boolean> property, final Boolean active) {
-        property.getEntity().getProperty(User.EMAIL).setRequired(active);
+        property.getEntity().getPropertyIfNotProxy(User.EMAIL).ifPresent(p -> p.setRequired(active));
     }
 
 }
