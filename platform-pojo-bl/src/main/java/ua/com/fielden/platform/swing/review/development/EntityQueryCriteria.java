@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.swing.review.development;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.file_reports.WorkbookExporter.convertToByteArray;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,7 +38,6 @@ import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
-import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -413,30 +410,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         fo.close();
     }
 
-    public byte[] exportAll() throws IOException {
-        final List<T> entities = getAllEntities(generateQuery());
-        final Pair<String[], String[]> propAndTitles = generatePropTitlesToExport();
-        return convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue()));
-    }
-
-    public byte[] exportPages(final Integer fromPage, final Integer toPage, final Integer pageCapacity) throws IOException {
-        final List<T> entities = new ArrayList<>();
-        final Pair<String[], String[]> propAndTitles = generatePropTitlesToExport();
-        for (int page = fromPage - 1; page < toPage; page++) {
-            entities.addAll(getPage(page, pageCapacity).data());
-        }
-        return convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue()));
-    }
-
-    public byte[] exportEntities(final List<AbstractEntity<?>> selectedEntities) throws IOException {
-        final List<Long> ids = new ArrayList<>();
-        for (final AbstractEntity<?> entity : selectedEntities) {
-            ids.add(entity.getId());
-        }
-        final Pair<String[], String[]> propAndTitles = generatePropTitlesToExport();
-        return convertToByteArray(WorkbookExporter.export(getEntitesById(ids), propAndTitles.getKey(), propAndTitles.getValue()));
-    }
-
     private QueryExecutionModel<T, EntityResultQueryModel<T>> generateQuery() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
@@ -452,7 +425,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
                 .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
     }
 
-    private Pair<String[], String[]> generatePropTitlesToExport() {
+    public Pair<String[], String[]> generatePropTitlesToExport() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
@@ -487,18 +460,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             generatedEntityController.setEntityType(getManagedType());
             return generatedEntityController.findById(id, fetchModel, getByteArrayForManagedType());
         }
-    }
-
-    public List<T> getEntitesById(final List<Long> ids) {
-        final Class<?> root = getEntityClass();
-        final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
-        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider);
-        final EntityResultQueryModel<T> notOrderedQuery = select(getManagedType()).where().prop("id").in().values(ids.toArray(new Long[] {})).model();
-        return getAllEntities(adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
-                .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
-                .with(fetchProvider.fetchModel()).model());
     }
 
     /**
@@ -565,6 +526,17 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             generatedEntityController.setEntityType(getManagedType());
             return generatedEntityController.firstPage(queryModel, pageSize, getByteArrayForManagedType());
         }
+    }
+
+    /**
+     * Returns all entities those satisfies conditions of the specified {@link QueryExecutionModel}.
+     *
+     * @param queryModel
+     *            - query model for which the first result page must be returned.
+     * @return
+     */
+    public final List<T> getAllEntities() {
+        return getAllEntities(generateQuery());
     }
 
     /**

@@ -17,6 +17,15 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
  *
  */
 public interface ICriteriaGenerator {
+    /**
+     * Generates and configures {@link EntityQueryCriteria} instance.
+     *
+     * @param <T>
+     * @param root
+     * @param cdtm
+     * @return
+     */
+    public <T extends AbstractEntity<?>> EnhancedCentreEntityQueryCriteria<T, IEntityDao<T>> generateCentreQueryCriteria(final Class<T> root, ICentreDomainTreeManagerAndEnhancer cdtm, final Class<?> miType, final Annotation... customAnnotations);
 
     /**
      * Generates and configures {@link EntityQueryCriteria} instance.
