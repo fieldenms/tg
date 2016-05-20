@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
+import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;

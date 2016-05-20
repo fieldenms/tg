@@ -13,7 +13,7 @@ import com.google.inject.TypeLiteral;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
@@ -125,7 +125,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         //	bind(IRotableClassDao.class).to(RotableClassDao.class);
         bind(IUserRoleDao.class).to(UserRoleDao.class);
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
-        bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
+        bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);
 
         bind(IUser.class).to(UserDao.class);
         // bind IUserProvider

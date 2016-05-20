@@ -1,6 +1,21 @@
 package ua.com.fielden.platform.entity;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.CREATED_BY;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.CREATED_DATE;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.CREATED_TRANSACTION_GUID;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_DATE;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.REF_COUNT;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -9,26 +24,7 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.*;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
@@ -39,8 +35,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -49,7 +44,7 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  *
  */
-public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends AbstractDomainDrivenTestCase {
+public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends AbstractDaoTestCase {
 
     @Test
     public void identification_of_retrievable_properties_for_non_composite_entity_with_non_persistent_props_other_than_desc() {
@@ -61,13 +56,19 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
         final List<MetaProperty<?>> retrievableProps = cat1.getProperties().values().stream()
                 .filter(p -> p.isRetrievable()).collect(Collectors.toList());
 
-        assertEquals(5, retrievableProps.size());
+        assertEquals(11, retrievableProps.size());
 
         final Set<String> names = retrievableProps.stream().map(p -> p.getName()).collect(Collectors.toSet());
         assertTrue(names.contains(KEY));
         assertTrue(names.contains(DESC));
         assertTrue(names.contains(ACTIVE));
         assertTrue(names.contains(REF_COUNT));
+        assertTrue(names.contains(CREATED_BY));
+        assertTrue(names.contains(CREATED_DATE));
+        assertTrue(names.contains(CREATED_TRANSACTION_GUID));
+        assertTrue(names.contains(LAST_UPDATED_BY));
+        assertTrue(names.contains(LAST_UPDATED_DATE));
+        assertTrue(names.contains(LAST_UPDATED_TRANSACTION_GUID));
         assertTrue(names.contains("parent"));
     }
 
@@ -125,6 +126,8 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
 
         save(new_(TgCategory.class, "Cat1").setActive(true));
@@ -141,8 +144,4 @@ public class MetaPropertyIdentificationOfRetrievablePropertiesTest extends Abstr
         save(new_(TgVehicle.class, "CAR2", "CAR2 DESC").setInitDate(date("2007-01-01 00:00:00")).setModel(m316).setPrice(new Money("200")).setPurchasePrice(new Money("100")).setActive(false).setLeased(true).setLastMeterReading(new BigDecimal("105")).setStation(orgUnit5));
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }

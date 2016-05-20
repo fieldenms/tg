@@ -2,11 +2,14 @@ package ua.com.fielden.platform.security.user;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.LAST_UPDATED_BY;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.security.user.User.EMAIL;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -113,17 +116,32 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     
     @Override
     @SessionRequired
-    @Authorise(UserSaveToken.class)
     public User save(final User user) {
         if (User.system_users.VIRTUAL_USER.matches(user)) {
             throw new SecurityException("VIRTUAL_USER cannot be persisted.");
         }
-        // if a new user is being created then lets try activate it 
-        // this is possible only if an email address is associated with the user
-        // there could also be a situation there an existing user that was not activated (password is blank) had
-        // their email address assigned... this should also lead to user activation
-        if (!user.isPersisted() && !StringUtils.isEmpty(user.getEmail()) || 
-             user.isPersisted() && !StringUtils.isEmpty(user.getEmail()) && user.getProperty("email").isDirty() && StringUtils.isEmpty(findById(user.getId(), fetchAll(User.class)).getPassword())) {
+
+        // anybody should be able to save updated reference count
+        if (user.getDirtyProperties().stream().count() == 1 && user.getProperty(User.REF_COUNT).isDirty()) {
+            return super.save(user);
+        } else {
+            return ordinarySave(user);
+        }
+        
+    }
+    
+    @Authorise(UserSaveToken.class)
+    protected User ordinarySave(final User user) {
+        // remove all authenticated sessions in case the user is being deactivated
+        if (user.isPersisted() && !user.isActive() && user.getProperty(ACTIVE).isDirty()) {
+            coUserSession.clearAll(user);
+        }
+        
+        // if a new active user is being created then need to send an activation email 
+        // this is possible only if an email address is associated with the user, which is required for active users
+        // there could also be a situation where an inactive existing user, which did not have their password set in the first place, is being activated... this also warrants an activation email
+        if (!user.isPersisted() && user.isActive() || 
+             user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && StringUtils.isEmpty(findById(user.getId(), fetchAll(User.class)).getPassword())) {
             final User savedUser = super.save(user);
             final Optional<User> opUser = assignPasswordResetUuid(savedUser.getKey());
             newUserNotifier.notify(opUser.get());
@@ -206,13 +224,13 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public User findUser(final String username) {
-        return findByKeyAndFetch(fetch(User.class), username);
+        return findByKeyAndFetch(fetch(User.class).with(LAST_UPDATED_BY), username);
     }
     
     @Override
     public IFetchProvider<User> createFetchProvider() {
         return super.createFetchProvider()
-                .with("key", "email") // this property is "required" (necessary during saving) -- should be declared as fetching property
+                .with("key", EMAIL, ACTIVE) // this property is "required" (necessary during saving) -- should be declared as fetching property
                 .with("base", "basedOnUser.base"); //
     }
 
@@ -287,8 +305,13 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public Optional<User> assignPasswordResetUuid(final String usernameOrEmail) {
         // let's try to find a user by username or email
         final EntityResultQueryModel<User> query = select(User.class)
-                .where().lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail)
-                .or().lowerCase().prop("email").eq().lowerCase().val(usernameOrEmail).model();
+                .where()
+                .prop(ACTIVE).eq().val(true)
+                .and()
+                .begin()
+                    .lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail)
+                    .or().lowerCase().prop(EMAIL).eq().lowerCase().val(usernameOrEmail)
+                .end().model();
         
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
 

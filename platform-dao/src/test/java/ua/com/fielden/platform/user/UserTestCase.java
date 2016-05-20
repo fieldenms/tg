@@ -21,6 +21,7 @@ import ua.com.fielden.platform.property.validator.EmailValidator;
 import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -66,12 +67,12 @@ public class UserTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void multiple_users_may_have_their_email_addresses_set_to_null() {
-        final User user3 = coUser.findByKey("USER3").setEmail(null);
+    public void multiple_inactive_users_may_have_their_email_addresses_set_to_null() {
+        final User user3 = coUser.findByKey("USER3").setActive(false).setEmail(null);
         assertTrue(user3.isValid().isSuccessful());
         assertNull(coUser.save(user3).getEmail());
         
-        final User user4 = coUser.findByKey("USER4").setEmail(null);
+        final User user4 = coUser.findByKey("USER4").setActive(false).setEmail(null);
         assertTrue(user4.isValid().isSuccessful());
         assertNull(coUser.save(user3).getEmail());
     }
@@ -121,7 +122,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertTrue(user.isPresent());
         assertNotNull(user.get().getResetUuid());
     }
-    
+
     @Test 
     public void locating_user_by_name_during_password_reset_UUID_generation_is_case_insensitive() {
         final Optional<User> user = coUser.assignPasswordResetUuid("user3");
@@ -215,6 +216,26 @@ public class UserTestCase extends AbstractDaoTestCase {
         assertFalse(coUser.isPasswordResetUuidValid(uuid));
     }
 
+    @Test
+    public void password_reset_for_non_existing_user_fails() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        final String now = "2016-05-19 11:02:00";
+        consts.setNow(dateTime(now));
+        
+        assertFalse(coUser.assignPasswordResetUuid("NON-EXISTING-USER").isPresent());
+    }
+    
+    @Test
+    public void password_reset_for_inactive_user_fails() {
+        final UniversalConstantsForTesting consts = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        final String now = "2016-05-19 11:03:00";
+        consts.setNow(dateTime(now));
+        
+        final User inactiveUser = coUser.findByKey("INACTIVE_USER");
+        assertFalse(coUser.assignPasswordResetUuid(inactiveUser.getKey()).isPresent());
+    }
+
+    
     @Test 
     public void unit_test_user_cannot_be_persisted() {
         final IUser coUser = co(User.class);
@@ -228,17 +249,51 @@ public class UserTestCase extends AbstractDaoTestCase {
         }
     }
     
+    @Test
+    public void self_modification_of_user_instance_result_in_correct_assignment_of_the_last_updated_by_group_of_properties() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        up.setUsername(up.getUser().getKey(), co(User.class)); // refresh the user
+
+        final User currUser = up.getUser();
+        assertNotNull(currUser);
+        assertTrue(currUser.isPersisted());
+        assertEquals(5L, currUser.getVersion().longValue());
+        
+        final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
+        constants.setNow(dateTime("2016-05-16 16:36:57"));
+        
+        // modify and save
+        final String email = "new_email@company.com";
+        final User savedUser = save(currUser.setEmail(email));
+        assertEquals(6L, savedUser.getVersion().longValue());
+        
+        // refresh the user instance in the provider
+        up.setUsername(currUser.getKey(), co(User.class));
+        
+        final User user = up.getUser();
+        assertTrue(user.isPersisted());
+        assertEquals(6L, savedUser.getVersion().longValue());
+        assertEquals(email, user.getEmail());
+        
+        assertNotNull(user.getLastUpdatedBy());
+        assertEquals(user, user.getLastUpdatedBy());
+        assertNotNull(user.getLastUpdatedDate());
+        assertEquals(constants.now().toDate(), user.getLastUpdatedDate());
+        assertNotNull(user.getLastUpdatedTransactionGuid());
+    }
+    
     @Override
     protected void populateDomain() {
-        super.populateDomain(); // creates the default current user TEST
-
-        // add users without email
+        super.populateDomain();
+        
+        // add inactive users with no email addresses
+        coUser.save(new_(User.class, "INACTIVE_USER").setBase(true).setActive(false));
         coUser.save(new_(User.class, "USER1").setBase(true));
         coUser.save(new_(User.class, "USER2").setBase(true));
 
-        // add users with email
-        coUser.save(new_(User.class, "USER3").setBase(true).setEmail("user3@company.com"));
-        coUser.save(new_(User.class, "USER4").setBase(true).setEmail("user4@company.com"));
+        // add active users with email addresses
+        coUser.save(new_(User.class, "USER3").setBase(true).setEmail("USER3@company.com").setActive(true));
+        coUser.save(new_(User.class, "USER4").setBase(true).setEmail("USER4@company.com").setActive(true));
     }
 
 }

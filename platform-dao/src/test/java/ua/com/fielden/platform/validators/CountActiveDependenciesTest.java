@@ -11,13 +11,12 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
 
-public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
+public class CountActiveDependenciesTest extends AbstractDaoTestCase {
 
     private final IEntityAggregatesDao coAggregates = getInstance(IEntityAggregatesDao.class);
     private final IApplicationDomainProvider domainProvider = getInstance(IApplicationDomainProvider.class);
@@ -60,6 +59,8 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));
         cat1 = save(cat1.setParent(cat1));
         TgCategory cat2 = save(new_(TgCategory.class, "Cat2").setActive(true));
@@ -76,11 +77,6 @@ public class CountActiveDependenciesTest extends AbstractDomainDrivenTestCase {
         save(new_(TgSystem.class, "Sys7").setActive(true).setCategory(cat2));
         save(new_(TgSystem.class, "Sys8").setActive(false).setCategory(cat3));
         save(new_(TgSystem.class, "Sys9").setActive(false).setCategory(cat3));
-    }
-
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
     }
 
 }

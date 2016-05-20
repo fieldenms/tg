@@ -5,16 +5,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.List;
-
 import org.junit.Test;
 
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.TgCategory;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
-import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-public class SavingNewActivatableEntitiesWithReferencesToOtherActivatablesTest extends AbstractDomainDrivenTestCase {
+public class SavingNewActivatableEntitiesWithReferencesToOtherActivatablesTest extends AbstractDaoTestCase {
 
     @Test
     public void saving_new_active_entity_with_reference_should_increase_refCount_of_that_reference() {
@@ -88,12 +85,8 @@ public class SavingNewActivatableEntitiesWithReferencesToOtherActivatablesTest e
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         save(new_(TgCategory.class, "Cat1").setActive(true));
     }
-
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
-
 }

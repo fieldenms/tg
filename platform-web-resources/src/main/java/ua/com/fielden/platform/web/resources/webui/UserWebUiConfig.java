@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.security.user.User.*;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
@@ -52,10 +53,12 @@ public class UserWebUiConfig {
      * @return
      */
     private static EntityCentre<User> createCentre(final Injector injector) {
+        final String fmr = "'flex', 'margin-right: 20px', 'width: 200px'";
+        final String fmrLast = "'flex', 'width: 200px'";
         final String critLayout = "['vertical', 'center-justified', "
-                + "['flex'], "
-                + "['flex'], "
-                + "['flex']"
+                + format("[[%s], [%s]], ", fmr, fmrLast)
+                + format("[[%s], [%s]], ", fmr, fmrLast)
+                + format("['flex']")
                 + "]";
         
         final EntityCentre<User> userCentre = new EntityCentre<>(MiUser.class, "Users",
@@ -64,8 +67,10 @@ public class UserWebUiConfig {
                 .addTopAction(UserActions.NEW_ACTION.mkAction()).also()                
                 .addTopAction(UserActions.DELETE_ACTION.mkAction())
                 .addCrit("this").asMulti().autocompleter(User.class).also()
+                .addCrit("basedOnUser").asMulti().autocompleter(User.class).also()
+                .addCrit(ACTIVE).asMulti().bool().also()
                 .addCrit("base").asMulti().bool().also()
-                .addCrit("basedOnUser").asMulti().autocompleter(User.class)
+                .addCrit(EMAIL).asMulti().text()
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), critLayout)
                 .addProp("this")
                     .order(1).asc()
@@ -73,7 +78,8 @@ public class UserWebUiConfig {
                 .also()
                 .addProp("basedOnUser").width(200).also()
                 .addProp("base").width(80).also()
-                .addProp("email").minWidth(150)
+                .addProp(EMAIL).minWidth(150).also()
+                .addProp(ACTIVE).minWidth(50)
                 .addPrimaryAction(UserActions.EDIT_ACTION.mkAction()).also()
                 .addSecondaryAction(UserActions.MANAGE_ROLES_ACTION.mkAction())
                 .build(), injector, null);
@@ -91,21 +97,19 @@ public class UserWebUiConfig {
         
         final String layout = 
             "['padding:20px', "
-            + format("[[%s], [%s]], ", fmr, fmrLast)
-            + format("[[%s], [%s]], ", fmr, fmrLast)
+            + format("[[%s], [%s]], ", fmr, fmrLast) // key, basedOnUser
+            + format("[[%s], [%s]], ", fmr, fmrLast) // active, base
+            +        "['flex'], " // email
             + format(bottomButtonPanel, actionButton, actionButton)
             + "]";
         
         final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
                 .forEntity(User.class)
-                .addProp("key").asSinglelineText()
-                .also()
-                .addProp("email").asSinglelineText()
-                .also()                
-                .addProp("base").asCheckbox()
-                .also()
-                .addProp("basedOnUser").asAutocompleter()
-                .also()
+                .addProp("key").asSinglelineText().also()
+                .addProp("basedOnUser").asAutocompleter().also()
+                .addProp("active").asCheckbox().also()
+                .addProp("base").asCheckbox().also()
+                .addProp("email").asSinglelineText().also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
