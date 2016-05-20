@@ -116,12 +116,22 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     
     @Override
     @SessionRequired
-    @Authorise(UserSaveToken.class)
     public User save(final User user) {
         if (User.system_users.VIRTUAL_USER.matches(user)) {
             throw new SecurityException("VIRTUAL_USER cannot be persisted.");
         }
 
+        // anybody should be able to save updated reference count
+        if (user.getDirtyProperties().stream().count() == 1 && user.getProperty(User.REF_COUNT).isDirty()) {
+            return super.save(user);
+        } else {
+            return ordinarySave(user);
+        }
+        
+    }
+    
+    @Authorise(UserSaveToken.class)
+    protected User ordinarySave(final User user) {
         // remove all authenticated sessions in case the user is being deactivated
         if (user.isPersisted() && !user.isActive() && user.getProperty(ACTIVE).isDirty()) {
             coUserSession.clearAll(user);
