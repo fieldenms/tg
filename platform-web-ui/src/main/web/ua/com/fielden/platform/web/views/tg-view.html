@@ -109,7 +109,11 @@
 
             _showMenu: function (e, detail, source) {
                 this.fire("main-menu");
-            }
+            },
+            
+            canLeave: function() {
+                return this.$.menuItemView.canLeave();
+            },
         });
     })();
 </script>

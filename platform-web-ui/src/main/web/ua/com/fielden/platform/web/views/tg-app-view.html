@@ -133,6 +133,11 @@
             load: function () {
                 this.$$("#view").load();
             },
+            
+            canLeave: function() {
+                return this.$$("#view").canLeave();
+            },
+            
             _calcStyleForItem: function (menuItem) {
                 return "background-color: " + menuItem.bgColor + ";";
             },
