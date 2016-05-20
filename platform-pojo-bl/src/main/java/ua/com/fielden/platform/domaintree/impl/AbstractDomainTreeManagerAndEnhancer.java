@@ -231,6 +231,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
                 }
             }
         }
+        
+        @Override
+        public Class<?> adjustManagedTypeName(final Class<?> root, final String clientGeneratedTypeNameSuffix) {
+            return baseEnhancer().adjustManagedTypeName(root, clientGeneratedTypeNameSuffix);
+        }
 
         @Override
         public void discard() {

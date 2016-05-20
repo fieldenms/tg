@@ -816,4 +816,34 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "sumOfOctuple", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "SUM(8 * integerProp)", "Sum of octuple", "Desc");
         assertEquals("Incorrect count of enhanced types byte arrays.", 1, copy.getManagedTypeArrays(EnhancingMasterEntity.class).size());
     }
+    
+    @Test
+    public void adjusting_of_a_name_for_ungenerated_type_leads_to_exception() {
+        // clear domain
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
+        dtm().apply();
+
+        // check the snapshot of domain
+        checkEmptyDomain(dtm());
+        
+        try {
+            dtm().adjustManagedTypeName(EnhancingMasterEntity.class, "grwe7w64329y4e3289dfh293h");
+            fail("Adjusting of a name for ungenerated type should fail.");
+        } catch (final IllegalArgumentException e) {
+        }
+    }
+    
+    @Test
+    public void adjusting_of_a_name_for_generated_type_replaces_the_name_and_do_not_change_domain_tree_enhancer_semantics() {
+        final IDomainTreeEnhancer dtmCopy = EntityUtils.deepCopy(dtm(), serialiser());
+        
+        final String newSuffix = "grwe7w64329y4e3289dfh293h";
+        final Class<?> adjustedType = dtm().adjustManagedTypeName(EnhancingMasterEntity.class, newSuffix);
+        assertEquals("ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity$$TgEntity_" + newSuffix, adjustedType.getName());
+        
+        assertTrue("dte instance should be equal after generated type naming adjustments.", EntityUtils.equalsEx(dtmCopy, dtm()));
+    }
 }

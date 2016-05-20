@@ -413,6 +413,34 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         }
         return originalAndEnhancedRootTypes;
     }
+    
+    @Override
+    public Class<?> adjustManagedTypeName(final Class<?> root, final String clientGeneratedTypeNameSuffix) {
+        final Class<?> managedType = getManagedType(root);
+        if (!DynamicEntityClassLoader.isGenerated(managedType)) {
+            throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
+        }
+        logger.error(String.format("Started to adjustManagedTypeName for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
+        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+
+        try {
+            final String predefinedRootTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + clientGeneratedTypeNameSuffix;
+            final Class<?> rootWithPredefinedName = classLoader.startModification(managedType.getName()).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
+            
+            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<String, ByteArray>();
+            final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
+            byteArraysWithRenamedRoot.putAll(currentByteArrays.getValue());
+            byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(rootWithPredefinedName.getName())));
+            originalAndEnhancedRootTypesAndArrays.put(root, new Pair<>(rootWithPredefinedName, byteArraysWithRenamedRoot));
+        } catch (final ClassNotFoundException e) {
+            logger.error(e.getMessage(), e);
+            throw new IllegalStateException(e);
+        }
+        
+        final Class<?> adjustedType = getManagedType(root);
+        logger.error(String.format("Ended to adjustManagedTypeName for root [%s]. Adjusted to [%s].", root.getSimpleName(), adjustedType.getSimpleName()));
+        return adjustedType;
+    }
 
     /**
      * Propagates recursively the <code>enhancedType</code> from place [root; path] to place [root; ""].

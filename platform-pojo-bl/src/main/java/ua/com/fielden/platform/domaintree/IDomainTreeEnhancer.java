@@ -66,6 +66,17 @@ public interface IDomainTreeEnhancer extends IRootTyped {
      * @return
      */
     List<ByteArray> getManagedTypeArrays(final Class<?> type);
+    
+    /**
+     * Adjusts managed type name for <code>root</code> with a new name. This method is strictly applicable only to the roots which {@link #getManagedType(Class)} is generated and 
+     * is used to provide correspondence between server-side and client side generated types naming in case where server-side type didn't exist and was generated from [user; miType; saveAsName] 
+     * returned from client.
+     * 
+     * @param root
+     * @param clientGeneratedTypeNameSuffix -- the suffix of generated type name from client application after '$$TgEntity_' part
+     * @return
+     */
+    Class<?> adjustManagedTypeName(final Class<?> root, final String clientGeneratedTypeNameSuffix);
 
     /**
      * Adds the <code>calculatedProperty</code> to root type's {@link ICalculatedProperty#getRoot()} hierarchy. Throws {@link IncorrectCalcPropertyException} when the calculated
