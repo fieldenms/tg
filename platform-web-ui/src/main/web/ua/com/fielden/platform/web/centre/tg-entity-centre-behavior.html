@@ -790,11 +790,8 @@
              */
             canLeave: function () {
                 // Check whether selection criteria can be left.
-                var canLeaveThisCentre = this.$.selection_criteria.classList.contains('canLeave') && this.$.selection_criteria.canLeave(),
-                    insertionPoints,
-                    insPoIndex,
-                    elementWithCanLeave,
-                    canLeaveChild;
+                var canLeaveThisCentre = this.$.selection_criteria.classList.contains('canLeave') && this.$.selection_criteria.canLeave();
+                var insertionPoints, insPoIndex, elementWithCanLeave, canLeaveChild;
                 if (canLeaveThisCentre) {
                     return canLeaveThisCentre;
                 }
