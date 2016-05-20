@@ -31,9 +31,11 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
@@ -71,9 +73,13 @@ public class EntitySerialisationWithJacksonTest {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final Date testingDate = new Date();
     private final FactoryForTestingEntities factory = new FactoryForTestingEntities(injector.getInstance(EntityFactory.class), testingDate);
-    private final ISerialiserEngine jacksonSerialiser = new Serialiser(factory.getFactory(), createClassProvider()).getEngine(SerialiserEngines.JACKSON);
-    private final ISerialiserEngine jacksonDeserialiser = new Serialiser(factory.getFactory(), createClassProvider()).getEngine(SerialiserEngines.JACKSON);
+    private final ISerialiserEngine jacksonSerialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder()).getEngine(SerialiserEngines.JACKSON);
+    private final ISerialiserEngine jacksonDeserialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder()).getEngine(SerialiserEngines.JACKSON);
     private boolean observed = false;
+    
+    private ISerialisationTypeEncoder createSerialisationTypeEncoder() {
+        return new SerialisationTypeEncoder();
+    }
 
     private ProvidedSerialisationClassProvider createClassProvider() {
         return new ProvidedSerialisationClassProvider(

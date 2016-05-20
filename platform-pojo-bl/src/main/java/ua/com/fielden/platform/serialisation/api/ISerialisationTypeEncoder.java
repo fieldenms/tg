@@ -31,4 +31,6 @@ public interface ISerialisationTypeEncoder {
      * @return
      */
     <T extends AbstractEntity<?>> Class<T> decode(final String entityTypeId);
+    
+    ISerialisationTypeEncoder setTgJackson(final ISerialiserEngine tgJackson);
 }

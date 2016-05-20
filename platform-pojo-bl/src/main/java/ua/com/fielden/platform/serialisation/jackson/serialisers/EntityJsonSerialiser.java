@@ -1,9 +1,24 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getChangedFromOriginal;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditable;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getOriginalValue;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequired;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisible;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEditableDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isMaxDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isMinDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isRequiredDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValidationResultDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isVisibleDefault;
+
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.apache.log4j.Logger;
 
@@ -16,32 +31,27 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
-import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.utils.Pair;
-
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
 
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
     private final Class<T> type;
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
-    private final EntityType entityType;
     private final boolean excludeNulls;
+    private final ISerialisationTypeEncoder serialisationTypeEncoder;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder) {
         super(type);
-        if (entityType.getKey() == null) {
-            throw new IllegalStateException("The name of the type [" + entityType + "] should be populated to be ready for serialisation.");
-        }
 
         this.type = type;
         this.properties = properties;
-        this.entityType = entityType;
         this.excludeNulls = excludeNulls;
+        this.serialisationTypeEncoder = serialisationTypeEncoder;
     }
 
     @Override
@@ -70,7 +80,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         } else {
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.getKey());
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references, serialisationTypeEncoder.encode(type));
             references.putReference(entity, newReference);
 
             generator.writeStartObject();

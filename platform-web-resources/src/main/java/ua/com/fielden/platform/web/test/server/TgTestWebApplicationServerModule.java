@@ -46,7 +46,6 @@ public class TgTestWebApplicationServerModule extends TgTestApplicationServerMod
 
     @Override
     protected void configure() {
-        bind(ISerialisationTypeEncoder.class).to(SerialisationTypeEncoder.class).in(Scopes.SINGLETON); //
         super.configure();
         bindWebAppResources(new WebUiConfig(domainName, port, workflow, path));
     }

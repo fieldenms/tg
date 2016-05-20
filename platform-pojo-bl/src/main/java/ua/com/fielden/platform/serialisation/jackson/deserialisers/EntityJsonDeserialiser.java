@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -31,15 +32,13 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
-import ua.com.fielden.platform.serialisation.jackson.EntityType;
-import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDeserializer<T> {
     private static final long serialVersionUID = 1L;
@@ -49,16 +48,14 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private final Class<T> type;
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
-    private final EntityType entityType;
-    private final EntityTypeInfoGetter entityTypeInfoGetter;
+    private final ISerialisationTypeEncoder serialisationTypeEncoder;
 
-    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final EntityTypeInfoGetter entityTypeInfoGetter) {
+    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final ISerialisationTypeEncoder serialisationTypeEncoder) {
         super(type);
         this.factory = entityFactory;
         this.mapper = mapper;
         this.properties = properties;
-        this.entityType = entityType;
-        this.entityTypeInfoGetter = entityTypeInfoGetter;
+        this.serialisationTypeEncoder = serialisationTypeEncoder;
 
         this.type = type;
         versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
@@ -106,14 +103,15 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             }
             entity.beginInitialising();
 
-            final String newServerSideReference = EntitySerialiser.newSerialisationId(entity, references, entityType.getKey());
+            // TODO check whether this logic is possible to be remained final String newServerSideReference = EntitySerialiser.newSerialisationId(entity, references, entityType.getKey());
             
             final JsonNode atIdNode = node.get("@id");
             final String clientSideReference = atIdNode == null ? null : atIdNode.asText();
-            if (!EntityUtils.equalsEx(newServerSideReference, clientSideReference)) {
-                throw new EntityDeserialisationException(format("EntityJsonSerialiser has received reference number [%s] that does not conform to its internal next number [%s] for entity type [%s] for entity id [%s].", clientSideReference, newServerSideReference, type.getSimpleName(), id));
-            }
-            references.putEntity(newServerSideReference, entity);
+//            if (!EntityUtils.equalsEx(newServerSideReference, clientSideReference)) {
+         // TODO check whether this logic is possible to be remained 
+//                throw new EntityDeserialisationException(format("EntityJsonSerialiser has received reference number [%s] that does not conform to its internal next number [%s] for entity type [%s] for entity id [%s].", clientSideReference, newServerSideReference, type.getSimpleName(), id));
+//            }
+            references.putEntity(clientSideReference, entity);
 
             // deserialise version -- should never be null
             final JsonNode versionJsonNode = node.get(AbstractEntity.VERSION); // the node should not be null itself
@@ -196,7 +194,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
      * @return
      */
     private JavaType concreteTypeOf(final ResolvedType constructedType, final Supplier<JsonNode> idNodeSupplier) {
-        return TgJackson.extractConcreteType(constructedType, idNodeSupplier, entityTypeInfoGetter, mapper.getTypeFactory());
+        return TgJackson.extractConcreteType(constructedType, idNodeSupplier, mapper.getTypeFactory(), serialisationTypeEncoder);
     }
 
     /**

@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Charsets;
 
@@ -28,6 +27,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
@@ -66,12 +66,14 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     private final TgJacksonModule module;
     private final EntityFactory factory;
     private final EntityTypeInfoGetter entityTypeInfoGetter;
+    private final ISerialisationTypeEncoder serialisationTypeEncoder;
 
-    public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider) {
+    public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder) {
         super();
         this.module = new TgJacksonModule();
         this.factory = entityFactory;
         entityTypeInfoGetter = new EntityTypeInfoGetter();
+        this.serialisationTypeEncoder = serialisationTypeEncoder.setTgJackson(this);
 
         // enable(SerializationFeature.INDENT_OUTPUT);
         // enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
@@ -90,8 +92,8 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         this.module.addSerializer(Warning.class, new ResultJsonSerialiser(this));
         this.module.addDeserializer(Warning.class, new ResultJsonDeserialiser<Warning>(this));
 
-        this.module.addDeserializer(ArrayList.class, new ArrayListJsonDeserialiser(this, entityTypeInfoGetter));
-        this.module.addDeserializer((Class<List>) ClassesRetriever.findClass("java.util.Arrays$ArrayList"), new ArraysArrayListJsonDeserialiser(this, entityTypeInfoGetter));
+        this.module.addDeserializer(ArrayList.class, new ArrayListJsonDeserialiser(this, serialisationTypeEncoder));
+        this.module.addDeserializer((Class<List>) ClassesRetriever.findClass("java.util.Arrays$ArrayList"), new ArraysArrayListJsonDeserialiser(this, serialisationTypeEncoder));
 
         registerModule(module);
     }
@@ -100,8 +102,8 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * Register all serialisers / deserialisers for entity types present in TG app.
      */
     protected void registerEntityTypes(final ISerialisationClassProvider provider, final TgJacksonModule module) {
-        new EntitySerialiser<EntityType>(EntityType.class, this.module, this, this.factory, entityTypeInfoGetter, true);
-        new EntitySerialiser<EntityTypeProp>(EntityTypeProp.class, this.module, this, this.factory, entityTypeInfoGetter, true);
+        new EntitySerialiser<EntityType>(EntityType.class, this.module, this, this.factory, entityTypeInfoGetter, true, serialisationTypeEncoder);
+        new EntitySerialiser<EntityTypeProp>(EntityTypeProp.class, this.module, this, this.factory, entityTypeInfoGetter, true, serialisationTypeEncoder);
         for (final Class<?> type : provider.classes()) {
             if (AbstractEntity.class.isAssignableFrom(type)) {
                 registerNewEntityType((Class<AbstractEntity<?>>) type);
@@ -116,7 +118,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * @return
      */
     public EntityType registerNewEntityType(final Class<AbstractEntity<?>> newType) {
-        return new EntitySerialiser<AbstractEntity<?>>(newType, module, this, factory, entityTypeInfoGetter).getEntityTypeInfo();
+        return new EntitySerialiser<AbstractEntity<?>>(newType, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder).getEntityTypeInfo();
     }
 
     @Override
@@ -140,7 +142,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
                     logger.error(e.getMessage(), e);
                     throw new RuntimeException(e);
                 }
-            }, entityTypeInfoGetter, getTypeFactory());
+            }, getTypeFactory(), serialisationTypeEncoder);
 
             EntitySerialiser.getContext().reset();
             final T val = readValue(contentString, concreteType);
@@ -159,19 +161,18 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * @param type
      * @param idNodeSupplier
      *            -- the supplier function to retrieve idNode
-     * @param entityTypeInfoGetter
      * @param typeFactory
      * @return
      */
-    public static <T> JavaType extractConcreteType(final ResolvedType type, final Supplier<JsonNode> idNodeSupplier, final EntityTypeInfoGetter entityTypeInfoGetter, final TypeFactory typeFactory) {
+    public static <T> JavaType extractConcreteType(final ResolvedType type, final Supplier<JsonNode> idNodeSupplier, final TypeFactory typeFactory, final ISerialisationTypeEncoder serialisationTypeEncoder) {
         final JavaType concreteType;
         if (EntityUtils.isEntityType(type.getRawClass()) && Modifier.isAbstract(type.getRawClass().getModifiers())) {
             // when we are trying to deserialise an entity of unknown concrete type (e.g. passing AbstractEntity.class) -- there is a need to determine concrete type from @id property
             final JsonNode idNode = idNodeSupplier.get();
             if (idNode != null && !idNode.isNull()) {
-                final String typeNumberStr = idNode.asText().split("#")[0];
-                final String concreteTypeName = entityTypeInfoGetter.get(typeNumberStr).getKey();
-                concreteType = typeFactory.constructType(ClassesRetriever.findClass(concreteTypeName));
+                final String entityTypeId = idNode.asText().split("#")[0];
+                final Class<?> decodedType = serialisationTypeEncoder.decode(entityTypeId);
+                concreteType = typeFactory.constructType(decodedType);
             } else {
                 concreteType = (JavaType) type;
             }
@@ -233,5 +234,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
 
     public LinkedHashMap<String, EntityType> getTypeTable() {
         return entityTypeInfoGetter.getTypeTable();
+    }
+    
+    public EntityTypeInfoGetter getEntityTypeInfoGetter() {
+        return entityTypeInfoGetter;
     }
 }
