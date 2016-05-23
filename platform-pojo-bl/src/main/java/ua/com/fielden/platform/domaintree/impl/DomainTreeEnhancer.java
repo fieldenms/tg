@@ -441,6 +441,37 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         logger.error(String.format("Ended to adjustManagedTypeName for root [%s]. Adjusted to [%s].", root.getSimpleName(), adjustedType.getSimpleName()));
         return adjustedType;
     }
+    
+    @Override
+    public Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations) {
+        final Class<?> managedType = getManagedType(root);
+        if (!DynamicEntityClassLoader.isGenerated(managedType)) {
+            throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
+        }
+        logger.error(String.format("Started to adjustManagedTypeAnnotations for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
+        if (additionalAnnotations.length == 0) {
+            logger.error(String.format("Ended to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
+            return managedType;
+        }
+        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+
+        try {
+            final Class<?> managedTypeWithAnnotations = classLoader.startModification(managedType.getName()).addClassAnnotations(additionalAnnotations).endModification();
+            
+            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<String, ByteArray>();
+            final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
+            byteArraysWithRenamedRoot.putAll(currentByteArrays.getValue());
+            byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(managedTypeWithAnnotations.getName())));
+            originalAndEnhancedRootTypesAndArrays.put(root, new Pair<>(managedTypeWithAnnotations, byteArraysWithRenamedRoot));
+        } catch (final ClassNotFoundException e) {
+            logger.error(e.getMessage(), e);
+            throw new IllegalStateException(e);
+        }
+        
+        final Class<?> adjustedType = getManagedType(root);
+        logger.error(String.format("Ended to adjustManagedTypeAnnotations for root [%s].", root.getSimpleName()));
+        return adjustedType;
+    }
 
     /**
      * Propagates recursively the <code>enhancedType</code> from place [root; path] to place [root; ""].

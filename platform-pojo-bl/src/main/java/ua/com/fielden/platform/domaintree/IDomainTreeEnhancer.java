@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.reflection.asm.impl.TypeMaker;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -77,6 +79,18 @@ public interface IDomainTreeEnhancer extends IRootTyped {
      * @return
      */
     Class<?> adjustManagedTypeName(final Class<?> root, final String clientGeneratedTypeNameSuffix);
+    
+    /**
+     * Adjusts managed type for <code>root</code> with new type annotations. This method is strictly applicable only to the roots which {@link #getManagedType(Class)} is generated and 
+     * is used to provide additional information into generated type, for example [miType; saveAsName; user] for this centre manager.
+     * <p>
+     * It is important that additional annotations have their target specified as <code>TYPE</code> and retention as <code>RUNTIME</code> (as per documentation of {@link TypeMaker#addClassAnnotations(Annotation...)} method).
+     * 
+     * @param root
+     * @param additionalAnnotations -- array of custom user-defined annotations to be generated into root's managed type
+     * @return
+     */
+    Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations);
 
     /**
      * Adds the <code>calculatedProperty</code> to root type's {@link ICalculatedProperty#getRoot()} hierarchy. Throws {@link IncorrectCalcPropertyException} when the calculated
