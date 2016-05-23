@@ -158,8 +158,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
                 criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
             }
-            IPage<T> page;
-            final List<T> data;
+            IPage<T> page = null;
+            List<T> data = new ArrayList<T>();
             final Integer pageCapacity = (Integer) customObject.get("@@pageCapacity");
             final String action = (String) customObject.get("@@action");
             if (isRunning(customObject)) {
@@ -180,7 +180,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                     resultantCustomObject.put("summary", navigatedData.getValue());
                 }
                 data = page.data();
-            } else {
+            } else if (RunActions.EXPORTALL.toString().equals(action)) {
                 page = null;
                 data = criteriaEntity.getAllEntities();
             }
@@ -188,34 +188,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             customObject.remove("@@exportAll");
             customObject.remove("@@pageNumber");
             customObject.remove("@@pageCount");
-            final boolean isNotRefreshingConcreteEntities = customObject.containsKey("@@idsToRefresh");
-
-            ArrayList<Object> resultEntities;
-            try {
-
-                resultEntities = new ArrayList<>(isNotRefreshingConcreteEntities
-                        ? data
-                        : selectEntities(data, convertToListWithLongValues((List<?>) customObject.get("@@idsToRefresh"))));
-                resultantCustomObject.put("resultEntities", resultEntities);
-                resultantCustomObject.put("pageNumber", page.no());
-                resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
-
-            } catch (final IndexOutOfBoundsException ex) {
-                // let's be defensive about how are we refreshing the current page
-                // there are situations where refreshing a centre with underlying data that populated the current page deleted
-                // results in IndexOutOfBoundsException exception in call page.data()
-                // if this is the case, we can simply return the result of a simple run
-                // TODO need todo something about pageCount and the current pageNumber
-                final IPage<T> p = criteriaEntity.run(pageCapacity);
-                resultEntities = new ArrayList<>(p.data());
-                resultantCustomObject.put("resultEntities", resultEntities);
-            }
-
-            if (!isNotRefreshingConcreteEntities) {
-                // mark customObject with a special property, that indicates the process of concrete entities refreshing (potentially this can be removed
-                // and resolved purely on the client side)
-                resultantCustomObject.put("isRefreshingConcreteEntities", "yes");
-            }
+            final ArrayList<Object> resultEntities = new ArrayList<Object>(data);
+            resultantCustomObject.put("resultEntities", resultEntities);
+            resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
+            resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
             return new Pair<>(resultantCustomObject, resultEntities);
         }
         return new Pair<>(resultantCustomObject, null);

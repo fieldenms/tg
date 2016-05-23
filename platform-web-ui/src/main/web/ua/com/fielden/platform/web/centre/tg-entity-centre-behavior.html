@@ -112,22 +112,6 @@
                 },
 
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-                //   prefix and default values specified in 'value' specificator of the property definition (or,       //
-                //   alternatively, computing function needs to be specified). 									       //
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                /**
-                 * The holder of EGI entities that 'should be updated'.
-                 */
-                _entitiesThatShouldBeUpdated: {
-                    type: Array,
-                    value: null
-                },
-
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
                 //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
                 // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
@@ -353,23 +337,19 @@
                 self._selectedView = 0;
                 self._showProgress = false;
 
-                self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
+                self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
                     if (criteriaEntity === null || criteriaEntity.isValid()) {
                         if (typeof summary !== 'undefined') {
                             this.retrievedTotals = summary;
                         }
-                        if (isRefreshingConcreteEntities) {
-                            this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this._entitiesThatShouldBeUpdated);
-                        } else {
-                            this.retrievedEntities = resultEntities;
-                            this.$.egi.renderingHints = renderingHints;
-                            if (this._triggerRun && this._selectedView === 0) {
-                                this.async(function () {
-                                    this._selectedView = 1;
-                                }, 100);
-                                this._triggerRun = false;
-                            }
+                        this.retrievedEntities = resultEntities;
+                        this.$.egi.renderingHints = renderingHints;
+                        if (this._triggerRun && this._selectedView === 0) {
+                            this.async(function () {
+                                this._selectedView = 1;
+                            }, 100);
+                            this._triggerRun = false;
                         }
                     }
                 }).bind(self);
@@ -735,14 +715,8 @@
                 // if there is no data or refresh is enforeced then simply refresh the current page
                 if (this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0) {
                     this.currentPage();
-                } else {
-                    if (entities !== null && entities.length > 0) {
-                        this.$.selection_criteria.refreshEntities(entities, (function (entities) {
-                            this._entitiesThatShouldBeUpdated = entities;
-                        }).bind(this)); // this._entitiesThatShouldBeUpdated
-                    } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
-                        this.currentPage();
-                    }
+                } else if (entities === null || entities.length === 0 || this.$.egi.containsAnyEntity(entities)) {
+                    this.currentPage();
                 }
             },
 

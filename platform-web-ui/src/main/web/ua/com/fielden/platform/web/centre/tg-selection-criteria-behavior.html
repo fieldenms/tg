@@ -213,11 +213,10 @@
                         var metaValues = customObject.metaValues;
                         var centreChanged = customObject.isCentreChanged;
                         var renderingHints = customObject.renderingHints || [];
-                        var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
                         var summary = customObject.summary;
                         var staleCriteriaMessage = customObject.staleCriteriaMessage;
 
-                        self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary, staleCriteriaMessage);
+                        self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage);
                     });
                 };
 
@@ -228,7 +227,7 @@
                 };
 
                 // calbacks, that will potentially be augmented by tg-action child elements: 
-                self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary, staleCriteriaMessage) {
+                self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage) {
                     if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
                         this.staleCriteriaMessage = staleCriteriaMessage;
                     }
@@ -236,7 +235,7 @@
                         var msg = "Running completed successfully.";
                         this._openToastWithoutEntity(msg, false, msg, false);
 
-                        this.postRun(null, null, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+                        this.postRun(null, null, resultEntities, pageCount, renderingHints, summary);
                     } else {
                         this._setPropertyModel(metaValues);
                         this._centreChanged = centreChanged;
@@ -245,7 +244,7 @@
                         this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
                         var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-                        this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+                        this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
                     }
                     this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
                     // custom external action
@@ -369,26 +368,6 @@
             },
 
             /**
-             * Starts the process of refreshing the specified 'entities', but only in case of there is no other refresh request in progress.
-             *
-             * IMPORTANT: this method supports appropriately only refreshing of those entities, that are present in the current
-             *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed
-             *     from the result-set if they became unmatchable to the selection criteria after modification).
-             *
-             * @param entities -- entities to be refreshed and be replaced or removed from EGI model.
-             * @param assignmntFun -- assignment function, which ensures that any state related changes happen in correct order during async execution.
-             *                        For example, tg-entity-centre-behavior needs to have its property _entitiesThatShouldBeUpdated assigned for proper refresh execution.
-             *                        However, where there are several refresh calls and the assignment of that property would happens outside of the execution context for those calls than refresh would not work correctly
-             *                        (i.e. the first refresh call would potentially use values assigned in some subsequent call.).
-             *                        The use of this assignment function should be thought of as a way to implement parameter stack, but at an object level rather than just at the function call level.
-             */
-            refreshEntities: function (entities, assignmentFun) {
-                this._openToast(null, "Refreshing entities", false, "", true);
-                this._validatePageCount();
-                return this._execute(RunActions.navigate, entities, assignmentFun);
-            },
-
-            /**
              * Starts the process of centre run.
              */
             nextPage: function () {
@@ -470,25 +449,25 @@
             /**
              * Starts the process of centre execution. It does not alter
              */
-            _execute: function (action, entitiesToRefresh, assignmentFun) {
+            _execute: function (action) {
                 var self = this;
 
                 if (self.isRunning) {
                     console.warn("Refresh is already in progress...");
                     self._refreshPromiseInProgress = self._refreshPromiseInProgress
                         .then(function () {
-                            return self._createPromise(action, entitiesToRefresh, assignmentFun);
+                            return self._createPromise(action);
                         });
                     return self._refreshPromiseInProgress;
                 }
 
                 // let's capture the promise being created at the instance level so that it could be referenced later...
-                self._refreshPromiseInProgress = self._createPromise(action, entitiesToRefresh, assignmentFun);
+                self._refreshPromiseInProgress = self._createPromise(action);
                 // ... and return it
                 return self._refreshPromiseInProgress;
             },
 
-            _createPromise: function (action, entitiesToRefresh, assignmentFun) {
+            _createPromise: function (action) {
                 var self = this;
 
                 return new Promise(function (resolve, reject) {
@@ -503,9 +482,6 @@
 
                     // cancel previous validation before starting saving process -- it includes validation process internally!
                     self._validator().abortValidationIfAny();
-                    if (assignmentFun) {
-                        assignmentFun(entitiesToRefresh);
-                    }
                     resolve(
                         // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
                         //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
@@ -515,8 +491,7 @@
                                 },
                                 action,
                                 self.requireSelectedEntities,
-                                self.requireMasterEntity,
-                                entitiesToRefresh
+                                self.requireMasterEntity
                             )
                         )
                     );
@@ -619,7 +594,7 @@
              * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
              * However, if the query enhancing process requires the selectionCrit entity too -- it will be used without any problem.
              */
-            _createContextHolderForRunning: function (modifHolderGetter, action, requireSelectedEntities, requireMasterEntity, entitiesToRefresh) {
+            _createContextHolderForRunning: function (modifHolderGetter, action, requireSelectedEntities, requireMasterEntity) {
                 var self = this;
                 var contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
 
@@ -628,12 +603,6 @@
                 if (self.pageCount !== null) {
                     self._reflector().setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
                     self._reflector().setCustomProperty(contextHolder, "@@pageCount", self.pageCount);
-
-                    if (entitiesToRefresh && entitiesToRefresh.length > 0) {
-                        self._reflector().setCustomProperty(contextHolder, "@@idsToRefresh", self.idsToRefresh(entitiesToRefresh));
-                    } else {
-                        self._reflector().removeCustomProperty(contextHolder, "@@idsToRefresh");
-                    }
                 } else {
                     self._reflector().removeCustomProperty(contextHolder, "@@pageNumber");
                     self._reflector().removeCustomProperty(contextHolder, "@@pageCount");
