@@ -11,6 +11,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.swing.menu.MiType;
+import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private TgJackson tgJackson;
@@ -25,8 +26,12 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     @Override
     public <T extends AbstractEntity<?>> String encode(final Class<T> entityType) {
         // need to register the type into EntityTypeInfoGetter in caser where it wasn't registered
+        final Class<? extends MiWithConfigurationSupport<?>> miType;
         if (DynamicEntityClassLoader.isGenerated(entityType)) {
-            System.out.println("========================== " + entityType.getAnnotation(MiType.class).value());
+            miType = entityType.getAnnotation(MiType.class).value();
+            System.out.println("========================== " + miType);
+        } else {
+            miType = null;
         }
         
         final String entityTypeName = entityType.getName();
@@ -41,7 +46,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
 
         
         
-        return entityType.getName();
+        return miType == null ? entityType.getName() : entityType.getName() + ":" + miType.getName();
     }
 
     @Override
@@ -58,7 +63,10 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
 //        }
 //        final Class<?> instanceType = ClassesRetriever.findClass(instanceTypeInfo.getKey());
         
-        final String entityTypeName = entityTypeId;
+        final String entityTypeName = entityTypeId.contains(":") ? entityTypeId.substring(0, entityTypeId.indexOf(":")) : entityTypeId;
+        if (entityTypeId.contains(":")) {
+            System.out.println("-------------------------- " + entityTypeId);
+        }
         final Class<T> decodedEntityType = (Class<T>) ClassesRetriever.findClass(entityTypeName);
         if (entityTypeInfoGetter.get(entityTypeName) == null) {
             tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) decodedEntityType);
