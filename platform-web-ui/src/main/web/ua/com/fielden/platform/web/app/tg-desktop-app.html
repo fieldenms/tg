@@ -106,19 +106,32 @@
             },
 
             _checkWeatherCanLeave: function (e) {
-                var modules = this.querySelectorAll("tg-app-view"),
-                    customDialogs = document.body.querySelectorAll("tg-custom-action-dialog"),
-                    master,
-                    itemIndex;
+                var modules = this.querySelectorAll("tg-app-view");
+                var customDialogs = document.body.querySelectorAll("tg-custom-action-dialog");
+                var changedEntityCentres = [];
+                var master, itemIndex, viewToCheck;
                 for (itemIndex = 0; itemIndex < modules.length; itemIndex++) {
-                    if (typeof modules[itemIndex].canLeave === 'function' && modules[itemIndex].canLeave()) {
-                        e.returnValue = "There are some unsaved entity centres.";
+                    viewToCheck = typeof modules[itemIndex].canLeave === 'function' && modules[itemIndex].canLeave();
+                    if (Array.isArray(viewToCheck)) {
+                        viewToCheck.forEach(function(element) {
+                            changedEntityCentres.push(element);    
+                        });
+                    } else if (viewToCheck) {
+                        changedEntityCentres.push(viewToCheck);
                     }
                 }
+                if (changedEntityCentres.length > 0) {
+                    e.returnValue = "The following menu items were changed:\n";
+                    changedEntityCentres.forEach(function(element) {
+                        e.returnValue += "\t * " + element + "\n";
+                    });
+                }
                 for (itemIndex = 0; itemIndex < customDialogs.length; itemIndex++) {
-                    master = customDialogs[itemIndex].querySelector(".canLeave");
-                    if (master && typeof master.canLeave === 'function' && master.canLeave()) {
-                        e.returnValue = "There are some unsaved entity masters.";
+                    if (customDialogs[itemIndex].style.display !== 'none') {
+                        master = customDialogs[itemIndex].querySelector(".canLeave");
+                        if (master && typeof master.canLeave === 'function' && master.canLeave()) {
+                            e.returnValue = "There are some unsaved entity masters.";
+                        }
                     }
                 }
             },

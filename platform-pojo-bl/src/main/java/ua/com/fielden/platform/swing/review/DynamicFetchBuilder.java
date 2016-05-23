@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.swing.review;
 
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isQueryBasedEntityType;
@@ -9,6 +10,7 @@ import java.util.Set;
 import ua.com.fielden.platform.dynamictree.DynamicEntityTree;
 import ua.com.fielden.platform.dynamictree.DynamicEntityTreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -55,7 +57,11 @@ public class DynamicFetchBuilder {
         final fetch<T> result;
         if (ActivatableAbstractEntity.class.isAssignableFrom(managedType)) {
             result = uncompletedFetch.without(AbstractEntity.ID).without(AbstractEntity.VERSION)
-                    .without(ActivatableAbstractEntity.ACTIVE).without(ActivatableAbstractEntity.REF_COUNT);
+                    .without(ActivatableAbstractEntity.ACTIVE).without(ActivatableAbstractEntity.REF_COUNT)
+                    .without(LAST_UPDATED_BY).without(LAST_UPDATED_DATE).without(LAST_UPDATED_TRANSACTION_GUID);
+        } else if (AbstractPersistentEntity.class.isAssignableFrom(managedType)) {
+            result = uncompletedFetch.without(AbstractEntity.ID).without(AbstractEntity.VERSION)
+                    .without(LAST_UPDATED_BY).without(LAST_UPDATED_DATE).without(LAST_UPDATED_TRANSACTION_GUID);
         } else {
             result = uncompletedFetch.without(AbstractEntity.ID).without(AbstractEntity.VERSION);
         }

@@ -135,7 +135,15 @@
             },
             
             canLeave: function() {
-                return this.$$("#view").canLeave();
+                var viewThatWasChanged = this.$$("#view").canLeave();
+                var viewsDesc = [];
+                if (Array.isArray(viewThatWasChanged)) {
+                    viewThatWasChanged.forEach(function (element) {
+                        viewsDesc.push(this.menuItem.title + " \u2192 " +  element);
+                    }.bind(this));
+                    return viewsDesc;
+                }
+                return viewThatWasChanged; 
             },
             
             _calcStyleForItem: function (menuItem) {

@@ -4,6 +4,8 @@ import java.util.Properties;
 
 import org.apache.log4j.xml.DOMConfigurator;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
@@ -11,11 +13,9 @@ import ua.com.fielden.platform.entity.query.DefaultFilter;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassProvider;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
-
-import com.google.inject.Injector;
-import com.google.inject.name.Names;
 
 /**
  * Provides Platform specific implementation of {@link IDomainDrivenTestCaseConfiguration} for testing purposes, which is mainly related to construction of appropriate IoC modules.
@@ -48,14 +48,14 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
             props.setProperty("hibernate.show_sql", "false");
             props.setProperty("hibernate.format_sql", "true");
             props.setProperty("attachments.location", ".");
-            props.setProperty("email.smtp", "192.168.1.8");
-            props.setProperty("email.fromAddress", "trident.fleet@fielden.com.au");
+            props.setProperty("email.smtp", "non-existing-server");
+            props.setProperty("email.fromAddress", "platform@fielden.com.au");
 
 
             final PlatformTestDomainTypes domainProvider = new PlatformTestDomainTypes();
 
             hibernateModule = new PlatformTestServerModule(PlatformTestHibernateSetup.getHibernateTypes(), domainProvider, DefaultSerialisationClassProvider.class, DefaultFilter.class, props);
-            injector = new ApplicationInjectorFactory().add(hibernateModule).getInjector();
+            injector = new ApplicationInjectorFactory().add(hibernateModule).add(new NewUserNotifierMockBindingModule()).getInjector();
 
             entityFactory = injector.getInstance(EntityFactory.class);
 

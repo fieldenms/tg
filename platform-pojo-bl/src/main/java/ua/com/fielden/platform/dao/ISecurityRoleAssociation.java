@@ -15,7 +15,7 @@ import ua.com.fielden.platform.security.user.UserRole;
  * @author TG Team
  * 
  */
-public interface ISecurityRoleAssociationDao extends IEntityDao<SecurityRoleAssociation> {
+public interface ISecurityRoleAssociation extends IEntityDao<SecurityRoleAssociation> {
 
     /**
      * Returns the list of {@link SecurityRoleAssociation} those are associated with given security token
@@ -40,8 +40,8 @@ public interface ISecurityRoleAssociationDao extends IEntityDao<SecurityRoleAsso
      */
     void removeAssociationsFor(final Class<? extends ISecurityToken> securityToken);
 
-    /** Returns a total number of user roles associated with the token. */
-    int countAssociations(final User user, final Class<? extends ISecurityToken> securityTokenClass);
+    /** Returns a total number of active user roles associated with the token. */
+    int countActiveAssociations(final User user, final Class<? extends ISecurityToken> securityTokenClass);
     
     /**
      * Removes the set of {@link SecurityRoleAssociation}s.

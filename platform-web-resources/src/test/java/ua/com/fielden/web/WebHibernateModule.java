@@ -11,7 +11,7 @@ import com.google.inject.name.Names;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.dao.AttachmentDao;
 import ua.com.fielden.platform.dao.DomainMetadata;
-import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
@@ -107,7 +107,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bind(ISortingProperty.class).to(SortingPropertyDao.class);
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
-        bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
+        bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);
         bind(IUser.class).to(UserDao.class);
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);

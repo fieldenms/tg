@@ -33,7 +33,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 public class UserUserRoleTestCase extends AbstractDaoTestCase {
     private final IUserRoleDao coUserRole = getInstance(IUserRoleDao.class);
     private final IUserAndRoleAssociation coUserAndRoleAssociation = getInstance(IUserAndRoleAssociation.class);
-    private final ISecurityRoleAssociationDao coSecurityRoleAssociation = getInstance(ISecurityRoleAssociationDao.class);
+    private final ISecurityRoleAssociation coSecurityRoleAssociation = getInstance(ISecurityRoleAssociation.class);
     private final IUser coUser = getInstance(IUser.class);
 
     @Test
@@ -64,7 +64,8 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
             assertEquals("the " + userIndex + "-th person has wrong number of user roles, please check the testThatTheUsersWereRetrievedCorrectly", 2, userRoles.size());
             for (int userRoleIndex = 0; userRoleIndex < 2; userRoleIndex++) {
                 final int userRoleGlobalIndex = 2 * userIndex + userRoleIndex;
-                final UserRole userRole = new UserRole("role" + Integer.toString(userRoleGlobalIndex - 1), "");
+                final UserRole userRole = new_(UserRole.class, "role" + Integer.toString(userRoleGlobalIndex - 1), "");
+                
                 assertTrue("the " + userIndex + "-th person doesn't have the " + Integer.toString(userRoleGlobalIndex + 1) + "-th user role", userRoles.contains(userRole));
             }
         }
@@ -89,7 +90,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         // retrieving the user, modifying it's password and saving changes
         User user = coUser.findUserByKeyWithRoles("user1");
         user.setPassword("new password");
-        UserAndRoleAssociation userAssociation = new_composite(UserAndRoleAssociation.class, user, new UserRole("role1", ""));
+        UserAndRoleAssociation userAssociation = new_composite(UserAndRoleAssociation.class, user, new_(UserRole.class, "role1", ""));
         final Set<UserAndRoleAssociation> associations = new HashSet<UserAndRoleAssociation>();
         for (final UserAndRoleAssociation roleAssociation : user.getRoles()) {
             if (roleAssociation.equals(userAssociation)) {
@@ -107,7 +108,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         // checking whether the user role1 was removed or not
         final Set<UserAndRoleAssociation> userRoleAssociations = user.getRoles();
         assertEquals("the first person has wrong number of user roles, please check the testWhetherTheSaveWorksProperlyForUsers", 1, userRoleAssociations.size());
-        userAssociation = new_composite(UserAndRoleAssociation.class, user, new UserRole("role2", ""));
+        userAssociation = new_composite(UserAndRoleAssociation.class, user, new_(UserRole.class, "role2", ""));
         assertTrue("the " + 1 + "-th person doesn't have the second user role", userRoleAssociations.contains(userAssociation));
 
     }
@@ -139,7 +140,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         userRolesAssociation = user.getRoles();
         assertEquals("the 'new user' person has wrong number of user roles, please check the testWhetherTheCreatedUserWereCorrectlySaved", 3, userRolesAssociation.size());
         for (int userRoleIndex = 0; userRoleIndex < 3; userRoleIndex++) {
-            final UserAndRoleAssociation userRoleAssociation = new_composite(UserAndRoleAssociation.class, user, new UserRole("nrole" + Integer.toString(userRoleIndex + 1), ""));
+            final UserAndRoleAssociation userRoleAssociation = new_composite(UserAndRoleAssociation.class, user, new_(UserRole.class, "nrole" + Integer.toString(userRoleIndex + 1), ""));
             assertTrue("the 'new user'-th person doesn't have the " + userRoleAssociation.getUserRole().getKey() + "-th user role", userRolesAssociation.contains(userRoleAssociation));
         }
     }
@@ -159,7 +160,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
 
     @Test
     public void test_that_new_security_role_association_can_be_saved() {
-        final UserRole role = save(new_(UserRole.class, "role56", "role56 desc"));
+        final UserRole role = save(new_(UserRole.class, "role56", "role56 desc").setActive(true));
         final SecurityRoleAssociation association = save(new_composite(SecurityRoleAssociation.class, FirstLevelSecurityToken1.class, role));
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
         assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 3, roles.size());
@@ -178,23 +179,23 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     @Test
     public void test_count_association_between_user_and_token() {
         final IUser coUser = co(User.class);
-        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), FirstLevelSecurityToken1.class));
-        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken1.class));
-        assertEquals("Incorrect number of associations between user and token.", 0, coSecurityRoleAssociation.countAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken2.class));
+        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), FirstLevelSecurityToken1.class));
+        assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken1.class));
+        assertEquals("Incorrect number of associations between user and token.", 0, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken2.class));
     }
 
     @Override
     protected void populateDomain() {
         super.populateDomain();
         
-        final UserRole role1 = save(new_(UserRole.class, "role1", "role desc 1"));
-        final UserRole role2 = save(new_(UserRole.class, "role2", "role desc 2"));
-        final UserRole role3 = save(new_(UserRole.class, "role3", "role desc 3"));
-        final UserRole role4 = save(new_(UserRole.class, "role4", "role desc 4"));
-        final UserRole role5 = save(new_(UserRole.class, "role5", "role desc 5"));
-        final UserRole role6 = save(new_(UserRole.class, "role6", "role desc 6"));
-        final UserRole role7 = save(new_(UserRole.class, "role7", "role desc 7"));
-        final UserRole role8 = save(new_(UserRole.class, "role8", "role desc 8"));
+        final UserRole role1 = save(new_(UserRole.class, "role1", "role desc 1").setActive(true));
+        final UserRole role2 = save(new_(UserRole.class, "role2", "role desc 2").setActive(true));
+        final UserRole role3 = save(new_(UserRole.class, "role3", "role desc 3").setActive(true));
+        final UserRole role4 = save(new_(UserRole.class, "role4", "role desc 4").setActive(true));
+        final UserRole role5 = save(new_(UserRole.class, "role5", "role desc 5").setActive(true));
+        final UserRole role6 = save(new_(UserRole.class, "role6", "role desc 6").setActive(true));
+        final UserRole role7 = save(new_(UserRole.class, "role7", "role desc 7").setActive(true));
+        final UserRole role8 = save(new_(UserRole.class, "role8", "role desc 8").setActive(true));
 
         final User user1 = save(new_(User.class, "user1", "user desc 1").setBase(true).setPassword("userpass1"));
         final User user2 = save(new_(User.class, "user2", "user desc 2").setBase(true).setPassword("userpass2"));
@@ -224,8 +225,4 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         save(new_composite(SecurityRoleAssociation.class).setRole(role4).setSecurityToken(FirstLevelSecurityToken2.class));
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }

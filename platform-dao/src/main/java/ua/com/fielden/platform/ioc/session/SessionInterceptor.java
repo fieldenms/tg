@@ -1,7 +1,10 @@
-package ua.com.fielden.platform.ioc;
+package ua.com.fielden.platform.ioc.session;
+
+import static java.util.UUID.randomUUID;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
@@ -10,6 +13,7 @@ import org.hibernate.Transaction;
 
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
 
 /**
  * Intercepts methods annotated with {@link SessionRequired} to inject Hibernate session before the actual method execution. Nested invocation of methods annotated with
@@ -35,6 +39,8 @@ public class SessionInterceptor implements MethodInterceptor {
     private final SessionFactory sessionFactory;
 
     private transient final Logger logger = Logger.getLogger(this.getClass());
+    
+    private ThreadLocal<String> transactionGuid = new ThreadLocal<>();
 
     public SessionInterceptor(final SessionFactory sessnioFactory) {
         this.sessionFactory = sessnioFactory;
@@ -42,9 +48,9 @@ public class SessionInterceptor implements MethodInterceptor {
 
     @Override
     public Object invoke(final MethodInvocation invocation) throws Throwable {
-        final ISessionEnabled dao = (ISessionEnabled) invocation.getThis();
+        final ISessionEnabled invocationOwner = (ISessionEnabled) invocation.getThis();
         final Session session = sessionFactory.getCurrentSession();
-        dao.setSession(session);
+        invocationOwner.setSession(session);
         final Transaction tr = session.getTransaction();
         /*
          * this variable indicates whether transaction should be handled in this method;
@@ -58,12 +64,31 @@ public class SessionInterceptor implements MethodInterceptor {
             logger.debug("Starting new DB transaction");
             tr.begin();
             logger.debug("Started new DB transaction");
+            
+            // generate a GUID for the current transaction
+            if (!StringUtils.isEmpty(transactionGuid.get())) {
+                throw new SessionScopingException("There should have been no transaction GUID assigned yet for a new session scope."); 
+            }
+            final String guid = randomUUID().toString();
+            transactionGuid.set(guid);
+            invocationOwner.setTransactionGuid(guid);
+        } else {
+            // assigned a transaction GUID, which should already be generated
+            final String guid = transactionGuid.get();
+            if (StringUtils.isEmpty(guid)) {
+                throw new SessionScopingException("A nested session scope is missing a transaction GUID."); 
+            }
+            
+            invocationOwner.setTransactionGuid(guid);
         }
+        
+        
         try {
             final Object result = invocation.proceed(); // this invocation could also be captured by SessionInterceptor
             if (shouldCommit && tr.isActive()) { // if this is the invocation that activated the current transaction then we should commit it
                 logger.debug("Committing DB transaction");
                 tr.commit();
+                transactionGuid.remove();
                 logger.debug("Committed DB transaction");
             } else if (session.isOpen()) {
                 // should flush only if the current session is still open
@@ -71,11 +96,12 @@ public class SessionInterceptor implements MethodInterceptor {
                 session.flush();
             }
             return result;
-        } catch (final RuntimeException e) {
+        } catch (final Exception e) {
             logger.warn(e);
             if (tr.isActive()) { // if transaction is active and there was an exception then it should be rollbacked
                 logger.debug("Rolling back DB transaction");
                 tr.rollback();
+                transactionGuid.remove();
                 logger.debug("Rolled back DB transaction");
             }
             throw e;

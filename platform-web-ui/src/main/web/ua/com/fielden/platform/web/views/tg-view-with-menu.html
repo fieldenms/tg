@@ -293,15 +293,16 @@
             },
             
             canLeave: function () {
-                var items = this.querySelectorAll("tg-menu-item-view"),
-                    canLeaveResult,
-                    itemIndex;
+                var items = this.querySelectorAll("tg-menu-item-view");
+                var changedViews = [];
+                var canLeaveResult, itemIndex;
                 for (itemIndex = 0; itemIndex < items.length; itemIndex++) {
                     canLeaveResult = items[itemIndex].canLeave();
                     if (canLeaveResult) {
-                        return canLeaveResult;
+                        changedViews.push(items[itemIndex].getAttribute('page-name'));
                     }
                 }
+                return changedViews.length > 0 ? changedViews : undefined;
             },
 
             _menuItemsRendered: function () {

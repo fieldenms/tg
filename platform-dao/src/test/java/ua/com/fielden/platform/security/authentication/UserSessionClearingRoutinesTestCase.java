@@ -124,9 +124,9 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
 
         // add more users
         final IUser coUser = co(User.class);
-        final User user1 = coUser.save(new_(User.class, "USER1").setBase(true));
+        final User user1 = coUser.save(new_(User.class, "USER1").setBase(true).setEmail("USER1@unit-test.software").setActive(true));
         save(new_(TgPerson.class, "Person 1").setUser(user1));
-        final User user2 = coUser.save(new_(User.class, "USER2").setBase(true));
+        final User user2 = coUser.save(new_(User.class, "USER2").setBase(true).setEmail("USER2@unit-test.software").setActive(true));
         save(new_(TgPerson.class, "Person 2").setUser(user2));
 
         final User currUser = getInstance(IUserProvider.class).getUser();
