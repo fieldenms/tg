@@ -30,9 +30,9 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
         }
         
         final String entityTypeName = entityType.getName();
-        if (entityTypeInfoGetter.get(entityTypeName) == null) {
-            tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) entityType);
-        }
+//        if (entityTypeInfoGetter.get(entityTypeName) == null) {
+//            tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) entityType);
+//        }
         
         // TODO continue implementation
 //        if (entityType.getKey() == null) {

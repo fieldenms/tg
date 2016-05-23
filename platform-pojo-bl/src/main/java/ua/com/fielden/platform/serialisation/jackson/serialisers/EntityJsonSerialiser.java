@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.apache.log4j.Logger;
 
@@ -34,6 +33,7 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
+import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.utils.Pair;
@@ -42,16 +42,16 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     private final Class<T> type;
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
+    private final EntityType entityType;
     private final boolean excludeNulls;
-    private final ISerialisationTypeEncoder serialisationTypeEncoder;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls) {
         super(type);
 
         this.type = type;
         this.properties = properties;
+        this.entityType = entityType;
         this.excludeNulls = excludeNulls;
-        this.serialisationTypeEncoder = serialisationTypeEncoder;
     }
 
     @Override
@@ -80,7 +80,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         } else {
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references, serialisationTypeEncoder.encode(type));
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_identificator());
             references.putReference(entity, newReference);
 
             generator.writeStartObject();

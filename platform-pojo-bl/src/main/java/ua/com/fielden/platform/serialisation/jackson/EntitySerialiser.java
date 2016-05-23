@@ -18,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -66,9 +67,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
-        this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter);
+        this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter, serialisationTypeEncoder);
 
-        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, excludeNulls, serialisationTypeEncoder);
+        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, this.entityTypeInfo, excludeNulls);
         final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, serialisationTypeEncoder);
 
         // register serialiser and deserialiser
@@ -76,7 +77,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         module.addDeserializer(type, deserialiser);
     }
 
-    private EntityType createEntityTypeInfo(final EntityTypeInfoGetter entityTypeInfoGetter) {
+    private EntityType createEntityTypeInfo(final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder) {
         final EntityType entityTypeInfo = this.factory.newEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
         entityTypeInfo.beginInitialising();
         entityTypeInfo.setKey(type.getName());
@@ -162,6 +163,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             }
             entityTypeInfo.set_props(props);
         }
+        entityTypeInfo.set_identificator(serialisationTypeEncoder.encode(type));
         return entityTypeInfoGetter.register(entityTypeInfo);
     }
 

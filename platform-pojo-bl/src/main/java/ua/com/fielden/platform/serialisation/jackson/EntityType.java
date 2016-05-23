@@ -25,6 +25,10 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(IEntityType.class)
 public class EntityType extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
+    
+    @IsProperty
+    @Title(value = "Identificator", desc = "Identificator of the type in context of other types for serialisation")
+    private String _identificator;
 
     @IsProperty(String.class)
     @Title(value = "Composite Keys", desc = "Composite key property names")
@@ -114,5 +118,15 @@ public class EntityType extends AbstractEntity<String> {
 
     public List<String> get_compositeKeyNames() {
         return Collections.unmodifiableList(_compositeKeyNames);
+    }
+    
+    @Observable
+    public EntityType set_identificator(final String _identificator) {
+        this._identificator = _identificator;
+        return this;       
+    }      
+    
+    public String get_identificator() {
+        return _identificator;
     }
 }

@@ -444,6 +444,14 @@
         };
         EntityType.prototype = Object.create(Object.prototype);
         EntityType.prototype.constructor = EntityType;
+        
+        /**
+         * Returns the identificator for the entity type.
+         *
+         */
+        EntityType.prototype.identificator = function () {
+            return this._identificator;
+        }
 
         /**
          * Returns full Java class name for the entity type.
@@ -800,7 +808,7 @@
         	var EntityType = this._getEntityTypePrototype();
             var registeredType = new EntityType(newType);
             _typeTable[registeredType.fullClassName()] = registeredType;
-            console.log("Registering new type with name ", registeredType.fullClassName(), registeredType);
+            console.log("Registering new entity type with identificator ", registeredType.identificator(), registeredType);
             return registeredType;
         },
 
