@@ -165,13 +165,6 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
 
         bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
-        bind(INewUserNotifier.class).toInstance(new INewUserNotifier() {
-            @Override
-            public void notify(User user) {
-            }
-            
-        });
-
         // bind DAO
         //	bind(IWheelsetDao.class).to(WheelsetDao.class);
         //	bind(IWorkshopDao2.class).to(WorkshopDao2.class);

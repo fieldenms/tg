@@ -130,12 +130,6 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IUser.class).to(UserDao.class);
         // bind IUserProvider
         bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
-        bind(INewUserNotifier.class).toInstance(new INewUserNotifier() {
-            @Override
-            public void notify(User user) {
-            }
-            
-        });
         
         bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);

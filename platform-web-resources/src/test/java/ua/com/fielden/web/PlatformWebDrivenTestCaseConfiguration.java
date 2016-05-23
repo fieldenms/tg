@@ -4,6 +4,7 @@ import org.restlet.data.Protocol;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -33,7 +34,7 @@ public class PlatformWebDrivenTestCaseConfiguration implements IWebDrivenTestCas
 
     public PlatformWebDrivenTestCaseConfiguration() {
         restClientUtil = new RestClientUtil(Protocol.HTTP, "localhost", PORT, "v1", "test");
-        injector = new ApplicationInjectorFactory().add(new CommonRestFactoryModuleForTestingPurposes(restClientUtil, serialisationClassProvider)).getInjector();
+        injector = new ApplicationInjectorFactory().add(new CommonRestFactoryModuleForTestingPurposes(restClientUtil, serialisationClassProvider)).add(new NewUserNotifierMockBindingModule()).getInjector();
         entityFactory = injector.getInstance(EntityFactory.class);
         clientSerialiser = injector.getInstance(ISerialiser.class);
         restClientUtil.initSerialiser(clientSerialiser);
