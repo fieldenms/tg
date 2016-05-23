@@ -14,7 +14,9 @@ import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.swing.menu.MiType;
+import ua.com.fielden.platform.swing.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
@@ -115,6 +117,16 @@ public class CentreUtils<T extends AbstractEntity<?>> {
                                 getDifferencesCentre(gdtm, miType),
                                 getEntityType(miType)
                         );
+                // For all generated types on freshCentre (and on its derivatives like 'unchanged freshCentre', 'run centre', 'unchanged run centre' etc.) there is a need to
+                //  provide miType information inside its generated type to be sent to the client application. This is done through the use of 
+                //  annotation miType and, in future, other custom annotations, for example @SaveAsName.
+                // Please note that copyCentre method in GlobalDomainTreeManager performs copying of all defined annotations to provide freshCentre's derivatives
+                //  with such additional information too.
+                for (final Class<?> root: freshCentre.getRepresentation().rootTypes()) {
+                    if (DynamicEntityClassLoader.isGenerated(freshCentre.getEnhancer().getManagedType(root))) {
+                        freshCentre.getEnhancer().adjustManagedTypeAnnotations(root, new MiTypeAnnotation().newInstance(miType));
+                    }
+                }
 
                 initUnchangedCentreManager(gdtm, miType, FRESH_CENTRE_NAME, freshCentre);
 

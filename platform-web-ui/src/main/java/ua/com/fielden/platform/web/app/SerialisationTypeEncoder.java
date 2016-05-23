@@ -4,11 +4,13 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
+import ua.com.fielden.platform.swing.menu.MiType;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private TgJackson tgJackson;
@@ -23,6 +25,9 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     @Override
     public <T extends AbstractEntity<?>> String encode(final Class<T> entityType) {
         // need to register the type into EntityTypeInfoGetter in caser where it wasn't registered
+        if (DynamicEntityClassLoader.isGenerated(entityType)) {
+            System.out.println("========================== " + entityType.getAnnotation(MiType.class).value());
+        }
         
         final String entityTypeName = entityType.getName();
         if (entityTypeInfoGetter.get(entityTypeName) == null) {

@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -602,6 +604,16 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         // TODO kryo.register(CentreDomainTreeManager.class, new CentreDomainTreeManagerSerialiserWithTransientAnalyses(kryo));
         final ICentreDomainTreeManagerAndEnhancer copy = initCentreManagerCrossReferences(EntityUtils.deepCopy(centre, getSerialiser()));
         // TODO kryo.register(CentreDomainTreeManager.class);
+        
+        // Performs copying of all defined custom annotations on generated types to provide the copy with the same annotations as original centre have.
+        for (final Class<?> root: centre.getRepresentation().rootTypes()) {
+            final Class<?> managedType = centre.getEnhancer().getManagedType(root);
+            if (DynamicEntityClassLoader.isGenerated(managedType)) {
+                final Annotation[] annotationsToCopy = managedType.getAnnotations();
+                copy.getEnhancer().adjustManagedTypeAnnotations(root, annotationsToCopy);
+            }
+        }
+        
         logger.debug("Copying centre...done");
         return copy;
     }
