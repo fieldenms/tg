@@ -46,7 +46,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         final List<AbstractEntity<?>> entities;
         if (entity.getAll()) {
             customObject.put("@@pageNumber", -1);
-            customObject.put("@@exportAll", "yes");
+            customObject.put("@@action", "export all");
             entities = new ArrayList<>(selectionCrit.exportQueryRunner().apply(customObject));
         } else if (entity.getPageRange()) {
             entities = new ArrayList<>();
