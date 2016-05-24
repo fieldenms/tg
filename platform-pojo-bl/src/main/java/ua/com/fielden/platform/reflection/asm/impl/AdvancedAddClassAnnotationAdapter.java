@@ -115,12 +115,10 @@ public class AdvancedAddClassAnnotationAdapter extends ClassVisitor implements O
         final List<String> params = Reflector.annotataionParams(annotation.annotationType());
 
         for (final String name : params) {
-            if (!name.equals("equals") && !name.equals("toString") && !name.equals("hashCode")) {
-                final Pair<Class<?>, Object> pair = Reflector.getAnnotationParamValue(annotation, name);
-                final Class<?> type = pair.getKey();
-                final Object value = pair.getValue();
-                processValueForAnnotation(av, name, type, value);
-            }
+            final Pair<Class<?>, Object> pair = Reflector.getAnnotationParamValue(annotation, name);
+            final Class<?> type = pair.getKey();
+            final Object value = pair.getValue();
+            processValueForAnnotation(av, name, type, value);
         }
 
     }
