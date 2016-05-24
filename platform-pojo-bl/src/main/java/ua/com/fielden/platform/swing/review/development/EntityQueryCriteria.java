@@ -226,6 +226,13 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         }
     }
 
+    /**
+     * Returns the data page with summary/ Before it retrieves the page it also calculates whether specified page number is in the range available pages.
+     *
+     * @param pageNumber
+     * @param pageCapacity
+     * @return
+     */
     public Pair<IPage<T>, T> getPageWithSummaries(final int pageNumber, final int pageCapacity) {
         final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> resultQuery = generateQueryWithSummaries();
         final int entitiesCount = count(resultQuery.getKey());
@@ -238,9 +245,18 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         return new Pair<>(getPage(resultQuery.getKey(), pageNumber, pageCapacity), getSummary(resultQuery.getValue()));
     }
 
+    /**
+     * Calculates the summaries for specified query.
+     *
+     * @param query
+     * @return
+     */
     private T getSummary(final QueryExecutionModel<T, EntityResultQueryModel<T>> query) {
-        final List<T> list = getAllEntities(query);
-        return list.size() == 1 ? list.get(0) : null;
+        if (query != null) {
+            final List<T> list = getAllEntities(query);
+            return list.size() == 1 ? list.get(0) : null;
+        }
+        return null;
     }
 
     private IPage<T> getPage(final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery, final int pageNumber, final int pageCapacity) {
@@ -252,6 +268,11 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         }
     }
 
+    /**
+     * Generates the query and summary query for this entity query criteria.
+     *
+     * @return
+     */
     private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> generateQueryWithSummaries() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
