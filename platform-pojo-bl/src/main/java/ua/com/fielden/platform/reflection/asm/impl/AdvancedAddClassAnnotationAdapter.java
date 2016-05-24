@@ -112,7 +112,7 @@ public class AdvancedAddClassAnnotationAdapter extends ClassVisitor implements O
     }
 
     private void processAnnotationParam(final AnnotationVisitor av, final Annotation annotation) {
-        final List<String> params = Reflector.annotataionParams(annotation.getClass()); // should this not be annotation.annotationType()?
+        final List<String> params = Reflector.annotataionParams(annotation.annotationType());
 
         for (final String name : params) {
             final Pair<Class<?>, Object> pair = Reflector.getAnnotationParamValue(annotation, name);
