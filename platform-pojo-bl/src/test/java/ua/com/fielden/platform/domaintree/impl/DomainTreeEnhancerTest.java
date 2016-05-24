@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -26,6 +27,8 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPrope
 import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.KeyTitle;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -879,12 +882,26 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         assertTrue("dte instance should be equal after no adjustments have been performed.", EntityUtils.equalsEx(dtmCopy, dtm()));
     }
 
-    
     @Test
     public void adjusting_of_annotations_for_generated_type_adds_those_annotations_to_generated_type_and_do_not_change_domain_tree_enhancer_semantics() {
+        final Annotation[] originalAnnotations = dtm().getManagedType(EnhancingMasterEntity.class).getAnnotations();
+        assertEquals("There should be 2 type annotations in managedType for EnhancingMasterEntity.", 2, originalAnnotations.length);
+        assertEquals("First annotation should be KeyTitle.", KeyTitle.class, originalAnnotations[0].annotationType());
+        assertEquals("Second annotation should be KeyType.", KeyType.class, originalAnnotations[1].annotationType());
+        
         final IDomainTreeEnhancer dtmCopy = EntityUtils.deepCopy(dtm(), serialiser());
         
+        final Annotation[] deepCopiedAnnotations = dtmCopy.getManagedType(EnhancingMasterEntity.class).getAnnotations();
+        assertEquals("There should be 2 type annotations in managedType for EnhancingMasterEntity.", 2, deepCopiedAnnotations.length);
+        assertEquals("First annotation should be KeyTitle.", KeyTitle.class, deepCopiedAnnotations[0].annotationType());
+        assertEquals("Second annotation should be KeyType.", KeyType.class, deepCopiedAnnotations[1].annotationType());
+        
         final Class<?> adjustedType = dtm().adjustManagedTypeAnnotations(EnhancingMasterEntity.class, new EntityTypeAnnotation(EnhancingMasterEntity.class).newInstance());
+        final Annotation[] adjustedAnnotations = adjustedType.getAnnotations();
+        assertEquals("There should be 3 type annotations in managedType for EnhancingMasterEntity.", 3, adjustedAnnotations.length);
+        assertEquals("First annotation should be KeyTitle.", KeyTitle.class, adjustedAnnotations[0].annotationType());
+        assertEquals("Second annotation should be KeyType.", KeyType.class, adjustedAnnotations[1].annotationType());
+        assertEquals("Third annotation should be EntityType.", EntityType.class, adjustedAnnotations[2].annotationType());
         assertEquals(EnhancingMasterEntity.class, adjustedType.getAnnotation(EntityType.class).value());
         
         assertTrue("dte instance should be equal after generated type annotations adjustments.", EntityUtils.equalsEx(dtmCopy, dtm()));
