@@ -1,27 +1,37 @@
 package ua.com.fielden.platform.web.app;
 
+import java.util.regex.Pattern;
+
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.swing.menu.MiType;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.RefreshApplicationException;
+import ua.com.fielden.platform.web.centre.CentreUtils;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private TgJackson tgJackson;
     private EntityTypeInfoGetter entityTypeInfoGetter;
     private final IUserProvider userProvider;
+    private final IServerGlobalDomainTreeManager serverGdtm;
     
     @Inject
-    public SerialisationTypeEncoder(final IUserProvider userProvider) {
+    public SerialisationTypeEncoder(final IUserProvider userProvider, final IServerGlobalDomainTreeManager serverGdtm) {
         this.userProvider = userProvider;
+        this.serverGdtm = serverGdtm;
     }
     
     @Override
@@ -49,21 +59,44 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     public <T extends AbstractEntity<?>> Class<T> decode(final String entityTypeId) {
         final boolean isGenerated = entityTypeId.contains(":");
         final String entityTypeName;
-        final Class<T> decodedEntityType;
+        Class<T> decodedEntityType = null;
         
         if (isGenerated) {
             System.out.println("-------------------------- " + entityTypeId);
             entityTypeName = entityTypeId.substring(0, entityTypeId.indexOf(":"));
             
-            // TODO the type, that has been arrived from client, needs to be not only "registered" in classLoader, but also registered in form of EntityType inside TgJackson's EntityTypeInfoGetter!!!
-            // TODO there is a need to check whether the type with 'entityTypeName' exists on server, and if not, corresponding centre should be loaded
-            if (entityTypeInfoGetter.get(entityTypeName) == null) {
-                throw new RefreshApplicationException();
+            try {
+                decodedEntityType = (Class<T>) ClassesRetriever.findClass(entityTypeName);
+            } catch (final IllegalArgumentException doesNotExistException) {
+                final String[] parts = entityTypeId.split(":");
+                if (parts.length != 3) {
+                    throw new SerialisationTypeEncoderException(String.format("Generated type has unknown format for its identifier %s.", entityTypeId));
+                }
+                final String miTypeName = parts[1];
+                final String saveAsName = parts[2];
+                final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) ClassesRetriever.findClass(miTypeName);
                 
-                // TODO tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) decodedEntityType);
+                final User user = userProvider.getUser();
+                if (user == null) { // the user is unknown at this stage!
+                    throw new SerialisationTypeEncoderException(String.format("User is somehow unknown during decoding of entity type inside deserialisation process."));
+                }
+                final String userName = user.getKey();
+                final IGlobalDomainTreeManager userSpecificGdtm = serverGdtm.get(userName);
+                final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUtils.getFreshCentre(userSpecificGdtm, miType);
+                final ICentreDomainTreeManagerAndEnhancer copiedFreshCentre = ((GlobalDomainTreeManager) userSpecificGdtm).copyCentre(freshCentre);
+                
+                final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
+                    
+                decodedEntityType = (Class<T>) copiedFreshCentre.getEnhancer().adjustManagedTypeName(ClassesRetriever.findClass(originalAndSuffix[0]), originalAndSuffix[1]);
+                
+                if (entityTypeInfoGetter.get(decodedEntityType.getName()) != null) {
+                    throw new SerialisationTypeEncoderException(String.format("Somehow decoded entity type %s was already registered in TgJackson.", decodedEntityType.getName()));
+                }
+                tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) decodedEntityType);
+                
+                // init 'previously Run centre'
+                CentreUtils.initUnchangedCentreManager(userSpecificGdtm, miType, CentreUtils.PREVIOUSLY_RUN_CENTRE_NAME, copiedFreshCentre);
             }
-            
-            decodedEntityType = (Class<T>) ClassesRetriever.findClass(entityTypeName);
         } else {
             entityTypeName = entityTypeId;
             decodedEntityType = (Class<T>) ClassesRetriever.findClass(entityTypeName);
