@@ -106,6 +106,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
@@ -1043,6 +1044,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         shortDesc("Delete selected").
                         longDesc("Deletes the selected entities").
                         build())
+                .also()
+                .addTopAction(CentreConfigActions.SORT_ACTION.mkAction())
                 .also()
                 .addTopAction(action(NewEntityAction.class).
                         withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
