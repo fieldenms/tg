@@ -115,7 +115,6 @@ public class TgTestApplicationServerModule extends BasicWebServerModule {
         }).annotatedWith(SessionCache.class).toProvider(SessionCacheBuilder.class).in(Scopes.SINGLETON);
         
         bindConstant().annotatedWith(AppUri.class).to(format("https://%s:%s%s", getProps().get("web.domain"), getProps().get("port"), getProps().get("web.path")));
-        bind(INewUserNotifier.class).to(NewUserNotifierByEmail.class);
     }
 
     private static class SessionCacheBuilder implements Provider<Cache<String, UserSession>> {
