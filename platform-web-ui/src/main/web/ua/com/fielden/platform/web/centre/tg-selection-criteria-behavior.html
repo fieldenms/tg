@@ -209,7 +209,7 @@
                         var customObject = self._reflector().customObject(entityAndCustomObject);
                         var resultEntities = customObject.resultEntities || [];
                         var pageCount = customObject.pageCount || null;
-                        var pageNumber = customObject.pageNumber || null;
+                        var pageNumber = customObject.pageNumber;
                         var metaValues = customObject.metaValues;
                         var centreChanged = customObject.isCentreChanged;
                         var renderingHints = customObject.renderingHints || [];
@@ -231,6 +231,13 @@
                     if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
                         this.staleCriteriaMessage = staleCriteriaMessage;
                     }
+                    this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
+                    // custom external action
+                    if (pageNumber !== null) {
+                        this.pageNumber = pageNumber;
+                    }
+                    this.pageNumberUpdated = this.pageNumber;
+                    this.pageCountUpdated = this.pageCount;
                     if (criteriaEntity === null) {
                         var msg = "Running completed successfully.";
                         this._openToastWithoutEntity(msg, false, msg, false);
@@ -246,13 +253,6 @@
                         var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
                         this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
                     }
-                    this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
-                    // custom external action
-                    if (pageNumber !== null) {
-                        this.pageNumber = pageNumber;
-                    }
-                    this.pageNumberUpdated = this.pageNumber;
-                    this.pageCountUpdated = this.pageCount;
                 }).bind(self);
 
                 self._postRunDefaultError = (function (errorResult) {

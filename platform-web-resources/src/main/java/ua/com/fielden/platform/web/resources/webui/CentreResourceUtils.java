@@ -173,7 +173,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 resultantCustomObject.put("summary", refreshedData.getValue());
             } else if (RunActions.NAVIGATE.toString().equals(action)) {
                 try {
-                    page = criteriaEntity.getPage((Integer) customObject.get("@@pageNumber"), (Integer) customObject.get("@@pageCount"), pageCapacity);
+                    page = criteriaEntity.getPage((Integer) customObject.get("@@pageNumber"), pageCapacity);
                 } catch (final Exception e) {
                     final Pair<IPage<T>, T> navigatedData = criteriaEntity.getPageWithSummaries((Integer) customObject.get("@@pageNumber"), pageCapacity);
                     page = navigatedData.getKey();
