@@ -12,6 +12,7 @@ import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.swing.menu.MiType;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.RefreshApplicationException;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private TgJackson tgJackson;
@@ -27,49 +28,45 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     public <T extends AbstractEntity<?>> String encode(final Class<T> entityType) {
         // need to register the type into EntityTypeInfoGetter in caser where it wasn't registered
         final Class<? extends MiWithConfigurationSupport<?>> miType;
-        if (DynamicEntityClassLoader.isGenerated(entityType)) {
+        final boolean isGenerated = DynamicEntityClassLoader.isGenerated(entityType);
+        if (isGenerated) {
             miType = entityType.getAnnotation(MiType.class).value();
             System.out.println("========================== " + miType);
         } else {
             miType = null;
         }
         
-        // final String entityTypeName = entityType.getName();
-//        if (entityTypeInfoGetter.get(entityTypeName) == null) {
-//            tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) entityType);
-//        }
+        final String entityTypeName = entityType.getName();
+        if (entityTypeInfoGetter.get(entityTypeName) == null) {
+            throw new IllegalStateException("The type [" + entityTypeName + "] should be already registered at this stage.");
+            // TODO tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) entityType); ?
+        }
         
-        // TODO continue implementation
-//        if (entityType.getKey() == null) {
-//            throw new IllegalStateException("The name of the type [" + entityType + "] should be populated to be ready for serialisation.");
-//        }
-
-        
-        
-        return miType == null ? entityType.getName() : entityType.getName() + ":" + miType.getName();
+        return isGenerated ? entityType.getName() + ":" + miType.getName() + ":%main%": entityType.getName();
     }
 
     @Override
     public <T extends AbstractEntity<?>> Class<T> decode(final String entityTypeId) {
+        final boolean isGenerated = entityTypeId.contains(":");
+        final String entityTypeName;
+        final Class<T> decodedEntityType;
         
-        // TODO the type, that has been arrived from client, needs to be not only "registered" in classLoader, but also registered in form of EntityType inside TgJackson's EntityTypeInfoGetter!!!
-        // TODO the type, that has been arrived from client, needs to be not only "registered" in classLoader, but also registered in form of EntityType inside TgJackson's EntityTypeInfoGetter!!!
-        // TODO the type, that has been arrived from client, needs to be not only "registered" in classLoader, but also registered in form of EntityType inside TgJackson's EntityTypeInfoGetter!!!
-        // TODO the type, that has been arrived from client, needs to be not only "registered" in classLoader, but also registered in form of EntityType inside TgJackson's EntityTypeInfoGetter!!!
-        // TODO the type, that has been arrived from client, needs to be not only "registered" in classLoader, but also registered in form of EntityType inside TgJackson's EntityTypeInfoGetter!!!
-//        final EntityType instanceTypeInfo = serialisationTypeEncoder.get(entityTypeId);
-//        if (instanceTypeInfo == null) {
-//            throw new RefreshApplicationException();
-//        }
-//        final Class<?> instanceType = ClassesRetriever.findClass(instanceTypeInfo.getKey());
-        
-        final String entityTypeName = entityTypeId.contains(":") ? entityTypeId.substring(0, entityTypeId.indexOf(":")) : entityTypeId;
-        if (entityTypeId.contains(":")) {
+        if (isGenerated) {
             System.out.println("-------------------------- " + entityTypeId);
-        }
-        final Class<T> decodedEntityType = (Class<T>) ClassesRetriever.findClass(entityTypeName);
-        if (entityTypeInfoGetter.get(entityTypeName) == null) {
-            tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) decodedEntityType);
+            entityTypeName = entityTypeId.substring(0, entityTypeId.indexOf(":"));
+            
+            // TODO the type, that has been arrived from client, needs to be not only "registered" in classLoader, but also registered in form of EntityType inside TgJackson's EntityTypeInfoGetter!!!
+            // TODO there is a need to check whether the type with 'entityTypeName' exists on server, and if not, corresponding centre should be loaded
+            if (entityTypeInfoGetter.get(entityTypeName) == null) {
+                throw new RefreshApplicationException();
+                
+                // TODO tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) decodedEntityType);
+            }
+            
+            decodedEntityType = (Class<T>) ClassesRetriever.findClass(entityTypeName);
+        } else {
+            entityTypeName = entityTypeId;
+            decodedEntityType = (Class<T>) ClassesRetriever.findClass(entityTypeName);
         }
         
         return decodedEntityType;

@@ -56,6 +56,9 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
     @Override
     public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
+        if (entityType.get_identificator() == null) {
+            throw new IllegalStateException("The identificator of the type [" + entityType + "] should be populated to be ready for serialisation.");
+        }
         ////////////////////////////////////////////////////
         ///////////////// handle references ////////////////
         ////////////////////////////////////////////////////

@@ -297,35 +297,6 @@ public class FactoryForTestingEntities {
         return entity;
     }
     
-    public AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final boolean instrumented) {
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-        
-        final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
-        try {
-            emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
-                    cl.startModification(EmptyEntity.class.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(EmptyEntity.class.getName())).endModification();
-        } catch (final ClassNotFoundException e) {
-            throw Result.failure(e);
-        }
-        final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
-        tgJackson.registerNewEntityType(emptyEntityTypeEnhanced);
-        
-        final AbstractEntity<String> entity;
-        if (instrumented) {
-            entity = (AbstractEntity<String>) factory.newEntity(emptyEntityTypeEnhanced, 159L);
-        } else {
-            entity = (AbstractEntity<String>) factory.newPlainEntity(emptyEntityTypeEnhanced, 159L);
-            entity.setEntityFactory(factory);
-        }
-
-        entity.beginInitialising();
-        entity.setKey("GENERATED+UNINSTRUMENTED");
-        entity.setDesc("GENERATED+UNINSTRUMENTED desc");
-        entity.endInitialising();
-        
-        return entity;
-    }
-    
     public Entity1WithEntity2 createInstrumentedEntityWithUninstrumentedProperty() {
         final Entity1WithEntity2 entity = factory.newEntity(Entity1WithEntity2.class, 159L);
         

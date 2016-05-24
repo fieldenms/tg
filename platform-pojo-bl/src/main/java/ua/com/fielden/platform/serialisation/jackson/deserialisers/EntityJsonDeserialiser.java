@@ -103,14 +103,10 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             }
             entity.beginInitialising();
 
-            // TODO check whether this logic is possible to be remained final String newServerSideReference = EntitySerialiser.newSerialisationId(entity, references, entityType.getKey());
-            
             final JsonNode atIdNode = node.get("@id");
+            // At this stage 'clientSideReference' has been already decoded using ISerialisationTypeEncoder, that is why concrete EntityJsonDeserialiser has been chosen for deserialisation
+            // Method determineValue is doing the necessary type determination with the usage of TgJackson.extractConcreteType method.
             final String clientSideReference = atIdNode == null ? null : atIdNode.asText();
-//            if (!EntityUtils.equalsEx(newServerSideReference, clientSideReference)) {
-         // TODO check whether this logic is possible to be remained 
-//                throw new EntityDeserialisationException(format("EntityJsonSerialiser has received reference number [%s] that does not conform to its internal next number [%s] for entity type [%s] for entity id [%s].", clientSideReference, newServerSideReference, type.getSimpleName(), id));
-//            }
             references.putEntity(clientSideReference, entity);
 
             // deserialise version -- should never be null

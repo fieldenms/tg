@@ -24,18 +24,13 @@ public class EntityTypeInfoGetter {
      * @param entityType
      */
     public EntityType register(final EntityType entityType) {
-        if (EntityType.class.getName().equals(entityType.getKey()) || EntityTypeProp.class.getName().equals(entityType.getKey())) {
-            entityType.endInitialising();
-            return entityType;
-        }
-
         if (!typeTable.containsKey(entityType.getKey())) {
             typeTable.put(entityType.getKey(), entityType);
             entityType.endInitialising();
 
-            logger.debug("Registering new type with name [" + entityType.getKey() + "] = " + entityType);
+            logger.debug(String.format("Registering new type with name [%s] = %s", entityType.getKey(), entityType));
         } else {
-            logger.warn("Is trying to register already registered new type [" + entityType.getKey() + "]. Has disregarded.");
+            logger.warn(String.format("Is trying to register already registered new type [%s]. Has disregarded.", entityType.getKey()));
         }
         return typeTable.get(entityType.getKey());
     }

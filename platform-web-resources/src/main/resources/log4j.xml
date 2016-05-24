@@ -45,7 +45,11 @@
 		<appender-ref ref="stdout" />
 	</logger>
 	<logger name="ua.com.fielden.platform.serialisation.api.impl.TgJackson" additivity="false">
-		<level value="error" />
+		<level value="debug" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter" additivity="false">
+		<level value="debug" />
 		<appender-ref ref="stdout" />
 	</logger>
 	<logger name="ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator" additivity="false">

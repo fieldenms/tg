@@ -28,9 +28,17 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
+import ua.com.fielden.platform.sample.domain.MiEmptyEntity;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
+import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
+import ua.com.fielden.platform.swing.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -304,11 +312,43 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithMapOfSameEntities(),
                 factory.createEntityWithCompositeKey(),
                 factory.createUninstrumentedEntity(),
-                factory.createGeneratedEntity(restUtil.getSerialiser(), false), // uninstrumented
-                factory.createGeneratedEntity(restUtil.getSerialiser(), true), // instrumented
+                createGeneratedEntity(restUtil.getSerialiser(), false), // uninstrumented
+                createGeneratedEntity(restUtil.getSerialiser(), true), // instrumented
                 factory.createInstrumentedEntityWithUninstrumentedProperty(),
                 factory.createUninstrumentedEntityWithInstrumentedProperty()
                 );
+    }
+    
+    private static AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final boolean instrumented) {
+        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+        
+        final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
+        try {
+            emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
+                    cl.startModification(EmptyEntity.class.getName())
+                        .modifyTypeName(new DynamicTypeNamingService().nextTypeName(EmptyEntity.class.getName()))
+                        .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEmptyEntity.class))
+                    .endModification();
+        } catch (final ClassNotFoundException e) {
+            throw Result.failure(e);
+        }
+        final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
+        tgJackson.registerNewEntityType(emptyEntityTypeEnhanced);
+        
+        final AbstractEntity<String> entity;
+        if (instrumented) {
+            entity = (AbstractEntity<String>) serialiser.factory().newEntity(emptyEntityTypeEnhanced, 159L);
+        } else {
+            entity = (AbstractEntity<String>) serialiser.factory().newPlainEntity(emptyEntityTypeEnhanced, 159L);
+            entity.setEntityFactory(serialiser.factory());
+        }
+
+        entity.beginInitialising();
+        entity.setKey("GENERATED+UNINSTRUMENTED");
+        entity.setDesc("GENERATED+UNINSTRUMENTED desc");
+        entity.endInitialising();
+        
+        return entity;
     }
     
     public List<AbstractEntity<?>> getEntities() {
