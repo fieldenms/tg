@@ -25,6 +25,7 @@ import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.migration.LegacyConnectionModule;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
@@ -127,7 +128,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
 
             hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
             hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata, idOnlyProxiedEntityTypeCache);
-            injector = new ApplicationInjectorFactory().add(hibernateModule).add(new LegacyConnectionModule(new Provider() {
+            injector = new ApplicationInjectorFactory().add(hibernateModule).add(new NewUserNotifierMockBindingModule()).add(new LegacyConnectionModule(new Provider() {
                 @Override
                 public Object get() {
                     try {

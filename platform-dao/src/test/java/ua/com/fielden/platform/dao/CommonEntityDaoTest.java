@@ -1,20 +1,9 @@
 package ua.com.fielden.platform.dao;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
-
-
-
-
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -26,9 +15,6 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -49,6 +35,12 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
 
     //TODO test count, delete
 
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
+    }
+    
     public void test_that_entity_with_simple_key_is_handled_correctly() {
         // find all
         final List<EntityWithMoney> result = dao.getPage(0, 25).data();
@@ -307,8 +299,7 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         // test save date time
         entity.setDateTimeProperty(new DateTime(2009, 03, 01, 12, 0, 55, 300).toDate());
         dao.save(entity);
-        hibernateUtil.getSessionFactory().getCurrentSession().flush();
-        hibernateUtil.getSessionFactory().getCurrentSession().clear();
+        
         entity = dao.findByKey("key1");
         final DateTime updatedDateTime = new DateTime(entity.getDateTimeProperty());
         assertEquals("Incorrect year.", 2009, updatedDateTime.getYear());
@@ -321,16 +312,14 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         // test save null date time
         entity.setDateTimeProperty(null);
         dao.save(entity);
-        hibernateUtil.getSessionFactory().getCurrentSession().flush();
-        hibernateUtil.getSessionFactory().getCurrentSession().clear();
+
         entity = dao.findByKey("key1");
         assertNull("Date property should habve been null.", entity.getDateTimeProperty());
         // test equality
         final Date prevDate = new Date();
         entity.setDateTimeProperty(prevDate);
         dao.save(entity);
-        hibernateUtil.getSessionFactory().getCurrentSession().flush();
-        hibernateUtil.getSessionFactory().getCurrentSession().clear();
+
         entity = dao.findByKey("key1");
         assertEquals("Date values should be equal", prevDate.getTime(), entity.getDateTimeProperty().getTime());
         assertEquals("Date values should be equal", prevDate, entity.getDateTimeProperty());
@@ -341,14 +330,10 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
     public void test_entity_version_is_updated_after_save() {
         EntityWithMoney entity = dao.findByKey("key1");
 
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-
         assertEquals("Incorrect prev version", Long.valueOf(0), entity.getVersion());
         entity.setDesc("new desc");
         entity = dao.save(entity);
         assertEquals("Incorrect curr version", Long.valueOf(1), entity.getVersion());
-
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
 
         final EntityWithMoney updatedEntity = dao.findByKey("key1");
         assertEquals("Incorrect prev version", Long.valueOf(1), updatedEntity.getVersion());
@@ -360,7 +345,6 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         // update entity to simulate staleness
         entity.setDesc("new desc");
         dao.save(entity);
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
 
         final EntityWithMoney entity2 = dao.findByKey("key1");
         assertTrue("This version should have been recognised as stale.", dao.isStale(entity.getId(), 0L));
@@ -377,17 +361,11 @@ public class CommonEntityDaoTest extends DbDrivenTestCase {
         assertEquals("Incorrect prev version", Long.valueOf(0), entity.getVersion());
         entity.setDesc("new desc");
 
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-
         // retrieve another instance of the same entity, modify and save -- this should emulate concurrent modification
         final EntityWithMoney anotherEntityInstance = dao.findByKey("key1");
         anotherEntityInstance.setDesc("another desc");
 
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
-
         dao.save(anotherEntityInstance);
-
-        hibernateUtil.getSessionFactory().getCurrentSession().close();
 
         // try to save previously retrieved entity, which should fail due to concurrent modification
         try {

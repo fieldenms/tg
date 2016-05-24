@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.view.master.api.compound;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 public interface ICompoundMaster7<T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> {
     /**
@@ -13,5 +14,5 @@ public interface ICompoundMaster7<T extends AbstractEntity<?>, F extends Abstrac
     /**
      * Completes building of compound master and registers the functional master that opens compound master.
      */
-    void done();
+    EntityMaster<F> done();
 }

@@ -351,6 +351,10 @@
                     throw "Do not execute methods firstPage(), nextPage() etc. before the method run().";
                 }
             },
+            
+            canLeave: function () {
+                return this._centreChanged ? "Please save changes before leaving" : undefined;
+            },
 
             /**
              * Starts the process of refreshing of the current page.

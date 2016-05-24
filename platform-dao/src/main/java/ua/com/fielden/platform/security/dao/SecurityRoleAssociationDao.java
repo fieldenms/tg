@@ -6,7 +6,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.order
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,7 +17,7 @@ import org.apache.commons.lang.StringUtils;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -31,13 +30,13 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 /**
- * DbDriven implementation of the {@link ISecurityRoleAssociationDao}
+ * DbDriven implementation of the {@link ISecurityRoleAssociation}
  * 
  * @author TG Team
  * 
  */
 @EntityType(SecurityRoleAssociation.class)
-public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAssociation> implements ISecurityRoleAssociationDao {
+public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAssociation> implements ISecurityRoleAssociation {
 
     /**
      * Instantiates the {@link SecurityRoleAssociationDao}
@@ -84,10 +83,17 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     @Override
     @SessionRequired
-    public int countAssociations(final User user, final Class<? extends ISecurityToken> token) {
-        final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class).where().prop("user").eq().val(user).and().prop("userRole.id").eq().prop("sra.role.id").model();
-        final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).as("sra").where().prop("sra.securityToken").eq().val(token.getName()).and().exists(slaveModel).model();
-        return count(model, Collections.<String, Object> emptyMap());
+    public int countActiveAssociations(final User user, final Class<? extends ISecurityToken> token) {
+        final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class)
+                .where()
+                .prop("user").eq().val(user)
+                .and().prop("userRole.active").eq().val(true) // filter out association with inactive roles
+                .and().prop("userRole.id").eq().prop("sra.role.id").model();
+        final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).as("sra")
+                .where()
+                .prop("sra.securityToken").eq().val(token.getName())
+                .and().exists(slaveModel).model();
+        return count(model);
     }
     
     @Override

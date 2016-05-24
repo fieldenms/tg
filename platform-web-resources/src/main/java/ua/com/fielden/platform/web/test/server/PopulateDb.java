@@ -90,16 +90,16 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUser(u);
         
-        final User _su = coUser.save(new_(User.class, User.system_users.SU.name()).setBase(true));
+        final User _su = coUser.save(new_(User.class, User.system_users.SU.name()).setBase(true).setEmail("SU@demoapp.com").setActive(true));
         final User su = coUser.resetPasswd(_su, _su.getKey());
-        final User _demo = ao(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su));
+        final User _demo = ao(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su).setEmail("DEMO@demoapp.com").setActive(true));
         final User demo = coUser.resetPasswd(_demo, _demo.getKey());
         
         final ITgPerson aoPerson = (ITgPerson) ao(TgPerson.class);
         aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());
         aoPerson.populateNew("Demo", "User", "Demo User", "DEMO");
 
-        final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies."));
+        final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
         System.out.println("admin.getId() == " + admin.getId());
 
         save(new_composite(UserAndRoleAssociation.class, su, admin));

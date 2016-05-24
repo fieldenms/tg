@@ -594,7 +594,7 @@
             	}
                 return this._ajaxSaver().generateRequest().completes;
             },
-
+            
             /**
              * Returns 'true' if the entity has been modified from original, 'false' otherwise.
              *
@@ -622,7 +622,6 @@
             		}
             	} 
             	
-            	// if all child nodes can be left, then check self if required
             	if (this.classList.contains('canLeave')) {
 	            	// create modif holder to analyze the currently bound entity on subject of its modifications
 	            	var modifHolder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);

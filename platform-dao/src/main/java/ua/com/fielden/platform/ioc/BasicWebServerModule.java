@@ -14,7 +14,7 @@ import ua.com.fielden.platform.dao.AttachmentDao;
 import ua.com.fielden.platform.dao.EntityAttachmentAssociationDao;
 import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
-import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
@@ -196,7 +196,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(ISortingProperty.class).to(SortingPropertyDao.class);
 
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
-        bind(ISecurityRoleAssociationDao.class).to(SecurityRoleAssociationDao.class);
+        bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);
         bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
         bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
 

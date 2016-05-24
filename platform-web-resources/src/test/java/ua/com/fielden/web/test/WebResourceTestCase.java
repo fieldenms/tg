@@ -137,6 +137,7 @@ public class WebResourceTestCase extends WebBasedTestCase {
 
     @Test
     public void test_entity_exists() {
+        DbDrivenTestCase.hibernateUtil.getSessionFactory().getCurrentSession().close();
         assertTrue("Entity should exist.", rao.entityExists(dao.findById(1L)));
         assertFalse("Entity should exist.", rao.entityExists(dao.findById(46L)));
     }

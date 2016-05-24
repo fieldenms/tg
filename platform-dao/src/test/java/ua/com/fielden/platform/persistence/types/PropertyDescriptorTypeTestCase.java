@@ -15,12 +15,16 @@ public class PropertyDescriptorTypeTestCase extends DbDrivenTestCase {
     private final ITgWorkOrder dao = injector.getInstance(ITgWorkOrder.class);
 
     public void test_property_descriptor_is_restored_correctly() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
+        
         final TgWorkOrder wo = dao.findByKeyAndFetch(fetch(TgWorkOrder.class).with("importantProperty").with("vehicle"), "WO_001");
         assertNotNull("Important property should not be null.", wo.getImportantProperty());
         assertEquals("Incorrect important property.", new PropertyDescriptor<TgWorkOrder>(TgWorkOrder.class, "vehicle"), wo.getImportantProperty());
     }
 
     public void test_property_descriptor_is_stored_correctly() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
+        
         final TgWorkOrder wo = dao.findByKeyAndFetch(fetch(TgWorkOrder.class).with("importantProperty").with("vehicle"), "WO_002");
         assertNull("Important property should be null.", wo.getImportantProperty());
 

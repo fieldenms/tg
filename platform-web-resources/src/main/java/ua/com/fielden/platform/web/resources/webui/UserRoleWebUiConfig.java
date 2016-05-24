@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
@@ -9,6 +10,7 @@ import java.util.Optional;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
@@ -52,19 +54,28 @@ public class UserRoleWebUiConfig {
      * @return
      */
     private static EntityCentre<UserRole> createCentre(final Injector injector) {
+        final String fmr = "'flex', 'margin-right: 20px', 'width: 200px'";
+        final String fmrLast = "'flex', 'width: 200px'";
+        final String critLayout = "['vertical', 'center-justified', "
+                + format("[[%s], [%s]], ", fmr, fmrLast)
+                + format("['flex']")
+                + "]";
+        
         final EntityCentre<UserRole> userRoleCentre = new EntityCentre<>(MiUserRole.class, "User Roles",
                 EntityCentreBuilder.centreFor(UserRole.class)
                 .runAutomatically()
                 .addTopAction(UserRoleActions.NEW_ACTION.mkAction()).also()                
                 .addTopAction(UserRoleActions.DELETE_ACTION.mkAction())
                 .addCrit("this").asMulti().autocompleter(UserRole.class).also()
+                .addCrit(ActivatableAbstractEntity.ACTIVE).asMulti().bool().also()
                 .addCrit("desc").asMulti().text()
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), critLayout)
                 .addProp("this")
                     .order(1).asc()
                     .width(200)
                 .also()
-                .addProp("desc").minWidth(200)
+                .addProp("desc").minWidth(200).also()
+                .addProp(ACTIVE).minWidth(50)
                 .addPrimaryAction(UserRoleActions.EDIT_ACTION.mkAction()).also()
                 .addSecondaryAction(UserRoleActions.MANAGE_SECURITY_TOKEN_ACTION.mkAction())
                 .build(), injector, null);
@@ -79,21 +90,25 @@ public class UserRoleWebUiConfig {
     private static EntityMaster<UserRole> createMaster(final Injector injector) {
         final String fmr = "'flex'";
 
+        final String layout = 
+            "['padding:20px', 'width: 300px', "
+            + format("[%s],", fmr)
+            + format("[%s],", fmr)
+            + format("[%s],", fmr)
+            + format(bottomButtonPanel, actionButton, actionButton)
+            + "]";
         final IMaster<UserRole> masterConfigForUserRole = new SimpleMasterBuilder<UserRole>()
                 .forEntity(UserRole.class)
                 .addProp("key").asSinglelineText()
                 .also()
-                .addProp("desc").asSinglelineText()
+                .addProp("desc").asMultilineText()
+                .also()
+                .addProp(ActivatableAbstractEntity.ACTIVE).asCheckbox()
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel changes")
                 .addAction(MasterActions.SAVE).longDesc("Save changes")
 
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', "
-                        + format("[%s],", fmr)
-                        + format("[%s],", fmr)
-                        + format(bottomButtonPanel, actionButton, actionButton)
-                        + "    ]"))
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .done();
         return new EntityMaster<UserRole>(
                 UserRole.class,

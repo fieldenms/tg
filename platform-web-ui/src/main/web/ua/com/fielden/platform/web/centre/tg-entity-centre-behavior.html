@@ -102,7 +102,7 @@
                     type: Boolean,
                     value: false
                 },
-                
+
                 /**
                  * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
                  */
@@ -187,12 +187,12 @@
                 _postRun: {
                     type: Function
                 },
-                
+
                 /**
                  * Determines whether centre was runned or not if it was runned then the value should be 'yes' otherwise value is null.
                  */
                 _wasRun: {
-                	type: String
+                    type: String
                 },
 
                 /**
@@ -292,12 +292,12 @@
                 _activateResultSetView: {
                     type: Function
                 },
-                
+
                 _disablementCounter: {
                     type: Number,
                     value: 0
                 },
-                
+
                 currentState: {
                     type: String,
                     value: 'EDIT'
@@ -335,15 +335,15 @@
             _computeViewerDisabled: function (_criteriaLoaded, _wasRun) {
                 return _criteriaLoaded === false || _wasRun !== "yes";
             },
-            
+
             _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
                 this.$.egi.entities = retrievedEntities;
             },
-            
+
             _retrievedTotalsChanged: function (retrievedTotals, oldValue) {
                 this.$.egi.totals = retrievedTotals;
             },
-            
+
             /**
              * Initialisation block. It has all children web components already initialised.
              */
@@ -548,7 +548,7 @@
                     this._ajaxDiscarder().body = JSON.stringify(customObject);
                     return this._ajaxDiscarder().generateRequest().completes;
                 }).bind(self);
-                
+
                 self.run = (function () {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
@@ -761,7 +761,7 @@
             canNotCurrent: function (pageNumber, pageCount, isRunning) {
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canCurrent(pageNumber, pageCount));
             },
-            
+
             computeConfigButtonTooltip: function (staleCriteriaMessage) {
                 return staleCriteriaMessage === null ? 'Show selection criteria' : staleCriteriaMessage;
             },
@@ -786,6 +786,29 @@
             },
 
             /**
+             * Contract that allows one to determines whether this component can be closed/left or not.
+             */
+            canLeave: function () {
+                // Check whether selection criteria can be left.
+                var canLeaveThisCentre = this.$.selection_criteria.classList.contains('canLeave') && this.$.selection_criteria.canLeave();
+                var insertionPoints, insPoIndex, elementWithCanLeave, canLeaveChild;
+                if (canLeaveThisCentre) {
+                    return canLeaveThisCentre;
+                }
+                // Check whether all insertion points can be left.
+                insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');
+                for (insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
+                    elementWithCanLeave = insertionPoints[insPoIndex].querySelector('.canLeave');
+                    canLeaveChild = elementWithCanLeave && elementWithCanLeave.canLeave();
+                    if (canLeaveChild) {
+                        return canLeaveChild;
+                    }
+                }
+            },
+
+
+
+            /**
              * Computes URL for 'ajaxSaver' and 'ajaxDiscarder'.
              */
             _computeUrl: function (miType) {
@@ -803,10 +826,10 @@
                     });
                 }
             },
-            
+
             disableView: function () {
                 this._disablementCounter += 1;
-                if (this._disablementCounter > 0 && this.currentState !== 'VIEW') { 
+                if (this._disablementCounter > 0 && this.currentState !== 'VIEW') {
                     this.disableViewForDescendants();
                 }
             },

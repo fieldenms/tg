@@ -101,13 +101,46 @@
                         this.$.pages.selected = selected;
                         return;
                     }
-                } 
+                }
                 this.selectAfterRender = selected;
+            },
+
+            _checkWeatherCanLeave: function (e) {
+                var modules = this.querySelectorAll("tg-app-view");
+                var customDialogs = document.body.querySelectorAll("tg-custom-action-dialog");
+                var changedEntityCentres = [];
+                var master, itemIndex, viewToCheck;
+                for (itemIndex = 0; itemIndex < modules.length; itemIndex++) {
+                    viewToCheck = typeof modules[itemIndex].canLeave === 'function' && modules[itemIndex].canLeave();
+                    if (Array.isArray(viewToCheck)) {
+                        viewToCheck.forEach(function(element) {
+                            changedEntityCentres.push(element);    
+                        });
+                    } else if (viewToCheck) {
+                        changedEntityCentres.push(viewToCheck);
+                    }
+                }
+                if (changedEntityCentres.length > 0) {
+                    e.returnValue = "The following menu items were changed:\n";
+                    changedEntityCentres.forEach(function(element) {
+                        e.returnValue += "\t * " + element + "\n";
+                    });
+                }
+                for (itemIndex = 0; itemIndex < customDialogs.length; itemIndex++) {
+                    if (customDialogs[itemIndex].style.display !== 'none') {
+                        master = customDialogs[itemIndex].querySelector(".canLeave");
+                        if (master && typeof master.canLeave === 'function' && master.canLeave()) {
+                            e.returnValue = "There are some unsaved entity masters.";
+                        }
+                    }
+                }
             },
 
             ready: function () {
                 //Setting dwellTime to 0 for iron-location that is in the shadow-dom of carbon-location component. This fixes the problem of delayong the history changes.
                 this.$.location.$$("iron-location").dwellTime = 0;
+                //Binding to 'this' functions those are used outside the scope of this component.
+                this._checkWeatherCanLeave = this._checkWeatherCanLeave.bind(this);
             },
 
             attached: function () {
@@ -119,6 +152,12 @@
                         this.set("_route.path", "/menu");
                     }
                 });
+
+                window.addEventListener("beforeunload", this._checkWeatherCanLeave);
+            },
+
+            detached: function () {
+                window.removeEventListener("beforeunload", this._checkWeatherCanLeave);
             }
         });
     })();
