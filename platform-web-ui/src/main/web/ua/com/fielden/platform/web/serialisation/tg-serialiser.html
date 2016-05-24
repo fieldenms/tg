@@ -52,13 +52,13 @@
                                 // Find the index of the obj in 'array of serialised objects'. If the index equals -1 -- the object was not serialised yet
                                 index = getId(obj);
                                 if (index >= 0) {
-                                    serialisedObj["@id_ref"] = obj.type().identificator() + "#" + (index + 1); // use the current number
+                                    serialisedObj["@id_ref"] = obj.type().identifier() + "#" + (index + 1); // use the current number
                                     return serialisedObj;
                                 } else {                                        
                                     // If obj wasn't found in object map then
                                     // create object and add property "@id" to that object, also add created object to object map with key "@id".
                                     // That object map contains entity references in order to use it later for initialising cross referenced objects. 
-                                    serialisedObj["@id"] = obj.type().identificator() + "#" + (putId(obj) + 1); 
+                                    serialisedObj["@id"] = obj.type().identifier() + "#" + (putId(obj) + 1); 
                                 }
                             }
                             // All object properties will be copied to new object. Just skip "_type" property.
@@ -131,8 +131,8 @@
                                 return objectMap[obj["@id_ref"]];
                             } else if (obj.hasOwnProperty("@id")) {
                                 // If it is an object with "@id" property then create new object with "_id" and "_type" properties and add to the object map.
-                                var typeIdentificator = obj["@id"].split("#")[0];
-                                var typeName = typeIdentificator.split(":")[0];
+                                var typeIdentifier = obj["@id"].split("#")[0];
+                                var typeName = typeIdentifier.split(":")[0];
 
                                 deserialisedObject = self.$.reflector.newEntityEmpty();
                                 // deserialisedObject = {};

@@ -68,7 +68,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
             final String typeString = (String) request.getAttributes().get("type");
             final String propertyName = (String) request.getAttributes().get("property");
 
-            // the type represents 'autocompletion type', to which autocompleter was bound. It can be "miType" (the identificator of corresponding centre) or "entity master entity" (not generated)
+            // the type represents 'autocompletion type', to which autocompleter was bound. It can be "miType" (the identifier of corresponding centre) or "entity master entity" (not generated)
             final Class<?> type = ClassesRetriever.findClass(typeString);
             if (MiWithConfigurationSupport.class.isAssignableFrom(type)) {
                 final String criterionPropertyName = propertyName;

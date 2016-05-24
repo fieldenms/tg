@@ -164,7 +164,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             entityTypeInfo.set_props(props);
         }
         final EntityType registered = entityTypeInfoGetter.register(entityTypeInfo);
-        registered.set_identificator(serialisationTypeEncoder.encode(type));
+        registered.set_identifier(serialisationTypeEncoder.encode(type));
         return registered;
     }
 

@@ -258,7 +258,7 @@
         },
         
         /**
-         * Returns identificator of the entity. If it is persisted -- such identificator is represented by id, otherwise -- by key.
+         * Returns identifier of the entity. If it is persisted -- such identifier is represented by id, otherwise -- by key.
          */
         idOrKey: function (entity) {
             return entity.id === null ? entity.get('key') : entity.id;

@@ -27,8 +27,8 @@ public class EntityType extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
     
     @IsProperty
-    @Title(value = "Identificator", desc = "Identificator of the type in context of other types for serialisation")
-    private String _identificator;
+    @Title(value = "Identifier", desc = "Identifier of the type in context of other types for serialisation")
+    private String _identifier;
 
     @IsProperty(String.class)
     @Title(value = "Composite Keys", desc = "Composite key property names")
@@ -121,12 +121,12 @@ public class EntityType extends AbstractEntity<String> {
     }
     
     @Observable
-    public EntityType set_identificator(final String _identificator) {
-        this._identificator = _identificator;
+    public EntityType set_identifier(final String _identifier) {
+        this._identifier = _identifier;
         return this;       
     }      
     
-    public String get_identificator() {
-        return _identificator;
+    public String get_identifier() {
+        return _identifier;
     }
 }

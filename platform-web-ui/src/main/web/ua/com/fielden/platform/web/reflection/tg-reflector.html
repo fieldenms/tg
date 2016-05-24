@@ -446,11 +446,11 @@
         EntityType.prototype.constructor = EntityType;
         
         /**
-         * Returns the identificator for the entity type.
+         * Returns the identifier for the entity type.
          *
          */
-        EntityType.prototype.identificator = function () {
-            return this._identificator;
+        EntityType.prototype.identifier = function () {
+            return this._identifier;
         }
 
         /**
@@ -808,7 +808,7 @@
         	var EntityType = this._getEntityTypePrototype();
             var registeredType = new EntityType(newType);
             _typeTable[registeredType.fullClassName()] = registeredType;
-            console.log("Registering new entity type with identificator ", registeredType.identificator(), registeredType);
+            console.log("Registering new entity type with identifier ", registeredType.identifier(), registeredType);
             return registeredType;
         },
 
