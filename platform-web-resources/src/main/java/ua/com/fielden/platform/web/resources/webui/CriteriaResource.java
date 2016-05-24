@@ -218,13 +218,18 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
 
             final boolean isRunning = CentreResourceUtils.isRunning(customObject);
-            final M appliedCriteriaEntity = isRunning ? CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm) :
-                CentreResourceUtils.<T, M> createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm);
+            
+            if (isRunning) {
+                final M freshCentreAppliedCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm);
+                // init 'previously Run centre'
+                CentreResourceUtils.initUnchangedCentreManager(gdtm, miType, CentreResourceUtils.PREVIOUSLY_RUN_CENTRE_NAME, ((GlobalDomainTreeManager) gdtm).copyCentre(freshCentreAppliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer()));
+            }
+            final M previouslyRunCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaEntityForPaginating(companionFinder, critGenerator, miType, gdtm);
 
             final Pair<Map<String, Object>, ArrayList<?>> pair =
                     CentreResourceUtils.<T, M> createCriteriaMetaValuesCustomObjectWithResult(
                             customObject,
-                            appliedCriteriaEntity,
+                            previouslyRunCriteriaEntity,
                             centre.getAdditionalFetchProvider(),
                             createQueryEnhancerAndContext(
                                     webUiConfig,
@@ -235,19 +240,16 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                                     entityFactory,
                                     centreContextHolder,
                                     centre.getQueryEnhancerConfig(),
-                                    appliedCriteriaEntity));
+                                    previouslyRunCriteriaEntity));
             if (isRunning) {
-                // init 'previously Run centre'
-                CentreResourceUtils.initUnchangedCentreManager(gdtm, miType, CentreResourceUtils.PREVIOUSLY_RUN_CENTRE_NAME, ((GlobalDomainTreeManager) gdtm).copyCentre(appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer()));
-
                 pair.getKey().put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(miType, gdtm));
-                pair.getKey().put("metaValues", CentreResourceUtils.createCriteriaMetaValues(appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer(), CentreResourceUtils.getEntityType(miType)));
+                pair.getKey().put("metaValues", CentreResourceUtils.createCriteriaMetaValues(previouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer(), CentreResourceUtils.getEntityType(miType)));
                 pair.getKey().put("staleCriteriaMessage", null);
             }
 
             if (pair.getValue() == null) {
                 logger.debug("CRITERIA_RESOURCE: run finished.");
-                return restUtil.rawListJSONRepresentation(isRunning ? appliedCriteriaEntity : null, pair.getKey());
+                return restUtil.rawListJSONRepresentation(isRunning ? previouslyRunCriteriaEntity : null, pair.getKey());
             }
 
             //Running the rendering customiser for result set of entities.
@@ -266,7 +268,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             enhanceResultEntitiesWithCustomPropertyValues(centre, centre.getCustomPropertiesDefinitions(), centre.getCustomPropertiesAsignmentHandler(), (List<AbstractEntity<?>>) pair.getValue());
 
             final ArrayList<Object> list = new ArrayList<Object>();
-            list.add(isRunning ? appliedCriteriaEntity : null);
+            list.add(isRunning ? previouslyRunCriteriaEntity : null);
             list.add(pair.getKey());
 
             // TODO It looks like adding values directly to the list outside the map object leads to proper type/serialiser correspondence
