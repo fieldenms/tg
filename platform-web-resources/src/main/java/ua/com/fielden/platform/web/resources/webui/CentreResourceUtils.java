@@ -197,37 +197,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return new Pair<>(resultantCustomObject, null);
     }
 
-    /**
-     * Selects the entities from resulting <code>data</code> to contain only those, that have specified <code>longIds</code>.
-     *
-     * @param data
-     * @param ids
-     * @return
-     */
-    private static <T extends AbstractEntity<?>> List<T> selectEntities(final List<T> data, final List<Long> longIds) {
-        final List<T> list = new ArrayList<>();
-        if (longIds.isEmpty()) {
-            list.addAll(data);
-        } else {
-            for (final T retrievedEntity : data) {
-                if (longIds.contains(retrievedEntity.getId())) {
-                    list.add(retrievedEntity);
-                }
-            }
-        }
-        return list;
-    }
-
-    private static List<Long> convertToListWithLongValues(final List ids) {
-        final List<Long> longIds = new ArrayList<>();
-        for (final Object id : ids) {
-            if (id != null) {
-                longIds.add(id instanceof Integer ? ((Integer) id).longValue() : (Long) id);
-            }
-        }
-        return longIds;
-    }
-
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////
 
     /**

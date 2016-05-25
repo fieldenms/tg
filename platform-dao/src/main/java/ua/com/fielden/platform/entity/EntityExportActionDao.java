@@ -3,8 +3,10 @@ package ua.com.fielden.platform.entity;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -43,16 +45,16 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         entity.setFileName(String.format("export-of-%s.xls", selectionCrit.getEntityClass().getSimpleName()));
         entity.setMime("application/vnd.ms-excel");
         final Map<String, Object> customObject = new LinkedHashMap<String, Object>();
-        final List<AbstractEntity<?>> entities;
+        final Set<AbstractEntity<?>> entities;
         if (entity.getAll()) {
             customObject.put("@@pageNumber", -1);
             customObject.put("@@action", "export all");
-            entities = new ArrayList<>(selectionCrit.exportQueryRunner().apply(customObject));
+            entities = new LinkedHashSet<>(selectionCrit.exportQueryRunner().apply(customObject));
         } else if (entity.getPageRange()) {
-            entities = new ArrayList<>();
-            customObject.put("@@pageCapacity", entity.getPageCapacity());
-            customObject.put("@@pageCount", 0);
+            entities = new LinkedHashSet<>();
             for (int page = entity.getFromPage() - 1; page < entity.getToPage(); page++) {
+                customObject.put("@@pageCapacity", entity.getPageCapacity());
+                customObject.put("@@action", "navigate");
                 customObject.put("@@pageNumber", page);
                 entities.addAll(selectionCrit.exportQueryRunner().apply(customObject));
             }
@@ -61,21 +63,41 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
                 throw Result.failure("Please select at least one entity to export");
             }
             customObject.put("@@pageNumber", -1);
-            customObject.put("@@exportAll", "yes");
+            customObject.put("@@action", "export all");
             final List<Long> ids = new ArrayList<>();
             for (final AbstractEntity<?> selectedEntity : entity.getContext().getSelectedEntities()) {
                 ids.add(selectedEntity.getId());
             }
-            customObject.put("@@idsToRefresh", ids);
-            entities = new ArrayList<>(selectionCrit.exportQueryRunner().apply(customObject));
+            entities = new LinkedHashSet<>(selectEntities(selectionCrit.exportQueryRunner().apply(customObject), ids));
         }
         try {
             final Pair<String[], String[]> propAndTitles = selectionCrit.generatePropTitlesToExport();
-            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles.getKey(), propAndTitles.getValue())));
+            entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(new ArrayList<>(entities), propAndTitles.getKey(), propAndTitles.getValue())));
         } catch (final IOException e) {
             throw Result.failure("Could not export data.", e);
         }
 
         return entity;
+    }
+
+    /**
+     * Selects the entities from resulting <code>data</code> to contain only those, that have specified <code>longIds</code>.
+     *
+     * @param data
+     * @param ids
+     * @return
+     */
+    private List<AbstractEntity<?>> selectEntities(final List<AbstractEntity<?>> data, final List<Long> longIds) {
+        final List<AbstractEntity<?>> list = new ArrayList<>();
+        if (longIds.isEmpty()) {
+            return list;
+        } else {
+            for (final AbstractEntity<?> retrievedEntity : data) {
+                if (longIds.contains(retrievedEntity.getId())) {
+                    list.add(retrievedEntity);
+                }
+            }
+        }
+        return list;
     }
 }
