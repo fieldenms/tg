@@ -2,9 +2,8 @@ package ua.com.fielden.platform.web.test.server;
 
 import java.util.List;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.sample.domain.MiDeletionTestEntity;
 import ua.com.fielden.platform.sample.domain.MiDetailsCentre;
 import ua.com.fielden.platform.sample.domain.MiTgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity;
@@ -18,6 +17,8 @@ import ua.com.fielden.platform.sample.domain.MiUserRole;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
+
+import com.google.inject.Inject;
 
 /**
  * Application specific main menu structure.
@@ -43,6 +44,7 @@ public class TemplateMainMenu implements IMainMenuStructureBuilder {
                 .push(MiUser.class.getName())
                 .push(MiTgFetchProviderTestEntity.class.getName())
                 .push(MiUserRole.class.getName())
+                .push(MiDeletionTestEntity.class.getName())
                 .pop();
     }
 

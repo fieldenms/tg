@@ -37,6 +37,7 @@ import ua.com.fielden.platform.sample.domain.ExportActionProducer;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
+import ua.com.fielden.platform.sample.domain.MiDeletionTestEntity;
 import ua.com.fielden.platform.sample.domain.MiDetailsCentre;
 import ua.com.fielden.platform.sample.domain.MiTgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.MiTgEntityWithPropertyDependency;
@@ -51,6 +52,7 @@ import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusActionProducer;
+import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
@@ -177,6 +179,22 @@ public class WebUiConfig extends AbstractWebUiConfig {
     public void initConfiguration() {
         configApp().setTimeFormat("HH:mm").setTimeWithMillisFormat("HH:mm:ss.SSS");
         // Add entity centres.
+
+        //Centre configuration for deletion test case entity.
+        final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
+                EntityCentreBuilder.centreFor(TgDeletionTestEntity.class)
+                        .addTopAction(action(EntityDeleteAction.class).
+                                withContext(context().withSelectedEntities().build()).
+                                icon("remove-circle-outline").
+                                shortDesc("Delete selected").
+                                longDesc("Deletes the selected entities").
+                                build())
+                        .addProp("this").also()
+                        .addProp("desc")
+                        // .addProp("additionalProp")
+                        .build(), injector(), null);
+        configApp().addCentre(deletionTestCentre);
+
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
                         .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).
@@ -744,7 +762,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .captionBgColor("#78909C")
                 .menu()
                 .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
+                .addMenuItem("Deletion Centre").description("Deletion centre description").centre(deletionTestCentre).done()
                 .addMenuItem("Custom View").description("Custom view description").view(customView).done()
+                .addMenuItem("Deletion Centre").description("Deletion centre description").centre(deletionTestCentre).done()
                 .addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
                 .done().done()
                 .addModule("Accidents")
