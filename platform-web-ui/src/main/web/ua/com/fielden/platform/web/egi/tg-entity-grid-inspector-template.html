@@ -1523,42 +1523,56 @@
                     }
                 }
             },
+            
+            /**
+             * Returns true if egi conatains ata least one entity from entitiesToSearch list, otherwise returns false.
+             */
+            containsAnyEntity: function (entitiesToSearch) {
+                var entityIndex;
+                for (entityIndex = 0; entityIndex < entitiesToSearch.length; entityIndex++) {
+                    if (_findEntity(entitiesToSearch[entityIndex], this.entities) !== -1) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            
             /**
              * Replaces the entitiesThatShouldBeUpdated with the updated ones (and their rendering hints).
              *
              * Please note, that if some entity from entitiesThatShouldBeUpdated does not exists in updatedEntities list
              *   -- it will be removed from result-set.
              */
-            replaceUpdatedEntities: function (updatedEntities, updatedRenderingHints, entitiesThatShouldBeUpdated) {
-                var newEntities = this.entities.slice(); // array copy (shallow)
-                var newRenderingHints = this.renderingHints.slice(); // array copy (shallow)
-                for (var i = 0; i < updatedEntities.length; i = i + 1) {
-                    var updatedEntity = updatedEntities[i];
-                    var updatedEntityRenderingHints = updatedRenderingHints[i];
-                    // console.log("updated ", updatedEntity, updatedEntityRenderingHints);
-                    var entityIndex = _findEntity(updatedEntity, newEntities);
-                    if (entityIndex !== -1) {
-                        newEntities[entityIndex] = updatedEntity; // replace old entity with updated one
-                        newRenderingHints[entityIndex] = updatedEntityRenderingHints; // replace also its rendering hints
-                    } else {
-                        // this is the case when the updateEntity was not present in result-set, but should become present. Adds it into the beginning of the list
-                        newEntities.unshift(updatedEntity);
-                        newRenderingHints.unshift(updatedEntityRenderingHints);
-                    }
-                }
-                // need to remove all entities that should be updated, but have not been returned in 'updatedEntities' list (it means they have dissapeared from result-set after modification)
-                for (var j = 0; j < entitiesThatShouldBeUpdated.length; j = j + 1) {
-                    var entityThatShouldBeUpdated = entitiesThatShouldBeUpdated[j];
-                    if (!_hasEntity(entityThatShouldBeUpdated, updatedEntities)) {
-                        var index = _findEntity(entityThatShouldBeUpdated, newEntities);
-
-                        newEntities.splice(index, 1); // remove the entity
-                        newRenderingHints.splice(index, 1); // and its rendering hints
-                    }
-                }
-                this.entities = newEntities;
-                this.renderingHints = newRenderingHints;
-            },
+//            replaceUpdatedEntities: function (updatedEntities, updatedRenderingHints, entitiesThatShouldBeUpdated) {
+//                var newEntities = this.entities.slice(); // array copy (shallow)
+//                var newRenderingHints = this.renderingHints.slice(); // array copy (shallow)
+//                for (var i = 0; i < updatedEntities.length; i = i + 1) {
+//                    var updatedEntity = updatedEntities[i];
+//                    var updatedEntityRenderingHints = updatedRenderingHints[i];
+//                    // console.log("updated ", updatedEntity, updatedEntityRenderingHints);
+//                    var entityIndex = _findEntity(updatedEntity, newEntities);
+//                    if (entityIndex !== -1) {
+//                        newEntities[entityIndex] = updatedEntity; // replace old entity with updated one
+//                        newRenderingHints[entityIndex] = updatedEntityRenderingHints; // replace also its rendering hints
+//                    } else {
+//                        // this is the case when the updateEntity was not present in result-set, but should become present. Adds it into the beginning of the list
+//                        newEntities.unshift(updatedEntity);
+//                        newRenderingHints.unshift(updatedEntityRenderingHints);
+//                    }
+//                }
+//                // need to remove all entities that should be updated, but have not been returned in 'updatedEntities' list (it means they have dissapeared from result-set after modification)
+//                for (var j = 0; j < entitiesThatShouldBeUpdated.length; j = j + 1) {
+//                    var entityThatShouldBeUpdated = entitiesThatShouldBeUpdated[j];
+//                    if (!_hasEntity(entityThatShouldBeUpdated, updatedEntities)) {
+//                        var index = _findEntity(entityThatShouldBeUpdated, newEntities);
+//
+//                        newEntities.splice(index, 1); // remove the entity
+//                        newRenderingHints.splice(index, 1); // and its rendering hints
+//                    }
+//                }
+//                this.entities = newEntities;
+//                this.renderingHints = newRenderingHints;
+//            },
             /**
              * Determines whether property is boolean or not.
              */

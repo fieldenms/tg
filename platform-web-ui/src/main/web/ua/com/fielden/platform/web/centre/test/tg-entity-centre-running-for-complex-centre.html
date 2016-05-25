@@ -38,8 +38,8 @@
 	    test('run action works for complex centre', function (done) {
             var old_postRun = centre._postRun;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
-            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
             	
             	var entity = resultEntities[0];
             	
@@ -105,8 +105,8 @@
             var old_postRun = centre._postRun;
             var firstTime = false;
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
-            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
             	
             	if (firstTime === false) {
                     assert.strictEqual(resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
@@ -148,7 +148,7 @@
                     
                     firstTime = true;
             	} else {
-            	    assert.strictEqual(resultEntities.length, 1, 'The count of refreshed entity for the centre should be 1.');
+            	    assert.strictEqual(resultEntities.length, 20, 'The count of refreshed entity for the centre should be 20.');
             	}
             };
             

@@ -38,6 +38,7 @@ import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
+import ua.com.fielden.platform.pagination.EmptyPage;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -226,6 +227,79 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
+     * Returns the data page with summary/ Before it retrieves the page it also calculates whether specified page number is in the range available pages.
+     *
+     * @param pageNumber
+     * @param pageCapacity
+     * @return
+     */
+    public Pair<IPage<T>, T> getPageWithSummaries(final int pageNumber, final int pageCapacity) {
+        final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> resultQuery = generateQueryWithSummaries();
+        final int entitiesCount = count(resultQuery.getKey());
+        final int pageSize = entitiesCount % pageCapacity == 0 ? entitiesCount / pageCapacity : entitiesCount / pageCapacity + 1;
+        if (pageSize == 0) {
+            return new Pair<>(new EmptyPage<T>(), null);
+        } else if (pageSize <= pageNumber) {
+            return new Pair<>(getPage(resultQuery.getKey(), pageSize - 1, pageCapacity), getSummary(resultQuery.getValue()));
+        }
+        return new Pair<>(getPage(resultQuery.getKey(), pageNumber, pageCapacity), getSummary(resultQuery.getValue()));
+    }
+
+    /**
+     * Calculates the summaries for specified query.
+     *
+     * @param query
+     * @return
+     */
+    private T getSummary(final QueryExecutionModel<T, EntityResultQueryModel<T>> query) {
+        if (query != null) {
+            final List<T> list = getAllEntities(query);
+            return list.size() == 1 ? list.get(0) : null;
+        }
+        return null;
+    }
+
+    private IPage<T> getPage(final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery, final int pageNumber, final int pageCapacity) {
+        if (getManagedType().equals(getEntityClass())) {
+            return dao.getPage(resultQuery, pageNumber, pageCapacity);
+        } else {
+            generatedEntityController.setEntityType(getManagedType());
+            return generatedEntityController.getPage(resultQuery, pageNumber, pageCapacity, getByteArrayForManagedType());
+        }
+    }
+
+    /**
+     * Generates the query and summary query for this entity query criteria.
+     *
+     * @return
+     */
+    private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> generateQueryWithSummaries() {
+        final Class<?> root = getEntityClass();
+        final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+        final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
+        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
+        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
+        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
+        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider);
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
+                .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
+                .with(fetchProvider.fetchModel())//
+                .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
+        if (!separatedFetch.getValue().isEmpty()) {
+            final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = adjustLightweightness(notOrderedQuery, false)
+                    .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue()))//
+                    .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
+            return new Pair<>(resultQuery, totalQuery);
+        }
+        return new Pair<>(resultQuery, null);
+    }
+
+    private int count(final QueryExecutionModel<T, EntityResultQueryModel<T>> query) {
+        return dao.count(query.getQueryModel(), query.getParamValues());
+    }
+
+    /**
      * This is temporary solution needed for pagination support on web ui
      */
     public IPage<T> getPage(final int pageNumber, final int pageCapacity) {
@@ -252,25 +326,11 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @return
      */
     public final IPage<T> run(final int pageSize) {
-        final Class<?> root = getEntityClass();
-        final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
-        final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
-        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
-        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
-        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
-        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
-        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider);
-        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
-                .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
-                .with(fetchProvider.fetchModel())//
-                .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
-        if (!separatedFetch.getValue().isEmpty()) {
-            final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = adjustLightweightness(notOrderedQuery, false)
-                    .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue()))//
-                    .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
-            return firstPage(resultQuery, totalQuery, pageSize);
+        final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = generateQueryWithSummaries();
+        if (queries.getValue() != null) {
+            return firstPage(queries.getKey(), queries.getValue(), pageSize);
         } else {
-            return run(resultQuery, pageSize);
+            return run(queries.getKey(), pageSize);
         }
     }
 
