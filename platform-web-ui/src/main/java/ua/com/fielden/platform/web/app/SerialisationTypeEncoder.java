@@ -20,6 +20,7 @@ import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.swing.menu.MiType;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
@@ -82,20 +83,20 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                 }
                 final String userName = user.getKey();
                 final IGlobalDomainTreeManager userSpecificGdtm = serverGdtm.get(userName);
-                final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUtils.getFreshCentre(userSpecificGdtm, miType);
-                final ICentreDomainTreeManagerAndEnhancer copiedFreshCentre = ((GlobalDomainTreeManager) userSpecificGdtm).copyCentre(freshCentre);
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(userSpecificGdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
+                // TODO why do we need a copy???? final ICentreDomainTreeManagerAndEnhancer copiedPreviouslyRunCentre = ((GlobalDomainTreeManager) userSpecificGdtm).copyCentre(previouslyRunCentre);
                 
                 final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
                     
-                decodedEntityType = (Class<T>) copiedFreshCentre.getEnhancer().adjustManagedTypeName(ClassesRetriever.findClass(originalAndSuffix[0]), originalAndSuffix[1]);
+                decodedEntityType = (Class<T>) /* copiedPreviouslyRunCentre*/ previouslyRunCentre.getEnhancer().adjustManagedTypeName(ClassesRetriever.findClass(originalAndSuffix[0]), originalAndSuffix[1]);
                 
                 if (entityTypeInfoGetter.get(decodedEntityType.getName()) != null) {
                     throw new SerialisationTypeEncoderException(String.format("Somehow decoded entity type %s was already registered in TgJackson.", decodedEntityType.getName()));
                 }
                 tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) decodedEntityType);
                 
-                // init 'previously Run centre'
-                CentreUtils.initUnchangedCentreManager(userSpecificGdtm, miType, CentreUtils.PREVIOUSLY_RUN_CENTRE_NAME, copiedFreshCentre);
+//                // init 'previously Run centre'
+//                CentreUtils.initUnchangedCentreManager(userSpecificGdtm, miType, CentreUtils.PREVIOUSLY_RUN_CENTRE_NAME, copiedFreshCentre);
             }
         } else {
             entityTypeName = entityTypeId;

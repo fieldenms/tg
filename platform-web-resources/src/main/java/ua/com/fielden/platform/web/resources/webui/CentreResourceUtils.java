@@ -53,6 +53,7 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.RefreshApplicationException;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -352,7 +353,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IGlobalDomainTreeManager gdtm) {
         final Class<T> entityType = getEntityType(miType);
         final M validationPrototype = (M) critGenerator.generateCentreQueryCriteria(entityType, cdtmae, miType, createMiTypeAnnotation(miType));
-        validationPrototype.setFreshCentreSupplier( () -> CentreUtils.getFreshCentre(gdtm, miType) );
+        validationPrototype.setFreshCentreSupplier( () -> CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME) );
 
         final Field idField = Finder.getFieldByName(validationPrototype.getType(), AbstractEntity.ID);
         final boolean idAccessible = idField.isAccessible();
@@ -556,13 +557,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForPaginating(final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
-        pushRestartClientApplicationMessage(gdtm, miType);
-
         // load fresh centre if it is not loaded yet
-        CentreResourceUtils.getFreshCentre(gdtm, miType);
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.previouslyRunCentre(gdtm, miType);
-
-        return createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, 0L, gdtm);
+        // TODO why do we need here freshCentre at all? CentreResourceUtils.getFreshCentre(gdtm, miType);
+        final ICentreDomainTreeManagerAndEnhancer updatedPreviouslyRunCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
+        return createCriteriaValidationPrototype(miType, updatedPreviouslyRunCentre, critGenerator, 0L, gdtm);
     }
 
     /**
@@ -577,9 +575,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             throw new IllegalArgumentException("ModifiedPropertiesHolder should not be empty during invocation of fully fledged criteria entity creation.");
         }
 
-        // load fresh centre if it is not loaded yet
-        CentreResourceUtils.getFreshCentre(gdtm, miType);
-        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreResourceUtils.freshCentre(gdtm, miType);
+        // load / update fresh centre if it is not loaded yet / stale
+        final ICentreDomainTreeManagerAndEnhancer originalCdtmae = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
         applyMetaValues(originalCdtmae, getEntityType(miType), modifiedPropertiesHolder);
         final M validationPrototype = createCriteriaValidationPrototype(miType, originalCdtmae, critGenerator, EntityResourceUtils.getVersion(modifiedPropertiesHolder), gdtm);
         final M appliedCriteriaEntity = constructCriteriaEntityAndResetMetaValues(
@@ -590,14 +587,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         ).getKey();
 
         return appliedCriteriaEntity;
-    }
-
-    protected static void pushRestartClientApplicationMessage(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        try {
-            CentreUtils.previouslyRunCentre(gdtm, miType);
-        } catch (final PreviouslyRunCentreNotInitialisedException notInitialisedError) {
-            throw new RefreshApplicationException();
-        }
     }
 
     /**
@@ -630,5 +619,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 ),
                 modifiedPropertiesHolder//
         );
+    }
+    
+    /**
+     * Returns the 'managed type' for the 'centre' manager.
+     *
+     * @param root
+     * @param centre
+     * @return
+     */
+    private static Class<?> managedType(final Class<AbstractEntity<?>> root, final ICentreDomainTreeManagerAndEnhancer centre) {
+        return centre.getEnhancer().getManagedType(root);
     }
 }

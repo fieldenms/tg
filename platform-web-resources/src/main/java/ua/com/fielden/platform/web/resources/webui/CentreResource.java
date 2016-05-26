@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
@@ -83,30 +84,12 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             // before SAVING process there is a need to apply all actual criteria from modifHolder:
             CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm);
 
-            saveActualState(gdtm);
+            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
 
             // it is necessary to use "fresh" instance of cdtme (after the saving process)
-            return CriteriaResource.createCriteriaRetrievalEnvelope(CentreResourceUtils.getFreshCentre(gdtm, miType), miType, gdtm, restUtil, companionFinder, critGenerator);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            return CriteriaResource.createCriteriaRetrievalEnvelope(freshCentre, miType, gdtm, restUtil, companionFinder, critGenerator);
         }, restUtil);
-    }
-
-    private void saveActualState(final IGlobalDomainTreeManager gdtm) {
-        // gets the fresh centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'fresh centre')
-        final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreResourceUtils.freshCentre(gdtm, miType);
-        // removes the fresh centre -- to be later re-populated
-        CentreResourceUtils.removeFreshCentre(gdtm, miType);
-
-        final ICentreDomainTreeManagerAndEnhancer defaultCentre = CentreResourceUtils.getDefaultCentre(gdtm, miType);
-        // creates differences centre from the differences between 'default centre' and 'fresh centre'
-        final ICentreDomainTreeManagerAndEnhancer differencesCentre = CentreUtils.createDifferencesCentre(freshCentre, defaultCentre, CentreResourceUtils.getEntityType(miType), gdtm);
-
-        // override old 'diff centre' with recently created one and save it
-        CentreResourceUtils.overrideAndSaveDifferencesCentre(gdtm, miType, differencesCentre);
-    }
-
-    private void discardActualState(final IGlobalDomainTreeManager gdtm) {
-        // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)
-        CentreResourceUtils.discardFreshCentre(gdtm, miType);
     }
 
     /**
@@ -117,19 +100,20 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
     @Put
     public Representation discard(final Representation envelope) {
         return EntityResourceUtils.handleUndesiredExceptions(getResponse(), () -> {
-            final Map<String, Object> wasRunHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
+            final Map<String, Object> wasRunHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
-            if (wasRun != null) {
-                CentreResourceUtils.pushRestartClientApplicationMessage(gdtm, miType);
-            }
+//            TODO this is considered as not needed logic: if (wasRun != null) {
+//                CentreResourceUtils.pushRestartClientApplicationMessage(gdtm, miType);
+//            }
 
-            discardActualState(gdtm);
+            // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)
+            CentreResourceUtils.discardFreshCentre(gdtm, miType);
             
-            final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage(wasRun, CentreResourceUtils.getFreshCentre(gdtm, miType), miType, gdtm, companionFinder, critGenerator);
-
             // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-            return CriteriaResource.createCriteriaDiscardEnvelope(CentreResourceUtils.getFreshCentre(gdtm, miType), miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage(wasRun, freshCentre, miType, gdtm, companionFinder, critGenerator);
+            return CriteriaResource.createCriteriaDiscardEnvelope(freshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage);
         }, restUtil);
     }
 }

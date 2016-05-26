@@ -69,6 +69,8 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses;
 
     private final transient List<IAnalysisListener> analysisListeners;
+    private transient Long savedEntityId;
+    private transient Long savedEntityVersion;
 
     /**
      * A <i>manager with enhancer</i> constructor for the first time instantiation.
@@ -1139,5 +1141,21 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
             return false;
         }
         return true;
+    }
+    
+    public Long getSavedEntityId() {
+        return savedEntityId;
+    }
+    
+    public void setSavedEntityId(final Long savedEntityId) {
+        this.savedEntityId = savedEntityId;
+    }
+    
+    public Long getSavedEntityVersion() {
+        return savedEntityVersion;
+    }
+    
+    public void setSavedEntityVersion(final Long savedEntityVersion) {
+        this.savedEntityVersion = savedEntityVersion;
     }
 }

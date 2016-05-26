@@ -638,7 +638,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (userSpecificGlobalManager == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
         } else {
-            return CentreUtils.getFreshCentre(userSpecificGlobalManager, this.menuItemType);
+            return CentreUpdater.updateCentre(userSpecificGlobalManager, this.menuItemType, CentreUpdater.FRESH_CENTRE_NAME);
         }
     }
 

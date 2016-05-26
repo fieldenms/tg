@@ -499,6 +499,18 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
         }
     }
+    
+    public boolean isStale(final Long id, final Long version) {
+        if (id == null) {
+            logger.error("ID should exist.");
+            throw new IllegalArgumentException("ID should exist.");
+        }
+        if (version == null) {
+            logger.error("Version should exist.");
+            throw new IllegalArgumentException("Version should exist.");
+        }
+        return entityCentreConfigController.isStale(id, version);
+    }
 
     protected ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final CentreManagerConfigurator centreConfigurator, final Class<?> root, final Class<?> menuItemType) {
         return centreConfigurator.configCentre(createEmptyCentre(root, getSerialiser()));
@@ -888,6 +900,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         }
 
         final EntityCentreConfig newECC = entityCentreConfigController.save(ecc);
+        // populate Id and Version to be able to determine staleness of the centre
+        ((CentreDomainTreeManagerAndEnhancer) copyMgr).setSavedEntityId(newECC.getId());
+        ((CentreDomainTreeManagerAndEnhancer) copyMgr).setSavedEntityVersion(newECC.getVersion());
 
         for (final String analysisName : copyMgr.analysisKeys()) {
             final EntityCentreAnalysisConfig ecac = factory.newByKey(EntityCentreAnalysisConfig.class, newECC, analysisName);

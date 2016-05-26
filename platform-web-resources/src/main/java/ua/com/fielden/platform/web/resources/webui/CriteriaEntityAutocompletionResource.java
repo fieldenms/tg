@@ -27,6 +27,7 @@ import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQuer
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
@@ -101,7 +102,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             if (CentreResourceUtils.isEmpty(centreContextHolder.getModifHolder())) {
                 // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
                 criteriaEntity = null;
-                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreResourceUtils.getFreshCentre(gdtm, miType), critGenerator, 0L, gdtm);
+                final M enhancedCentreEntityQueryCriteria = CentreResourceUtils.createCriteriaValidationPrototype(miType, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME), critGenerator, 0L, gdtm);
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
 
             } else {
