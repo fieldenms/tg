@@ -12,18 +12,17 @@
 
 <link rel="import" href="/app/tg-reflector.html">
 
-<dom-module id="tg-editor">
+ <dom-module id="tg-editor">
     <style>
         .main-container {
             @apply(--layout-horizontal);
-
-@apply(--layout-center);
-
+            @apply(--layout-center);
         }
+        
         #input-container {
             @apply(--layout-flex);
-
         }
+
         #input-container::content .input-layer {
             font-size: 1rem;
             line-height: 1.8rem;
@@ -44,12 +43,15 @@
         #input-container[has-layer]:not([focused])::content .custom-input {
             opacity: 0;
         }
+        
         paper-input-container::shadow .add-on-content {
             position: relative;
         }
+        
         paper-input-container::shadow .label-and-input-container {
             min-width: 0px;
         }
+        
         paper-input-container {
             --paper-input-container-label-floating {
                 overflow: hidden;
@@ -58,68 +60,79 @@
                 font-size: 0.9rem;
                 transform: translate3d(0, -75%, 0);
                 width: auto;
-            }
-            ;
+            };
+            
             --paper-input-container-input: {
                 font-size: 1rem;
                 line-height: 1.8rem;
             }
         }
+            
         paper-input-error {
             width: 100%;
             position: absolute;
         }
+            
         paper-char-counter {
             position: absolute;
             right: 0;
             top: 0;
         }
+        
         /* style requiredness */
         paper-input-container.required {
             --paper-input-container-color: #03A9F4;
             --paper-input-container-focus-color: #03A9F4;
         }
-        paper-input-container.decorator-disabled.required::shadow:not(.is-invalid) .unfocused-line {
-            border-bottom: 1px dashed;
-            background: transparent;
-            opacity: 0.6;
-            border-color: #03A9F4;
+        
+        paper-input-container.decorator-disabled.required::shadow :not(.is-invalid) .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: #03A9F4;
         }
+        
         /* style warning */
         paper-input-container.warning {
             --paper-input-container-invalid-color: #FFA000;
         }
+        
         paper-input-container.decorator-disabled.warning::shadow .is-invalid .unfocused-line {
-            border-bottom: 1px dashed;
-            background: transparent;
-            opacity: 0.6;
-            border-color: #FFA000;
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: #FFA000;
         }
+        
         paper-input-container.decorator-disabled.warning::shadow .is-invalid .focused-line {
-            background: transparent !important;
-            border-color: transparent !important;
+      		background: transparent !important;
+        	border-color: transparent !important;
         }
+        
         /* style error */
         paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .unfocused-line {
-            border-bottom: 1px dashed;
-            background: transparent;
-            opacity: 0.6;
-            border-color: var(--google-red-500);
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: var(--google-red-500);
         }
+        
         paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow .is-invalid .focused-line {
-            background: transparent !important;
-            border-color: transparent !important;
+      		background: transparent !important;
+        	border-color: transparent !important;
         }
+        
         /* style not required, not warning and not error -- regular one */
-        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow:not(.is-invalid) .unfocused-line {
-            border-bottom: 1px dashed;
-            background: transparent;
-            opacity: 0.6;
-            border-color: var(--secondary-text-color);
+        paper-input-container.decorator-disabled:not(.required):not(.warning)::shadow :not(.is-invalid) .unfocused-line {
+        	border-bottom: 1px dashed;
+      		background: transparent;
+      		opacity: 0.6;
+        	border-color: var(--secondary-text-color);
         }
+        
         /* The next style chunk is applied on all 'add-on content', for e.g. char-counter, error message etc. */
-        paper-input-container.decorator-disabled::shadow .add-on-content::content {
-            opacity: 0.6;
+        paper-input-container.decorator-disabled::shadow .add-on-content ::content {
+      		opacity: 0.6;
         }
     </style>
 
@@ -128,20 +141,20 @@
             <!-- flex auto  for textarea! -->
             <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]">[[propTitle]]</label>
             <div class="main-container">
-                <content select=".prefix-custom-attributes"></content>
+            	<content select=".prefix-custom-attributes"></content>
                 <div id="input-container" class="relative" style$="[[_calcDecoratorPartStyle(_disabled)]]" has-layer$="[[_hasLayer]]" disabled$="[[_disabled]]" focused$="[[_focused]]">
                     <content select=".custom-input"></content>
                     <content id="layer_selector" select=".input-layer"></content>
                 </div>
                 <content select=".custom-icon-buttons"></content>
-                <content select=".property-action"></content>
+				<content select=".property-action"></content>
             </div>
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
             <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]"></paper-input-char-counter>
         </paper-input-container>
-
+        
         <tg-reflector id="reflector"></tg-reflector>
 
         <template is="dom-if" if="[[debug]]">
@@ -167,11 +180,10 @@
             // No default values are allowed in this case.														   //
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             propTitle: String,
-            debug: Boolean,
             _focused: Boolean,
             _disabled: {
-                type: Boolean,
-                observer: '_disabledChanged'
+            	type: Boolean,
+            	observer: '_disabledChanged'
             },
             _hasLayer: Boolean,
             _editingValue: {
@@ -181,15 +193,16 @@
             _error: String,
             _commValue: String,
             _acceptedValue: String,
+            debug: Boolean,
             _editorKind: String
         },
-
+        
         behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
 
         ready: function () {
             this._hasLayer = Polymer.dom(this.$.layer_selector).getDistributedNodes().length > 0;
         },
-
+        
         attached: function () {
             this.async((function () {
                 if (!this._editorKind) {
@@ -197,11 +210,11 @@
                 }
             }).bind(this), 1);
         },
-
+        
         _isMultilineText: function (editorKind) {
             return 'MULTILINE_TEXT' === editorKind;
         },
-
+        
         /**
          * Calculates the style for container's label.
          */
@@ -215,7 +228,7 @@
             }
             return style;
         },
-
+        
         /**
          * Calculates the style for decorator inner parts, based on '_disabled' property.
          */
@@ -226,16 +239,16 @@
             }
             return style;
         },
-
+        
         /**
          * The observer to the '_disabled' property, which maintains appropriately the class list of the decorator (regarding the class 'decorator-disabled').
          */
         _disabledChanged: function (newValue, oldValue) {
-            if (newValue === true) {
-                this.$.decorator.classList.add("decorator-disabled");
-            } else {
-                this.$.decorator.classList.remove("decorator-disabled");
-            }
+        	if (newValue === true) {
+            	this.$.decorator.classList.add("decorator-disabled");
+        	} else {
+        		this.$.decorator.classList.remove("decorator-disabled");
+        	}
             this.updateStyles();
         }
     });
