@@ -1,5 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/app/tg-app-config.html">
+
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
 
@@ -16,8 +18,14 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+        .input-layer {
+            text-align: right;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
     </style>
     <template>
+        <tg-app-config id="appConfig"></tg-app-config>
     	<tg-editor 
     		id="editorDom" 
     		prop-title="[[propTitle]]"
@@ -26,7 +34,8 @@
     		action="[[action]]" 
     		_error="[[_error]]" 
     		_comm-value="[[_commValue]]" 
-    		_accepted-value="[[_acceptedValue]]" 
+    		_accepted-value="[[_acceptedValue]]"
+            _focused="[[focused]]"
     		debug="[[debug]]">
     		<input
     			id="input"
@@ -39,7 +48,10 @@
     			on-change="_onChange"
     			on-input="_onInput"
     			on-keydown="_onKeydown"
+                on-focus="_onFocus"
+                on-blur="_outFocus"
     			disabled$="[[_disabled]]"/>
+            <div class="input-layer">[[_formatText(_editingValue)]]</div>
     		<content class=".property-action"></content>
     	</tg-editor>
     </template>
@@ -66,6 +78,14 @@
          */
         convertFromString: function (strValue) {
         	return strValue === '' ? null : parseInt(strValue);
+        },
+        
+        _formatText: function(valueToFormat) {
+            var value = this.convertFromString(valueToFormat);
+            if (value !== null) {
+                return this.reflector().formatNumber(value, this.$.appConfig.locale);
+            }
+            return '';
         }
     });
 </script>

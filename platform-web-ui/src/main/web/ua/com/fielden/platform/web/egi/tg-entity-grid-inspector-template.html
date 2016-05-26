@@ -1505,19 +1505,13 @@
                     return this.$.reflector.millisDateRepresentation(entity.get(property));
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
-                        return entity.get(property).toLocaleString(this.$.appConfig.locale, {
-                            maximumFractionDigits: 2,
-                            minimumFractionDigits: 2
-                        });
+                        return this.$.reflector.formatDecimal(entity.get(property), this.$.appConfig.locale);
                     } else {
-                        return entity.get(property).toLocaleString(this.$.appConfig.locale);
+                        return this.$.reflector.formatNumber(entity.get(property), this.$.appConfig.locale);
                     }
                 } else {
                     if (type === 'Money') {
-                        return '$' + entity.get(property).amount.toLocaleString(this.$.appConfig.locale, {
-                            maximumFractionDigits: 2,
-                            minimumFractionDigits: 2
-                        });
+                        return this.$.reflector.formatMoney(entity.get(property), this.$.appConfig.locale);;
                     } else {
                         return entity.get(property);
                     }
