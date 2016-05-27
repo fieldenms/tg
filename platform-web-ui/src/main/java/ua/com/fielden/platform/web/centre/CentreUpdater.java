@@ -33,6 +33,7 @@ public class CentreUpdater {
     
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
     public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
+    public static final String SAVED_CENTRE_NAME = "__________SAVED";
     
     /**
      * Returns the current version of centre manager (it assumes that it should be initialised!).
@@ -116,7 +117,7 @@ public class CentreUpdater {
         }
         final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(gdtm, miType, name);
         final ICentreDomainTreeManagerAndEnhancer loadedCentre = loadCentreFromDefaultAndDiff(gdtm, miType, name, updatedDiffCentre);
-        initUnchangedCentre(gdtm, miType, name, loadedCentre);
+        initCentre(gdtm, miType, name, loadedCentre);
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
@@ -184,9 +185,7 @@ public class CentreUpdater {
     private static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType) {
         if (globalManager.getEntityCentreManager(miType, null) == null) {
             // standard init (from Centre DSL config)
-            globalManager.initEntityCentreManager(miType, null);
-            
-            // TODO is there any need to have default centre cached in 'persistentCentres', not only in 'currentCentres'? Can we avoid unnecessary copying and / or checking on isChanged?
+            globalManager.initEntityCentreManager(miType, null); // TODO is there any need to have default centre cached in 'persistentCentres', not only in 'currentCentres'? Can we avoid unnecessary copying and / or checking on isChanged?
 
             // check if it is ok (not changed)
             if (globalManager.isChangedEntityCentreManager(miType, null)) {
@@ -198,19 +197,8 @@ public class CentreUpdater {
                     globalManager.getEntityCentreManager(miType, null),
                     CentreUtils.getEntityType(miType) //
             );
-            initUnchangedCentre(globalManager, miType, null, defaultedCentre);
-
-            // check if it is ok (not changed)
-            if (globalManager.isChangedEntityCentreManager(miType, null)) {
-                throw new IllegalStateException("Should be not changed (after init of defaulted centre instance).");
-            }
+            initCentre(globalManager, miType, null, defaultedCentre); // after this action default centre will be changed in most cases!
         }
-
-        // check if it is ok (not changed)
-        if (globalManager.isChangedEntityCentreManager(miType, null)) {
-            throw new IllegalStateException("Should be not changed.");
-        }
-
         return globalManager.getEntityCentreManager(miType, null);
     }
     
@@ -277,24 +265,6 @@ public class CentreUpdater {
         }
         final ICentreDomainTreeManagerAndEnhancer differencesCentre = globalManager.getEntityCentreManager(miType, diffSurrogateName);
         return differencesCentre;
-    }
-    
-    /**
-     * Initialises 'virtual' (should never be persistent) centre -- caches it on the server (into currentCentres and persistentCentres).
-     *
-     * @param gdtm
-     * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
-     * @param centre
-     *  
-     * @return
-     */
-    protected static void initUnchangedCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer centre) {
-        ((GlobalDomainTreeManager) gdtm).init(miType, name, centre, true);
-
-        if (gdtm.isChangedEntityCentreManager(miType, name)) {
-            throw new IllegalStateException("Should be not changed.");
-        }
     }
     
     /**
@@ -482,7 +452,7 @@ public class CentreUpdater {
         // the name consists of 'name' and 'DIFFERENCES_SUFFIX'
         final String diffSurrogateName = name + DIFFERENCES_SUFFIX;
         
-        ((GlobalDomainTreeManager) gdtm).overrideCentre(miType, diffSurrogateName, newDifferencesCentre);
+        initCentre(gdtm, miType, diffSurrogateName, newDifferencesCentre);
         gdtm.saveEntityCentreManager(miType, diffSurrogateName);
     }
 }

@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
+import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -83,10 +84,10 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             // before SAVING process there is a need to apply all actual criteria from modifHolder:
             CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm);
 
-            CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUtils.commitAndUpdateFreshCentre(gdtm, miType);
+            CentreUtils.initAndCommitSavedCentre(gdtm, miType, freshCentre);
 
             // it is necessary to use "fresh" instance of cdtme (after the saving process)
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
             return CriteriaResource.createCriteriaRetrievalEnvelope(freshCentre, miType, gdtm, restUtil, companionFinder, critGenerator);
         }, restUtil);
     }
@@ -104,7 +105,14 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
 
             // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)
-            CentreResourceUtils.discardFreshCentre(gdtm, miType);
+            if (CentreUtils.isFreshCentreChanged(miType, gdtm)) {
+                final ICentreDomainTreeManagerAndEnhancer savedCentre = CentreUpdater.centre(gdtm, miType, CentreUtils.SAVED_CENTRE_NAME);
+                CentreUtils.initAndCommitFreshCentre(gdtm, miType, savedCentre);
+            } else {
+                final String message = "Can not discard the centre that was not changed.";
+                logger.error(message);
+                throw new IllegalArgumentException(message);
+            }
             
             // it is necessary to use "fresh" instance of cdtme (after the discarding process)
             final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);

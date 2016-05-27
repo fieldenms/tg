@@ -582,6 +582,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
                 companionFinder//
         ).getKey();
+        
+        // need to commit changed fresh centre:
+        CentreUtils.commitAndUpdateFreshCentre(gdtm, miType);
+        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
+        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
+        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
+        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
+        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
+        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
+        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
+        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
 
         return appliedCriteriaEntity;
     }
