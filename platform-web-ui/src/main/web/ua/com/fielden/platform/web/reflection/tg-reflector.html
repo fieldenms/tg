@@ -1052,7 +1052,37 @@
             }
             return str;
         },
-
+        
+        /**
+         * Formates the numbers in to string based on specified loacles. If the value is null then returns empty string.
+         */
+        formatNumber: function (value, locale) {
+            if (value !== null) {
+                return value.toLocaleString(locale);
+            }
+            return '';
+        },
+        
+        /**
+         * Formates numbers with floating point in to string based on locales. If the value is null then returns empty string.
+         */
+        formatDecimal: function (value, locale) {
+            if (value !== null) {
+                return value.toLocaleString(locale, {maximumFractionDigits: 2, minimumFractionDigits: 2});
+            }
+            return '';
+        },
+            
+        /**
+         * Format money numbers in to string based on locales. If the value is null then returns empty string.
+         */
+        formatMoney: function (value, locale) {
+            if (value !== null) {
+                return '$' + this.formatDecimal(value.amount, locale);
+            }
+            return '';
+        },
+        
         /**
          * Returns the binding value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
          *

@@ -67,6 +67,16 @@
                 },
 
                 /**
+                * True if the input is in focus, otherwise false.
+                */
+                focused: {
+                	readOnly: true,
+                	type: Boolean,
+                	value: false,
+                	notify: true
+                },
+
+                /**
                  * This published property specifies to what binding entity this editor should be bound.
                  */
                 entity: {
@@ -211,6 +221,34 @@
                 	type: String,
                 	observer: '_acceptedValueChanged'
                 },
+
+            	/**
+             	 * This event is invoked after the component gained focus.
+             	 *
+             	 * Designated to be bound to child elements.
+             	 */
+            	_onFocus: {
+                	type: Function,
+                	value: function () {
+                    	return (function (event) {
+                        	this._setFocused(true);
+                    	}).bind(this);
+                	}
+            	},
+            
+            	/**
+             	 * This event is invoked after the component lost focus.
+             	 *
+             	 * Designated to be bound to child elements.
+             	 */
+            	_outFocus: {
+                	type: Function,
+                	value: function () {
+                    	return (function (event) {
+                        	this._setFocused(false);
+                    	}).bind(this);
+                	}
+            	},
                 
             	/**
             	 * This event is invoked after the component has been changed (it is invoked after the focus was lost). Provides value commit behaviour.
