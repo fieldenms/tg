@@ -17,20 +17,26 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
  * @author TG Team
  *
  */
-public class CentreUtils<T extends AbstractEntity<?>> {
+public class CentreUtils<T extends AbstractEntity<?>> extends CentreUpdater {
     private final static Logger logger = Logger.getLogger(CentreUtils.class);
 
     public CentreUtils() {
     }
     
+    /**
+     * Initialises and commits previouslyRun centre from the passed <code>preparedPreviouslyRunCentre</code> instance.
+     * 
+     * @param gdtm
+     * @param miType
+     * @param preparedPreviouslyRunCentre
+     */
     public static void initAndCommitPreviouslyRunCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer preparedPreviouslyRunCentre) {
-        // in case where diff centre is not in the database -- it should be populated into database
-        CentreUpdater.updateDifferencesCentreOnlyIfNotInitialised(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
+        // in case where diff centre is not in the database -- empty diff should be populated into database
+        updateDifferencesCentreOnlyIfNotInitialised(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME);
         // init 'previously Run centre'
-        CentreUpdater.initUnchangedCentreManager(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME, preparedPreviouslyRunCentre);
-        
+        initCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, preparedPreviouslyRunCentre);
         // and then commit it to the database (save its diff)
-        CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
+        commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME);
     }
 
     /**
@@ -41,7 +47,7 @@ public class CentreUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static boolean isFreshCentreChanged(final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
-        final boolean isCentreChanged = gdtm.isChangedEntityCentreManager(miType, CentreUpdater.FRESH_CENTRE_NAME);
+        final boolean isCentreChanged = gdtm.isChangedEntityCentreManager(miType, FRESH_CENTRE_NAME);
         logger.debug("isCentreChanged == " + isCentreChanged);
         return isCentreChanged;
     }
@@ -55,8 +61,8 @@ public class CentreUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public static void discardFreshCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        if (gdtm.isChangedEntityCentreManager(miType, CentreUpdater.FRESH_CENTRE_NAME)) {
-            gdtm.discardEntityCentreManager(miType, CentreUpdater.FRESH_CENTRE_NAME);
+        if (gdtm.isChangedEntityCentreManager(miType, FRESH_CENTRE_NAME)) {
+            gdtm.discardEntityCentreManager(miType, FRESH_CENTRE_NAME);
         } else {
             final String message = "Can not discard the centre that was not changed.";
             logger.error(message);

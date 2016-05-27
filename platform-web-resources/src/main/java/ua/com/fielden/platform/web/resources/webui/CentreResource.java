@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
-import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -103,9 +102,6 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
             final Map<String, Object> wasRunHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
-//            TODO this is considered as not needed logic: if (wasRun != null) {
-//                CentreResourceUtils.pushRestartClientApplicationMessage(gdtm, miType);
-//            }
 
             // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)
             CentreResourceUtils.discardFreshCentre(gdtm, miType);

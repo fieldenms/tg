@@ -420,7 +420,8 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
             throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
         }
-        logger.error(String.format("Started to adjustManagedTypeName for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
+        // TODO logger.debug
+        logger.error(String.format("\tStarted to adjustManagedTypeName for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
 
         try {
@@ -438,7 +439,8 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         }
         
         final Class<?> adjustedType = getManagedType(root);
-        logger.error(String.format("Ended to adjustManagedTypeName for root [%s]. Adjusted to [%s].", root.getSimpleName(), adjustedType.getSimpleName()));
+        // TODO logger.debug
+        logger.error(String.format("\tEnded to adjustManagedTypeName for root [%s]. Adjusted to [%s].", root.getSimpleName(), adjustedType.getSimpleName()));
         return adjustedType;
     }
     
@@ -448,9 +450,11 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
             throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
         }
-        logger.error(String.format("Started to adjustManagedTypeAnnotations for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
+        // TODO logger.debug
+        logger.error(String.format("\tStarted to adjustManagedTypeAnnotations for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
         if (additionalAnnotations.length == 0) {
-            logger.error(String.format("Ended to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
+            // TODO logger.debug
+            logger.error(String.format("\tEnded to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
             return managedType;
         }
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
@@ -469,7 +473,8 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         }
         
         final Class<?> adjustedType = getManagedType(root);
-        logger.error(String.format("Ended to adjustManagedTypeAnnotations for root [%s].", root.getSimpleName()));
+        // TODO logger.debug
+        logger.error(String.format("\tEnded to adjustManagedTypeAnnotations for root [%s].", root.getSimpleName()));
         return adjustedType;
     }
 

@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 
 import com.google.inject.Inject;
 
@@ -500,7 +502,19 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         }
     }
     
-    public boolean isStale(final Long id, final Long version) {
+    /**
+     * Checks whether the centre is stale on this server node, i.e. its version is lower than the one in the database. It is needed to update the centre instance in case where 
+     * the centre is stale to be able to use relevant configuration for a) centre criteria changing b) previouslyRun centre context restoration etc.
+     * <p>
+     * Please note that the version / ID are not copied during centre copying process, that is why currentCentres' instance should be used instead of persistentCentre instance.
+     * 
+     * @param centre
+     * @return
+     */
+    public boolean isStale(final CentreDomainTreeManagerAndEnhancer centre) {
+        final Long id = centre.getSavedEntityId();
+        final Long version = centre.getSavedEntityVersion();
+        
         if (id == null) {
             logger.error("ID should exist.");
             throw new IllegalArgumentException("ID should exist.");
@@ -509,7 +523,11 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             logger.error("Version should exist.");
             throw new IllegalArgumentException("Version should exist.");
         }
-        return entityCentreConfigController.isStale(id, version);
+        logger.error(String.format("Checking the staleness of the centre with ID [%s] and version [%s]: started...", id, version));
+        final boolean stale = entityCentreConfigController.isStale(id, version);
+        // TODO debug
+        logger.error(String.format("Checking the staleness of the centre with ID [%s] and version [%s]: %s.", id, version, stale));
+        return stale;
     }
 
     protected ICentreDomainTreeManagerAndEnhancer createDefaultCentre(final CentreManagerConfigurator centreConfigurator, final Class<?> root, final Class<?> menuItemType) {
@@ -611,7 +629,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @return
      */
     public ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre) {
-        logger.debug("Copying centre...");
+        // TODO logger.debug
+        logger.error(String.format("Copying centre..."));
+        final DateTime start = new DateTime();
         // final TgKryo kryo = (TgKryo) getSerialiser();
         // TODO kryo.register(CentreDomainTreeManager.class, new CentreDomainTreeManagerSerialiserWithTransientAnalyses(kryo));
         final ICentreDomainTreeManagerAndEnhancer copy = initCentreManagerCrossReferences(EntityUtils.deepCopy(centre, getSerialiser()));
@@ -626,7 +646,10 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             }
         }
         
-        logger.debug("Copying centre...done");
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        // TODO logger.debug
+        logger.error(String.format("Copying centre... done in [%s].", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return copy;
     }
 

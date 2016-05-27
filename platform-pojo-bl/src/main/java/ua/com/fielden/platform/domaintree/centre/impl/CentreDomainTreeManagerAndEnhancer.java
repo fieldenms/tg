@@ -11,6 +11,8 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import com.esotericsoftware.kryo.Kryo;
+
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPropertyException;
@@ -48,12 +50,11 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.kryo.serialisers.TgSimpleSerializer;
+import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
-
-import com.esotericsoftware.kryo.Kryo;
 
 /**
  * Criteria (entity-centre) domain tree manager with "power" of managing domain with calculated properties. The calculated properties can be managed exactly as simple properties.<br>
@@ -69,7 +70,15 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     private final transient LinkedHashMap<String, IAbstractAnalysisDomainTreeManager> freezedAnalyses;
 
     private final transient List<IAnalysisListener> analysisListeners;
+    /**
+     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
+     */
     private transient Long savedEntityId;
+    /**
+     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
+     */
     private transient Long savedEntityVersion;
 
     /**
@@ -1143,18 +1152,42 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         return true;
     }
     
+    /**
+     * ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
+     * 
+     * @return
+     */
     public Long getSavedEntityId() {
         return savedEntityId;
     }
     
+    /**
+     * Sets ID of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
+     * 
+     * @param savedEntityId
+     */
     public void setSavedEntityId(final Long savedEntityId) {
         this.savedEntityId = savedEntityId;
     }
     
+    /**
+     * Version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
+     * 
+     * @return
+     */
     public Long getSavedEntityVersion() {
         return savedEntityVersion;
     }
     
+    /**
+     * Sets version of the {@link EntityCentreConfig} entity, that was saved with this centre manager's byte array into the database. This is needed to check the staleness of the centre manager 
+     * in a lightweight manner to be able to use most recent version of the centre manager on different server nodes.
+     * 
+     * @param savedEntityVersion
+     */
     public void setSavedEntityVersion(final Long savedEntityVersion) {
         this.savedEntityVersion = savedEntityVersion;
     }

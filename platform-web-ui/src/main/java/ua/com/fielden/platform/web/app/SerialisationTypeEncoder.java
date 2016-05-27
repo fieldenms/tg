@@ -2,12 +2,13 @@ package ua.com.fielden.platform.web.app;
 
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
-import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -21,9 +22,9 @@ import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
 import ua.com.fielden.platform.swing.menu.MiType;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
-import ua.com.fielden.platform.web.centre.CentreUtils;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
+    private final Logger logger = Logger.getLogger(getClass());
     private TgJackson tgJackson;
     private EntityTypeInfoGetter entityTypeInfoGetter;
     private final IUserProvider userProvider;
@@ -42,7 +43,8 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
         final boolean isGenerated = DynamicEntityClassLoader.isGenerated(entityType);
         if (isGenerated) {
             miType = entityType.getAnnotation(MiType.class).value();
-            System.out.println("========================== " + miType);
+            // TODO logger.debug
+            logger.error("============encode============== " + miType);
         } else {
             miType = null;
         }
@@ -50,7 +52,6 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
         final String entityTypeName = entityType.getName();
         if (entityTypeInfoGetter.get(entityTypeName) == null) {
             throw new IllegalStateException("The type [" + entityTypeName + "] should be already registered at this stage.");
-            // TODO tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) entityType); ?
         }
         
         return isGenerated ? entityType.getName() + ":" + miType.getName() + ":%main%": entityType.getName();
@@ -63,7 +64,8 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
         Class<T> decodedEntityType = null;
         
         if (isGenerated) {
-            System.out.println("-------------------------- " + entityTypeId);
+            // TODO logger.debug
+            logger.error("-------------decode------------- " + entityTypeId);
             entityTypeName = entityTypeId.substring(0, entityTypeId.indexOf(":"));
             
             try {
@@ -83,20 +85,16 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
                 }
                 final String userName = user.getKey();
                 final IGlobalDomainTreeManager userSpecificGdtm = serverGdtm.get(userName);
-                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(userSpecificGdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
-                // TODO why do we need a copy???? final ICentreDomainTreeManagerAndEnhancer copiedPreviouslyRunCentre = ((GlobalDomainTreeManager) userSpecificGdtm).copyCentre(previouslyRunCentre);
                 
                 final String[] originalAndSuffix = entityTypeName.split(Pattern.quote(DynamicTypeNamingService.APPENDIX + "_"));
-                    
-                decodedEntityType = (Class<T>) /* copiedPreviouslyRunCentre*/ previouslyRunCentre.getEnhancer().adjustManagedTypeName(ClassesRetriever.findClass(originalAndSuffix[0]), originalAndSuffix[1]);
+                
+                final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(userSpecificGdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
+                decodedEntityType = (Class<T>) previouslyRunCentre.getEnhancer().adjustManagedTypeName(ClassesRetriever.findClass(originalAndSuffix[0]), originalAndSuffix[1]);
                 
                 if (entityTypeInfoGetter.get(decodedEntityType.getName()) != null) {
                     throw new SerialisationTypeEncoderException(String.format("Somehow decoded entity type %s was already registered in TgJackson.", decodedEntityType.getName()));
                 }
                 tgJackson.registerNewEntityType((Class<AbstractEntity<?>>) decodedEntityType);
-                
-//                // init 'previously Run centre'
-//                CentreUtils.initUnchangedCentreManager(userSpecificGdtm, miType, CentreUtils.PREVIOUSLY_RUN_CENTRE_NAME, copiedFreshCentre);
             }
         } else {
             entityTypeName = entityTypeId;

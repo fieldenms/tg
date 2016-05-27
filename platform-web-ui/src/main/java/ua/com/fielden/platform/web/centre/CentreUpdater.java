@@ -19,20 +19,43 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
+/**
+ * Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
+ * <p>
+ * Every surrogate centre has its own diff centre that, saves into the database during {@link #commitCentre(IGlobalDomainTreeManager, Class, String)} process.
+ * 
+ * @author TG Team
+ *
+ */
 public class CentreUpdater {
     private final static Logger logger = Logger.getLogger(CentreUpdater.class);
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
     
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
     public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
+    
+    /**
+     * Returns the current version of centre manager (it assumes that it should be initialised!).
+     *
+     * @param gdtm
+     * @param miType
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * 
+     * @return
+     */
+    public static ICentreDomainTreeManagerAndEnhancer centre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
+        if (gdtm.getEntityCentreManager(miType, name) == null) {
+            throw new IllegalStateException(String.format("The '%s' centre should be initialised.", name));
+        }
+        return gdtm.getEntityCentreManager(miType, name);
+    }
 
     /**
-     * Returns the current version of edited by the user centre manager (initialises it in case if it is not created yet).
+     * Returns the current version of centre (initialises it in case if it is not created yet, updates it in case where it is stale).
      * <p>
-     * Initialisation goes through the following chain: 'default centre' + 'differences centre' := 'initial fresh centre'. Later the user make its own diffs on top of the 'initial
-     * fresh centre'.
+     * Initialisation / updating goes through the following chain: 'default centre' + 'differences centre' := 'centre'.
      * <p>
-     * Fresh centre is never saved, but it is used to create 'differences centre' (when saving is performed) and then it is removed.
+     * Centre on its own is never saved, but it is used to create 'differences centre' (when committing is performed).
      *
      * @param gdtm
      * @param miType
@@ -43,33 +66,10 @@ public class CentreUpdater {
     public static ICentreDomainTreeManagerAndEnhancer updateCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
         synchronized (gdtm) {
             if (gdtm.getEntityCentreManager(miType, name) == null) {
-                logger.info(String.format("Initialising '%s' centre for miType [%s] for the first time for user %s...", name, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
-                final DateTime start = new DateTime();
-
-                final ICentreDomainTreeManagerAndEnhancer loadedDiffCentre = updateDifferencesCentre(gdtm, miType, name);
-                
-                final ICentreDomainTreeManagerAndEnhancer loadedCentre = loadCentreFromDefaultAndDiff(gdtm, miType, name, loadedDiffCentre);
-                initCentre(gdtm, miType, name, loadedCentre);
-                
-                final DateTime end = new DateTime();
-                final Period pd = new Period(start, end);
-                logger.info(String.format("Initialised the '%s' centre for miType [%s] for the first time for user %s... done in [%s].", name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
-                return centre(gdtm, miType, name);
+                return updateOrLoadCentre(gdtm, miType, name, false);
             } else {
                 if (isDiffCentreStale(gdtm, miType, name)) {
-                    logger.info(String.format("Updating of stale '%s' centre for miType [%s] for user %s...", name, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
-                    final DateTime start = new DateTime();
-                    
-                    final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(gdtm, miType, name);
-                    
-                    removeCentre(gdtm, miType, name);
-                    final ICentreDomainTreeManagerAndEnhancer loadedCentre = loadCentreFromDefaultAndDiff(gdtm, miType, name, updatedDiffCentre);
-                    initCentre(gdtm, miType, name, loadedCentre);
-                    
-                    final DateTime end = new DateTime();
-                    final Period pd = new Period(start, end);
-                    logger.info(String.format("Updated stale '%s' centre for miType [%s] for user %s... done in [%s].", name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
-                    return centre(gdtm, miType, name);
+                    return updateOrLoadCentre(gdtm, miType, name, true);
                 } else {
                     return centre(gdtm, miType, name);
                 }
@@ -77,6 +77,13 @@ public class CentreUpdater {
         }
     }
     
+    /**
+     * Commits the centre's diff to the database and removes it from cache (needs to be updated to be able to be used).
+     * 
+     * @param gdtm
+     * @param miType
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     */
     public static void commitCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
         // gets the centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'centre')
         final ICentreDomainTreeManagerAndEnhancer centre = centre(gdtm, miType, name);
@@ -91,32 +98,65 @@ public class CentreUpdater {
         overrideAndSaveDifferencesCentre(gdtm, miType, name, differencesCentre);
     }
     
+    /**
+     * Updates / loads the centre from its updated diff.
+     * 
+     * @param gdtm
+     * @param miType
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @param update -- <code>true</code> if update process is done, <code>false</code> if init process is done
+     * @return
+     */
+    private static ICentreDomainTreeManagerAndEnhancer updateOrLoadCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final boolean update) {
+        logger.info(String.format("%s '%s' centre for miType [%s] %sfor user %s...", update ? "Updating of stale" : "Initialising", name, miType.getSimpleName(), update ? "" : "for the first time ", gdtm.getUserProvider().getUser()));
+        final DateTime start = new DateTime();
+
+        if (update) {
+            removeCentre(gdtm, miType, name);
+        }
+        final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(gdtm, miType, name);
+        final ICentreDomainTreeManagerAndEnhancer loadedCentre = loadCentreFromDefaultAndDiff(gdtm, miType, name, updatedDiffCentre);
+        initUnchangedCentre(gdtm, miType, name, loadedCentre);
+        
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.info(String.format("%s the '%s' centre for miType [%s] %sfor user %s... done in [%s].", update ? "Updated stale" : "Initialised", name, miType.getSimpleName(), update ? "" : "for the first time ", gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        return centre(gdtm, miType, name);
+    }
+    
+    /**
+     * Returns <code>true</code> in case where the centre stale (by checking staleness of its diff cenre), <code>false</code> otherwise.
+     * 
+     * @param gdtm
+     * @param miType
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @return
+     */
     private static boolean isDiffCentreStale(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
         // the name consists of 'name' and 'DIFFERENCES_SUFFIX'
         final String diffSurrogateName = name + DIFFERENCES_SUFFIX;
         
         // ensure that diff centre exists (it should)
         final CentreDomainTreeManagerAndEnhancer currentDiffCentre = (CentreDomainTreeManagerAndEnhancer) centre(gdtm, miType, diffSurrogateName);
-        return ((GlobalDomainTreeManager) gdtm).isStale(currentDiffCentre.getSavedEntityId(), currentDiffCentre.getSavedEntityVersion());
+        return ((GlobalDomainTreeManager) gdtm).isStale(currentDiffCentre);
     }
 
     /**
-     * Loads centre through the following chain: 'default centre' + 'differences centre' := 'initial centre'. Later the user make its own diffs on top of the 'initial
-     * centre'.
+     * Loads centre through the following chain: 'default centre' + 'differences centre' := 'centre'.
      *
      * @param gdtm
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
-     * @param centre
+     * @param updatedDiffCentre -- updated differences centre 
      *  
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer loadCentreFromDefaultAndDiff(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer diffCentre) {
+    private static ICentreDomainTreeManagerAndEnhancer loadCentreFromDefaultAndDiff(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre) {
         // TODO consider not copying of default centre for performance reasons:
         final ICentreDomainTreeManagerAndEnhancer defaultCentreCopy = ((GlobalDomainTreeManager) gdtm).copyCentre(getDefaultCentre(gdtm, miType));
-        // applies diffCentre on top of defaultCentreCopy to producer loadedCentre:
-        final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentreCopy, diffCentre, CentreUtils.getEntityType(miType));
-        // For all generated types on freshCentre (and on its derivatives like 'unchanged freshCentre', 'run centre', 'unchanged run centre' etc.) there is a need to
+        // applies diffCentre on top of defaultCentreCopy to produce loadedCentre:
+        final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentreCopy, updatedDiffCentre, CentreUtils.getEntityType(miType));
+        // For all generated types on freshCentre (and on its derivatives like 'unchanged freshCentre', 'previouslyRun centre', 'unchanged previouslyRun centre' etc.) there is a need to
         //  provide miType information inside its generated type to be sent to the client application. This is done through the use of 
         //  annotation miType and, in future, other custom annotations, for example @SaveAsName.
         // Please note that copyCentre method in GlobalDomainTreeManager performs copying of all defined annotations to provide freshCentre's derivatives
@@ -134,8 +174,8 @@ public class CentreUpdater {
      * <p>
      * Currently it is created from Entity Centre DSL through the special gdtm, which knows about Centre DSL configuration.
      *
-     * IMPORTANT: this 'default centre' is used for constructing 'fresh centre', 'previouslyRun centre' and 'diff centre', that is why it is very important to make it suitable for Web UI default values.
-     * All other centre will reuse such Web UI specific default values.
+     * IMPORTANT: this 'default centre' is used for constructing 'fresh centre', 'previouslyRun centre' and their 'diff centres', that is why it is very important to make it suitable for Web UI default values.
+     * All other centres will reuse such Web UI specific default values.
      *
      * @param globalManager
      * @param miType
@@ -158,7 +198,7 @@ public class CentreUpdater {
                     globalManager.getEntityCentreManager(miType, null),
                     CentreUtils.getEntityType(miType) //
             );
-            ((GlobalDomainTreeManager) globalManager).init(miType, null, defaultedCentre, true);
+            initUnchangedCentre(globalManager, miType, null, defaultedCentre);
 
             // check if it is ok (not changed)
             if (globalManager.isChangedEntityCentreManager(miType, null)) {
@@ -183,7 +223,7 @@ public class CentreUpdater {
      *  
      * @return
      */
-    public static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentreOnlyIfNotInitialised(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
+    protected static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentreOnlyIfNotInitialised(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
         // the name consists of 'name' and 'DIFFERENCES_SUFFIX'
         final String diffSurrogateName = name + DIFFERENCES_SUFFIX;
         
@@ -213,7 +253,7 @@ public class CentreUpdater {
         
         // WILL BE UPDATED IN EVERY CALL OF updateDifferencesCentre!
         try {
-            // init diff centre from persistent storage if exists
+            // init (or update) diff centre from persistent storage if exists
             globalManager.initEntityCentreManager(miType, diffSurrogateName);
         } catch (final IllegalArgumentException e) {
             if (e.getMessage().startsWith("Unable to initialise a non-existent entity-centre instance for type")) {
@@ -240,7 +280,7 @@ public class CentreUpdater {
     }
     
     /**
-     * Initialises 'virtual' (should never be persistent) centre -- caches it on the server.
+     * Initialises 'virtual' (should never be persistent) centre -- caches it on the server (into currentCentres and persistentCentres).
      *
      * @param gdtm
      * @param miType
@@ -249,12 +289,26 @@ public class CentreUpdater {
      *  
      * @return
      */
-    private static void initCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer centre) {
-        initUnchangedCentreManager(gdtm, miType, name, centre);
+    protected static void initUnchangedCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer centre) {
+        ((GlobalDomainTreeManager) gdtm).init(miType, name, centre, true);
 
         if (gdtm.isChangedEntityCentreManager(miType, name)) {
             throw new IllegalStateException("Should be not changed.");
         }
+    }
+    
+    /**
+     * Initialises 'virtual' (should never be persistent) centre -- caches it on the server (into currentCentres only).
+     *
+     * @param gdtm
+     * @param miType
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @param centre
+     *  
+     * @return
+     */
+    protected static void initCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer centre) {
+        ((GlobalDomainTreeManager) gdtm).overrideCentre(miType, name, centre);
     }
     
     /**
@@ -268,22 +322,6 @@ public class CentreUpdater {
      */
     private static void removeCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
         ((GlobalDomainTreeManager) gdtm).removeCentre(miType, name);
-    }
-    
-    /**
-     * Returns the current version of centre manager (it assumes that it should be initialised!).
-     *
-     * @param gdtm
-     * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
-     * 
-     * @return
-     */
-    public static ICentreDomainTreeManagerAndEnhancer centre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
-        if (gdtm.getEntityCentreManager(miType, name) == null) {
-            throw new IllegalStateException(String.format("The '%s' centre should be initialised.", name));
-        }
-        return gdtm.getEntityCentreManager(miType, name);
     }
     
     /**
@@ -426,12 +464,8 @@ public class CentreUpdater {
      * @param centre
      * @return
      */
-    private static Class<?> managedType(final Class<AbstractEntity<?>> root, final ICentreDomainTreeManagerAndEnhancer centre) {
+    protected static Class<?> managedType(final Class<AbstractEntity<?>> root, final ICentreDomainTreeManagerAndEnhancer centre) {
         return centre.getEnhancer().getManagedType(root);
-    }
-    
-    static void initUnchangedCentreManager(final IGlobalDomainTreeManager gdtm, final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer mgr) {
-        ((GlobalDomainTreeManager) gdtm).init(menuItemType, name, mgr, true);
     }
     
     /**

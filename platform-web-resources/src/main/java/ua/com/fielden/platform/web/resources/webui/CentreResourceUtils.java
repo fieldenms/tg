@@ -50,7 +50,6 @@ import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.platform.utils.RefreshApplicationException;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
@@ -557,8 +556,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForPaginating(final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
-        // load fresh centre if it is not loaded yet
-        // TODO why do we need here freshCentre at all? CentreResourceUtils.getFreshCentre(gdtm, miType);
         final ICentreDomainTreeManagerAndEnhancer updatedPreviouslyRunCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
         return createCriteriaValidationPrototype(miType, updatedPreviouslyRunCentre, critGenerator, 0L, gdtm);
     }
@@ -619,16 +616,5 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 ),
                 modifiedPropertiesHolder//
         );
-    }
-    
-    /**
-     * Returns the 'managed type' for the 'centre' manager.
-     *
-     * @param root
-     * @param centre
-     * @return
-     */
-    private static Class<?> managedType(final Class<AbstractEntity<?>> root, final ICentreDomainTreeManagerAndEnhancer centre) {
-        return centre.getEnhancer().getManagedType(root);
     }
 }
