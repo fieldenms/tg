@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <!-- link rel="import" href="/app/tg-reflector.html" -->
 
 <!-- dom-module id="tg-editor">
@@ -221,6 +222,21 @@
                 	type: String,
                 	observer: '_acceptedValueChanged'
                 },
+                
+                /**
+                 * This function returns the tooltip for this editor.
+                 */
+                _getTooltip: {
+                    type: Function,
+                    value: function () {
+                        return (function (value){
+                            var tooltip = this._formatText(value);
+                            tooltip += this.propTitle && ((tooltip && '<br>') + '<b>' + this.propTitle + '</b>');
+                            tooltip += this.propDesc && '<br>' + this.propTitle;
+                            return tooltip;
+                        }).bind(this);
+                    }
+                },
 
             	/**
              	 * This event is invoked after the component gained focus.
@@ -318,6 +334,8 @@
             		console.log("focus got: _onFocus:", event);
             	}, */
             },
+            
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
             
             observers: [
             	'_recordDefinition(entity, propertyName, _editorValidationMsg)'
@@ -673,10 +691,10 @@
             },
 
             /**
-             * Binding function for tooltips.
+             * Overide this to provide custom formatting for entered text.
              */
-            tooltip: function (propDesc) {
-                return propDesc;
+            _formatText: function (value) {
+                return value;
             },
             
             /**

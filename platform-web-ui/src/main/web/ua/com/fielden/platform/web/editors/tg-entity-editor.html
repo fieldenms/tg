@@ -11,8 +11,6 @@
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 
-<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
-
 <link rel="import" href="/resources/serialisation/tg-serialiser.html">
 
 <link rel="import" href="/resources/editors/tg-entity-editor-result.html">
@@ -107,10 +105,7 @@
         Polymer({
             is: 'tg-entity-editor',
 
-            behaviors: [
-                        Polymer.TgBehaviors.TgEditorBehavior, 
-                        Polymer.TgBehaviors.TgTooltipBehavior
-                        ],
+            behaviors: [Polymer.TgBehaviors.TgEditorBehavior],
 
             /********************************************************
              ********************************************************

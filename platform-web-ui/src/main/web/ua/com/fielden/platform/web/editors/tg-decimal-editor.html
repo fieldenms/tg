@@ -50,7 +50,8 @@
     			on-keydown="_onKeydown"
                 on-focus="_onFocus"
                 on-blur="_outFocus"
-    			disabled$="[[_disabled}}"/>
+    			disabled$="[[_disabled}}"
+                tooltip-text$="[[_getTooltip(_editingValue)]]"/>
             <div class="input-layer">[[_formatText(_editingValue)]]</div>
     		<content class=".property-action"></content>
     	</tg-editor>

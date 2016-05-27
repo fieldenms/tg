@@ -87,7 +87,8 @@
             	on-change="_onChange"
             	on-input="_onInput"
             	on-keydown="_onKeydown"
-            	disabled$="[[_disabled]]"/>
+            	disabled$="[[_disabled]]"
+                tooltip-text$="[[_getTooltip(_editingValue)]]"/>
             <div class="layout horizontal prefix-custom-attributes" style$="[[_calcDecoratorPartStyle(_disabled)]]">
                 <div on-tap="_openColourPicker" class="small-box prefix-custom-attributes" style$="[[_calcColourBoxStyle(_editingValue)]]">
                     <iron-icon class$="[[_calcColourSmallIconClass(_editingValue)]]" icon="close"></iron-icon>
@@ -328,6 +329,9 @@
                     style += "opacity: 0.6;"
                 }
                 return style;
+            },
+            _formatText: function (value) {
+                return value && '#' + value;
             }
           });
         })();
