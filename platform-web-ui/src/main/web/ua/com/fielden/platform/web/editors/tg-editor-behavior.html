@@ -222,21 +222,6 @@
                 	type: String,
                 	observer: '_acceptedValueChanged'
                 },
-                
-                /**
-                 * This function returns the tooltip for this editor.
-                 */
-                _getTooltip: {
-                    type: Function,
-                    value: function () {
-                        return (function (value){
-                            var tooltip = this._formatText(value);
-                            tooltip += this.propTitle && ((tooltip && '<br>') + '<b>' + this.propTitle + '</b>');
-                            tooltip += this.propDesc && '<br>' + this.propTitle;
-                            return tooltip;
-                        }).bind(this);
-                    }
-                },
 
             	/**
              	 * This event is invoked after the component gained focus.
@@ -357,6 +342,16 @@
                     this._bindMessages(entity, propertyName, _editorValidationMsg);
                     this._validationComponentsDefined = true;
                 }
+            },
+            
+            /**
+             * This function returns the tooltip for this editor.
+             */
+            _getTooltip: function (value) {
+                var tooltip = this._formatText(value);
+                tooltip += this.propTitle && ((tooltip && '<br>') + '<b>' + this.propTitle + '</b>');
+                tooltip += this.propDesc && '<br>' + this.propTitle;
+                return tooltip;
             },
             
             /**

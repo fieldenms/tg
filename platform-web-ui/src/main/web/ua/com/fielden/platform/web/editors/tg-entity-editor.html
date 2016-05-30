@@ -684,8 +684,8 @@
                 } 
             },
             
-            _getTooltip(entity, focused, multi) {
-                if (focused) {
+            _getTooltip: function(entity, focused, multi) {
+                if (!focused) {
                     return Polymer.TgBehaviors.TgEditorBehavior._getTooltip.call(this, entity);
                 }
                 return "";
