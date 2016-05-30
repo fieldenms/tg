@@ -564,7 +564,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
      *
      * @param centreContextHolder
-     * @param isPaginating -- returns <code>true</code> in case when this method is a part of 'Paginating Actions', <code>false</code> otherwise
      * @return
      */
     protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntity(final Map<String, Object> modifiedPropertiesHolder, final ICompanionObjectFinder companionFinder, final ICriteriaGenerator critGenerator, final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
@@ -583,17 +582,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 companionFinder//
         ).getKey();
         
-        // need to commit changed fresh centre:
-        CentreUtils.commitAndUpdateFreshCentre(gdtm, miType);
-        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
-        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
-        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
-        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
-        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
-        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
-        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
-        // TODO do we need to promote newly committed fresh centre to appliedCriteriaEntity?!
-
+        // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
+        CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
         return appliedCriteriaEntity;
     }
 

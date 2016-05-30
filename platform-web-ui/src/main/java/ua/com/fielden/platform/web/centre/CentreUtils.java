@@ -23,90 +23,16 @@ public class CentreUtils<T extends AbstractEntity<?>> extends CentreUpdater {
 
     public CentreUtils() {
     }
-    
-    /**
-     * Initialises and commits previouslyRun centre from the passed <code>preparedPreviouslyRunCentre</code> instance.
-     * 
-     * @param gdtm
-     * @param miType
-     * @param preparedPreviouslyRunCentre
-     */
-    public static void initAndCommitPreviouslyRunCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer preparedPreviouslyRunCentre) {
-        // in case where diff centre is not in the database -- empty diff should be populated into database
-        updateDifferencesCentreOnlyIfNotInitialised(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME);
-        // init 'previously Run centre'
-        initCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME, preparedPreviouslyRunCentre);
-        // and then commit it to the database (save its diff)
-        commitCentre(gdtm, miType, PREVIOUSLY_RUN_CENTRE_NAME);
-    }
-    
-    /**
-     * Initialises and commits 'saved' centre from the passed <code>preparedSavedCentre</code> instance.
-     * 
-     * @param gdtm
-     * @param miType
-     * @param preparedSavedCentre
-     */
-    public static void initAndCommitSavedCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer preparedSavedCentre) {
-        // TODO in case where 'saved' centre is not in the database -- empty one should be populated into database!!
-        // TODO updateDifferencesCentreOnlyIfNotInitialised(gdtm, miType, SAVED_CENTRE_NAME);
-        
-        // init 'saved centre'
-        initCentre(gdtm, miType, SAVED_CENTRE_NAME, preparedSavedCentre);
-        // and then commit it to the database (save its diff)
-        commitCentre(gdtm, miType, SAVED_CENTRE_NAME);
-    }
-    
-    /**
-     * Initialises and commits 'fresh' centre from the passed <code>preparedFreshCentre</code> instance.
-     * 
-     * @param gdtm
-     * @param miType
-     * @param preparedFreshCentre
-     */
-    public static void initAndCommitFreshCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final ICentreDomainTreeManagerAndEnhancer preparedFreshCentre) {
-        // TODO in case where 'fresh' centre is not in the database -- empty one should be populated into database!!
-        // TODO updateDifferencesCentreOnlyIfNotInitialised(gdtm, miType, FRESH_CENTRE_NAME);
-        
-        // init 'fresh centre'
-        initCentre(gdtm, miType, FRESH_CENTRE_NAME, preparedFreshCentre);
-        // and then commit it to the database (save its diff)
-        commitCentre(gdtm, miType, FRESH_CENTRE_NAME);
-    }
-    
-    /**
-     * Commits and updates fresh centre. Usually this should be done after the fresh centre has been changed from client-side modifPropsHolder.
-     * 
-     * @param gdtm
-     * @param miType
-     * @return
-     */
-    public static ICentreDomainTreeManagerAndEnhancer commitAndUpdateFreshCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        // TODO can we do that more efficiently??!!
-        // TODO can we do that more efficiently??!!
-        // TODO can we do that more efficiently??!!
-        // TODO can we do that more efficiently??!!
-        // TODO can we do that more efficiently??!!
-        // TODO can we do that more efficiently??!!
-        // TODO can we do that more efficiently??!!
-        // TODO can we do that more efficiently??!!
-        // TODO can we do that more efficiently??!!
-        // TODO can we do that more efficiently??!!
-        // TODO can we do that more efficiently??!!
-        // TODO can we do that more efficiently??!!
-        commitCentre(gdtm, miType, FRESH_CENTRE_NAME);
-        return updateCentre(gdtm, miType, FRESH_CENTRE_NAME);
-    }
 
     /**
-     * Returns <code>true</code> if the centre is changed (and thus can be saved / discarded), <code>false</code> otherwise.
+     * Returns <code>true</code> if the centre is changed (and thus can be saved / discarded) from client application perspective, <code>false</code> otherwise.
      *
-     * @param miType
-     * @param gdtm
+     * @param updatedFreshCentre -- updated instance of 'fresh' centre
+     * @param updatedSavedCentre -- updated instance of 'saved' centre
      * @return
      */
-    public static boolean isFreshCentreChanged(final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm) {
-        final boolean isCentreChanged = !EntityUtils.equalsEx(CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME), CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME));
+    public static boolean isFreshCentreChanged(final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre, final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre) {
+        final boolean isCentreChanged = !EntityUtils.equalsEx(updatedFreshCentre, updatedSavedCentre);
         logger.debug("isCentreChanged == " + isCentreChanged);
         return isCentreChanged;
     }

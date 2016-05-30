@@ -84,8 +84,8 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             // before SAVING process there is a need to apply all actual criteria from modifHolder:
             CentreResourceUtils.createCriteriaEntity(modifiedPropertiesHolder, companionFinder, critGenerator, miType, gdtm);
 
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUtils.commitAndUpdateFreshCentre(gdtm, miType);
-            CentreUtils.initAndCommitSavedCentre(gdtm, miType, freshCentre);
+            final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUtils.centre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            CentreUpdater.initAndCommit(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME, freshCentre);
 
             // it is necessary to use "fresh" instance of cdtme (after the saving process)
             return CriteriaResource.createCriteriaRetrievalEnvelope(freshCentre, miType, gdtm, restUtil, companionFinder, critGenerator);
@@ -104,10 +104,11 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             final Map<String, Object> wasRunHolder = EntityResourceUtils.restoreModifiedPropertiesHolderFrom(envelope, restUtil);
             final String wasRun = (String) wasRunHolder.get("@@wasRun");
 
+            final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME);
             // discards fresh centre's changes (here fresh centre should have changes -- otherwise the exception will be thrown)
-            if (CentreUtils.isFreshCentreChanged(miType, gdtm)) {
-                final ICentreDomainTreeManagerAndEnhancer savedCentre = CentreUpdater.centre(gdtm, miType, CentreUtils.SAVED_CENTRE_NAME);
-                CentreUtils.initAndCommitFreshCentre(gdtm, miType, savedCentre);
+            if (CentreUtils.isFreshCentreChanged(updatedFreshCentre, updatedSavedCentre)) {
+                CentreUpdater.initAndCommit(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME, updatedSavedCentre);
             } else {
                 final String message = "Can not discard the centre that was not changed.";
                 logger.error(message);
@@ -115,9 +116,9 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Ser
             }
             
             // it is necessary to use "fresh" instance of cdtme (after the discarding process)
-            final ICentreDomainTreeManagerAndEnhancer freshCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
-            final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage(wasRun, freshCentre, miType, gdtm, companionFinder, critGenerator);
-            return CriteriaResource.createCriteriaDiscardEnvelope(freshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage);
+            final ICentreDomainTreeManagerAndEnhancer newFreshCentre = CentreUpdater.centre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
+            final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage(wasRun, newFreshCentre, miType, gdtm, companionFinder, critGenerator);
+            return CriteriaResource.createCriteriaDiscardEnvelope(newFreshCentre, miType, gdtm, restUtil, companionFinder, critGenerator, staleCriteriaMessage);
         }, restUtil);
     }
 }

@@ -85,18 +85,53 @@ public class CentreUpdater {
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
      */
-    public static void commitCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
-        // gets the centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'centre')
-        final ICentreDomainTreeManagerAndEnhancer centre = centre(gdtm, miType, name);
-        // removes the centre -- to be later re-populated
-        removeCentre(gdtm, miType, name);
+    public static ICentreDomainTreeManagerAndEnhancer commitCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
+        synchronized (gdtm) {
+            logger.info(String.format("%s '%s' centre for miType [%s] for user %s...", "Committing", name, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+            final DateTime start = new DateTime();
+            // gets the centre (that was created from the chain 'default centre' + 'saved diff centre' + 'current user diff' := 'centre')
+            final ICentreDomainTreeManagerAndEnhancer centre = centre(gdtm, miType, name);
+            
+            final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(gdtm, miType);
+            // creates differences centre from the differences between 'default centre' and 'centre'
+            final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(centre, defaultCentre, CentreUtils.getEntityType(miType), gdtm);
+            
+            // override old 'diff centre' with recently created one and save it
+            overrideAndSaveDifferencesCentre(gdtm, miType, name, differencesCentre);
 
-        final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(gdtm, miType);
-        // creates differences centre from the differences between 'default centre' and 'centre'
-        final ICentreDomainTreeManagerAndEnhancer differencesCentre = createDifferencesCentre(centre, defaultCentre, CentreUtils.getEntityType(miType), gdtm);
+            final DateTime end = new DateTime();
+            final Period pd = new Period(start, end);
+            logger.info(String.format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Committed", name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+            return centre;
+        }
+    }
+    
+    /**
+     * Initialises and commits centre from the passed <code>centreToBeInitialisedAndCommitted</code> instance for surrogate centre with concrete <code>name</code>.
+     * 
+     * @param gdtm
+     * @param miType
+     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
+     * @param centreToBeInitialisedAndCommitted
+     */
+    public static ICentreDomainTreeManagerAndEnhancer initAndCommit(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer centreToBeInitialisedAndCommitted) {
+        synchronized (gdtm) {
+            logger.info(String.format("%s '%s' centre for miType [%s] for user %s...", "Initialising & committing", name, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+            final DateTime start = new DateTime();
+            
+            // there is a need to copy passed instance not to have shared state between surrogate centres (for e.g. 
+            //  same 'fresh' centre instance should not be used for 'previouslyRun' centre, it will cause unpredictable results after changing 'fresh' centre's criteria)
+            final ICentreDomainTreeManagerAndEnhancer copiedInstance = copyCentre(centreToBeInitialisedAndCommitted, gdtm);
+            // initialises centre from copied instance
+            initCentre(gdtm, miType, name, copiedInstance);
+            // and then commit it to the database (save its diff)
+            commitCentre(gdtm, miType, name);
 
-        // override old 'diff centre' with recently created one and save it
-        overrideAndSaveDifferencesCentre(gdtm, miType, name, differencesCentre);
+            final DateTime end = new DateTime();
+            final Period pd = new Period(start, end);
+            logger.info(String.format("%s the '%s' centre for miType [%s] for user %s... done in [%s].", "Initialised & committed", name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+            return copiedInstance;
+        }
     }
     
     /**
@@ -112,9 +147,6 @@ public class CentreUpdater {
         logger.info(String.format("%s '%s' centre for miType [%s] %sfor user %s...", update ? "Updating of stale" : "Initialising", name, miType.getSimpleName(), update ? "" : "for the first time ", gdtm.getUserProvider().getUser()));
         final DateTime start = new DateTime();
 
-        if (update) {
-            removeCentre(gdtm, miType, name);
-        }
         final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre = updateDifferencesCentre(gdtm, miType, name);
         final ICentreDomainTreeManagerAndEnhancer loadedCentre = loadCentreFromDefaultAndDiff(gdtm, miType, name, updatedDiffCentre);
         initCentre(gdtm, miType, name, loadedCentre);
@@ -154,7 +186,7 @@ public class CentreUpdater {
      */
     private static ICentreDomainTreeManagerAndEnhancer loadCentreFromDefaultAndDiff(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre) {
         // TODO consider not copying of default centre for performance reasons:
-        final ICentreDomainTreeManagerAndEnhancer defaultCentreCopy = ((GlobalDomainTreeManager) gdtm).copyCentre(getDefaultCentre(gdtm, miType));
+        final ICentreDomainTreeManagerAndEnhancer defaultCentreCopy = copyCentre(getDefaultCentre(gdtm, miType), gdtm);
         // applies diffCentre on top of defaultCentreCopy to produce loadedCentre:
         final ICentreDomainTreeManagerAndEnhancer loadedCentre = applyDifferences(defaultCentreCopy, updatedDiffCentre, CentreUtils.getEntityType(miType));
         // For all generated types on freshCentre (and on its derivatives like 'unchanged freshCentre', 'previouslyRun centre', 'unchanged previouslyRun centre' etc.) there is a need to
@@ -211,7 +243,7 @@ public class CentreUpdater {
      *  
      * @return
      */
-    protected static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentreOnlyIfNotInitialised(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
+    private static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentreOnlyIfNotInitialised(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
         // the name consists of 'name' and 'DIFFERENCES_SUFFIX'
         final String diffSurrogateName = name + DIFFERENCES_SUFFIX;
         
@@ -277,21 +309,22 @@ public class CentreUpdater {
      *  
      * @return
      */
-    protected static void initCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer centre) {
-        ((GlobalDomainTreeManager) gdtm).overrideCentre(miType, name, centre);
+    private static void initCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer centre) {
+        synchronized (gdtm) {
+            ((GlobalDomainTreeManager) gdtm).overrideCentre(miType, name, centre);
+        }
     }
     
     /**
-     * Removes centre (to be able later to re-populate it automatically).
-     *
+     * Copies centre manager.
+     * 
+     * @param centre
      * @param gdtm
-     * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
-     *  
+     * 
      * @return
      */
-    private static void removeCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
-        ((GlobalDomainTreeManager) gdtm).removeCentre(miType, name);
+    private static ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre, final IGlobalDomainTreeManager gdtm) {
+        return ((GlobalDomainTreeManager) gdtm).copyCentre(centre);
     }
     
     /**
@@ -355,7 +388,7 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer createDifferencesCentre(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer originalCentre, final Class<AbstractEntity<?>> root, final IGlobalDomainTreeManager gdtm) {
-        final ICentreDomainTreeManagerAndEnhancer differencesCentre = ((GlobalDomainTreeManager) gdtm).copyCentre(centre);
+        final ICentreDomainTreeManagerAndEnhancer differencesCentre = copyCentre(centre, gdtm);
 
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
             if (!AbstractDomainTree.isPlaceholder(property)) {
@@ -451,6 +484,10 @@ public class CentreUpdater {
     private static void overrideAndSaveDifferencesCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer newDifferencesCentre) {
         // the name consists of 'name' and 'DIFFERENCES_SUFFIX'
         final String diffSurrogateName = name + DIFFERENCES_SUFFIX;
+        
+        // In case where diff centre was not ever initialised from persistent storage -- it should be initialised for the first time.
+        // It guarantees that at the point of diff centre saving, the empty diff was already saved. See method 'updateDifferencesCentre' for more details.
+        updateDifferencesCentreOnlyIfNotInitialised(gdtm, miType, name);
         
         initCentre(gdtm, miType, diffSurrogateName, newDifferencesCentre);
         gdtm.saveEntityCentreManager(miType, diffSurrogateName);
