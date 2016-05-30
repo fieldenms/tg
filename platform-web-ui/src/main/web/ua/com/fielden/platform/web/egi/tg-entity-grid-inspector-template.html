@@ -1131,11 +1131,18 @@
                     tooltip = this._getValue(entity, column.property, column.type).toString();
                 }
                 if (action !== null) {
-                    tooltip += "<br>" + action.longDesc;
+                    tooltip += "<br><br>" + this._generateActionTooltip(action);
                 }
                 return tooltip;
             },
-
+            
+            _generateActionTooltip: function(action) {
+                return "<div style='display:flex;'>" + 
+                    "<div style='margin-right:10px;'>With action: </div>" +
+                    "<div style='flex-grow:1;'><b>" + action.shortDesc + "</b><br>" + action.longDesc + "</div>" +
+                    "</div>"
+            },
+ 
             _getTotalTooltip: function (summary) {
                 var tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
                 tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
