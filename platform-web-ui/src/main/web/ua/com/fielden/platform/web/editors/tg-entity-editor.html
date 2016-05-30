@@ -74,6 +74,9 @@
             	on-change="_onChange"
             	on-input="_onInput"
             	on-keydown="_onKeydown"
+                on-focus="_onFocus"
+                on-blur="_outFocus"
+                tooltip-text$="[[_getTooltip(entity, focused, multi)]]"
             	disabled$="[[_disabled]]"/>
 	    	<paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
@@ -679,8 +682,28 @@
                     console.log('select prev');
                     this.$.result.selectPrev();
                 } 
+            },
+            
+            _getTooltip(entity, focused, multi) {
+                if (focused) {
+                    return Polymer.TgBehaviors.TgEditorBehavior._getTooltip.call(this, entity);
+                }
+                return "";
+            },
+            
+            _formatText: function(valueToFormat) {
+                if (valueToFormat !== null) {
+                    var entityValue = this.reflector()._getValueFor(valueToFormat, this.propertyName);
+                    if (Array.isArray(entityValue)) {
+                        return entityValue.join(this.separator);
+                    } else if (entityValue != null){
+                        return this.reflector().convert(entityValue) + (entityValue.desc ? " &ndash; " + entityValue.desc : "");   
+                    } else {
+                        return '';
+                    }
+                }
+                return '';
             }
-
         });
     })();
 </script>
