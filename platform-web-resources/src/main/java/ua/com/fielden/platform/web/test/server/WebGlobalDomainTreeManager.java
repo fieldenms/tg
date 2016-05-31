@@ -34,6 +34,7 @@ public class WebGlobalDomainTreeManager extends GlobalDomainTreeManager implemen
         super(serialiser, serialiser0, factory, userProvider, mainMenuItemController, entityCentreConfigController, entityCentreAnalysisConfigController, entityMasterConfigController, entityLocatorConfigController);
 
         this.webApp = webApp;
+        this.avoidPersistentCentres();
     }
 
     @Override

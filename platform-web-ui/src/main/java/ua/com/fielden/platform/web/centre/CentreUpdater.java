@@ -185,6 +185,9 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer loadCentreFromDefaultAndDiff(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer updatedDiffCentre) {
+        logger.info(String.format("\t%s '%s' centre for miType [%s] for user %s...", "loadCentreFromDefaultAndDiff", name, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+        final DateTime start = new DateTime();
+        
         // TODO consider not copying of default centre for performance reasons:
         final ICentreDomainTreeManagerAndEnhancer defaultCentreCopy = copyCentre(getDefaultCentre(gdtm, miType), gdtm);
         // applies diffCentre on top of defaultCentreCopy to produce loadedCentre:
@@ -199,6 +202,9 @@ public class CentreUpdater {
                 loadedCentre.getEnhancer().adjustManagedTypeAnnotations(root, new MiTypeAnnotation().newInstance(miType));
             }
         }
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.info(String.format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "loadCentreFromDefaultAndDiff", name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return loadedCentre;
     }
     
@@ -210,28 +216,31 @@ public class CentreUpdater {
      * IMPORTANT: this 'default centre' is used for constructing 'fresh centre', 'previouslyRun centre' and their 'diff centres', that is why it is very important to make it suitable for Web UI default values.
      * All other centres will reuse such Web UI specific default values.
      *
-     * @param globalManager
+     * @param gdtm
      * @param miType
      * @return
      */
-    private static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType) {
-        if (globalManager.getEntityCentreManager(miType, null) == null) {
+    private static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        logger.info(String.format("\t\t%s centre for miType [%s] for user %s...", "getDefaultCentre", miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+        final DateTime start = new DateTime();
+        
+        if (gdtm.getEntityCentreManager(miType, null) == null) {
             // standard init (from Centre DSL config)
-            globalManager.initEntityCentreManager(miType, null); // TODO is there any need to have default centre cached in 'persistentCentres', not only in 'currentCentres'? Can we avoid unnecessary copying and / or checking on isChanged?
-
-            // check if it is ok (not changed)
-            if (globalManager.isChangedEntityCentreManager(miType, null)) {
-                throw new IllegalStateException("Should be not changed (after init).");
-            }
+            gdtm.initEntityCentreManager(miType, null);
 
             // Web UI default values application
             final ICentreDomainTreeManagerAndEnhancer defaultedCentre = applyWebUIDefaultValues(
-                    globalManager.getEntityCentreManager(miType, null),
+                    gdtm.getEntityCentreManager(miType, null),
                     CentreUtils.getEntityType(miType) //
             );
-            initCentre(globalManager, miType, null, defaultedCentre); // after this action default centre will be changed in most cases!
+            initCentre(gdtm, miType, null, defaultedCentre); // after this action default centre will be changed in most cases!
         }
-        return globalManager.getEntityCentreManager(miType, null);
+
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.info(String.format("\t\t%s the centre for miType [%s] for user %s... done in [%s].", "getDefaultCentre", miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+
+        return gdtm.getEntityCentreManager(miType, null);
     }
     
     /**
@@ -268,6 +277,9 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer updateDifferencesCentre(final IGlobalDomainTreeManager globalManager, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name) {
+        logger.info(String.format("\t%s '%s' centre for miType [%s] for user %s...", "updateDifferencesCentre", name, miType.getSimpleName(), globalManager.getUserProvider().getUser()));
+        final DateTime start = new DateTime();
+        
         // the name consists of 'name' and 'DIFFERENCES_SUFFIX'
         final String diffSurrogateName = name + DIFFERENCES_SUFFIX;
         
@@ -283,19 +295,15 @@ public class CentreUpdater {
                 getDefaultCentre(globalManager, miType);
 
                 globalManager.saveAsEntityCentreManager(miType, null, diffSurrogateName);
-
-                if (globalManager.isChangedEntityCentreManager(miType, diffSurrogateName)) {
-                    throw new IllegalStateException("Should be not changed.");
-                }
             } else {
                 throw e;
             }
         }
-
-        if (globalManager.isChangedEntityCentreManager(miType, diffSurrogateName)) {
-            throw new IllegalStateException("Should be not changed.");
-        }
         final ICentreDomainTreeManagerAndEnhancer differencesCentre = globalManager.getEntityCentreManager(miType, diffSurrogateName);
+
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.info(String.format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "updateDifferencesCentre", name, miType.getSimpleName(), globalManager.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return differencesCentre;
     }
     
@@ -388,6 +396,8 @@ public class CentreUpdater {
      * @return
      */
     private static ICentreDomainTreeManagerAndEnhancer createDifferencesCentre(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer originalCentre, final Class<AbstractEntity<?>> root, final IGlobalDomainTreeManager gdtm) {
+        logger.info(String.format("\t%s centre for user %s...", "createDifferencesCentre", gdtm.getUserProvider().getUser()));
+        final DateTime start = new DateTime();
         final ICentreDomainTreeManagerAndEnhancer differencesCentre = copyCentre(centre, gdtm);
 
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
@@ -431,6 +441,9 @@ public class CentreUpdater {
             }
         }
 
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.info(String.format("\t%s centre for user %s... done in [%s].", "createDifferencesCentre", gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return differencesCentre;
     }
     
@@ -482,6 +495,9 @@ public class CentreUpdater {
      * @return
      */
     private static void overrideAndSaveDifferencesCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer newDifferencesCentre) {
+        logger.info(String.format("\t%s '%s' centre for miType [%s] for user %s...", "overrideAndSaveDifferencesCentre", name, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
+        final DateTime start = new DateTime();
+        
         // the name consists of 'name' and 'DIFFERENCES_SUFFIX'
         final String diffSurrogateName = name + DIFFERENCES_SUFFIX;
         
@@ -491,5 +507,9 @@ public class CentreUpdater {
         
         initCentre(gdtm, miType, diffSurrogateName, newDifferencesCentre);
         gdtm.saveEntityCentreManager(miType, diffSurrogateName);
+
+        final DateTime end = new DateTime();
+        final Period pd = new Period(start, end);
+        logger.info(String.format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre", name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
     }
 }

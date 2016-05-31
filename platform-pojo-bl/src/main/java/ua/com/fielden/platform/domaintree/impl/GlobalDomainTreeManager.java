@@ -72,7 +72,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     private final IEntityMasterConfig entityMasterConfigController;
     private final DomainTreeVersionMaintainer versionMaintainer;
 
-    private final EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> persistentCentres;
+    private EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> persistentCentres;
     private final transient EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> currentCentres;
     private final transient EnhancementPropertiesMap<ICentreDomainTreeManagerAndEnhancer> freezedCentres;
     private final transient EnhancementPropertiesMap<Boolean> centresOwning;
@@ -630,7 +630,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     public ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre) {
         // TODO logger.debug
-        logger.error(String.format("Copying centre..."));
+        logger.error(String.format("\t\t\tCopying centre..."));
         final DateTime start = new DateTime();
         // final TgKryo kryo = (TgKryo) getSerialiser();
         // TODO kryo.register(CentreDomainTreeManager.class, new CentreDomainTreeManagerSerialiserWithTransientAnalyses(kryo));
@@ -649,7 +649,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         // TODO logger.debug
-        logger.error(String.format("Copying centre... done in [%s].", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.error(String.format("\t\t\tCopying centre... done in [%s].", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return copy;
     }
 
@@ -668,7 +668,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     public void init(final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer mgr, final boolean owning) {
         final ICentreDomainTreeManagerAndEnhancer fullyDefinedMgr = initCentreManagerCrossReferences(mgr);
         currentCentres.put(key(menuItemType, name), fullyDefinedMgr);
-        persistentCentres.put(key(menuItemType, name), copyCentre(fullyDefinedMgr));
+        if (persistentCentres != null) {
+            persistentCentres.put(key(menuItemType, name), copyCentre(fullyDefinedMgr));
+        }
         centresOwning.put(key(menuItemType, name), owning);
     }
 
@@ -692,33 +694,41 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public IGlobalDomainTreeManager discardEntityCentreManager(final Class<?> menuItemType, final String name) {
-        validateMenuItemType(menuItemType);
-        validateMenuItemTypeRootType(menuItemType);
-        final ICentreDomainTreeManagerAndEnhancer persistentCentre = persistentCentres.get(key(menuItemType, name));
-        notInitiliasedError(persistentCentre, menuItemType, name);
-        currentCentres.put(key(menuItemType, name), copyCentre(persistentCentre));
-
-        if (isFreezedEntityCentreManager(menuItemType, name)) {
-            unfreeze(menuItemType, name);
+        if (persistentCentres != null) {
+            validateMenuItemType(menuItemType);
+            validateMenuItemTypeRootType(menuItemType);
+            final ICentreDomainTreeManagerAndEnhancer persistentCentre = persistentCentres.get(key(menuItemType, name));
+            notInitiliasedError(persistentCentre, menuItemType, name);
+            currentCentres.put(key(menuItemType, name), copyCentre(persistentCentre));
+    
+            if (isFreezedEntityCentreManager(menuItemType, name)) {
+                unfreeze(menuItemType, name);
+            }
+            return this;
+        } else {
+            throw new UnsupportedOperationException("avoidPersistentCentres switch is on.");
         }
-        return this;
     }
 
     @Override
     public IGlobalDomainTreeManager freezeEntityCentreManager(final Class<?> menuItemType, final String name) {
-        validateMenuItemType(menuItemType);
-        validateMenuItemTypeRootType(menuItemType);
-        if (isFreezedEntityCentreManager(menuItemType, name)) {
-            error("Unable to freeze the entity-centre instance more than once for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
-                    + "] for current user [" + currentUser() + "].");
+        if (persistentCentres != null) {
+            validateMenuItemType(menuItemType);
+            validateMenuItemTypeRootType(menuItemType);
+            if (isFreezedEntityCentreManager(menuItemType, name)) {
+                error("Unable to freeze the entity-centre instance more than once for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
+                + "] for current user [" + currentUser() + "].");
+            }
+            notInitiliasedError(currentCentres.get(key(menuItemType, name)), menuItemType, name);
+            notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
+            
+            freezedCentres.put(key(menuItemType, name), persistentCentres.remove(key(menuItemType, name)));
+            persistentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name))));
+            currentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
+            return this;
+        } else {
+            throw new UnsupportedOperationException("avoidPersistentCentres switch is on.");
         }
-        notInitiliasedError(currentCentres.get(key(menuItemType, name)), menuItemType, name);
-        notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
-
-        freezedCentres.put(key(menuItemType, name), persistentCentres.remove(key(menuItemType, name)));
-        persistentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name))));
-        currentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
-        return this;
     }
 
     /**
@@ -743,11 +753,15 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @param name
      */
     protected void unfreeze(final Class<?> menuItemType, final String name) {
-        if (!isFreezedEntityCentreManager(menuItemType, name)) {
-            error("Unable to unfreeze the entity-centre instance that is not 'freezed' for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
-                    + "] for current user [" + currentUser() + "].");
+        if (persistentCentres != null) {
+            if (!isFreezedEntityCentreManager(menuItemType, name)) {
+                error("Unable to unfreeze the entity-centre instance that is not 'freezed' for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
+                + "] for current user [" + currentUser() + "].");
+            }
+            persistentCentres.put(key(menuItemType, name), freezedCentres.remove(key(menuItemType, name)));
+        } else {
+            throw new UnsupportedOperationException("avoidPersistentCentres switch is on.");
         }
-        persistentCentres.put(key(menuItemType, name), freezedCentres.remove(key(menuItemType, name)));
     }
 
     /**
@@ -800,8 +814,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 ecc.setConfigBody(getSerialiser().serialise(currentMgr));
                 saveCentre(currentMgr, ecc);
                 // TODO entityCentreAnalysisConfigController.save(entity)
-
-                persistentCentres.put(key(menuItemType, name), copyCentre(currentMgr));
+                if (persistentCentres != null) {
+                    persistentCentres.put(key(menuItemType, name), copyCentre(currentMgr));
+                }
             } else if (count < 1) { // there is no saved entity-centre
                 if (name == null) { // principle centre
                     if (!isEntityCentreManagerOwner(menuItemType, null)) {
@@ -814,7 +829,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                         final ICentreDomainTreeManagerAndEnhancer centre = getEntityCentreManager(menuItemType, null);
                         ecc.setConfigBody(getSerialiser().serialise(centre));
                         saveCentre(centre, ecc);
-                        persistentCentres.put(key(menuItemType, null), copyCentre(currentMgr));
+                        if (persistentCentres != null) {
+                            persistentCentres.put(key(menuItemType, null), copyCentre(currentMgr));
+                        }
                     }
                 } else {
                     if (!isEntityCentreManagerOwner(menuItemType, null)) {
@@ -935,47 +952,59 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public boolean isChangedEntityCentreManager(final Class<?> menuItemType, final String name) {
-        validateMenuItemType(menuItemType);
-        validateMenuItemTypeRootType(menuItemType);
-
-        notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
-        return !EntityUtils.equalsEx(currentCentres.get(key(menuItemType, name)), persistentCentres.get(key(menuItemType, name)));
+        if (persistentCentres != null) {
+            validateMenuItemType(menuItemType);
+            validateMenuItemTypeRootType(menuItemType);
+            
+            notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
+            return !EntityUtils.equalsEx(currentCentres.get(key(menuItemType, name)), persistentCentres.get(key(menuItemType, name)));
+        } else {
+            throw new UnsupportedOperationException("avoidPersistentCentres switch is on.");
+        }
     }
 
     @Override
     public IGlobalDomainTreeManager removeEntityCentreManager(final Class<?> menuItemType, final String name) {
-        validateMenuItemType(menuItemType);
-        validateMenuItemTypeRootType(menuItemType);
-
-        if (isFreezedEntityCentreManager(menuItemType, name)) {
-            error("Unable to Remove the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
-                    + "] for current user [" + currentUser() + "].");
-        }
-        notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
-        if (name == null) {
-            error("Unable to remove a principle entity-centre for type [" + menuItemType.getSimpleName() + "].");
-        } else if (Boolean.FALSE.equals(centresOwning.get(key(menuItemType, name)))) { // the report not owns by current user. It can not be removed by current user.
-            error("Unable to remove the entity-centre instance, that current user does not own. The type [" + menuItemType.getSimpleName() + "] with title ["
-                    + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
+        if (persistentCentres != null) {
+            validateMenuItemType(menuItemType);
+            validateMenuItemTypeRootType(menuItemType);
+            
+            if (isFreezedEntityCentreManager(menuItemType, name)) {
+                error("Unable to Remove the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
+                + "] for current user [" + currentUser() + "].");
+            }
+            notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
+            if (name == null) {
+                error("Unable to remove a principle entity-centre for type [" + menuItemType.getSimpleName() + "].");
+            } else if (Boolean.FALSE.equals(centresOwning.get(key(menuItemType, name)))) { // the report not owns by current user. It can not be removed by current user.
+                error("Unable to remove the entity-centre instance, that current user does not own. The type [" + menuItemType.getSimpleName() + "] with title ["
+                        + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
+            } else {
+                removeCentre(menuItemType, name);
+                
+                final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title(menuItemType, name));
+                final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
+                
+                // remove all analyses dependencies
+                entityCentreAnalysisConfigController.delete(analysesForConcreteECCmodel(ecc));
+                
+                // remove an instance of EntityCentreConfig which should exist in DB
+                entityCentreConfigController.delete(ecc);
+            }
+            return this;
         } else {
-            removeCentre(menuItemType, name);
-
-            final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title(menuItemType, name));
-            final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
-
-            // remove all analyses dependencies
-            entityCentreAnalysisConfigController.delete(analysesForConcreteECCmodel(ecc));
-
-            // remove an instance of EntityCentreConfig which should exist in DB
-            entityCentreConfigController.delete(ecc);
+            throw new UnsupportedOperationException("avoidPersistentCentres switch is on.");
         }
-        return this;
     }
 
     public void removeCentre(final Class<?> menuItemType, final String name) {
-        currentCentres.remove(key(menuItemType, name));
-        persistentCentres.remove(key(menuItemType, name));
-        centresOwning.remove(key(menuItemType, name));
+        if (persistentCentres != null) {
+            currentCentres.remove(key(menuItemType, name));
+            persistentCentres.remove(key(menuItemType, name));
+            centresOwning.remove(key(menuItemType, name));
+        } else {
+            throw new UnsupportedOperationException("avoidPersistentCentres switch is on.");
+        }
     }
 
     @Override
@@ -1108,10 +1137,23 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
 
     @Override
     public void copyDefaults(final Class<?> menuItemType, final String name) {
-        final Class<?> root = validateMenuItemTypeRootType(menuItemType);
-        final IAddToCriteriaTickRepresentation ctr = currentCentres.get(key(menuItemType, name)).getRepresentation().getFirstTick();
-        final IAddToCriteriaTickRepresentation ptr = persistentCentres.get(key(menuItemType, name)).getRepresentation().getFirstTick();
-        ptr.setValuesByDefault(root, ctr.getValuesByDefault(root));
-        ptr.setValues2ByDefault(root, ctr.getValues2ByDefault(root));
+        if (persistentCentres != null) {
+            final Class<?> root = validateMenuItemTypeRootType(menuItemType);
+            final IAddToCriteriaTickRepresentation ctr = currentCentres.get(key(menuItemType, name)).getRepresentation().getFirstTick();
+            final IAddToCriteriaTickRepresentation ptr = persistentCentres.get(key(menuItemType, name)).getRepresentation().getFirstTick();
+            ptr.setValuesByDefault(root, ctr.getValuesByDefault(root));
+            ptr.setValues2ByDefault(root, ctr.getValues2ByDefault(root));
+        } else {
+            throw new UnsupportedOperationException("avoidPersistentCentres switch is on.");
+        }
+    }
+    
+    /**
+     * Turns on the switch of 'not using persistentCentres' for {@link #isChangedEntityCentreManager(Class, String)}, {@link #discardEntityCentreManager(Class, String)} and other logic.
+     * <p>
+     * This is to be used for performance reasons not to use heavy {@link #copyCentre(ICentreDomainTreeManagerAndEnhancer)} logic where it is not necessary.
+     */
+    protected void avoidPersistentCentres() {
+        this.persistentCentres = null;
     }
 }
