@@ -75,7 +75,6 @@
             	on-input="_onInput"
             	on-keydown="_onKeydown"
                 on-focus="_onFocus"
-                on-blur="_outFocus"
                 tooltip-text$="[[_getTooltip(entity, focused, multi)]]"
             	disabled$="[[_disabled]]"/>
 	    	<paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
@@ -354,6 +353,7 @@
             		result.additionalProperties = JSON.parse(this.additionalProperties);
                 }
                 this._blurEventHandler = (function(e) {
+                    this._outFocus(e);
                 	// There is no need to proceed with search if user moved out of the search field
                 	this._cancelSearch();
                 }).bind(this);
