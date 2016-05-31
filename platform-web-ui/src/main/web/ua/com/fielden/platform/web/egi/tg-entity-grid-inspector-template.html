@@ -136,7 +136,7 @@
         .table-data-cell {
             padding: 0 0.6rem;
         }
-        .table-data-cell {
+        .table-data-cell[with-action] {
             cursor: pointer;
         }
         .grid-toolbar {
@@ -245,7 +245,6 @@
             border-bottom: 1px solid black;
             cursor: pointer;
             color: #212121;
-            cursor: pointer;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
         }
@@ -346,7 +345,7 @@
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]" as="column">
-                                        <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
+                                        <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[column.customAction]]">
                                             <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
                                                 <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                                 </div>
@@ -446,7 +445,7 @@
                                                 </div>
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                                <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
+                                                <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[column.customAction]]">
                                                     <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
                                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                                         <iron-icon class="table-icon" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, true)]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
@@ -1118,20 +1117,32 @@
                 return (selected ? 'Unselecct' : 'Select') + ' this entity';
             },
 
-            _getTooltip: function (entity, column) {
+            _getTooltip: function (entity, column, action) {
                 var property = entity.prop(column.property);
                 var validationResult = property.validationResult();
+                var tooltip = "";
                 if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
-                    return validationResult.message;
+                    tooltip = validationResult.message;
                 } else if (column.tooltipProperty) {
-                    return this._getValue(entity, column.tooltipProperty, "String").toString()
+                    tooltip = this._getValue(entity, column.tooltipProperty, "String").toString()
                 } else if (this.$.reflector.findTypeByName(column.type)) {
-                    return entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                    tooltip = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
                 } else {
-                    return this._getValue(entity, column.property, column.type).toString();
+                    tooltip = this._getValue(entity, column.property, column.type).toString();
                 }
+                if (action !== null) {
+                    tooltip += "<br><br>" + this._generateActionTooltip(action);
+                }
+                return tooltip;
             },
-
+            
+            _generateActionTooltip: function(action) {
+                return "<div style='display:flex;'>" + 
+                    "<div style='margin-right:10px;'>With action: </div>" +
+                    "<div style='flex-grow:1;'><b>" + action.shortDesc + "</b><br>" + action.longDesc + "</div>" +
+                    "</div>"
+            },
+ 
             _getTotalTooltip: function (summary) {
                 var tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
                 tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";

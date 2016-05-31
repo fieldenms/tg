@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <!-- link rel="import" href="/app/tg-reflector.html" -->
 
 <!-- dom-module id="tg-editor">
@@ -319,6 +320,8 @@
             	}, */
             },
             
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+            
             observers: [
             	'_recordDefinition(entity, propertyName, _editorValidationMsg)'
 			],
@@ -339,6 +342,16 @@
                     this._bindMessages(entity, propertyName, _editorValidationMsg);
                     this._validationComponentsDefined = true;
                 }
+            },
+            
+            /**
+             * This function returns the tooltip for this editor.
+             */
+            _getTooltip: function (value) {
+                var tooltip = this._formatText(value);
+                tooltip += this.propTitle && ((tooltip && '<br>') + '<b>' + this.propTitle + '</b>');
+                tooltip += this.propDesc && '<br>' + this.propTitle;
+                return tooltip;
             },
             
             /**
@@ -673,10 +686,10 @@
             },
 
             /**
-             * Binding function for tooltips.
+             * Overide this to provide custom formatting for entered text.
              */
-            tooltip: function (propDesc) {
-                return propDesc;
+            _formatText: function (value) {
+                return value;
             },
             
             /**
