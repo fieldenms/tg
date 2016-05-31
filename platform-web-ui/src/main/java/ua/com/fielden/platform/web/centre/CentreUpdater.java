@@ -490,11 +490,11 @@ public class CentreUpdater {
      * @param gdtm
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.)
-     * @param newDifferencesCentre
+     * @param newDiffCentre
      * 
      * @return
      */
-    private static void overrideAndSaveDifferencesCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer newDifferencesCentre) {
+    private static void overrideAndSaveDifferencesCentre(final IGlobalDomainTreeManager gdtm, final Class<? extends MiWithConfigurationSupport<?>> miType, final String name, final ICentreDomainTreeManagerAndEnhancer newDiffCentre) {
         logger.info(String.format("\t%s '%s' centre for miType [%s] for user %s...", "overrideAndSaveDifferencesCentre", name, miType.getSimpleName(), gdtm.getUserProvider().getUser()));
         final DateTime start = new DateTime();
         
@@ -503,13 +503,16 @@ public class CentreUpdater {
         
         // In case where diff centre was not ever initialised from persistent storage -- it should be initialised for the first time.
         // It guarantees that at the point of diff centre saving, the empty diff was already saved. See method 'updateDifferencesCentre' for more details.
-        updateDifferencesCentreOnlyIfNotInitialised(gdtm, miType, name);
+        final ICentreDomainTreeManagerAndEnhancer staleDiffCentre = updateDifferencesCentreOnlyIfNotInitialised(gdtm, miType, name);
+        final boolean diffChanged = !EntityUtils.equalsEx(staleDiffCentre, newDiffCentre);
         
-        initCentre(gdtm, miType, diffSurrogateName, newDifferencesCentre);
-        gdtm.saveEntityCentreManager(miType, diffSurrogateName);
+        if (diffChanged) {
+            initCentre(gdtm, miType, diffSurrogateName, newDiffCentre);
+            gdtm.saveEntityCentreManager(miType, diffSurrogateName);
+        }
 
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        logger.info(String.format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre", name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.info(String.format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre" + (diffChanged ? "" : " (nothing has changed)"), name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
     }
 }
