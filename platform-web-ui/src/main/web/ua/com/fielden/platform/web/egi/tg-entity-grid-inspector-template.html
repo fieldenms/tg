@@ -1122,13 +1122,13 @@
                 var validationResult = property.validationResult();
                 var tooltip = "";
                 if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
-                    tooltip = validationResult.message;
+                    tooltip = "<b>" + validationResult.message + "</b>";
                 } else if (column.tooltipProperty) {
-                    tooltip = this._getValue(entity, column.tooltipProperty, "String").toString()
+                    tooltip = "<b>" + this._getValue(entity, column.tooltipProperty, "String").toString()  + "</b>"
                 } else if (this.$.reflector.findTypeByName(column.type)) {
                     tooltip = this._generateEntityTooltip(entity, column);
                 } else {
-                    tooltip = this._getValue(entity, column.property, column.type).toString();
+                    tooltip = "<b>" + this._getValue(entity, column.property, column.type).toString() + "</b>";
                 }
                 if (column.columnDesc) {
                     tooltip += "<br><br>" + column.columnDesc;
@@ -1141,7 +1141,12 @@
             
             _generateEntityTooltip: function (entity, column) {
                 var key = this._getValue(entity, column.property, column.type);
-                var desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                var desc;
+                try {
+                    desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                } catch (e) {
+                    desc = "";
+                }
                 return "<b>" + key + "</b>" + (desc ? "<br>" + desc : "");
             },
             
