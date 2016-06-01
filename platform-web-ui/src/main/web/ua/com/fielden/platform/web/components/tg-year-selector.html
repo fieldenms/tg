@@ -2,12 +2,12 @@
 <link rel="import" href="/resources/polymer/iron-list/iron-list.html">
 <link rel="import" href="/resources/polymer/iron-scroll-threshold/iron-scroll-threshold.html">
 
-<dom-module id="tg-year-selector">
+<dom-module id="tg-number-selector">
     <style>
     </style>
     <template>
-        <iron-scroll-threshold on-lower-threshold="_loadFutureYears" on-upper-threshold="_loadPastYears" lower-threshold="50" upper-threshold="50" id="threshold">
-            <iron-list scroll-target="threshold" items="[[years]]" selected-item="{{selectedYear}}">
+        <iron-scroll-threshold on-lower-threshold="_loadNextNumbers" on-upper-threshold="_loadPreviousNumbers" lower-threshold="50" upper-threshold="50" id="threshold">
+            <iron-list scroll-target="threshold" items="[[numbers]]" selected-item="{{selectedNumber}}">
                 <template>
                     <div class="year-item layout horizontal center-center" selected$="[[selected]]">[[item]]</div>
                 </template>
@@ -19,34 +19,34 @@
     (function () {
         Polymer({
 
-            is: "tg-year-selector",
+            is: "tg-number-selector",
 
             properties: {
-                selectedYear: {
+                selectedNumber: {
                     type: Number,
                     notify: true,
+                    observer: "_selectedNumberChanged"
                 },
-                yearIncrement: Number,
-                years: Array,
-                
-                _lastFutureYear: Number,
-                _lastPastYear: Number,
-            },
-
-            ready: function () {
-                var today = new Date();
-                this.selectedYear = today.getFullYear();
-                this.yearIncrement = 10;
-                this.years = [];
+                numbersToLoadAtOnce: {
+                    type: Number,
+                    value: 10
+                },
+                numbers: Array,
             },
             
+            _selectedNumberChanged: function (newValue, oldValue) {
+                if (!this.numbres) {
+                    this.numbres = [];
+                }
+            },
+
             attached: function () {
                 this._lastPastYear = this._loadPastYears();
                 this._lastFutureYear = this._loadFutureYears();
                 this.years.push(this.selectedYear);
             },
             
-            _loadPastYears: function () {
+            _loadPreviousNumbers: function () {
                 var year = this._lastPastYear || this.selectedYear;
                 var yearCounter;
                 for (yearCounter = 1; yearCounter < this.yearIncrement; yearCounter++) {
