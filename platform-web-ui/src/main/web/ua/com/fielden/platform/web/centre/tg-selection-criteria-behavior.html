@@ -3,6 +3,12 @@
 
 <script>
     (function () {
+        //Actions those can be applied to entity centre.
+        var RunActions = {
+            run: "run",
+            navigate: "navigate",
+            refresh: "refresh"
+        };
         var SimultaneousRunException = function () {
             Object.call(this);
 
@@ -20,29 +26,29 @@
         }
 
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-    	Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl = {
-    			
-        	properties: {
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	// These mandatory properties must be specified in attributes, when constructing descendant elements.  //
-            	// No default values are allowed in this case.														   //
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	/**
-            	 * The external function to be bound from tg-entity-centre for retrieving 'selected entities as part of the context'.
-            	 */
-            	getSelectedEntities: Function,
-            	/**
-            	 * The external function to be bound from tg-entity-centre for retrieving 'master entity as part of the context'.
-            	 */
-            	getMasterEntity: Function,
-            	
+        Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl = {
+
+            properties: {
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // These mandatory properties must be specified in attributes, when constructing descendant elements.  //
+                // No default values are allowed in this case.														   //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                /**
+                 * The external function to be bound from tg-entity-centre for retrieving 'selected entities as part of the context'.
+                 */
+                getSelectedEntities: Function,
+                /**
+                 * The external function to be bound from tg-entity-centre for retrieving 'master entity as part of the context'.
+                 */
+                getMasterEntity: Function,
+
                 /*
-                 * NOTE: there is no need to have 'requireSelectionCriteria' attribute (QueryEnhancer related) -- the selection criteria will be send every time, 
+                 * NOTE: there is no need to have 'requireSelectionCriteria' attribute (QueryEnhancer related) -- the selection criteria will be send every time,
                  *   because it is necessary for 'query' construction (see '_createContextHolderForRunning' method).
                  */
-            	
+
                 /**
                  * Determines whether the selected entities are required to be send inside the centre context during run() method (QueryEnhancer related).
                  *
@@ -55,214 +61,210 @@
                  * 'null' -- if not applicable, for e.g. in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
                  */
                 requireMasterEntity: String,
-            	
-            	/**
-            	 * The menu item type, which identifies this centre.
-            	 */
-            	miType: {
-            		type: String
-            	},
-            	
+
+                /**
+                 * The menu item type, which identifies this centre.
+                 */
+                miType: {
+                    type: String
+                },
+
                 /**
                  * Custom callback that will be invoked after successfull run.
                  *
                  * arguments: entity, bindingEntity, customObject
                  */
                 postRun: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /**
                  * Currently immutable capacity of the page.
                  */
                 pageCapacity: {
-                	type: Number
+                    type: Number
                 },
-                
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-            	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-            	//   prefix and default values specified in 'value' specificator of the property definition (or,       //
-            	//   alternatively, computing function needs to be specified). 									       //
-            	/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+                //   prefix and default values specified in 'value' specificator of the property definition (or,       //
+                //   alternatively, computing function needs to be specified). 									       //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
                 _centreChanged: {
-                	type: Boolean,
-                	value: false,
-                	notify: true
+                    type: Boolean,
+                    value: false,
+                    notify: true
                 },
-                
+
                 _criteriaLoaded: {
-                	type: Boolean,
-                	value: false,
-                	notify: true
+                    type: Boolean,
+                    value: false,
+                    notify: true
                 },
-                
+
                 /**
                  * Indicates whether this centre was run by the user (after run() action has been performed).
                  */
                 _wasRun: {
-                	type: String,
-                	value: null, 
-                	notify: true
+                    type: String,
+                    value: null,
+                    notify: true
                 },
-                
-				////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
-            	
-             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-             	//////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
-             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-             	// These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-             	//   prefix. 																				           //
-             	// Also, these properties are designed to be bound to children element properties -- it is necessary to//
-             	//   populate their default values in ready callback (to have these values populated in children)!     //
-             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
-             	propertyModel: Object,
-             	
-             	/**
-             	 * Defines whether the criteria is stale, i.e. the pagination action (or Current Page or Refresh Individual Entities actions)
-             	 * was done againt previously Run criteria, not the fresh criteria that was changed by the user.
-             	 */
-             	staleCriteriaMessage: {
+
+                ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
+
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //////////////////////////////// INNER PROPERTIES, THAT GOVERN CHILDREN /////////////////////////////////
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
+                //   prefix. 																				           //
+                // Also, these properties are designed to be bound to children element properties -- it is necessary to//
+                //   populate their default values in ready callback (to have these values populated in children)!     //
+                /////////////////////////////////////////////////////////////////////////////////////////////////////////
+                propertyModel: Object,
+
+                /**
+                 * Defines whether the criteria is stale, i.e. the pagination action (or Current Page or Refresh Individual Entities actions)
+                 * was done againt previously Run criteria, not the fresh criteria that was changed by the user.
+                 */
+                staleCriteriaMessage: {
                     type: String,
                     notify: true
-             	},
-             	
-             	/**
+                },
+
+                /**
                  * The current number of pages after the firstPage has been retrieved. To update this please invoke run() action one more time.
                  */
                 pageCount: {
-                	type: Number,
-                	notify: true
+                    type: Number,
+                    notify: true
                 },
 
                 /**
                  * The current page number.
                  */
                 pageNumber: {
-                	type: Number,
-                	notify: true
+                    type: Number,
+                    notify: true
                 },
 
                 pageCountUpdated: {
-                	type: Number,
-                	notify: true
+                    type: Number,
+                    notify: true
                 },
                 pageNumberUpdated: {
-                	type: Number,
-                	notify: true
+                    type: Number,
+                    notify: true
                 },
-                
+
                 isRunning: {
                     type: Boolean,
                     notify: true
                 },
-                
+
                 /**
                  * Default implementation for postRun callback.
                  */
                 _postRunDefault: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /**
                  * Default implementation for unsuccessful postRun callback.
                  */
                 _postRunDefaultError: {
-                	type: Function
+                    type: Function
                 },
-                
+
                 /** A promise pointing to the last (resolved or otherwise) entities refresh call. */
                 _refreshPromiseInProgress: {
                     type: Object
                 }
-        	},
+            },
 
             /**
              * Initialisation block. It has all children web components already initialised.
              */
             ready: function () {
                 var self = this;
-                
+
                 // this is very important to assign initial values, because the following properties are used in multi-property observers like 'canNotFirst: function (pageNumber, pageCount, isRunning) ...'
                 this.pageNumber = 0;
                 this.pageCount = null;
                 this.pageNumberUpdated = 0;
                 this.pageCountUpdated = null;
-                
+
                 this.propertyModel = null;
                 this.currentState = "EDIT";
-                
+
                 this.staleCriteriaMessage = null;
-                
+
                 self._processRunnerResponse = function (e) {
-                	self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {
+                    self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {
                         var criteriaEntity = entityAndCustomObject[0];
                         self._provideExceptionOccured(criteriaEntity, exceptionOccured);
                         var customObject = self._reflector().customObject(entityAndCustomObject);
                         var resultEntities = customObject.resultEntities || [];
                         var pageCount = customObject.pageCount || null;
+                        var pageNumber = customObject.pageNumber;
                         var metaValues = customObject.metaValues;
                         var centreChanged = customObject.isCentreChanged;
                         var renderingHints = customObject.renderingHints || [];
-                        var isRefreshingConcreteEntities = customObject.isRefreshingConcreteEntities;
                         var summary = customObject.summary;
                         var staleCriteriaMessage = customObject.staleCriteriaMessage;
 
-                        self._postRunDefault(criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary, staleCriteriaMessage);
-                	});
+                        self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage);
+                    });
                 };
-                
+
                 self._processRunnerError = function (e) {
-                	self._processError(e, "run", function (errorResult) {
+                    self._processError(e, "run", function (errorResult) {
                         self._postRunDefaultError(errorResult);
                     });
                 };
-				
-				// calbacks, that will potentially be augmented by tg-action child elements: 
-                self._postRunDefault = (function (criteriaEntity, resultEntities, pageCount, metaValues, centreChanged, renderingHints, isRefreshingConcreteEntities, summary, staleCriteriaMessage) {
+
+                // calbacks, that will potentially be augmented by tg-action child elements: 
+                self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage) {
                     if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
                         this.staleCriteriaMessage = staleCriteriaMessage;
                     }
-                    if (criteriaEntity === null) {
-    	                var msg = "Running completed successfully.";
-    	                this._openToastWithoutEntity(msg, false, msg, false);
-    	                
-    	                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
-		                // custom external action
-		                this.postRun(null, null, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
-    	                
-    	                this.pageNumberUpdated = this.pageNumber;
-    	                this.pageCountUpdated = this.pageCount;
-                    } else {
-		                this._setPropertyModel(metaValues);
-		                this._centreChanged = centreChanged;
-	
-		                var msg = this._toastMsg("Running", criteriaEntity);
-		                this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
-	
-		                var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-	
-		                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
-		                // custom external action
-		                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary);
-	
-		                this.pageNumberUpdated = this.pageNumber;
-		                this.pageCountUpdated = this.pageCount;
+                    this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
+                    // custom external action
+                    if (pageNumber !== null) {
+                        this.pageNumber = pageNumber;
                     }
-				}).bind(self);
-				
+                    this.pageNumberUpdated = this.pageNumber;
+                    this.pageCountUpdated = this.pageCount;
+                    if (criteriaEntity === null) {
+                        var msg = "Running completed successfully.";
+                        this._openToastWithoutEntity(msg, false, msg, false);
+
+                        this.postRun(null, null, resultEntities, pageCount, renderingHints, summary);
+                    } else {
+                        this._setPropertyModel(metaValues);
+                        this._centreChanged = centreChanged;
+
+                        var msg = this._toastMsg("Running", criteriaEntity);
+                        this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
+
+                        var newBindingEntity = this._postEntityReceived(criteriaEntity, false);
+                        this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                    }
+                }).bind(self);
+
                 self._postRunDefaultError = (function (errorResult) {
-                	// This function will be invoked after server-side error appear.
-                	// 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).
-                	console.warn("SERVER ERROR: ", errorResult);
+                    // This function will be invoked after server-side error appear.
+                    // 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).
+                    console.warn("SERVER ERROR: ", errorResult);
                 }).bind(self);
-                
+
                 self._postRunnerLoadingFinished = (function () {
-                	console.log("_postRunnerLoadingFinished");
+                    console.log("_postRunnerLoadingFinished");
                 }).bind(self);
-                
+
                 self.postValidated = (function (validatedEntity, bindingEntity, customObject) {
                     if (typeof customObject.staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
                         this.staleCriteriaMessage = customObject.staleCriteriaMessage;
@@ -273,14 +275,14 @@
                     console.log("postValidated", customObject);
                 }).bind(self);
             },
-            
+
             /**
              * Overridden to populate 'propertyModel' and '_isCentreChange' flag from arrived information.
              */
             _postRetrievedDefaultForDescendants: function (entity, bindingEntity, customObject) {
-            	Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
+                Polymer.TgBehaviors.TgEntityBinderBehavior._postRetrievedDefaultForDescendants.call(this, entity, bindingEntity, customObject);
 
-            	this._setPropertyModel(customObject.metaValues);
+                this._setPropertyModel(customObject.metaValues);
                 this._centreChanged = customObject.isCentreChanged;
                 this._criteriaLoaded = true;
             },
@@ -293,26 +295,26 @@
                     // custom property objects that hold meta-values will be transferred with modifiedPropertiesHolder
                     for (var property in this.propertyModel) {
                         if (this.propertyModel.hasOwnProperty(property)) {
-                        	var prop = this._convertFrom(property);
+                            var prop = this._convertFrom(property);
                             modPropHolder["@@metaValues"][prop] = this._extractModifiedMetaValuesHolder(this.propertyModel[property]);
                         }
                     }
                 }
                 return modPropHolder;
             },
-            
+
             /**
              * Converts propertyName to 'propertyModel' naming convention which is understandable for Polymer binding.
-             * 
+             *
              * Empty name converts to 'THIS'; dots convert to colons.
              */
             _convertTo: function (propertyName) {
                 return propertyName === '' ? 'THIS' : propertyName.replace(/\u002E/g, ':');
             },
-            
+
             /**
              * Converts the name from 'propertyModel' naming convention to standard dot-notated property names.
-             * 
+             *
              * 'THIS' converts to empty propertyName; colons convert to dots.
              */
             _convertFrom: function (name) {
@@ -351,7 +353,7 @@
                     throw "Do not execute methods firstPage(), nextPage() etc. before the method run().";
                 }
             },
-            
+
             canLeave: function () {
                 return this._centreChanged ? "Please save changes before leaving" : undefined;
             },
@@ -362,27 +364,7 @@
             currentPage: function () {
                 this._openToast(null, "Refreshing current page", false, "", true);
                 this._validatePageCount();
-                return this._execute(false);
-            },
-
-            /**
-             * Starts the process of refreshing the specified 'entities', but only in case of there is no other refresh request in progress.
-             *
-             * IMPORTANT: this method supports appropriately only refreshing of those entities, that are present in the current
-             *     EGI grid (a subset of current page entities). It will later be replaced by refreshed instances (or removed
-             *     from the result-set if they became unmatchable to the selection criteria after modification).
-             *
-             * @param entities -- entities to be refreshed and be replaced or removed from EGI model. 
-             * @param assignmntFun -- assignment function, which ensures that any state related changes happen in correct order during async execution. 
-             *                        For example, tg-entity-centre-behavior needs to have its property _entitiesThatShouldBeUpdated assigned for proper refresh execution.
-             *                        However, where there are several refresh calls and the assignment of that property would happens outside of the execution context for those calls than refresh would not work correctly 
-             *                        (i.e. the first refresh call would potentially use values assigned in some subsequent call.).
-             *                        The use of this assignment function should be thought of as a way to implement parameter stack, but at an object level rather than just at the function call level.
-             */
-            refreshEntities: function (entities, assignmentFun) {
-                this._openToast(null, "Refreshing entities", false, "", true);
-                this._validatePageCount();
-                return this._execute(false, entities, assignmentFun);
+                return this._execute(RunActions.refresh);
             },
 
             /**
@@ -395,7 +377,7 @@
                     throw "The next page number [" + (this.pageNumber + 1) + "] is greater than the last number of the pages [" + (this.pageCount - 1) + "].";
                 }
                 this.pageNumber = this.pageNumber + 1;
-                return this._execute(false);
+                return this._execute(RunActions.navigate);
             },
 
             /**
@@ -408,7 +390,7 @@
                     throw "The previous page number [" + (this.pageNumber - 1) + "] is less than the first number of the pages [" + 0 + "].";
                 }
                 this.pageNumber = this.pageNumber - 1;
-                return this._execute(false);
+                return this._execute(RunActions.navigate);
             },
 
             /**
@@ -421,7 +403,7 @@
                     throw "Cannot retrieve first page (with number [" + 0 + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = 0;
-                return this._execute(false);
+                return this._execute(RunActions.navigate);
             },
 
             /**
@@ -434,9 +416,9 @@
                     throw "Cannot retrieve last page (with number [" + (this.pageCount - 1) + "]) for empty count of the pages [" + this.pageCount + "].";
                 }
                 this.pageNumber = this.pageCount - 1;
-                return this._execute(false);
+                return this._execute(RunActions.navigate);
             },
-            
+
             _canPrev: function (pageNumber) {
                 return !(pageNumber - 1 < 0);
             },
@@ -461,60 +443,57 @@
                 this._openToast(null, "Loading data", false, "", true);
                 this.pageNumber = 0;
                 this.pageCount = null;
-                return this._execute(true);
+                return this._execute(RunActions.run);
             },
 
             /**
              * Starts the process of centre execution. It does not alter
              */
-            _execute: function (isRunAction, entitiesToRefresh, assignmentFun) {
+            _execute: function (action) {
                 var self = this;
 
                 if (self.isRunning) {
                     console.warn("Refresh is already in progress...");
                     self._refreshPromiseInProgress = self._refreshPromiseInProgress
-                    .then(function() {
-                        return self._createPromise(isRunAction, entitiesToRefresh, assignmentFun);
-                    });
+                        .then(function () {
+                            return self._createPromise(action);
+                        });
                     return self._refreshPromiseInProgress;
                 }
 
                 // let's capture the promise being created at the instance level so that it could be referenced later...
-                self._refreshPromiseInProgress = self._createPromise(isRunAction, entitiesToRefresh, assignmentFun);
+                self._refreshPromiseInProgress = self._createPromise(action);
                 // ... and return it
                 return self._refreshPromiseInProgress;
             },
-            
-            _createPromise: function (isRunAction, entitiesToRefresh, assignmentFun) {
+
+            _createPromise: function (action) {
                 var self = this;
-            
+
                 return new Promise(function (resolve, reject) {
                     var _persistedModifiedPropertiesHolder = null;
-                    if (isRunAction) {
+                    if (action === RunActions.run) {
                         self._wasRun = 'yes';
                         _persistedModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                         console.debug('_wasRun has been changed to: ', self._wasRun);
                     } else if (self._wasRun === null) {
                         throw '_wasRun is not initialised, however this is not Run action, and _wasRun should be defined as yes at this stage.';
                     }
-    
+
                     // cancel previous validation before starting saving process -- it includes validation process internally!
                     self._validator().abortValidationIfAny();
-                    if (assignmentFun) {
-                        assignmentFun(entitiesToRefresh);
-                    }
                     resolve(
-	                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-	                    //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
-                    	self._runModifiedProperties(
-	                    	self._createContextHolderForRunning(function () {
-	                    			return isRunAction ? self._reset(_persistedModifiedPropertiesHolder) : null;
-	                    		}, 
-	                    		self.requireSelectedEntities, 
-	                    		self.requireMasterEntity, 
-	                    		entitiesToRefresh
-	                    	)
-                    	)
+                        // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
+                        //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
+                        self._runModifiedProperties(
+                            self._createContextHolderForRunning(function () {
+                                    return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
+                                },
+                                action,
+                                self.requireSelectedEntities,
+                                self.requireMasterEntity
+                            )
+                        )
                     );
                 });
             },
@@ -543,18 +522,18 @@
              */
             _setPropertyModel: function (metaValues) {
                 this.propertyModel = this._createPropertyModel(metaValues);
-                
+
                 for (var property in metaValues) {
                     if (metaValues.hasOwnProperty(property)) {
-                    	var propertyName = this._convertTo(property);
-                    	var prop = this.propertyModel[propertyName];
-                    	this.notifyPath('propertyModel.' + propertyName + '.orNull', prop.orNull);
-                    	this.notifyPath('propertyModel.' + propertyName + '.not', prop.not);
-                    	this.notifyPath('propertyModel.' + propertyName + '.exclusive', prop.exclusive);
-                    	this.notifyPath('propertyModel.' + propertyName + '.exclusive2', prop.exclusive2);
-                    	this.notifyPath('propertyModel.' + propertyName + '.datePrefix', prop.datePrefix);
-                    	this.notifyPath('propertyModel.' + propertyName + '.dateMnemonic', prop.dateMnemonic);
-                    	this.notifyPath('propertyModel.' + propertyName + '.andBefore', prop.andBefore);
+                        var propertyName = this._convertTo(property);
+                        var prop = this.propertyModel[propertyName];
+                        this.notifyPath('propertyModel.' + propertyName + '.orNull', prop.orNull);
+                        this.notifyPath('propertyModel.' + propertyName + '.not', prop.not);
+                        this.notifyPath('propertyModel.' + propertyName + '.exclusive', prop.exclusive);
+                        this.notifyPath('propertyModel.' + propertyName + '.exclusive2', prop.exclusive2);
+                        this.notifyPath('propertyModel.' + propertyName + '.datePrefix', prop.datePrefix);
+                        this.notifyPath('propertyModel.' + propertyName + '.dateMnemonic', prop.dateMnemonic);
+                        this.notifyPath('propertyModel.' + propertyName + '.andBefore', prop.andBefore);
                     }
                 }
             },
@@ -595,54 +574,49 @@
                     return self._reset(modifHolder);
                 }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
             },
-            
+
             /**
              * Create context holder with custom '@@miType' property.
              */
             _createContextHolder: function (modifHolderGetter, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
                 var contextHolder = this._reflector().createContextHolder(
-    				requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
-    				modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
+                    requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
+                    modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
                 );
                 this._reflector().setCustomProperty(contextHolder, "@@miType", this.miType);
                 return contextHolder;
             },
-            
+
             /**
-             * Create context holder for running with custom '@@pageCapacity', "@@pageNumber" and other properties for running, page retrieval or 
+             * Create context holder for running with custom '@@pageCapacity', "@@pageNumber" and other properties for running, page retrieval or
              *   concrete entities refresh processes.
              *
              * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
              * However, if the query enhancing process requires the selectionCrit entity too -- it will be used without any problem.
              */
-            _createContextHolderForRunning: function (modifHolderGetter, requireSelectedEntities, requireMasterEntity, entitiesToRefresh) {
-            	var self = this;
-            	var contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
-            	
-            	self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
-                if (self.pageCount !== null) {
-                	self._reflector().setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
-                	self._reflector().setCustomProperty(contextHolder, "@@pageCount", self.pageCount);
+            _createContextHolderForRunning: function (modifHolderGetter, action, requireSelectedEntities, requireMasterEntity) {
+                var self = this;
+                var contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
 
-                	if (entitiesToRefresh && entitiesToRefresh.length > 0) {
-                		self._reflector().setCustomProperty(contextHolder, "@@idsToRefresh", self.idsToRefresh(entitiesToRefresh));
-                    } else {
-                    	self._reflector().removeCustomProperty(contextHolder, "@@idsToRefresh");
-                    }
+                self._reflector().setCustomProperty(contextHolder, "@@action", action);
+                self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
+                if (self.pageCount !== null) {
+                    self._reflector().setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
+                    self._reflector().setCustomProperty(contextHolder, "@@pageCount", self.pageCount);
                 } else {
-                	self._reflector().removeCustomProperty(contextHolder, "@@pageNumber");
-                	self._reflector().removeCustomProperty(contextHolder, "@@pageCount");
+                    self._reflector().removeCustomProperty(contextHolder, "@@pageNumber");
+                    self._reflector().removeCustomProperty(contextHolder, "@@pageCount");
                 }
-            	
-            	return contextHolder;
+
+                return contextHolder;
             },
-            
+
         };
-    	
-		Polymer.TgBehaviors.TgSelectionCriteriaBehavior = [
-			Polymer.TgBehaviors.TgEntityBinderBehavior,
-			Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl
-		];
-		
+
+        Polymer.TgBehaviors.TgSelectionCriteriaBehavior = [
+   Polymer.TgBehaviors.TgEntityBinderBehavior,
+   Polymer.TgBehaviors.TgSelectionCriteriaBehaviorImpl
+  ];
+
     })();
 </script>

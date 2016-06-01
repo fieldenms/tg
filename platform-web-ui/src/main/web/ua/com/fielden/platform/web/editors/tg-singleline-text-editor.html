@@ -30,7 +30,8 @@
     			on-change="_onChange"
     			on-input="_onInput"
     			on-keydown="_onKeydown"
-    			disabled$="[[_disabled]]"/>
+    			disabled$="[[_disabled]]"
+                tooltip-text$="[[_getTooltip(_editingValue)]]"/>
         	<content class=".property-action"></content>
     	</tg-editor>
     </template>

@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <!-- link rel="import" href="/app/tg-reflector.html" -->
 
 <!-- dom-module id="tg-editor">
@@ -64,6 +65,16 @@
                  */
                 propDesc: {
                 	type: String
+                },
+
+                /**
+                * True if the input is in focus, otherwise false.
+                */
+                focused: {
+                	readOnly: true,
+                	type: Boolean,
+                	value: false,
+                	notify: true
                 },
 
                 /**
@@ -211,6 +222,34 @@
                 	type: String,
                 	observer: '_acceptedValueChanged'
                 },
+
+            	/**
+             	 * This event is invoked after the component gained focus.
+             	 *
+             	 * Designated to be bound to child elements.
+             	 */
+            	_onFocus: {
+                	type: Function,
+                	value: function () {
+                    	return (function (event) {
+                        	this._setFocused(true);
+                    	}).bind(this);
+                	}
+            	},
+            
+            	/**
+             	 * This event is invoked after the component lost focus.
+             	 *
+             	 * Designated to be bound to child elements.
+             	 */
+            	_outFocus: {
+                	type: Function,
+                	value: function () {
+                    	return (function (event) {
+                        	this._setFocused(false);
+                    	}).bind(this);
+                	}
+            	},
                 
             	/**
             	 * This event is invoked after the component has been changed (it is invoked after the focus was lost). Provides value commit behaviour.
@@ -281,6 +320,8 @@
             	}, */
             },
             
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+            
             observers: [
             	'_recordDefinition(entity, propertyName, _editorValidationMsg)'
 			],
@@ -301,6 +342,16 @@
                     this._bindMessages(entity, propertyName, _editorValidationMsg);
                     this._validationComponentsDefined = true;
                 }
+            },
+            
+            /**
+             * This function returns the tooltip for this editor.
+             */
+            _getTooltip: function (value) {
+                var tooltip = this._formatText(value);
+                tooltip += this.propTitle && ((tooltip && '<br>') + '<b>' + this.propTitle + '</b>');
+                tooltip += this.propDesc && '<br>' + this.propTitle;
+                return tooltip;
             },
             
             /**
@@ -635,10 +686,10 @@
             },
 
             /**
-             * Binding function for tooltips.
+             * Overide this to provide custom formatting for entered text.
              */
-            tooltip: function (propDesc) {
-                return propDesc;
+            _formatText: function (value) {
+                return value;
             },
             
             /**

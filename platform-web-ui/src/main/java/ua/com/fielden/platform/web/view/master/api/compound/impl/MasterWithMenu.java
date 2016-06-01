@@ -80,7 +80,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                     .attr("id", "mi" + el.numberOfAction)
                     .attr("class", "menu-item-section")
                     .attr("data-route", el.getDataRoute())
-                    .attr("title", el.getShortDesc()));
+                    .attr("section-title", el.getShortDesc()));
             menuItemsDom.add(
                     new DomElement("paper-item").attr("class", "menu-item").attr("data-route", el.getDataRoute())
                     .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 10px"))

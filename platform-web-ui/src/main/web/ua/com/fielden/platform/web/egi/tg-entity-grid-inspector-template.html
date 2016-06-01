@@ -136,7 +136,7 @@
         .table-data-cell {
             padding: 0 0.6rem;
         }
-        .table-data-cell {
+        .table-data-cell[with-action] {
             cursor: pointer;
         }
         .grid-toolbar {
@@ -245,7 +245,6 @@
             border-bottom: 1px solid black;
             cursor: pointer;
             color: #212121;
-            cursor: pointer;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
         }
@@ -302,7 +301,7 @@
                     <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                         <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
                         <div class="layout horizontal center">
-                            <content select=".entity-specific-action"></content>
+                            <content id="top_action_selctor" select=".entity-specific-action"></content>
                         </div>
                         <div class="layout horizontal center" style="margin-left:auto">
                             <content select=".standart-action"></content>
@@ -346,7 +345,7 @@
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]" as="column">
-                                        <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
+                                        <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[column.customAction]]">
                                             <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
                                                 <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                                 </div>
@@ -446,7 +445,7 @@
                                                 </div>
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                                <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column)]]">
+                                                <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[column.customAction]]">
                                                     <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
                                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                                         <iron-icon class="table-icon" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, true)]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
@@ -1118,20 +1117,32 @@
                 return (selected ? 'Unselecct' : 'Select') + ' this entity';
             },
 
-            _getTooltip: function (entity, column) {
+            _getTooltip: function (entity, column, action) {
                 var property = entity.prop(column.property);
                 var validationResult = property.validationResult();
+                var tooltip = "";
                 if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
-                    return validationResult.message;
+                    tooltip = validationResult.message;
                 } else if (column.tooltipProperty) {
-                    return this._getValue(entity, column.tooltipProperty, "String").toString()
+                    tooltip = this._getValue(entity, column.tooltipProperty, "String").toString()
                 } else if (this.$.reflector.findTypeByName(column.type)) {
-                    return entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                    tooltip = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
                 } else {
-                    return this._getValue(entity, column.property, column.type).toString();
+                    tooltip = this._getValue(entity, column.property, column.type).toString();
                 }
+                if (action !== null) {
+                    tooltip += "<br><br>" + this._generateActionTooltip(action);
+                }
+                return tooltip;
             },
-
+            
+            _generateActionTooltip: function(action) {
+                return "<div style='display:flex;'>" + 
+                    "<div style='margin-right:10px;'>With action: </div>" +
+                    "<div style='flex-grow:1;'><b>" + action.shortDesc + "</b><br>" + action.longDesc + "</div>" +
+                    "</div>"
+            },
+ 
             _getTotalTooltip: function (summary) {
                 var tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
                 tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
@@ -1505,60 +1516,68 @@
                     return this.$.reflector.millisDateRepresentation(entity.get(property));
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
-                        return entity.get(property).toLocaleString(this.$.appConfig.locale, {
-                            maximumFractionDigits: 2,
-                            minimumFractionDigits: 2
-                        });
+                        return this.$.reflector.formatDecimal(entity.get(property), this.$.appConfig.locale);
                     } else {
-                        return entity.get(property).toLocaleString(this.$.appConfig.locale);
+                        return this.$.reflector.formatNumber(entity.get(property), this.$.appConfig.locale);
                     }
                 } else {
                     if (type === 'Money') {
-                        return '$' + entity.get(property).amount.toLocaleString(this.$.appConfig.locale, {
-                            maximumFractionDigits: 2,
-                            minimumFractionDigits: 2
-                        });
+                        return this.$.reflector.formatMoney(entity.get(property), this.$.appConfig.locale);;
                     } else {
                         return entity.get(property);
                     }
                 }
             },
+            
+            /**
+             * Returns true if egi conatains ata least one entity from entitiesToSearch list, otherwise returns false.
+             */
+            containsAnyEntity: function (entitiesToSearch) {
+                var entityIndex;
+                for (entityIndex = 0; entityIndex < entitiesToSearch.length; entityIndex++) {
+                    if (_findEntity(entitiesToSearch[entityIndex], this.entities) !== -1) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            
             /**
              * Replaces the entitiesThatShouldBeUpdated with the updated ones (and their rendering hints).
              *
              * Please note, that if some entity from entitiesThatShouldBeUpdated does not exists in updatedEntities list
              *   -- it will be removed from result-set.
              */
-            replaceUpdatedEntities: function (updatedEntities, updatedRenderingHints, entitiesThatShouldBeUpdated) {
-                var newEntities = this.entities.slice(); // array copy (shallow)
-                var newRenderingHints = this.renderingHints.slice(); // array copy (shallow)
-                for (var i = 0; i < updatedEntities.length; i = i + 1) {
-                    var updatedEntity = updatedEntities[i];
-                    var updatedEntityRenderingHints = updatedRenderingHints[i];
-                    // console.log("updated ", updatedEntity, updatedEntityRenderingHints);
-                    var entityIndex = _findEntity(updatedEntity, newEntities);
-                    if (entityIndex !== -1) {
-                        newEntities[entityIndex] = updatedEntity; // replace old entity with updated one
-                        newRenderingHints[entityIndex] = updatedEntityRenderingHints; // replace also its rendering hints
-                    } else {
-                        // this is the case when the updateEntity was not present in result-set, but should become present. Adds it into the beginning of the list
-                        newEntities.unshift(updatedEntity);
-                        newRenderingHints.unshift(updatedEntityRenderingHints);
-                    }
-                }
-                // need to remove all entities that should be updated, but have not been returned in 'updatedEntities' list (it means they have dissapeared from result-set after modification)
-                for (var j = 0; j < entitiesThatShouldBeUpdated.length; j = j + 1) {
-                    var entityThatShouldBeUpdated = entitiesThatShouldBeUpdated[j];
-                    if (!_hasEntity(entityThatShouldBeUpdated, updatedEntities)) {
-                        var index = _findEntity(entityThatShouldBeUpdated, newEntities);
-
-                        newEntities.splice(index, 1); // remove the entity
-                        newRenderingHints.splice(index, 1); // and its rendering hints
-                    }
-                }
-                this.entities = newEntities;
-                this.renderingHints = newRenderingHints;
-            },
+//            replaceUpdatedEntities: function (updatedEntities, updatedRenderingHints, entitiesThatShouldBeUpdated) {
+//                var newEntities = this.entities.slice(); // array copy (shallow)
+//                var newRenderingHints = this.renderingHints.slice(); // array copy (shallow)
+//                for (var i = 0; i < updatedEntities.length; i = i + 1) {
+//                    var updatedEntity = updatedEntities[i];
+//                    var updatedEntityRenderingHints = updatedRenderingHints[i];
+//                    // console.log("updated ", updatedEntity, updatedEntityRenderingHints);
+//                    var entityIndex = _findEntity(updatedEntity, newEntities);
+//                    if (entityIndex !== -1) {
+//                        newEntities[entityIndex] = updatedEntity; // replace old entity with updated one
+//                        newRenderingHints[entityIndex] = updatedEntityRenderingHints; // replace also its rendering hints
+//                    } else {
+//                        // this is the case when the updateEntity was not present in result-set, but should become present. Adds it into the beginning of the list
+//                        newEntities.unshift(updatedEntity);
+//                        newRenderingHints.unshift(updatedEntityRenderingHints);
+//                    }
+//                }
+//                // need to remove all entities that should be updated, but have not been returned in 'updatedEntities' list (it means they have dissapeared from result-set after modification)
+//                for (var j = 0; j < entitiesThatShouldBeUpdated.length; j = j + 1) {
+//                    var entityThatShouldBeUpdated = entitiesThatShouldBeUpdated[j];
+//                    if (!_hasEntity(entityThatShouldBeUpdated, updatedEntities)) {
+//                        var index = _findEntity(entityThatShouldBeUpdated, newEntities);
+//
+//                        newEntities.splice(index, 1); // remove the entity
+//                        newRenderingHints.splice(index, 1); // and its rendering hints
+//                    }
+//                }
+//                this.entities = newEntities;
+//                this.renderingHints = newRenderingHints;
+//            },
             /**
              * Determines whether property is boolean or not.
              */
