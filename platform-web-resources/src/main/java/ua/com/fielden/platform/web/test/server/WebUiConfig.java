@@ -1270,6 +1270,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
                 .addProp("this")
+                    .order(2).asc()
                     .minWidth(60);
         
         final IWithSummary<TgPersistentEntityWithProperties> afterSummary;
@@ -1281,7 +1282,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         
                 IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
                 .also()
-                .addProp("desc").minWidth(200).
+                .addProp("desc").
+                        order(1).asc().
+                        minWidth(200).
                         withAction(action(TgFunctionalEntityWithCentreContext.class).
                         withContext(context().withSelectedEntities().build()).
                         icon("assignment-turned-in").
