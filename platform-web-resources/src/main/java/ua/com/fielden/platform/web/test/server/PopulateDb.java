@@ -18,7 +18,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
@@ -207,10 +206,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final TgCollectionalSerialisationParent csp1 = (TgCollectionalSerialisationParent) save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
         save(new_composite(TgCollectionalSerialisationChild.class, csp1, "1").setDesc("desc1"));
-
-        //Populate db with deletion test case entities.
-        save(new_(TgDeletionTestEntity.class, "DE1", "Delete Entity 1"));
-        save(new_(TgDeletionTestEntity.class, "DE2", "Delete Entity 2"));
 
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
         mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));

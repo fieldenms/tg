@@ -21,7 +21,7 @@
     <tg-reflector id="reflector"></tg-reflector>
     <test-fixture id="CentreFixture">
         <template>
-            <tg-MiDeletionTestEntity-centre id="centre"></tg-MiDeletionTestEntity-centre>
+            <tg-MiDeletionTestEntity-centre id="centre" uuid="DELETION_TEST_CENTRE"></tg-MiDeletionTestEntity-centre>
         </template>
     </test-fixture>
 
@@ -36,13 +36,19 @@
 
             test('refresh after entity deleteion works', function (done) {
                 var old_postRun = centre._postRun;
-                var deleteAction, testingPhase;
+                var deleteAction, newAction, testingPhase, keyEditor, descEditor;
 
                 centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
                     old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
 
-                    if (testingPhase === 'first') {
-                        assert.strictEqual(resultEntities.length, 2, "The number of retrieved entities is incorrect should be 2 but wass: " + resultEntities.length + ".");
+                    if (testingPhase === 'zero') {
+                        testingPhase = 'first';
+                        newAction._run();
+                    } else if (testingPhase === 'second') {
+                        assert.strictEqual(resultEntities.length, 1, "The number of refreshed entities is incorrect should be 1 but wass: " + resultEntities.length + ".");
+                        newAction._run();
+                    } else if (testingPhase === 'third') {
+                        assert.strictEqual(resultEntities.length, 2, "The number of refreshed entities is incorrect should be 2 but wass: " + resultEntities.length + ".");
                         var entities = centre.$.egi.entities;
                         var selection = centre.$.egi.selectedEntities;
                         var index;
@@ -59,8 +65,43 @@
                 };
 
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
-                    deleteAction = Polymer.dom(centre.$.egi.$$("#top_action_selctor")).getDistributedNodes()[0].children[0];
-                    testingPhase = 'first';
+                    newAction = Polymer.dom(centre.$.egi.$$("#top_action_selctor")).getDistributedNodes()[0].children[0];
+                    newAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                        console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
+
+                        var outerMaster = newAction._masterReferenceForTesting;
+
+                        outerMaster.addEventListener('after-load', function (event) {
+                            var embeddedMaster = event.detail;
+
+                            embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {};
+
+                            embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+                                this.async(function () {
+                                    var saveButton = embeddedMaster.querySelector("tg-action[role='save']");
+                                    var keyEditor = embeddedMaster.$.editor_4_key;
+                                    var descEditor = embeddedMaster.$.editor_4_desc;
+                                    if (testingPhase === 'first') {
+                                        keyEditor._editingValue = 'DE1';
+                                        keyEditor.commit();
+                                        descEditor._editingValue = 'DE DESCRIPTION 1';
+                                        descEditor.commit();
+                                        testingPhase = 'second';
+                                        saveButton._asyncRun();
+                                    } else if (testingPhase === 'second') {
+                                        keyEditor._editingValue = 'DE2';
+                                        keyEditor.commit();
+                                        descEditor._editingValue = 'DE DESCRIPTION 2';
+                                        descEditor.commit();
+                                        testingPhase = 'third';
+                                        saveButton._asyncRun();
+                                    }
+                                }.bind(this), 500);
+                            };
+                        });
+                    };
+                    deleteAction = Polymer.dom(centre.$.egi.$$("#top_action_selctor")).getDistributedNodes()[0].children[1];
+                    testingPhase = 'zero';
                     centre.run();
                 };
                 centre.retrieve();

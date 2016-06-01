@@ -348,9 +348,8 @@
              * This function returns the tooltip for this editor.
              */
             _getTooltip: function (value) {
-                var tooltip = this._formatText(value);
-                tooltip += this.propTitle && ((tooltip && '<br>') + '<b>' + this.propTitle + '</b>');
-                tooltip += this.propDesc && '<br>' + this.propTitle;
+                var tooltip = this._formatTooltipText(value);
+                tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
                 return tooltip;
             },
             
@@ -690,6 +689,14 @@
              */
             _formatText: function (value) {
                 return value;
+            },
+            
+             /**
+             * Overide this to provide custom formatting for tooltip text.
+             */
+            _formatTooltipText: function (value) {
+                var formatedText = this._formatText(value);
+                return formatedText && "<b>" + formatedText + "</b>";
             },
             
             /**
