@@ -1130,7 +1130,7 @@
                 } else {
                     tooltip = this._getValue(entity, column.property, column.type).toString();
                 }
-                if (action !== null) {
+                if (action) {
                     tooltip += "<br><br>" + this._generateActionTooltip(action);
                 }
                 return tooltip;
