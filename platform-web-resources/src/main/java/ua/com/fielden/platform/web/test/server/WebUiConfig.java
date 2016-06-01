@@ -56,6 +56,7 @@ import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentPr
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusActionProducer;
 import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
+import ua.com.fielden.platform.sample.domain.TgDeletionTestEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
@@ -189,6 +190,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
         //Centre configuration for deletion test case entity.
         final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
                 EntityCentreBuilder.centreFor(TgDeletionTestEntity.class)
+                        .addTopAction(action(EntityNewAction.class).
+                                withContext(context().withSelectionCrit().build()).
+                                icon("add-circle-outline").
+                                shortDesc("Add new").
+                                longDesc("Add new delete action").
+                                withNoParentCentreRefresh().
+                                build())
+                        .also()
                         .addTopAction(action(EntityDeleteAction.class).
                                 withContext(context().withSelectedEntities().build()).
                                 icon("remove-circle-outline").
@@ -200,6 +209,25 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         // .addProp("additionalProp")
                         .build(), injector(), null);
         configApp().addCentre(deletionTestCentre);
+        final SimpleMasterBuilder<TgDeletionTestEntity> masterBuilder = new SimpleMasterBuilder<TgDeletionTestEntity>();
+        final String actionStyle = "'margin: 10px', 'width: 110px'";
+        final String outer = "'flex', 'min-width:200px'";
+
+        final String desktopTabletMasterLayout = ("['padding:20px',"
+                //                      key
+                + format("['justified', [%s]],", outer)
+                //                      desc
+                + format("['justified', [%s]],", outer)
+                + format("['margin-top: 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionStyle, actionStyle)
+                + "]");
+        @SuppressWarnings("unchecked")
+        final IMaster<TgDeletionTestEntity> deletionMaster = masterBuilder.forEntity(TgDeletionTestEntity.class)
+            .addProp("key").asSinglelineText().also()//
+            .addProp("desc").asSinglelineText().also()
+            .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancels current changes if any or refresh the data")
+            .addAction(MasterActions.SAVE)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopTabletMasterLayout).done();
+        configApp().addMaster(new EntityMaster<TgDeletionTestEntity>(TgDeletionTestEntity.class, TgDeletionTestEntityProducer.class, deletionMaster, injector()));
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
