@@ -1126,20 +1126,37 @@
                 } else if (column.tooltipProperty) {
                     tooltip = this._getValue(entity, column.tooltipProperty, "String").toString()
                 } else if (this.$.reflector.findTypeByName(column.type)) {
-                    tooltip = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                    tooltip = this._generateEntityTooltip(entity, column);
                 } else {
                     tooltip = this._getValue(entity, column.property, column.type).toString();
                 }
-                if (action) {
+                if (column.columnDesc) {
+                    tooltip += "<br><br>" + column.columnDesc;
+                }
+                if (action && (action.shortDesc || action.longDesc)) {
                     tooltip += "<br><br>" + this._generateActionTooltip(action);
                 }
                 return tooltip;
             },
             
+            _generateEntityTooltip: function (entity, column) {
+                var key = this._getValue(entity, column.property, column.type);
+                var desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                return "<b>" + key + "</b>" + (desc ? "<br>" + desc : "");
+            },
+            
             _generateActionTooltip: function(action) {
-                return "<div style='display:flex;'>" + 
+                var shortDesc = "<b>" + action.shortDesc + "</b>";
+                var longDesc;
+                if (shortDesc) {
+                    longDesc = action.longDesc ? "<br>" + action.longDesc : "";
+                } else {
+                    longDesc = action.longDesc ? "<b>" + action.longDesc + "</b>" : "";
+                }
+                var tooltip = shortDesc + longDesc;
+                return tooltip && "<div style='display:flex;'>" + 
                     "<div style='margin-right:10px;'>With action: </div>" +
-                    "<div style='flex-grow:1;'><b>" + action.shortDesc + "</b><br>" + action.longDesc + "</div>" +
+                    "<div style='flex-grow:1;'>" + tooltip + "</div>" +
                     "</div>"
             },
  
