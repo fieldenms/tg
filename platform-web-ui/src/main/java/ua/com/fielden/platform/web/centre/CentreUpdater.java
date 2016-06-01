@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.centre;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -7,6 +10,7 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager.MetaValueType;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
@@ -18,6 +22,7 @@ import ua.com.fielden.platform.swing.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
@@ -384,6 +389,25 @@ public class CentreUpdater {
                 }
             }
         }
+        
+        if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.ALL_ORDERING, root, "")) {
+            // need to clear all previous orderings:
+            final List<Pair<String, Ordering>> orderedProperties = new ArrayList<>(targetCentre.getSecondTick().orderedProperties(root));
+            for (final Pair<String, Ordering> orderedProperty: orderedProperties) {
+                if (Ordering.ASCENDING == orderedProperty.getValue()) {
+                    targetCentre.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
+                }
+                targetCentre.getSecondTick().toggleOrdering(root, orderedProperty.getKey());
+            }
+            // and apply new ones from diff centre:
+            for (final Pair<String, Ordering> newOrderedProperty: differencesCentre.getSecondTick().orderedProperties(root)) {
+                targetCentre.getSecondTick().toggleOrdering(root, newOrderedProperty.getKey());
+                if (Ordering.DESCENDING == newOrderedProperty.getValue()) {
+                    targetCentre.getSecondTick().toggleOrdering(root, newOrderedProperty.getKey());
+                }
+            }
+        }
+        
         return targetCentre;
     }
     
@@ -439,6 +463,11 @@ public class CentreUpdater {
                     }
                 }
             }
+        }
+        
+        // need to determine whether orderedProperties have been changed (as a whole) and mark diff centre if true:
+        if (!EntityUtils.equalsEx(differencesCentre.getSecondTick().orderedProperties(root), originalCentre.getSecondTick().orderedProperties(root))) {
+            differencesCentre.getFirstTick().markMetaValuePresent(MetaValueType.ALL_ORDERING, root, "");
         }
 
         final DateTime end = new DateTime();
