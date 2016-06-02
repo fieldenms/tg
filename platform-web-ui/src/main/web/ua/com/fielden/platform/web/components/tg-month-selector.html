@@ -150,10 +150,14 @@
 
             ready: function () {
                 var today = new Date();
-                this.selectedDate = today.getTime();
                 this.todayDay = today.getDate();
                 this.todayMonth = today.getMonth();
                 this.todayYear = today.getFullYear();
+            },
+            
+            attached: function () {
+                var dateToShow = (this.selectedDate && new Date(this.selectedDate)) || new Date();
+                this._adjustMonth(dateToShow);
             },
 
             /**
@@ -169,24 +173,32 @@
             _nextMonth: function () {
                 this._selectMonth(1);
             },
+            
+            /**
+             * Selectes the year on the displayed calendar
+             */
+            _selectYear: function (year) {
+                var dateToShow = new Date(year, this.month, 1);
+                this._adjustMonth(dateToShow);
+            },
 
             /**
              * Selects month depending on increment (the increment might be positive or negetive).
              */
             _selectMonth: function (increment) {
-                var shownDate = new Date(this.year, this.month + increment, 1);
-                this._adjustMonth(shownDate);
+                var dateToShow = new Date(this.year, this.month + increment, 1);
+                this._adjustMonth(dateToShow);
             },
 
             /**
              * Updates the calendar information depending on which month was choosen.
              */
-            _adjustMonth: function (shownDate) {
-                if (this.shownMonth !== shownDate.getMonth() || this.shownYear !== shownDate.getFullYear()) {
-                    this.monthName = moment(this.selectedDate).format("MMMM");
-                    this.month = this.selectedDate.getMonth();
-                    this.year = this.selectedDate.getFullYear();
-                    this.weeks = createMonth(this.shownYear, this.shownMonth);
+            _adjustMonth: function (dateToShow) {
+                if (this.month !== dateToShow.getMonth() || this.year !== dateToShow.getFullYear()) {
+                    this.monthName = moment(dateToShow).format("MMMM");
+                    this.month = dateToShow.getMonth();
+                    this.year = dateToShow.getFullYear();
+                    this.weeks = createMonth(this.year, this.month);
                 }
             },
             
@@ -194,7 +206,7 @@
 			 * Selects the date.
 			 */
 			_selectDay: function (event, detail, el) {
-				this.selectedDate = new Date(this.shownYear, this.shownMonth, event.model.day).getTime();
+				this.selectedDate = new Date(this.year, this.month, event.model.day).getTime();
 			},
 
 			/**
@@ -202,9 +214,9 @@
 			 */
 			_selectedDateChanged: function (newValue, oldValue) {
 				var newDate = new Date(newValue);
-				this.selectedDay = newDate.getDate();
-                this.selectedMonth = newDate.getMonth();
                 this.selectedYear = newDate.getFullYear();
+                this.selectedMonth = newDate.getMonth();
+				this.selectedDay = newDate.getDate();
 				this._adjustMonth(newDate);
 			},
             

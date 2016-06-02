@@ -5,146 +5,169 @@
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/components/tg-time.html">
 <link rel="import" href="/resources/components/tg-month-selector.html">
-<link rel="import" href="/resources/components/tg-year-selector.html">
+<link rel="import" href="/resources/components/tg-number-selector.html">
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 
 
 <dom-module id="tg-calendar">
-	<style>
-		.col {
-			width: 14em;
-		}
+    <style>
+        .col {
+            width: 14em;
+        }
         .day-name {
-			background-color: #0288D1;
-			color: white;
-		}
-		.header {
-			height: 2.2em;
-			font-size: 14px;
-		}
-		.selected-date {
-			background-color: #03A9F4;
-			color: white !important;
-		}
-		
-		.selected-month {
-			font-size: 24px;
-		}
-		
-		.selected-day {
-			font-size: 56px;
-		}
-		
-		.selected-year {
-			font-size: 24px;
-			color: #81D4FA;
-		}
-		tg-time {
-			background-color: #03A9F4;
-			color: white;
-			--tg-time: {
-				font-size: 14px;
-				height: 14px;
-			};
-			--tg-time-portion: {
-				margin: 8px 0px;
-			};
-			--tg-meridian: {
-				font-size: 14px;
-				height: 14px;
-			};
-		}
-	</style>
-	<template>
-		<tg-app-config id="appConfig"></tg-app-config>
-		<iron-media-query query="[[_calcMobileQuery()]]" query-matches="{{_phoneScreen}}"></iron-media-query>
-		<div class$="[[_calcCalendarLayout(_phoneScreen)]]">
-			<div class="col layout vertical">
-				<div class="header day-name layout vertical center-center">[[dayName]]</div>
-				<div class="selected-date layout vertical center justified" style="padding: 10px;">
-					<div class="selected-month">[[monthName]]</div>
-					<div class="selected-day">[[day]]</div>
-					<div class="selected-year">[[year]]</div>
-				</div>
-				<template is="dom-if" if="[[pickTime]]">
-					<tg-time hour="{{selectedHour}}" minute="{{selectedMinute}}"></tg-time>
-				</template>
-			</div>
-			<div class="col relative">
+            background-color: #0288D1;
+            color: white;
+        }
+        .header {
+            height: 2.2em;
+            font-size: 14px;
+        }
+        .selected-date {
+            background-color: #03A9F4;
+            color: white !important;
+        }
+        .selected-month {
+            font-size: 24px;
+        }
+        .selected-day {
+            font-size: 56px;
+        }
+        .selected-year {
+            font-size: 24px;
+            color: #81D4FA;
+            cursor: pointer;
+        }
+        tg-time {
+            background-color: #03A9F4;
+            color: white;
+            --tg-time: {
+                font-size: 14px;
+                height: 14px;
+            }
+            ;
+            --tg-time-portion: {
+                margin: 8px 0px;
+            }
+            ;
+            --tg-meridian: {
+                font-size: 14px;
+                height: 14px;
+            }
+            ;
+        }
+    </style>
+    <template>
+        <tg-app-config id="appConfig"></tg-app-config>
+        <iron-media-query query="[[_calcMobileQuery()]]" query-matches="{{_phoneScreen}}"></iron-media-query>
+        <div class$="[[_calcCalendarLayout(_phoneScreen)]]">
+            <div class="col layout vertical">
+                <div class="header day-name layout vertical center-center">[[dayName]]</div>
+                <div class="selected-date layout vertical center justified" style="padding: 10px;">
+                    <div class="selected-month">[[monthName]]</div>
+                    <div class="selected-day">[[day]]</div>
+                    <div class="selected-year" on-tap="_showYearSelector">[[year]]</div>
+                </div>
+                <template is="dom-if" if="[[pickTime]]">
+                    <tg-time hour="{{selectedHour}}" minute="{{selectedMinute}}"></tg-time>
+                </template>
+            </div>
+            <div class="col relative">
                 <neon-animated-pages class="fit" id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
-                    <tg-month-selector page-name="monthSelector"></tg-month-selector>
-                    <tg-year-selector page-name="yearSelector"></tg-year-selector>
+                    <tg-month-selector id="monthSelector" page-name="monthSelector" selected-date="{{selectedDate}}"></tg-month-selector>
+                    <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}"></tg-number-selector>
                 </neon-animated-pages>
-			</div>
-		</div>
-	</template>
+            </div>
+        </div>
+    </template>
 </dom-module>
 <script>
-	(function () {
-		Polymer({
+    (function () {
+        Polymer({
 
-			is: "tg-calendar",
+            is: "tg-calendar",
 
-			properties: {
-				selectedDate: {
-					type: Number,
-					notify: true,
-					observer: "_selectedDateChanged"
-				},
-				selectedHour: {
-					type: Number,
-					notify: true
-				},
-				selectedMinute: {
-					type: Number,
-					notify: true
-				},
-				pickTime: {
-					type: Boolean,
-					reflectToAttribute: true,
-					value: false
-				}
-			},
+            properties: {
+                selectedDate: {
+                    type: Number,
+                    notify: true,
+                    observer: "_selectedDateChanged"
+                },
+                selectedYear: {
+                    type: Number,
+                    observer: "_selectedYearChanged"
+                },
+                selectedHour: {
+                    type: Number,
+                    notify: true
+                },
+                selectedMinute: {
+                    type: Number,
+                    notify: true
+                },
+                pickTime: {
+                    type: Boolean,
+                    reflectToAttribute: true,
+                    value: false
+                }
+            },
+
+            ready: function () {
+                this._selectedPage = 'monthSelector';
+            },
 
 
-			attached: function () {
-				var shownDate = (this.selectedDate && new Date(this.selectedDate)) || new Date();
-				this._adjustDate(shownDate);
-			},
-            
-			/**
-			 * Updates the calendar information according to specified date.
-			 */
-			_adjustDate: function (date) {
-				this.dayName = moment(date).format("dddd");
-				this.monthName = moment(date).format("MMM").toUpperCase();
-				this.day = date.getDate();
-				this.year = date.getFullYear();
-			},
+            attached: function () {
+                var shownDate = (this.selectedDate && new Date(this.selectedDate)) || new Date();
+                this._adjustDate(shownDate);
+            },
 
-			/**
-			 * Listens when the selected date changes.
-			 */
-			_selectedDateChanged: function (newValue, oldValue) {
-				var newDate = new Date(newValue);
-				this._adjustDate(newDate);
-			},
+            /**
+             * Updates the calendar information according to specified date.
+             */
+            _adjustDate: function (date) {
+                this.dayName = moment(date).format("dddd");
+                this.monthName = moment(date).format("MMM").toUpperCase();
+                this.day = date.getDate();
+                this.year = date.getFullYear();
+                this.selectedYear = date.getFullYear();
+            },
 
-			/**
-			 * Calculates the media query for mobile devices.
-			 */
-			_calcMobileQuery: function () {
-				return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
-			},
+            /**
+             * Listens when year was changed and updates calendar.
+             */
+            _selectedYearChanged: function (newValue, oldValue) {
+                this.$.monthSelector._selectYear(newValue);
+            },
 
-			/**
-			 * Calculates the calendar layout depending on phoneScreen.
-			 */
-			_calcCalendarLayout: function (phoneScreen) {
-				return "layout " + (phoneScreen ? "vertical" : "horizontal");
-			}
+            /**
+             * Listens when the selected date changes.
+             */
+            _selectedDateChanged: function (newValue, oldValue) {
+                if (newValue !== null) {
+                    var newDate = new Date(newValue);
+                    this._adjustDate(newDate);
+                }
+            },
+
+            _showYearSelector: function () {
+                this._selectedPage = "yearSelector";
+            },
+
+            /**
+             * Calculates the media query for mobile devices.
+             */
+            _calcMobileQuery: function () {
+                return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
+            },
+
+            /**
+             * Calculates the calendar layout depending on phoneScreen.
+             */
+            _calcCalendarLayout: function (phoneScreen) {
+                return "layout " + (phoneScreen ? "vertical" : "horizontal");
+            }
         });
-	})();
+    })();
 </script>
