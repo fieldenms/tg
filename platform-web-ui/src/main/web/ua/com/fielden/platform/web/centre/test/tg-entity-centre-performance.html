@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity-centre basic tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+    
+    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+    
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties1">
+</head>
+
+<body>
+    <tg-reflector id="reflector"></tg-reflector>
+    <test-fixture id="CentreFixture">
+        <template>
+            <tg-MiTgPersistentEntityWithProperties1-centre id="centre" uuid="TEST_CENTRE"></tg-MiTgPersistentEntityWithProperties1-centre>
+        </template>
+    </test-fixture>
+    
+<script>
+    suite('entity centre', function() {
+        var centre, reflector, noOfIterations, _calcConfidenceInterval;
+        
+        setup(function() {
+            centre = fixture('CentreFixture');
+            reflector = document.querySelector('#reflector');
+            noOfIterations = 100;
+            _calcConfidenceInterval = function (data) {
+                var n = data.length;
+                var sum = 0;
+                for (var index = 0; index < n; index++) {
+                    sum += data[index];
+                }
+                return sum * 1.0 / n;
+            }
+        });
+        
+        test('subsequent validations measuring', function (done) {
+            var start;
+            var count = 0;
+            var data = [];
+            
+            var _leftEditor = function (name) {
+                return centre.$.selection_criteria.$['editor_4_tgPersistentEntityWithProperties_' + name + '_is'];
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                var editor = _leftEditor('booleanProp');
+                console.log('_leftEditor(booleanProp) === ', editor);
+                
+                start = new Date().getTime();
+                editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                editor.commit();
+            };
+            
+            centre.$.selection_criteria.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                count++;
+                
+                var time = new Date().getTime() - start;
+                data.push(time);
+                console.debug('Validated in ', time, ' millis (no ', count, ').');
+                
+                var editor = _leftEditor('booleanProp');
+                console.log('_leftEditor(booleanProp) === ', editor);
+                
+                start = new Date().getTime();
+                editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                editor.commit();
+                
+                if (count >= noOfIterations) {
+                    console.debug('x_ = ', _calcConfidenceInterval(data));
+                    done();
+                }
+            };
+            
+            centre.retrieve();
+        });
+        
+        
+        /* test('run action works for custom fetch provider', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+            	
+            	var entity = resultEntities[0];
+            	
+                // value ok?
+                assert.ok(entity.get("property"), "Property value should be initialised.");
+                assert.ok(entity.get("additionalProperty"), "Property value should be initialised.");
+            	
+            	done();
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+				centre.run();
+            };
+
+ 			centre.retrieve();
+	    }); */
+	});
+</script>
+
+</body>
+
+</html>

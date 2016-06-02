@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+</head>
+
+<body>
+    <script>
+        WCT._config.mochaOptions.timeout = 150000;
+        
+        WCT.loadSuites([
+            'centre/test/tg-entity-centre-performance.html'
+        ]);
+
+        /*TODO mocha.setup({ui: 'tdd', slow: 1000, timeout: 5000, htmlbase: ''});*/
+    </script>
+</body>
+
+</html>

@@ -691,13 +691,13 @@
                 return "";
             },
             
-            _formatText: function(valueToFormat) {
+            _formatTooltipText: function(valueToFormat) {
                 if (valueToFormat !== null) {
                     var entityValue = this.reflector()._getValueFor(valueToFormat, this.propertyName);
                     if (Array.isArray(entityValue)) {
-                        return entityValue.join(this.separator);
+                        return entityValue.length > 0 ? ("<b>" + entityValue.join(this.separator) + "</b>") : '';
                     } else if (entityValue != null){
-                        return this.reflector().convert(entityValue) + (entityValue.desc ? " &ndash; " + entityValue.desc : "");   
+                        return "<b>" + this.reflector().convert(entityValue) + "</b>" + (entityValue.desc ? "<br>" + entityValue.desc : "");   
                     } else {
                         return '';
                     }
