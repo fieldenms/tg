@@ -17,7 +17,7 @@
         }
     </style>
     <template>
-        <iron-scroll-threshold class="fit" on-lower-threshold="_lowerThreshold" on-upper-threshold="_upperThreshold" lower-threshold="50" upper-threshold="50" id="threshold">
+        <iron-scroll-threshold class="fit" on-lower-threshold="_lowerThreshold" lower-threshold="10" upper-threshold="10" on-upper-threshold="_upperThreshold" id="threshold">
             <iron-list class="fit" id="list" items="[]" scroll-target="threshold">
                 <template>
                     <div class="layout horizontal center-center">
@@ -41,6 +41,14 @@
                     type: Number,
                     notify: true,
                     observer: "_selectedNumberChanged"
+                },
+                upperBound: {
+                    type: Number,
+                    observer: "_upperBoundChanged"
+                },
+                lowerBound: {
+                    type: Number,
+                    observer: "_lowerBoundChanged"
                 }
             },
 
@@ -70,7 +78,16 @@
                         this.$.list.push("items", newValue);
                         this._loadPreviousNumbers();
                         this._loadNextNumbers();
-                        this.$.list.scrollToIndex(numbersToLoadAtOnce + 1);
+                    }
+                }
+            },
+            
+            _lowerBoundChanged: function (newValue, oldValue) {
+                if (this.$.list.items.length > 0 && newValue > this.$.list.items[0]) {
+                    var lastIndex = this.$.list.items.indexOf(newValue);
+                    this.$.list.splice("items", 0, lastIndex);
+                    if (this.selectedNumber < newValue) {
+                        this.selectedNumber = newValue;
                     }
                 }
             },
@@ -83,13 +100,25 @@
                 if (this.$.list.items.length > 0) {
                     var startFrom = this.$.list.items[0];
                     var calcTo = toNumber || startFrom - numbersToLoadAtOnce;
+                    calcTo = calcTo < this.lowerBound ? this.lowerBound : calcTo;
+                    console.log(startFrom, calcTo, startFrom);
                     if (calcTo < startFrom) {
                         for (startFrom -= 1; startFrom >= calcTo; startFrom--) {
                             this.$.list.unshift("items", startFrom);
                         }
+                        this.$.threshold.scroll(0, numbersToLoadAtOnce * cellSize);
                     }
-                    this.$.threshold.scroll(0, numbersToLoadAtOnce * cellSize);
                     this.$.threshold.clearTriggers();
+                }
+            },
+            
+            _upperBoundChanged: function (newValue, oldValue) {
+                if (this.$.list.items.length > 0 && newValue < this.$.list.items[this.$.list.items.length - 1]) {
+                    var lastIndex = this.$.list.items.indexOf(newValue);
+                    this.$.list.splice("items", lastIndex + 1, this.$.list.items.length - lastIndex - 1);
+                    if (this.selectedNumber > newValue) {
+                        this.selectedNumber = newValue;
+                    }
                 }
             },
 
@@ -101,9 +130,12 @@
                 if (this.$.list.items.length > 0) {
                     var startFrom = this.$.list.items[this.$.list.items.length - 1];
                     var calcTo = toNumber || startFrom + numbersToLoadAtOnce;
+                    calcTo = calcTo > this.upperBound ? this.upperBound : calcTo;
+                    console.log(startFrom, calcTo, this.upperBound, calcTo > this.upperBound, calcTo > startFrom);
                     if (calcTo > startFrom) {
                         for (startFrom += 1; startFrom <= calcTo; startFrom++) {
                             this.$.list.push("items", startFrom);
+                            console.log("pushed", startFrom);
                         }
                     }
                     this.$.threshold.clearTriggers();

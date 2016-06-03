@@ -3,7 +3,6 @@
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
-<link rel="import" href="/resources/components/tg-time.html">
 <link rel="import" href="/resources/components/tg-month-selector.html">
 <link rel="import" href="/resources/components/tg-number-selector.html">
 <link rel="import" href="/app/tg-app-config.html">
@@ -30,32 +29,27 @@
         }
         .selected-month {
             font-size: 24px;
+            cursor: pointer;
         }
         .selected-day {
             font-size: 56px;
+            cursor: pointer;
         }
         .selected-year {
             font-size: 24px;
             color: #81D4FA;
             cursor: pointer;
         }
-        tg-time {
+        .time-picker {
             background-color: #03A9F4;
             color: white;
-            --tg-time: {
-                font-size: 14px;
-                height: 14px;
-            }
-            ;
-            --tg-time-portion: {
-                margin: 8px 0px;
-            }
-            ;
-            --tg-meridian: {
-                font-size: 14px;
-                height: 14px;
-            }
-            ;
+            padding-bottom: 16px;
+        }
+        .time {
+            font-size: 18px;
+            height: 18px;
+            margin: 0 1px;
+            cursor: pointer;
         }
     </style>
     <template>
@@ -65,18 +59,25 @@
             <div class="col layout vertical">
                 <div class="header day-name layout vertical center-center">[[dayName]]</div>
                 <div class="selected-date layout vertical center justified" style="padding: 10px;">
-                    <div class="selected-month">[[monthName]]</div>
-                    <div class="selected-day">[[day]]</div>
+                    <div class="selected-month" on-tap="_showMonthSelector">[[monthName]]</div>
+                    <div class="selected-day" on-tap="_showMonthSelector">[[day]]</div>
                     <div class="selected-year" on-tap="_showYearSelector">[[year]]</div>
                 </div>
                 <template is="dom-if" if="[[pickTime]]">
-                    <tg-time hour="{{selectedHour}}" minute="{{selectedMinute}}"></tg-time>
+                    <div class="time-picker layout horizontal center-center">
+                        <div class="time" on-tap="_showHourSelector">[[_formatHours(selectedHour, showMeridian)]]</div>
+                        <div class="time">:</div>
+                        <div class="time" on-tap="_showMinuteSelector">[[_formatMinute(selectedMinute)]]</div>
+                        <div class="time" on-tap="_changeMeridan" hidden$="[[!showMeridian]]">[[meridian]]</div>
+                    </div>
                 </template>
             </div>
             <div class="col relative">
                 <neon-animated-pages class="fit" id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_onPageChange">
                     <tg-month-selector id="monthSelector" page-name="monthSelector" selected-date="{{selectedDate}}"></tg-month-selector>
                     <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}" on-number-selected="_showMonthSelector"></tg-number-selector>
+                    <tg-number-selector page-name="hourSelector" selected-number="{{selectedHour}}" lower-bound="[[_getHourLowerBound(showMeridian)]]" upper-bound="[[_getHourUpperBound(showMeridian)]]" on-number-selected="_showMonthSelector"></tg-number-selector>
+                    <tg-number-selector page-name="minuteSelector" selected-number="{{selectedMinute}}" lower-bound="0" upper-bound="59" on-number-selected="_showMonthSelector"></tg-number-selector>
                 </neon-animated-pages>
             </div>
         </div>
@@ -84,6 +85,11 @@
 </dom-module>
 <script>
     (function () {
+        var meridians = ["AM", "PM"];
+        var zeroPad = function (str, num) {
+            str = (str && str.toString()) || "";
+            return str.length < num ? zeroPad("0" + str, num) : str;
+        };
         Polymer({
 
             is: "tg-calendar",
@@ -110,6 +116,15 @@
                     type: Boolean,
                     reflectToAttribute: true,
                     value: false
+                },
+                meridian: {
+                    type: String,
+                    notify: true,
+                    value: "AM"
+                },
+                showMeridian: {
+                    type: Boolean,
+                    value: moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a") >= 0
                 }
             },
 
@@ -154,9 +169,22 @@
             _showYearSelector: function () {
                 this._selectedPage = "yearSelector";
             },
-            
+
             _showMonthSelector: function () {
                 this._selectedPage = "monthSelector";
+            },
+
+            _showHourSelector: function () {
+                this._selectedPage = "hourSelector";
+            },
+
+            _showMinuteSelector: function () {
+                this._selectedPage = "minuteSelector";
+            },
+
+            _changeMeridan: function () {
+                var indexOfMeridian = meridians.indexOf(this.meridian);
+                this.meridian = meridians[indexOfMeridian ? 0 : 1];
             },
 
             /**
@@ -177,7 +205,27 @@
                 if (detail.toPage.getAttribute('page-name') !== 'monthSelector' && typeof detail.toPage._resize === 'function') {
                     detail.toPage._resize();
                 }
-            }
+            },
+
+            _formatHours: function (value, showMeridian) {
+                if (showMeridian) {
+                    return zeroPad(value % 12 === 0 ? 12 : value % 12, 2);
+                } else {
+                    return zeroPad(value, 2);
+                }
+            },
+
+            _getHourLowerBound: function (showMeridian) {
+                return showMeridian ? 1 : 0;
+            },
+
+            _getHourUpperBound: function (showMeridian) {
+                return showMeridian ? 12 : 23;
+            },
+
+            _formatMinute: function (value) {
+                return zeroPad(value, 2);
+            },
         });
     })();
 </script>
