@@ -39,7 +39,22 @@
                 for (var index = 0; index < n; index++) {
                     sum += data[index];
                 }
-                return sum * 1.0 / n;
+                var x_ = sum * 1.0 / n; // "mean"
+                
+                var sum = 0;
+                for (var index = 0; index < n; index++) {
+                    var diff = data[index] - x_;
+                    sum += diff * diff;
+                }
+                sum = sum / n;
+                var sigma = Math.sqrt(sum); // standard deviation
+                
+                // The value of z(alfa / 2) is taken from z-table for confidence level of 95%, for example from here (http://www.statisticshowto.com/tables/z-table/).
+                // alfa = 0.95, alfa / 2 = 0.475, find that value inside the table and check intersections: 1.9 and 0.6 => z := 1.96
+                var z = 1.96;
+                var deltaX = z * (sigma / Math.sqrt(n));
+                
+                return [+((x_ - deltaX).toFixed(1)), +((x_ + deltaX).toFixed(1))];
             }
         });
         
@@ -76,7 +91,7 @@
                 editor.commit();
                 
                 if (count >= noOfIterations) {
-                    console.debug('x_ = ', _calcConfidenceInterval(data));
+                    console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
                     done();
                 }
             };
