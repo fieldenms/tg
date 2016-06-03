@@ -243,7 +243,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
             throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
         }
-        logger.error(String.format("Started to adjustManagedTypeName for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
+        // logger.debug(String.format("Started to adjustManagedTypeName for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
 
         try {
@@ -261,7 +261,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         }
         
         final Class<?> adjustedType = getManagedType(root);
-        logger.error(String.format("Ended to adjustManagedTypeName for root [%s]. Adjusted to [%s].", root.getSimpleName(), adjustedType.getSimpleName()));
+        // logger.debug(String.format("Ended to adjustManagedTypeName for root [%s]. Adjusted to [%s].", root.getSimpleName(), adjustedType.getSimpleName()));
         return adjustedType;
     }
     
@@ -271,9 +271,9 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
             throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
         }
-        logger.error(String.format("Started to adjustManagedTypeAnnotations for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
+        // logger.debug(String.format("Started to adjustManagedTypeAnnotations for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
         if (additionalAnnotations.length == 0) {
-            logger.error(String.format("Ended to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
+            logger.warn(String.format("Ended to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
             return managedType;
         }
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
@@ -292,7 +292,7 @@ public final class DomainTreeEnhancer0 extends AbstractDomainTree implements IDo
         }
         
         final Class<?> adjustedType = getManagedType(root);
-        logger.error(String.format("Ended to adjustManagedTypeAnnotations for root [%s].", root.getSimpleName()));
+        // logger.debug(String.format("Ended to adjustManagedTypeAnnotations for root [%s].", root.getSimpleName()));
         return adjustedType;
     }
 

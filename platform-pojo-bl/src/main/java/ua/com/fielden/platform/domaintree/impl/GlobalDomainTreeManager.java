@@ -523,10 +523,9 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             logger.error("Version should exist.");
             throw new IllegalArgumentException("Version should exist.");
         }
-        logger.error(String.format("Checking the staleness of the centre with ID [%s] and version [%s]: started...", id, version));
+        // logger.debug(String.format("Checking the staleness of the centre with ID [%s] and version [%s]: started...", id, version));
         final boolean stale = entityCentreConfigController.isStale(id, version);
-        // TODO debug
-        logger.error(String.format("Checking the staleness of the centre with ID [%s] and version [%s]: %s.", id, version, stale));
+        // logger.debug(String.format("Checking the staleness of the centre with ID [%s] and version [%s]: %s.", id, version, stale));
         return stale;
     }
 
@@ -629,8 +628,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      * @return
      */
     public ICentreDomainTreeManagerAndEnhancer copyCentre(final ICentreDomainTreeManagerAndEnhancer centre) {
-        // TODO logger.debug
-        logger.error(String.format("\t\t\tCopying centre..."));
+        logger.debug(String.format("\t\t\tCopying centre..."));
         final DateTime start = new DateTime();
         // final TgKryo kryo = (TgKryo) getSerialiser();
         // TODO kryo.register(CentreDomainTreeManager.class, new CentreDomainTreeManagerSerialiserWithTransientAnalyses(kryo));
@@ -648,8 +646,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
-        // TODO logger.debug
-        logger.error(String.format("\t\t\tCopying centre... done in [%s].", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+        logger.debug(String.format("\t\t\tCopying centre... done in [%s].", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
         return copy;
     }
 

@@ -43,8 +43,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
         final boolean isGenerated = DynamicEntityClassLoader.isGenerated(entityType);
         if (isGenerated) {
             miType = entityType.getAnnotation(MiType.class).value();
-            // TODO logger.debug
-            logger.error("============encode============== " + miType);
+            logger.debug("============encode============== " + miType);
         } else {
             miType = null;
         }
@@ -64,8 +63,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
         Class<T> decodedEntityType = null;
         
         if (isGenerated) {
-            // TODO logger.debug
-            logger.error("-------------decode------------- " + entityTypeId);
+            logger.debug("-------------decode------------- " + entityTypeId);
             entityTypeName = entityTypeId.substring(0, entityTypeId.indexOf(":"));
             
             try {

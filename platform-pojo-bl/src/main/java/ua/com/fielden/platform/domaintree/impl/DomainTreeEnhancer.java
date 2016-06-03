@@ -420,13 +420,12 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
             throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
         }
-        // TODO logger.debug
-        logger.error(String.format("\t\t\t\tStarted to adjustManagedTypeName for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
+        // logger.debug(String.format("\t\t\t\tStarted to adjustManagedTypeName for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
 
         try {
             final String predefinedRootTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + clientGeneratedTypeNameSuffix;
-            final Class<?> rootWithPredefinedName = classLoader.startModification(managedType.getName()).modifyTypeName(predefinedRootTypeName)./* TODO modifySupertypeName(originalRoot.getName()).*/endModification();
+            final Class<?> rootWithPredefinedName = classLoader.startModification(managedType.getName()).modifyTypeName(predefinedRootTypeName).endModification();
             
             final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<String, ByteArray>();
             final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
@@ -439,8 +438,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         }
         
         final Class<?> adjustedType = getManagedType(root);
-        // TODO logger.debug
-        logger.error(String.format("\t\t\t\tEnded to adjustManagedTypeName for root [%s]. Adjusted to [%s].", root.getSimpleName(), adjustedType.getSimpleName()));
+        // logger.debug(String.format("\t\t\t\tEnded to adjustManagedTypeName for root [%s]. Adjusted to [%s].", root.getSimpleName(), adjustedType.getSimpleName()));
         return adjustedType;
     }
     
@@ -450,11 +448,9 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         if (!DynamicEntityClassLoader.isGenerated(managedType)) {
             throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
         }
-        // TODO logger.debug
-        logger.error(String.format("\t\t\t\tStarted to adjustManagedTypeAnnotations for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
+        // logger.debug(String.format("\t\t\t\tStarted to adjustManagedTypeAnnotations for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
         if (additionalAnnotations.length == 0) {
-            // TODO logger.debug
-            logger.error(String.format("\t\t\t\tEnded to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
+            logger.warn(String.format("\t\t\t\tEnded to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
             return managedType;
         }
         final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
@@ -473,8 +469,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         }
         
         final Class<?> adjustedType = getManagedType(root);
-        // TODO logger.debug
-        logger.error(String.format("\t\t\t\tEnded to adjustManagedTypeAnnotations for root [%s].", root.getSimpleName()));
+        // logger.debug(String.format("\t\t\t\tEnded to adjustManagedTypeAnnotations for root [%s].", root.getSimpleName()));
         return adjustedType;
     }
 
