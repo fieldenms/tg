@@ -55,7 +55,7 @@
                 var deltaX = z * (sigma / Math.sqrt(n));
                 
                 return [+((x_ - deltaX).toFixed(1)), +((x_ + deltaX).toFixed(1))];
-            }
+            };
         });
         
         test('subsequent validations measuring', function (done) {
@@ -76,24 +76,28 @@
                 editor.commit();
             };
             
-            centre.$.selection_criteria.postValidated = function (validatedEntity, bindingEntity, customObject) {
-                count++;
-                
-                var time = new Date().getTime() - start;
-                data.push(time);
-                console.debug('Validated in ', time, ' millis (no ', count, ').');
-                
-                var editor = _leftEditor('booleanProp');
-                console.log('_leftEditor(booleanProp) === ', editor);
-                
-                start = new Date().getTime();
-                editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
-                editor.commit();
-                
-                if (count >= noOfIterations) {
-                    console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
-                    done();
-                }
+            centre.$.selection_criteria._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
+                newValidationPromise.then(function(value) {
+                    count++;
+                    
+                    var time = new Date().getTime() - start;
+                    data.push(time);
+                    console.debug('Validated in ', time, ' millis (no ', count, ').');
+                    
+                    var editor = _leftEditor('booleanProp');
+                    console.log('_leftEditor(booleanProp) === ', editor);
+                    
+                    start = new Date().getTime();
+                    editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                    editor.commit();
+                    
+                    if (count >= noOfIterations) {
+                        console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
+                        done();
+                    }
+                }, function (error) {
+                    console.error("The action was rejected with error: " + error);
+                });
             };
             
             centre.retrieve();
