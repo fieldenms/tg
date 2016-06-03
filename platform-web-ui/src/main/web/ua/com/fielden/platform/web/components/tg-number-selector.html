@@ -112,7 +112,6 @@
                     var startFrom = this.$.list.items[0];
                     var calcTo = toNumber || startFrom - numbersToLoadAtOnce;
                     calcTo = calcTo < this.lowerBound ? this.lowerBound : calcTo;
-                    console.log(startFrom, calcTo, startFrom);
                     if (calcTo < startFrom) {
                         for (startFrom -= 1; startFrom >= calcTo; startFrom--) {
                             this.$.list.unshift("items", startFrom);
@@ -142,11 +141,9 @@
                     var startFrom = this.$.list.items[this.$.list.items.length - 1];
                     var calcTo = toNumber || startFrom + numbersToLoadAtOnce;
                     calcTo = calcTo > this.upperBound ? this.upperBound : calcTo;
-                    console.log(startFrom, calcTo, this.upperBound, calcTo > this.upperBound, calcTo > startFrom);
                     if (calcTo > startFrom) {
                         for (startFrom += 1; startFrom <= calcTo; startFrom++) {
                             this.$.list.push("items", startFrom);
-                            console.log("pushed", startFrom);
                         }
                     }
                     this.$.threshold.clearTriggers();
