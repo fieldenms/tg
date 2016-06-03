@@ -566,9 +566,9 @@
              				null, null, 'true',
              				null, null, this.getMasterEntity);
              		
-             		this._validator().validate(preparedModifHolder, contextHolder);
+             		return this._validator().validate(preparedModifHolder, contextHolder);
             	 } else {
-             		this._validator().validate(preparedModifHolder, this.savingContext);
+             		return this._validator().validate(preparedModifHolder, this.savingContext);
              	}
              },
 
