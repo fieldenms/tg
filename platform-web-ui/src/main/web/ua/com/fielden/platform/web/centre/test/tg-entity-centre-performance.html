@@ -103,28 +103,51 @@
             centre.retrieve();
         });
         
-        
-        /* test('run action works for custom fetch provider', function (done) {
-            var old_postRun = centre._postRun;
+        test('subsequent savings measuring', function (done) {
+            var start;
+            var count = 0;
+            var data = [];
             
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
-            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-            	
-            	var entity = resultEntities[0];
-            	
-                // value ok?
-                assert.ok(entity.get("property"), "Property value should be initialised.");
-                assert.ok(entity.get("additionalProperty"), "Property value should be initialised.");
-            	
-            	done();
+            var _leftEditor = function (name) {
+                return centre.$.selection_criteria.$['editor_4_tgPersistentEntityWithProperties_' + name + '_is'];
             };
             
             centre.postRetrieved = function (entity, bindingEntity, customObject) {
-				centre.run();
+                var editor = _leftEditor('booleanProp');
+                editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                editor.commit();
             };
-
- 			centre.retrieve();
-	    }); */
+            
+            centre.$.selection_criteria._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
+                // console.debug('_validationPromiseChanged:', newValidationPromise, oldValidationPromise);
+                newValidationPromise.then(function(value) {
+                    start = new Date().getTime();
+                    centre.save().then(function(value) {
+                        count++;
+                        
+                        var time = new Date().getTime() - start;
+                        data.push(time);
+                        console.debug('Saved in ', time, ' millis (no ', count, ').');
+                        
+                        if (count >= noOfIterations) {
+                            console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
+                            done();
+                        }
+                        
+                        var editor = _leftEditor('booleanProp');
+                        editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                        editor.commit();
+                    }, function (error) {
+                        console.error("Saving was rejected with error: " + error);
+                    });
+                }, function (error) {
+                    console.error("Validation was rejected with error: " + error);
+                });
+            };
+            
+            centre.retrieve();
+        });
+        
 	});
 </script>
 
