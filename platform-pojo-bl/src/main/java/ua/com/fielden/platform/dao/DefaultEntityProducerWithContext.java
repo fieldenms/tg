@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.dao;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityEditAction;
@@ -20,22 +23,44 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
 
     private final EntityFactory factory;
     protected final Class<T> entityType;
-    private final IEntityDao<T> companion;
+    
     // optional centre context for context-dependent entity producing logic
     private CentreContext<? extends AbstractEntity<?>, AbstractEntity<?>> centreContext;
     private AbstractEntity<?> masterEntity;
     private Long compoundMasterEntityId;
     private String chosenProperty;
 
+    private ICompanionObjectFinder coFinder;
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
+
     public DefaultEntityProducerWithContext(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
         this.factory = factory;
         this.entityType = entityType;
-        this.companion = companionFinder.<IEntityDao<T>, T> find(this.entityType);
+        this.coFinder = companionFinder;
     }
 
+    
+    /**
+     * A convenient way to obtain companion instances by the types of corresponding entities.
+     * 
+     * @param type -- entity type whose companion instance needs to be obtained
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+        IEntityDao<?> co = coCache.get(type);
+        if (co == null) {
+            co = coFinder.find(type);
+            coCache.put(type, co);
+        }
+        return (C) co;
+    }
+
+    
     @Override
     public final T newEntity() {
         final T entity = factory.newEntity(entityType);
+        final IEntityDao<T> companion = co(this.entityType);
         
         if (companion != null) {
             provideProxies(entity, companion.getFetchProvider());
@@ -121,7 +146,7 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
 
     protected IEntityDao<T> companion() {
-        return companion;
+        return co(this.entityType);
     }
 
     /**
