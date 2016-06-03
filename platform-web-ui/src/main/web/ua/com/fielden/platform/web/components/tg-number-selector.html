@@ -5,10 +5,10 @@
 <dom-module id="tg-number-selector">
     <style>
         .number-item {
-            height: 52px;
-            width: 52px;
+            height: 42px;
+            width: 42px;
             font-size: 14px;
-            border-radius: 26px;
+            border-radius: 21px;
             cursor: pointer;
         }
         .number-item[selected] {
@@ -21,7 +21,7 @@
             <iron-list class="fit" id="list" items="[]" scroll-target="threshold">
                 <template>
                     <div class="layout horizontal center-center">
-                        <div class="number-item layout vertical center-center" selected$="[[_isSelected(selectedNumber, item)]]" on-tap="_select">[[item]]</div>
+                        <div class="number-item layout vertical center-center" selected$="[[selected]]" on-tap="_select">[[item]]</div>
                     </div>
                 </template>
             </iron-list>
@@ -30,8 +30,8 @@
 </dom-module>
 <script>
     (function () {
-        var numbersToLoadAtOnce = 10;
-        var cellSize = 52;
+        var numbersToLoadAtOnce = 50;
+        var cellSize = 32;
         Polymer({
 
             is: "tg-number-selector",
@@ -49,11 +49,18 @@
                 lowerBound: {
                     type: Number,
                     observer: "_lowerBoundChanged"
+                },
+                _wasResized: {
+                    type: Boolean,
+                    value: false
                 }
             },
 
             _resize: function () {
-                this.$.list.fire("iron-resize");
+                if (!this._wasResized) {
+                    this.$.list.fire("iron-resize");
+                    this._wasResized = true;
+                }
                 if (this.selectedNumber) {
                     var selectedIndex = this.$.list.items.indexOf(this.selectedNumber);
                     if (selectedIndex < this.$.list.firstVisibleIndex - 1 || selectedIndex > this.$.list.lastVisibleIndex + 1) {
@@ -67,8 +74,10 @@
             },
 
             _select: function (e, detail) {
-                this.selectedNumber = e.model.item;
-                this.fire("number-selected", this.selectedNumber);
+                if (e.model.item !== this.$.list.selectedItem) {
+                    this.selectedNumber = e.model.item;
+                    this.fire("number-selected", this.selectedNumber);
+                }
             },
 
             _selectedNumberChanged: function (newValue, oldValue) {
@@ -79,9 +88,10 @@
                         this._loadPreviousNumbers();
                         this._loadNextNumbers();
                     }
+                    this.$.list.selectItem(this.selectedNumber);
                 }
             },
-            
+
             _lowerBoundChanged: function (newValue, oldValue) {
                 if (this.$.list.items.length > 0 && newValue > this.$.list.items[0]) {
                     var lastIndex = this.$.list.items.indexOf(newValue);
@@ -111,7 +121,7 @@
                     this.$.threshold.clearTriggers();
                 }
             },
-            
+
             _upperBoundChanged: function (newValue, oldValue) {
                 if (this.$.list.items.length > 0 && newValue < this.$.list.items[this.$.list.items.length - 1]) {
                     var lastIndex = this.$.list.items.indexOf(newValue);
