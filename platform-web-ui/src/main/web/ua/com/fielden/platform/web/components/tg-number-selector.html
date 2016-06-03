@@ -74,7 +74,8 @@
             },
 
             _select: function (e, detail) {
-                if (e.model.item !== this.$.list.selectedItem) {
+                if (e.model.item !== this.selectedNumber) {
+                    this.$.list.deselectItem(this.selectedNumber);
                     this.selectedNumber = e.model.item;
                     this.fire("number-selected", this.selectedNumber);
                 }
