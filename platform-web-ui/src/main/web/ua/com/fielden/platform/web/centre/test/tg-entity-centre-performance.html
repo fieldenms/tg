@@ -193,6 +193,39 @@
             centre.retrieve();
         });
         
+        test('subsequent runnings measuring', function (done) {
+            var start;
+            var count = 0;
+            var data = [];
+            var _createPostRunFunction = function () {
+                return function(value) {
+                    count++;
+                    
+                    var time = new Date().getTime() - start;
+                    data.push(time);
+                    console.debug('Running in ', time, ' millis (no ', count, ').');
+                    
+                    if (count >= noOfIterations) {
+                        console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
+                        done();
+                    }
+                    
+                    start = new Date().getTime();
+                    centre.run().then(_createPostRunFunction(), function (error) {
+                        console.error("Running was rejected with error: " + error);
+                    });
+                };
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                start = new Date().getTime();
+                centre.run().then(_createPostRunFunction(), function (error) {
+                    console.error("Running was rejected with error: " + error);
+                });
+            };
+            
+            centre.retrieve();
+        });
 	});
 </script>
 
