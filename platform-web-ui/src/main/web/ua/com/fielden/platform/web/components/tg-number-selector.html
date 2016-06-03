@@ -4,33 +4,34 @@
 
 <dom-module id="tg-number-selector">
     <style>
-        .year-item {
-            height: 2.2em;
-            width: 2.2em;
-            font-size: 12px;
-            border-radius: 1.1em;
+        .number-item {
+            height: 52px;
+            width: 52px;
+            font-size: 14px;
+            border-radius: 26px;
             cursor: pointer;
         }
-        .year-item[selected] {
+        .number-item[selected] {
             background-color: #03A9F4;
             color: white;
         }
     </style>
     <template>
-        <!--iron-scroll-threshold class="fit" on-lower-threshold="_loadNextNumbers" on-upper-threshold="_loadPreviousNumbers" lower-threshold="50" upper-threshold="50" id="threshold"-->
-        <!--scroll-target="threshold"-->
-        <iron-list class="fit" id="list" items="[[numbers]]"selected-item="{{selectedNumber}}">
-            <template>
-                <div class="number-item layout horizontal center-center" selected$="[[selected]]">
-                    <div>[[item]]</div>
-                </div>
-            </template>
-        </iron-list>
-        <!--/iron-scroll-threshold-->
+        <iron-scroll-threshold class="fit" on-lower-threshold="_lowerThreshold" on-upper-threshold="_upperThreshold" lower-threshold="50" upper-threshold="50" id="threshold">
+            <iron-list class="fit" id="list" items="[]" scroll-target="threshold">
+                <template>
+                    <div class="layout horizontal center-center">
+                        <div class="number-item layout vertical center-center" selected$="[[_isSelected(selectedNumber, item)]]" on-tap="_select">[[item]]</div>
+                    </div>
+                </template>
+            </iron-list>
+        </iron-scroll-threshold>
     </template>
 </dom-module>
 <script>
     (function () {
+        var numbersToLoadAtOnce = 10;
+        var cellSize = 52;
         Polymer({
 
             is: "tg-number-selector",
@@ -40,60 +41,74 @@
                     type: Number,
                     notify: true,
                     observer: "_selectedNumberChanged"
-                },
-                numbersToLoadAtOnce: {
-                    type: Number,
-                    value: 10
                 }
             },
 
-            ready: function () {
-                this.numbers = [0, 1, 2, 3, 4, 5];
+            _resize: function () {
+                this.$.list.fire("iron-resize");
+                if (this.selectedNumber) {
+                    var selectedIndex = this.$.list.items.indexOf(this.selectedNumber);
+                    if (selectedIndex < this.$.list.firstVisibleIndex - 1 || selectedIndex > this.$.list.lastVisibleIndex + 1) {
+                        this.$.list.scrollToIndex(selectedIndex);
+                    }
+                }
+            },
+
+            _isSelected: function (selectedNumber, item) {
+                return selectedNumber === item;
+            },
+
+            _select: function (e, detail) {
+                this.selectedNumber = e.model.item;
+                this.fire("number-selected", this.selectedNumber);
+            },
+
+            _selectedNumberChanged: function (newValue, oldValue) {
+                if (newValue !== null) {
+                    //Just opened
+                    if (this.$.list.items.length === 0) {
+                        this.$.list.push("items", newValue);
+                        this._loadPreviousNumbers();
+                        this._loadNextNumbers();
+                        this.$.list.scrollToIndex(numbersToLoadAtOnce + 1);
+                    }
+                }
+            },
+
+            _upperThreshold: function () {
+                this._loadPreviousNumbers();
+            },
+
+            _loadPreviousNumbers: function (toNumber) {
+                if (this.$.list.items.length > 0) {
+                    var startFrom = this.$.list.items[0];
+                    var calcTo = toNumber || startFrom - numbersToLoadAtOnce;
+                    if (calcTo < startFrom) {
+                        for (startFrom -= 1; startFrom >= calcTo; startFrom--) {
+                            this.$.list.unshift("items", startFrom);
+                        }
+                    }
+                    this.$.threshold.scroll(0, numbersToLoadAtOnce * cellSize);
+                    this.$.threshold.clearTriggers();
+                }
+            },
+
+            _lowerThreshold: function () {
+                this._loadNextNumbers();
+            },
+
+            _loadNextNumbers: function (toNumber) {
+                if (this.$.list.items.length > 0) {
+                    var startFrom = this.$.list.items[this.$.list.items.length - 1];
+                    var calcTo = toNumber || startFrom + numbersToLoadAtOnce;
+                    if (calcTo > startFrom) {
+                        for (startFrom += 1; startFrom <= calcTo; startFrom++) {
+                            this.$.list.push("items", startFrom);
+                        }
+                    }
+                    this.$.threshold.clearTriggers();
+                }
             }
-            //            _selectedNumberChanged: function (newValue, oldValue) {
-            //                var valueIndex;
-            //                if (newValue !== null) {
-            //                    if (this.$.list.items.length === 0) {
-            //                        this.$.list.push("items", newValue);
-            //                        this._loadPreviousNumbers();
-            //                        this._loadNextNumbers();
-            //                    } else if (newValue <= this.$.list.items[0]) {
-            //                        this._loadPreviousNumbers(newValue);
-            //                    } else if (newValue >= this.$.list.items[this.$.list.items.length - 1]) {
-            //                        this._loadNextNumbers(newValue);
-            //                    }
-            //                    valueIndex = this.$.list.items.indexOf(newValue);
-            //                    if (valueIndex < 0) {
-            //                        throw "The element should have been loaded";
-            //                    } else if (valueIndex < this.$.list.firstVisibleIndex || valueIndex > this.$.lastVisibleIndex) {
-            //                        this.$.list.scrollToIndex(valueIndex);
-            //                    }
-            //                }
-            //            },
-            //
-            //            _loadPreviousNumbers: function (toNumber) {
-            //                if (this.$.list.items.length > 0) {
-            //                    var startFrom = this.$.list.items[0];
-            //                    var calcTo = toNumber || startFrom - this.numbersToLoadAtOnce;
-            //                    if (calcTo < startFrom) {
-            //                        for (startFrom -= 1; startFrom >= calcTo; startFrom--) {
-            //                            this.$.list.unshift("items", startFrom);
-            //                        }
-            //                    }
-            //                }
-            //            },
-            //
-            //            _loadNextNumbers: function (toNumber) {
-            //                if (this.$.list.items.length > 0) {
-            //                    var startFrom = this.$.list.items[this.$.list.items.length - 1];
-            //                    var calcTo = toNumber || startFrom + this.numbersToLoadAtOnce;
-            //                    if (calcTo > startFrom) {
-            //                        for (startFrom += 1; startFrom <= calcTo; startFrom++) {
-            //                            this.$.list.push("items", startFrom);
-            //                        }
-            //                    }
-            //                }
-            //            }
         });
     })();
 </script>

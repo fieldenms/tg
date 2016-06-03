@@ -74,9 +74,9 @@
                 </template>
             </div>
             <div class="col relative">
-                <neon-animated-pages class="fit" id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation">
+                <neon-animated-pages class="fit" id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_onPageChange">
                     <tg-month-selector id="monthSelector" page-name="monthSelector" selected-date="{{selectedDate}}"></tg-month-selector>
-                    <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}"></tg-number-selector>
+                    <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}" on-number-selected="_showMonthSelector"></tg-number-selector>
                 </neon-animated-pages>
             </div>
         </div>
@@ -154,6 +154,10 @@
             _showYearSelector: function () {
                 this._selectedPage = "yearSelector";
             },
+            
+            _showMonthSelector: function () {
+                this._selectedPage = "monthSelector";
+            },
 
             /**
              * Calculates the media query for mobile devices.
@@ -167,6 +171,12 @@
              */
             _calcCalendarLayout: function (phoneScreen) {
                 return "layout " + (phoneScreen ? "vertical" : "horizontal");
+            },
+
+            _onPageChange: function (e, detail) {
+                if (detail.toPage.getAttribute('page-name') !== 'monthSelector' && typeof detail.toPage._resize === 'function') {
+                    detail.toPage._resize();
+                }
             }
         });
     })();
