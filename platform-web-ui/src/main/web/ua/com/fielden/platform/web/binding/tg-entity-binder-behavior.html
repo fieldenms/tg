@@ -257,7 +257,16 @@
                 _disablementCounter: {
                     type: Number,
                     value: 0
+                },
+                
+                _validationPromise: {
+                    type: Object,
+                    observer: '_validationPromiseChanged'
                 }
+    		},
+    		
+    		_validationPromiseChanged: function (newValidationPromise, oldValidationPromise) {
+    		    console.debug('_validationPromiseChanged:', newValidationPromise, oldValidationPromise);
     		},
     		
     		/**
@@ -394,7 +403,7 @@
 
         	            // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
             	        // (if the entity was not modified -- _validate(holder) will start the error recovery process)
-                    	slf._validateForDescendants(slf._reset(holder));
+                    	slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
                 	}, 50);
                 }).bind(self);
              	
@@ -525,7 +534,7 @@
              * The inner function for validation to be overridden in descendants (for e.g. context-dependent validation in tg-entity-master)
              */
             _validateForDescendants: function (preparedModifHolder) {
-                this._validator().validate(preparedModifHolder);
+                return this._validator().validate(preparedModifHolder);
             },
 
             /**
