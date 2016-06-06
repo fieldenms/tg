@@ -53,7 +53,21 @@ public class EntityType extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Is Persistent?", desc = "Indicated whether the associated entity type represents a persistent entity.")
     private boolean _persistent;
+    
+    @IsProperty
+    @Title(value = "Should Display Description?", desc = "Indicates whether editors for values of this type should display values descriptions")
+    private Boolean _displayDesc;
 
+    @Observable
+    public EntityType set_displayDesc(final Boolean _displayDesc) {
+        this._displayDesc = _displayDesc;
+        return this;
+    }
+
+    public Boolean get_displayDesc() {
+        return _displayDesc;
+    }
+    
     @Observable
     public EntityType set_persistent(final boolean _persistent) {
         this._persistent = _persistent;

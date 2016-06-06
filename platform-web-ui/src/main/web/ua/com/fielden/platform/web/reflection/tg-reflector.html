@@ -525,7 +525,15 @@
         EntityType.prototype.isPersistent = function () {
             return this['_persistent'] === true;
         }
-
+        
+        /**
+         * Returns 'true' if editors for this entity type should display description of its values when not focused, 'false' otherwise.
+         *
+         */
+        EntityType.prototype.shouldDisplayDescription = function () {
+            return typeof this['_displayDesc'] === 'undefined' ? false : this['_displayDesc'];
+        }
+        
         /** 
          * Returns entity title.
          */

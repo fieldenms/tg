@@ -162,6 +162,16 @@
 
                 done();
             });
+            
+            test('shouldDisplayDescription method works', function (done) {
+                var entity1 = reflector.newEntity(typeName1);
+                var entity2 = reflector.newEntity(typeName2);
+                
+                assert.strictEqual(entity1.type().shouldDisplayDescription(), true, "shouldDisplayDescription for entity type TgPersistentEntityWithProperties should be true.");
+                assert.strictEqual(entity2.type().shouldDisplayDescription(), false, "shouldDisplayDescription for entity type TgPersistentCompositeEntity should be false.");
+                
+                done();
+            });
         });
     </script>
 </body>
