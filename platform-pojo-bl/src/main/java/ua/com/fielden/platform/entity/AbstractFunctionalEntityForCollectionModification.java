@@ -25,7 +25,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
  *
  * @author TG Team
  *
- * @param <ID_TYPE> -- the type of identificators for collection items (usually Long.class for persisted entities, otherwise it should be equal to key type).
+ * @param <ID_TYPE> -- the type of identifiers for collection items (usually Long.class for persisted entities, otherwise it should be equal to key type).
  */
 @KeyType(Long.class)
 public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE> extends AbstractFunctionalEntityWithCentreContext<Long> {

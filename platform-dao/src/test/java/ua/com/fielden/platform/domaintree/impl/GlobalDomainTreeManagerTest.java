@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 
 import org.junit.Test;
@@ -23,7 +24,13 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForGlobalDomainTree;
 import ua.com.fielden.platform.domaintree.testing.MiMasterEntityForGlobalDomainTree;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.KeyTitle;
+import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -681,6 +688,40 @@ public class GlobalDomainTreeManagerTest extends GlobalDomainTreeRepresentationT
         nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").setRunAutomatically(false);
         nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, "REPORT");
         assertTrue("The state is incorrect after reloading.", nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, "REPORT").isRunAutomatically());
+    }
+    
+    @Test
+    public void test_that_CENTRE_copying_actually_copies_custom_annotations_on_its_managed_types() {
+        // create PRINCIPLE and REPORT report for USER2
+        final GlobalDomainTreeManager nonBaseMgr = createManagerForNonBaseUser();
+        nonBaseMgr.initEntityCentreManager(MENU_ITEM_TYPE, null);
+        final ICentreDomainTreeManagerAndEnhancer originalCentre = nonBaseMgr.getEntityCentreManager(MENU_ITEM_TYPE, null);
+        originalCentre.getEnhancer().addCustomProperty(ROOT, "", "_customProp", "Custom Prop", "Custom Prop", Integer.class);
+        originalCentre.getEnhancer().apply();
+        
+        Annotation[] annotations = originalCentre.getEnhancer().getManagedType(ROOT).getAnnotations();
+        assertEquals("There should be 3 type annotations in managedType.", 3, annotations.length);
+        assertEquals("First annotation should be KeyTitle.", KeyTitle.class, annotations[0].annotationType());
+        assertEquals("Second annotation should be DescTitle.", DescTitle.class, annotations[1].annotationType());
+        assertEquals("Third annotation should be KeyType.", KeyType.class, annotations[2].annotationType());
+        
+        originalCentre.getEnhancer().adjustManagedTypeAnnotations(ROOT, new EntityTypeAnnotation((Class<AbstractEntity<?>>) ROOT).newInstance());
+        
+        annotations = originalCentre.getEnhancer().getManagedType(ROOT).getAnnotations();
+        assertEquals("There should be 4 type annotations in managedType.", 4, annotations.length);
+        assertEquals("First annotation should be KeyTitle.", KeyTitle.class, annotations[0].annotationType());
+        assertEquals("Second annotation should be DescTitle.", DescTitle.class, annotations[1].annotationType());
+        assertEquals("Third annotation should be KeyType.", KeyType.class, annotations[2].annotationType());
+        assertEquals("Fourth annotation should be EntityType.", EntityType.class, annotations[3].annotationType());
+        
+        final ICentreDomainTreeManagerAndEnhancer copiedCentre = nonBaseMgr.copyCentre(originalCentre);
+        
+        annotations = copiedCentre.getEnhancer().getManagedType(ROOT).getAnnotations();
+        assertEquals("There should be 4 type annotations in managedType.", 4, annotations.length);
+        assertEquals("First annotation should be KeyTitle.", KeyTitle.class, annotations[0].annotationType());
+        assertEquals("Second annotation should be DescTitle.", DescTitle.class, annotations[1].annotationType());
+        assertEquals("Third annotation should be KeyType.", KeyType.class, annotations[2].annotationType());
+        assertEquals("Fourth annotation should be EntityType.", EntityType.class, annotations[3].annotationType());
     }
 
     @Test

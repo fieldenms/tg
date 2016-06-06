@@ -17,6 +17,8 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
@@ -39,6 +41,7 @@ import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.MiDeletionTestEntity;
 import ua.com.fielden.platform.sample.domain.MiDetailsCentre;
+import ua.com.fielden.platform.sample.domain.MiEntityCentreNotGenerated;
 import ua.com.fielden.platform.sample.domain.MiTgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.MiTgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity;
@@ -91,9 +94,13 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
+import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayout;
+import ua.com.fielden.platform.web.centre.api.resultset.summary.IWithSummary;
+import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
@@ -102,6 +109,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
@@ -112,8 +120,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
-
-import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -249,7 +255,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                          .build(), injector(), null);
           configApp().addCentre(collectionalSerialisationTestCentre);
 
-        final EntityCentre<TgPersistentEntityWithProperties> detailsCentre = createEntityCentre(MiDetailsCentre.class, "Details Centre", createEntityCentreConfig(false, true, true));
+        final EntityCentre<TgPersistentEntityWithProperties> detailsCentre = createEntityCentre(MiDetailsCentre.class, "Details Centre", createEntityCentreConfig(false, true, true, true));
         final EntityCentre<TgEntityWithPropertyDependency> propDependencyCentre = new EntityCentre<>(MiTgEntityWithPropertyDependency.class, "Property Dependency Example",
                 EntityCentreBuilder.centreFor(TgEntityWithPropertyDependency.class)
                 .runAutomatically()
@@ -288,16 +294,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 });
 
 
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, true, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(false, false, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(false, false, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(false, false, false));
-        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(false, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, true, false, true));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentreNotGenerated = createEntityCentre(MiEntityCentreNotGenerated.class, "MiEntityCentreNotGenerated", createEntityCentreConfig(true, true, false, false));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre1 = createEntityCentre(MiTgPersistentEntityWithProperties1.class, "TgPersistentEntityWithProperties 1", createEntityCentreConfig(false, false, false, true));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre2 = createEntityCentre(MiTgPersistentEntityWithProperties2.class, "TgPersistentEntityWithProperties 2", createEntityCentreConfig(false, false, false, true));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(false, false, false, true));
+        final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(false, false, false, true));
 
         final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector());
         final UserRoleWebUiConfig userRoleWebUiConfig = new UserRoleWebUiConfig(injector());
 
         configApp().addCentre(entityCentre);
+        configApp().addCentre(entityCentreNotGenerated);
         configApp().addCentre(entityCentre1);
         configApp().addCentre(entityCentre2);
         configApp().addCentre(entityCentre3);
@@ -790,7 +798,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .captionBgColor("#78909C")
                 .menu()
                 .addMenuItem("Entity Centre").description("Entity centre description").centre(entityCentre).done()
-                .addMenuItem("Deletion Centre").description("Deletion centre description").centre(deletionTestCentre).done()
+                .addMenuItem("Not Generated Centre").description("Entity centre without calculated / custom properties, which type is strictly TgPersistentEntityWithProperties.class").centre(entityCentreNotGenerated).done()
                 .addMenuItem("Custom View").description("Custom view description").view(customView).done()
                 .addMenuItem("Deletion Centre").description("Deletion centre description").centre(deletionTestCentre).done()
                 .addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
@@ -1062,7 +1070,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
     }
 
-    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final boolean isComposite, final boolean runAutomatically, final boolean withQueryEnhancer) {
+    private EntityCentreConfig<TgPersistentEntityWithProperties> createEntityCentreConfig(final boolean isComposite, final boolean runAutomatically, final boolean withQueryEnhancer, final boolean withCalculatedAndCustomProperties) {
         final String centreMr = "['margin-right: 40px', 'flex']";
         final String centreMrLast = "['flex']";
 
@@ -1083,6 +1091,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         shortDesc("Delete selected").
                         longDesc("Deletes the selected entities").
                         build())
+                .also()
+                .addTopAction(CentreConfigActions.SORT_ACTION.mkAction())
                 .also()
                 .addTopAction(action(NewEntityAction.class).
                         withContext(context().withCurrentEntity().build()).// the current entity could potentially be used to demo "copy" functionality
@@ -1109,7 +1119,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
 
         @SuppressWarnings("unchecked")
-        final IQueryEnhancerSetter<TgPersistentEntityWithProperties> beforeEnhancerConf = actionConf
+        final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = actionConf
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
@@ -1259,9 +1269,22 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .withScrollingConfig(ScrollConfig.configScroll().withFixedCheckboxesPrimaryActionsAndFirstProps(1).withFixedSecondaryActions().withFixedHeader().withFixedSummary().done())
                 .setPageCapacity(20)
                 .setVisibleRowsCount(10)
-                .addProp("this").minWidth(60).withSummary("kount", "COUNT(SELF)", "Count:Number of entities").withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
+                .addProp("this")
+                    .order(2).asc()
+                    .minWidth(60);
+        
+        final IWithSummary<TgPersistentEntityWithProperties> afterSummary;
+        if (withCalculatedAndCustomProperties) {
+            afterSummary = afterMinWidthConf.withSummary("kount", "COUNT(SELF)", "Count:Number of entities");
+        } else {
+            afterSummary = afterMinWidthConf;
+        }
+        
+                IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
                 .also()
-                .addProp("desc").minWidth(200).
+                .addProp("desc").
+                        order(1).asc().
+                        minWidth(200).
                         withAction(action(TgFunctionalEntityWithCentreContext.class).
                         withContext(context().withSelectedEntities().build()).
                         icon("assignment-turned-in").
@@ -1269,8 +1292,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Functional context-dependent action 5").
                         build())
 
-                .also()
-                .addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
+                .also();
+                
+                if (withCalculatedAndCustomProperties) {
+                beforeAddProp = beforeAddProp.addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
                         withAction(action(TgStatusActivationFunctionalEntity.class).
                         withContext(context().withCurrentEntity().build()).
                         icon("assignment-turned-in").
@@ -1309,13 +1334,23 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         shortDesc("Change Status to SR").
                         longDesc("Change Status to SR").
                         build())
-
+                        .also();
+                }
+                final IWithSummary<TgPersistentEntityWithProperties> beforeSummaryConf = beforeAddProp.addProp("integerProp")
+                    .minWidth(42)
+                    .withTooltip("desc");
+                
+                    final IWithTooltip<TgPersistentEntityWithProperties> beforeSummaryConfForBigDecimalProp = (withCalculatedAndCustomProperties ? beforeSummaryConf.withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property") : beforeSummaryConf)
                 .also()
-                .addProp("integerProp").minWidth(42).withTooltip("desc").withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property")
-                .also()
-                .addProp("bigDecimalProp").minWidth(68).withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
-                .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
-                .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property")
+                .addProp("bigDecimalProp")
+                    .minWidth(68);
+                    
+                    final IAlsoSecondaryAction<TgPersistentEntityWithProperties> beforeRenderingCustomiserConfiguration = (withCalculatedAndCustomProperties ? 
+                            beforeSummaryConfForBigDecimalProp
+                                .withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
+                                .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
+                                .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property") : 
+                                beforeSummaryConfForBigDecimalProp)
                 .also()
                 .addProp("entityProp").minWidth(40)
                 .also()
@@ -1413,15 +1448,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 shortDesc("Function 4").
                                 longDesc("Functional context-dependent action 4").
                                 build()
-                )
-                .setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class)
+                );
+                final IQueryEnhancerSetter<TgPersistentEntityWithProperties> beforeEnhancerConfiguration = (withCalculatedAndCustomProperties ? beforeRenderingCustomiserConfiguration.setCustomPropsValueAssignmentHandler(CustomPropsAssignmentHandler.class) : beforeRenderingCustomiserConfiguration)
                 .setRenderingCustomiser(TestRenderingCustomiser.class);
 
         final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
         if (withQueryEnhancer) {
-            afterQueryEnhancerConf = beforeEnhancerConf.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().build());
+            afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().build());
         } else {
-            afterQueryEnhancerConf = beforeEnhancerConf;
+            afterQueryEnhancerConf = beforeEnhancerConfiguration;
         }
         // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
 

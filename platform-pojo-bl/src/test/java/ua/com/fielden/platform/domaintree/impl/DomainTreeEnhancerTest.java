@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -26,10 +27,14 @@ import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer.IncorrectCalcPrope
 import ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity;
 import ua.com.fielden.platform.domaintree.testing.EnhancingSlaveEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.KeyTitle;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -815,5 +820,90 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "sumOfSeptuple", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "SUM(7 * integerProp)", "Sum of septuple", "Desc");
         calcFieldExistsInSinglePlaceAndItWORKS(copy.getManagedType(EnhancingMasterEntity.class), "sumOfOctuple", CalculatedPropertyCategory.AGGREGATED_EXPRESSION, "integerProp", Integer.class, "SUM(8 * integerProp)", "Sum of octuple", "Desc");
         assertEquals("Incorrect count of enhanced types byte arrays.", 1, copy.getManagedTypeArrays(EnhancingMasterEntity.class).size());
+    }
+    
+    @Test
+    public void adjusting_of_a_name_for_ungenerated_type_leads_to_exception() {
+        // clear domain
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
+        dtm().apply();
+
+        // check the snapshot of domain
+        checkEmptyDomain(dtm());
+        
+        try {
+            dtm().adjustManagedTypeName(EnhancingMasterEntity.class, "grwe7w64329y4e3289dfh293h");
+            fail("Adjusting of a name for ungenerated type should fail.");
+        } catch (final IllegalArgumentException e) {
+        }
+    }
+    
+    @Test
+    public void adjusting_of_a_name_for_generated_type_replaces_the_name_and_do_not_change_domain_tree_enhancer_semantics() {
+        final IDomainTreeEnhancer dtmCopy = EntityUtils.deepCopy(dtm(), serialiser());
+        
+        final String newSuffix = "grwe7w64329y4e3289dfh293h";
+        final Class<?> adjustedType = dtm().adjustManagedTypeName(EnhancingMasterEntity.class, newSuffix);
+        assertEquals("ua.com.fielden.platform.domaintree.testing.EnhancingMasterEntity$$TgEntity_" + newSuffix, adjustedType.getName());
+        
+        assertTrue("dte instance should be equal after generated type naming adjustments.", EntityUtils.equalsEx(dtmCopy, dtm()));
+    }
+    
+    @Test
+    public void adjusting_of_annotations_for_ungenerated_type_leads_to_exception() {
+        // clear domain
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "masterEntityProp.masterEntityProp.oldSingle");
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "evenSlaverEntityProp.slaveEntityProp.oldDouble");
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "slaveEntityProp.oldTriple");
+        dtm().removeCalculatedProperty(EnhancingMasterEntity.class, "oldQuadruple");
+        dtm().apply();
+
+        // check the snapshot of domain
+        checkEmptyDomain(dtm());
+        
+        try {
+            dtm().adjustManagedTypeAnnotations(EnhancingMasterEntity.class);
+            fail("Adjusting of a annotations for ungenerated type should fail.");
+        } catch (final IllegalArgumentException e) {
+        }
+    }
+    
+    @Test
+    public void adjusting_of_annotations_does_nothing_in_case_of_empty_annotations() {
+        final Class<?> originalManagedType = dtm().getManagedType(EnhancingMasterEntity.class);
+        final IDomainTreeEnhancer dtmCopy = EntityUtils.deepCopy(dtm(), serialiser());
+        
+        final Class<?> adjustedType = dtm().adjustManagedTypeAnnotations(EnhancingMasterEntity.class);
+        assertEquals(adjustedType, originalManagedType);
+        
+        assertTrue("dte instance should be equal after no adjustments have been performed.", EntityUtils.equalsEx(dtmCopy, dtm()));
+    }
+
+    @Test
+    public void adjusting_of_annotations_for_generated_type_adds_those_annotations_to_generated_type_and_do_not_change_domain_tree_enhancer_semantics() {
+        final Annotation[] originalAnnotations = dtm().getManagedType(EnhancingMasterEntity.class).getAnnotations();
+        assertEquals("There should be 2 type annotations in managedType for EnhancingMasterEntity.", 2, originalAnnotations.length);
+        assertEquals("First annotation should be KeyTitle.", KeyTitle.class, originalAnnotations[0].annotationType());
+        assertEquals("Second annotation should be KeyType.", KeyType.class, originalAnnotations[1].annotationType());
+        
+        final IDomainTreeEnhancer dtmCopy = EntityUtils.deepCopy(dtm(), serialiser());
+        
+        final Annotation[] deepCopiedAnnotations = dtmCopy.getManagedType(EnhancingMasterEntity.class).getAnnotations();
+        assertEquals("There should be 2 type annotations in managedType for EnhancingMasterEntity.", 2, deepCopiedAnnotations.length);
+        assertEquals("First annotation should be KeyTitle.", KeyTitle.class, deepCopiedAnnotations[0].annotationType());
+        assertEquals("Second annotation should be KeyType.", KeyType.class, deepCopiedAnnotations[1].annotationType());
+        
+        final Class<?> adjustedType = dtm().adjustManagedTypeAnnotations(EnhancingMasterEntity.class, new EntityTypeAnnotation(EnhancingMasterEntity.class).newInstance());
+        final Annotation[] adjustedAnnotations = adjustedType.getAnnotations();
+        assertEquals("There should be 3 type annotations in managedType for EnhancingMasterEntity.", 3, adjustedAnnotations.length);
+        assertEquals("First annotation should be KeyTitle.", KeyTitle.class, adjustedAnnotations[0].annotationType());
+        assertEquals("Second annotation should be KeyType.", KeyType.class, adjustedAnnotations[1].annotationType());
+        assertEquals("Third annotation should be EntityType.", EntityType.class, adjustedAnnotations[2].annotationType());
+        assertEquals(EnhancingMasterEntity.class, adjustedType.getAnnotation(EntityType.class).value());
+        
+        assertTrue("dte instance should be equal after generated type annotations adjustments.", EntityUtils.equalsEx(dtmCopy, dtm()));
     }
 }

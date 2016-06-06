@@ -140,6 +140,9 @@ public class DomainTreeVersionMaintainer extends AbstractDomainTree {
 
     public CentreDomainTreeManagerAndEnhancer maintainCentreVersion(final EntityCentreConfig downloadedEcc) throws Exception {
         final Pair<CentreDomainTreeManagerAndEnhancer, Boolean> cdtmaeAndShouldBePromoted = retrieveCentre(downloadedEcc.toString(), downloadedEcc.getConfigBody(), getSerialiser(), serialiser0);
+        // populate Id and Version to be able to determine staleness of the centre
+        cdtmaeAndShouldBePromoted.getKey().setSavedEntityId(downloadedEcc.getId());
+        cdtmaeAndShouldBePromoted.getKey().setSavedEntityVersion(downloadedEcc.getVersion());
         if (cdtmaeAndShouldBePromoted.getValue()) {
             // the converted version should be promoted to the cloud
             downloadedEcc.setConfigBody(getSerialiser().serialise(cdtmaeAndShouldBePromoted.getKey())); // serialise with CURRENT version of serialiser

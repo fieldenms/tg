@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -230,6 +231,16 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
                     }
                 }
             }
+        }
+        
+        @Override
+        public Class<?> adjustManagedTypeName(final Class<?> root, final String clientGeneratedTypeNameSuffix) {
+            return baseEnhancer().adjustManagedTypeName(root, clientGeneratedTypeNameSuffix);
+        }
+        
+        @Override
+        public Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations) {
+            return baseEnhancer().adjustManagedTypeAnnotations(root, additionalAnnotations);
         }
 
         @Override

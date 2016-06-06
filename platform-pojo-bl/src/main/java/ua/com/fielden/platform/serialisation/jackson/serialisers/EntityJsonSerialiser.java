@@ -1,5 +1,19 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getChangedFromOriginal;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditable;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getOriginalValue;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequired;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisible;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEditableDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isMaxDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isMinDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isRequiredDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValidationResultDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isVisibleDefault;
+
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,14 +30,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.utils.Pair;
-
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
 
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
     private final Class<T> type;
@@ -34,9 +47,6 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
     public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls) {
         super(type);
-        if (entityType.get_number() == null) {
-            throw new IllegalStateException("The number of the type [" + entityType + "] should be populated to be ready for serialisation.");
-        }
 
         this.type = type;
         this.properties = properties;
@@ -46,6 +56,9 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
     @Override
     public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
+        if (entityType.get_identifier() == null) {
+            throw new IllegalStateException("The identifier of the type [" + entityType + "] should be populated to be ready for serialisation.");
+        }
         ////////////////////////////////////////////////////
         ///////////////// handle references ////////////////
         ////////////////////////////////////////////////////
@@ -70,7 +83,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         } else {
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_number());
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_identifier());
             references.putReference(entity, newReference);
 
             generator.writeStartObject();

@@ -4,6 +4,7 @@ import java.io.InputStream;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
@@ -20,12 +21,19 @@ public class Serialiser implements ISerialiser {
     private final EntityFactory factory;
     private ISerialiserEngine tgKryo;
     private ISerialiserEngine tgJackson;
+    private final ISerialisationClassProvider provider;
 
     @Inject
     public Serialiser(final EntityFactory factory, final ISerialisationClassProvider provider) {
         this.factory = factory;
+        this.provider = provider;
         createTgKryo(factory, provider); // the serialiser engine will be set automatically
-        this.tgJackson = new TgJackson(factory, provider);
+    }
+    
+    public static Serialiser createSerialiserWithKryoAndJackson(final EntityFactory factory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder) {
+        final Serialiser serialiser = new Serialiser(factory, provider);
+        serialiser.initJacksonEngine(serialisationTypeEncoder);
+        return serialiser;
     }
 
     protected ISerialiserEngine createTgKryo(final EntityFactory factory, final ISerialisationClassProvider provider) {
@@ -79,5 +87,10 @@ public class Serialiser implements ISerialiser {
             tgJackson = engine;
         }
         return this;
+    }
+    
+    @Override
+    public void initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder) {
+        tgJackson = new TgJackson(factory, provider, serialisationTypeEncoder);
     }
 }

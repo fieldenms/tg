@@ -55,7 +55,6 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final List<String> checkedProperties = cdtmae.getSecondTick().checkedProperties(root);
         final List<Pair<String, Ordering>> orderedProperties = cdtmae.getSecondTick().orderedProperties(root);
         final LinkedHashSet<SortingProperty> result = new LinkedHashSet<>();
-        int sortingNumber = 0;
         for (final String checkedProp: checkedProperties) {
             if ("".equals(checkedProp) || (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) && 
                     !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp))) {
@@ -63,11 +62,10 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
                 final SortingProperty sortingProperty = factory.newEntity(SortingProperty.class, null, "".equals(checkedProp) ? "this" : checkedProp, titleAndDesc.getValue());
                 sortingProperty.setTitle(titleAndDesc.getKey());
     
-                final Ordering ordering = getOrdering(orderedProperties, checkedProp);
-                if (ordering != null) {
-                    sortingProperty.setSorting(Ordering.ASCENDING == ordering); // 'null' is by default, means no sorting exist
-                    sortingProperty.setSortingNumber(sortingNumber);
-                    sortingNumber++;
+                final Pair<Ordering, Integer> orderingAndNumber = getOrderingAndNumber(orderedProperties, checkedProp);
+                if (orderingAndNumber != null) {
+                    sortingProperty.setSorting(Ordering.ASCENDING == orderingAndNumber.getKey()); // 'null' is by default, means no sorting exist
+                    sortingProperty.setSortingNumber(orderingAndNumber.getValue());
                 }
                 result.add(sortingProperty);
             }
@@ -75,10 +73,10 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         return result;
     }
 
-    private Ordering getOrdering(final List<Pair<String, Ordering>> orderedProperties, final String prop) {
+    private Pair<Ordering, Integer> getOrderingAndNumber(final List<Pair<String, Ordering>> orderedProperties, final String prop) {
         for (final Pair<String, Ordering> orderedProperty : orderedProperties) {
             if (orderedProperty.getKey().equals(prop)) {
-                return orderedProperty.getValue();
+                return Pair.pair(orderedProperty.getValue(), orderedProperties.indexOf(orderedProperty));
             }
         }
         return null;
