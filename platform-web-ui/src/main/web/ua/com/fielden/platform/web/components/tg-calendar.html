@@ -3,345 +3,251 @@
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
-<link rel="import" href="/resources/components/tg-time.html">
+<link rel="import" href="/resources/components/tg-month-selector.html">
+<link rel="import" href="/resources/components/tg-number-selector.html">
 <link rel="import" href="/app/tg-app-config.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
+
 
 <dom-module id="tg-calendar">
-	<style>
-		.col {
-			width: 14em;
-		}
-		
-		.day {
-			height: 2.2em;
-			width: 2.2em;
-			font-size: 12px;
-			border-radius: 1.1em;
-			cursor: pointer;
-		}
-		
-		.dead-day {
-			cursor: auto !important;
-			pointer-events: none;
-			color: #CDCDCD;
-		}
-		
-		.day-short-name {
-			color: #757575;
-			pointer-events: none;
-			cursor: auto;
-		}
-		
-		.day-name {
-			background-color: #0288D1;
-			color: white;
-		}
-		
-		.header {
-			height: 2.2em;
-			font-size: 14px;
-		}
-		
-		.month-shown {
-			font-weight: 600;
-			margin: 0px 1.1em;
-		}
-		
-		.selected-date {
-			background-color: #03A9F4;
-			color: white !important;
-		}
-		
-		.selected-month {
-			font-size: 24px;
-		}
-		
-		.selected-day {
-			font-size: 56px;
-		}
-		
-		.selected-year {
-			font-size: 24px;
-			color: #81D4FA;
-		}
-		
-		.today-date {
-			color: #03A9F4;
-		}
-		
-		.calendar {
-			min-height: 11.5em;
-		}
-		
-		paper-icon-button {
-			padding: 0px;
-			margin: 0px;
-            width: 24px;
-            height: 24px;
-		}
-		
-		tg-time {
-			background-color: #03A9F4;
-			color: white;
-			--tg-time: {
-				font-size: 14px;
-				height: 14px;
-			}
-			;
-			--tg-time-portion: {
-				margin: 8px 0px;
-			}
-			;
-			--tg-meridian: {
-				font-size: 14px;
-				height: 14px;
-			}
-			;
-		}
-	</style>
-	<template>
-		<tg-app-config id="appConfig"></tg-app-config>
-		<iron-media-query query="[[_calcMobileQuery()]]" query-matches="{{_phoneScreen}}"></iron-media-query>
-		<div class$="[[_calcCalendarLayout(_phoneScreen)]]">
-			<div class="col layout vertical">
-				<div class="header day-name layout vertical center-center">[[dayName]]</div>
-				<div class="selected-date layout vertical center justified" style="padding: 10px;">
-					<div class="selected-month">[[monthName]]</div>
-					<div class="selected-day">[[day]]</div>
-					<div class="selected-year">[[year]]</div>
-				</div>
-				<template is="dom-if" if="[[pickTime]]">
-					<tg-time hour="{{selectedHour}}" minute="{{selectedMinute}}"></tg-time>
-				</template>
-			</div>
-			<div class="col layout vertical">
-				<div class="header month-shown layout horizontal justified center">
-					<div>
-						<paper-icon-button icon="chevron-left" on-tap="_prevMonth"></paper-icon-button>
-					</div>
-					<div class="layout vertical center-justified">
-						<span>
-                            <span>[[shownMonthName]]</span> <span>[[shownYear]]</span>
-						</span>
-					</div>
-					<div>
-						<paper-icon-button icon="chevron-right" on-tap="_nextMonth"></paper-icon-button>
-					</div>
-				</div>
-				<div class="calendar layout vertical">
-					<div class="layout horizontal center-justified">
-						<div class="day day-short-name layout vertical center-center"><span>S</span>
-						</div>
-						<div class="day day-short-name layout vertical center-center"><span>M</span>
-						</div>
-						<div class="day day-short-name layout vertical center-center"><span>T</span>
-						</div>
-						<div class="day day-short-name layout vertical center-center"><span>W</span>
-						</div>
-						<div class="day day-short-name layout vertical center-center"><span>T</span>
-						</div>
-						<div class="day day-short-name layout vertical center-center"><span>F</span>
-						</div>
-						<div class="day day-short-name layout vertical center-center"><span>S</span>
-						</div>
-					</div>
-					<template is="dom-repeat" items="[[weeks]]" as="week">
-						<div class="layout horizontal center-justified">
-							<template is="dom-repeat" items="[[week]]" as="day">
-								<div on-tap="_selectDay" class$="[[_calcDayClass(day, selectedDay)]]"><span>[[_absolute(day)]]</span>
-								</div>
-							</template>
-						</div>
-					</template>
-				</div>
-			</div>
-		</div>
-	</template>
+    <style>
+        .col {
+            width: 14em;
+        }
+        .day-name {
+            background-color: #0288D1;
+            color: white;
+        }
+        .header {
+            height: 2.2em;
+            font-size: 14px;
+        }
+        .selected-date {
+            background-color: #03A9F4;
+            color: white !important;
+        }
+        .selected-month {
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .selected-day {
+            font-size: 56px;
+            cursor: pointer;
+        }
+        .selected-year {
+            font-size: 24px;
+            color: #81D4FA;
+            cursor: pointer;
+        }
+        .time-picker {
+            background-color: #03A9F4;
+            color: white;
+            padding-bottom: 16px;
+        }
+        .time {
+            font-size: 18px;
+            height: 18px;
+            margin: 0 1px;
+            cursor: pointer;
+        }
+    </style>
+    <template>
+        <tg-app-config id="appConfig"></tg-app-config>
+        <iron-media-query query="[[_calcMobileQuery()]]" query-matches="{{_phoneScreen}}"></iron-media-query>
+        <div class$="[[_calcCalendarLayout(_phoneScreen)]]">
+            <div class="col layout vertical">
+                <div class="header day-name layout vertical center-center">[[dayName]]</div>
+                <div class="selected-date layout vertical center justified" style="padding: 10px;">
+                    <div class="selected-month" on-tap="_showMonthSelector">[[monthName]]</div>
+                    <div class="selected-day" on-tap="_showDefaultPage">[[day]]</div>
+                    <div class="selected-year" on-tap="_showYearSelector">[[year]]</div>
+                </div>
+                <template is="dom-if" if="[[pickTime]]">
+                    <div class="time-picker layout horizontal center-center">
+                        <div class="time" on-tap="_showHourSelector">[[_formatHours(selectedHour, showMeridian)]]</div>
+                        <div class="time">:</div>
+                        <div class="time" on-tap="_showMinuteSelector">[[_formatMinute(selectedMinute)]]</div>
+                        <div class="time" on-tap="_changeMeridan" hidden$="[[!showMeridian]]">[[meridian]]</div>
+                    </div>
+                </template>
+            </div>
+            <div class="col relative">
+                <neon-animated-pages class="fit" id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_onPageChange">
+                    <tg-month-selector id="defaultPage" page-name="defaultPage" selected-date="{{selectedDate}}"></tg-month-selector>
+                    <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}" on-number-selected="_showDefaultPage"></tg-number-selector>
+                    <tg-number-selector page-name="monthSelector" selected-number="{{selectedMonth}}" lower-bound="0" upper-bound="11" formatter="[[formatMonth]]" on-number-selected="_showDefaultPage"></tg-number-selector>
+                    <tg-number-selector page-name="hourSelector" selected-number="{{selectedHour}}" lower-bound="[[_getHourLowerBound(showMeridian)]]" upper-bound="[[_getHourUpperBound(showMeridian)]]" on-number-selected="_showDefaultPage"></tg-number-selector>
+                    <tg-number-selector page-name="minuteSelector" selected-number="{{selectedMinute}}" lower-bound="0" upper-bound="59" on-number-selected="_showDefaultPage"></tg-number-selector>
+                </neon-animated-pages>
+            </div>
+        </div>
+    </template>
 </dom-module>
 <script>
-	(function () {
-		var getDaysInMonth = function (year, month) {
-				return new Date(year, month + 1, 0).getDate();
-			},
-			createMonth = function (year, month) {
-				var weeks = [],
-					week = [],
-					day = 1,
-					days = getDaysInMonth(year, month);
-				while (day > 0) {
-					week = createWeek(year, month, day);
-					weeks.push(week);
-					day = week[week.length - 1] > 0 && week[week.length - 1] < days ? week[week.length - 1] + 1 : 0;
-				}
-				return weeks;
-			},
-			createWeek = function (year, month, day) {
-				var week = [],
-					firstDay = new Date(year, month, day).getDay(),
-					days = getDaysInMonth(year, month),
-					previousMonthDays = getDaysInMonth(year, month - 1),
-					nextMonthDay = -1,
-					_i = 0;
-				// In case when the first day of the month is not a sanday then add 0 to the first days of the week.
-				for (; _i < firstDay; _i++) {
-					week.push(-1 * (previousMonthDays - (firstDay - (_i + 1))));
-				}
-				// Add day numbers to the week.
-				for (; _i < 7 && day <= days; _i++) {
-					week.push(day);
-					day += 1;
-				}
-				// In case when the last day of the month is not saturday then add 0 to the last days of the week. 
-				for (; _i < 7; _i++) {
-					week.push(nextMonthDay);
-					nextMonthDay -= 1;
-				}
-				return week;
-			};
-		Polymer({
+    (function () {
+        var meridians = ["AM", "PM"];
+        var zeroPad = function (str, num) {
+            str = (str && str.toString()) || "";
+            return str.length < num ? zeroPad("0" + str, num) : str;
+        };
+        Polymer({
 
-			is: "tg-calendar",
+            is: "tg-calendar",
 
-			properties: {
-				selectedDate: {
-					type: Number,
-					notify: true,
-					observer: "_selectedDateChanged"
-				},
-				selectedHour: {
-					type: Number,
-					notify: true
-				},
-				selectedMinute: {
-					type: Number,
-					notify: true
-				},
-				pickTime: {
-					type: Boolean,
-					reflectToAttribute: true,
-					value: false
-				}
-			},
+            properties: {
+                selectedDate: {
+                    type: Number,
+                    notify: true,
+                    observer: "_selectedDateChanged"
+                },
+                selectedYear: {
+                    type: Number,
+                    observer: "_selectedYearChanged"
+                },
+                selectedMonth: {
+                    type: Number,
+                    observer: "_selectedMonthChanged"
+                },
+                selectedHour: {
+                    type: Number,
+                    notify: true
+                },
+                selectedMinute: {
+                    type: Number,
+                    notify: true
+                },
+                pickTime: {
+                    type: Boolean,
+                    reflectToAttribute: true,
+                    value: false
+                },
+                meridian: {
+                    type: String,
+                    notify: true,
+                    value: "AM"
+                },
+                showMeridian: {
+                    type: Boolean,
+                    value: moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a") >= 0
+                },
+                _months: Array
+            },
 
-			ready: function () {
-				this.today = new Date();
-				this.todayYear = this.today.getFullYear();
-				this.todayMonth = this.today.getMonth();
-				this.todayDay = this.today.getDate();
-				this.selectedDate = null;
-				this.selectedYear = null;
-				this.selectedMonth = null;
-				this.selectedDay = null;
-				this.selectedHour = 0;
-				this.selectedMinute = 0;
-			},
+            ready: function () {
+                this._selectedPage = 'defaultPage';
+                this.formatMonth = (function(monthNumber) {
+                    return this._months[monthNumber];
+                }).bind(this);
+                this._months = moment.monthsShort();
+            },
 
-			attached: function () {
-				var shownDate = (this.selectedDate && new Date(this.selectedDate)) || new Date();
-				this._adjustDate(shownDate);
-				this._adjustShownMonth(shownDate);
-			},
 
-			/**
-			 * Goes to the previous month.
-			 */
-			_prevMonth: function () {
-				this._selectMonth(-1);
-			},
+            attached: function () {
+                var shownDate = (this.selectedDate && new Date(this.selectedDate)) || new Date();
+                this._adjustDate(shownDate);
+            },
 
-			/**
-			 * Goes to the next month.
-			 */
-			_nextMonth: function () {
-				this._selectMonth(1);
-			},
+            /**
+             * Updates the calendar information according to specified date.
+             */
+            _adjustDate: function (date) {
+                this.dayName = moment(date).format("dddd");
+                this.monthName = moment(date).format("MMM").toUpperCase();
+                this.day = date.getDate();
+                this.year = date.getFullYear();
+                this.selectedYear = date.getFullYear();
+                this.selectedMonth = date.getMonth();
+            },
 
-			/**
-			 * Selects month depending on increment (the increment might be positive or negetive).
-			 */
-			_selectMonth: function (increment) {
-				var shownDate = new Date(this.shownYear, this.shownMonth + increment, 1);
-				this._adjustShownMonth(shownDate);
-			},
+            /**
+             * Listens when year was changed and updates calendar.
+             */
+            _selectedYearChanged: function (newValue, oldValue) {
+                this.$.defaultPage._selectYear(newValue);
+            },
+            
+            /**
+             * Listens when month was changed and updates calendar.
+             */
+            _selectedMonthChanged: function (newValue, oldValue) {
+                this.$.defaultPage._selectMonth(newValue);
+            },
 
-			/**
-			 * Updates the calendar information depending on which month was choosen.
-			 */
-			_adjustShownMonth: function (shownDate) {
-				if (this.shownMonth !== shownDate.getMonth() || this.shownYear !== shownDate.getFullYear()) {
-					this.shownMonthName = moment(shownDate).format("MMMM");
-					this.shownMonth = shownDate.getMonth();
-					this.shownYear = shownDate.getFullYear();
-					this.weeks = createMonth(this.shownYear, this.shownMonth);
-				}
-			},
+            /**
+             * Listens when the selected date changes.
+             */
+            _selectedDateChanged: function (newValue, oldValue) {
+                if (newValue !== null) {
+                    var newDate = new Date(newValue);
+                    this._adjustDate(newDate);
+                }
+            },
 
-			/**
-			 * Selects the date.
-			 */
-			_selectDay: function (event, detail, el) {
-				this.selectedDate = new Date(this.shownYear, this.shownMonth, event.model.day).getTime();
-			},
+            _showYearSelector: function () {
+                this._selectedPage = "yearSelector";
+            },
+            
+            _showMonthSelector: function () {
+                this._selectedPage = "monthSelector";
+            },
 
-			/**
-			 * Updates the calendar information according to specified date.
-			 */
-			_adjustDate: function (date) {
-				this.dayName = moment(date).format("dddd");
-				this.monthName = moment(date).format("MMM").toUpperCase();
-				this.day = date.getDate();
-				this.year = date.getFullYear();
-			},
+            _showDefaultPage: function () {
+                this._selectedPage = "defaultPage";
+            },
 
-			/**
-			 * Listens when the selected date changes.
-			 */
-			_selectedDateChanged: function (newValue, oldValue) {
-				var newDate = new Date(newValue);
-				this.selectedYear = newDate.getFullYear();
-				this.selectedMonth = newDate.getMonth();
-				this.selectedDay = newDate.getDate();
-				this._adjustDate(newDate);
-				this._adjustShownMonth(newDate);
-			},
+            _showHourSelector: function () {
+                this._selectedPage = "hourSelector";
+            },
 
-			/**
-			 * Calculates the media query for mobile devices.
-			 */
-			_calcMobileQuery: function () {
-				return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
-			},
+            _showMinuteSelector: function () {
+                this._selectedPage = "minuteSelector";
+            },
 
-			/**
-			 * Calculates the calendar layout depending on phoneScreen.
-			 */
-			_calcCalendarLayout: function (phoneScreen) {
-				return "layout " + (phoneScreen ? "vertical" : "horizontal");
-			},
+            _changeMeridan: function () {
+                var indexOfMeridian = meridians.indexOf(this.meridian);
+                this.meridian = meridians[indexOfMeridian ? 0 : 1];
+            },
 
-			/**
-			 * Calcualtes class names for specified day.
-			 */
-			_calcDayClass: function (day, selectedDay) {
-				var dayClasses = "day layout vertical center-center";
-				if (day < 0) {
-					dayClasses += " dead-day";
-				}
-				if (day === this.todayDay && this.shownMonth === this.todayMonth && this.shownYear === this.todayYear) {
-					dayClasses += " today-date";
-				}
-				if (day === selectedDay && this.shownMonth === this.selectedMonth && this.shownYear === this.selectedYear) {
-					dayClasses += " selected-date";
-				}
-				return dayClasses;
-			},
+            /**
+             * Calculates the media query for mobile devices.
+             */
+            _calcMobileQuery: function () {
+                return "max-width: " + (this.$.appConfig.minTabletWidth - 1) + "px";
+            },
 
-			/**
-			 * Returns the absolute value of the day
-			 */
-			_absolute: function (day) {
-				return Math.abs(day);
-			}
-		});
-	})();
+            /**
+             * Calculates the calendar layout depending on phoneScreen.
+             */
+            _calcCalendarLayout: function (phoneScreen) {
+                return "layout " + (phoneScreen ? "vertical" : "horizontal");
+            },
+
+            _onPageChange: function (e, detail) {
+                if (detail.toPage.getAttribute('page-name') !== 'defaultPage' && typeof detail.toPage._resize === 'function') {
+                    detail.toPage._resize();
+                }
+            },
+
+            _formatHours: function (value, showMeridian) {
+                if (showMeridian) {
+                    return zeroPad(value % 12 === 0 ? 12 : value % 12, 2);
+                } else {
+                    return zeroPad(value, 2);
+                }
+            },
+
+            _getHourLowerBound: function (showMeridian) {
+                return showMeridian ? 1 : 0;
+            },
+
+            _getHourUpperBound: function (showMeridian) {
+                return showMeridian ? 12 : 23;
+            },
+
+            _formatMinute: function (value) {
+                return zeroPad(value, 2);
+            },
+        });
+    })();
 </script>
