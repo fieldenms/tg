@@ -1045,7 +1045,6 @@ public class AbstractEntityTest {
             }
         });
         changingThread.start();
-        Thread.sleep(500); // to allow for changing thread to kick in properly
 
         // validation happens on a separate thread
         final Thread validationThread = new Thread(new Runnable() {
@@ -1055,7 +1054,6 @@ public class AbstractEntityTest {
             }
         });
         validationThread.start();
-        Thread.sleep(500); // to allow for validation thread to kick in properly
 
         // both threads should be alive
         assertTrue(changingThread.isAlive());
@@ -1065,7 +1063,9 @@ public class AbstractEntityTest {
 
         entity.setLockPropertyValidation(false); // release property validation lock
 
-        Thread.sleep(500); // to allow for changing and validation threads to complete
+        // wait for both threads to complete
+        changingThread.join();
+        validationThread.join();
 
         assertNotNull(entity.getLockableProperty()); // property should have been changed already
         assertNotNull(entity.isValid().isSuccessful());
@@ -1085,7 +1085,6 @@ public class AbstractEntityTest {
             }
         });
         validationThread.start();
-        Thread.sleep(500); // to allow for validation thread to kick in properly
 
         // changing property happens on a separate thread
         final Thread changingThread = new Thread(new Runnable() {
@@ -1096,8 +1095,7 @@ public class AbstractEntityTest {
             }
         });
         changingThread.start();
-        Thread.sleep(500); // to allow for changing thread to kick in properly
-
+        
         // both threads should be alive
         assertTrue(changingThread.isAlive());
         assertTrue(validationThread.isAlive());
@@ -1106,7 +1104,9 @@ public class AbstractEntityTest {
 
         entity.setLockEntityValidation(false); // release validation lock
 
-        Thread.sleep(500); // to allow for changing and validation threads to complete
+        // wait for both threads to complete
+        validationThread.join();
+        changingThread.join();
 
         assertNotNull(entity.getMoney()); // property should have been changed already
         assertNotNull(entity.isValid().isSuccessful());
