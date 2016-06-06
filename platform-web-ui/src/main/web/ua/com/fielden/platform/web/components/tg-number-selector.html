@@ -21,7 +21,7 @@
             <iron-list class="fit" id="list" items="[]" scroll-target="threshold">
                 <template>
                     <div class="layout horizontal center-center">
-                        <div class="number-item layout vertical center-center" selected$="[[selected]]" on-tap="_select">[[item]]</div>
+                        <div class="number-item layout vertical center-center" selected$="[[selected]]" on-tap="_select">[[formatter(item)]]</div>
                     </div>
                 </template>
             </iron-list>
@@ -50,6 +50,14 @@
                     type: Number,
                     observer: "_lowerBoundChanged"
                 },
+                formatter: {
+                    type: Function,
+                    value: function () {
+                        return (function (item) {
+                            return item;
+                        }).bind(this);
+                    }
+                },
                 _wasResized: {
                     type: Boolean,
                     value: false
@@ -75,7 +83,6 @@
 
             _select: function (e, detail) {
                 if (e.model.item !== this.selectedNumber) {
-                    this.$.list.deselectItem(this.selectedNumber);
                     this.selectedNumber = e.model.item;
                     this.fire("number-selected", this.selectedNumber);
                 }
@@ -88,8 +95,18 @@
                         this.$.list.push("items", newValue);
                         this._loadPreviousNumbers();
                         this._loadNextNumbers();
+                    } else if (newValue <= this.$.list.items[0]) {
+                        this._loadPreviousNumbers(newValue);
+                    } else if (newValue >= this.$.list.items[this.$.list.items.length - 1]) {
+                        this._loadNextNumbers(newValue);
                     }
-                    this.$.list.selectItem(this.selectedNumber);
+                    if (newValue < this.$.list.items[0] || newValue > this.$.list.items[this.$.list.items.length - 1]) {
+                        throw "The selected element is out of bounds or it wasn't loaded for some reason.";
+                    }
+                    if (typeof oldValue !== undefined && oldValue !== null && oldValue >= this.$.list.items[0] && oldValue <= this.$.list.items[this.$.list.items.length - 1]) {
+                        this.$.list.deselectItem(oldValue);
+                    }
+                    this.$.list.selectItem(newValue);
                 }
             },
 

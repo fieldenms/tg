@@ -13,9 +13,9 @@
             margin: 0px 1.1em;
         }
         .selected-date {
-			background-color: #03A9F4;
-			color: white !important;
-		}
+            background-color: #03A9F4;
+            color: white !important;
+        }
         .day {
             height: 2.2em;
             width: 2.2em;
@@ -34,14 +34,14 @@
             cursor: auto;
         }
         .today-date {
-			color: #03A9F4;
-		}
+            color: #03A9F4;
+        }
         paper-icon-button {
-			padding: 0px;
-			margin: 0px;
+            padding: 0px;
+            margin: 0px;
             width: 24px;
             height: 24px;
-		}
+        }
     </style>
     <template>
         <div class="layout vertical">
@@ -135,7 +135,7 @@
                 selectedDate: {
                     type: Number,
                     notify: true,
-					observer: "_selectedDateChanged"
+                    observer: "_selectedDateChanged"
                 },
                 selectedDay: Number,
                 selectedMonth: Number,
@@ -153,8 +153,9 @@
                 this.todayDay = today.getDate();
                 this.todayMonth = today.getMonth();
                 this.todayYear = today.getFullYear();
+                this.selectedDay = null;
             },
-            
+
             attached: function () {
                 var dateToShow = (this.selectedDate && new Date(this.selectedDate)) || new Date();
                 this._adjustMonth(dateToShow);
@@ -164,16 +165,16 @@
              * Goes to the previous month.
              */
             _prevMonth: function () {
-                this._selectMonth(-1);
+                this._selectMonth(this.month - 1);
             },
 
             /**
              * Goes to the next month.
              */
             _nextMonth: function () {
-                this._selectMonth(1);
+                this._selectMonth(this.month + 1);
             },
-            
+
             /**
              * Selectes the year on the displayed calendar
              */
@@ -185,8 +186,8 @@
             /**
              * Selects month depending on increment (the increment might be positive or negetive).
              */
-            _selectMonth: function (increment) {
-                var dateToShow = new Date(this.year, this.month + increment, 1);
+            _selectMonth: function (month) {
+                var dateToShow = new Date(this.year, month, 1);
                 this._adjustMonth(dateToShow);
             },
 
@@ -194,55 +195,59 @@
              * Updates the calendar information depending on which month was choosen.
              */
             _adjustMonth: function (dateToShow) {
-                if (this.month !== dateToShow.getMonth() || this.year !== dateToShow.getFullYear()) {
+                if (!isNaN(dateToShow.getTime()) && (this.month !== dateToShow.getMonth() || this.year !== dateToShow.getFullYear())) {
                     this.monthName = moment(dateToShow).format("MMMM");
                     this.month = dateToShow.getMonth();
                     this.year = dateToShow.getFullYear();
                     this.weeks = createMonth(this.year, this.month);
                 }
             },
-            
-            /**
-			 * Selects the date.
-			 */
-			_selectDay: function (event, detail, el) {
-				this.selectedDate = new Date(this.year, this.month, event.model.day).getTime();
-			},
 
-			/**
-			 * Listens when the selected date changes.
-			 */
-			_selectedDateChanged: function (newValue, oldValue) {
-				var newDate = new Date(newValue);
-                this.selectedYear = newDate.getFullYear();
-                this.selectedMonth = newDate.getMonth();
-				this.selectedDay = newDate.getDate();
-				this._adjustMonth(newDate);
-			},
-            
             /**
-			 * Calcualtes class names for specified day.
-			 */
-			_calcDayClass: function (day, selectedDay) {
-				var dayClasses = "day layout vertical center-center";
-				if (day < 0) {
-					dayClasses += " dead-day";
-				}
-				if (day === this.todayDay && this.month === this.todayMonth && this.year === this.todayYear) {
-					dayClasses += " today-date";
-				}
-				if (day === selectedDay && this.month === this.selectedMonth && this.year === this.selectedYear) {
-					dayClasses += " selected-date";
-				}
-				return dayClasses;
-			},
+             * Selects the date.
+             */
+            _selectDay: function (event, detail, el) {
+                this.selectedDate = new Date(this.year, this.month, event.model.day).getTime();
+            },
 
-			/**
-			 * Returns the absolute value of the day
-			 */
-			_absolute: function (day) {
-				return Math.abs(day);
-			}
+            /**
+             * Listens when the selected date changes.
+             */
+            _selectedDateChanged: function (newValue, oldValue) {
+                if (newValue !== null) {
+                    var newDate = new Date(newValue);
+                    if (!isNaN(newDate.getTime())) {
+                        this.selectedYear = newDate.getFullYear();
+                        this.selectedMonth = newDate.getMonth();
+                        this._adjustMonth(newDate);
+                        this.selectedDay = newDate.getDate();
+                    }
+                }
+            },
+
+            /**
+             * Calcualtes class names for specified day.
+             */
+            _calcDayClass: function (day, selectedDay) {
+                var dayClasses = "day layout vertical center-center";
+                if (day < 0) {
+                    dayClasses += " dead-day";
+                }
+                if (day === this.todayDay && this.month === this.todayMonth && this.year === this.todayYear) {
+                    dayClasses += " today-date";
+                }
+                if (day === selectedDay && this.month === this.selectedMonth && this.year === this.selectedYear) {
+                    dayClasses += " selected-date";
+                }
+                return dayClasses;
+            },
+
+            /**
+             * Returns the absolute value of the day
+             */
+            _absolute: function (day) {
+                return Math.abs(day);
+            }
         });
     })();
 </script>

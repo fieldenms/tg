@@ -60,7 +60,7 @@
                 <div class="header day-name layout vertical center-center">[[dayName]]</div>
                 <div class="selected-date layout vertical center justified" style="padding: 10px;">
                     <div class="selected-month" on-tap="_showMonthSelector">[[monthName]]</div>
-                    <div class="selected-day" on-tap="_showMonthSelector">[[day]]</div>
+                    <div class="selected-day" on-tap="_showDefaultPage">[[day]]</div>
                     <div class="selected-year" on-tap="_showYearSelector">[[year]]</div>
                 </div>
                 <template is="dom-if" if="[[pickTime]]">
@@ -74,10 +74,11 @@
             </div>
             <div class="col relative">
                 <neon-animated-pages class="fit" id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_onPageChange">
-                    <tg-month-selector id="monthSelector" page-name="monthSelector" selected-date="{{selectedDate}}"></tg-month-selector>
-                    <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}" on-number-selected="_showMonthSelector"></tg-number-selector>
-                    <tg-number-selector page-name="hourSelector" selected-number="{{selectedHour}}" lower-bound="[[_getHourLowerBound(showMeridian)]]" upper-bound="[[_getHourUpperBound(showMeridian)]]" on-number-selected="_showMonthSelector"></tg-number-selector>
-                    <tg-number-selector page-name="minuteSelector" selected-number="{{selectedMinute}}" lower-bound="0" upper-bound="59" on-number-selected="_showMonthSelector"></tg-number-selector>
+                    <tg-month-selector id="defaultPage" page-name="defaultPage" selected-date="{{selectedDate}}"></tg-month-selector>
+                    <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}" on-number-selected="_showDefaultPage"></tg-number-selector>
+                    <tg-number-selector page-name="monthSelector" selected-number="{{selectedMonth}}" lower-bound="0" upper-bound="11" formatter="[[formatMonth]]" on-number-selected="_showDefaultPage"></tg-number-selector>
+                    <tg-number-selector page-name="hourSelector" selected-number="{{selectedHour}}" lower-bound="[[_getHourLowerBound(showMeridian)]]" upper-bound="[[_getHourUpperBound(showMeridian)]]" on-number-selected="_showDefaultPage"></tg-number-selector>
+                    <tg-number-selector page-name="minuteSelector" selected-number="{{selectedMinute}}" lower-bound="0" upper-bound="59" on-number-selected="_showDefaultPage"></tg-number-selector>
                 </neon-animated-pages>
             </div>
         </div>
@@ -104,6 +105,10 @@
                     type: Number,
                     observer: "_selectedYearChanged"
                 },
+                selectedMonth: {
+                    type: Number,
+                    observer: "_selectedMonthChanged"
+                },
                 selectedHour: {
                     type: Number,
                     notify: true
@@ -125,11 +130,16 @@
                 showMeridian: {
                     type: Boolean,
                     value: moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a") >= 0
-                }
+                },
+                _months: Array
             },
 
             ready: function () {
-                this._selectedPage = 'monthSelector';
+                this._selectedPage = 'defaultPage';
+                this.formatMonth = (function(monthNumber) {
+                    return this._months[monthNumber];
+                }).bind(this);
+                this._months = moment.monthsShort();
             },
 
 
@@ -147,13 +157,21 @@
                 this.day = date.getDate();
                 this.year = date.getFullYear();
                 this.selectedYear = date.getFullYear();
+                this.selectedMonth = date.getMonth();
             },
 
             /**
              * Listens when year was changed and updates calendar.
              */
             _selectedYearChanged: function (newValue, oldValue) {
-                this.$.monthSelector._selectYear(newValue);
+                this.$.defaultPage._selectYear(newValue);
+            },
+            
+            /**
+             * Listens when month was changed and updates calendar.
+             */
+            _selectedMonthChanged: function (newValue, oldValue) {
+                this.$.defaultPage._selectMonth(newValue);
             },
 
             /**
@@ -169,9 +187,13 @@
             _showYearSelector: function () {
                 this._selectedPage = "yearSelector";
             },
-
+            
             _showMonthSelector: function () {
                 this._selectedPage = "monthSelector";
+            },
+
+            _showDefaultPage: function () {
+                this._selectedPage = "defaultPage";
             },
 
             _showHourSelector: function () {
@@ -202,7 +224,7 @@
             },
 
             _onPageChange: function (e, detail) {
-                if (detail.toPage.getAttribute('page-name') !== 'monthSelector' && typeof detail.toPage._resize === 'function') {
+                if (detail.toPage.getAttribute('page-name') !== 'defaultPage' && typeof detail.toPage._resize === 'function') {
                     detail.toPage._resize();
                 }
             },
