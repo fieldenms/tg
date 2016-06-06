@@ -78,7 +78,7 @@
                 <template is="dom-repeat" items="[[weeks]]" as="week">
                     <div class="layout horizontal center-justified">
                         <template is="dom-repeat" items="[[week]]" as="day">
-                            <div on-tap="_selectDay" class$="[[_calcDayClass(day, selectedDay)]]"><span>[[_absolute(day)]]</span>
+                            <div on-tap="_selectDay" class$="[[_calcDayClass(day, month, year, selectedDay, selectedMonth, selectedYear)]]"><span>[[_absolute(day)]]</span>
                             </div>
                         </template>
                     </div>
@@ -154,6 +154,10 @@
                 this.todayMonth = today.getMonth();
                 this.todayYear = today.getFullYear();
                 this.selectedDay = null;
+                this.selectedMonth = null;
+                this.selectedYear = null;
+                this.month = null;
+                this.year = null;
             },
 
             attached: function () {
@@ -228,15 +232,15 @@
             /**
              * Calcualtes class names for specified day.
              */
-            _calcDayClass: function (day, selectedDay) {
+            _calcDayClass: function (day, month, year, selectedDay, selectedMonth, selectedYear) {
                 var dayClasses = "day layout vertical center-center";
                 if (day < 0) {
                     dayClasses += " dead-day";
                 }
-                if (day === this.todayDay && this.month === this.todayMonth && this.year === this.todayYear) {
+                if (day === this.todayDay && month === this.todayMonth && year === this.todayYear) {
                     dayClasses += " today-date";
                 }
-                if (day === selectedDay && this.month === this.selectedMonth && this.year === this.selectedYear) {
+                if (day === selectedDay && month === selectedMonth && year === selectedYear) {
                     dayClasses += " selected-date";
                 }
                 return dayClasses;
