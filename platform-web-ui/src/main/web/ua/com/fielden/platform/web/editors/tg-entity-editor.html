@@ -59,12 +59,12 @@
     </style>
 
     <template>
-        <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" _has-layer="[[_hasLayer(entity, multi)]]" _focused="[[focused]]" debug="[[debug]]">
+        <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" _has-layer="[[_hasLayer(_editingValue, entity)]]" _focused="[[focused]]" debug="[[debug]]">
             <input id="input" class="custom-input entity-input" is="iron-input" type="text" on-blur="_blurEventHandler" bind-value="{{_editingValue}}" on-change="_onChange" on-input="_onInput" on-keydown="_onKeydown" on-focus="_onFocus" tooltip-text$="[[_getTooltip(entity, focused, multi)]]" disabled$="[[_disabled]]" />
             <paper-icon-button hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
             <paper-icon-button hidden$="[[searchingOrClosed]]" on-down="_done" icon="done" class="search-button custom-icon-buttons" tabIndex="-1" disabled$="[[_disabled]]" tooltip-text="Accept the selected entries"></paper-icon-button>
             <paper-spinner active hidden$="[[!searching]]" class="custom-icon-buttons" tabIndex="-1" alt="searching..." disabled$="[[_disabled]]"></paper-spinner>
-            <div class="input-layer"><span>[[_formatKey(entity, multi)]]</span><span style="color:#737373" hidden$="[[!_hasDesc(entity, multi)]]"> &ndash; <i>[[_formatDesc(entity, multi)]]</i></span>
+            <div class="input-layer"><span>[[_formatKey(entity)]]</span><span style="color:#737373" hidden$="[[!_hasDesc(entity)]]"> &ndash; <i>[[_formatDesc(entity)]]</i></span>
             </div>
             <content class=".property-action"></content>
         </tg-editor>
@@ -691,7 +691,7 @@
                 return '';
             },
 
-            _formatKey: function (entity, multi) {
+            _formatKey: function (entity) {
                 if (entity !== null) {
                     var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
                     if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
@@ -701,7 +701,7 @@
                 return '';
             },
 
-            _hasDesc: function (entity, multi) {
+            _hasDesc: function (entity) {
                 if (entity !== null) {
                     var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
                     if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
@@ -711,7 +711,7 @@
                 return false;
             },
 
-            _formatDesc: function (entity, multi) {
+            _formatDesc: function (entity) {
                 if (entity !== null) {
                     var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
                     if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.desc) {
@@ -721,10 +721,10 @@
                 return '';
             },
 
-            _hasLayer: function (entity, multi) {
+            _hasLayer: function (_editingValue, entity) {
                 if (entity !== null) {
                     var entityValue = this.reflector()._getValueFor(entity, this.propertyName);
-                    return entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
+                    return entityValue !== null && this.convertToString(this.reflector().convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
                 }
                 return false;
             }
