@@ -25,6 +25,7 @@ import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
@@ -34,6 +35,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -41,6 +43,7 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -275,10 +278,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final String msg = String.format("No entity with key [%s] has been found.", val);
             logger.info(msg);
             entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
-        } else if (multipleFoundEntities(type, name, val, newValue)) {
-            final String msg = String.format("Multiple entities have been found for [%s].", val);
-            logger.info(msg);
-            entity.getProperty(name).setDomainValidationResult(Result.failure(entity, msg));
         } else if (!isEntityStale) {
             enforceSet(shouldApplyOriginalValue, name, entity, newValue);
         } else {
@@ -408,19 +407,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     private static <M extends AbstractEntity<?>> boolean notFoundEntity(final Class<M> type, final String propertyName, final Object reflectedValue, final Object newValue) {
         return reflectedValue != null && newValue == null && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
     }
-
-    /**
-     * Returns <code>true</code> if the property is of entity type and multiple entities ware found by the search string (reflectedValue), <code>false</code> otherwise.
-     *
-     * @param type
-     * @param propertyName
-     * @param reflectedValue
-     * @param newValue
-     * @return
-     */
-    private static <M extends AbstractEntity<?>> boolean multipleFoundEntities(final Class<M> type, final String propertyName, final Object reflectedValue, final Object newValue) {
-        return reflectedValue != null && Arrays.asList().equals(newValue) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, propertyName));
-    }
     
     /**
      * Determines property type.
@@ -474,7 +460,16 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
             final Class<AbstractEntity<?>> entityPropertyType = (Class<AbstractEntity<?>>) propertyType;
 
-            if (EntityUtils.isCompositeEntity(entityPropertyType)) {
+            if (EntityUtils.isPropertyDescriptor(entityPropertyType)) {
+                final Class<AbstractEntity<?>> enclosingEntityType = (Class<AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, propertyName).value();
+                final List<PropertyDescriptor<AbstractEntity<?>>> allPropertyDescriptors = Finder.getPropertyDescriptors(enclosingEntityType);
+                final PojoValueMatcher<PropertyDescriptor<AbstractEntity<?>>> matcher = new PojoValueMatcher<>(allPropertyDescriptors, AbstractEntity.KEY, allPropertyDescriptors.size());
+                final List<PropertyDescriptor<AbstractEntity<?>>> matchedPropertyDescriptors = matcher.findMatches((String) reflectedValue);
+                if (matchedPropertyDescriptors.size() > 1) {
+                    return null; // multiple property descriptors match -- need to show 'No entity with key [...] has been found.' message
+                }
+                return matchedPropertyDescriptors.size() == 1 ? matchedPropertyDescriptors.get(0) : null;
+            } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
                 final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType);
                 
                 final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
