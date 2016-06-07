@@ -68,8 +68,11 @@
                 if (!this._wasResized) {
                     this.$.list.fire("iron-resize");
                     this._wasResized = true;
+                } else {
+                    this.$.list._updateMetrics();
+                    this.$.list._positionItems();
                 }
-                if (this.selectedNumber) {
+                if (typeof this.selectedNumber !== undefined && this.selectedNumber !== null) {
                     var selectedIndex = this.$.list.items.indexOf(this.selectedNumber);
                     if (selectedIndex < this.$.list.firstVisibleIndex - 1 || selectedIndex > this.$.list.lastVisibleIndex + 1) {
                         this.$.list.scrollToIndex(selectedIndex);
