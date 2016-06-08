@@ -245,8 +245,8 @@
            			var dialog = this.$.dateDialog;
            			var datePicker = this.$.datePicker;
            			datePicker.selectedDate = null;
-                	datePicker.selectedHour = 0;
-                	datePicker.selectedMinute = 0;
+                	datePicker.selectedHour = null;
+                	datePicker.selectedMinute = null;
                 	
                     if (self._editingValue && self._editingValue.trim() !== '' && self._validMoment !== null) {
                         datePicker.selectedDate = self._validMoment.valueOf();

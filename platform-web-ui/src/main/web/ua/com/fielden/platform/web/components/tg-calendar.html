@@ -145,7 +145,11 @@
 
 
             attached: function () {
-                this.selectedDate = this.selectedDate || new Date().getTime();
+                var todayDate = new Date();
+                todayDate.setSeconds(0, 0);
+                this.selectedDate = this.selectedDate || todayDate.getTime();
+                this.selectedHour = (typeof this.selectedHour !== undefined && this.selectedHour !== null) ? this.selectedHour : todayDate.getHours();
+                this.selectedMinute = (typeof this.selectedMinute !== undefined && this.selectedMinute !== null) ? this.selectedMinute : todayDate.getMinutes();
             },
 
             /**
