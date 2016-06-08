@@ -38,6 +38,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.ExportActionProducer;
@@ -86,7 +87,6 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.test.domain.entities.WorkOrder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
@@ -318,8 +318,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Deletes the selected entities").
                         build())
                 .addCrit("this").asMulti().autocompleter(TgEntityWithPropertyDescriptor.class).also()
-                .addCrit("propertyDescriptor").asMulti().autocompleter(PropertyDescriptor.class)
-                    .withMatcher((Class<? extends IValueMatcherWithCentreContext<PropertyDescriptor>>) TgEntityWithPropertyDescriptorPropertyDescriptorMatcher.class, context().withSelectedEntities().build())
+                .addCrit("propertyDescriptor").asMulti().autocompleter((Class<PropertyDescriptor<TgPersistentEntityWithProperties>>) ClassesRetriever.findClass("ua.com.fielden.platform.entity.meta.PropertyDescriptor"))
+                    .withMatcher(TgEntityWithPropertyDescriptorPropertyDescriptorMatcher.class, context().withSelectedEntities().build())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
 
                 .addProp("this")
