@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
 /**
- * A producer for new instances of entity {@link TgEntityWithPropertyDependency}.
+ * A producer for new instances of entity {@link TgCollectionalSerialisationParent}.
  *
  * @author TG Team
  *
