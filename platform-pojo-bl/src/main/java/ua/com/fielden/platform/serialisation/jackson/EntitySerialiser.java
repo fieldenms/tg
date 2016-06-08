@@ -32,6 +32,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 
 import com.esotericsoftware.kryo.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.javafx.property.adapter.PropertyDescriptor;
 
 /**
  * Serialises / deserialises descendants of {@link AbstractEntity}.
@@ -47,7 +48,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     private final EntityType entityTypeInfo;
 
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder) {
-        this(type, module, mapper, factory, entityTypeInfoGetter, false, serialisationTypeEncoder);
+        this(type, module, mapper, factory, entityTypeInfoGetter, false, serialisationTypeEncoder, false);
     }
 
     /**
@@ -60,8 +61,9 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      * @param entityTypeInfoGetter
      * @param excludeNulls -- the special switch that indicate whether <code>null</code> properties should be fully disregarded during serialisation into JSON
      * @param serialisationTypeEncoder
+     * @param propertyDescriptorType -- <code>true</code> to create {@link EntitySerialiser} for {@link PropertyDescriptor} entity type, <code>false</code> otherwise
      */
-    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder) {
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder, final boolean propertyDescriptorType) {
         this.type = type;
         this.factory = factory;
 
@@ -69,8 +71,8 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
         properties = createCachedProperties(type);
         this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter, serialisationTypeEncoder);
 
-        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, this.entityTypeInfo, excludeNulls);
-        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, serialisationTypeEncoder);
+        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, this.entityTypeInfo, excludeNulls, propertyDescriptorType);
+        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, serialisationTypeEncoder, propertyDescriptorType);
 
         // register serialiser and deserialiser
         module.addSerializer(type, serialiser);

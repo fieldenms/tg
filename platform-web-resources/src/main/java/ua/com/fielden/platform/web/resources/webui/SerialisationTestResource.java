@@ -160,7 +160,6 @@ public class SerialisationTestResource extends ServerResource {
                     if (!EntityUtils.equalsEx(pd1.getPropertyName(), pd2.getPropertyName())) {
                         return Result.failure(format("PropertyDescriptors equality: pd1 [%s] propertyName [%s] does not equal to pd2 [%s] propertyName [%s].", pd1, pd1.getPropertyName(), pd2, pd2.getPropertyName()));
                     }
-                    // TODO what about PD type parameter?
                 }
                 // id equality
                 if (!EntityUtils.equalsEx(e1.getId(), e2.getId())) {
@@ -327,7 +326,8 @@ public class SerialisationTestResource extends ServerResource {
                 createGeneratedEntity(restUtil.getSerialiser(), true), // instrumented
                 factory.createInstrumentedEntityWithUninstrumentedProperty(),
                 factory.createUninstrumentedEntityWithInstrumentedProperty(),
-                factory.createPropertyDescriptor()
+                factory.createPropertyDescriptor(),
+                factory.createPropertyDescriptorInstrumented()
                 );
     }
     

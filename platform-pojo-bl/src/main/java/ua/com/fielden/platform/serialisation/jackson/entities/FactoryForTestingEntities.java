@@ -132,6 +132,10 @@ public class FactoryForTestingEntities {
     public PropertyDescriptor<EntityWithInteger> createPropertyDescriptor() {
         return new PropertyDescriptor<>(EntityWithInteger.class, "prop");
     }
+    
+    public PropertyDescriptor<EntityWithInteger> createPropertyDescriptorInstrumented() {
+        return PropertyDescriptor.fromString("ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger:prop", factory);
+    }
 
     public EmptyEntity createEmptyEntityWithNoId() {
         return createNewEntity(EmptyEntity.class, "key", "description");

@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -49,8 +50,9 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
     private final ISerialisationTypeEncoder serialisationTypeEncoder;
+    private final boolean propertyDescriptorType;
 
-    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final ISerialisationTypeEncoder serialisationTypeEncoder) {
+    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final ISerialisationTypeEncoder serialisationTypeEncoder, final boolean propertyDescriptorType) {
         super(type);
         this.factory = entityFactory;
         this.mapper = mapper;
@@ -60,6 +62,8 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         this.type = type;
         versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
         versionField.setAccessible(true);
+        
+        this.propertyDescriptorType = propertyDescriptorType;
     }
 
     @Override
@@ -96,10 +100,18 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
 
             final T entity;
             if (uninstrumented) {
-                entity = factory.newPlainEntity(type, id);
+                if (propertyDescriptorType) {
+                    entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText());
+                } else {
+                    entity = factory.newPlainEntity(type, id);
+                }
                 entity.setEntityFactory(factory);
             } else {
-                entity = factory.newEntity(type, id);
+                if (propertyDescriptorType) {
+                    entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText(), factory);
+                } else {
+                    entity = factory.newEntity(type, id);
+                }
             }
             entity.beginInitialising();
 

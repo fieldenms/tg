@@ -203,8 +203,7 @@
                     // check property descriptor instance:
                     assert.deepEqual(find(entities, 'PropertyDescriptor').get('key'), 'EntityWithInteger prop Title', 'PropertyDescriptor key has incorrect value.');
                     assert.deepEqual(find(entities, 'PropertyDescriptor').get('desc'), 'EntityWithInteger prop Desc', 'PropertyDescriptor desc has incorrect value.');
-                    assert.deepEqual(find(entities, 'PropertyDescriptor')['entityType'], 'ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger', 'PropertyDescriptor entityType has incorrect value.');
-                    assert.deepEqual(find(entities, 'PropertyDescriptor')['propertyName'], 'prop', 'PropertyDescriptor propertyName has incorrect value.');
+                    assert.deepEqual(find(entities, 'PropertyDescriptor')['@pdString'], 'ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger:prop', 'PropertyDescriptor @pdString has incorrect value.');
                     
                     // console.log("deserialised with tg-serialiser: ", JSON.stringify(resultWithEntities));
                     entitySender.body = JSON.stringify(serialiser.serialise(resultWithEntities));

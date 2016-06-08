@@ -755,4 +755,25 @@ public class EntitySerialisationWithJacksonTest {
         assertEquals("Incorrect entityType.", EntityWithInteger.class, restoredEntity.getEntityType());
         assertEquals("Incorrect propertyName.", "prop", restoredEntity.getPropertyName());
     }
+    
+    @Test
+    public void instrumented_property_descriptor_should_be_restored() throws Exception {
+        final PropertyDescriptor<EntityWithInteger> entity = factory.createPropertyDescriptorInstrumented();
+
+        final PropertyDescriptor<EntityWithInteger> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), PropertyDescriptor.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+
+        assertEquals("Incorrect key.", "EntityWithInteger prop Title", restoredEntity.getKey());
+        assertTrue("Incorrect prop ChangedFromOriginal.", restoredEntity.getProperty("key").isChangedFromOriginal()); // 'new' entity -- that is why it should be changed from original
+        assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("key").isDirty()); // 'new' entity -- that is why it should be dirty
+        
+        assertEquals("Incorrect desc.", "EntityWithInteger prop Desc", restoredEntity.getDesc());
+        assertTrue("Incorrect prop ChangedFromOriginal.", restoredEntity.getProperty("desc").isChangedFromOriginal()); // 'new' entity -- that is why it should be changed from original
+        assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("desc").isDirty()); // 'new' entity -- that is why it should be dirty
+        
+        assertEquals("Incorrect entityType.", EntityWithInteger.class, restoredEntity.getEntityType());
+        assertEquals("Incorrect propertyName.", "prop", restoredEntity.getPropertyName());
+    }
 }
