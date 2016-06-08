@@ -84,6 +84,13 @@ public class Entity extends AbstractEntity<String> {
     @IsProperty(Entity.class)
     private PropertyDescriptor<Entity> propertyDescriptor;
 
+    @Override
+    @Observable
+    public Entity setKey(String key) {
+        super.setKey(key);
+        return this;
+    }
+    
     public Integer getFirstProperty() {
         return firstProperty;
     }
