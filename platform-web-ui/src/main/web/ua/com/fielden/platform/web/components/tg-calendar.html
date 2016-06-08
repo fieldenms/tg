@@ -58,11 +58,11 @@
         <iron-media-query query="[[_calcMobileQuery()]]" query-matches="{{_phoneScreen}}"></iron-media-query>
         <div class$="[[_calcCalendarLayout(_phoneScreen)]]">
             <div class="col layout vertical">
-                <div class="header day-name layout vertical center-center">[[dayName]]</div>
+                <div class="header day-name layout vertical center-center">[[selectedDayName]]</div>
                 <div class="selected-date layout vertical center justified" style="padding: 10px;">
-                    <div class="selected-month" on-tap="_showMonthSelector">[[monthName]]</div>
-                    <div class="selected-day" on-tap="_showDefaultPage">[[day]]</div>
-                    <div class="selected-year" on-tap="_showYearSelector">[[year]]</div>
+                    <div class="selected-month" on-tap="_showMonthSelector">[[selectedMonthName]]</div>
+                    <div class="selected-day" on-tap="_showDefaultPage">[[selectedDay]]</div>
+                    <div class="selected-year" on-tap="_showYearSelector">[[selectedYear]]</div>
                 </div>
                 <template is="dom-if" if="[[pickTime]]">
                     <div class="time-picker layout horizontal center-center">
@@ -74,7 +74,7 @@
                 </template>
             </div>
             <div class="col relative">
-                <neon-animated-pages class="fit" id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_onPageChange">
+                <neon-animated-pages class="fit" id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-select="_onPageChange">
                     <tg-month-selector id="defaultPage" page-name="defaultPage" selected-date="{{selectedDate}}"></tg-month-selector>
                     <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}" on-number-selected="_showDefaultPage"></tg-number-selector>
                     <tg-number-selector page-name="monthSelector" selected-number="{{selectedMonth}}" lower-bound="0" upper-bound="11" formatter="[[formatMonth]]" on-number-selected="_showDefaultPage"></tg-number-selector>
@@ -103,12 +103,10 @@
                     observer: "_selectedDateChanged"
                 },
                 selectedYear: {
-                    type: Number,
-                    observer: "_selectedYearChanged"
+                    type: Number
                 },
                 selectedMonth: {
-                    type: Number,
-                    observer: "_selectedMonthChanged"
+                    type: Number
                 },
                 selectedHour: {
                     type: Number,
@@ -134,6 +132,8 @@
                 },
                 _months: Array
             },
+            
+            observers: ["_selectYearMonthDay(selectedYear, selectedMonth, selectedDay)"],
 
             ready: function () {
                 this._selectedPage = 'defaultPage';
@@ -145,34 +145,30 @@
 
 
             attached: function () {
-                var shownDate = (this.selectedDate && new Date(this.selectedDate)) || new Date();
-                this._adjustDate(shownDate);
+                var todayDate = new Date();
+                todayDate.setSeconds(0, 0);
+                this.selectedDate = this.selectedDate || todayDate.getTime();
+                this.selectedHour = (typeof this.selectedHour !== undefined && this.selectedHour !== null) ? this.selectedHour : todayDate.getHours();
+                this.selectedMinute = (typeof this.selectedMinute !== undefined && this.selectedMinute !== null) ? this.selectedMinute : todayDate.getMinutes();
             },
 
             /**
              * Updates the calendar information according to specified date.
              */
             _adjustDate: function (date) {
-                this.dayName = moment(date).format("dddd");
-                this.monthName = moment(date).format("MMM").toUpperCase();
-                this.day = date.getDate();
-                this.year = date.getFullYear();
-                this.selectedYear = date.getFullYear();
+                this.selectedDayName = moment(date).format("dddd");
+                this.selectedMonthName = moment(date).format("MMM").toUpperCase();
+                this.selectedDay = date.getDate();
                 this.selectedMonth = date.getMonth();
-            },
-
-            /**
-             * Listens when year was changed and updates calendar.
-             */
-            _selectedYearChanged: function (newValue, oldValue) {
-                this.$.defaultPage._selectYear(newValue);
+                this.selectedYear = date.getFullYear();
             },
             
             /**
-             * Listens when month was changed and updates calendar.
+             * Changes selected date according to changed year and month. 
              */
-            _selectedMonthChanged: function (newValue, oldValue) {
-                this.$.defaultPage._selectMonth(newValue);
+            _selectYearMonthDay: function (newYear, newMonth, newDay) {
+                var lastDayOfTheMonth = new Date(newYear, newMonth + 1, 0).getDate();
+                this.selectedDate = new Date(newYear, newMonth, newDay > lastDayOfTheMonth ? lastDayOfTheMonth : newDay);
             },
 
             /**
@@ -225,8 +221,8 @@
             },
 
             _onPageChange: function (e, detail) {
-                if (detail.toPage.getAttribute('page-name') !== 'defaultPage' && typeof detail.toPage._resize === 'function') {
-                    detail.toPage._resize();
+                if (detail.item.getAttribute('page-name') !== 'defaultPage' && typeof detail.item._resize === 'function') {
+                    detail.item._resize();
                 }
             },
 

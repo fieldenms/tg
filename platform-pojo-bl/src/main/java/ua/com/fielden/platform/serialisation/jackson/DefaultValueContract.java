@@ -213,6 +213,15 @@ public class DefaultValueContract {
     public static boolean isEntityDescDefault(final Class<?> entityType, final String entityDesc) {
         return EntityUtils.equalsEx(entityDesc, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getValue());
     }
+    
+    /**
+     * Returns <code>true</code> if the value of <code>displayDesc</code> is default, <code>false</code> otherwise.
+     *
+     * @return
+     */
+    public static boolean isDisplayDescDefault(final boolean shouldDisplayDesc) {
+        return EntityUtils.equalsEx(shouldDisplayDesc, false);
+    }
 
     ///////////////////////////////////////////////// ENTITY TYPE PROP props /////////////////////////////////////////////////
     /**
