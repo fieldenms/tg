@@ -13,16 +13,16 @@ public class PojoValueMatcherTest {
 
     private final List<Entity> entities = new ArrayList<>();
     {
-        entities.add(new Entity().setKey("ORDINARY VALUE 1"));
-        entities.add(new Entity().setKey("ORDINARY VALUE 2"));
-        entities.add(new Entity().setKey("SPECIAL SYMBOL (hrs)"));
-        entities.add(new Entity().setKey("SPECIAL SYMBOL 2 *"));
-        entities.add(new Entity().setKey("Non special symbol --"));
-        entities.add(new Entity().setKey("MIxed CaSe"));
-        entities.add(new Entity().setKey("some more [symbols]"));
-        entities.add(new Entity().setKey("some more {symbols}"));
-        entities.add(new Entity().setKey("some more /symbols/"));
-        entities.add(new Entity().setKey("some more \\symbols\\"));
+        entities.add((Entity) new Entity().setKey("ORDINARY VALUE 1"));
+        entities.add((Entity) new Entity().setKey("ORDINARY VALUE 2"));
+        entities.add((Entity) new Entity().setKey("SPECIAL SYMBOL (hrs)"));
+        entities.add((Entity) new Entity().setKey("SPECIAL SYMBOL 2 *"));
+        entities.add((Entity) new Entity().setKey("Non special symbol --"));
+        entities.add((Entity) new Entity().setKey("MIxed CaSe"));
+        entities.add((Entity) new Entity().setKey("some more [symbols]"));
+        entities.add((Entity) new Entity().setKey("some more {symbols}"));
+        entities.add((Entity) new Entity().setKey("some more /symbols/"));
+        entities.add((Entity) new Entity().setKey("some more \\symbols\\"));
     }
     
     @Test
