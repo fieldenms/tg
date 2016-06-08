@@ -13,13 +13,16 @@ import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
@@ -35,6 +38,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.ExportActionProducer;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
@@ -82,6 +86,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.test.domain.entities.WorkOrder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
@@ -314,6 +319,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
                 .addCrit("this").asMulti().autocompleter(TgEntityWithPropertyDescriptor.class).also()
                 .addCrit("propertyDescriptor").asMulti().autocompleter(PropertyDescriptor.class)
+                    .withMatcher((Class<? extends IValueMatcherWithCentreContext<PropertyDescriptor>>) TgEntityWithPropertyDescriptorPropertyDescriptorMatcher.class, context().withSelectedEntities().build())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
 
                 .addProp("this")
@@ -954,6 +960,38 @@ public class WebUiConfig extends AbstractWebUiConfig {
         protected EntityResultQueryModel<TgPersistentEntityWithProperties> completeEqlBasedOnContext(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString, final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
             System.out.println("EntityPropValueMatcherForCentre: CONTEXT == " + getContext());
             return incompleteEql.model();
+        }
+    }
+    
+    /**
+     * Value matcher for PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptor property for TgEntityWithPropertyDescriptor entity centre's criterion.
+     *
+     * @author TG Team
+     */
+    public static class TgEntityWithPropertyDescriptorPropertyDescriptorMatcher extends AbstractSearchEntityByKeyWithCentreContext<PropertyDescriptor<TgPersistentEntityWithProperties>> {
+
+        @Inject
+        public TgEntityWithPropertyDescriptorPropertyDescriptorMatcher() {
+            super(null);
+        }
+
+        @Override
+        public List<PropertyDescriptor<TgPersistentEntityWithProperties>> findMatches(final String searchString) {
+            // final Class<WorkOrder> enclosingEntityType = (Class<WorkOrder>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, WoStatusRequiredProperty.class, "requiredProperty").value();
+            final List<PropertyDescriptor<TgPersistentEntityWithProperties>> allPropertyDescriptors = Finder.getPropertyDescriptors(TgPersistentEntityWithProperties.class);
+            final PojoValueMatcher<PropertyDescriptor<TgPersistentEntityWithProperties>> matcher = new PojoValueMatcher<>(allPropertyDescriptors, AbstractEntity.KEY, allPropertyDescriptors.size());
+            final List<PropertyDescriptor<TgPersistentEntityWithProperties>> matchedPropertyDescriptors = matcher.findMatches(searchString);
+            return matchedPropertyDescriptors;
+        }
+        
+        @Override
+        public List<PropertyDescriptor<TgPersistentEntityWithProperties>> findMatchesWithModel(final String searchString) {
+            return findMatches(searchString);
+        }
+
+        @Override
+        protected EntityResultQueryModel<PropertyDescriptor<TgPersistentEntityWithProperties>> completeEqlBasedOnContext(final CentreContext<PropertyDescriptor<TgPersistentEntityWithProperties>, ?> context, final String searchString, final ICompoundCondition0<PropertyDescriptor<TgPersistentEntityWithProperties>> incompleteEql) {
+            throw new UnsupportedOperationException("EQL queries should not be used for property descriptors retrieval.");
         }
     }
 
