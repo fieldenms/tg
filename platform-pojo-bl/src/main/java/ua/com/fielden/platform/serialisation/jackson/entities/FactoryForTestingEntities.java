@@ -18,12 +18,8 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 
@@ -131,6 +127,10 @@ public class FactoryForTestingEntities {
 
     public EmptyEntity createSimpleEmptyEntity() {
         return finalise(createPersistedEntity(EmptyEntity.class, 1L, "key", "description"));
+    }
+    
+    public PropertyDescriptor<EntityWithInteger> createPropertyDescriptor() {
+        return new PropertyDescriptor<>(EntityWithInteger.class, "prop");
     }
 
     public EmptyEntity createEmptyEntityWithNoId() {

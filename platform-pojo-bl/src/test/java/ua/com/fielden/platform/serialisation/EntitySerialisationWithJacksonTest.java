@@ -28,6 +28,7 @@ import com.google.inject.Module;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -104,7 +105,8 @@ public class EntitySerialisationWithJacksonTest {
                 SubBaseEntity2.class,
                 EntityWithCompositeKey.class,
                 EntityWithMoney.class,
-                EntityWithPolymorphicAEProp.class);
+                EntityWithPolymorphicAEProp.class,
+                PropertyDescriptor.class);
     }
 
     @Test
@@ -737,5 +739,20 @@ public class EntitySerialisationWithJacksonTest {
         assertEquals("Incorrectly restored key.", "key", restoredEntity.getKey());
         assertEquals("Incorrectly restored description.", "description", restoredEntity.getDesc());
         assertEquals("Incorrectly restored entity type.", EntityWithInteger.class, restoredEntity.getType());
+    }
+    
+    @Test
+    public void property_descriptor_should_be_restored() throws Exception {
+        final PropertyDescriptor<EntityWithInteger> entity = factory.createPropertyDescriptor();
+
+        final PropertyDescriptor<EntityWithInteger> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), PropertyDescriptor.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+
+        assertEquals("Incorrect key.", "EntityWithInteger prop Title", restoredEntity.getKey());
+        assertEquals("Incorrect desc.", "EntityWithInteger prop Desc", restoredEntity.getDesc());
+        assertEquals("Incorrect entityType.", EntityWithInteger.class, restoredEntity.getEntityType());
+        assertEquals("Incorrect propertyName.", "prop", restoredEntity.getPropertyName());
     }
 }

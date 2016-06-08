@@ -24,8 +24,8 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -150,6 +150,17 @@ public class SerialisationTestResource extends ServerResource {
                 // type equality
                 if (!EntityUtils.equalsEx(e1.getType(), e2.getType())) {
                     return Result.failure(format("e1 [%s] type [%s] does not equal to e2 [%s] type [%s].", e1, e1.getType(), e2, e2.getType()));
+                }
+                if (EntityUtils.isPropertyDescriptor(e1.getType())) {
+                    final PropertyDescriptor pd1 = (PropertyDescriptor) e1;
+                    final PropertyDescriptor pd2 = (PropertyDescriptor) e2;
+                    if (!EntityUtils.equalsEx(pd1.getEntityType(), pd2.getEntityType())) {
+                        return Result.failure(format("PropertyDescriptors equality: pd1 [%s] entityType [%s] does not equal to pd2 [%s] entityType [%s].", pd1, pd1.getEntityType(), pd2, pd2.getEntityType()));
+                    }
+                    if (!EntityUtils.equalsEx(pd1.getPropertyName(), pd2.getPropertyName())) {
+                        return Result.failure(format("PropertyDescriptors equality: pd1 [%s] propertyName [%s] does not equal to pd2 [%s] propertyName [%s].", pd1, pd1.getPropertyName(), pd2, pd2.getPropertyName()));
+                    }
+                    // TODO what about PD type parameter?
                 }
                 // id equality
                 if (!EntityUtils.equalsEx(e1.getId(), e2.getId())) {
@@ -315,7 +326,8 @@ public class SerialisationTestResource extends ServerResource {
                 createGeneratedEntity(restUtil.getSerialiser(), false), // uninstrumented
                 createGeneratedEntity(restUtil.getSerialiser(), true), // instrumented
                 factory.createInstrumentedEntityWithUninstrumentedProperty(),
-                factory.createUninstrumentedEntityWithInstrumentedProperty()
+                factory.createUninstrumentedEntityWithInstrumentedProperty(),
+                factory.createPropertyDescriptor()
                 );
     }
     
