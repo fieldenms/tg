@@ -1,5 +1,18 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCompositeKeySeparatorDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCritOnlyDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityDescDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityTitleDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isIgnoreDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isLengthDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isPrecisionDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isResultOnlyDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isScaleDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isSecreteDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUpperCaseDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayDescDefault;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -7,18 +20,20 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
+
+import com.esotericsoftware.kryo.Context;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -28,10 +43,6 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDes
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
-
-import com.esotericsoftware.kryo.Context;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Serialises / deserialises descendants of {@link AbstractEntity}.
@@ -84,6 +95,12 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
         // let's inform the client of the type's persistence nature
         entityTypeInfo.set_persistent(EntityUtils.isPersistedEntityType(type));
+        
+        // let's inform the client of whether value descriptions should be displayed in editors of this type
+        final boolean shouldDisplayDescription = AnnotationReflector.isAnnotationPresentForClass(DisplayDescription.class, type);
+        if (!isDisplayDescDefault(shouldDisplayDescription)) {
+            entityTypeInfo.set_displayDesc(shouldDisplayDescription);
+        }
         
         if (EntityUtils.isCompositeEntity(type)) {
             final List<String> compositeKeyNames = new ArrayList<>();
