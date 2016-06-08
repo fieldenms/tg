@@ -78,8 +78,8 @@
                     <tg-month-selector id="defaultPage" page-name="defaultPage" selected-date="{{selectedDate}}"></tg-month-selector>
                     <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}" on-number-selected="_showDefaultPage"></tg-number-selector>
                     <tg-number-selector page-name="monthSelector" selected-number="{{selectedMonth}}" lower-bound="0" upper-bound="11" formatter="[[formatMonth]]" on-number-selected="_showDefaultPage"></tg-number-selector>
-                    <tg-number-selector page-name="hourSelector" selected-number="{{selectedHour}}" lower-bound="[[_getHourLowerBound(showMeridian)]]" upper-bound="[[_getHourUpperBound(showMeridian)]]" on-number-selected="_showDefaultPage"></tg-number-selector>
-                    <tg-number-selector page-name="minuteSelector" selected-number="{{selectedMinute}}" lower-bound="0" upper-bound="59" on-number-selected="_showDefaultPage"></tg-number-selector>
+                    <tg-number-selector page-name="hourSelector" selected-number="{{selectedHour}}" lower-bound="[[_getHourLowerBound(showMeridian)]]" upper-bound="[[_getHourUpperBound(showMeridian)]]" on-number-selected="_timeSelected"></tg-number-selector>
+                    <tg-number-selector page-name="minuteSelector" selected-number="{{selectedMinute}}" lower-bound="0" upper-bound="59" on-number-selected="_timeSelected"></tg-number-selector>
                 </neon-animated-pages>
             </div>
         </div>
@@ -130,6 +130,8 @@
                     type: Boolean,
                     value: moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a") >= 0
                 },
+                seconds: Number,
+                milis: Number,
                 _months: Array
             },
             
@@ -150,6 +152,8 @@
                 this.selectedDate = this.selectedDate || todayDate.getTime();
                 this.selectedHour = (typeof this.selectedHour !== undefined && this.selectedHour !== null) ? this.selectedHour : todayDate.getHours();
                 this.selectedMinute = (typeof this.selectedMinute !== undefined && this.selectedMinute !== null) ? this.selectedMinute : todayDate.getMinutes();
+                this.seconds = this.seconds || 0;
+                this.milis = this.milis || 0;
             },
 
             /**
@@ -191,6 +195,12 @@
 
             _showDefaultPage: function () {
                 this._selectedPage = "defaultPage";
+            },
+            
+            _timeSelected: function() {
+                this._showDefaultPage();
+                this.seconds = 0;
+                this.milis = 0;
             },
 
             _showHourSelector: function () {
