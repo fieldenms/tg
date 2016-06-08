@@ -13,13 +13,16 @@ import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
@@ -30,10 +33,13 @@ import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.reflection.ClassesRetriever;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.ExportActionProducer;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
@@ -44,6 +50,7 @@ import ua.com.fielden.platform.sample.domain.MiDetailsCentre;
 import ua.com.fielden.platform.sample.domain.MiEntityCentreNotGenerated;
 import ua.com.fielden.platform.sample.domain.MiTgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.MiTgEntityWithPropertyDependency;
+import ua.com.fielden.platform.sample.domain.MiTgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties1;
@@ -61,6 +68,7 @@ import ua.com.fielden.platform.sample.domain.TgDummyAction;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependencyProducer;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
@@ -107,9 +115,9 @@ import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
-import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
@@ -292,7 +300,40 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     centre.getSecondTick().setWidth(TgEntityWithPropertyDependency.class, "dependentProp", 60);
                     return centre;
                 });
+        
+        final EntityCentre<TgEntityWithPropertyDescriptor> propDescriptorCentre = new EntityCentre<>(MiTgEntityWithPropertyDescriptor.class, "Property Descriptor Example",
+                EntityCentreBuilder.centreFor(TgEntityWithPropertyDescriptor.class)
+                .runAutomatically()
+                .addTopAction(action(EntityNewAction.class).
+                        withContext(context().withSelectionCrit().build()).
+                        icon("add-circle-outline").
+                        shortDesc("Add new").
+                        longDesc("Starts creation of entities").
+                        build())
+                .also()
+                .addTopAction(action(EntityDeleteAction.class).
+                        withContext(context().withSelectedEntities().build()).
+                        icon("remove-circle-outline").
+                        shortDesc("Delete selected").
+                        longDesc("Deletes the selected entities").
+                        build())
+                .addCrit("this").asMulti().autocompleter(TgEntityWithPropertyDescriptor.class).also()
+                .addCrit("propertyDescriptor").asMulti().autocompleter((Class<PropertyDescriptor<TgPersistentEntityWithProperties>>) ClassesRetriever.findClass("ua.com.fielden.platform.entity.meta.PropertyDescriptor"))
+                    .withMatcher(TgEntityWithPropertyDescriptorPropertyDescriptorMatcher.class, context().withSelectedEntities().build())
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
 
+                .addProp("this")
+                    .width(60)
+                .also()
+                .addProp("propertyDescriptor")
+                    .width(160)
+                .addPrimaryAction(action(EntityEditAction.class).
+                        withContext(context().withCurrentEntity().withSelectionCrit().build()).
+                        icon("editor:mode-edit").
+                        shortDesc("Edit entity").
+                        longDesc("Opens master for editing this entity").
+                        build())
+                .build(), injector(), null);
 
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre = createEntityCentre(MiTgPersistentEntityWithProperties.class, "TgPersistentEntityWithProperties", createEntityCentreConfig(true, true, false, true));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentreNotGenerated = createEntityCentre(MiEntityCentreNotGenerated.class, "MiEntityCentreNotGenerated", createEntityCentreConfig(true, true, false, false));
@@ -312,6 +353,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().addCentre(entityCentre4);
         configApp().addCentre(detailsCentre);
         configApp().addCentre(propDependencyCentre);
+        configApp().addCentre(propDescriptorCentre);
         configApp().addCentre(userWebUiConfig.centre);
         configApp().addCentre(userRoleWebUiConfig.centre);
 
@@ -802,6 +844,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addMenuItem("Custom View").description("Custom view description").view(customView).done()
                 .addMenuItem("Deletion Centre").description("Deletion centre description").centre(deletionTestCentre).done()
                 .addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
+                .addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
@@ -917,6 +960,38 @@ public class WebUiConfig extends AbstractWebUiConfig {
         protected EntityResultQueryModel<TgPersistentEntityWithProperties> completeEqlBasedOnContext(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString, final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
             System.out.println("EntityPropValueMatcherForCentre: CONTEXT == " + getContext());
             return incompleteEql.model();
+        }
+    }
+    
+    /**
+     * Value matcher for PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptor property for TgEntityWithPropertyDescriptor entity centre's criterion.
+     *
+     * @author TG Team
+     */
+    public static class TgEntityWithPropertyDescriptorPropertyDescriptorMatcher extends AbstractSearchEntityByKeyWithCentreContext<PropertyDescriptor<TgPersistentEntityWithProperties>> {
+
+        @Inject
+        public TgEntityWithPropertyDescriptorPropertyDescriptorMatcher() {
+            super(null);
+        }
+
+        @Override
+        public List<PropertyDescriptor<TgPersistentEntityWithProperties>> findMatches(final String searchString) {
+            // final Class<WorkOrder> enclosingEntityType = (Class<WorkOrder>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, WoStatusRequiredProperty.class, "requiredProperty").value();
+            final List<PropertyDescriptor<TgPersistentEntityWithProperties>> allPropertyDescriptors = Finder.getPropertyDescriptors(TgPersistentEntityWithProperties.class);
+            final PojoValueMatcher<PropertyDescriptor<TgPersistentEntityWithProperties>> matcher = new PojoValueMatcher<>(allPropertyDescriptors, AbstractEntity.KEY, allPropertyDescriptors.size());
+            final List<PropertyDescriptor<TgPersistentEntityWithProperties>> matchedPropertyDescriptors = matcher.findMatches(searchString);
+            return matchedPropertyDescriptors;
+        }
+        
+        @Override
+        public List<PropertyDescriptor<TgPersistentEntityWithProperties>> findMatchesWithModel(final String searchString) {
+            return findMatches(searchString);
+        }
+
+        @Override
+        protected EntityResultQueryModel<PropertyDescriptor<TgPersistentEntityWithProperties>> completeEqlBasedOnContext(final CentreContext<PropertyDescriptor<TgPersistentEntityWithProperties>, ?> context, final String searchString, final ICompoundCondition0<PropertyDescriptor<TgPersistentEntityWithProperties>> incompleteEql) {
+            throw new UnsupportedOperationException("EQL queries should not be used for property descriptors retrieval.");
         }
     }
 

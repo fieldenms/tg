@@ -28,9 +28,9 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
-import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.EntityType;
@@ -44,14 +44,16 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     private final List<CachedProperty> properties;
     private final EntityType entityType;
     private final boolean excludeNulls;
+    private final boolean propertyDescriptorType;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls, final boolean propertyDescriptorType) {
         super(type);
 
         this.type = type;
         this.properties = properties;
         this.entityType = entityType;
         this.excludeNulls = excludeNulls;
+        this.propertyDescriptorType = propertyDescriptorType;
     }
 
     @Override
@@ -91,6 +93,13 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
             generator.writeFieldName("@id");
             generator.writeObject(newReference);
             
+            if (propertyDescriptorType) {
+                final PropertyDescriptor<?> pd = (PropertyDescriptor<?>) entity;
+                // write property descriptor toString() value to special '@pdString' field
+                generator.writeFieldName("@pdString");
+                generator.writeObject(pd.toString());
+            }
+            
             final boolean uninstrumented = !PropertyTypeDeterminator.isInstrumented(entity.getClass());
             if (uninstrumented) {
                 generator.writeFieldName("@uninstrumented");
@@ -109,7 +118,6 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                 generator.writeObject(entity.getVersion());
             }
             
-
             // serialise all the properties relying on the fact that property sequence is consistent with order of fields in the class declaration
             for (final CachedProperty prop : properties) {
                 // non-composite keys should be persisted by identifying their actual type
@@ -179,7 +187,6 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             }
                         }
                     }
-
                 }
             }
 

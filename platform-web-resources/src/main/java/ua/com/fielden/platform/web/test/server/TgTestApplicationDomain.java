@@ -15,6 +15,7 @@ import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
@@ -66,6 +67,7 @@ public class TgTestApplicationDomain implements IApplicationDomainProvider {
         add(TgCreatePersistentStatusAction.class);
         add(TgDummyAction.class);
         add(TgEntityWithPropertyDependency.class);
+        add(TgEntityWithPropertyDescriptor.class);
         add(DumpCsvTxtProcessor.class);
         add(NewEntityAction.class);
         add(ExportAction.class);

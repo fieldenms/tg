@@ -49,9 +49,11 @@ public class PojoValueMatcher<T extends AbstractEntity<?>> implements IValueMatc
         return exec;
     }
 
+    public final static Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
+    
     @Override
     public List<T> findMatches(final String v) {
-        final String value = isCaseSensitive ? v : v.toUpperCase();
+        final String value = SPECIAL_REGEX_CHARS.matcher(isCaseSensitive ? v : v.toUpperCase()).replaceAll("\\\\$0");
         final List<T> possibleEntities = new ArrayList<T>();
         final int substringLen = value.length();
         if (substringLen == 0) {
