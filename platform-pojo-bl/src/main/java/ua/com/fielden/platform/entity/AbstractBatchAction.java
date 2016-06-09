@@ -7,6 +7,7 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.error.Result;
 
 /**
  * The entity that collects data for batch save.
@@ -143,5 +144,11 @@ public abstract class AbstractBatchAction<T extends AbstractEntity<?>> extends A
      */
     public Set<T> getSaveEntities() {
         return Collections.unmodifiableSet(saveEntities);
+    }
+    
+    @Override
+    protected Result validate() {
+        // no validation is required
+        return Result.successful(this);
     }
 }

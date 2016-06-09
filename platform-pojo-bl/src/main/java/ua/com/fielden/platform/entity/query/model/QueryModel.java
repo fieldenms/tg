@@ -54,7 +54,7 @@ public abstract class QueryModel<T extends AbstractEntity<?>> extends AbstractMo
         return true;
     }
 
-    public Class<? extends AbstractEntity<?>> getResultType() {
+    public Class<T> getResultType() {
         return resultType;
     }
 

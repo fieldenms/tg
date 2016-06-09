@@ -23,7 +23,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.web.CompanionResourceFactory;
+import ua.com.fielden.platform.web.factories.CompanionResourceFactory;
 
 import com.google.inject.Injector;
 

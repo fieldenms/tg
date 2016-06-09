@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -32,10 +33,12 @@ import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
+import ua.com.fielden.platform.pagination.EmptyPage;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -44,10 +47,13 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.swing.review.DynamicParamBuilder;
+import ua.com.fielden.platform.swing.review.DynamicPropertyAnalyser;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 
 import com.google.inject.Inject;
 
@@ -67,6 +73,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     private final C cdtme;
     private final ICompanionObjectFinder controllerProvider;
+    private Optional<IFetchProvider<T>> additionalFetchProvider = Optional.empty();
+    private Optional<IQueryEnhancer<T>> additionalQueryEnhancer = Optional.empty();
+    private Optional<CentreContext<T, ?>> centreContextForQueryEnhancer = Optional.empty();
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
@@ -87,7 +96,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the centre domain tree manager.
-     * 
+     *
      * @return
      */
     public C getCentreDomainTreeMangerAndEnhancer() {
@@ -96,7 +105,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the copy of centre domain tree manager
-     * 
+     *
      * @return
      */
     //TODO remove this later after details will be implemented using
@@ -106,7 +115,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the root for which this criteria was generated.
-     * 
+     *
      * @return
      */
     public Class<T> getEntityClass() {
@@ -115,7 +124,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the enhanced type for entity class. The entity class is retrieved with {@link #getEntityClass()} method.
-     * 
+     *
      * @return
      */
     @SuppressWarnings("unchecked")
@@ -136,45 +145,198 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @Deprecated
     public IValueMatcher<?> getValueMatcher(final String propertyName) {
-        if (valueMatchers.get(propertyName) == null) {
-            valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher((Class<? extends AbstractEntity<?>>) getType(), propertyName));
-        }
-        return valueMatchers.get(propertyName);
+        throw new UnsupportedOperationException("This is an old Swing related code, which should not be called.");
+        //        if (valueMatchers.get(propertyName) == null) {
+        //            valueMatchers.put(propertyName, valueMatcherFactory.getValueMatcher(getType(), propertyName));
+        //        }
+        //        return valueMatchers.get(propertyName);
     }
 
     /**
-     * Run the configured entity query.
-     * 
-     * @param pageSize
+     * Enhances this criteria entity with custom fetch provider, that will extend the fetching strategy of running queries on top of chosen result-set properties.
+     *
+     * @param additionalFetchProvider
+     */
+    public void setAdditionalFetchProvider(final IFetchProvider<T> additionalFetchProvider) {
+        this.additionalFetchProvider = Optional.of(additionalFetchProvider);
+    }
+
+    /**
+     * Enhances this criteria entity with custom query enhancer and its optional centre context, that will extend the query on top of chosen criteria conditions.
+     *
+     * @param additionalQueryEnhancer
+     * @param centreContextForQueryEnhancer
+     */
+    public void setAdditionalQueryEnhancerAndContext(final IQueryEnhancer<T> additionalQueryEnhancer, final Optional<CentreContext<T, ?>> centreContextForQueryEnhancer) {
+        this.additionalQueryEnhancer = Optional.of(additionalQueryEnhancer);
+        this.centreContextForQueryEnhancer = centreContextForQueryEnhancer;
+    }
+
+    /**
+     * Creates the query model based on 'queryProperties' of the 'managedType' and on custom query enhancer (if any).
+     *
+     * @param managedType
+     * @param queryProperties
+     * @param additionalQueryEnhancer
+     * @param centreContextForQueryEnhancer
      * @return
      */
-    public final IPage<T> run(final int pageSize) {
+    private static <T extends AbstractEntity<?>> EntityResultQueryModel<T> createQuery(final Class<T> managedType, final List<QueryProperty> queryProperties, final Optional<IQueryEnhancer<T>> additionalQueryEnhancer, final Optional<CentreContext<T, ?>> centreContextForQueryEnhancer) {
+        if (additionalQueryEnhancer.isPresent()) {
+            return DynamicQueryBuilder.createQuery(managedType, queryProperties, Optional.of(new Pair<>(additionalQueryEnhancer.get(), centreContextForQueryEnhancer))).model();
+        } else {
+            return DynamicQueryBuilder.createQuery(managedType, queryProperties).model();
+        }
+    }
+
+    /**
+     * Creates the fetch provider based on 'properties' of the 'managedType' and on custom fetch provider (if any).
+     * <p>
+     * Please, note that custom fetch provider can have its top-level type marked as 'instrumented' (or its property fetch providers). If this is the case, then it will override
+     * existing defaults (for top-level entity it will override .lightweight on query builder and for properties it will override their concrete fetch models).
+     *
+     * @param managedType
+     * @param properties
+     * @param additionalFetchProvider
+     * @return
+     */
+    private static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> createFetchModelFrom(final Class<V> managedType, final Set<String> properties, final Optional<IFetchProvider<T>> additionalFetchProvider) {
+        final IFetchProvider<V> rootProvider = properties.contains("") ? EntityUtils.fetchNotInstrumentedWithKeyAndDesc(managedType)
+                : EntityUtils.fetchNotInstrumented(managedType);
+        final IFetchProvider<V> rootProviderWithResultSetProperties = rootProvider.with(properties);
+        if (additionalFetchProvider.isPresent()) {
+            return rootProviderWithResultSetProperties.with(additionalFetchProvider.get().copy(managedType));
+        } else {
+            return rootProviderWithResultSetProperties;
+        }
+    }
+
+    /**
+     * This is temporary solution needed for pagination support on web ui
+     */
+    public IPage<T> getPage(final int pageNumber, final int pageCount, final int pageCapacity) {
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = generateQuery();
+        if (getManagedType().equals(getEntityClass())) {
+            return dao.getPage(resultQuery, pageNumber, pageCount, pageCapacity);
+        } else {
+            generatedEntityController.setEntityType(getManagedType());
+            return generatedEntityController.getPage(resultQuery, pageNumber, pageCount, pageCapacity, getByteArrayForManagedType());
+        }
+    }
+
+    /**
+     * Returns the data page with summary/ Before it retrieves the page it also calculates whether specified page number is in the range available pages.
+     *
+     * @param pageNumber
+     * @param pageCapacity
+     * @return
+     */
+    public Pair<IPage<T>, T> getPageWithSummaries(final int pageNumber, final int pageCapacity) {
+        final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> resultQuery = generateQueryWithSummaries();
+        final int entitiesCount = count(resultQuery.getKey());
+        final int pageSize = entitiesCount % pageCapacity == 0 ? entitiesCount / pageCapacity : entitiesCount / pageCapacity + 1;
+        if (pageSize == 0) {
+            return new Pair<>(new EmptyPage<T>(), null);
+        } else if (pageSize <= pageNumber) {
+            return new Pair<>(getPage(resultQuery.getKey(), pageSize - 1, pageCapacity), getSummary(resultQuery.getValue()));
+        }
+        return new Pair<>(getPage(resultQuery.getKey(), pageNumber, pageCapacity), getSummary(resultQuery.getValue()));
+    }
+
+    /**
+     * Calculates the summaries for specified query.
+     *
+     * @param query
+     * @return
+     */
+    private T getSummary(final QueryExecutionModel<T, EntityResultQueryModel<T>> query) {
+        if (query != null) {
+            final List<T> list = getAllEntities(query);
+            return list.size() == 1 ? list.get(0) : null;
+        }
+        return null;
+    }
+
+    private IPage<T> getPage(final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery, final int pageNumber, final int pageCapacity) {
+        if (getManagedType().equals(getEntityClass())) {
+            return dao.getPage(resultQuery, pageNumber, pageCapacity);
+        } else {
+            generatedEntityController.setEntityType(getManagedType());
+            return generatedEntityController.getPage(resultQuery, pageNumber, pageCapacity, getByteArrayForManagedType());
+        }
+    }
+
+    /**
+     * Generates the query and summary query for this entity query criteria.
+     *
+     * @return
+     */
+    private Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> generateQueryWithSummaries() {
         final Class<?> root = getEntityClass();
         final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
         final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
         final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
-        final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
-        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
-        .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
-        .with(DynamicFetchBuilder.createFetchOnlyModel(getManagedType(), separatedFetch.getKey()))//
-        .with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
+        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
+        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider);
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
+                .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
+                .with(fetchProvider.fetchModel())//
+                .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
         if (!separatedFetch.getValue().isEmpty()) {
-            final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = from(notOrderedQuery)//
-            .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue()))//
-            .with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
-            return firstPage(resultQuery, totalQuery, pageSize);
+            final QueryExecutionModel<T, EntityResultQueryModel<T>> totalQuery = adjustLightweightness(notOrderedQuery, false)
+                    .with(DynamicFetchBuilder.createTotalFetchModel(getManagedType(), separatedFetch.getValue()))//
+                    .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
+            return new Pair<>(resultQuery, totalQuery);
+        }
+        return new Pair<>(resultQuery, null);
+    }
+
+    private int count(final QueryExecutionModel<T, EntityResultQueryModel<T>> query) {
+        return dao.count(query.getQueryModel(), query.getParamValues());
+    }
+
+    /**
+     * This is temporary solution needed for pagination support on web ui
+     */
+    public IPage<T> getPage(final int pageNumber, final int pageCapacity) {
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = generateQuery();
+        if (getManagedType().equals(getEntityClass())) {
+            return dao.getPage(resultQuery, pageNumber, pageCapacity);
         } else {
-            return run(resultQuery, pageSize);
+            generatedEntityController.setEntityType(getManagedType());
+            return generatedEntityController.getPage(resultQuery, pageNumber, pageCapacity, getByteArrayForManagedType());
+        }
+    }
+
+    private Map<String, Object> enhanceQueryParams(final Map<String, Object> buildParametersMap) {
+        if (additionalQueryEnhancer.isPresent()) {
+            return additionalQueryEnhancer.get().enhanceQueryParams(buildParametersMap, centreContextForQueryEnhancer);
+        }
+        return buildParametersMap;
+    }
+
+    /**
+     * Run the configured entity query.
+     *
+     * @param pageSize
+     * @return
+     */
+    public final IPage<T> run(final int pageSize) {
+        final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = generateQueryWithSummaries();
+        if (queries.getValue() != null) {
+            return firstPage(queries.getKey(), queries.getValue(), pageSize);
+        } else {
+            return run(queries.getKey(), pageSize);
         }
     }
 
     /**
      * Runs the specified query and returns result.
-     * 
+     *
      * @param queryModel
      * @param pageSize
      * @return
@@ -185,7 +347,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Runs the specified query model and returns the result list.
-     * 
+     *
      * @param queryModel
      * @return
      */
@@ -195,7 +357,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Runs the specified query model with managed type and its byte representation. Returns the result page of specified size.
-     * 
+     *
      * @param queryModel
      * @param managedType
      * @param managedTypeArray
@@ -211,7 +373,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Runs the specified query model with managed type and its byte representation.
-     * 
+     *
      * @param queryModel
      * @param managedType
      * @param managedTypeArray
@@ -231,7 +393,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /**
      * Returns the {@link LifecycleModel} instance that corresponds to the given query model, lifecycle property and the interval. If the associated controller isn't lifecycle then
      * it will return null.
-     * 
+     *
      * @param model
      * @param propertyName
      * @param from
@@ -249,7 +411,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the value that indicates whether companion object associated with this criteria is lifecycle or not.
-     * 
+     *
      * @return
      */
     public boolean isLifecycleController() {
@@ -258,7 +420,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Exports data in to the specified external file.
-     * 
+     *
      * @param fileName
      * @param propertyNames
      * @param propertyTitles
@@ -270,17 +432,23 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
         final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
-        final EntityResultQueryModel<T> notOrderedQuery = DynamicQueryBuilder.createQuery(getManagedType(), createQueryProperties()).model();
-        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = from(notOrderedQuery)//
-        .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
-        .with(DynamicFetchBuilder.createFetchOnlyModel(getManagedType(), separatedFetch.getKey()))//
-        .with(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap)).model();
+        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
+        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider);
+        final QueryExecutionModel<T, EntityResultQueryModel<T>> resultQuery = adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
+                .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), tickManager.orderedProperties(root)))//
+                .with(fetchProvider.fetchModel())//
+                .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
         export(fileName, resultQuery, propertyNames, propertyTitles);
+    }
+
+    private QueryExecutionModel.Builder<T, EntityResultQueryModel<T>> adjustLightweightness(final EntityResultQueryModel<T> notOrderedQuery, final boolean shouldBeInstrumented) {
+        // all import row centre should be heavyweight to populate errors trough ACE handlers
+        return shouldBeInstrumented ? from(notOrderedQuery) : from(notOrderedQuery).lightweight();
     }
 
     /**
      * Exports data, those were retrieved with query, in to the file specified with appropriate filename.
-     * 
+     *
      * @param fileName
      * @param query
      * @param propertyNames
@@ -289,7 +457,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     public void export(final String fileName, final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
         final byte[] content;
-        query.setLightweight(true);
+        query.lightweight();
         if (getManagedType().equals(getEntityClass())) {
             content = dao.export(query, propertyNames, propertyTitles);
         } else {
@@ -302,9 +470,41 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         fo.close();
     }
 
+    private QueryExecutionModel<T, EntityResultQueryModel<T>> generateQuery() {
+        final Class<?> root = getEntityClass();
+        final IAddToResultTickManager resultTickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+        final IAddToCriteriaTickManager criteriaTickManager = getCentreDomainTreeMangerAndEnhancer().getFirstTick();
+        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
+        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, resultTickManager, enhancer);
+        final Map<String, Pair<Object, Object>> paramMap = EntityQueryCriteriaUtils.createParamValuesMap(getEntityClass(), getManagedType(), criteriaTickManager);
+        final EntityResultQueryModel<T> notOrderedQuery = createQuery(getManagedType(), createQueryProperties(), additionalQueryEnhancer, centreContextForQueryEnhancer);
+        final IFetchProvider<T> fetchProvider = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider);
+        return adjustLightweightness(notOrderedQuery, fetchProvider.instrumented())
+                .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
+                .with(fetchProvider.fetchModel())//
+                .with(enhanceQueryParams(DynamicParamBuilder.buildParametersMap(getManagedType(), paramMap))).model();
+    }
+
+    public Pair<String[], String[]> generatePropTitlesToExport() {
+        final Class<?> root = getEntityClass();
+        final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
+        final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
+        final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
+        final List<String> propertyNames = new ArrayList<String>();
+        final List<String> propertyTitles = new ArrayList<String>();
+        for (final String propertyName : separatedFetch.getKey()) {
+            if (tickManager.getWidth(root, propertyName) > 0) {
+                final DynamicPropertyAnalyser analyser = new DynamicPropertyAnalyser(getManagedType(), propertyName);
+                propertyNames.add(analyser.getCriteriaFullName());
+                propertyTitles.add(CriteriaReflector.getCriteriaTitleAndDesc(getManagedType(), propertyName).getKey());
+            }
+        }
+        return new Pair<>(propertyNames.toArray(new String[] {}), propertyTitles.toArray(new String[] {}));
+    }
+
     /**
      * Returns the entity for specified id
-     * 
+     *
      * @param entity
      * @return
      */
@@ -313,7 +513,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final IAddToResultTickManager tickManager = getCentreDomainTreeMangerAndEnhancer().getSecondTick();
         final IDomainTreeEnhancer enhancer = getCentreDomainTreeMangerAndEnhancer().getEnhancer();
         final Pair<Set<String>, Set<String>> separatedFetch = EntityQueryCriteriaUtils.separateFetchAndTotalProperties(root, tickManager, enhancer);
-        final fetch<T> fetchModel = DynamicFetchBuilder.createFetchOnlyModel(getManagedType(), separatedFetch.getKey());
+        final fetch<T> fetchModel = createFetchModelFrom(getManagedType(), separatedFetch.getKey(), additionalFetchProvider).fetchModel();
         if (getManagedType().equals(getEntityClass())) {
             return dao.findById(id, fetchModel);
         } else {
@@ -324,7 +524,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Removes the passed entity. If the entity is not of the entity type or managed type of this criteria.
-     * 
+     *
      * @param entity
      */
     public void delete(final T entity) {
@@ -337,7 +537,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns refetched with fetchModel entity for specified one.
-     * 
+     *
      * @param entity
      * @param fetchModel
      * @return
@@ -345,7 +545,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     public T refetchEntity(final T entity, final fetch<T> fetchModel) {
         if (entity.getType().equals(getEntityClass())) {
             return dao.findByEntityAndFetch(fetchModel, entity);
-        } else if (DynamicEntityClassLoader.isEnhanced(entity.getType()) && DynamicEntityClassLoader.getOriginalType(entity.getType()).equals(getEntityClass())) {
+        } else if (DynamicEntityClassLoader.isGenerated(entity.getType()) && DynamicEntityClassLoader.getOriginalType(entity.getType()).equals(getEntityClass())) {
             generatedEntityController.setEntityType(getManagedType());
             return generatedEntityController.findById(entity.getId(), fetchModel, getByteArrayForManagedType());
         }
@@ -356,7 +556,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /**
      * Converts existing properties model (which has separate properties for from/to, is/isNot and so on) into new properties model (which has single abstraction for one
      * criterion).
-     * 
+     *
      * @param properties
      * @return
      */
@@ -372,7 +572,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the first result page for query model. The page size is specified with the second parameter.
-     * 
+     *
      * @param queryModel
      *            - query model for which the first result page must be returned.
      * @param pageSize
@@ -390,7 +590,18 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns all entities those satisfies conditions of the specified {@link QueryExecutionModel}.
-     * 
+     *
+     * @param queryModel
+     *            - query model for which the first result page must be returned.
+     * @return
+     */
+    public final List<T> getAllEntities() {
+        return getAllEntities(generateQuery());
+    }
+
+    /**
+     * Returns all entities those satisfies conditions of the specified {@link QueryExecutionModel}.
+     *
      * @param queryModel
      *            - query model for which the first result page must be returned.
      * @return
@@ -406,7 +617,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns first entities those satisfies conditions of the specified {@link QueryExecutionModel}.
-     * 
+     *
      * @param queryModel
      *            - query model for which the first result page must be returned.
      * @return
@@ -422,7 +633,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the first result page for query model with summary. The page size is specified with the third parameter.
-     * 
+     *
      * @param queryModel
      *            - query model for which the first result page must be returned.
      * @param pageSize
@@ -441,7 +652,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /**
      * Converts existing properties model (which has separate properties for from/to, is/isNot and so on) into new properties model (which has single abstraction for one
      * criterion).
-     * 
+     *
      * @param properties
      * @return
      */
@@ -471,7 +682,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the byte array for the managed type.
-     * 
+     *
      * @return
      */
     private List<byte[]> getByteArrayForManagedType() {
@@ -480,7 +691,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Returns the list of byte arrays for the list of {@link ByteArray} instances.
-     * 
+     *
      * @param list
      * @return
      */

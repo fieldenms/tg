@@ -24,9 +24,9 @@ import com.google.inject.Injector;
 
 /**
  * A test case for an entity with byte array as a property. Ensures correct entity-like behaviour.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class EntityWithByteArrayTest {
     private boolean observed = false; // used
@@ -34,8 +34,7 @@ public class EntityWithByteArrayTest {
     {
         module.getDomainValidationConfig().setValidator(EntityWithByteArray.class, "byteArray", new HappyValidator() {
             @Override
-            public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
-
+            public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
                 return super.handle(property, newValue, oldValue, mutatorAnnotations);
             }
         });

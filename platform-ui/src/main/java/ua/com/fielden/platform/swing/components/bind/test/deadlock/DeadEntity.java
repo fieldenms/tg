@@ -10,14 +10,13 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 
 /**
  * Entity designed to emulate deadlocks.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
 public class DeadEntity extends AbstractEntity<String> {
@@ -64,7 +63,6 @@ public class DeadEntity extends AbstractEntity<String> {
     // =========================================
 
     @Observable
-    @NotNull
     @DomainValidation
     public void setVehicle(final String vehicle) {
         this.vehicle = vehicle;
@@ -72,7 +70,6 @@ public class DeadEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     @DomainValidation
     public DeadEntity setOdometerReading(final Integer odometerReading) {
         this.odometerReading = odometerReading;

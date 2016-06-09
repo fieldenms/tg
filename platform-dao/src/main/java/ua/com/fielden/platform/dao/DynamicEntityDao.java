@@ -10,14 +10,14 @@ import com.google.inject.Inject;
 /**
  * This DAO is applicable for instantiation of any entity class specified at runtime. However, it is not type safe -- there is no way at compile time to ensure correct values for
  * entity and key types.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @EntityType(AbstractEntity.class)
-public class DynamicEntityDao extends CommonEntityDao {
+public class DynamicEntityDao<E extends AbstractEntity<?>> extends CommonEntityDao<E> {
 
-    private Class<? extends AbstractEntity<?>> entityType;
+    private Class<E> entityType;
     private Class<? extends Comparable> keyType;
     private QueryExecutionModel defaultModel;
 
@@ -29,14 +29,14 @@ public class DynamicEntityDao extends CommonEntityDao {
         super(filter);
     }
 
-    public void setEntityType(final Class<? extends AbstractEntity<?>> type) {
+    public void setEntityType(final Class<E> type) {
         this.entityType = type;
         this.keyType = AnnotationReflector.getKeyType(entityType);
         this.defaultModel = produceDefaultQueryExecutionModel(entityType);
     }
 
     @Override
-    public Class<?> getEntityType() {
+    public Class<E> getEntityType() {
         return entityType;
     }
 

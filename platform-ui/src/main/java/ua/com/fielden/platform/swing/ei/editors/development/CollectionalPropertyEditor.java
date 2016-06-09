@@ -58,7 +58,7 @@ public class CollectionalPropertyEditor implements IPropertyEditor {
         SwingUtilitiesEx.invokeLater(new Runnable() {
             @Override
             public void run() {
-                editor.setText(((Collection<?>) entity.get(propertyName)).size() + "");
+            	editor.setText(((Collection<?>) entity.get(propertyName)).size() + "");
             }
         });
     }

@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
@@ -87,12 +86,6 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     }
 
     @Override
-    public IPage<SecondLevelEntity> firstPage(final QueryExecutionModel<SecondLevelEntity, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public IPage<SecondLevelEntity> getPage(final QueryExecutionModel<SecondLevelEntity, ?> query, final int pageNo, final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
@@ -108,24 +101,6 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
     public SecondLevelEntity save(final SecondLevelEntity entity) {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public void delete(final SecondLevelEntity entity) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<SecondLevelEntity> model, final Map<String, Object> paramValues) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<SecondLevelEntity> model) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -198,4 +173,9 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
         return null;
     }
 
+    @Override
+    public IFetchProvider<SecondLevelEntity> getFetchProvider() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

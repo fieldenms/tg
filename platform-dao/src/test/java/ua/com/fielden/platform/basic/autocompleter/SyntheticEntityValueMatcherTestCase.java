@@ -11,6 +11,7 @@ public class SyntheticEntityValueMatcherTestCase extends DbDrivenTestCase {
 
     @Test
     public void testSyntheticValueMatcherWithSimpleEntities() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         final SyntheticEntityValueMatcher valueMatcher = new SyntheticEntityValueMatcher(injector.getInstance(IEntityAggregatesDao.class), SimpleSyntheticEntity.class);
 
         assertEquals("The number of entities for %entity% param value must be 6", 6, valueMatcher.findMatches("%entity%").size());
@@ -22,6 +23,7 @@ public class SyntheticEntityValueMatcherTestCase extends DbDrivenTestCase {
 
     @Test
     public void testSyntheticvalueMatcherWithComplexEntity() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         final SyntheticEntityValueMatcher valueMatcher = new SyntheticEntityValueMatcher(injector.getInstance(IEntityAggregatesDao.class), ComplexSyntheticEntity.class);
 
         assertEquals("The number of entities for %entity% param value must be 6", 6, valueMatcher.findMatches("%entity%").size());

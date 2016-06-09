@@ -7,6 +7,9 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
+import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
+import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity2;
+import ua.com.fielden.platform.persistence.types.EntityWithAutoAssignableProperties;
 import ua.com.fielden.platform.persistence.types.EntityWithExTaxAndTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithSimpleMoney;
@@ -14,11 +17,14 @@ import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyalty;
+import ua.com.fielden.platform.sample.domain.TgAuthoriser;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgCategory;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
+import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcProps;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgModelCount;
@@ -28,6 +34,8 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.TgOriginator;
+import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
@@ -61,10 +69,12 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
 
     static {
         entityTypes.addAll(PlatformDomainTypes.types);
+        add(TgPerson.class);
         add(TgPersonName.class);
         add(TgAuthor.class);
         add(TgAuthorship.class);
         add(TgAuthorRoyalty.class);
+        add(TgEntityWithLoopedCalcProps.class);
         add(TgBogie.class);
         add(TgBogieClass.class);
         add(TgWagon.class);
@@ -96,10 +106,16 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(EntityWithSimpleTaxMoney.class);
         add(EntityWithSimpleMoney.class);
         add(EntityWithDynamicCompositeKey.class);
+        add(EntityWithAutoAssignableProperties.class);
+        add(EntityBasedOnAbstractPersistentEntity.class);
+        add(EntityBasedOnAbstractPersistentEntity2.class);
         add(TgAverageFuelUsage.class);
         add(TgSystem.class);
         add(TgSubSystem.class);
         add(TgCategory.class);
+        add(TgAuthoriser.class);
+        add(TgOriginator.class);
+        add(TgEntityWithComplexSummaries.class);
     }
 
     @Override

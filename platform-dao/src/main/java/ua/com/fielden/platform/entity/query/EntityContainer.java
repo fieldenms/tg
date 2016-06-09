@@ -1,25 +1,20 @@
 package ua.com.fielden.platform.entity.query;
 
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractUnionEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.utils.EntityUtils;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
-public final class EntityContainer<R extends AbstractEntity<?>> {
+import java.util.HashMap;
+import java.util.Map;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+
+public final class EntityContainer<R extends AbstractEntity<?>> {
     private final Class<R> resultType;
-    private R entity;
+    private Class<? extends R> proxiedResultType;
     private final Map<String, Object> primitives = new HashMap<String, Object>();
     private final Map<String, ValueContainer> composites = new HashMap<String, ValueContainer>();
     private final Map<String, EntityContainer<? extends AbstractEntity<?>>> entities = new HashMap<String, EntityContainer<? extends AbstractEntity<?>>>();
     private final Map<String, CollectionContainer<? extends AbstractEntity<?>>> collections = new HashMap<String, CollectionContainer<? extends AbstractEntity<?>>>();
+    private boolean instrumented = false;
 
     public EntityContainer(final Class<R> resultType) {
         this.resultType = resultType;
@@ -29,92 +24,48 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
         return primitives.size() + entities.size() + composites.size() + collections.size();
     }
 
-    public boolean isEmpty() {
-        return (countAllDataItems() == 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null) || (isUnionEntityType(resultType) && countAllDataItems() == 0);
-    }
-
     public boolean notYetInitialised() {
         return countAllDataItems() == 1 && getId() != null && !isUnionEntityType(resultType);
     }
 
-    public boolean isInstantiated() {
-        return entity != null;
+    public boolean isEmpty() {
+        if (isUnionEntityType(resultType)) {
+            for (final EntityContainer<? extends AbstractEntity<?>> entityContainer : entities.values()) {
+                if (!entityContainer.isEmpty()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return (countAllDataItems() == 1 && primitives.containsKey(AbstractEntity.ID) && getId() == null) || (isUnionEntityType(resultType) && countAllDataItems() == 0);
     }
 
     public Long getId() {
         final Object idObject = primitives.get(AbstractEntity.ID);
-        return idObject != null ? new Long(((Number) idObject).longValue())
+        return idObject != null ? Long.valueOf(((Number) idObject).longValue())
                 : (isUnionEntityType(resultType) ? (entities.values().iterator().hasNext() ? entities.values().iterator().next().getId() : null) : null);
     }
 
-    public R instantiate(final EntityFactory entFactory, final boolean userViewOnly) {
-        entity = userViewOnly ? entFactory.newPlainEntity(resultType, getId()) : entFactory.newEntity(resultType, getId());
-        entity.setInitialising(true);
-        final boolean unionEntity = isUnionEntityType(resultType);
-
-        for (final Map.Entry<String, Object> primPropEntry : primitives.entrySet()) {
-            setPropertyValue(entity, primPropEntry.getKey(), primPropEntry.getValue());
-        }
-
-        for (final Map.Entry<String, ValueContainer> compositePropEntry : composites.entrySet()) {
-            setPropertyValue(entity, compositePropEntry.getKey(), compositePropEntry.getValue().instantiate());
-        }
-
-        for (final Map.Entry<String, EntityContainer<? extends AbstractEntity<?>>> entityEntry : entities.entrySet()) {
-            final Object propValue = determinePropValue(entityEntry.getValue(), entFactory, userViewOnly);
-            setPropertyValue(entity, entityEntry.getKey(), propValue);
-            if (unionEntity && propValue != null /*&& userViewOnly*/) {
-                ((AbstractUnionEntity) entity).ensureUnion(entityEntry.getKey());
-            }
-        }
-
-        for (final Map.Entry<String, CollectionContainer<? extends AbstractEntity<?>>> entityEntry : collections.entrySet()) {
-            setPropertyValue(entity, entityEntry.getKey(), entityEntry.getValue().instantiate(entFactory, userViewOnly));
-        }
-
-        if (!userViewOnly) {
-            EntityUtils.handleMetaProperties(entity);
-        }
-
-        entity.setInitialising(false);
-
-        return entity;
+    public void setInstrumented() {
+        this.instrumented = true;
     }
-
-    private Object determinePropValue(final EntityContainer<? extends AbstractEntity<?>> entityContainer, final EntityFactory entFactory, final boolean userViewOnly) {
-        if (entityContainer == null || entityContainer.notYetInitialised()) {
-            return null;
-        } else if (entityContainer.isInstantiated()) {
-            return entityContainer.entity;
-        } else {
-            return entityContainer.instantiate(entFactory, userViewOnly);
-        }
-    }
-
-    private void setPropertyValue(final R entity, final String propName, final Object propValue) {
-        try {
-            if (EntityAggregates.class.equals(resultType) || propValue instanceof Set) {
-                entity.set(propName, propValue);
-            } else {
-                setPropertyToField(entity, propName, propValue);
-            }
-        } catch (final Exception e) {
-            throw new IllegalStateException("Can't set value [" + propValue + "] of type [" + (propValue != null ? propValue.getClass() : "?") + "] for property [" + propName
-                    + "] due to:" + e);
-        }
-    }
-
-    private void setPropertyToField(final R entity, final String propName, final Object propValue) throws Exception {
-        final Field field = Finder.findFieldByName(resultType, propName);
-        field.setAccessible(true);
-        field.set(entity, propValue);
-        field.setAccessible(false);
+    
+    public boolean isInstrumented() {
+        return instrumented;
     }
 
     public Class<R> getResultType() {
         return resultType;
     }
 
+    public Class<? extends R> getProxiedResultType() {
+        return proxiedResultType;
+    }
+
+    public void setProxiedResultType(Class<? extends R> proxiedResultType) {
+        this.proxiedResultType = proxiedResultType;
+    }
+    
     public Map<String, Object> getPrimitives() {
         return primitives;
     }
@@ -129,5 +80,5 @@ public final class EntityContainer<R extends AbstractEntity<?>> {
 
     public Map<String, CollectionContainer<? extends AbstractEntity<?>>> getCollections() {
         return collections;
-    }
+   }
 }

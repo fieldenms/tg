@@ -7,6 +7,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.restlet.Application;
 import org.restlet.Component;
+import org.restlet.Restlet;
 import org.restlet.data.Protocol;
 
 import ua.com.fielden.platform.rao.RestClientUtil;
@@ -22,9 +23,21 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
  * An instance of pre-configured {@link RestClientUtil} is provided for the use by descendants requiring instantiation of RAO classes.
  * <p>
  * Effectively each web-drive test case is a little web-application.
- * 
+ * <p>
+ * <hr>
+ * <br>
+ * As of recently this class can also be used statically for attaching/detaching restlets from the running server.
+ * This provides a way to reuse the current unit test server not only by extending the class, but also by means of directly
+ * interacting with the unit test server, which is established statically and is the same for all test case instances,
+ * by means of methods {@link WebBasedTestCase#attachWebApplication(Restlet)} and {@link WebBasedTestCase#detachWebApplication(Restlet)}.
+ * <p>
+ * The term <code>WebAppliction</code> in the name of these method refers to a test web application, which should incorporate the routing for all its web resources.
+ * <p>
+ * Since the move to domain driven testing where all data is populated through the domain, there is no really any
+ * practical reason to extend {@link WebBasedTestCase}.
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class WebBasedTestCase extends Application {
     protected static final Component component = new Component();
@@ -38,6 +51,34 @@ public abstract class WebBasedTestCase extends Application {
         }
     }
 
+    /**
+     * Attaches the provided restlet to the running server at the specified path prefix.
+     *
+     * @param restlet
+     */
+    public static void attachWebApplication(final String pathPrefix, final Restlet restlet) {
+        try {
+            component.getDefaultHost().attach(pathPrefix, restlet);
+        } catch (final Exception e) {
+            e.printStackTrace();
+            System.exit(100);
+        }
+
+    }
+
+    /**
+     * Removes web application with all its routes from the test web server.
+     *
+     * @param restlet
+     */
+    public static void detachWebApplication(final Restlet restlet) {
+        try {
+            component.getDefaultHost().detach(restlet);
+        } catch (final Exception e) {
+            e.printStackTrace();
+            System.exit(100);
+        }
+    }
     protected DbDrivenTestCase dbDrivenTestCase = new DbDrivenTestCase() {
         @Override
         protected String[] getDataSetPathsForInsert() {
@@ -67,8 +108,8 @@ public abstract class WebBasedTestCase extends Application {
     @Before
     public void setUp() {
         try {
-            component.getDefaultHost().attach("/v1", this); // needed for application versioned resources
-            component.getDefaultHost().attach("/system", this); // needed for application unversioned resources such as authentication resource
+            attachWebApplication("/v1", this); // needed for application versioned resources
+            attachWebApplication("/system", this); // needed for application unversioned resources such as authentication resource
             if (getDataSetPaths() != null && getDataSetPaths().length > 0) {
                 dbDrivenTestCase.setUp();
             }
@@ -81,7 +122,7 @@ public abstract class WebBasedTestCase extends Application {
     @After
     public void tearDown() {
         try {
-            component.getDefaultHost().detach(this);
+            detachWebApplication(this);
             if (getDataSetPaths() != null && getDataSetPaths().length > 0) {
                 dbDrivenTestCase.tearDown();
             }
@@ -94,7 +135,7 @@ public abstract class WebBasedTestCase extends Application {
     /**
      * This method should be implemented in descendants in order to provide list of paths to datasets, which are to be used with the given test case (via invoking method
      * getDataSet()).
-     * 
+     *
      * @return
      */
     protected abstract String[] getDataSetPaths();

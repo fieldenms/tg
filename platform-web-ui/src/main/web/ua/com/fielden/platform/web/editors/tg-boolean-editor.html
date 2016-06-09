@@ -1,0 +1,119 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/editors/tg-editor-behavior.html">
+<link rel="import" href="/resources/editors/tg-editor.html">
+
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
+
+<dom-module id="tg-boolean-editor">
+    <style>
+        /* Styles for boolean property editors. */
+        paper-checkbox {
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -o-user-select: none;
+            font-family: 'Roboto', 'Noto', sans-serif;
+            --paper-checkbox-checked-color: #0288D1;
+            --paper-checkbox-checked-ink-color: #0288D1;
+            height: 1.8rem;
+        }
+        
+        paper-checkbox::shadow #checkboxContainer {
+            flex-shrink: 0;
+        }
+        paper-checkbox::shadow #checkboxLabel {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.9rem;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            color: #757575 !important;
+        }
+    </style>
+    <template>
+        <tg-editor
+        	id="editorDom"
+        	prop-title="[[propTitle]]"
+        	_disabled="[[_disabled]]"
+        	_editing-value="{{_editingValue}}"
+        	action="[[action]]"
+        	_error="[[_error]]"
+        	_comm-value="[[_commValue]]"
+        	_accepted-value="[[_acceptedValue]]"
+        	debug="[[debug]]">
+        	<paper-checkbox
+        		id="input"
+        		class="paper-input-input custom-input boolean-input layout horizontal center"
+        		checked="[[_isBooleanChecked(_editingValue)]]"
+        		disabled$="[[_disabled]]"
+        		on-change="_onChange"
+                tooltip-text$="[[_getTooltip(_editingValue)]]">[[propTitle]]</paper-checkbox>
+        	<content class=".property-action"></content>
+        </tg-editor>
+    </template>
+</dom-module>
+<script>
+    Polymer({
+        is: 'tg-boolean-editor',
+        behaviors: [Polymer.TgBehaviors.TgEditorBehavior],
+
+        properties: {
+            _onChange: {
+                type: Function
+            },
+            
+            _isBooleanChecked: {
+                type: Function
+            }
+        },
+
+        ready: function () {
+            this.$.editorDom._editorKind = "BOOLEAN";
+            
+            this._onChange = (function (e) {
+                console.log("_onChange:", e);
+                var target = e.target || e.srcElement;
+                this._editingValue = this.convertToString(target.checked);
+                
+    			var parentFunction = Polymer.TgBehaviors.TgEditorBehavior.properties._onChange.value.call(this);
+    			parentFunction.call(this, e);
+            }).bind(this);
+            
+            this._isBooleanChecked = (function (editingValue) {
+                return editingValue === 'true';
+            }).bind(this);
+        },
+        
+        /**
+         * This method returns a default value for '_editingValue', which is used 
+         *  for representing the value when no entity was bound to this editor yet.
+         *
+         * Overriden to return 'false' as the value that will be used when no entity is bound to this editor yet.
+         */
+        _defaultEditingValue: function () {
+        	return 'false';
+        },
+        
+        /**
+         * Converts the value into string representation (which is used in edititing / comm values).
+         */
+        convertToString: function (value) {
+            return "" + value;
+        },
+
+        /**
+         * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
+         */
+        convertFromString: function (strValue) {
+            if (strValue !== "false" && strValue !== "true") {
+                throw "The entered check value is incorrect [" + strValue + "].";
+            }
+            return strValue === "true" ? true : false;
+        }
+    });
+</script>

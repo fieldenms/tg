@@ -12,7 +12,7 @@ import ua.com.fielden.platform.swing.menu.TreeMenuWithTabs;
 import ua.com.fielden.platform.swing.menu.api.ITreeMenuFactory;
 import ua.com.fielden.platform.swing.menu.api.ITreeMenuItemFactory;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 
 import com.google.inject.Injector;
 
@@ -29,7 +29,7 @@ public class TreeMenuFactory implements ITreeMenuFactory {
     private final Injector injector;
     private final ITreeMenuItemFactory defaultFactory;
     private final IUserProvider userProvider;
-    private final IMainMenuItemInvisibilityController mmiController;
+    private final IMainMenuItemInvisibility mmiController;
 
     public TreeMenuFactory(final TreeMenuItem<?> root, final TreeMenuWithTabs<?> menu, final Injector injector) {
         this.root = root;
@@ -37,7 +37,7 @@ public class TreeMenuFactory implements ITreeMenuFactory {
         this.injector = injector;
         this.defaultFactory = new DefaultTreeMenuItemFactory();
         this.userProvider = injector.getInstance(IUserProvider.class);
-        this.mmiController = injector.getInstance(IMainMenuItemInvisibilityController.class);
+        this.mmiController = injector.getInstance(IMainMenuItemInvisibility.class);
     }
 
     @Override

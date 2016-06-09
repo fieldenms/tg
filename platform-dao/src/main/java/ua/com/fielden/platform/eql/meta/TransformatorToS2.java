@@ -132,13 +132,12 @@ public class TransformatorToS2 {
     public void addSource(final ISource1<? extends ISource2> source) {
         final ISource2 transformedSource = transformSource(source);
         if (EntityAggregates.class.equals(transformedSource.sourceType())) {
-            final EntityInfo entAggEntityInfo = new EntityInfo(EntityAggregates.class);
+            final EntityInfo entAggEntityInfo = new EntityInfo(EntityAggregates.class, null);
             for (final Yield2 yield : ((QueryBasedSource2) transformedSource).getYields().getYields()) {
                 final AbstractPropInfo aep = AbstractEntity.class.isAssignableFrom(yield.javaType()) ? new EntityTypePropInfo(yield.getAlias(), entAggEntityInfo, metadata.get(yield.javaType()), null)
                         : new PrimTypePropInfo(yield.getAlias(), entAggEntityInfo, yield.javaType(), null);
                 entAggEntityInfo.getProps().put(yield.getAlias(), aep);
             }
-
             getCurrentQueryMap().put(source, new SourceInfo(transformedSource, entAggEntityInfo, true, source.getAlias()));
         } else {
             getCurrentQueryMap().put(source, new SourceInfo(transformedSource, metadata.get(transformedSource.sourceType()), true, source.getAlias()));

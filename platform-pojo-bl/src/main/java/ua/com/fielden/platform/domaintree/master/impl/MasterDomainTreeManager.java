@@ -110,14 +110,14 @@ public class MasterDomainTreeManager extends AbstractDomainTree implements IMast
      * 
      */
     public static class MasterDomainTreeManagerSerialiser extends AbstractDomainTreeSerialiser<MasterDomainTreeManager> {
-        public MasterDomainTreeManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public MasterDomainTreeManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
         public MasterDomainTreeManager read(final ByteBuffer buffer) {
             final LocatorManager locatorManager = readValue(buffer, LocatorManager.class);
-            return new MasterDomainTreeManager(kryo(), locatorManager);
+            return new MasterDomainTreeManager(serialiser(), locatorManager);
         }
 
         @Override

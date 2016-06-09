@@ -10,9 +10,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * This validator implements a check for a numerical value to be not greater than the specified limit.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class MaxValueValidator implements IBeforeChangeEventHandler<Object> {
     private final BigDecimal limit;
@@ -22,7 +22,7 @@ public class MaxValueValidator implements IBeforeChangeEventHandler<Object> {
     }
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
         final Object entity = property.getEntity();
         if (newValue == null) { // no violation
             return new Result(entity, "Value is null.");

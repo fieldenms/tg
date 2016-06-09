@@ -37,7 +37,7 @@ import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
+import ua.com.fielden.platform.serialisation.xstream.GZipOutputStreamEx;
 import ua.com.fielden.platform.swing.egi.AbstractPropertyColumnMapping;
 import ua.com.fielden.platform.swing.egi.EntityGridInspector;
 import ua.com.fielden.platform.swing.egi.coloring.EgiColoringScheme;

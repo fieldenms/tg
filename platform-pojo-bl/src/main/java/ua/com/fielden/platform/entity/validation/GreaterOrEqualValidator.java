@@ -10,9 +10,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * This validator implements a check for limit to be greater or equal to the specified limit. If applicable to properties of type BigDecimal and Money.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class GreaterOrEqualValidator implements IBeforeChangeEventHandler<Object> {
     private final BigDecimal limit;
@@ -22,7 +22,7 @@ public class GreaterOrEqualValidator implements IBeforeChangeEventHandler<Object
     }
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue == null) {
             return new Result(null, "Value is null and thus not applicable for validation.");
         }

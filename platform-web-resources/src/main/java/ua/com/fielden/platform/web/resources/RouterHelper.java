@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.resources;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -10,28 +12,27 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.file_reports.IReportDaoFactory;
-import ua.com.fielden.platform.web.AttachmentDownloadResourceFactory;
-import ua.com.fielden.platform.web.AttachmentInstanceResourceFactory;
-import ua.com.fielden.platform.web.AttachmentQueryResourceFactory;
-import ua.com.fielden.platform.web.AttachmentTypeResourceFactory;
-import ua.com.fielden.platform.web.EntityAggregatesQueryExportResourceFactory;
-import ua.com.fielden.platform.web.EntityAggregatesQueryResourceFactory;
-import ua.com.fielden.platform.web.EntityInstanceResourceFactory;
-import ua.com.fielden.platform.web.EntityLifecycleResourceFactory;
-import ua.com.fielden.platform.web.EntityQueryExportResourceFactory;
-import ua.com.fielden.platform.web.EntityTypeResourceFactory;
-import ua.com.fielden.platform.web.GeneratedEntityQueryExportResourceFactory;
-import ua.com.fielden.platform.web.GeneratedEntityQueryResourceFactory;
-import ua.com.fielden.platform.web.ReportResourceFactory;
-import ua.com.fielden.platform.web.SnappyQueryRestlet;
-
-import com.google.inject.Injector;
+import ua.com.fielden.platform.web.factories.AttachmentDownloadResourceFactory;
+import ua.com.fielden.platform.web.factories.AttachmentInstanceResourceFactory;
+import ua.com.fielden.platform.web.factories.AttachmentQueryResourceFactory;
+import ua.com.fielden.platform.web.factories.AttachmentTypeResourceFactory;
+import ua.com.fielden.platform.web.factories.EntityAggregatesQueryExportResourceFactory;
+import ua.com.fielden.platform.web.factories.EntityAggregatesQueryResourceFactory;
+import ua.com.fielden.platform.web.factories.EntityInstanceResourceFactory;
+import ua.com.fielden.platform.web.factories.EntityLifecycleResourceFactory;
+import ua.com.fielden.platform.web.factories.EntityQueryExportResourceFactory;
+import ua.com.fielden.platform.web.factories.EntityTypeResourceFactory;
+import ua.com.fielden.platform.web.factories.GeneratedEntityQueryExportResourceFactory;
+import ua.com.fielden.platform.web.factories.GeneratedEntityQueryResourceFactory;
+import ua.com.fielden.platform.web.factories.ReportResourceFactory;
+import ua.com.fielden.platform.web.factories.SnappyQueryRestlet;
+import ua.com.fielden.platform.web.factories.webui.FileProcessingResourceFactory;
 
 /**
  * Provides convenient methods for routing standard entity resources.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class RouterHelper {
     private final Injector injector;
@@ -65,7 +66,7 @@ public final class RouterHelper {
 
     /**
      * Registers all the necessary resources for {@link Attachment} with the router.
-     * 
+     *
      * @param router
      * @param location
      */
@@ -85,7 +86,7 @@ public final class RouterHelper {
         final Restlet instanceResource = new AttachmentInstanceResourceFactory(location, injector, factory);
         router.attach("/users/{username}/" + Attachment.class.getSimpleName() + "/{entity-id}", instanceResource);
     }
-
+    
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerInstanceResource(final Router router, final Class<DAO> daoType) {
         final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimise it
         final Restlet instanceResource = new EntityInstanceResourceFactory<T, DAO>(daoType, injector, factory);

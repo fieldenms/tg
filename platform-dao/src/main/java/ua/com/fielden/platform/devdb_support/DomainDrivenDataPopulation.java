@@ -103,7 +103,7 @@ public abstract class DomainDrivenDataPopulation {
                 st.close();
 
                 // create truncate statements
-                for (final PersistedEntityMetadata entry : config.getDomainMetadata().getEntityMetadatas()) {
+                for (final PersistedEntityMetadata entry : config.getDomainMetadata().getPersistedEntityMetadatas()) {
                     truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
                 }
             }

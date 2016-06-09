@@ -11,7 +11,7 @@ public class EntityTypePropInfo extends AbstractPropInfo {
     }
 
     public EntityTypePropInfo(final String name, final EntityInfo parent, final EntityInfo propEntityInfo, final Expression1 expression) {
-        super(name, parent, expression, true);
+        super(name, parent, expression);
         this.propEntityInfo = propEntityInfo;
     }
 

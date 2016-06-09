@@ -33,9 +33,9 @@ import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
 
 /**
  * A test for {@link CalculatedProperty}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CalculatedPropertyTest extends AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////

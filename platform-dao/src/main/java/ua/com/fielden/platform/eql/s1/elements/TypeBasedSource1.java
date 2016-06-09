@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
-import ua.com.fielden.platform.dao.eql.EntityMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.TransformatorToS2;
 import ua.com.fielden.platform.eql.s2.elements.TypeBasedSource2;
@@ -20,7 +19,6 @@ public class TypeBasedSource1 extends AbstractSource1<TypeBasedSource2> {
     @Override
     public TypeBasedSource2 transform(final TransformatorToS2 resolver) {
         return (TypeBasedSource2) resolver.getTransformedSource(this);
-        //return new ua.com.fielden.platform.eql.s2.elements.TypeBasedSource(entityMetadata, alias, getDomainMetadataAnalyser());
     }
 
     @Override

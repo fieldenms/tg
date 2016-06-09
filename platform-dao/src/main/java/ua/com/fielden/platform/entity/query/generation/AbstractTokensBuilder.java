@@ -1,5 +1,14 @@
 package ua.com.fielden.platform.entity.query.generation;
 
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.GROUPED_CONDITIONS;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IPARAM;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IVAL;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PARAM;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -14,21 +23,12 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.ISetOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
-import ua.com.fielden.platform.entity.query.generation.elements.Now;
 import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryBasedSet;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EQUERY_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.EXPR_TOKENS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.GROUPED_CONDITIONS;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IPARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.IVAL;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PARAM;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.PROP;
-import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
 
 /**
  * Abstract builder to accumulate tokens until ready for respective model creation.
@@ -125,6 +125,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
     }
 
+    @Override
     public void add(final TokenCategory cat, final Object value) {
         if (child != null) {
             child.add(cat, value);
@@ -160,10 +161,12 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         }
     }
 
+    @Override
     public boolean canBeClosed() {
         return isClosing();
     }
 
+    @Override
     public void finaliseChild() {
         if (child != null) {
             final ITokensBuilder last = child;
@@ -230,7 +233,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case COUNT_ALL:
             return new CountAll();
         case NOW:
-            return new Now(getDbVersion());
+            return new EntValue(getParamValue(EntQueryGenerator.NOW)); //return new Now(getDbVersion());
 
         default:
             throw new RuntimeException("Unrecognised zero agrument function: " + function);

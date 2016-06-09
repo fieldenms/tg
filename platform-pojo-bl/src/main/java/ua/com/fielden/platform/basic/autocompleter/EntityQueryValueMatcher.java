@@ -3,32 +3,32 @@
  */
 package ua.com.fielden.platform.basic.autocompleter;
 
-import java.lang.reflect.Field;
-import java.util.List;
-
-import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.lang.reflect.Field;
+import java.util.List;
+
+import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
+
 /**
  * Value matcher that uses {@link EntityQuery} inside and, thus, it can be provided with already formed queries.
- * 
+ *
  * @author TG Team
  */
-public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IValueMatcher<T> {
+public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IValueMatcherWithFetch<T> {
 
     private final IEntityDao<T> dao;
 
@@ -44,7 +44,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
     /**
      * Creates a matcher that matches entities by their property <code>propertyName</code> (can be a dot notated property) and orders the result set by property
      * <code>orderBy</code> (can also be a dot notated property).
-     * 
+     *
      * @param dao
      * @param propertyName
      * @param orderBy
@@ -58,7 +58,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
         // Entity's key may have a composite nature.
         // In order to support more intuitive autocompletion for such entities, it is necessary to enhance matching query
         final Pair<Class<?>, String> pair = PropertyTypeDeterminator.transform(dao.getEntityType(), propertyName);
-        if (DynamicEntityKey.class != AnnotationReflector.getKeyType(pair.getKey())) { // the key is not composite
+        if (!EntityUtils.isCompositeEntity((Class<T>) pair.getKey())) { // the key is not composite
             this.queryModel = select(dao.getEntityType()).where().prop(propertyName).iLike().param(propertyParamName).model();
         } else { // the key is composite
             final String additionalSearchProp = createSearchProp(propertyName, pair.getKey());
@@ -75,7 +75,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 
     /**
      * Creates a search property based on the original search property <code>propertyName</code> and a pair
-     * 
+     *
      * @param propertyName
      * @param pair
      * @return
@@ -92,7 +92,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 
     /**
      * Creates a matcher that uses property <code>key</code> for ordering the result set.
-     * 
+     *
      * @param dao
      * @param propertyName
      */
@@ -102,7 +102,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 
     /**
      * Creates a matcher based on the passed compound condition, which gets enhanced with "like" expression for propertyName.
-     * 
+     *
      * @param entityQuery
      * @param propertyName
      *            -- should contain alias
@@ -123,7 +123,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
 
     @Override
     public List<T> findMatchesWithModel(final String value) {
-        return dao.getFirstEntities(from(queryModel).with(defaultOrdering).with(propertyParamName, value).with(fetchModel).model(), pageSize);
+        return dao.getFirstEntities(from(queryModel).with(defaultOrdering).with(propertyParamName, value).with(getFetch()).model(), pageSize);
     }
 
     public EntityQueryValueMatcher<T> setPageSize(final int pageSize) {
@@ -141,12 +141,12 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
     }
 
     @Override
-    public <FT extends AbstractEntity<?>> fetch<FT> getFetchModel() {
-        return (fetch<FT>) fetchModel;
+    public fetch<T> getFetch() {
+        return fetchModel;
     }
 
     @Override
-    public <FT extends AbstractEntity<?>> void setFetchModel(final fetch<FT> fetchModel) {
-        this.fetchModel = (fetch<T>) fetchModel;
+    public void setFetch(final fetch<T> fetchModel) {
+        this.fetchModel = fetchModel;
     }
 }

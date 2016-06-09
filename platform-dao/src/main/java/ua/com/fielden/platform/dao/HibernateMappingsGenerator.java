@@ -1,19 +1,22 @@
 package ua.com.fielden.platform.dao;
 
 import static ua.com.fielden.platform.dao.DomainMetadata.specialProps;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import static ua.com.fielden.platform.entity.AbstractEntity.*;
 
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.
@@ -22,9 +25,10 @@ import static ua.com.fielden.platform.entity.AbstractEntity.*;
  *
  */
 public class HibernateMappingsGenerator {
-
+    transient private final Logger logger = Logger.getLogger(this.getClass());
+    
     public String generateMappings(final DomainMetadata domainMetadata) {
-        final Collection<PersistedEntityMetadata> entityMetadatas = domainMetadata.getEntityMetadatas();
+        final Collection<PersistedEntityMetadata> entityMetadatas = domainMetadata.getPersistedEntityMetadatas();
         final StringBuffer sb = new StringBuffer();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         sb.append("<!DOCTYPE hibernate-mapping PUBLIC\n");
@@ -44,7 +48,7 @@ public class HibernateMappingsGenerator {
         sb.append("</hibernate-mapping>");
 
         final String result = sb.toString();
-        // System.out.println(result);
+        logger.debug("\n\n" + result + "\n\n");
         return result;
     }
 

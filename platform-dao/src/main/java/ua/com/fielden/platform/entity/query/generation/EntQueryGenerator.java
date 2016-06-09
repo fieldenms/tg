@@ -1,41 +1,50 @@
 package ua.com.fielden.platform.entity.query.generation;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.QueryExecutionModel;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
 import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBys;
 import ua.com.fielden.platform.entity.query.generation.elements.QueryCategory;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
+    public static final String NOW = "UC#NOW"; 
+    
     private final DbVersion dbVersion;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
+    private final IUniversalConstants universalConstants;
     private final IFilter filter;
     private final String username;
 
-    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
+    public EntQueryGenerator(final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, final IUniversalConstants universalConstants) {
         this.dbVersion = domainMetadataAnalyser.getDbVersion();
         this.domainMetadataAnalyser = domainMetadataAnalyser;
         this.filter = filter;
         this.username = username;
+        this.universalConstants = universalConstants;
     }
 
-    public EntQuery generateEntQueryAsResultQuery(final QueryExecutionModel<?, ?> qem) {
-        return generateEntQuery(qem.getQueryModel(), qem.getOrderModel(), null, qem.getFetchModel(), qem.getParamValues(), QueryCategory.RESULT_QUERY, filter, username);
+    public <T extends AbstractEntity<?>, Q extends QueryModel<T>> EntQuery generateEntQueryAsResultQuery(final Q query, final OrderingModel orderModel, final Class<T> resultType, final IRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
+        final Map<String, Object> localParamValues = new HashMap<>();    
+        localParamValues.putAll(paramValues);
+        
+        if (universalConstants.now() != null) {
+            localParamValues.put(NOW, universalConstants.now().toDate());	
+        }
+    	
+        return generateEntQuery(query, orderModel, resultType, fetchModel, localParamValues, QueryCategory.RESULT_QUERY, filter, username);
     }
 
     public EntQuery generateEntQueryAsSourceQuery(final QueryModel<?> qryModel, final Map<String, Object> paramValues, final Class resultType) {
@@ -43,12 +52,11 @@ public class EntQueryGenerator {
     }
 
     public EntQuery generateEntQueryAsSubquery(final QueryModel<?> qryModel, final Map<String, Object> paramValues) {
-        return generateEntQuery(qryModel, null, null, null, paramValues, QueryCategory.SUB_QUERY, filter, username);
+        return generateEntQuery(qryModel, null, qryModel.getResultType(), null, paramValues, QueryCategory.SUB_QUERY, filter, username);
     }
 
     public EntQueryBlocks parseTokensIntoComponents(final QueryModel<?> qryModel, //
             final OrderingModel orderModel, //
-            final fetch fetchModel, //
             final Map<String, Object> paramValues) {
         final QrySourcesBuilder from = new QrySourcesBuilder(this, paramValues);
         final ConditionsBuilder where = new ConditionsBuilder(null, this, paramValues);
@@ -95,23 +103,21 @@ public class EntQueryGenerator {
     private EntQuery generateEntQuery(final QueryModel<?> qryModel, //
             final OrderingModel orderModel, //
             final Class resultType, //
-            final fetch fetchModel, //
+            final IRetrievalModel fetchModel, //
             final Map<String, Object> paramValues, //
             final QueryCategory category, //
             final IFilter filter, //
             final String username) {
-        Class actualResultType = resultType != null ? resultType : qryModel.getResultType();
-//        FetchModel actualFetchModel = fetchModel == null ? (actualResultType.equals(EntityAggregates.class) ? null : new FetchModel(fetch(actualResultType), domainMetadataAnalyser)) : new FetchModel(fetchModel, domainMetadataAnalyser); 
         return new EntQuery( //
         qryModel.isFilterable(), //
-        parseTokensIntoComponents(qryModel, orderModel, fetchModel, paramValues), //
-        actualResultType, //
+        parseTokensIntoComponents(qryModel, orderModel, /*fetchModel,*/ paramValues), //
+        resultType, //
         category, //
         domainMetadataAnalyser, //
         filter, //
         username, //
         this, //
-        fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), //actualFetchModel, //
+        fetchModel,
         paramValues);
     }
 

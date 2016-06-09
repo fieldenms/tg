@@ -2,6 +2,7 @@ package ua.com.fielden.platform.ui.config;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -9,12 +10,10 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 
 /**
  * This type controls visibility of the main menu items to users based on the specified base user, who is the <code>owner</code> of a {@link MainMenuItemInvisibility} instance. <br>
@@ -22,12 +21,12 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController
  * base user.
  * <p>
  * Instances of this type can be deleted only by base users controlling the main menu configuration for the derived users.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
-@CompanionObject(IMainMenuItemInvisibilityController.class)
+@CompanionObject(IMainMenuItemInvisibility.class)
 @MapEntityTo("MAIN_MENU_INVISIBLE")
 public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
@@ -63,7 +62,6 @@ public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    @NotNull
     @EntityExists(User.class)
     public void setOwner(final User owner) {
         if (owner != null && !owner.isBase()) {

@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.security;
 
 import ua.com.fielden.platform.entity.AbstractBatchAction;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.swing.review.annotations.AssociationAction;
 

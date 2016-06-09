@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
@@ -87,12 +86,6 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     }
 
     @Override
-    public IPage<LastLevelEntity> firstPage(final QueryExecutionModel<LastLevelEntity, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
     public IPage<LastLevelEntity> getPage(final QueryExecutionModel<LastLevelEntity, ?> query, final int pageNo, final int pageCapacity) {
         // TODO Auto-generated method stub
         return null;
@@ -108,24 +101,6 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
     public LastLevelEntity save(final LastLevelEntity entity) {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    @Override
-    public void delete(final LastLevelEntity entity) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<LastLevelEntity> model, final Map<String, Object> paramValues) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<LastLevelEntity> model) {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -201,4 +176,9 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
         return null;
     }
 
+    @Override
+    public IFetchProvider<LastLevelEntity> getFetchProvider() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

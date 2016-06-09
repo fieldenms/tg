@@ -1,3 +1,5 @@
+rebel.xml
+*.synctex.gz
 *.orig
 *.aux
 *.db
@@ -21,13 +23,14 @@
 target
 .classpath
 .project
+.idea
 .settings
 *.class
 *.dtd
 *.nav
 *.snm
 *.vrb
-
+*.old
 
 # Package Files #
 *.jar
@@ -39,3 +42,6 @@ platform-web-resources/src/test/resources/data-files/attachments/NEW-ATTACHMENT-
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# JRevel project config files
+rebel.xml

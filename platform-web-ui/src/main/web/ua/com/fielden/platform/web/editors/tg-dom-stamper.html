@@ -1,0 +1,33 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<!-- 
+  This simple element is very useful for the cases where 
+  there is a need to have some DOM stamped based on calculated DOM
+  text.
+  
+  Use 'domText' property to bind DOM text that is needed to be stamped as inner DOM elements.
+
+ -->
+<dom-module id="tg-dom-stamper">
+    <template></template>
+</dom-module>
+
+<script>
+    Polymer({
+    	is: 'tg-dom-stamper',
+    	
+    	properties: {
+    	    /**
+    	     * DOM text that is needed to be stamped as inner DOM elements.
+    	     */
+    	    domText: {
+    	        type: String,
+    	        observer: '_domTextChanged'
+    	    }
+    	},
+        
+    	_domTextChanged: function (newDomText) {
+    	    Polymer.dom(this.root).innerHTML = newDomText;
+    	}
+    });
+</script>

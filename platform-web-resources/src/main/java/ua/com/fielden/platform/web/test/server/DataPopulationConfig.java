@@ -1,0 +1,86 @@
+package ua.com.fielden.platform.web.test.server;
+
+import java.util.Properties;
+
+import ua.com.fielden.platform.dao.DomainMetadata;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
+import ua.com.fielden.platform.test.DbDrivenTestCase;
+import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+
+import com.google.inject.Injector;
+import com.google.inject.name.Named;
+
+/**
+ * Provides Web UI Testing Server specific implementation of {@link IDomainDrivenTestCaseConfiguration} to be used for creation and population of the target development database
+ * from within of IDE.
+ *
+ * @author TG Team
+ *
+ */
+public final class DataPopulationConfig implements IDomainDrivenTestCaseConfiguration {
+    private final EntityFactory entityFactory;
+    private final Injector injector;
+    private final TgTestApplicationServerModule module;
+
+    /**
+     * Default constructor is required for dynamic instantiation by {@link DbDrivenTestCase}.
+     */
+    public DataPopulationConfig() {
+        // instantiate all the factories and Hibernate utility
+        try {
+            final Properties props = hbc;
+            // application properties
+            props.setProperty("app.name", "TG Test App");
+            props.setProperty("reports.path", "");
+            props.setProperty("domain.path", "../platform-pojo-bl/target/classes");
+            props.setProperty("domain.package", "ua.com.fielden.platform.sample.domain");
+            props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
+            props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
+            props.setProperty("workflow", "development");
+            props.setProperty("email.smtp", "non-existing-server");
+            props.setProperty("email.fromAddress", "tg@fielden.com.au");
+
+            final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
+            module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
+            injector = new ApplicationInjectorFactory().add(module).add(new NewUserNotifierMockBindingModule()).getInjector();
+            entityFactory = injector.getInstance(EntityFactory.class);
+        } catch (final Exception e) {
+            throw new IllegalStateException("Could not create data population configuration.", e);
+        }
+    }
+
+    @Override
+    public EntityFactory getEntityFactory() {
+        return entityFactory;
+    }
+
+    @Override
+    public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
+        return module.getDomainMetaPropertyConfig();
+    }
+
+    @Override
+    public DomainValidationConfig getDomainValidationConfig() {
+        return module.getDomainValidationConfig();
+    }
+
+    @Override
+    public <T> T getInstance(final Class<T> type) {
+        return injector.getInstance(type);
+    }
+
+    @Override
+    public DomainMetadata getDomainMetadata() {
+        return module.getDomainMetadata();
+    }
+    
+    @Override
+    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
+        return module.getIdOnlyProxiedEntityTypeCache();
+    }
+}

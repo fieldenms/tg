@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.expression.lexer.lparen;
 
 import ua.com.fielden.platform.expression.EgTokenCategory;
-import ua.com.fielden.platform.expression.automata.NonDeterministicAutomata.TEXT_POST_PROCESSING;
 import ua.com.fielden.platform.expression.lexer.BaseNonDeterministicAutomata;
 
 /**

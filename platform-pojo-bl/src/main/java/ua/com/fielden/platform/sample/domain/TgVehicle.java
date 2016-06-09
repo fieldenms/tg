@@ -12,6 +12,7 @@ import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -22,7 +23,6 @@ import ua.com.fielden.platform.entity.annotation.PersistedType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
@@ -147,12 +147,21 @@ public class TgVehicle extends AbstractEntity<String> {
     @Calculated
     @Title("Calc Model")
     private TgVehicleModel calcModel;
+    
+    @Observable
+    public TgVehicle setCalcModel(final TgVehicleModel calcModel) {
+        this.calcModel = calcModel;
+        return this;
+    }
+
     private static final ExpressionModel calcModel_ = expr().prop("model").model();
+
 
     @IsProperty
     @Title(value = "Financial details", desc = "Fin Details")
     private TgVehicleFinDetails finDetails;
 
+    //   FIXME
     //    @IsProperty @Calculated @Title("Calc Make")
     //    private TgVehicleMake calcMake;
     //    private static final ExpressionModel calcMake_ = expr().prop("model.make").model();
@@ -164,11 +173,6 @@ public class TgVehicle extends AbstractEntity<String> {
     //	return aggregated;
     //  }
 
-    /**
-     * Constructor for (@link EntityFactory}.
-     */
-    protected TgVehicle() {
-    }
 
     @Observable
     public TgVehicle setFinDetails(final TgVehicleFinDetails finDetails) {
@@ -182,6 +186,12 @@ public class TgVehicle extends AbstractEntity<String> {
 
     public TgFuelUsage getLastFuelUsage() {
         return lastFuelUsage;
+    }
+
+    @Observable
+    protected TgVehicle setLastFuelUsage(final TgFuelUsage fu) {
+        this.lastFuelUsage = fu;
+        return this;
     }
 
     public Integer getConstValueProp() {
@@ -227,7 +237,7 @@ public class TgVehicle extends AbstractEntity<String> {
     public BigDecimal getCalc6() {
         return calc6;
     }
-
+    
     @Observable
     public TgVehicle setLastMeterReading(final BigDecimal lastMeterReading) {
         this.lastMeterReading = lastMeterReading;
@@ -327,6 +337,60 @@ public class TgVehicle extends AbstractEntity<String> {
     @EntityExists(TgVehicle.class)
     public TgVehicle setReplacedBy(final TgVehicle replacedBy) {
         this.replacedBy = replacedBy;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setConstValueProp(final Integer constValueProp) {
+        this.constValueProp = constValueProp;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc0(final BigDecimal calc0) {
+        this.calc0 = calc0;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setLastFuelUsageQty(final BigDecimal lastFuelUsageQty) {
+        this.lastFuelUsageQty = lastFuelUsageQty;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setSumOfPrices(final Money sumOfPrices) {
+        this.sumOfPrices = sumOfPrices;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc2(final BigDecimal calc2) {
+        this.calc2 = calc2;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc3(final BigDecimal calc3) {
+        this.calc3 = calc3;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc4(final BigDecimal calc4) {
+        this.calc4 = calc4;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc5(final BigDecimal calc5) {
+        this.calc5 = calc5;
+        return this;
+    }
+
+    @Observable
+    public TgVehicle setCalc6(final BigDecimal calc6) {
+        this.calc6 = calc6;
         return this;
     }
 }

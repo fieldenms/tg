@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>@title</title>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/@mobileStartupResources.html">
+
+    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="@title">
+    <link rel="icon" sizes="192x192" href="/resources/icons/tg-icon192x192.png">
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="@title">
+    <link rel="apple-touch-icon" href="/resources/icons/tg-icon.png">
+
+    <!-- Tile icon for Win8 (144x144) -->
+    <meta name="msapplication-TileImage" content="/resources/icons/tg-icon144x144.png">
+
+    <style>
+        html {
+            font-size: 10pt;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+
+</head>
+
+<body unresolved class="fullbleed">
+    <template is="dom-bind" id="app">
+        <tg-mobile-app class="fit"></tg-mobile-app>
+    </template>
+    <script>
+        (function () {
+            var app = document.querySelector('#app');
+        })();
+    </script>
+</body>
+
+</html>

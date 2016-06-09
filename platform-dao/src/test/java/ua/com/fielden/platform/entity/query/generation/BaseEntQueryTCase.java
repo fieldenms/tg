@@ -3,30 +3,26 @@ package ua.com.fielden.platform.entity.query.generation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
+import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.dao.PropertyMetadata;
-import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.generation.elements.AbstractSource.PropResolutionInfo;
@@ -39,18 +35,21 @@ import ua.com.fielden.platform.entity.query.generation.elements.ISource;
 import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleMake;
@@ -61,15 +60,20 @@ import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import com.google.inject.Guice;
 
 public class BaseEntQueryTCase {
+    public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
+
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
     protected static final Class<TgVehicle> VEHICLE = TgVehicle.class;
     protected static final Class<TgVehicleFinDetails> VEHICLE_FIN_DETAILS = TgVehicleFinDetails.class;
     protected static final Class<TgVehicleModel> MODEL = TgVehicleModel.class;
     protected static final Class<TgVehicleMake> MAKE = TgVehicleMake.class;
+    protected static final Class<TgPersonName> PERSON_NAME = TgPersonName.class;
+    protected static final Class<TgAuthor> AUTHOR = TgAuthor.class;
     protected static final Class<TgFuelUsage> FUEL_USAGE = TgFuelUsage.class;
     protected static final Class<TgOrgUnit5> ORG5 = TgOrgUnit5.class;
     protected static final Class<TgOrgUnit4> ORG4 = TgOrgUnit4.class;
@@ -81,16 +85,16 @@ public class BaseEntQueryTCase {
     protected static final Class<String> STRING = String.class;
     protected static final Class<Date> DATE = Date.class;
     protected static final Class<Long> LONG = Long.class;
+    protected static final Class<Boolean> BOOLEAN = boolean.class;
     protected static final Class<Integer> INTEGER = Integer.class;
     protected static final Class<BigInteger> BIG_INTEGER = BigInteger.class;
     protected static final Class<BigDecimal> BIG_DECIMAL = BigDecimal.class;
     protected static final Type H_LONG = StandardBasicTypes.LONG;
     protected static final Type H_STRING = StandardBasicTypes.STRING;
+    protected static final Type H_BOOLEAN = StandardBasicTypes.YES_NO;
     protected static final Type H_BIG_DECIMAL = StandardBasicTypes.BIG_DECIMAL;
     protected static final Type H_BIG_INTEGER = StandardBasicTypes.BIG_INTEGER;
     protected static final TypeResolver typeResolver = new TypeResolver();
-
-    public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
 
     static {
         hibTypeDefaults.put(boolean.class, YesNoType.class);
@@ -99,59 +103,56 @@ public class BaseEntQueryTCase {
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
     }
 
-    protected static Type hibtype(final String name) {
-        return typeResolver.basic(name);
-    }
-
     protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
-    private static final EntQueryGenerator qb = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, null, null);
+    private static final EntQueryGenerator qb = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, null, null, Guice.createInjector(new HibernateUserTypesModule()).getInstance(IUniversalConstants.class));
 
-    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
+    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null, Guice.createInjector(new HibernateUserTypesModule()).getInstance(IUniversalConstants.class));
 
     protected static EntQuery entSourceQry(final QueryModel qryModel) {
-        return qb.generateEntQueryAsSourceQuery(qryModel, Collections.EMPTY_MAP, null);
+        return qb.generateEntQueryAsSourceQuery(qryModel, new HashMap<String, Object>(), qryModel.getResultType());
     }
 
     protected static EntQuery entSourceQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
-        return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, null);
+        return qb.generateEntQueryAsSourceQuery(qryModel, paramValues, qryModel.getResultType());
     }
 
     protected static EntQuery entResultQry(final QueryModel qryModel) {
         if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model());
+            return qb.generateEntQueryAsResultQuery((EntityResultQueryModel) qryModel, null, qryModel.getResultType(), null, new HashMap<String, Object>());
         } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
+            return qb.generateEntQueryAsResultQuery((AggregatedResultQueryModel) qryModel, null, qryModel.getResultType(), null, new HashMap<String, Object>());
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }
     }
 
     protected static EntQuery entResultQry(final EntityResultQueryModel qryModel, final OrderingModel orderModel) {
-        return qb.generateEntQueryAsResultQuery(from(qryModel).with(orderModel).model());
+        return qb.generateEntQueryAsResultQuery(qryModel, orderModel, qryModel.getResultType(), null, new HashMap<String, Object>());
     }
 
     protected static EntQuery entResultQry(final QueryModel qryModel, final Map<String, Object> paramValues) {
-        if (qryModel instanceof EntityResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).with(paramValues).model());
-        } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qb.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).with(paramValues).model());
+        if (qryModel instanceof EntityResultQueryModel || qryModel instanceof AggregatedResultQueryModel) {
+            return qb.generateEntQueryAsResultQuery(qryModel, null, qryModel.getResultType(), null, paramValues);
+//        } 
+//        else if (qryModel instanceof AggregatedResultQueryModel) {
+//            return qb.generateEntQueryAsResultQuery(qryModel).with(paramValues).model());
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }
     }
 
     protected static EntQuery entSubQry(final QueryModel qryModel) {
-        return qb.generateEntQueryAsSubquery(qryModel, Collections.EMPTY_MAP);
+        return qb.generateEntQueryAsSubquery(qryModel, new HashMap<String, Object>());
     }
 
     protected static EntQuery entResultQryWithUserFilter(final QueryModel qryModel) {
-        if (qryModel instanceof EntityResultQueryModel) {
-            return qbwf.generateEntQueryAsResultQuery(from((EntityResultQueryModel) qryModel).model());
-        } else if (qryModel instanceof AggregatedResultQueryModel) {
-            return qbwf.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
+        if (qryModel instanceof EntityResultQueryModel || qryModel instanceof AggregatedResultQueryModel) {
+            return qbwf.generateEntQueryAsResultQuery(qryModel, null, qryModel.getResultType(), null, new HashMap<String, Object>());
+//        } else if (qryModel instanceof AggregatedResultQueryModel) {
+//            return qbwf.generateEntQueryAsResultQuery(from((AggregatedResultQueryModel) qryModel).model());
         } else {
             throw new IllegalArgumentException("Instance of incorrect QueryModel descendant");
         }
@@ -256,5 +257,9 @@ public class BaseEntQueryTCase {
 
     public static PropertyMetadata ppi(final String name, final Class javaType, final boolean nullable, final Object hibType, final List<PropertyColumn> columns, final PropertyCategory type) {
         return new PropertyMetadata.Builder(name, javaType, nullable).columns(columns).hibType(hibType).type(type).build();
+    }
+    
+    public static PropertyMetadata ppi(final String name, final Class javaType, final ExpressionModel expressionModel, final Object hibType, final PropertyCategory type, final boolean aggregatedExpression) {
+        return new PropertyMetadata.Builder(name, javaType, true).expression(expressionModel).hibType(hibType).type(type).aggregatedExpression(aggregatedExpression).build();
     }
 }

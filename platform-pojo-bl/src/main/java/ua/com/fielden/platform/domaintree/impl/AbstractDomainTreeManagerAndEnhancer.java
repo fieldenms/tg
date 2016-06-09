@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,9 +32,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Domain tree manager with "power" of managing domain with calculated properties. The calculated properties can be managed exactly as simple properties.<br>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTreeManagerAndEnhancer {
     private final AbstractDomainTreeManager base;
@@ -66,9 +67,9 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
     /**
      * The {@link DomainTreeEnhancer} wrapper that reflects the changes in manager.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class DomainTreeEnhancerWithPropertiesPopulation implements IDomainTreeEnhancer {
         private final static Logger logger = Logger.getLogger(DomainTreeEnhancerWithPropertiesPopulation.class);
@@ -78,7 +79,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         /**
          * A {@link DomainTreeEnhancerWithPropertiesPopulation} constructor which requires a base implementations of {@link DomainTreeEnhancer} and
          * {@link AbstractDomainTreeRepresentation}.
-         * 
+         *
          * @param baseEnhancer
          * @param dtr
          */
@@ -89,7 +90,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
         /**
          * Finds a first index of property that does not start with "path".
-         * 
+         *
          * @param pathIndex
          * @param path
          * @param props
@@ -106,7 +107,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
         /**
          * Migrate <code>calcProps</code> from map form to a set form.
-         * 
+         *
          * @param calculatedProperties
          * @return
          */
@@ -184,7 +185,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
          * Returns <code>true</code> when the property has been changed <b>significantly</b> which means that maybe category or place of the property has been changed. This can be
          * result of the {@link CalculatedProperty#setContextualExpression(String)} or {@link CalculatedProperty#setTitle(String)} or
          * {@link CalculatedProperty#setAttribute(CalculatedPropertyAttribute)} actions.
-         * 
+         *
          * @param newProp
          * @param oldProp
          * @return
@@ -194,7 +195,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
             //	    !EntityUtils.equalsEx(newProp.getTitle(), oldProp.getTitle()) || //
             //	    !EntityUtils.equalsEx(newProp.getAttribute(), oldProp.getAttribute());
             return !EntityUtils.equalsEx(newProp.category(), oldProp.category()) || //
-                    !EntityUtils.equalsEx(newProp.path(), oldProp.path());
+            !EntityUtils.equalsEx(newProp.path(), oldProp.path());
         }
 
         protected static void removeMetaStateFromPropertyToBeRemoved(final Class<?> root, final String removedProperty, final IDomainTreeRepresentationWithMutability dtr) {
@@ -231,6 +232,16 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
                 }
             }
         }
+        
+        @Override
+        public Class<?> adjustManagedTypeName(final Class<?> root, final String clientGeneratedTypeNameSuffix) {
+            return baseEnhancer().adjustManagedTypeName(root, clientGeneratedTypeNameSuffix);
+        }
+        
+        @Override
+        public Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations) {
+            return baseEnhancer().adjustManagedTypeAnnotations(root, additionalAnnotations);
+        }
 
         @Override
         public void discard() {
@@ -255,6 +266,16 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         @Override
         public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
             return baseEnhancer().addCalculatedProperty(root, contextPath, contextualExpression, title, desc, attribute, originationProperty);
+        }
+
+        @Override
+        public ICalculatedProperty addCalculatedProperty(final Class<?> root, final String contextPath, final String customPropertyName, final String contextualExpression, final String title, final String desc, final CalculatedPropertyAttribute attribute, final String originationProperty) {
+            return baseEnhancer().addCalculatedProperty(root, contextPath, customPropertyName, contextualExpression, title, desc, attribute, originationProperty);
+        }
+
+        @Override
+        public IDomainTreeEnhancer addCustomProperty(final Class<?> root, final String contextPath, final String name, final String title, final String desc, final Class<?> type) {
+            return baseEnhancer().addCustomProperty(root, contextPath, name, title, desc, type);
         }
 
         @Override
@@ -284,6 +305,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         @Override
         public Map<Class<?>, List<CalculatedProperty>> calculatedProperties() {
             return baseEnhancer().calculatedProperties();
+        }
+
+        @Override
+        public Map<Class<?>, List<CustomProperty>> customProperties() {
+            return baseEnhancer().customProperties();
         }
 
         @Override
@@ -323,7 +349,7 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
     /**
      * Creates a domain tree enhancer wrapper that takes care about population of domain tree changes (calc props) in representation "included properties" (which triggers other
      * population like manager's "checked properties" automatically).
-     * 
+     *
      * @return
      */
     protected DomainTreeEnhancerWithPropertiesPopulation createEnhancerWrapperWithPropertiesPopulation() {
@@ -347,9 +373,9 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
     /**
      * A <i>tick manager with enhancer</i>.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected class TickManagerAndEnhancer extends TickManager implements ITickManagerWithMutability {
         private final TickManager base;
@@ -450,9 +476,9 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
     /**
      * A <i>representation with enhancer</i>.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected class DomainTreeRepresentationAndEnhancer implements IDomainTreeRepresentationWithMutability {
         private final AbstractDomainTreeRepresentation base;
@@ -484,10 +510,11 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
          * <p>
          * Please note that you can only mutate this list with methods {@link List#add(Object)} and {@link List#remove(Object)} to correctly reflect the changes on depending
          * objects. (e.g. UI tree models, checked properties etc.)
-         * 
+         *
          * @param root
          * @return
          */
+        @Override
         public List<String> includedPropertiesMutable(final Class<?> root) {
             return this.base.includedPropertiesMutable(enhancerWithPropertiesPopulation.getManagedType(root));
         }
@@ -507,9 +534,9 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
 
         /**
          * A <i>representation tick with enhancer</i>.
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         protected class TickRepresentationAndEnhancer implements ITickRepresentationWithMutability {
             private final AbstractTickRepresentation base;

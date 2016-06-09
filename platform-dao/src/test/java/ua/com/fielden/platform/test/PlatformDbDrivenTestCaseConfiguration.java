@@ -21,9 +21,11 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
+import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.migration.LegacyConnectionModule;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.persistence.ProxyInterceptor;
@@ -120,12 +122,13 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
         final ProxyInterceptor interceptor = new ProxyInterceptor();
         try {
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), testDomain, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
+            final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
             final Configuration cfg = new Configuration();
             cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
 
             hibernateUtil = new HibernateUtil(interceptor, cfg.configure(new URL("file:src/test/resources/hibernate4test.cfg.xml")));
-            hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata);
-            injector = new ApplicationInjectorFactory().add(hibernateModule).add(new LegacyConnectionModule(new Provider() {
+            hibernateModule = new DaoTestHibernateModule(hibernateUtil.getSessionFactory(), domainMetadata, idOnlyProxiedEntityTypeCache);
+            injector = new ApplicationInjectorFactory().add(hibernateModule).add(new NewUserNotifierMockBindingModule()).add(new LegacyConnectionModule(new Provider() {
                 @Override
                 public Object get() {
                     try {

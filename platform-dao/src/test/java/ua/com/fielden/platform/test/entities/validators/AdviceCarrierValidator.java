@@ -11,14 +11,14 @@ import ua.com.fielden.platform.test.domain.entities.Wagon;
 
 /**
  * Domain validator for property <code>carrier</code> ({@link Advice#setCarrier(ua.com.fielden.pnl.equipment.Wagon)}).
- * 
+ *
  * @author 01es
- * 
+ *
  */
 public class AdviceCarrierValidator implements IBeforeChangeEventHandler<Wagon> {
 
     @Override
-    public Result handle(final MetaProperty property, final Wagon newValue, final Wagon oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Wagon> property, final Wagon newValue, final Wagon oldValue, final Set<Annotation> mutatorAnnotations) {
         // TODO Auto-generated method stub
         return null;
     }

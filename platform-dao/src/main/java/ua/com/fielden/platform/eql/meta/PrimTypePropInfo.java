@@ -11,7 +11,7 @@ public class PrimTypePropInfo extends AbstractPropInfo {
     }
 
     public PrimTypePropInfo(final String name, final EntityInfo parent, final Class propType, final Expression1 expression) {
-        super(name, parent, expression, true);
+        super(name, parent, expression);
         this.propType = propType;
     }
 
@@ -22,8 +22,7 @@ public class PrimTypePropInfo extends AbstractPropInfo {
     @Override
     public AbstractPropInfo resolve(final String dotNotatedSubPropName) {
         if (dotNotatedSubPropName != null) {
-            System.out.println("name = " + getName() + "; propType = " + getPropType() + "; resolving NOT NULL -- " + dotNotatedSubPropName);
-            throw new IllegalStateException("Resolve method should get [null] as parameter");
+            throw new IllegalStateException("Resolve method should get [null] as parameter instead of [" + dotNotatedSubPropName + "].\nAdditional info: name = " + getName() + "; propType = " + getPropType() + ";");
         }
         return this;
     }

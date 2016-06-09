@@ -18,7 +18,7 @@ import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleCompositeEntit
 import ua.com.fielden.platform.example.dynamiccriteria.iao.ISimpleECEEntityDao;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 

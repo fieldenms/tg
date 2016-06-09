@@ -30,9 +30,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A locator manager mixin implementation (save, init, discard locators etc.).
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class LocatorManager extends AbstractDomainTree implements ILocatorManager {
     private final transient Logger logger = Logger.getLogger(getClass());
@@ -49,7 +49,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     /**
      * Returns a current locators for locator manager. It is lazily loaded by the very first invocation from "persistentLocators" by copying them.
-     * 
+     *
      * @return
      */
     private EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer> currentLocators() {
@@ -97,7 +97,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     /**
      * A locator <i>manager</i> constructor (save, int, discard locators, etc.).
-     * 
+     *
      * @param serialiser
      */
     protected LocatorManager(final ISerialiser serialiser, final Set<Class<?>> rootTypes, final Map<Pair<Class<?>, String>, LocatorDomainTreeManagerAndEnhancer> persistentLocators) {
@@ -128,7 +128,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     /**
      * Logs and throws an {@link IllegalArgumentException} error with specified message.
-     * 
+     *
      * @param message
      */
     private void error(final String message) {
@@ -138,7 +138,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     /**
      * Logs and throws an {@link RuntimeException} error with specified message to indicate inner implementation errors.
-     * 
+     *
      * @param message
      */
     private void implementationError(final String message) {
@@ -164,7 +164,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     private Phase phase(final Class<?> root, final String property) {
         return freezedLocators.get(key(root, property)) != null ? FREEZED_EDITING_PHASE //
-                : locatorsInEditingMode.contains(key(root, property)) ? EDITING_PHASE : USAGE_PHASE;
+        : locatorsInEditingMode.contains(key(root, property)) ? EDITING_PHASE : USAGE_PHASE;
     }
 
     private Type type(final Class<?> root, final String property) {
@@ -350,7 +350,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     /**
      * Unfreezes the locator instance that is currently freezed.
-     * 
+     *
      * @param root
      * @param property
      */
@@ -360,13 +360,13 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     /**
      * A specific Kryo serialiser for {@link LocatorManager}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class LocatorManagerSerialiser extends AbstractDomainTreeSerialiser<LocatorManager> {
-        public LocatorManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public LocatorManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -378,7 +378,7 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
             //		EntityUtils.deepCopy(loc, kryo());
             //	    }
 
-            return new LocatorManager(kryo(), rootTypes, persistentLocators);
+            return new LocatorManager(serialiser(), rootTypes, persistentLocators);
         }
 
         @Override
@@ -404,23 +404,30 @@ public class LocatorManager extends AbstractDomainTree implements ILocatorManage
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final LocatorManager other = (LocatorManager) obj;
         if (persistentLocators == null) {
-            if (other.persistentLocators != null)
+            if (other.persistentLocators != null) {
                 return false;
-        } else if (!persistentLocators.equals(other.persistentLocators))
+            }
+        } else if (!persistentLocators.equals(other.persistentLocators)) {
             return false;
+        }
         if (rootTypes == null) {
-            if (other.rootTypes != null)
+            if (other.rootTypes != null) {
                 return false;
-        } else if (!rootTypes.equals(other.rootTypes))
+            }
+        } else if (!rootTypes.equals(other.rootTypes)) {
             return false;
+        }
         return true;
     }
 

@@ -5,15 +5,16 @@ import java.util.Date;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.before_change_event_handling.Controller;
+import ua.com.fielden.platform.entity.before_change_event_handling.EnumForParams;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.types.Money;
 
 /**
  * ACE event handler for testing purposes.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AfterChangeEventHandler implements IAfterChangeEventHandler<Object> {
 
@@ -26,11 +27,12 @@ public class AfterChangeEventHandler implements IAfterChangeEventHandler<Object>
     private DateTime dateTimeParam;
     private Controller controllerParam;
     private Class<?> classParam;
+    private EnumForParams enumParam;
 
     private boolean invoked = false;
 
     @Override
-    public void handle(final MetaProperty property, final Object entityPropertyValue) {
+    public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
         setInvoked(true);
     }
 
@@ -112,6 +114,10 @@ public class AfterChangeEventHandler implements IAfterChangeEventHandler<Object>
 
     public void setClassParam(final Class<?> classParam) {
         this.classParam = classParam;
+    }
+
+    public EnumForParams getEnumParam() {
+        return enumParam;
     }
 
 }

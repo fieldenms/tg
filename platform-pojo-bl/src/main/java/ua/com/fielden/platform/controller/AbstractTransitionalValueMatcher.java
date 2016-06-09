@@ -7,14 +7,13 @@ import java.util.TreeSet;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
 
 /**
  * Provides a base class for convenient implementation of value matchers specific to transitional logic such as work order status transitions.
- * 
+ *
  * @author TG Team
- * 
+ *
  * @param <M>
  * @param <T>
  * @param <C>
@@ -59,24 +58,10 @@ public abstract class AbstractTransitionalValueMatcher<M extends AbstractEntity<
 
     /**
      * Should be implemented to provide a way for obtaining an instance of property owner at runtime from the required context.
-     * 
+     *
      * @return
      */
     protected abstract M getPropertyOwner();
-
-    @Override
-    public List<T> findMatchesWithModel(final String value) {
-        return findMatches(value);
-    }
-
-    @Override
-    public <FT extends AbstractEntity<?>> fetch<FT> getFetchModel() {
-        return null;
-    }
-
-    @Override
-    public <FT extends AbstractEntity<?>> void setFetchModel(final fetch<FT> fetchModel) {
-    }
 
     @Override
     public Integer getPageSize() {

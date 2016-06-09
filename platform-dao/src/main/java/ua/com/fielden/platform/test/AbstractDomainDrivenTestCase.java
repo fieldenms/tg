@@ -12,8 +12,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -36,6 +38,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  *
  */
 public abstract class AbstractDomainDrivenTestCase {
+    transient private final Logger logger = Logger.getLogger(this.getClass());
 
     private static final List<String> dataScript = new ArrayList<String>();
     private static final List<String> truncateScript = new ArrayList<String>();
@@ -46,7 +49,7 @@ public abstract class AbstractDomainDrivenTestCase {
     private final EntityFactory factory = config.getEntityFactory();
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final Collection<PersistedEntityMetadata> entityMetadatas = config.getDomainMetadata().getEntityMetadatas();
+    private final Collection<PersistedEntityMetadata> entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
 
     private static boolean domainPopulated = false;
 
@@ -59,7 +62,7 @@ public abstract class AbstractDomainDrivenTestCase {
 
             // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
             //      This should be modified once correct db schema generation is implemented
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", "jdbc:h2:src/test/resources/db/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE");
+            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", "jdbc:h2:./src/test/resources/db/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.username", "sa");
@@ -104,12 +107,19 @@ public abstract class AbstractDomainDrivenTestCase {
     @Before
     public final void beforeTest() throws Exception {
         final Connection conn = createConnection();
-
+        Optional<Exception> raisedEx = Optional.empty();
+        
         if (domainPopulated) {
             // apply data population script
+            logger.debug("Executing data population script.");
             exec(dataScript, conn);
         } else {
-            populateDomain();
+            try {
+                populateDomain();
+            } catch (final Exception ex) {
+                raisedEx = Optional.of(ex);
+                ex.printStackTrace();
+            }
 
             // record data population statements
             final Statement st = conn.createStatement();
@@ -136,6 +146,11 @@ public abstract class AbstractDomainDrivenTestCase {
         }
 
         conn.close();
+        
+        if (raisedEx.isPresent()) {
+            domainPopulated = false;
+            throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
+        }
     }
 
     private void exec(final List<String> statements, final Connection conn) throws SQLException {
@@ -148,11 +163,8 @@ public abstract class AbstractDomainDrivenTestCase {
 
     @After
     public final void afterTest() throws Exception {
-        final Connection conn = createConnection();
-
-        System.out.println("TRUNCATE TABLES");
-        // TODO need to switch off referential integrity
-        exec(truncateScript, conn);
+        exec(truncateScript, createConnection());
+        logger.debug("Executing tables truncation script.");
     }
 
     private static Connection createConnection() {
@@ -174,11 +186,13 @@ public abstract class AbstractDomainDrivenTestCase {
     }
 
     protected <T extends AbstractEntity<?>> T save(final T instance) {
+        @SuppressWarnings("unchecked")
         final IEntityDao<T> pp = provider.find((Class<T>) instance.getType());
         return pp.save(instance);
     }
 
-    protected <T extends IEntityDao<E>, E extends AbstractEntity<?>> T ao(final Class<E> type) {
+    @SuppressWarnings("unchecked")
+    protected <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type) {
         return (T) provider.find(type);
     }
 

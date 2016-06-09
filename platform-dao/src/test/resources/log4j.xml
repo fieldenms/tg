@@ -36,12 +36,12 @@
 		Logger of top level category 'ua.com.fielden.platform'. Additional logger can be added any time if required.
 	-->
 	<logger name="ua.com.fielden.platform" additivity="false">
-		<level value="info" />
+		<level value="error" />
 		<appender-ref ref="stdout" />
 	</logger>
 	
 	<logger name="ua.com.fielden.platform.dao" additivity="false">
-		<level value="debug" />
+		<level value="error" />
 		<appender-ref ref="stdout" />
 	</logger>
 	
@@ -49,7 +49,36 @@
 		<level value="off" />
 		<appender-ref ref="stdout" />
 	</logger>
-		
+	<logger name="ua.com.fielden.platform.entity.query.EntityHibernateRetrievalQueryProducer" additivity="false">
+        <level value="error" />
+        <appender-ref ref="stdout" />
+    </logger>
+	<logger name="ua.com.fielden.platform.entity.query.EntityFetcher" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.entity.query.EntityContainerFetcher" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.entity.query.generation.elements.EntQuery" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.dao.HibernateMappingsGenerator" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.dao.PropertyMetadata" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
+	<logger name="ua.com.fielden.platform.entity.query.EntityRetrievalModel" additivity="false">
+		<level value="error" />
+		<appender-ref ref="stdout" />
+	</logger>
+	
+	
 	
 	<!-- 
 		Loggers for Hibernate.

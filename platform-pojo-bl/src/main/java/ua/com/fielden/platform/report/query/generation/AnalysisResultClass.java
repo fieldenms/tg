@@ -53,7 +53,7 @@ public class AnalysisResultClass extends AbstractEntity<String> {
         final List<NewProperty> newProperties = createNewProperties(enhancedType, usedDistributions, distributionED);
         newProperties.addAll(createNewProperties(enhancedType, usedAggregations, aggregationED));
 
-        final DynamicEntityClassLoader cl = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
+        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
 
         try {
             final Class<?> generatedClass = cl.startModification(AnalysisResultClass.class.getName()).addProperties(newProperties.toArray(new NewProperty[0])).endModification();

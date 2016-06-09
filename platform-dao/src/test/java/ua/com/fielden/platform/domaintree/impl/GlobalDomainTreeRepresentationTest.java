@@ -17,35 +17,34 @@ import ua.com.fielden.platform.domaintree.centre.impl.LocatorDomainTreeManagerAn
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.EntityWithStringKeyType;
 import ua.com.fielden.platform.domaintree.testing.SlaveEntity;
-import ua.com.fielden.platform.domaintree.testing.TgKryo0ForDomainTreesTestingPurposes;
-import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.provider.IUserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser0ForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTestCase {
+public class GlobalDomainTreeRepresentationTest extends AbstractDaoTestCase {
     private final EntityFactory entityFactory = getInstance(EntityFactory.class);
-    private final ISerialiser0 serialiser0 = new TgKryo0ForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
-    private final ISerialiser serialiser = new TgKryoForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
-    private final IUserDao userDao = getInstance(IUserDao.class);
+    private final ISerialiser0 serialiser0 = new Serialiser0ForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
+    private final ISerialiser serialiser = new SerialiserForDomainTreesTestingPurposes(entityFactory, new ClassProviderForTestingPurposes());
+    private final IUser userDao = getInstance(IUser.class);
 
     protected GlobalDomainTreeManager createManagerForNonBaseUser2() {
         return createGlobalDomainTreeManager("USER3");
@@ -60,7 +59,7 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
     }
 
     private GlobalDomainTreeManager createGlobalDomainTreeManager(final String userName) {
-        return new GlobalDomainTreeManager(serialiser, serialiser0, entityFactory, createUserProvider(userName), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IEntityMasterConfigController.class), getInstance(IEntityLocatorConfigController.class)) {
+        return new GlobalDomainTreeManager(serialiser, serialiser0, entityFactory, createUserProvider(userName), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfig.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IEntityMasterConfig.class), getInstance(IEntityLocatorConfig.class)) {
             @Override
             protected void validateMenuItemType(final Class<?> menuItemType) { // no menu item validation due to non-existence of MiWithConfigurationSupport at platform-dao (it exists only on platform-ui level)
             }
@@ -75,7 +74,12 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
             }
 
             @Override
-            public void setUsername(final String username, final IUserController controller) {
+            public void setUsername(final String username, final IUser coUser) {
+            }
+
+            @Override
+            public void setUser(User user) {
+                
             }
         };
         return baseUserProvider;
@@ -132,9 +136,10 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDomainDrivenTest
 
     @Override
     protected void populateDomain() {
-        final User baseUser1 = save(new_(User.class, "USER1").setBase(true));
-        save(new_(User.class, "USER2").setBase(false).setBasedOnUser(baseUser1));
-        save(new_(User.class, "USER3").setBase(false).setBasedOnUser(baseUser1));
+        super.populateDomain();
+        final User baseUser1 = save(new_(User.class, "USER1").setBase(true).setEmail("USER1@unit-test.software").setActive(true));
+        save(new_(User.class, "USER2").setBase(false).setBasedOnUser(baseUser1).setEmail("USER2@unit-test.software").setActive(true));
+        save(new_(User.class, "USER3").setBase(false).setBasedOnUser(baseUser1).setEmail("USER3@unit-test.software").setActive(true));
         save(new_(MainMenuItem.class, "ua.com.fielden.platform.domaintree.testing.MiMasterEntityForGlobalDomainTree").setOrder(1));
     }
 }

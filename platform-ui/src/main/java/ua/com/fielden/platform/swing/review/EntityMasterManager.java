@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
@@ -17,7 +18,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.swing.actions.Command;
-import ua.com.fielden.platform.swing.model.DefaultEntityProducer;
 import ua.com.fielden.platform.swing.model.IUmViewOwner;
 import ua.com.fielden.platform.swing.model.callback.IPostInitCallback;
 import ua.com.fielden.platform.swing.review.factory.IEntityMasterFactory;
@@ -164,12 +164,12 @@ public class EntityMasterManager implements IEntityMasterManager {
 
     /**
      * Returns either specific {@link IEntityProducer} instance (if one was associated with the specified {@code entityClass} using
-     * {@link #addEntityProducer(Class, IEntityProducer)} method) or {@link DefaultEntityProducer} instance otherwise.
+     * {@link #addEntityProducer(Class, IEntityProducer)} method) or {@link DefaultEntityProducerWithContext} instance otherwise.
      */
     @Override
     public <T extends AbstractEntity<?>> IEntityProducer<T> getEntityProducer(final Class<T> entityClass) {
         final IEntityProducer<T> entityProducer = entityProducers.get(entityClass);
-        return entityProducer != null ? entityProducer : new DefaultEntityProducer<T>(entityFactory, entityClass);
+        return entityProducer != null ? entityProducer : new DefaultEntityProducerWithContext<T>(entityFactory, entityClass, null);
     }
 
     /**

@@ -79,8 +79,8 @@ public class AbstractAnalysisDomainTreeManager1 extends AbstractAnalysisDomainTr
      * 
      */
     public static class AbstractAnalysisDomainTreeManager1Serialiser extends AbstractAnalysisDomainTreeManagerSerialiser<AbstractAnalysisDomainTreeManager1> {
-        public AbstractAnalysisDomainTreeManager1Serialiser(final ISerialiser kryo) {
-            super(kryo);
+        public AbstractAnalysisDomainTreeManager1Serialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -89,7 +89,7 @@ public class AbstractAnalysisDomainTreeManager1 extends AbstractAnalysisDomainTr
             final AbstractAnalysisAddToDistributionTickManager1 firstTick = readValue(buffer, AbstractAnalysisAddToDistributionTickManager1.class);
             final AbstractAnalysisAddToAggregationTickManager1 secondTick = readValue(buffer, AbstractAnalysisAddToAggregationTickManager1.class);
             final Boolean visible = readValue(buffer, Boolean.class);
-            return new AbstractAnalysisDomainTreeManager1(kryo(), dtr, visible, firstTick, secondTick);
+            return new AbstractAnalysisDomainTreeManager1(serialiser(), dtr, visible, firstTick, secondTick);
         }
     }
 }

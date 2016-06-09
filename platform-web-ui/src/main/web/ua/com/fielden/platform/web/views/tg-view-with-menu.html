@@ -1,0 +1,375 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/polymer/paper-item/paper-item.html">
+<link rel="import" href="/resources/polymer/paper-drawer-panel/paper-drawer-panel.html">
+<link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
+<link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/views/tg-menu-item-view.html">
+<link rel="import" href="/app/tg-app-config.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
+
+
+<dom-module id="tg-view-with-menu">
+    <style>
+        :host {
+            --paper-fab-background: #fcfcfc;
+            --paper-menu-color: #01579b;
+            --paper-item-min-height: 40px;
+            --paper-fab: {
+                color: #666464;
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                z-index: 1;
+                width: 50px;
+                height: 50px;
+            }
+            ;
+            --paper-menu: {
+                padding: 0;
+                margin: 0;
+                overflow: auto;
+            }
+            ;
+            --paper-item: {
+                padding-left: 22px;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 300ms ease-in-out;
+            }
+            ;
+        }
+        neon-animated-pages {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            top: 44px;
+        }
+        .menu-item-view {
+            overflow: auto;
+        }
+        .tool-bar {
+            padding: 0 16px;
+            height: 44px;
+            font-size: 18px;
+            color: white;
+            background-color: var(--paper-light-blue-700);
+        }
+        #drawerPanel:not([narrow]) #menuButton {
+            display: none;
+        }
+        #drawerPanel:not([narrow]) paper-menu {
+            border-right: 1px solid #CBCDCE;
+        }
+        #menuButton {
+            margin-right: 24px;
+        }
+    </style>
+    <template>
+        <tg-app-config id="app_config"></tg-app-config>
+        <paper-drawer-panel id="drawerPanel" disable-swipe force-narrow>
+
+            <div class="layout vertical" drawer>
+
+                <div id="menuToolBar" class="tool-bar layout horizontal center">
+                    <div class="flex">[[menuItem.title]]</div>
+                </div>
+
+                <paper-menu id="menu" class="flex" selected="{{_selectedPage}}" on-iron-activate="_itemActivated" attr-for-selected="name">
+                    <template is="dom-repeat" items="[[menuItem.menu]]">
+                        <paper-item name$="[[item.title]]" tooltip-text$="[[item.description]]">[[item.title]]</paper-item>
+                    </template>
+                </paper-menu>
+
+            </div>
+
+            <div class="layout vertical" main>
+
+                <div id="viewToolBar" class="tool-bar layout horizontal center">
+                    <div class="layout horizontal center flex">
+                        <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
+                        <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
+                    </div>
+                </div>
+
+                <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
+                    <div class="menu-item-view" page-name="_"></div>
+                    <template is="dom-repeat" items="[[menuItem.menu]]" on-dom-change="_menuItemsRendered">
+                        <tg-menu-item-view class="menu-item-view" page-name$="[[item.title]]" menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
+                    </template>
+                </neon-animated-pages>
+
+                <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
+            </div>
+
+
+        </paper-drawer-panel>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        var findSubmodule = function (submoduleName, menuItem) {
+            var menuItemIndex;
+            for (menuItemIndex = 0; menuItemIndex < menuItem.menu.length; menuItemIndex++) {
+                if (menuItem.menu[menuItemIndex].title === submoduleName) {
+                    return submoduleName;
+                }
+            }
+            return "_";
+        };
+        Polymer({
+
+            is: "tg-view-with-menu",
+
+            properties: {
+                menuItem: Object,
+                selectedModule: String,
+                submodule: {
+                    type: Object,
+                    notify: true
+                },
+                animationConfig: {
+                    value: function () {
+                        return {
+                            'entry': [
+                                {
+                                    name: 'slide-from-top-animation',
+                                    node: this.$.viewToolBar
+                                }, {
+                                    name: 'slide-from-bottom-animation',
+                                    node: this.$.pages
+                                }, {
+                                    name: 'scale-up-animation',
+                                    node: this.$.fab,
+                                    timing: {
+                                        delay: 400
+                                    }
+                                }
+                            ],
+                            'exit': [
+                                {
+                                    name: 'slide-up-animation',
+                                    node: this.$.viewToolBar
+                                }, {
+                                    name: 'slide-down-animation',
+                                    node: this.$.pages
+                                }, {
+                                    name: 'scale-down-animation',
+                                    node: this.$.fab
+                                }
+                            ]
+                        };
+                    }
+                },
+
+                //Private members those starts with underscore
+                _menuItemsLoaded: Boolean,
+                _selectedPage: {
+                    type: String,
+                    observer: '_selectedPageChanged'
+                }
+
+            },
+
+            behaviors: [
+                Polymer.NeonAnimatableBehavior,
+                Polymer.TgBehaviors.TgTooltipBehavior
+            ],
+
+            hostAttributes: {
+                class: "layout vertical"
+            },
+
+            observers: [
+                '_updatePage(menuItem, submodule)'
+            ],
+
+            ready: function () {
+                var self = this,
+                    masterCounter = 1;
+                ////////////////// State related events ///////////////////////////
+                postal.subscribe({
+                    channel: self.menuItem.title,
+                    topic: "state.select",
+                    callback: function (data, envelop) {
+                        if (data.state[1] === self.$.menu.selected) {
+                            history.pushState(data.state, "");
+                        } else {
+                            self.$.menu.selected = data.state[1];
+                        }
+                        self._initDrawerPanel();
+                        postal.publish({
+                            channel: "app",
+                            topic: "state.pushed",
+                            data: data
+                        });
+                    }
+                });
+                //////////////////////////Edit actions//////////////////////////////////
+                postal.subscribe({
+                    channel: "manager_" + self.menuItem.title,
+                    topic: "master.edit.create",
+                    callback: function (data, envelope) {
+                        var idArray = data.view.attrs.uuid.split('/');
+                        self.push("menuItem.menu", data);
+                        self.async(function () {
+                            self.$.menu.selected = idArray[1];
+                        }, 1);
+                    }
+                });
+
+                postal.subscribe({
+                    channel: "manager_" + self.menuItem.title,
+                    topic: "master.show",
+                    callback: function (data, envelope) {
+                        var idArray = data.item.view.attrs.uuid.split('/');
+                        if (idArray[0] !== self.menuItem.title) {
+                            postal.publish({
+                                channel: idArray[0],
+                                topic: "state.select",
+                                data: {
+                                    state: idArray
+                                }
+                            })
+                        } else {
+                            self.$.menu.selected = idArray[1];
+                        }
+                        postal.publish({
+                            channel: "view",
+                            topic: "master.shown",
+                            data: data
+                        });
+                    }
+                });
+                /////////////////New Actions//////////////////////////////
+                postal.subscribe({
+                    channel: "manager_" + self.menuItem.title,
+                    topic: "master.new.create",
+                    callback: function (data, envelope) {
+                        var centreUuid = data.view.attrs.centreUuid.split('/');
+                        centreUuid[centreUuid.length - 1] = "New Master #" + masterCounter;
+                        data.title = "New Master #" + masterCounter;
+                        data.description = "New Master #" + masterCounter;
+                        data.view.attrs.uuid = centreUuid.join('/');
+                        masterCounter += 1;
+                        self.push("menuItem.menu", data);
+                        self.async(function () {
+                            self.$.menu.selected = centreUuid[1];
+                        }, 1);
+                    }
+                });
+                //////////////Master save acation////////////////////////////
+                postal.subscribe({
+                    channel: "manager_" + self.menuItem.title,
+                    topic: "master.saved",
+                    callback: function (data, envelope) {
+                        var centreUuid = data.centreUuid.split('/');
+                        postal.publish({
+                            channel: "view",
+                            topic: "master.saved",
+                            data: data
+                        });
+                        self.$.menu.selected = centreUuid[1];
+                    }
+                });
+            },
+
+            attached: function () {
+                this.async(function () {
+                    if (!this._selectedPage) {
+                        this.set("_selectedPage", "_");
+                    }
+                });
+            },
+
+            getSelectedPage: function () {
+                return this._selectedPage;
+            },
+            
+            canLeave: function () {
+                var items = this.querySelectorAll("tg-menu-item-view");
+                var changedViews = [];
+                var canLeaveResult, itemIndex;
+                for (itemIndex = 0; itemIndex < items.length; itemIndex++) {
+                    canLeaveResult = items[itemIndex].canLeave();
+                    if (canLeaveResult) {
+                        changedViews.push(items[itemIndex].getAttribute('page-name'));
+                    }
+                }
+                return changedViews.length > 0 ? changedViews : undefined;
+            },
+
+            _menuItemsRendered: function () {
+                this._menuItemsLoaded = true;
+            },
+
+            _updatePage(menuItem, submodule, _menuItemsLoaded) {
+                var pageName;
+                if (menuItem.title === decodeURIComponent(this.selectedModule)) {
+                    pageName = findSubmodule(decodeURIComponent(submodule.path.substring(1)), menuItem);
+                    this.set("_selectedPage", pageName);
+                    this.async(function () {
+                        var viewToLoad;
+                        if (pageName !== '_') {
+                            viewToLoad = this.$$("[page-name='" + pageName + "']");
+                            if (viewToLoad) {
+                                viewToLoad.loadAfterInit();
+                            }
+                        }
+                    });
+                }
+            },
+
+            _initDrawerPanel: function () {
+                if (this._selectedPage === '_') {
+                    this.$.drawerPanel.selected = 'drawer';
+                } else {
+                    this.$.drawerPanel.selected = 'main';
+                }
+            },
+
+            _showMenu: function (e, detail, source) {
+                this.fire("main-menu");
+            },
+
+            _togglePanel: function (e, detail, source) {
+                this.$.drawerPanel.togglePanel();
+            },
+
+            _calcSelectedPageTitle: function (page) {
+                return page === '_' ? '' : page;
+            },
+
+            _calcUuid: function (item) {
+                return this.menuItem.title + '/' + item.title;
+            },
+
+            /**
+             * The listener that listens the menu item activation on tap.
+             */
+            _itemActivated: function (e, detail) {
+                this.set("submodule.path", "/" + encodeURIComponent(detail.selected));
+            },
+
+            _selectedPageChanged: function (newValue, oldValue) {
+                this._initDrawerPanel();
+            },
+
+            _animationFinished: function (e, detail, source) {
+                var viewToLoad;
+                if (this.$.menu.selected !== '_') {
+                    viewToLoad = detail.toPage;
+                    if (viewToLoad && !viewToLoad.wasLoaded()) {
+                        viewToLoad.load();
+                    }
+                }
+            }
+        });
+    })();
+</script>

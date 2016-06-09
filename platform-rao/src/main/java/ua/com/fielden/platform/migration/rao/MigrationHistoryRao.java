@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.migration.rao;
 
 import ua.com.fielden.platform.migration.MigrationHistory;
-import ua.com.fielden.platform.migration.controller.IMigrationHistoryDao;
+import ua.com.fielden.platform.migration.controller.IMigrationHistory;
 import ua.com.fielden.platform.rao.CommonEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
@@ -15,7 +15,7 @@ import com.google.inject.Inject;
  * 
  */
 @EntityType(MigrationHistory.class)
-public class MigrationHistoryRao extends CommonEntityRao<MigrationHistory> implements IMigrationHistoryDao {
+public class MigrationHistoryRao extends CommonEntityRao<MigrationHistory> implements IMigrationHistory {
     private static final long serialVersionUID = 1L;
 
     @Inject

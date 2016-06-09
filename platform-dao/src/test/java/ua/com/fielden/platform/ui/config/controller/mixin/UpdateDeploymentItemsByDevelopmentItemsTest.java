@@ -11,18 +11,18 @@ import org.junit.Test;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 
 /**
@@ -32,21 +32,21 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
  * @author TG Team
  * 
  */
-public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainDrivenTestCase {
-    private final IUserDao userDao = getInstance(IUserDao.class);
-    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenu.class), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfigController.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IMainMenuItemInvisibilityController.class), getInstance(EntityFactory.class));
+public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDaoTestCase {
+    private final IUser userDao = getInstance(IUser.class);
+    private final MainMenuItemMixin mixin = new MainMenuItemMixin(getInstance(IMainMenu.class), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfig.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IMainMenuItemInvisibility.class), getInstance(EntityFactory.class));
     private final EntityFactory factory = getInstance(EntityFactory.class);
 
     private User getBaseUser() {
-        return userDao.findByKeyAndFetch(fetchAll(User.class), "B-USER");
+        return userDao.findByKeyAndFetch(fetchAll(User.class), "BUSER");
     }
 
     private User getBaseUserOther() {
-        return userDao.findByKeyAndFetch(fetchAll(User.class), "B-USER-OTHER");
+        return userDao.findByKeyAndFetch(fetchAll(User.class), "BUSEROTHER");
     }
 
     private User getDescendantUser() {
-        return userDao.findByKeyAndFetch(fetchAll(User.class), "D-USER");
+        return userDao.findByKeyAndFetch(fetchAll(User.class), "DUSER");
     }
 
     /**
@@ -876,9 +876,11 @@ public class UpdateDeploymentItemsByDevelopmentItemsTest extends AbstractDomainD
 
     @Override
     protected void populateDomain() {
-        final User baseUser = save(new_(User.class, "B-USER").setBase(true)); // base user
-        final User baseUserOther = save(new_(User.class, "B-USER-OTHER").setBase(true)); // base user
-        save(new_(User.class, "D-USER").setBase(false).setBasedOnUser(baseUser)); // descendant user
+        super.populateDomain();
+        
+        final User baseUser = save(new_(User.class, "BUSER").setBase(true).setEmail("BUSER@unit-test.software").setActive(true)); // base user
+        final User baseUserOther = save(new_(User.class, "BUSEROTHER").setBase(true).setEmail("BUSEROTHER@unit-test.software").setActive(true)); // base user
+        save(new_(User.class, "DUSER").setBase(false).setBasedOnUser(baseUser).setEmail("DUSER@unit-test.software").setActive(true)); // descendant user
 
         // populate main menu items
         final MainMenuItem root_1 = save(new_(MainMenuItem.class, "type1").setTitle("Root 1").setOrder(1));

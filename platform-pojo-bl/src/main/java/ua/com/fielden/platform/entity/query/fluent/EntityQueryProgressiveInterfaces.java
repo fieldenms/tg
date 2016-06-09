@@ -82,7 +82,11 @@ public interface EntityQueryProgressiveInterfaces {
     interface ISingleOperand<T, ET extends AbstractEntity<?>> {
         T prop(String propertyName);
 
+        T prop(Enum propertyName);
+
         T extProp(String propertyName);
+
+        T extProp(Enum propertyName);
 
         T val(Object value);
 
@@ -90,7 +94,11 @@ public interface EntityQueryProgressiveInterfaces {
 
         T param(String paramName);
 
+        T param(Enum paramName);
+
         T iParam(String paramName);
+
+        T iParam(Enum paramName);
 
         T model(SingleResultQueryModel<?> model);
 
@@ -291,8 +299,12 @@ public interface EntityQueryProgressiveInterfaces {
 
     interface IFirstYieldedItemAlias<T> {
         T as(String alias);
+        
+        T as(Enum alias);
 
         T asRequired(String alias);
+
+        T asRequired(Enum alias);
 
         <E extends AbstractEntity<?>> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
 
@@ -302,7 +314,11 @@ public interface EntityQueryProgressiveInterfaces {
     interface ISubsequentYieldedItemAlias<T> /*extends ICompletedAndYielded*/{
         T as(String alias);
 
+        T as(Enum alias);
+
         T asRequired(String alias);
+
+        T asRequired(Enum alias);
     }
 
     interface IArithmeticalOperator<T> {

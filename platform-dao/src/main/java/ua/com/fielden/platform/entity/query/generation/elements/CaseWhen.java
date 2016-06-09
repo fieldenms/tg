@@ -104,6 +104,7 @@ public class CaseWhen implements ISingleOperand {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((elseOperand == null) ? 0 : elseOperand.hashCode());
+        result = prime * result + ((typeCast == null) ? 0 : typeCast.hashCode());
         result = prime * result + ((whenThenPairs == null) ? 0 : whenThenPairs.hashCode());
         return result;
     }
@@ -125,6 +126,13 @@ public class CaseWhen implements ISingleOperand {
                 return false;
             }
         } else if (!elseOperand.equals(other.elseOperand)) {
+            return false;
+        }
+        if (typeCast == null) {
+            if (other.typeCast != null) {
+                return false;
+            }
+        } else if (!typeCast.equals(other.typeCast)) {
             return false;
         }
         if (whenThenPairs == null) {

@@ -7,15 +7,14 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity with arbitrarily long validation process for the lockable property, which makes its instance locked as long as desired.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
@@ -41,7 +40,6 @@ public class EntityWithLocableProperty extends AbstractEntity<String> {
         return firstProperty;
     }
 
-    @NotNull
     @Observable
     public EntityWithLocableProperty setFirstProperty(final Integer property) {
         this.firstProperty = property;

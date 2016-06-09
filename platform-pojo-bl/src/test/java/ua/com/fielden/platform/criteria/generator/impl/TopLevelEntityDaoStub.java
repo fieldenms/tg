@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.user.User;
@@ -92,18 +91,6 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public void delete(final TopLevelEntity entity) {
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<TopLevelEntity> model, final Map<String, Object> paramValues) {
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<TopLevelEntity> model) {
-    }
-
-    @Override
     public boolean entityExists(final TopLevelEntity entity) {
         return false;
     }
@@ -144,11 +131,6 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
     }
 
     @Override
-    public IPage<TopLevelEntity> firstPage(final QueryExecutionModel<TopLevelEntity, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
-        return null;
-    }
-
-    @Override
     public List<TopLevelEntity> getFirstEntities(final QueryExecutionModel<TopLevelEntity, ?> query, final int numberOfEntities) {
         return null;
     }
@@ -165,6 +147,12 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
 
     @Override
     public TopLevelEntity findByEntityAndFetch(final fetch<TopLevelEntity> fetchModel, final TopLevelEntity entity) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public IFetchProvider<TopLevelEntity> getFetchProvider() {
         // TODO Auto-generated method stub
         return null;
     }

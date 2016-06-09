@@ -25,15 +25,15 @@ public class FirstLevelEntity extends AbstractEntity<DynamicEntityKey> implement
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @Title("Property")
-    @CompositeKeyMember(1)
-    private String property;
-
-    @IsProperty
     @CompositeKeyMember(2)
     @CritOnly
     @MapTo
     private String propertyTwo;
+
+    @IsProperty
+    @Title("Property")
+    @CompositeKeyMember(1)
+    private String property;
 
     @IsProperty
     @CritOnly

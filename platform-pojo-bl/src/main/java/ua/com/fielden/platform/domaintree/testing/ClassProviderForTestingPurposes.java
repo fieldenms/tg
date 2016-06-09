@@ -5,8 +5,8 @@ import static ua.com.fielden.platform.reflection.ClassesRetriever.findClass;
 import java.util.ArrayList;
 import java.util.List;
 
-import ua.com.fielden.platform.serialisation.impl.DefaultSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
 
 public class ClassProviderForTestingPurposes extends ProvidedSerialisationClassProvider {
 

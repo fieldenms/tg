@@ -1,36 +1,37 @@
 package ua.com.fielden.platform.ui.entity.centre;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.security.provider.UserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
+import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigControllerDao;
+import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-public class EntityCentreConfigPersistenceTest extends AbstractDomainDrivenTestCase {
-    private final IEntityCentreConfigController dao = getInstance(EntityCentreConfigControllerDao.class);
+public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
+    private final IEntityCentreConfig dao = getInstance(EntityCentreConfigDao.class);
     private final IMainMenuItemController menuDao = getInstance(MainMenuItemControllerDao.class);
-    private final IUserDao userDao = getInstance(UserController.class);
+    private final IUser userDao = getInstance(UserDao.class);
 
     @Test
     public void test_insertion_and_retrieval_of_binary_data() {
@@ -45,13 +46,13 @@ public class EntityCentreConfigPersistenceTest extends AbstractDomainDrivenTestC
 
     @Test
     public void test_update_of_binary_data() {
-        final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
+        EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 1, 2, 3 });
         dao.save(config);
 
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         config.setConfigBody(new byte[] { 1, 2, 3, 4 });
-        dao.save(config);
+        config = dao.save(config);
         assertEquals("Incorrect version.", Long.valueOf("1"), config.getVersion());
 
         final EntityCentreConfig fromDb = dao.findById(config.getId());
@@ -62,12 +63,10 @@ public class EntityCentreConfigPersistenceTest extends AbstractDomainDrivenTestC
 
     @Override
     protected void populateDomain() {
-        save(new_(User.class, "USER", "DESC").setBase(true).setPassword("PASSWD"));
+        super.populateDomain();
+        
+        save(new_(User.class, "USER", "DESC").setBase(true).setEmail("USER@unit-test.software").setPassword("PASSWD").setActive(true));
         save(new_(MainMenuItem.class, "type", "desc").setOrder(1));
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }

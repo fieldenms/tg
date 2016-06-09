@@ -1,0 +1,258 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity-centre basic tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+
+    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.sample.domain.MiTgPersistentEntityWithProperties">
+    <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
+</head>
+
+<body>
+    <tg-reflector id="reflector"></tg-reflector>
+    <test-fixture id="CentreFixture">
+        <template>
+            <tg-MiTgPersistentEntityWithProperties-centre id="centre"></tg-MiTgPersistentEntityWithProperties-centre>
+        </template>
+    </test-fixture>
+
+    <script>
+        suite('entity centre', function () {
+            var centre, reflector;
+
+            setup(function () {
+                centre = fixture('CentreFixture');
+                reflector = document.querySelector('#reflector');
+            });
+
+            test('refresh action works for complex centre', function (done) {
+                var old_postRun = centre._postRun;
+                var old_value, oldEditValue, valToEdit, testingPhase, masterEditor, saveButton;
+                var changeValue = function (value, phase) {
+                    masterEditor._editingValue = '' + value;
+                    masterEditor.commit();
+                    testingPhase = phase;
+                    saveButton._asyncRun()
+                }
+
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                    var entity, editAction;
+
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+
+                    entity = resultEntities[0];
+
+                    editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
+                    editAction.currentEntity = entity;
+
+                    if (testingPhase === 'first') {
+                        assert.strictEqual(summary.get("kount"), 21, "The number of retrieved entities is incorrect should be 21.");
+                        oldEditValue = summary.get('max_of_dec');
+                        valToEdit = oldEditValue + 1;
+
+                        editAction._run();
+
+                        editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                            console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
+
+                            var outerMaster = editAction._masterReferenceForTesting;
+
+                            outerMaster.addEventListener('after-load', function (event) {
+                                var embeddedMaster = event.detail;
+
+                                masterEditor = embeddedMaster.$.editor_4_bigDecimalProp;
+
+                                embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                                };
+
+                                embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+                                    saveButton = embeddedMaster.querySelector("tg-action[role='save']");
+                                    if (testingPhase === 'first') {
+                                        old_value = masterEditor._acceptedValue;
+                                        changeValue(valToEdit, 'second');
+                                    }
+                                };
+                            });
+                        }
+                    } else if (testingPhase === 'second') {
+                        assert.strictEqual(summary.get("max_of_dec"), valToEdit, "The value of summary on refresh should be: " + valToEdit);
+                        changeValue(old_value, "finish");
+                    } else if (testingPhase === 'finish') {
+                        assert.strictEqual(summary.get("max_of_dec"), oldEditValue, "The value of summary on refresh should be: " + oldEditValue);
+                        centre._postRun = old_postRun;
+                        done();
+                    }
+                };
+
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    var keyEditor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+                    testingPhase = 'first';
+                    keyEditor._editingValue = 'DEMO0*, DEMO1*, DEMO20';
+                    keyEditor.commit();
+                    centre.run();
+                };
+
+                centre.retrieve();
+            });
+            
+            test('refresh action after modification works', function (done) {
+                var old_postRun = centre._postRun;
+                var old_refresh = centre.refreshEntities.bind(centre);
+                var old_value, new_value, testingPhase, masterEditor, saveButton, entity, editAction;
+                var changeValue = function (value, phase) {
+                    masterEditor._editingValue = '' + value;
+                    masterEditor.commit();
+                    testingPhase = phase;
+                    saveButton._asyncRun()
+                }
+                
+                centre.refreshEntities = function (entities) {
+                    var prom = old_refresh(entities);
+                    if (testingPhase === 'third' || testingPhase === 'finish') {
+                        centre.currentPage();
+                    }
+                }
+
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                    if (testingPhase === 'first') {
+                        entity = resultEntities[0];
+                        old_value = entity.get("key");
+                        new_value = "DEMO35";
+                        editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
+                        editAction.currentEntity = entity;
+                        assert.strictEqual(pageCount, 2, "The initial number of pages is wrong: " + pageCount);
+                        testingPhase = 'second';
+                        centre.nextPage();
+                    } else if (testingPhase === 'second') {
+                        editAction._run();
+                        editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                            console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
+
+                            var outerMaster = editAction._masterReferenceForTesting;
+
+                            outerMaster.addEventListener('after-load', function (event) {
+                                var embeddedMaster = event.detail;
+
+                                masterEditor = embeddedMaster.$.editor_4_key;
+
+                                embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                                };
+
+                                embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+                                    saveButton = embeddedMaster.querySelector("tg-action[role='save']");
+                                    if (testingPhase === 'second') {
+                                        changeValue(new_value, 'third');
+                                    }
+                                };
+                            });
+                        }
+                    } else if (testingPhase === 'third') {
+                        assert.strictEqual(pageCount, 1, "The updated number of pagees is incorrect: " + pageCount);
+                        assert.strictEqual(centre.$.selection_criteria.pageNumberUpdated, 0, "The updated page number is incorrect" + centre.$.selection_criteria.pageNumberUpdated);
+                        changeValue(old_value, 'finish');
+                    } else if (testingPhase === 'finish') {
+                        assert.strictEqual(pageCount, 2, "The restored number of pagees is incorrect: " + pageCount);
+                        assert.strictEqual(centre.$.selection_criteria.pageNumberUpdated, 0, "The restored page number is incorrect: " + centre.$.selection_criteria.pageNumberUpdated);
+                        centre._postRun = old_postRun;
+                        centre.refreshEntities = old_refresh;
+                        done();
+                    }
+                };
+
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    testingPhase = 'first';
+                    centre.run();
+                };
+
+                centre.retrieve();
+            });
+            
+            test("refresh didn't took affect after modification for not exisitng entities.", function (done) {
+                var old_postRun = centre._postRun;
+                var old_refresh = centre.refreshEntities.bind(centre);
+                var old_value, new_value, testingPhase, masterEditor, saveButton, entity, editAction;
+                var changeValue = function (value, phase) {
+                    masterEditor._editingValue = '' + value;
+                    masterEditor.commit();
+                    testingPhase = phase;
+                    saveButton._asyncRun()
+                }
+                
+                centre.refreshEntities = function (entities) {
+                    var prom = old_refresh(entities);
+                    if (testingPhase === 'third') {
+                        changeValue(old_value, 'finish')
+                    } else if (testingPhase === 'finish') {
+                        assert.strictEqual(centre.$.selection_criteria.pageCountUpdated, 2, "The unrefreshed number of pagees is incorrect: " + centre.$.selection_criteria.pageCountUpdated);
+                        assert.strictEqual(centre.$.selection_criteria.pageNumberUpdated, 1, "The unrefreshed page number is incorrect: " + centre.$.selection_criteria.pageNumberUpdated);
+                        assert.strictEqual(centre.$.egi.entities.length, 1, "The number of entities on the last page is incorrect: " + centre.$.egi.entities.length);
+                        centre._postRun = old_postRun;
+                        centre.refreshEntities = old_refresh;
+                        var keyEditor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+                        keyEditor._editingValue = '';
+                        keyEditor.commit();
+                        done();
+                    }
+                }
+
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                    if (testingPhase === 'first') {
+                        entity = resultEntities[0];
+                        old_value = entity.get("key");
+                        new_value = "DEMO35";
+                        editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
+                        editAction.currentEntity = entity;
+                        assert.strictEqual(pageCount, 2, "The initial number of pages is wrong: " + pageCount);
+                        testingPhase = 'second';
+                        centre.nextPage();
+                    } else if (testingPhase === 'second') {
+                        editAction._run();
+                        editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                            console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
+
+                            var outerMaster = editAction._masterReferenceForTesting;
+
+                            outerMaster.addEventListener('after-load', function (event) {
+                                var embeddedMaster = event.detail;
+
+                                masterEditor = embeddedMaster.$.editor_4_key;
+
+                                embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                                };
+
+                                embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+                                    saveButton = embeddedMaster.querySelector("tg-action[role='save']");
+                                    if (testingPhase === 'second') {
+                                        changeValue(new_value, 'third');
+                                    }
+                                };
+                            });
+                        }
+                    }
+                };
+
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    testingPhase = 'first';
+                    centre.run();
+                };
+
+                centre.retrieve();
+            });
+        });
+    </script>
+
+</body>
+
+</html>

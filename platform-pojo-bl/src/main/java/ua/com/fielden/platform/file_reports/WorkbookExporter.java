@@ -2,66 +2,121 @@ package ua.com.fielden.platform.file_reports;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.zip.Deflater;
 
-import org.apache.log4j.helpers.DateTimeDateFormat;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
+import ua.com.fielden.platform.serialisation.xstream.GZipOutputStreamEx;
+import ua.com.fielden.platform.utils.Pair;
 
+/**
+ * A set of utility methods for exporting data into MS Excel.
+ * 
+ * @author TG Team
+ *
+ */
 public class WorkbookExporter {
 
     public static <M extends AbstractEntity<?>> HSSFWorkbook export(final List<M> entities, final String[] propertyNames, final String[] propertyTitles) {
+        final List<Pair<String, String>> propNamesAndTitles = new ArrayList<>();
+
+        for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
+            propNamesAndTitles.add(new Pair<String, String>(propertyNames[index], propertyTitles[index]));
+        }
+        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<M>("Exported data", entities, propNamesAndTitles);
+        final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
+        sheetsData.add(dataForWorkbookSheet);
+        return export(sheetsData);
+    }
+
+    public static byte[] convertToGZipByteArray(final HSSFWorkbook workbook) throws IOException {
+        final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
+        final GZipOutputStreamEx zOut = new GZipOutputStreamEx(oStream, Deflater.BEST_COMPRESSION);
+        workbook.write(zOut);
+        zOut.flush();
+        zOut.close();
+        oStream.flush();
+        oStream.close();
+        return oStream.toByteArray();
+    }
+
+    public static byte[] convertToByteArray(final HSSFWorkbook workbook) throws IOException {
+        final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
+        workbook.write(oStream);
+        oStream.flush();
+        oStream.close();
+        return oStream.toByteArray();
+    }
+
+    public static HSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData) {
         final HSSFWorkbook wb = new HSSFWorkbook();
-        final HSSFSheet sheet = wb.createSheet("Exported Data");
+        for (DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
+            addSheetWithData(wb, sheetData);
+        }
+        return wb;
+    }
+
+    private static <M extends AbstractEntity<?>> void addSheetWithData(final HSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData) {
+        final HSSFSheet sheet = wb.createSheet(sheetData.getSheetTitle());
         // Create a header row.
         final HSSFRow headerRow = sheet.createRow(0);
         // Create a new font and alter it
         final HSSFFont font = wb.createFont();
-        font.setFontHeightInPoints((short) 12);
+        font.setFontHeightInPoints((short) 11);
         font.setFontName("Courier New");
         font.setBoldweight((short) 1000);
         // Fonts are set into a style so create a new one to use
         final HSSFCellStyle headerCellStyle = wb.createCellStyle();
         headerCellStyle.setFont(font);
         headerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
+        headerCellStyle.setWrapText(true);
         final HSSFCellStyle headerInnerCellStyle = wb.createCellStyle();
         headerInnerCellStyle.setFont(font);
         headerInnerCellStyle.setBorderBottom(HSSFCellStyle.BORDER_THIN);
         headerInnerCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
+        headerInnerCellStyle.setWrapText(true);
         // Create cells and put column names there
-        for (int index = 0; index < propertyTitles.length; index++) {
+        for (int index = 0; index < sheetData.getPropTitles().size(); index++) {
             final HSSFCell cell = headerRow.createCell(index);
-            cell.setCellValue(propertyTitles[index]);
-            cell.setCellStyle(index < propertyTitles.length - 1 ? headerInnerCellStyle : headerCellStyle);
+            cell.setCellValue(sheetData.getPropTitles().get(index));
+            cell.setCellStyle(index < sheetData.getPropTitles().size() - 1 ? headerInnerCellStyle : headerCellStyle);
         }
+
+        CellStyle dateCellStyle = wb.createCellStyle();
+        CreationHelper createHelper = wb.getCreationHelper();
+        dateCellStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
 
         // let's make cell style to handle borders
         final HSSFCellStyle dataCellStyle = wb.createCellStyle();
         dataCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
-        for (int index = 0; index < entities.size(); index++) {
+        for (int index = 0; index < sheetData.getEntities().size(); index++) {
             final HSSFRow row = sheet.createRow(index + 1); // new row starting with 1
             // iterate through values in the current table row and populate the sheet row
-            for (int propIndex = 0; propIndex < propertyNames.length; propIndex++) {
+            for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
                 final HSSFCell cell = row.createCell(propIndex); // create new cell
-                if (propIndex < propertyNames.length - 1) { // the last column should not have right border
+                if (propIndex < sheetData.getPropNames().size() - 1) { // the last column should not have right border
                     cell.setCellStyle(dataCellStyle);
                 }
-                final Object value = entities.get(index).get(propertyNames[propIndex]); // get the value
+                final Object value = sheetData.getEntities().get(index).get(sheetData.getPropNames().get(propIndex)); // get the value
                 // need to try to do the best job with types
                 if (value instanceof Date) {
-                    cell.setCellValue(DateTimeDateFormat.getDateTimeInstance().format(value));
+                    cell.setCellValue((Date) value);
+                    cell.setCellStyle(dateCellStyle);
                 } else if (value instanceof DateTime) {
-                    cell.setCellValue(DateTimeDateFormat.getDateTimeInstance().format(value));
+                    cell.setCellValue(((DateTime) value).toDate());
+                    cell.setCellStyle(dateCellStyle);
                 } else if (value instanceof Number) {
                     cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
                     cell.setCellValue(((Number) value).doubleValue());
@@ -76,21 +131,17 @@ public class WorkbookExporter {
                 }
             }
         }
-        return wb;
+
+        // adjusting columns widths
+        for (int propIndex = 0; propIndex < sheetData.getPropNames().size(); propIndex++) {
+            sheet.autoSizeColumn(propIndex);
+            sheet.setColumnWidth(propIndex, (int) (sheet.getColumnWidth(propIndex) * 1.05));
+        }
+
+        // tripling first row height
+        sheet.getRow(0).setHeight((short) (sheet.getRow(0).getHeight() * 3));
+
+        // freezing first row
+        sheet.createFreezePane(0, 1);
     }
-
-    public static byte[] convertToByteArray(final HSSFWorkbook workbook) throws IOException {
-        final ByteArrayOutputStream oStream = new ByteArrayOutputStream();
-        final GZipOutputStreamEx zOut = new GZipOutputStreamEx(oStream, Deflater.BEST_COMPRESSION);
-
-        workbook.write(zOut);
-
-        zOut.flush();
-        zOut.close();
-        oStream.flush();
-        oStream.close();
-
-        return oStream.toByteArray();
-    }
-
 }

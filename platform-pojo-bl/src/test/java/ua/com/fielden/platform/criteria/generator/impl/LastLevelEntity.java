@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.validation.annotation.CompanionObject;
 
 /**
  * Entity for testing purposes.

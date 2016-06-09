@@ -39,8 +39,18 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends Ab
     }
 
     @Override
+    public T param(final Enum paramName) {
+        return param(paramName.toString());
+    }
+
+    @Override
     public T iParam(final String paramName) {
         return copy(getParent(), getTokens().iParam(paramName));
+    }
+
+    @Override
+    public T iParam(final Enum paramName) {
+        return iParam(paramName.toString());
     }
 
     @Override
@@ -49,8 +59,18 @@ abstract class AbstractSingleOperand<T, ET extends AbstractEntity<?>> extends Ab
     }
 
     @Override
+    public T prop(final Enum propertyName) {
+        return prop(propertyName.toString());
+    }
+
+    @Override
     public T extProp(final String propertyName) {
         return copy(getParent(), getTokens().extProp(propertyName));
+    }
+
+    @Override
+    public T extProp(final Enum propertyName) {
+        return extProp(propertyName.toString());
     }
 
     @Override

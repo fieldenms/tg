@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -9,23 +10,31 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
+import javassist.util.proxy.ProxyFactory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This is a helper class to provide some commonly used method for retrieval of RTTI not provided directly by the Java reflection package.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class Reflector {
     private final static Map<MethodKey, Pair<Method, NoSuchMethodException>> methods = new HashMap<>();
@@ -49,7 +58,7 @@ public final class Reflector {
 
     /**
      * This is a helper method used to walk along class hierarchy in search of the specified method.
-     * 
+     *
      * @param startWithClass
      * @param method
      * @param arguments
@@ -88,7 +97,7 @@ public final class Reflector {
 
     /**
      * Returns method specified with methodName from {@code startWithClass} class.
-     * 
+     *
      * @param startWithClass
      * @param methodName
      * @param arguments
@@ -195,7 +204,7 @@ public final class Reflector {
 
     /**
      * Returns constructor specified from {@code startWithClass} class.
-     * 
+     *
      * @param startWithClass
      * @param methodName
      * @param arguments
@@ -218,7 +227,7 @@ public final class Reflector {
 
     /**
      * Returns the method specified with methodName and the array of it's arguments. In order to determine correct method it uses instances instead of classes.
-     * 
+     *
      * @param instance
      * @param methodName
      * @param arguments
@@ -242,37 +251,55 @@ public final class Reflector {
 
     /**
      * Depending on the type of the field, the getter may start not with ''get'' but with ''is''. This method tries to determine a correct getter.
-     * 
+     *
      * @param propertyName
      * @param entity
      * @return
      * @throws Exception
      */
-    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) throws NoSuchMethodException {
-        final String propertyNameInGetter = propertyName.toUpperCase().charAt(0) + propertyName.substring(1);
+    public static Method obtainPropertyAccessor(final Class<?> entityClass, final String propertyName) {
         try {
-            return Reflector.getMethod(entityClass, "get" + propertyNameInGetter);
-        } catch (final Exception e) {
-            return Reflector.getMethod(entityClass, "is" + propertyNameInGetter);
+            return Reflector.getMethod(entityClass, Accessor.GET.getName(propertyName));
+        } catch (final Exception e1) {
+            try {
+                return Reflector.getMethod(entityClass, Accessor.IS.getName(propertyName));
+            } catch (NoSuchMethodException e2) {
+                throw new ReflectionException(format("Could not obtain accessor for property [%s] in type [%s].", propertyName, entityClass.getName()), e1);
+            }
         }
     }
 
     /**
      * Tries to obtain property setter for property, specified using dot-notation. Heavily uses
      * {@link PropertyTypeDeterminator#determinePropertyTypeWithoutKeyTypeDetermination(Class, String)} to obtain penult property in dot-notation
-     * 
+     *
      * @param entityClass
      * @param dotNotationExp
      * @return
      * @throws NoSuchMethodException
      * @throws Exception
      */
-    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) throws NoSuchMethodException {
+    public static Method obtainPropertySetter(final Class<?> entityClass, final String dotNotationExp) {
         if (StringUtils.isEmpty(dotNotationExp) || dotNotationExp.contains("()")) {
             throw new IllegalArgumentException("DotNotationExp could not be empty or could not define construction with methods.");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(entityClass, dotNotationExp);
-        return Reflector.getMethod(transformed.getKey(), "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1), PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false));
+        try {
+            final String methodName = "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1);
+            final Class<?> argumentType = PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false);
+            
+            if (DynamicEntityClassLoader.isGenerated(entityClass) && DynamicEntityClassLoader.getOriginalType(entityClass) == argumentType) {
+                return Reflector.getMethod(transformed.getKey(), 
+                        methodName, 
+                        entityClass);
+            } else {
+                return Reflector.getMethod(transformed.getKey(), 
+                        methodName, 
+                        argumentType);
+            }
+        } catch (final Exception ex) {
+            throw new ReflectionException(format("Could not obtain setter for property [%s] in type [%s].", dotNotationExp, entityClass.getName()), ex);
+        }
     }
 
     // ========================================================================================================
@@ -281,7 +308,7 @@ public final class Reflector {
     /**
      * A contract for determining if the property of specified type <code>propertyType</code> could be sortable or not. For now - only property of AE type with composite key could
      * not be sortable.
-     * 
+     *
      * @param propertyType
      * @return
      */
@@ -292,38 +319,28 @@ public final class Reflector {
 
     /**
      * Returns min and max possible values for property.
-     * 
+     *
      * @param entity
      * @param propertyName
      * @return
      */
-    public static Pair<Comparable, Comparable> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
-        final List<Field> fields = Finder.findProperties(entity.getType());
-        Comparable<?> min = null, max = null;
-        for (final Field field : fields) { // for each property field
-            if (field.getName().equals(propertyName)) { //
-                final List<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
-                for (final Annotation annotation : propertyValidationAnotations) {
-                    if (annotation instanceof GreaterOrEqual) {
-                        min = ((GreaterOrEqual) annotation).value();
-                    } else if (annotation instanceof Max) {
-                        max = ((Max) annotation).value();
-                    }
-                }
+    public static Pair<Integer, Integer> extractValidationLimits(final AbstractEntity<?> entity, final String propertyName) {
+        final Field field = Finder.findFieldByName(entity.getType(), propertyName);
+        Integer min = null, max = null;
+        final Set<Annotation> propertyValidationAnotations = entity.extractValidationAnnotationForProperty(field, PropertyTypeDeterminator.determinePropertyType(entity.getType(), propertyName), false);
+        for (final Annotation annotation : propertyValidationAnotations) {
+            if (annotation instanceof GreaterOrEqual) {
+                min = ((GreaterOrEqual) annotation).value();
+            } else if (annotation instanceof Max) {
+                max = ((Max) annotation).value();
             }
         }
-        if (min == null) {
-            min = Integer.MIN_VALUE;
-        }
-        if (max == null) {
-            max = Integer.MAX_VALUE;
-        }
-        return new Pair<Comparable, Comparable>(min, max);
+        return new Pair<>(min, max);
     }
 
     /**
      * Indicates whether specified class is synthetic entity or not.
-     * 
+     *
      * @param clazz
      * @return
      */
@@ -333,7 +350,7 @@ public final class Reflector {
 
     /**
      * Returns a list of parameters declared for the specified annotation type. An empty list is returned in case where there are no parameter declarations.
-     * 
+     *
      * @param annotationType
      * @return
      */
@@ -347,7 +364,7 @@ public final class Reflector {
 
     /**
      * Obtains and returns a pair of parameter type and its value for the specified annotation parameter.
-     * 
+     *
      * @param annotation
      * @param paramName
      * @return parameter value
@@ -365,7 +382,7 @@ public final class Reflector {
 
     /**
      * Converts a relative property path to an absolute path with respect to the provided context.
-     * 
+     *
      * @param context
      *            -- the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param relativePropertyPath
@@ -398,7 +415,7 @@ public final class Reflector {
 
     /**
      * A helper function, which recursively determines the depth of the context path in comparison to the relative property path provide.
-     * 
+     *
      * @return
      */
     private static String pathFromRoot(final String context, final int relativePathLength) {
@@ -421,7 +438,7 @@ public final class Reflector {
 
     /**
      * Converts an absolute property path to a relative one in respect to the provided context.
-     * 
+     *
      * @param context
      *            the dot notated property path from the root, which indicated the relative position in the type tree against which all other paths should be calculated.
      * @param absolutePropertyPath
@@ -466,7 +483,7 @@ public final class Reflector {
 
     /**
      * Calculate the property depth in the type tree based on the number of "." separators.
-     * 
+     *
      * @param propertyPath
      * @return
      */
@@ -480,7 +497,7 @@ public final class Reflector {
     /**
      * Converts a relative property path to an absolute path with respect to the provided context. Unlike relative2Absolute this method inverts the path making the context property
      * to be the first node in the path.
-     * 
+     *
      * @param type
      * @param contextProperty
      * @param dotNotaionalExp
@@ -524,11 +541,53 @@ public final class Reflector {
 
     /**
      * A convenient method returning a separator that is used to represent a composite entity as a single string value.
-     * 
+     *
      * @param type
      * @return
      */
     public static String getKeyMemberSeparator(final Class<? extends AbstractEntity<DynamicEntityKey>> type) {
         return AnnotationReflector.getAnnotation(type, KeyType.class).keyMemberSeparator();
+    }
+    
+    /**
+     * Returns <code>true</code> if the specified property is proxied for a given entity instance.
+     *  
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyProxied(final AbstractEntity<?> entity, final String propName) {
+        return entity.proxiedPropertyNames().contains(propName);
+    }
+    
+    /**
+     * Identifies whether the specified field represents a retrievable property.
+     * The notion retrievable is different to persistent as it also includes calculated properties, which do get retrieved from a database. 
+     * 
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final Field field) {
+        final String name = field.getName();
+        return entity.isPersistent()
+               && (
+                      field.isAnnotationPresent(Calculated.class) ||
+                      (!name.equals(AbstractEntity.KEY) && !name.equals(AbstractEntity.DESC) && field.isAnnotationPresent(MapTo.class)) ||
+                      (name.equals(AbstractEntity.KEY) && !entity.isComposite()) ||
+                      (name.equals(AbstractEntity.DESC) && entity.getType().isAnnotationPresent(DescTitle.class)) ||
+                      (Finder.isOne2One_association(entity.getType(), name))
+                  );
+    }
+    
+    /**
+     * A convenient equivalent to method {@link #isPropertyRetrievable(AbstractEntity, Field)} that accepts property name instead of the Field instance. 
+     * 
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public static boolean isPropertyRetrievable(final AbstractEntity<?> entity, final String propName) {
+        return isPropertyRetrievable(entity, Finder.findFieldByName(entity.getClass(), propName)); 
     }
 }

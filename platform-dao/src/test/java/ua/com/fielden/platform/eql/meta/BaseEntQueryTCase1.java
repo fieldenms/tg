@@ -1,25 +1,27 @@
 package ua.com.fielden.platform.eql.meta;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.type.TypeResolver;
-import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
+import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.dao.PropertyColumn;
 import ua.com.fielden.platform.dao.PropertyMetadata;
-import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.query.DbVersion;
@@ -63,10 +65,6 @@ import ua.com.fielden.platform.types.Money;
 
 import com.google.inject.Guice;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
 public class BaseEntQueryTCase1 {
     protected static final Class<TgWorkOrder> WORK_ORDER = TgWorkOrder.class;
     protected static final Class<TgVehicle> VEHICLE = TgVehicle.class;
@@ -96,12 +94,6 @@ public class BaseEntQueryTCase1 {
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
     public static final Map<Class<? extends AbstractEntity<?>>, EntityInfo> metadata = new HashMap<>();
 
-    static {
-        hibTypeDefaults.put(boolean.class, YesNoType.class);
-        hibTypeDefaults.put(Boolean.class, YesNoType.class);
-        hibTypeDefaults.put(Date.class, DateTimeType.class);
-        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
-    }
 
     protected static Type hibtype(final String name) {
         return typeResolver.basic(name);
@@ -113,6 +105,17 @@ public class BaseEntQueryTCase1 {
 
     protected static final EntQueryGenerator1 qb = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER);
 
+    static {
+        hibTypeDefaults.put(Date.class, DateTimeType.class);
+        hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
+        try {
+            metadata.putAll((new MetadataGenerator(qb)).generate(new HashSet<>(PlatformTestDomainTypes.entityTypes)));
+        } catch (final Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
     //private static final EntQueryGenerator1 qbwf = new EntQueryGenerator1(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null);
 
     protected static EntQuery1 entSourceQry(final QueryModel qryModel) {

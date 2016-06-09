@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.entity.query.generation.elements;
 
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
+import static ua.com.fielden.platform.utils.EntityUtils.getOrderPropsFromCompositeEntityKey;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,8 +25,8 @@ import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.FetchModel;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.generation.EntQueryBlocks;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
@@ -32,10 +37,6 @@ import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYield
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
-import static ua.com.fielden.platform.utils.EntityUtils.getOrderPropsFromCompositeEntityKey;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 public class EntQuery implements ISingleOperand {
 
@@ -45,7 +46,7 @@ public class EntQuery implements ISingleOperand {
     private final Yields yields;
     private final GroupBys groups;
     private final OrderBys orderings;
-    private final Class resultType;
+    private final Class<? extends AbstractEntity<?>> resultType;
     private final QueryCategory category;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final Map<String, Object> paramValues;
@@ -77,6 +78,7 @@ public class EntQuery implements ISingleOperand {
         return sql();
     }
 
+    @Override
     public String sql() {
         if (isResultQuery()) {
             assignSqlParamNames();
@@ -118,7 +120,7 @@ public class EntQuery implements ISingleOperand {
     }
 
     private boolean allPropsYieldEnhancementRequired() {
-        return yields.size() == 0 && !isSubQuery() && //
+        return yields.size() == 0 && !isSubQuery() &&
                 ((mainSourceIsTypeBased() && persistedType) || mainSourceIsQueryBased());
     }
 
@@ -134,7 +136,7 @@ public class EntQuery implements ISingleOperand {
         return getSources().getMain() instanceof QueryBasedSource;
     }
 
-    private void enhanceYieldsModel(final FetchModel fetchModel) {
+    private void enhanceYieldsModel() {
         // enhancing short-cuts in yield section (e.g. the following: assign missing "id" alias in case yield().prop("someEntProp").modelAsEntity(entProp.class) is used
         if (idAliasEnhancementRequired()) {
             final Yield idModel = new Yield(yields.getFirstYield().getOperand(), AbstractEntity.ID);
@@ -145,18 +147,20 @@ public class EntQuery implements ISingleOperand {
             yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + AbstractEntity.ID), AbstractEntity.ID));
         } else if (allPropsYieldEnhancementRequired()) {
             final String yieldPropAliasPrefix = getSources().getMain().getAlias() == null ? "" : getSources().getMain().getAlias() + ".";
+            logger.debug("enhanceYieldsModel.allPropsYieldEnhancementRequired");
             if (mainSourceIsTypeBased()) {
-                for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity((Class<? extends AbstractEntity<?>>) resultType)) {
-//                    if (ppi.isSynthetic()) {
-//                        throw new IllegalStateException(ppi.toString());
-//                    }
-                    final boolean skipProperty = ppi.isSynthetic() || //
-                            ppi.isVirtual() || //
-                            ppi.isCollection() || //
-                            (ppi.isAggregatedExpression() && !isResultQuery()) //
-                            || (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())));
+                for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
+                    //                    if (ppi.isSynthetic()) {
+                    //                        throw new IllegalStateException(ppi.toString());
+                    //                    }
+                    final boolean skipProperty = ppi.isSynthetic() ||
+                            ppi.isVirtual() ||
+                            ppi.isCollection() ||
+                            (ppi.isAggregatedExpression() && !isResultQuery())
+                    //|| (ppi.isCommonCalculated() && (fetchModel == null || !fetchModel.containsProp(ppi.getName())))
+                    ;
                     if (!skipProperty) {
-                        //System.out.println("!!!!!!!!!!!!!!!!!!! ------------------------ " + ppi.getName());
+                        logger.debug(" add yield: " + ppi);
                         yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
                     }
                 }
@@ -169,7 +173,7 @@ public class EntQuery implements ISingleOperand {
                     }
                 }
                 if (resultType != EntityAggregates.class) {
-                    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity((Class<? extends AbstractEntity<?>>) resultType)) {
+                    for (final PropertyMetadata ppi : domainMetadataAnalyser.getPropertyMetadatasForEntity(resultType)) {
                         final boolean skipProperty = ppi.isSynthetic() || ppi.isVirtual() || ppi.isCollection() || (ppi.isAggregatedExpression() && !isResultQuery());
                         if ((ppi.isCalculated()) && yields.getYieldByAlias(ppi.getName()) == null && !skipProperty) {
                             yields.addYield(new Yield(new EntProp(yieldPropAliasPrefix + ppi.getName()), ppi.getName()));
@@ -222,19 +226,46 @@ public class EntQuery implements ISingleOperand {
         }
     }
 
-    private void adjustYieldsModelAccordingToFetchModel(final FetchModel fetchModel) {
-        if (fetchModel != null) {
+    private boolean areAllFetchedPropsAggregatedExpressions(final IRetrievalModel fetchModel) {
+        boolean result = true;
+        for (final Yield yield : yields.getYields()) {
+            if (fetchModel.containsProp(yield.getAlias())) {
+                result = result && determineYieldDetailsType(yield).equals(ResultQueryYieldDetails.YieldDetailsType.AGGREGATED_EXPRESSION);
+            }
+        }
+        return result;
+    }
+
+    private boolean yieldIsOfEntityType(final Yield yield) {
+        final Class yieldType = determineYieldJavaType(yield);
+        return yieldType != null && AbstractEntity.class.isAssignableFrom(yieldType);
+    }
+
+    private void adjustYieldsModelAccordingToFetchModel(final IRetrievalModel fetchModel) {
+        if (fetchModel == null) {
+            logger.debug("adjustYieldsModelAccordingToFetchModel: no fetch model was provided -- nothing was removed");
+        } else {
+            logger.debug("adjustYieldsModelAccordingToFetchModel: fetchModel\n" + fetchModel);
             final Set<Yield> toBeRemoved = new HashSet<Yield>();
+
             for (final Yield yield : yields.getYields()) {
-                if (!fetchModel.containsProp(yield.getAlias())) {
-                    //System.out.println("--------------------- removing according to fetch: " + yield.getAlias());
+                if (shouldYieldBeRemoved(fetchModel, yield)) {
                     toBeRemoved.add(yield);
+                    logger.debug("adjustYieldsModelAccordingToFetchModel: removing property [" + yield.getAlias() + "]");
+                } else {
+                    logger.debug("adjustYieldsModelAccordingToFetchModel: retaining property [" + yield.getAlias() + "]");
                 }
             }
             yields.removeYields(toBeRemoved);
-        } else {
-            //System.out.println("--------------------- removing according to fetch: NONE fetch model was provided -- nothing was removed");
         }
+    }
+
+    private boolean shouldYieldBeRemoved(final IRetrievalModel fetchModel, Yield yield) {
+        boolean presentInFetchModel = fetchModel.containsProp(yield.getAlias());
+        final boolean allFetchedPropsAreAggregatedExpressions = areAllFetchedPropsAggregatedExpressions(fetchModel);
+        // this means that all not fetched props should be 100% removed -- in order to get valid sql stmt for entity centre totals query
+        boolean isHeaderOfMoneyType = yields.isHeaderOfSimpleMoneyTypeProperty(yield.getAlias());
+        return allFetchedPropsAreAggregatedExpressions ? (!presentInFetchModel || isHeaderOfMoneyType) : !presentInFetchModel;
     }
 
     private void adjustOrderBys() {
@@ -242,7 +273,7 @@ public class EntQuery implements ISingleOperand {
         for (final OrderBy orderBy : orderings.getModels()) {
             if (orderBy.getYieldName() != null) {
                 if (orderBy.getYieldName().equals("key") && DynamicEntityKey.class.equals(getKeyType(resultType))) {
-                    final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey(resultType, sources.getMain().getAlias());
+                    final List<String> keyOrderProps = getOrderPropsFromCompositeEntityKey((Class<? extends AbstractEntity<DynamicEntityKey>>) resultType, sources.getMain().getAlias());
                     for (final String keyMemberProp : keyOrderProps) {
                         toBeAdded.add(new OrderBy(new EntProp(keyMemberProp), orderBy.isDesc()));
                     }
@@ -297,14 +328,14 @@ public class EntQuery implements ISingleOperand {
         int yieldIndex = 0;
         for (final Yield yield : yields.getYields()) {
             yieldIndex = yieldIndex + 1;
-            yield.setInfo(new ResultQueryYieldDetails( //
-            yield.getAlias(), //
-            determineYieldJavaType(yield), //
-            determineYieldHibType(yield), //
-            "C" + yieldIndex, //
-            determineYieldNullability(yield), //
-            determineYieldDetailsType(yield)) //
-            );
+            yield.setInfo(new ResultQueryYieldDetails(
+                    yield.getAlias(),
+                    determineYieldJavaType(yield),
+                    determineYieldHibType(yield),
+                    "C" + yieldIndex,
+                    determineYieldNullability(yield),
+                    determineYieldDetailsType(yield))
+                    );
         }
     }
 
@@ -346,8 +377,8 @@ public class EntQuery implements ISingleOperand {
 
         if (persistedType) {
             if (qsYt != null && !qsYt.equals(rtYt)) {
-                if (!(isPersistedEntityType(qsYt) && Long.class.equals(rtYt)) && //
-                        !(isPersistedEntityType(rtYt) && Long.class.equals(qsYt)) && //
+                if (!(isPersistedEntityType(qsYt) && Long.class.equals(rtYt)) &&
+                        !(isPersistedEntityType(rtYt) && Long.class.equals(qsYt)) &&
                         !(rtYt.equals(DynamicEntityKey.class) && qsYt.equals(String.class)) && !rtYt.equals(Money.class)) {
                     throw new IllegalStateException("Different types: from source = " + qsYt.getSimpleName() + " from result type = " + rtYt.getSimpleName());
                 }
@@ -396,9 +427,9 @@ public class EntQuery implements ISingleOperand {
         }
     }
 
-    public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category, //
-            final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username, //
-            final EntQueryGenerator generator, final FetchModel fetchModel, final Map<String, Object> paramValues) {
+    public EntQuery(final boolean filterable, final EntQueryBlocks queryBlocks, final Class resultType, final QueryCategory category,
+            final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username,
+            final EntQueryGenerator generator, final IRetrievalModel fetchModel, final Map<String, Object> paramValues) {
         super();
         this.category = category;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
@@ -409,10 +440,11 @@ public class EntQuery implements ISingleOperand {
         this.orderings = queryBlocks.getOrderings();
         this.resultType = resultType;// != null ? resultType : (yields.size() == 0 ? this.sources.getMain().sourceType() : null);
         if (this.resultType == null && category != QueryCategory.SUB_QUERY) { // only primitive result queries have result type not assigned
-            throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!");
+            throw new IllegalStateException("This query is not subquery, thus its result type shouldn't be null!\n Query: " + queryBlocks);
         }
 
-        persistedType = (resultType == null || resultType == EntityAggregates.class) ? false : (domainMetadataAnalyser.getEntityMetadata(this.resultType) instanceof PersistedEntityMetadata);
+        persistedType = (resultType == null || resultType == EntityAggregates.class) ? false
+                : (domainMetadataAnalyser.getEntityMetadata(this.resultType) instanceof PersistedEntityMetadata);
 
         this.paramValues = paramValues;
 
@@ -435,15 +467,6 @@ public class EntQuery implements ISingleOperand {
                 result.put(propStage, newStageProps);
             }
         }
-
-        //	for (final Entry<EntPropStage, List<EntProp>> entProp : result.entrySet()) {
-        //	    System.out.println("           " + entProp.getKey());
-        //	    for (final EntProp prop : entProp.getValue()) {
-        //		System.out.println("                          " + prop);
-        //	    }
-        //
-        //	}
-
         return result;
     }
 
@@ -453,31 +476,27 @@ public class EntQuery implements ISingleOperand {
         return foundProps != null ? foundProps : Collections.<EntProp> emptyList();
     }
 
-    private void enhanceToFinalState(final EntQueryGenerator generator, final FetchModel fetchModel) {
+    private void enhanceToFinalState(final EntQueryGenerator generator, final IRetrievalModel fetchModel) {
         for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
             final ISource source = sourceAndItsJoinType.getKey();
             source.assignNullability(sourceAndItsJoinType.getValue());
             source.populateSourceItems(sourceAndItsJoinType.getValue());
         }
 
-        enhanceYieldsModel(fetchModel); //!! adds new properties in yield section
-        //System.out.println("                         1------------------ " + yields.getYields());
+        enhanceYieldsModel();
         adjustYieldsModelAccordingToFetchModel(fetchModel);
-        //System.out.println("                         2------------------ " + yields.getYields());
-        adjustOrderBys(); // enahnce order by model with yields and transforming unrecognised yieldedName into prop(..) calls
+        adjustOrderBys();
         enhanceGroupBysModelFromYields();
         enhanceGroupBysModelFromOrderBys();
 
         int countOfUnprocessed = 1;
 
         while (countOfUnprocessed > 0) {
-            //System.out.println("---------------------------generateMissingSources for getSources().count = " + getSources().getAllSourcesAndTheirJoinType().size());
             for (final Pair<ISource, Boolean> sourceAndItsJoinType : getSources().getAllSourcesAndTheirJoinType()) {
                 final ISource source = sourceAndItsJoinType.getKey();
                 getSources().getCompounds().addAll(source.generateMissingSources()); //source.getReferencingProps()
             }
 
-            //System.out.println("---------------------------countOfUnprocessed = " + countOfUnprocessed);
             final List<EntQuery> immediateSubqueries = getImmediateSubqueries();
             associateSubqueriesWithMasterQuery(immediateSubqueries);
 
@@ -486,7 +505,6 @@ public class EntQuery implements ISingleOperand {
             propsToBeResolved.addAll(collectUnresolvedPropsFromSubqueries(immediateSubqueries, EntPropStage.UNPROCESSED));
 
             countOfUnprocessed = propsToBeResolved.size();
-            //System.out.println("================propsToBeResolved preliminary=========" + propsToBeResolved);
 
             unresolvedProps.addAll(resolveProps(propsToBeResolved, generator));
 
@@ -535,8 +553,6 @@ public class EntQuery implements ISingleOperand {
                     unresolvedPropsFromSubqueries.add(entProp);
                 }
             }
-
-            //entQuery.unresolvedProps.clear();
         }
         return unresolvedPropsFromSubqueries;
     }

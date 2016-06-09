@@ -390,8 +390,8 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
      * 
      */
     public static class CentreDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<CentreDomainTreeRepresentation> {
-        public CentreDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public CentreDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -400,7 +400,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
             final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
             final AddToCriteriaTick firstTick = readValue(buffer, AddToCriteriaTick.class);
             final AddToResultSetTick secondTick = readValue(buffer, AddToResultSetTick.class);
-            return new CentreDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+            return new CentreDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

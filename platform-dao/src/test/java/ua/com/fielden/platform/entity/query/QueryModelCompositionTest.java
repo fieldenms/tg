@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.entity.query;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +38,6 @@ import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.LikeTest;
 import ua.com.fielden.platform.entity.query.generation.elements.MonthOf;
-import ua.com.fielden.platform.entity.query.generation.elements.Now;
 import ua.com.fielden.platform.entity.query.generation.elements.NullTest;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBy;
 import ua.com.fielden.platform.entity.query.generation.elements.OrderBys;
@@ -55,11 +60,6 @@ import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.utils.Pair;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     protected final IWhere0<TgVehicle> where_veh = select(VEHICLE).where();
@@ -338,12 +338,12 @@ public class QueryModelCompositionTest extends BaseEntQueryCompositionTCase {
     @Test
     public void test_query_ordering() {
         final EntityResultQueryModel<TgVehicleModel> qry = select(VEHICLE).groupBy().prop("model").yield().prop("model").modelAsEntity(MODEL);
-        final OrderingModel orderModel = orderBy().beginExpr().prop("model").add().now().endExpr().asc().prop("key").desc().model();
+        final OrderingModel orderModel = orderBy().beginExpr().prop("model").add().val(1).endExpr().asc().prop("key").desc().model();
         final EntQuery act = entResultQry(qry, orderModel);
         System.out.println(act.sql());
 
         final List<OrderBy> orderings = new ArrayList<OrderBy>();
-        orderings.add(new OrderBy(expression(prop("model"), compound(_add, new Now(DbVersion.H2))), false));
+        orderings.add(new OrderBy(expression(prop("model"), compound(_add, val(1))), false));
         orderings.add(new OrderBy(prop("key"), true));
         final OrderBys exp2 = new OrderBys(orderings);
         assertEquals("models are different", exp2, act.getOrderings());

@@ -42,13 +42,13 @@ import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityWithUnionForIncludedPropertiesLogic;
-import ua.com.fielden.platform.domaintree.testing.TgKryoForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -57,9 +57,9 @@ import com.google.inject.Injector;
 
 /**
  * A test for base TG domain tree representation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractDomainTreeTest {
     private static final String CREATE_DTM_FOR = "createDtm_for_";
@@ -110,12 +110,13 @@ public abstract class AbstractDomainTreeTest {
     }
 
     private static ISerialiser createSerialiser(final EntityFactory factory) {
-        return new TgKryoForDomainTreesTestingPurposes(factory, new ClassProviderForTestingPurposes());
+        final ClassProviderForTestingPurposes provider = new ClassProviderForTestingPurposes();
+        return new SerialiserForDomainTreesTestingPurposes(factory, provider);
     }
 
     /**
      * Returns a testing manager. Can be overridden to return specific manager for specific descendant test.
-     * 
+     *
      * @return
      */
     protected Object dtm() {
@@ -124,7 +125,7 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Returns an irrelevant "master" manager for current manager. It should be used only for initialisation purposes for current manager.
-     * 
+     *
      * @return
      */
     protected final static Object irrelevantDtm() {
@@ -133,7 +134,7 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Returns a testing manager.
-     * 
+     *
      * @return
      */
     protected final Object just_a_dtm() {
@@ -142,7 +143,7 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Returns a serialiser instance for all tests.
-     * 
+     *
      * @return
      */
     protected final static ISerialiser serialiser() {
@@ -151,7 +152,7 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Returns a factory instance for all tests.
-     * 
+     *
      * @return
      */
     protected final static EntityFactory factory() {
@@ -205,7 +206,7 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Creates root types.
-     * 
+     *
      * @return
      */
     protected static Set<Class<?>> createRootTypes_for_AbstractDomainTreeTest() {
@@ -221,13 +222,14 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Provides a testing configuration for the manager.
-     * 
+     *
      * @param dtm
      */
     protected static void manageTestingDTM_for_AbstractDomainTreeTest(final Object dtm) {
         final IDomainTreeRepresentation dtr = (IDomainTreeRepresentation) dtm;
         dtr.excludeImmutably(EvenSlaverEntity.class, "");
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 dtr.excludeImmutably(MasterEntity.class, name);
             }
@@ -236,6 +238,7 @@ public abstract class AbstractDomainTreeTest {
         dtr.getFirstTick().disableImmutably(EntityWithNormalNature.class, "");
         dtr.getSecondTick().disableImmutably(EntityWithNormalNature.class, "");
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 if (!dtr.isExcludedImmutably(MasterEntity.class, name)) {
                     dtr.getFirstTick().disableImmutably(MasterEntity.class, name);
@@ -247,7 +250,7 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Returns <code>true</code> if all desired fields (recursive) are initialised, <code>false</code> otherwise.
-     * 
+     *
      * @param instance
      * @return
      */
@@ -269,7 +272,7 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Returns <code>true</code> if all desired fields (recursive) are initialised, <code>false</code> otherwise.
-     * 
+     *
      * @param instance
      * @return
      */
@@ -353,7 +356,7 @@ public abstract class AbstractDomainTreeTest {
     /**
      * Performs after deserialisation process for "dtm" to define it fully, for e.g. when it is dependent on higher level structures. Can be 'overridden' to perform specific
      * processes for concrete manager in specific descendant tests.
-     * 
+     *
      * @param dtm
      */
     protected static void performAfterDeserialisationProcess_for_AbstractDomainTreeTest(final Object dtm) {
@@ -361,7 +364,7 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Asserts inner cross-references for its correctness for "dtm". Can be 'overridden' to assert specifically concrete manager for specific descendant tests.
-     * 
+     *
      * @param dtm
      */
     protected static void assertInnerCrossReferences_for_AbstractDomainTreeTest(final Object dtm) {
@@ -373,6 +376,7 @@ public abstract class AbstractDomainTreeTest {
 
     protected void checkOrSetMethodValues(final Object value, final String property, final Object instance, final String methodName, final Class<?>... setterArg) {
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 try {
                     if (methodName.startsWith("set")) {
@@ -390,6 +394,7 @@ public abstract class AbstractDomainTreeTest {
 
     protected void checkOrSetMethodValuesForNonCollectional(final Object value, final String property, final Object instance, final String methodName, final Class<?>... setterArg) {
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 try {
                     if (methodName.startsWith("set")) {
@@ -407,6 +412,7 @@ public abstract class AbstractDomainTreeTest {
 
     protected void checkOrSetMethodValuesForOneLevel(final Object value, final String property, final Object instance, final String methodName, final Class<?>... setterArg) {
         oneLevel(new IAction() {
+            @Override
             public void action(final String name) {
                 try {
                     if (methodName.startsWith("set")) {
@@ -424,9 +430,9 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Just an action.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected interface IAction {
         void action(final String name);
@@ -434,11 +440,11 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Runs simply an action for one level of properties :
-     * 
+     *
      * <pre>
      * action.action(atomicName);
      * </pre>
-     * 
+     *
      * @param action
      * @param atomicNames
      */
@@ -450,7 +456,7 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Runs simply an action for all appropriate levels of properties :
-     * 
+     *
      * <pre>
      * action.action(atomicName);
      * action.action(&quot;entityProp.&quot; + atomicName);
@@ -459,7 +465,7 @@ public abstract class AbstractDomainTreeTest {
      * action.action(&quot;entityProp.collection.&quot; + atomicName);
      * action.action(&quot;entityProp.collection.slaveEntityProp.&quot; + atomicName);
      * </pre>
-     * 
+     *
      * @param action
      * @param atomicNames
      */
@@ -470,13 +476,13 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Runs simply an action for levels without collections:
-     * 
+     *
      * <pre>
      * action.action(atomicName);
      * action.action(&quot;entityProp.&quot; + atomicName);
      * action.action(&quot;entityProp.entityProp.&quot; + atomicName);
      * </pre>
-     * 
+     *
      * @param action
      * @param atomicNames
      */
@@ -490,13 +496,13 @@ public abstract class AbstractDomainTreeTest {
 
     /**
      * Runs simply an action for levels with collections:
-     * 
+     *
      * <pre>
      * action.action(&quot;collection.&quot; + atomicName);
      * action.action(&quot;entityProp.collection.&quot; + atomicName);
      * action.action(&quot;entityProp.collection.slaveEntityProp.&quot; + atomicName);
      * </pre>
-     * 
+     *
      * @param action
      * @param atomicNames
      */

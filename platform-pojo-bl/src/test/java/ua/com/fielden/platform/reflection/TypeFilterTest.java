@@ -9,7 +9,8 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.TypeFilter.EntityHasPropertyOfType;
+import ua.com.fielden.platform.reflection.filtering.EntityHasPropertyOfTypePredicate;
+import ua.com.fielden.platform.reflection.filtering.TypeFilter;
 import ua.com.fielden.platform.reflection.test_entities.FirstLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
@@ -27,7 +28,7 @@ public class TypeFilterTest {
         final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
         types.add(SimpleEntity.class);
 
-        final List<Class<? extends AbstractEntity<?>>> result = TypeFilter.filter(types, new EntityHasPropertyOfType(String.class));
+        final List<Class<? extends AbstractEntity<?>>> result = TypeFilter.filter(types, new EntityHasPropertyOfTypePredicate(String.class));
         assertTrue(result.contains(SimpleEntity.class));
     }
 
@@ -36,7 +37,7 @@ public class TypeFilterTest {
         final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
         types.add(SecondLevelEntity.class);
 
-        final List<Class<? extends AbstractEntity<?>>> result = TypeFilter.filter(types, new EntityHasPropertyOfType(SecondLevelEntity.class));
+        final List<Class<? extends AbstractEntity<?>>> result = TypeFilter.filter(types, new EntityHasPropertyOfTypePredicate(SecondLevelEntity.class));
         assertTrue(result.contains(SecondLevelEntity.class));
     }
 
@@ -45,7 +46,7 @@ public class TypeFilterTest {
         final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
         types.add(SecondLevelEntity.class);
 
-        final List<Class<? extends AbstractEntity<?>>> result = TypeFilter.filter(types, new EntityHasPropertyOfType(String.class));
+        final List<Class<? extends AbstractEntity<?>>> result = TypeFilter.filter(types, new EntityHasPropertyOfTypePredicate(String.class));
         assertTrue(result.contains(SecondLevelEntity.class));
     }
 
@@ -55,7 +56,7 @@ public class TypeFilterTest {
         types.add(SimpleEntity.class);
         types.add(SecondLevelEntity.class);
 
-        final List<Class<? extends AbstractEntity<?>>> result = TypeFilter.filter(types, new EntityHasPropertyOfType(String.class));
+        final List<Class<? extends AbstractEntity<?>>> result = TypeFilter.filter(types, new EntityHasPropertyOfTypePredicate(String.class));
 
         assertTrue(result.contains(SecondLevelEntity.class));
         assertTrue(result.contains(SimpleEntity.class));
@@ -68,7 +69,7 @@ public class TypeFilterTest {
         types.add(FirstLevelEntity.class);
         types.add(SecondLevelEntity.class);
 
-        final List<Class<? extends AbstractEntity<?>>> result = TypeFilter.filter(types, new EntityHasPropertyOfType(SecondLevelEntity.class));
+        final List<Class<? extends AbstractEntity<?>>> result = TypeFilter.filter(types, new EntityHasPropertyOfTypePredicate(SecondLevelEntity.class));
 
         assertTrue(result.contains(SecondLevelEntity.class));
         assertFalse(result.contains(SimpleEntity.class));

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -22,16 +23,16 @@ import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
 
 /**
  * Test case for {@link AnnotationReflector}.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AnnotationReflectorTest {
     @Test
     public void testGetValidationAnnotations() throws Exception {
         final Method mutatorForProperty = Reflector.getMethod(SimpleEntity.class, "setProperty", String.class);
         assertNotNull("Could not find mutator for property 'property'", mutatorForProperty);
-        assertEquals("Incorrect number for validation annotations.", 2, AnnotationReflector.getValidationAnnotations(mutatorForProperty).size());
+        assertEquals("Incorrect number for validation annotations.", 1, AnnotationReflector.getValidationAnnotations(mutatorForProperty).size());
 
         final Method mutatorForPropertyTwo = Reflector.getMethod(SimpleEntity.class, "setPropertyTwo", String.class);
         assertNotNull("Could not find mutator for property 'propertyTwo'", mutatorForProperty);
@@ -88,9 +89,9 @@ public class AnnotationReflectorTest {
     public void test_isClassHasMethodAnnotatedWith() {
         assertTrue("", AnnotationReflector.isClassHasMethodAnnotatedWith(UnionEntity.class, Observable.class));
         // 3 -- for common properties, 2 -- for union entity, 2 -- AbstractUnionEntity, 2 -- AbstractEntity
-        assertEquals("", 8, AnnotationReflector.getMethodsAnnotatedWith(UnionEntity.class, Observable.class).size());
+        assertEquals("", 8, AnnotationReflector.getMethodsAnnotatedWith(UnionEntity.class, Optional.of(Observable.class)).size());
         assertTrue("", AnnotationReflector.isClassHasMethodAnnotatedWith(SecondLevelEntity.class, Observable.class));
         // 4 -- for SecondLevelEntity, 2 -- for FirstLevelEntity 2 - for AbstractEntity
-        assertEquals("", 9, AnnotationReflector.getMethodsAnnotatedWith(SecondLevelEntity.class, Observable.class).size());
+        assertEquals("", 9, AnnotationReflector.getMethodsAnnotatedWith(SecondLevelEntity.class, Optional.of(Observable.class)).size());
     }
 }

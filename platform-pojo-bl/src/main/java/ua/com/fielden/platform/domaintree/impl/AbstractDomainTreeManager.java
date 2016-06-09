@@ -589,8 +589,8 @@ public abstract class AbstractDomainTreeManager extends AbstractDomainTree imple
      * 
      */
     protected abstract static class AbstractDomainTreeManagerSerialiser<T extends AbstractDomainTreeManager> extends AbstractDomainTreeSerialiser<T> {
-        public AbstractDomainTreeManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public AbstractDomainTreeManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override

@@ -89,7 +89,7 @@ public enum Mutator {
      * @return
      */
     public String getName(final String propertyName) {
-        return startsWith + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
+        return startsWith + Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
     }
 
     Mutator(final String startsWith) {

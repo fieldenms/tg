@@ -1,0 +1,60 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/paper-button/paper-button.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+
+<style is="custom-style">
+    .confirm-dialog paper-button {
+        color: var(--paper-light-blue-500);
+        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+    }
+    .confirm-dialog paper-button:hover {
+        background: var(--paper-light-blue-50);
+    }
+</style>
+
+<dom-module id="tg-confirmation-dialog">
+    <script>
+        (function () {
+            var dialogModel = document.createElement('template', 'dom-bind');
+            dialogModel.innerHTML = '<paper-dialog id="confirmDialog" class="confirm-dialog layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">' +
+                '<div style="padding: 20px;">[[message]]</div>' +
+                '<div class="buttons">' +
+                '<template is="dom-repeat" items="[[buttons]]">' +
+                '<paper-button dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" on-tap="_action">[[item.name]]</paper-button>' +
+                '</template>' +
+                '</div>' +
+                '</paper-dialog>';
+            dialogModel.showDialog = function () {
+                var dialog = dialogModel.$.confirmDialog;
+
+                this.async(function () {
+                    dialog.open();
+                }, 1);
+            }
+            Polymer.dom(document.body).appendChild(dialogModel);
+            Polymer.dom.flush();
+
+            Polymer({
+                is: 'tg-confirmation-dialog',
+
+                _showConfirmationDialog: function (message, buttons) {
+                    dialogModel.message = message;
+                    dialogModel.buttons = buttons;
+
+                    return new Promise(function (resolve, reject) {
+                        dialogModel._action = function (e) {
+                            var button = e.model.item;
+                            if (button.confirm) {
+                                resolve(button.name);
+                            } else {
+                                reject(button.name);
+                            }
+                        }
+                        dialogModel.showDialog();
+                    });
+                }
+            });
+        })();
+    </script>
+</dom-module>

@@ -9,14 +9,14 @@ import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILoca
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.LocatorManager0;
 import ua.com.fielden.platform.domaintree.master.IMasterDomainTreeManager;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
  * WARNING: this is an OLD version!
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @Deprecated
 public class MasterDomainTreeManager0 extends AbstractDomainTree implements IMasterDomainTreeManager, ILocatorManager {
@@ -28,21 +28,21 @@ public class MasterDomainTreeManager0 extends AbstractDomainTree implements IMas
 
     /**
      * A <i>manager</i> constructor for the first time instantiation.
-     * 
+     *
      * @param serialiser
      * @param rootTypes
      */
-    public MasterDomainTreeManager0(final ISerialiser serialiser, final Set<Class<?>> rootTypes) {
+    public MasterDomainTreeManager0(final ISerialiser0 serialiser, final Set<Class<?>> rootTypes) {
         this(serialiser, new LocatorManager0(serialiser, rootTypes));
     }
 
     /**
      * A <i>manager</i> constructor.
-     * 
+     *
      * @param serialiser
      * @param locatorManager
      */
-    protected MasterDomainTreeManager0(final ISerialiser serialiser, final LocatorManager0 locatorManager) {
+    protected MasterDomainTreeManager0(final ISerialiser0 serialiser, final LocatorManager0 locatorManager) {
         super(serialiser);
         this.locatorManager = locatorManager;
     }
@@ -105,32 +105,37 @@ public class MasterDomainTreeManager0 extends AbstractDomainTree implements IMas
 
     /**
      * WARNING: this is an OLD version!
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     @Deprecated
     public static class MasterDomainTreeManager0Serialiser extends AbstractDomainTreeSerialiser<MasterDomainTreeManager0> {
         /**
          * WARNING: this is an OLD version!
-         * 
+         *
          * @author TG Team
-         * 
+         *
          */
         @Deprecated
-        public MasterDomainTreeManager0Serialiser(final ISerialiser kryo) {
-            super(kryo);
+        public MasterDomainTreeManager0Serialiser(final ISerialiser0 serialiser) {
+            super(serialiser);
         }
 
         @Override
         public MasterDomainTreeManager0 read(final ByteBuffer buffer) {
             final LocatorManager0 locatorManager = readValue(buffer, LocatorManager0.class);
-            return new MasterDomainTreeManager0(kryo(), locatorManager);
+            return new MasterDomainTreeManager0(serialiser(), locatorManager);
         }
 
         @Override
         public void write(final ByteBuffer buffer, final MasterDomainTreeManager0 manager) {
             writeValue(buffer, manager.locatorManager);
+        }
+
+        @Override
+        protected ISerialiser0 serialiser() {
+            return (ISerialiser0) super.serialiser();
         }
     }
 
@@ -144,18 +149,23 @@ public class MasterDomainTreeManager0 extends AbstractDomainTree implements IMas
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         final MasterDomainTreeManager0 other = (MasterDomainTreeManager0) obj;
         if (locatorManager == null) {
-            if (other.locatorManager != null)
+            if (other.locatorManager != null) {
                 return false;
-        } else if (!locatorManager.equals(other.locatorManager))
+            }
+        } else if (!locatorManager.equals(other.locatorManager)) {
             return false;
+        }
         return true;
     }
 

@@ -1,0 +1,119 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
+<link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/views/tg-menu-item-view.html">
+<link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
+
+<dom-module id="tg-view">
+    <style>
+        :host {
+            --paper-fab-background: #fcfcfc;
+            --paper-fab: {
+                color: #666464;
+                position: absolute;
+                top: 16px;
+                right: 16px;
+                width: 50px;
+                height: 50px;
+            }
+            ;
+        }
+        .tool-bar {
+            padding: 0 16px;
+            height: 44px;
+            font-size: 18px;
+            color: white;
+            background-color: #0288D1
+        }
+        .view {
+            background-color: white;
+        }
+    </style>
+    <template>
+        <div id="toolbar" class="tool-bar layout horizontal center">
+            <div class="flex">[[menuItem.title]]</div>
+        </div>
+        <div id="viewContainer">
+            <tg-menu-item-view id="menuItemView" auto-load="[[autoLoad]]" menu-item="[[menuItem]]"></tg-menu-item-view>
+        </div>
+        <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
+    </template>
+</dom-module>
+<script>
+    (function () {
+        Polymer({
+
+            is: "tg-view",
+
+            properties: {
+                menuItem: Object,
+                selectedModule: String,
+                autoLoad: {
+                    type: Boolean,
+                    value: false,
+                    reflectToAttribute: true
+                },
+                animationConfig: {
+                    value: function () {
+                        return {
+                            'entry': [
+                                {
+                                    name: 'slide-from-top-animation',
+                                    node: this.$.toolbar
+                                }, {
+                                    name: 'slide-from-bottom-animation',
+                                    node: this.$.viewContainer
+                                }, {
+                                    name: 'scale-up-animation',
+                                    node: this.$.fab,
+                                    timing: {
+                                        delay: 400
+                                    }
+                                }
+                            ],
+                            'exit': [
+                                {
+                                    name: 'slide-up-animation',
+                                    node: this.$.toolbar
+                                }, {
+                                    name: 'slide-down-animation',
+                                    node: this.$.viewContainer
+                                }, {
+                                    name: 'scale-down-animation',
+                                    node: this.$.fab
+                                }
+                            ]
+                        };
+                    }
+                }
+            },
+
+            behaviors: [
+                Polymer.NeonAnimatableBehavior
+            ],
+
+            hostAttributes: {
+                "class": "layout vertical"
+            },
+            
+            observers: [
+                "_moduleChanged(menuItem, selectedModule)"
+            ],
+
+            _moduleChanged: function (menuItem, selectedModule) {
+                if (menuItem.title === decodeURIComponent(selectedModule)) {
+                    this.$.menuItemView.loadAfterInit();
+                }
+            },
+
+            _showMenu: function (e, detail, source) {
+                this.fire("main-menu");
+            },
+            
+            canLeave: function() {
+                return this.$.menuItemView.canLeave();
+            },
+        });
+    })();
+</script>

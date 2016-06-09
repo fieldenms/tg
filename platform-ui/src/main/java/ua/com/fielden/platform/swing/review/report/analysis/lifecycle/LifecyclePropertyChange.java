@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 public class LifecyclePropertyChange implements IAfterChangeEventHandler<Date> {
 
     @Override
-    public void handle(final MetaProperty property, final Date entityPropertyValue) {
+    public void handle(final MetaProperty<Date> property, final Date entityPropertyValue) {
         if ("from".equals(property.getName())) {
             ((LifecyclePropertiesUpdater) property.getEntity()).getLdtm().setFrom(entityPropertyValue);
         } else if ("to".equals(property.getName())) {

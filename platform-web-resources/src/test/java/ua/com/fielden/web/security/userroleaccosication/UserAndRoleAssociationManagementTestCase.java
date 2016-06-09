@@ -15,13 +15,12 @@ import org.restlet.routing.Router;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.security.UserControllerRao;
 import ua.com.fielden.platform.security.UserRoleRao;
-import ua.com.fielden.platform.security.provider.IUserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
-import ua.com.fielden.platform.web.UserRoleAssociationResourceFactory;
+import ua.com.fielden.platform.web.factories.UserRoleAssociationResourceFactory;
 import ua.com.fielden.platform.web.resources.RouterHelper;
 import ua.com.fielden.platform.web.test.WebBasedTestCase;
 
@@ -34,7 +33,7 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 public class UserAndRoleAssociationManagementTestCase extends WebBasedTestCase {
 
     private final IUserRoleDao userRoleRao = new UserRoleRao(config.restClientUtil());
-    private final IUserController userControllerRao = new UserControllerRao(userRoleRao, config.restClientUtil());
+    private final IUser userControllerRao = new UserControllerRao(userRoleRao, config.restClientUtil());
 
     @Test
     public void test_that_all_user_roles_can_be_found() {
@@ -123,7 +122,7 @@ public class UserAndRoleAssociationManagementTestCase extends WebBasedTestCase {
 
         final RouterHelper helper = new RouterHelper(DbDrivenTestCase.injector, DbDrivenTestCase.entityFactory);
         helper.register(router, IUserRoleDao.class);
-        helper.register(router, IUserDao.class);
+        helper.register(router, IUser.class);
 
         final Restlet userRoleAssociationRestlet = new UserRoleAssociationResourceFactory(DbDrivenTestCase.injector);
         router.attach("/users/{username}/useroles", userRoleAssociationRestlet);

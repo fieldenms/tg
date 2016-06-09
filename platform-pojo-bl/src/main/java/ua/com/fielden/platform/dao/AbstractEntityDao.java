@@ -1,40 +1,43 @@
 package ua.com.fielden.platform.dao;
 
-import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.ConditionModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
-import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.ConditionModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import ua.com.fielden.platform.utils.EntityUtils;
+
 /**
  * Provides common implementation shared between Hibernate and REST implementation of DAOs.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements IEntityDao<T> {
 
     private final Class<? extends Comparable> keyType;
     private final Class<T> entityType;
-    private final QueryExecutionModel<T, EntityResultQueryModel<T>> defaultModel;
+    private IFetchProvider<T> fetchProvider;
 
     protected boolean getFilterable() {
         return false;
@@ -42,7 +45,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 
     /**
      * A principle constructor, which requires entity type that should be managed by this DAO instance. Entity's key type is determined automatically.
-     * 
+     *
      * @param entityType
      */
     protected AbstractEntityDao() {
@@ -52,7 +55,6 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
         }
         this.entityType = (Class<T>) annotation.value();
         this.keyType = AnnotationReflector.getKeyType(entityType);
-        this.defaultModel = produceDefaultQueryExecutionModel(entityType);
     }
 
     protected QueryExecutionModel<T, EntityResultQueryModel<T>> produceDefaultQueryExecutionModel(final Class<T> entityType) {
@@ -63,7 +65,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     }
 
     protected QueryExecutionModel<T, EntityResultQueryModel<T>> getDefaultQueryExecutionModel() {
-        return defaultModel;
+        return produceDefaultQueryExecutionModel(entityType);
     }
 
     @Override
@@ -98,14 +100,14 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 
     /**
      * Method checks whether the key of the entity type associated with this DAO if composite or not.
-     * 
+     *
      * If composite then <code>WHERE</code> statement is build using composite key members and the passed values. The number of values should match the number of composite key
      * members.
-     * 
+     *
      * Otherwise, <code>WHERE</code> statement is build using only property <code>key</code>.
-     * 
+     *
      * The created query expects a unique result, and throws a runtime exception if this is not the case.
-     * 
+     *
      * TODO Need to consider the case of polymorphic associations such as Rotable, which can be both Bogie and/or Wheelset.
      */
     @Override
@@ -139,7 +141,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
 
     /**
      * Convenient method for composing a query to select an entity by key value.
-     * 
+     *
      * @param keyValues
      * @return
      */
@@ -190,22 +192,22 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     }
 
     @Override
-    public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> summaryModel, final int pageCapacity) {
-        throw new UnsupportedOperationException("Not implemented.");
+    public final IFetchProvider<T> getFetchProvider() {
+        if (fetchProvider == null) {
+            fetchProvider = createFetchProvider();
+        }
+        return fetchProvider;
     }
 
-    @Override
-    public void delete(final T entity) {
-        throw new UnsupportedOperationException("By default deletion is not supported.");
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues) {
-        throw new UnsupportedOperationException("By default deletion is not supported.");
-    }
-
-    @Override
-    public void delete(final EntityResultQueryModel<T> model) {
-        delete(model, Collections.<String, Object> emptyMap());
+    /**
+     * Creates fetch provider for this entity companion.
+     * <p>
+     * Should be overridden to provide custom fetch provider.
+     *
+     * @return
+     */
+    protected IFetchProvider<T> createFetchProvider() {
+        // provides a very minimalistic version of fetch provider by default (only id and version are included)
+        return EntityUtils.fetch(getEntityType());
     }
 }

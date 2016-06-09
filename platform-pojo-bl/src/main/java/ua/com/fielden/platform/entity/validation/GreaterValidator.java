@@ -10,15 +10,15 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * This validator implements a check for limit to be greater to the specified limit.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class GreaterValidator implements IBeforeChangeEventHandler<Object> {
     private String limit;
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue == null) {
             return new Result(null, "Value is null and thus not applicable for validation.");
         }

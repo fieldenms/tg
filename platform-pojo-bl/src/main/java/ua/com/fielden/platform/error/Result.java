@@ -24,6 +24,12 @@ public class Result extends RuntimeException {
         message = null;
         instance = null;
     }
+    
+    private Result(final Object instance, final String message, final Exception exception) {
+        this.instance = instance;
+        this.message = message;
+        this.ex = exception;
+    }
 
     /**
      * Convenient factory method for creating a successful result.
@@ -91,36 +97,38 @@ public class Result extends RuntimeException {
         return new Result(null, new Exception(reason));
     }
 
-    public Result(final Object instance, final String message, final Exception ex) {
+    ///////////////////////////////////////////////
+    ////////////////// constructors ///////////////
+    ///////////////////////////////////////////////
+    /** Creates successful result. */
+    public Result(final Object instance, final String message) {
         this.instance = instance;
         this.message = message;
-        this.ex = ex;
+        this.ex = null;
     }
 
-    public Result(final Object instance, final String message) {
-        this(instance, message, null);
-    }
-
-    public Result(final Object instance, final Exception ex) {
-        this(instance, null, ex);
-    }
-
-    /**
-     * Creates unsuccessful result with provided exception.
-     *
-     * @param ex
-     */
-    public Result(final Exception ex) {
-        this(null, null, ex);
-    }
-
-    /**
-     * Creates successful result with provided message.
-     *
-     * @param msg
-     */
+    /** Creates successful result. */
     public Result(final String msg) {
-        this(null, msg, null);
+        this.instance = null;
+        this.message = msg;
+        this.ex = null;
+    }
+
+    /** Creates failed result. */
+    public Result(final Object instance, final Exception ex) {
+        super(ex);
+        this.instance = instance;
+        this.message = ex.getMessage();
+        this.ex = ex;
+
+    }
+
+    /** Creates failed result. */
+    public Result(final Exception ex) {
+        super(ex);
+        this.instance = null;
+        this.message = ex.getMessage();
+        this.ex = ex;
     }
 
     @Override
@@ -138,6 +146,16 @@ public class Result extends RuntimeException {
 
     public <T> T getInstance(final Class<T> expectedType) {
         return expectedType.cast(instance);
+    }
+    
+    /**
+     * Copies this result with overridden instance.
+     * 
+     * @param anotherInstance
+     * @return
+     */
+    public Result copyWith(final Object anotherInstance) {
+        return new Result(anotherInstance, message, ex);
     }
 
     public boolean isSuccessful() {

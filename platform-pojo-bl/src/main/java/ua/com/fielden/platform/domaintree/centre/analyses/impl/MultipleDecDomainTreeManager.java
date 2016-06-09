@@ -63,8 +63,8 @@ public class MultipleDecDomainTreeManager extends AbstractAnalysisDomainTreeMana
      * 
      */
     public static class MultipleDecDomainTreeManagerSerialiser extends AbstractAnalysisDomainTreeManagerSerialiser<MultipleDecDomainTreeManager> {
-        public MultipleDecDomainTreeManagerSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public MultipleDecDomainTreeManagerSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -73,7 +73,7 @@ public class MultipleDecDomainTreeManager extends AbstractAnalysisDomainTreeMana
             final AnalysisAddToDistributionTickManager firstTick = readValue(buffer, AnalysisAddToDistributionTickManager.class);
             final AnalysisAddToAggregationTickManager secondTick = readValue(buffer, AnalysisAddToAggregationTickManager.class);
             final Boolean visible = readValue(buffer, Boolean.class);
-            return new MultipleDecDomainTreeManager(kryo(), dtr, visible, firstTick, secondTick);
+            return new MultipleDecDomainTreeManager(serialiser(), dtr, visible, firstTick, secondTick);
         }
     }
 }

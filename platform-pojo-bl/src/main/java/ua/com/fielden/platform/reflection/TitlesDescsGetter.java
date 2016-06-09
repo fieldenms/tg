@@ -16,13 +16,14 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This is a helper class to provide methods related to property/entity titles/descs determination.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class TitlesDescsGetter {
     public static final char LEFT_ARROW = '\u2190';
@@ -34,9 +35,9 @@ public class TitlesDescsGetter {
     }
 
     /**
-     * 
+     *
      * Returns property path from <code>type</code> to specified property that consists of property titles and descriptions.
-     * 
+     *
      * @param type
      * @param dotNotationExp
      * @return
@@ -58,10 +59,10 @@ public class TitlesDescsGetter {
     /**
      * Returns full property title and description (usually Egi columns titles and toolTips) in form of "reversed path of titles" (e.g. "Status code<-Status<-Vehicle") and
      * "property description" (e.g. "[Vehicle Status code]").
-     * 
+     *
      * @param propertyName
      * @param parentKlass
-     * 
+     *
      * @return
      */
     public static Pair<String, String> getFullTitleAndDesc(final String propertyName, final Class<?> parentKlass) {
@@ -72,7 +73,7 @@ public class TitlesDescsGetter {
 
     /**
      * Remove all html tags from string.
-     * 
+     *
      * @param str
      * @return
      */
@@ -114,7 +115,7 @@ public class TitlesDescsGetter {
 
     /**
      * Returns {@link Pair} with key set to property title (taken either from {@link Title}, or {@link KeyTitle}, or {@link DescTitle}) and value set to property description
-     * 
+     *
      * @param propertyName
      * @param entityType
      * @return
@@ -127,19 +128,19 @@ public class TitlesDescsGetter {
         final boolean containsKey = AbstractEntity.KEY.equals(propertyName) || propertyName.endsWith("." + AbstractEntity.KEY);
         final boolean containsDesc = AbstractEntity.DESC.equals(propertyName) || propertyName.endsWith("." + AbstractEntity.DESC);
         final String title = containsKey ? (keyTitleAnnotation != null ? keyTitleAnnotation.value() : "") //
-                : containsDesc ? (descTitleAnnotation != null ? descTitleAnnotation.value() : "") //
-                        : titleAnnotation != null ? titleAnnotation.value() : "";
+        : containsDesc ? (descTitleAnnotation != null ? descTitleAnnotation.value() : "") //
+        : titleAnnotation != null ? titleAnnotation.value() : "";
         // If desc() is not specified in corresponding annotation then use value() instead:
         final String desc = containsKey ? (keyTitleAnnotation != null ? (keyTitleAnnotation.desc().isEmpty() ? keyTitleAnnotation.value() : keyTitleAnnotation.desc()) : "") //
-                : containsDesc ? (descTitleAnnotation != null ? (descTitleAnnotation.desc().isEmpty() ? descTitleAnnotation.value() : descTitleAnnotation.desc()) : "") //
-                        : titleAnnotation != null ? (titleAnnotation.desc().isEmpty() ? titleAnnotation.value() : titleAnnotation.desc()) : "";
+        : containsDesc ? (descTitleAnnotation != null ? (descTitleAnnotation.desc().isEmpty() ? descTitleAnnotation.value() : descTitleAnnotation.desc()) : "") //
+        : titleAnnotation != null ? (titleAnnotation.desc().isEmpty() ? titleAnnotation.value() : titleAnnotation.desc()) : "";
 
         return new Pair<String, String>(title, desc);
     }
 
     /**
      * Returns {@link TitlesDescsGetter#getEntityTitleAndDesc(Class)} title/desc, modified to show "collectional" relationship with <code>entityWithCollectionalPropertyType</code>.
-     * 
+     *
      * @return
      */
     public static Pair<String, String> getEntityTitleAndDescInCollectionalPropertyContex(final Class<?> collectionalPropertyType, final Class<?> entityWithCollectionalPropertyType) {
@@ -152,7 +153,7 @@ public class TitlesDescsGetter {
     /**
      * Returns {@link Pair} with key set to entity title and value set to entity description. Traverses <code>entityType</code> hierarchy bottom-up in search of the specified
      * entity title and description.
-     * 
+     *
      * @param entityType
      * @return
      */
@@ -168,7 +169,7 @@ public class TitlesDescsGetter {
     /**
      * Provides default values of title and description for entity. (e.g. "VehicleFinDetails.class" => "Vehicle Fin Details" and "Vehicle Fin Details entity")
      */
-    private static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<?> klass) {
+    public static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<?> klass) {
         final String s = breakClassName(klass.getSimpleName());
         return new Pair<String, String>(s, s + " entity");
     }
@@ -212,9 +213,9 @@ public class TitlesDescsGetter {
             final Required anRequired = AnnotationReflector.getPropertyAnnotation(Required.class, entityType, propName);
             errorMsg = anRequired != null ? anRequired.value() : "";
         }
+
         // template processing
         if (!StringUtils.isEmpty(errorMsg)) {
-
             final String propTitle = TitlesDescsGetter.getTitleAndDesc(propName, entityType).getKey();
             errorMsg = errorMsg.replace("{{prop-title}}", StringUtils.isEmpty(propTitle) ? propName : propTitle);
             errorMsg = errorMsg.replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey());
@@ -234,7 +235,7 @@ public class TitlesDescsGetter {
                 errorMsg = errorMsg.replace("{{prop-value}}", errouneousValue + "");
                 errorMsg = errorMsg.replace("{{entity-title}}", TitlesDescsGetter.getEntityTitleAndDesc(entityType).getKey());
             }
-        } catch (final NoSuchMethodException e) {
+        } catch (final ReflectionException e) {
             e.printStackTrace();
         }
 

@@ -7,22 +7,23 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
+import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 
 /**
- * DbDriven implementation of the {@link IUserAndRoleAssociationDao}
+ * DbDriven implementation of the {@link IUserAndRoleAssociation}
  * 
  * @author TG Team
  * 
  */
 @EntityType(UserAndRoleAssociation.class)
-public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssociation> implements IUserAndRoleAssociationDao {
+public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssociation> implements IUserAndRoleAssociation {
 
     @Inject
     protected UserAndRoleAssociationDao(final IFilter filter) {
@@ -43,5 +44,11 @@ public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssoci
         }
         query += StringUtils.join(querySubstr, " or ");
         getSession().createQuery(query).executeUpdate();
+    }
+    
+    @Override
+    @SessionRequired
+    public int batchDelete(EntityResultQueryModel<UserAndRoleAssociation> model) {
+        return defaultBatchDelete(model);
     }
 }

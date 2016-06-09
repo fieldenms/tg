@@ -13,16 +13,16 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.NotEmpty;
 import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity class used for {@link QueryProperty} testing.
- * 
+ *
  * @author 01es
- * 
+ *
  */
 @KeyType(String.class)
 @KeyTitle(value = "Entity No", desc = "Key Property")
@@ -70,6 +70,7 @@ public class EntityForQueryPropertyTesting extends AbstractEntity<String> {
     private boolean bool = false;
 
     @IsProperty
+    @Required
     private String strProp;
 
     @IsProperty(EntityForQueryPropertyTesting.class)
@@ -149,7 +150,6 @@ public class EntityForQueryPropertyTesting extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotEmpty
     public void setStrProp(final String strProp) {
         this.strProp = strProp;
     }

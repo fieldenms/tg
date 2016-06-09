@@ -1,0 +1,79 @@
+.map {
+    border: 1px solid #ccc;
+}
+.progress {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+    left: 400px;
+    top: 300px;
+    width: 200px;
+    height: 20px;
+    margin-top: -20px;
+    margin-left: -100px;
+    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 4px;
+    padding: 2px;
+}
+.progress-bar {
+    width: 0;
+    height: 100%;
+    background-color: #76A6FC;
+    border-radius: 4px;
+}
+body {
+    padding: 0;
+    margin: 0;
+}
+html, body, .map-container, .map{
+    height: 100%;
+    width: 100%;
+}
+
+/* * Unlike other icons, you can style `L.divIcon` with CSS.
+* These styles make each marker a circle with a border and centered text. */
+.count-icon {
+    background: #ff8888;
+    border: 5px solid rgba(255, 255, 255, 0.5);
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 50%;
+    line-height: 30px;
+}
+.img-overlay img {
+    margin: 0;
+    opacity: 1.0;
+    display: block;
+}
+.overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    /* height: 100%;
+    */
+    
+    height: 24px;
+    line-height: 24px;
+    background-color: transparent;
+    color: black;
+    font-weight: bold;
+    text-align: center;
+    vertical-align: middle;
+    /* margin-bottom: 0px;
+    */
+    font-size: 12px;
+}
+.img-overlay {
+    position: relative;
+    /* border: 1px #000 solid;
+    */
+    float: left;
+}
+.gps-marker-cluster {
+    background-color: transparent;
+}

@@ -14,13 +14,13 @@ import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 import com.google.inject.Inject;
 
 /**
- * RAO implementation of {@link IMainMenuItemInvisibilityController}.
+ * RAO implementation of {@link IMainMenuItemInvisibility}.
  * 
  * @author TG Team
  * 
  */
 @EntityType(MainMenuItemInvisibility.class)
-public class MainMenuItemInvisibilityControllerRao extends CommonEntityRao<MainMenuItemInvisibility> implements IMainMenuItemInvisibilityController {
+public class MainMenuItemInvisibilityControllerRao extends CommonEntityRao<MainMenuItemInvisibility> implements IMainMenuItemInvisibility {
 
     private final EntityFactory factory;
 

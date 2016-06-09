@@ -1,18 +1,19 @@
 package ua.com.fielden.platform.dao;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import org.hibernate.Hibernate;
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.PropertyCategory;
 import ua.com.fielden.platform.entity.query.generation.BaseEntQueryTCase;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 public class DomainMetadataTest extends BaseEntQueryTCase {
     private final BaseInfoForDomainMetadata baseInfoForDomainMetadata = new BaseInfoForDomainMetadata(DOMAIN_METADATA.getUserMapTo());
@@ -25,7 +26,8 @@ public class DomainMetadataTest extends BaseEntQueryTCase {
         final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("finDetails", TgVehicleFinDetails.class, true). //
         hibType(Hibernate.LONG). //
         type(PropertyCategory.EXPRESSION). //
-        expression(expr().prop("id").model()). //
+        //expression(expr().prop("id").model()). //
+        expression(expr().model(select(TgVehicleFinDetails.class).where().prop("key").eq().extProp("id").model()).model()). //
         build();
 
         assertEquals("Should be equal", expPropertyMetadata, actPropertyMetadata);

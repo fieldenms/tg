@@ -11,7 +11,7 @@ public class BceNotPermittedValue implements IBeforeChangeEventHandler<String> {
     private String notPermittedValue = "failure";
 
     @Override
-    public Result handle(final MetaProperty property, final String newValue, final String oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<String> property, final String newValue, final String oldValue, final Set<Annotation> mutatorAnnotations) {
         if (notPermittedValue.equalsIgnoreCase(newValue)) {
             return new Result(newValue, new IllegalArgumentException("The value is not permitted"));
         }

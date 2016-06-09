@@ -10,12 +10,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Method;
 import org.restlet.representation.Representation;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -26,24 +29,22 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.CommonEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
-import ua.com.fielden.platform.security.provider.IUserController;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.utils.Pair;
 
-import com.google.inject.Inject;
-
 /**
- * RAO implementation of the {@link IUserController}.
+ * RAO implementation of the {@link IUserEx}.
  * 
  * @author TG Team
  * 
  */
 
 @EntityType(User.class)
-public class UserControllerRao extends CommonEntityRao<User> implements IUserController {
+public class UserControllerRao extends CommonEntityRao<User> implements IUser {
     private final fetch<User> fetchModel = fetch(User.class).with("basedOnUser").with("roles", fetchAll(UserAndRoleAssociation.class));//.with("userRole").with("user")
 
     private final IUserRoleDao userRoleDao;
@@ -119,5 +120,30 @@ public class UserControllerRao extends CommonEntityRao<User> implements IUserCon
     @Override
     public User findUser(final String username) {
         return findByKeyAndFetch(fetchAll(User.class), username);
+    }
+
+    @Override
+    public User resetPasswd(final User user, final String passwd) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isPasswordStrong(final String passwd) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Optional<User> findUserByResetUuid(final String uuid) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Optional<User> assignPasswordResetUuid(final String usernameOrEmail) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isPasswordResetUuidValid(final String uuid) {
+        throw new UnsupportedOperationException();
     }
 }

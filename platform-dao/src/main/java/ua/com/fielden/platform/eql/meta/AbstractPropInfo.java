@@ -6,18 +6,16 @@ public abstract class AbstractPropInfo implements IResolvable {
     private final String name;
     private final EntityInfo parent;
     private final Expression1 expression;
-    private final boolean leaf;
 
     @Override
     public String toString() {
-        return parent + "." + name + (expression == null ? " no expr " : " has expr ");
+        return parent + "." + name + (expression == null ? "; no expr " : " has expr ");
     }
 
-    public AbstractPropInfo(final String name, final EntityInfo parent, final Expression1 expression, final boolean leaf) {
+    public AbstractPropInfo(final String name, final EntityInfo parent, final Expression1 expression) {
         this.name = name;
         this.parent = parent;
         this.expression = expression;
-        this.leaf = leaf;
         parent.getProps().put(name, this);
     }
 

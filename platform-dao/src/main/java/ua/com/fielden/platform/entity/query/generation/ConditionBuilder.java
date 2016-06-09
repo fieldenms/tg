@@ -1,30 +1,5 @@
 package ua.com.fielden.platform.entity.query.generation;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
-import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
-import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
-import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
-import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
-import ua.com.fielden.platform.entity.query.generation.elements.ExistenceTest;
-import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditions;
-import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
-import ua.com.fielden.platform.entity.query.generation.elements.ISetOperand;
-import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
-import ua.com.fielden.platform.entity.query.generation.elements.LikeTest;
-import ua.com.fielden.platform.entity.query.generation.elements.LowerCaseOf;
-import ua.com.fielden.platform.entity.query.generation.elements.NullTest;
-import ua.com.fielden.platform.entity.query.generation.elements.QuantifiedTest;
-import ua.com.fielden.platform.entity.query.generation.elements.Quantifier;
-import ua.com.fielden.platform.entity.query.generation.elements.SetTest;
-import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.entity.query.fluent.LogicalOperator.AND;
 import static ua.com.fielden.platform.entity.query.fluent.LogicalOperator.OR;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ALL_OF_EQUERY_TOKENS;
@@ -64,14 +39,41 @@ import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_P
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_PROPS;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.SET_OF_VALUES;
 import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.VAL;
+import static ua.com.fielden.platform.entity.query.fluent.TokenCategory.ZERO_ARG_FUNCTION;
 import static ua.com.fielden.platform.entity.query.generation.elements.Quantifier.ALL;
 import static ua.com.fielden.platform.entity.query.generation.elements.Quantifier.ANY;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import ua.com.fielden.platform.entity.query.fluent.ComparisonOperator;
+import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
+import ua.com.fielden.platform.entity.query.fluent.TokenCategory;
+import ua.com.fielden.platform.entity.query.generation.elements.ComparisonTest;
+import ua.com.fielden.platform.entity.query.generation.elements.CompoundCondition;
+import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
+import ua.com.fielden.platform.entity.query.generation.elements.ExistenceTest;
+import ua.com.fielden.platform.entity.query.generation.elements.GroupedConditions;
+import ua.com.fielden.platform.entity.query.generation.elements.ICondition;
+import ua.com.fielden.platform.entity.query.generation.elements.ISetOperand;
+import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
+import ua.com.fielden.platform.entity.query.generation.elements.LikeTest;
+import ua.com.fielden.platform.entity.query.generation.elements.LowerCaseOf;
+import ua.com.fielden.platform.entity.query.generation.elements.NullTest;
+import ua.com.fielden.platform.entity.query.generation.elements.QuantifiedTest;
+import ua.com.fielden.platform.entity.query.generation.elements.Quantifier;
+import ua.com.fielden.platform.entity.query.generation.elements.SetTest;
+import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.utils.Pair;
 
 public class ConditionBuilder extends AbstractTokensBuilder {
 
     private final static List<TokenCategory> singleOperands = Arrays.asList(new TokenCategory[] { //
     PROP, EXT_PROP, PARAM, IPARAM, //
-            VAL, IVAL, EXPR, FUNCTION_MODEL, EQUERY_TOKENS, EXPR_TOKENS });
+            VAL, IVAL, EXPR, FUNCTION_MODEL, ZERO_ARG_FUNCTION, EQUERY_TOKENS, EXPR_TOKENS });
     private final static List<TokenCategory> mutlipleAnyOperands = Arrays.asList(new TokenCategory[] { //
     ANY_OF_PROPS, ANY_OF_PARAMS, ANY_OF_IPARAMS, //
             ANY_OF_VALUES, ANY_OF_EQUERY_TOKENS, ANY_OF_EXPR_TOKENS });

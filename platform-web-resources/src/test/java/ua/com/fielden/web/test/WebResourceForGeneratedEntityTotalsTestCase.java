@@ -2,6 +2,7 @@ package ua.com.fielden.web.test;
 
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute.NO_ATTR;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -10,9 +11,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
+
+import com.google.inject.Injector;
+import com.google.inject.Module;
 
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerAndEnhancer;
@@ -25,8 +30,8 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.rao.GeneratedEntityRao;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.impl.ProvidedSerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
+import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.web.resources.RouterHelper;
@@ -34,15 +39,13 @@ import ua.com.fielden.platform.web.test.WebBasedTestCase;
 import ua.com.fielden.web.entities.IInspectedEntityDao;
 import ua.com.fielden.web.entities.InspectedEntity;
 
-import com.google.inject.Injector;
-import com.google.inject.Module;
-
 /**
  * Provides a unit test to ensure correct operation of EQL with generated types when it comes to calculation of totals.
  * 
  * @author TG Team
  * 
  */
+@Deprecated
 public class WebResourceForGeneratedEntityTotalsTestCase extends WebBasedTestCase {
     private final IGeneratedEntityController rao = new GeneratedEntityRao(config.restClientUtil());
 
@@ -50,7 +53,7 @@ public class WebResourceForGeneratedEntityTotalsTestCase extends WebBasedTestCas
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
-    private final ISerialiser serialiser = new TgKryo(factory, new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class }));
+    private final ISerialiser serialiser = new Serialiser(factory, new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class }));
     private final Set<Class<?>> rootTypes = new HashSet<Class<?>>() {
         {
             add(InspectedEntity.class);
@@ -104,12 +107,13 @@ public class WebResourceForGeneratedEntityTotalsTestCase extends WebBasedTestCas
     }
 
     @Test
+    @Ignore
     public void test_selection_of_totals() {
         final EntityResultQueryModel model = select(type).where().prop("intProperty").lt().val(30).//
         yield().prop("intPropertySum").as("intPropertySum").//
         yield().prop("minimaxDiff").as("minimaxDiff").//
         modelAsEntity(type);
-        final IPage firstPage = rao.firstPage(from(model).model(), 15, binaryTypes);
+        final IPage firstPage = rao.firstPage(from(model).with(fetchAll(type).with("intPropertySum").with("minimaxDiff")).model(), 15, binaryTypes);
 
         assertEquals("Incorrect value of returned items.", 1, firstPage.data().size());
         final AbstractEntity instance = (AbstractEntity) firstPage.data().get(0);

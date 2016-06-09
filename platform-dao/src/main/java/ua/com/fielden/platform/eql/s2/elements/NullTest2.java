@@ -34,25 +34,20 @@ public class NullTest2 extends AbstractCondition2 {
             return true;
         }
         if (obj == null) {
-            System.out.println(" nullTest: 1");
             return false;
         }
         if (!(obj instanceof NullTest2)) {
-            System.out.println(" nullTest: 2");
             return false;
         }
         final NullTest2 other = (NullTest2) obj;
         if (negated != other.negated) {
-            System.out.println(" nullTest: 3");
             return false;
         }
         if (operand == null) {
             if (other.operand != null) {
-                System.out.println(" nullTest: 4");
                 return false;
             }
         } else if (!operand.equals(other.operand)) {
-            System.out.println(" nullTest: 5");
             return false;
         }
         return true;

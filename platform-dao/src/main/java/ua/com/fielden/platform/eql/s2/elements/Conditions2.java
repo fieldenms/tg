@@ -47,7 +47,6 @@ public class Conditions2 extends AbstractCondition2 {
                 return false;
             }
         } else if (!allConditions.equals(other.allConditions)) {
-            System.out.println("Conditions 4: " + allConditions + " vs " + other.allConditions);
             return false;
         }
         if (negated != other.negated) {

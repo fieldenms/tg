@@ -2,13 +2,12 @@ package ua.com.fielden.platform.test.domain.entities;
 
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Wheelset rotable business entity
- * 
+ *
  * @author nc
- * 
+ *
  */
 public class Wheelset extends Rotable {
 
@@ -28,7 +27,6 @@ public class Wheelset extends Rotable {
 
     @Override
     @Observable
-    @NotNull
     @EntityExists(WheelsetClass.class)
     public Wheelset setRotableClass(final RotableClass klass) {
         super.setRotableClass(klass);

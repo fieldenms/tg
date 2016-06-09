@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
@@ -18,13 +22,17 @@ import java.util.Set;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.DescReadonly;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
@@ -34,38 +42,44 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyReadonly;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.annotation.TransactionDate;
-import ua.com.fielden.platform.entity.annotation.TransactionUser;
+import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
+import ua.com.fielden.platform.entity.annotation.factory.EntityExistsAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
+import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.EntityModule;
 import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
+import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
-
-import com.google.inject.Inject;
 
 /**
  * <h3>General Info</h3>
@@ -180,7 +194,7 @@ import com.google.inject.Inject;
  * <ul>
  *   <li>Mutator for a simple property -- a method with name '''set[property]''' and one parameter matching the type of the field representing the property.
  *
- *       It may and usually should be annotated with {@link Observable} to ensure observation of the property change. And may have a number of validation annotations such as {@link NotNull} etc.
+ *       It may and usually should be annotated with {@link Observable} to ensure observation of the property change. And may have a number of validation annotations.
  *       Please note that mutator with at least one validation annotation should also be annotated with {@link ValidationRequired} -- this is enforced by the platform and failure to comply results in early runtime exception.
  *   </li>
  *   <li>Mutators for a collectional property -- there are three possible mutators recognised by TG:
@@ -239,15 +253,16 @@ import com.google.inject.Inject;
 public abstract class AbstractEntity<K extends Comparable> implements Serializable, Comparable<AbstractEntity<K>>, IBindingEntity {
     private static final long serialVersionUID = 1L;
 
-    private transient final Logger logger;
+    protected transient final Logger logger;
 
     @MapTo("_ID")
     private Long id;
     @MapTo("_VERSION")
-    private long version = 0L;
+    private Long version = 0L;
     @IsProperty
     @UpperCase
     @MapTo("KEY_")
+    @Required
     private K key;
     private transient final boolean compositeKey;
     @IsProperty
@@ -301,11 +316,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Holds meta-properties for entity properties.
      */
-    private transient final Map<String, MetaProperty> properties;
+    private transient final Map<String, MetaProperty<?>> properties;
     /**
      * Indicates if entity instance is being initialised.
      */
     private transient boolean initialising = false;
+
+    /**
+     * True indicates that the editable state of entity should be ignored during entity mutation
+     * This property should be used with care. */
+    private transient boolean ignoreEditableState = false;
 
     /*
      * Block of fields responsible for synchronisation of validation for properties and entity itself.
@@ -315,7 +335,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     private transient volatile int lockCount;
 
     private transient final Class<K> keyType;
-    private transient final Class<?> actualEntityType;
+    private transient final Class<? extends AbstractEntity<?>> actualEntityType;
     /**
      * A reference to the application specific {@link EntityFactory} instance responsible for instantiation of this and other entities. It is also used for entity cloning.
      */
@@ -324,12 +344,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Property factory is responsible for meta-property instantiation. The actual instantiation happens in the setter.
      */
-    private transient IMetaPropertyFactory metaPropertyFactory;
+    private transient java.util.Optional<IMetaPropertyFactory> metaPropertyFactory = empty();
 
     /**
-     * Preferred property should be used by custom logic to set what property is from certain perspective is preferred. The original requirement for this was due to custom logic
-     * driven determination as to what property should be focused by default on an entity master. So, depending where in the business process an entity was instantiated would
-     * determine what of its properties should be facused by default.
+     * Preferred property should be used by custom logic to set what property is from certain perspective is preferred. 
+     * The original requirement for this was due to custom logic driven determination as to what property should be focused by default on an entity master. 
+     * So, the place where in the application logic an entity was instantiated can determine which of its properties should be focused by default.
      */
     private transient String preferredProperty;
 
@@ -338,27 +358,54 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     @SuppressWarnings("unchecked")
     protected AbstractEntity() {
-        actualEntityType = PropertyTypeDeterminator.stripIfNeeded(getClass());
+        actualEntityType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.stripIfNeeded(getClass());
+        
         changeSupport = new PropertyChangeSupportEx(this);
-        properties = new LinkedHashMap<String, MetaProperty>();
+        properties = new LinkedHashMap<>();
         lock = new ReentrantLock();
         validationInProgress = lock.newCondition();
         lockCount = 0;
 
         keyType = (Class<K>) AnnotationReflector.getKeyType(this.getClass());
         if (keyType == null) {
-            throw new IllegalStateException("Type " + this.getClass().getName() + " is not fully defined.");
+            throw new EntityDefinitionException(format("Entity [%s] is not fully defined -- key type is missing.", actualEntityType.getName()));
         }
+
+        if(!(this instanceof ActivatableAbstractEntity) && getType().isAnnotationPresent(DeactivatableDependencies.class)) {
+            throw new EntityDefinitionException(format("Non-activatable entity [%s] cannot have deactivatable dependencies.", actualEntityType.getName()));
+        }
+
 
         logger = Logger.getLogger(this.getType());
 
-        compositeKey = DynamicEntityKey.class.equals(keyType); //Finder.getKeyMembers(getType()).size() > 1;
+        compositeKey = DynamicEntityKey.class.equals(keyType);
         if (hasCompositeKey()) {
             setKey((K) new DynamicEntityKey((AbstractEntity<DynamicEntityKey>) this));
         }
     }
 
     /**
+     * A convenient method for obtaining the actual type that was used to potentially derive the type of the current instance.
+     * For example, generated types are always derived from some prototype entity type.
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+	public Class<? extends AbstractEntity<?>> getDerivedFromType() {
+        Class<? extends AbstractEntity<?>> tmpDerivedFromType = getType();
+        final String name = getType().getName();
+        final int index = name.indexOf("$$");
+        if (index > 0) {
+        	final String cleanName = name.substring(0, index);
+        	try {
+				tmpDerivedFromType = (Class<? extends AbstractEntity<?>>) Class.forName(cleanName);
+			} catch (final ClassNotFoundException e) {
+				e.printStackTrace();
+			} 
+        }
+        return tmpDerivedFromType;
+	}
+
+	/**
      * The main entity constructor.
      *
      * @param id
@@ -402,23 +449,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         return key;
     }
 
-    @NotNull
     @Observable
     public AbstractEntity<K> setKey(final K key) {
         this.key = key;
-        updateKeyMetaProperty();
         return this;
-    }
-
-    /**
-     * At the instantiation time it is not possible to determine key type, because the actual value may not be available. Therefore, this method was introduced to ensure correct
-     * type assignment to the meta-property associated with <code>key</code>.
-     */
-    private void updateKeyMetaProperty() {
-        final MetaProperty property = getProperty(KEY);
-        if (property != null && this.key != null) {
-            property.setType(getKeyType());
-        }
     }
 
     /**
@@ -441,15 +475,23 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             return false;
         }
         // let's ensure that types match
-        final AbstractEntity that = (AbstractEntity) obj;
+        final AbstractEntity<?> that = (AbstractEntity<?>) obj;
         if (this.getType() != that.getType()) {
             return false;
+        }
+
+        // TODO need to carefully consider this bit of logic for comparing ID-only values
+        if (this.isPersistent() && (that.isIdOnlyProxy() || this.isIdOnlyProxy()) && 
+                (!that.isInstrumented() || !that.isDirty()) && 
+                (!this.isInstrumented() || !this.isDirty()) && 
+                that.getId().equals(this.getId())) {
+            return true;
         }
         // now can compare key values
         final Object thatKey = that.getKey();
         return getKey() != null && getKey().equals(thatKey) || getKey() == null && thatKey == null;
     }
-
+    
     @Override
     public String toString() {
         return getKey() != null ? getKey().toString() : null;
@@ -473,6 +515,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
+     * Returns <code>true</code> if entity has a composite key.
+     *
+     * @return
+     */
+    public boolean isComposite() {
+        return DynamicEntityKey.class.isAssignableFrom(getKeyType());
+    }
+
+    /**
      * Registers property change listener.<br>
      * <br>
      * Note : Please, refer also to {@link PropertyChangeOrIncorrectAttemptListener} JavaDocs.
@@ -483,10 +534,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @Override
     public final synchronized void addPropertyChangeListener(final String propertyName, final PropertyChangeListener listener) {
         if (listener == null) {
-            throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
+            throw new EntityException(format("Property change listener for property [%s] in entity [%s] cannot be null.", propertyName, getType().getName()));
         }
         if (!isObservable(propertyName)) {
-            throw new IllegalArgumentException("Cannot register PropertyChangeListener with non-observable property '" + propertyName + "'.");
+            throw new EntityException(format("Cannot register a property change listener for a non-observable property [%s] in entity [%s].",  propertyName, getType().getName()));
         }
         changeSupport.addPropertyChangeListener(propertyName, listener);
     }
@@ -496,7 +547,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      *
      * @return
      */
-    public final Class<?> getType() {
+    public final Class<? extends AbstractEntity<?>> getType() {
         return actualEntityType;
     }
 
@@ -531,20 +582,12 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      * @throws Exception
      */
-    public final boolean isObservable(final String propertyName) {
+    private final boolean isObservable(final String propertyName) {
         try {
-            //	    final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(getType(), propertyName);
-            //	    final Method setter = Reflector.getMethod(/* getType() */this, "set" + propertyName.toUpperCase().charAt(0) + propertyName.substring(1), propertyType);
             final Class<?> type = getType();
             final Method setter = Reflector.obtainPropertySetter(type, propertyName);
             return AnnotationReflector.isAnnotationPresent(setter, Observable.class);
-        } catch (final NoSuchMethodException e) {
-            try {
-                final Method setter = Reflector.obtainPropertySetter(getType(), propertyName);//
-                return AnnotationReflector.isAnnotationPresent(setter, Observable.class);
-
-            } catch (final NoSuchMethodException ex) {
-            }
+        } catch (final ReflectionException e) {
         }
         return false;
     }
@@ -556,11 +599,22 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     @Override
-    public Object get(final String propertyName) {
+    public <T> T get(final String propertyName) {
+        if (Reflector.isPropertyProxied(this, propertyName)) {
+            throw new StrictProxyException(format("Cannot get value for proxied property [%s] of entity [%s].", propertyName, getType().getName()));
+        }
         try {
             return Finder.findFieldValueByName(this, propertyName);
         } catch (final Exception e) {
-            throw new IllegalArgumentException("Could not get the value for property " + propertyName + " for instance " + this + "@" + getType().getName(), e);
+            // there are cases where this.toString() may fail such as for non-initialized union entities
+            // need to degrade gracefully in order to to hide the original exception...
+            String thisToString;
+            try {
+                thisToString = this.toString();
+            } catch (final Exception ex) {
+                thisToString = "this.toString()";
+            }
+            throw new EntityException(format("Could not get the value for property [%s] in instance [%s]@[%s].", propertyName , thisToString, getType().getName()), e);
         }
     }
 
@@ -571,10 +625,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param value
      */
     @Override
-    public void set(final String propertyName, final Object value) {
+    public AbstractEntity<K> set(final String propertyName, final Object value) {
         try {
             final Class<?> propertyType = Finder.findFieldByName(getType(), propertyName).getType();
-            final Method setter = Reflector.getMethod(/* getType() */this, "set" + propertyName.toUpperCase().charAt(0) + propertyName.substring(1), propertyType);
+            final String setterName = Mutator.SETTER.getName(propertyName);
+            final Method setter = Reflector.getMethod(this, setterName, propertyType);
             Object valueToInvokeOn = this;
             if (!setter.getDeclaringClass().isAssignableFrom(getType()) && AbstractUnionEntity.class.isAssignableFrom(getType())) {
                 valueToInvokeOn = ((AbstractUnionEntity) this).activeEntity();
@@ -585,24 +640,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             setter.invoke(valueToInvokeOn, value);
             // reverting changes to 'accessible' property of Method class
             setter.setAccessible(isAccessible);
+            return this;
         } catch (final Exception e) {
-            throw new IllegalStateException(e.getCause());
+            throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e);
         }
-    }
-
-    /**
-     * Returns property by name.
-     *
-     * @param name
-     * @return
-     */
-    @Override
-    public final MetaProperty getProperty(final String name) {
-        return properties.get(name);
-    }
-
-    public final IMetaPropertyFactory getPropertyFactory() {
-        return metaPropertyFactory;
     }
 
     /**
@@ -613,86 +654,120 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     @Inject
     protected void setMetaPropertyFactory(final IMetaPropertyFactory metaPropertyFactory) {
+        // mark the start of the initialisation phase as part of entity creation
+        beginInitialising();
         ///logger.debug("Starting meta construction with factory " + metaPropertyFactory + " for type " + getType());
         // if meta-property factory has already been assigned it should not change
-        if (this.metaPropertyFactory != null) {
+        if (this.metaPropertyFactory.isPresent()) {
             logger.error("Property factory can be assigned only once.");
-            throw new IllegalStateException("Property factory can be assigned only once.");
+            throw new EntityException("Property factory can be assigned only once.");
         }
-        this.metaPropertyFactory = metaPropertyFactory;
+
+        this.metaPropertyFactory = of(metaPropertyFactory);
         final List<Field> keyMembers = Finder.getKeyMembers(getType());
 
         // obtain field annotated as properties
         final List<Field> fields = Finder.findRealProperties(getClass());
         //logger.debug("Iterating through " + fields.size() + " properties for building corresponding meta-properties.");
         for (final Field field : fields) { // for each property field
-            //logger.debug("Property " + field.getName());
-            try {
-                // ensure that there is an accessor -- with out it field is not a property
-                // throws exception if method does not exists
-                Reflector.obtainPropertyAccessor(getType(), field.getName());
-                // determine property type and adjacent virtues
-                final Class<?> type = determineType(field);
-                //logger.debug("TYPE (" + field.getName() + ") : " + type);
-                final boolean isKey = keyMembers.contains(field);
-                //logger.debug("IS_KEY (" + field.getName() + ") : " + isKey);
-                final boolean isCollectional = Collection.class.isAssignableFrom(type);
-                //logger.debug("IS_COLLECTIONAL (" + field.getName() + ") : " + isCollectional);
+            final String propName = field.getName();
+            
+            Reflector.obtainPropertyAccessor(getType(), propName);
+            // determine property type and adjacent virtues
+            final Class<?> type = determineType(field);
+            //logger.debug("TYPE (" + field.getName() + ") : " + type);
+            final boolean isKey = keyMembers.contains(field);
+            //logger.debug("IS_KEY (" + field.getName() + ") : " + isKey);
+            
+            if (Reflector.isPropertyProxied(this, propName)) {
+                properties.put(propName, new MetaProperty(this, field, type, isKey, true, extractDependentProperties(field, fields)));
+            } else {
+                //logger.debug("Property " + field.getName());
+                try {
+                    // ensure that there is an accessor -- with out it field is not a property
+                    // throws exception if method does not exists
+                    Reflector.obtainPropertyAccessor(getType(), propName);
 
-                final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
-                final Class<?> propertyAnnotationType = isPropertyAnnotation.value();
-
-                // perform some early runtime validation whether property was defined correctly
-                // TODO this kind of validation should really be implemented as part of the compilation process
-                if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
-                    final String error = "Property " + field.getName() + " in " + getType()
-                            + " is collectional (or property descriptor), but has missing type argument, which should be specified as part of annotation IsProperty.";
-                    logger.error(error);
-                    throw new IllegalStateException(error);
+                    final boolean isCollectional = Collection.class.isAssignableFrom(type);
+                    //logger.debug("IS_COLLECTIONAL (" + field.getName() + ") : " + isCollectional);
+    
+                    final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
+                    final Class<?> propertyAnnotationType = isPropertyAnnotation.value();
+    
+                    // perform some early runtime validation whether property was defined correctly
+                    // TODO this kind of validation should really be implemented as part of the compilation process
+                    if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
+                        final String error = format("Property [%s] in [%s] is collectional (or a property descriptor), but has missing type argument, which should be specified as part of annotation @IsProperty.",
+                                propName, getType().getName());
+                        logger.error(error);
+                        throw new EntityDefinitionException(error);
+                    }
+    
+                    final Class<? extends AbstractEntity<?>> entityType = getType();
+                    if (isCollectional && isLinkPropertyRequiredButMissing(propName)) {
+                        final String error = format("Property [%s] in entity [%s] is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.",
+                                propName, getType().getName());
+                        logger.error(error);
+                        throw new EntityDefinitionException(error);
+                    }
+    
+                    if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY))
+                            && !Finder.isOne2One_association(entityType, propName)) {
+                        final String error = format("Property [%s] in entity [%s] has AE key type, but it does not form correct one2one association due to non-parent type of property key.",
+                                propName, getType().getName());
+                        logger.error(error);
+                        throw new EntityDefinitionException(error);
+                    }
+    
+                    // if setter is annotated then try to instantiate specified validator
+                    //logger.debug("Collecting validators for " + field.getName());
+                    final Set<Annotation> declatedValidationAnnotations = new HashSet<Annotation>();
+                    final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = collectValidators(metaPropertyFactory, field, type, isCollectional, declatedValidationAnnotations);
+                    // create ACE handler
+                    //logger.debug("Initiating meta-property ACE handler for " + field.getName());
+                    final IAfterChangeEventHandler<?> definer = metaPropertyFactory.create(this, field);
+                    // create meta-property
+                    //logger.debug("Creating meta-property for " + field.getName());
+                    final boolean isUpperCase = AnnotationReflector.isAnnotationPresent(field, UpperCase.class);
+                    //logger.debug("IS_UPPERCASE (" + field.getName() + ") : " + isUpperCase);
+                    final MetaProperty<?> metaProperty = new MetaPropertyFull(
+                            this,
+                            field,
+                            type,
+                            false,
+                            isKey,
+                            isCollectional,
+                            isPropertyAnnotation.assignBeforeSave(),
+                            propertyAnnotationType,
+                            AnnotationReflector.isAnnotationPresent(field, Calculated.class),
+                            isUpperCase,
+                            declatedValidationAnnotations,
+                            validators,
+                            definer,
+                            extractDependentProperties(field, fields));
+                    // define meta-property properties used most commonly for UI construction: required, editable, title and desc //
+                    //logger.debug("Initialising meta-property for " + field.getName());
+                    initProperty(keyMembers, field, metaProperty);
+                    // put meta-property in the map associating it with a corresponding property name
+                    properties.put(propName, metaProperty);
+                } catch (final Exception e) {
+                    logger.error("Entity instantiation failed.", e);
+                    throw new EntityException(format("Instantiation of entity [%s] has failed (see cause for more details).", getType().getName()), e);
                 }
-
-                final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) getType();
-                if (isCollectional && EntityUtils.isPersistedEntityType(entityType) && !Finder.hasLinkProperty(entityType, field.getName())) {
-                    final String error = "Property "
-                            + field.getName()
-                            + " in "
-                            + getType()
-                            + " is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.";
-                    logger.error(error);
-                    throw new IllegalStateException(error);
-                }
-
-                if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY))
-                        && !Finder.isOne2One_association(entityType, field.getName())) {
-                    final String error = "Property " + field.getName() + " in " + getType()
-                            + " has AE key type, but it does not form correct one2one association due to non-parent type of property key.";
-                    logger.error(error);
-                    throw new IllegalStateException(error);
-                }
-
-                // if setter is annotated then try to instantiate specified validator
-                //logger.debug("Collecting validators for " + field.getName());
-                final Set<Annotation> declatedValidationAnnotations = new HashSet<Annotation>();
-                final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators = collectValidators(metaPropertyFactory, field, type, isCollectional, declatedValidationAnnotations);
-                // create ACE handler
-                //logger.debug("Initiating meta-property ACE handler for " + field.getName());
-                final IAfterChangeEventHandler definer = metaPropertyFactory.create(this, field);
-                // create meta-property
-                //logger.debug("Creating meta-property for " + field.getName());
-                final boolean isUpperCase = AnnotationReflector.isAnnotationPresent(field, UpperCase.class);
-                //logger.debug("IS_UPPERCASE (" + field.getName() + ") : " + isUpperCase);
-                final MetaProperty metaProperty = new MetaProperty(this, field, type, isKey, isCollectional, propertyAnnotationType, AnnotationReflector.isAnnotationPresent(field, Calculated.class), isUpperCase, declatedValidationAnnotations, validators, definer, extractDependentProperties(field, fields));
-                // define meta-property properties used most commonly for UI construction: required, editable, title and desc //
-                //logger.debug("Initialising meta-property for " + field.getName());
-                initProperty(keyMembers, field, metaProperty);
-                // put meta-property in the map associating it with a corresponding property name
-                properties.put(field.getName(), metaProperty);
-            } catch (final Exception e) {
-                logger.error("Entity instantiation failed.", e);
-                throw new IllegalStateException(e); // entity without properly generated met-properties is considered to be in illegal state
             }
         }
+        endInitialising();
         //logger.debug("Finished meta construction for type " + getType());
+    }
+    
+    /**
+     * A predicate method to identify whether a collectional property requires, but is missing a corresponding <code>link property</code> information.
+     * 
+     * @param propertyName
+     * @return
+     */
+    protected boolean isLinkPropertyRequiredButMissing(final String propertyName) {
+        return EntityUtils.isPersistedEntityType(getType()) && !Finder.hasLinkProperty(getType(), propertyName);
     }
 
     /**
@@ -714,31 +789,54 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      *
      * @param metaPropertyFactory
      * @param field
-     * @param type
+     * @param properyType
      * @param isCollectional
      * @return map of validators
      * @throws Exception
      */
-    private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> collectValidators(final IMetaPropertyFactory metaPropertyFactory, final Field field, final Class<?> type, final boolean isCollectional, final Set<Annotation> validationAnnotations)
+    private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> collectValidators(
+            final IMetaPropertyFactory metaPropertyFactory,
+            final Field field,
+            final Class<?> properyType,
+            final boolean isCollectional,
+            final Set<Annotation> validationAnnotations)
             throws Exception {
         //logger.debug("Start collecting validators for property " + field.getName() + "...");
         try {
-            final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>> validators = new EnumMap<ValidationAnnotation, Map<IBeforeChangeEventHandler, Result>>(ValidationAnnotation.class);
+            final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = new EnumMap<>(ValidationAnnotation.class);
             // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
             // removeFrom[property name], addTo[property name] and set[property name]
-            final List<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, type, isCollectional);
+            final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, properyType, isCollectional);
             for (final Annotation annotation : propertyValidationAnotations) {
                 final ValidationAnnotation validationAnnotation = ValidationAnnotation.getValueByType(annotation);
                 // if property factory cannot instantiate a validator for the specified annotation then null is returned;
-                final IBeforeChangeEventHandler[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), type);
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), properyType);
                 if (annotationValidators.length > 0) {
-                    final Map<IBeforeChangeEventHandler, Result> handlersAndResults = new LinkedHashMap<IBeforeChangeEventHandler, Result>();
-                    for (final IBeforeChangeEventHandler handler : annotationValidators) {
+                    final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
+                    for (final IBeforeChangeEventHandler<?> handler : annotationValidators) {
                         handlersAndResults.put(handler, null);
                     }
                     validators.put(validationAnnotation, handlersAndResults);
                 }
             }
+
+            // now let's see if we need to add EntityExists validation
+            if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && isEntityExistsValidationApplicable(getType(), field, properyType)) {
+                final EntityExists eeAnnotation = new EntityExistsAnnotation((Class<? extends AbstractEntity<?>>) properyType).newInstance();
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
+
+                if (annotationValidators.length != 1) {
+                    throw new EntityDefinitionException(format("Unexpexted number of @EntityExists annotations (expected 1, but actual %s) for property [%s] in entity [%s].", annotationValidators.length, field.getType(), getType().getName()));
+                }
+
+                propertyValidationAnotations.add(eeAnnotation);
+                final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
+                final IBeforeChangeEventHandler<?> handler = annotationValidators[0];
+                handlersAndResults.put(handler, null);
+
+                validators.put(ValidationAnnotation.ENTITY_EXISTS, handlersAndResults);
+            }
+
             // logger.debug("Finished collecting validators for property " + field.getName() + ".");
             validationAnnotations.addAll(propertyValidationAnotations);
 
@@ -750,13 +848,34 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
+     * Determines whether entity exists validation is applicable for the provided type.
+     *
+     * @param propName
+     * @param propType
+     * @return
+     */
+    private boolean isEntityExistsValidationApplicable(final Class<?> entityType, final Field field, final Class<?> propType) {
+
+        final SkipEntityExistsValidation seevAnnotation =  AnnotationReflector.getAnnotation(field, SkipEntityExistsValidation.class);
+        boolean skipEntityExistsValidation;
+        if (seevAnnotation != null) {
+            skipEntityExistsValidation = !seevAnnotation.skipActiveOnly();
+        } else {
+            skipEntityExistsValidation = false;
+        }
+
+        return !skipEntityExistsValidation &&
+                EntityUtils.isPersistedEntityType(propType);
+    }
+
+    /**
      * Initialises meta-property properties used most commonly for UI construction such as required, editable, title and desc.
      *
      * @param keyMembers
      * @param field
      * @param metaProperty
      */
-    private void initProperty(final List<Field> keyMembers, final Field field, final MetaProperty metaProperty) {
+    private void initProperty(final List<Field> keyMembers, final Field field, final MetaProperty<?> metaProperty) {
         if (KEY.equals(field.getName())) {
             metaProperty.setVisible(!(KEY.equals(field.getName()) && keyMembers.size() > 1)); // if entity is composite then "key" should be inactive
             metaProperty.setEditable(!AnnotationReflector.isAnnotationPresentForClass(KeyReadonly.class, getType()));
@@ -781,10 +900,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
             // TODO may need to relax this condition for composite key member in order to support empty composite members
             // As part of issue #28 need to relax requiredness for composite key members in case they have transactional nature
-            if (AnnotationReflector.isAnnotationPresent(field, TransactionUser.class) || AnnotationReflector.isAnnotationPresent(field, TransactionDate.class)) {
+            if (metaProperty.shouldAssignBeforeSave()) { // this should really be strictly for not yet persisted entities!
                 metaProperty.setRequired(false);
             } else {
-                metaProperty.setRequired(AnnotationReflector.isAnnotationPresent(field, Required.class) || AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class));
+                metaProperty.setRequired(
+                        AnnotationReflector.isAnnotationPresent(field, Required.class) ||
+                        (AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class) &&
+                        !AnnotationReflector.isAnnotationPresent(field, Optional.class)));
             }
 
             if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {
@@ -812,9 +934,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             final String[] dependentPropertyNames = AnnotationReflector.getAnnotation(field, Dependent.class).value();
             for (final String propName : dependentPropertyNames) {
                 if (!allFieldsNames.contains(propName)) {
-                    throw new IllegalArgumentException("There is no dependent property [" + propName + "].");
+                    throw new EntityDefinitionException(format("There is no dependent property [%s] in entity [%s].", propName, getType().getName()));
                 } else if (propName.equals(field.getName())) {
-                    throw new IllegalArgumentException("The property [" + propName + "] cannot be dependent to itself.");
+                    throw new EntityDefinitionException(format("Self-dependency is discovered for property [%s] in entity [%s].", propName, getType().getName()));
                 }
             }
             return dependentPropertyNames;
@@ -831,18 +953,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      * @throws NoSuchMethodException
      */
-    public List<Annotation> extractValidationAnnotationForProperty(final Field field, final Class<?> type, final boolean isCollectional) {
-        final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
+    public Set<Annotation> extractValidationAnnotationForProperty(final Field field, final Class<?> type, final boolean isCollectional) {
+        final Set<Annotation> propertyValidationAnotations = new HashSet<>();
         // try to obtain setter
         propertyValidationAnotations.addAll(extractSetterAnnotations(field, type));
         propertyValidationAnotations.addAll(extractFieldBeforeChangeAnnotations(field));
+        propertyValidationAnotations.addAll(extractFieldUniqueAnnotations(field));
 
         // if field represents a collectional property then it may have other mutators
         if (isCollectional) {
             // try to obtain incrementor
-            propertyValidationAnotations.addAll(extractIncrementorAnnotations(field, type));
+            propertyValidationAnotations.addAll(extractCollectionalPropIncrementorAnnotations(field, type));
             // try to obtain decrementor
-            propertyValidationAnotations.addAll(extractDecrementorAnnotations(field, type));
+            propertyValidationAnotations.addAll(extractCollectionalPropDecrementorAnnotations(field, type));
         }
         return propertyValidationAnotations;
     }
@@ -855,19 +978,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private List<Annotation> extractDecrementorAnnotations(final Field field, final Class<?> type) {
+    private Set<Annotation> extractCollectionalPropDecrementorAnnotations(final Field field, final Class<?> type) {
         try {
-            final Method decrementor = Reflector.getMethod(/* getType() */this, "removeFrom" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-            final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
+            final Method decrementor = Reflector.getMethod(this, "removeFrom" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
+            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(decrementor);
             if (annotations.size() > 0 && AnnotationReflector.getAnnotation(decrementor, Observable.class) == null) {
-                throw new IllegalStateException("Property " + field.getName() + " in " + getType()
-                        + " requires validation, but corresponding decrementor is not observable (no Observable annotation).");
+                throw new EntityDefinitionException(format("Collectional property [%s] in entity [%s] requires validation, but its decrementor [%s] is not observable (missing @Observable).",
+                        field.getName(), getType().getName(), decrementor.getName()));
             }
             return annotations;
         } catch (final NoSuchMethodException e) {
             // do nothing if decrementor does not exist
         }
-        return new ArrayList<Annotation>();
+        return new HashSet<>();
     }
 
     /**
@@ -878,19 +1001,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private List<Annotation> extractIncrementorAnnotations(final Field field, final Class<?> type) {
+    private Set<Annotation> extractCollectionalPropIncrementorAnnotations(final Field field, final Class<?> type) {
         try {
             final Method incremetor = Reflector.getMethod(/* getType() */this, "addTo" + field.getName().toUpperCase().charAt(0) + field.getName().substring(1), type);
-            final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
+            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(incremetor);
             if (annotations.size() > 0 && AnnotationReflector.getAnnotation(incremetor, Observable.class) == null) {
-                throw new IllegalStateException("Property " + field.getName() + " in " + getType()
-                        + " requires validation, but corresponding incremetor is not observable (no Observable annotation).");
+                throw new EntityDefinitionException(format("Collectional property [%s] in entity [%s] requires validation, but its incremetor [%s] is not observable (missing @Observable).",
+                        field.getName(), getType().getName(), incremetor.getName()));
             }
             return annotations;
         } catch (final NoSuchMethodException e1) {
             // do nothing if incrementor does not exist
         }
-        return new ArrayList<Annotation>();
+        return new HashSet<>();
     }
 
     /**
@@ -900,37 +1023,53 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param type
      * @return
      */
-    private List<Annotation> extractSetterAnnotations(final Field field, final Class<?> type) {
+    private Set<Annotation> extractSetterAnnotations(final Field field, final Class<?> type) {
         //logger.debug("Extracting validation annotations for property " + field.getName() + ".");
         try {
-            final Method setter = Reflector.getMethod(this, "set" + Character.toUpperCase(field.getName().charAt(0)) + field.getName().substring(1), type);
+            final Method setter = Reflector.getMethod(this, Mutator.SETTER.getName(field.getName()), type);
             if (AnnotationReflector.getAnnotation(setter, Observable.class) == null) {
-                final String errorMsg = "Setter " + setter.getName() + " for property " + field.getName() + " is not observable (no Observable annotation).";
+                final String errorMsg = format("Setter [%s] for property [%s] in entity [%s] is not observable (missing @Observable).", setter.getName(), field.getName(), getType().getName());
                 logger.error(errorMsg);
-                throw new IllegalStateException(errorMsg);
+                throw new EntityDefinitionException(errorMsg);
             }
-            final List<Annotation> annotations = AnnotationReflector.getValidationAnnotations(setter);
+            final Set<Annotation> annotations = AnnotationReflector.getValidationAnnotations(setter);
             //logger.debug("Number of validation annotations for property " + field.getName() + ": " + annotations.size());
             return annotations;
-        } catch (final NoSuchMethodException e1) {
+        } catch (final NoSuchMethodException e) {
             // do nothing if setter does not exist
-            logger.debug("There is no setter for property " + field.getName() + ".");
+            logger.debug(format("There is no setter for property [%s] in entity [%s].", field.getName(), getType().getName()));
         }
-        return new ArrayList<Annotation>();
+        return new HashSet<>();
     }
 
     /**
      * Processed BCE and ACE declarations in order to instantiate event handlers.
      *
      * @param field
-     * @param type
+     * @param entityType
      * @return
      */
-    private List<Annotation> extractFieldBeforeChangeAnnotations(final Field field) {
+    private static List<Annotation> extractFieldBeforeChangeAnnotations(final Field field) {
         final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
         final BeforeChange bce = AnnotationReflector.getAnnotation(field, BeforeChange.class);
         if (bce != null) {
             propertyValidationAnotations.add(bce);
+        }
+        return propertyValidationAnotations;
+    }
+    
+    /**
+     * Looks for {@link Unique} annotation.
+     *
+     * @param field
+     * @param entityType
+     * @return
+     */
+    private static List<Annotation> extractFieldUniqueAnnotations(final Field field) {
+        final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
+        final Unique uniqueAnnotation = AnnotationReflector.getAnnotation(field, Unique.class);
+        if (uniqueAnnotation != null) {
+            propertyValidationAnotations.add(uniqueAnnotation);
         }
         return propertyValidationAnotations;
     }
@@ -940,10 +1079,73 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      *
      * @return
      */
-    public final Map<String, MetaProperty> getProperties() {
+    public final Map<String, MetaProperty<?>> getProperties() {
+        assertInstrumented();
         return Collections.unmodifiableMap(properties);
     }
+    
+    /**
+     * Guarantees to return an instance of {@link MetaProperty} for the specified property name if it exists.
+     * Otherwise, throws an exception.
+     *
+     * @param name
+     * @return
+     */
+    @Override
+    public final <T> MetaProperty<T> getProperty(final String name) {
+        final MetaProperty<T> mp = (MetaProperty<T>) getProperties().get(name);
+        if (mp != null) {
+            return mp;
+        }
+        
+        throw new EntityException(format("Meta-data for property [%s] in entity [%s] could not be located.", name, getType().getName()));
+    }
+    
+    /**
+     * Returns an empty optional if the specified name represents a proxied property.
+     * Throws {@link EntityException} in case of uninstrumeted entity. 
+     * 
+     * @param name
+     * @return
+     */
+    public final <T> java.util.Optional<MetaProperty<T>> getPropertyIfNotProxy(final String name) {
+        final MetaProperty<T> prop = getProperty(name);
+        return prop.isProxy() ? empty() : of(prop);
+    }
 
+    /**
+     * A convenient alternative to {@link #getProperty(String)} that returns an optional value with either an instance of {@link MetaProperty} or without.
+     * An empty optional value indicates that either this entity instance was not instrumented or the specified property does not belong to this entity.
+     *
+     * @param name
+     * @return
+     */
+    public final java.util.Optional<MetaProperty<?>> getPropertyOptionally(final String name) {
+        if (metaPropertyFactory.isPresent()) {
+            final MetaProperty<?> mp = getProperties().get(name);
+            return mp != null ? of(mp) : empty(); 
+        }
+        return empty();
+    }
+
+    /**
+     * Throws {@link EntityException} if this instance is not instrumented.
+     */
+    public final void assertInstrumented() {
+        if (!isInstrumented()) {
+            throw new EntityException(format("Meta-properties for this instance of entity [%s] do not exist as it was not instrumented.", getType().getName()));
+        }
+    }
+    
+    /**
+     * A convenient method to check if this instance is instrumented.
+     * 
+     * @return
+     */
+    public final boolean isInstrumented() {
+        return PropertyTypeDeterminator.isInstrumented(this.getClass());
+    }
+    
     /**
      * Increases <code>lockCount</code> by one in a thread safe manner.
      */
@@ -1035,16 +1237,26 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return validation result
      */
     protected Result validate() {
-        Result firstFailure = null;
-        // iterate over properties in search of the first invalid one
-        for (final MetaProperty property : properties.values()) {
-            // if invalid return first error
-            if (!property.isValidWithRequiredCheck() && firstFailure == null) { // 1. process isValid() that triggers requiredness checking. 2. saves the first failure
-                firstFailure = property.getFirstFailure();
-            }
+        if (!isInstrumented()) {
+            throw new EntityException(format("Uninstrumented entity [%s] should not be validated.", getType().getName()));
         }
-        return firstFailure == null ? new Result(this, "Entity " + this + " is valid.") : firstFailure; // returns first failure if exists or successful result if there was no
-        // failure.
+        // iterate over properties in search of the first invalid one
+        final java.util.Optional<Result> firstFailure = nonProxiedProperties()
+        .filter(mp -> !mp.isValidWithRequiredCheck() && mp.getFirstFailure() != null)
+        .findFirst().map(mp -> mp.getFirstFailure());
+        
+//        Result firstFailure = null;
+//        for (final MetaProperty<?> property : properties.values()) {
+//            // if invalid return first error
+//            if (!property.isProxy() && !property.isValidWithRequiredCheck() && firstFailure == null) { // 1. process isValid() that triggers requiredness checking. 2. saves the first failure
+//                firstFailure = property.getFirstFailure();
+//            }
+//        }
+        
+        
+        // returns first failure if exists or successful result if there was no failure.
+        return firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
+//        return firstFailure != null ? firstFailure : new Result(this, "Entity " + this + " is valid.");
     }
 
     /**
@@ -1073,21 +1285,18 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         return getId() != null;
     }
 
-    /**
-     * Checks whether this is an enhanced entity instance.
-     *
-     * @return
-     */
-    public final boolean isEnhanced() {
-        return !getType().getName().equals(getClass().getName());
-    }
-
     public final boolean isInitialising() {
         return initialising;
     }
 
-    public final void setInitialising(final boolean initialising) {
-        this.initialising = initialising;
+    public final AbstractEntity<K> beginInitialising() {
+        this.initialising = true;
+        return this;
+    }
+
+    public final AbstractEntity<K> endInitialising() {
+        this.initialising = false;
+        return this;
     }
 
     public final boolean hasCompositeKey() {
@@ -1095,49 +1304,55 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
-     * This is an experimental support for checking whether an entity instance is dirty -- was modified, but changes has not been yet persisted. The envisage scenario is this: any
-     * change to a property leads to isDirty; once entity is persisted the dirty state is reset to false.
-     *
+     * Any change to a property on an instrumented entity instance leads to its dirtiness.
+     * Once a dirty entity is persisted, the dirty state gets reset to <code>false</code>.
+     * 
+     * The dirty state is applicable strictly to instrumented entities. 
+     * Therefore, an exception is thrown if this method is invoked on an uninstrumented instance.
+     * 
      * @return
      */
     public final boolean isDirty() {
-        return getDirtyProperties().size() != 0 || !isPersisted();
+        return !isPersisted() ||
+                nonProxiedProperties().filter(mp -> mp.isDirty()).findFirst().isPresent() ;
     }
 
-    public final void setDirty(final boolean dirty) {
+    public final AbstractEntity<K> setDirty(final boolean dirty) {
         // reset dirty state for properties in case where entity becomes not dirty
         if (!dirty) {
-            for (final MetaProperty prop : getDirtyProperties()) {
+            for (final MetaProperty<?> prop : getDirtyProperties()) {
                 prop.setDirty(false);
             }
         }
+        return this;
     }
 
+    /**
+     * A convenient method to obtain only meta-properties representing non-proxied properties.
+     * 
+     * @return
+     */
+    public Stream<MetaProperty<?>> nonProxiedProperties() {
+        return getProperties().values().stream().filter(mp -> !mp.isProxy());
+    }
+    
     /**
      * A utility method for accessing dirty properties.
      *
      * @return
      */
-    public final List<MetaProperty> getDirtyProperties() {
-        final List<MetaProperty> dirtyProperties = new ArrayList<MetaProperty>();
-        for (final MetaProperty prop : getProperties().values()) {
-            if (!prop.isCalculated() && prop.isDirty()) {
-                dirtyProperties.add(prop);
-            }
-        }
-        return dirtyProperties;
+    public final List<MetaProperty<?>> getDirtyProperties() {
+        return nonProxiedProperties().filter(mp -> !mp.isCalculated() && mp.isDirty()).collect(Collectors.toList());
     }
 
-    public final void resetMetaState() {
-        for (final MetaProperty property : properties.values()) {
-            property.resetState();
-        }
+    public AbstractEntity<?> resetMetaState() {
+        nonProxiedProperties().forEach(mp -> mp.resetState());
+        return this;
     }
 
-    public final void resetMetaValue() {
-        for (final MetaProperty property : properties.values()) {
-            property.resetValues();
-        }
+    public AbstractEntity<?> resetMetaValue() {
+        nonProxiedProperties().forEach(mp -> mp.resetValues());
+        return this;
     }
 
     /**
@@ -1170,20 +1385,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * Restores state of all properties to original, which includes setting original values and removal of all validation errors.
      */
     public AbstractEntity<K> restoreToOriginal() {
-        setInitialising(true);
+        beginInitialising();
         try {
             // restore property value state to original
-            for (final MetaProperty property : getProperties().values()) {
-                property.restoreToOriginal();
-            }
+            nonProxiedProperties().forEach(mp -> mp.restoreToOriginal());
             // run definers to restore meta-state that could have been set as part of some property after change logic
-            for (final MetaProperty property : getProperties().values()) {
-                if (!property.isCollectional()) { // TODO for collectional re-running definers is challenging at this stage
-                    property.define(property.getOriginalValue());
-                }
-            }
+            nonProxiedProperties().filter(mp -> !mp.isCollectional()).forEach(mp -> mp.defineForOriginalValue());
         } finally {
-            setInitialising(false);
+            endInitialising();
         }
         return this;
     }
@@ -1200,12 +1409,21 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
+     * Throws an exception if entity factory was not provided for this entity instance.
+     */
+    private void assertEntityFactoryPresence() {
+        if (getEntityFactory() == null) {
+            throw new EntityException(format("Entity factory is required, but is missing from an instance of entity [%s].", getType().getName()));
+        }
+    }
+    /**
      * Creates a new instance of the given type and copies all properties including, but not system properties such as ID and version.
      *
      * @param type
      * @return
      */
     public final <COPY extends AbstractEntity> COPY copyWithoutIdentity(final Class<COPY> type) {
+        assertEntityFactoryPresence();
         return copyTo(getEntityFactory().newEntity(type));
     }
 
@@ -1220,12 +1438,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     public final <COPY extends AbstractEntity> COPY copyTo(final COPY copy) {
-        copy.setInitialising(true);
-        // Under certain circumstances copying happens for a non-instrumented entity instance
-        // In such cases there would be no meta-properties, and copying would not happen.
+        copy.beginInitialising();
+        // Under certain circumstances copying happens for an uninstrumented entity instance
+        // In such cases there would be no meta-properties, and copying would fail.
         // Therefore, it is important to perform ad-hoc property retrieval via reflection.
-        final Stream<String> propertyNames = !getProperties().isEmpty() ? getProperties().keySet().stream()
-                : Finder.findRealProperties(getType()).stream().map(field -> field.getName());
+        final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(field -> field.getName());
 
         // Copy each identified property into a new instance.
         propertyNames.forEach(propName -> {
@@ -1239,7 +1456,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 }
             }
         });
-        copy.setInitialising(false);
+        copy.endInitialising();
         return copy;
     }
 
@@ -1251,6 +1468,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     protected final <COPY extends AbstractEntity> COPY createCopyInstance(final Class<COPY> type) {
+        assertEntityFactoryPresence();
         return getEntityFactory().newEntity(type, getId());
     }
 
@@ -1272,7 +1490,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      */
     public void setPreferredProperty(final String preferredProperty) {
         if (!EntityUtils.isProperty(getType(), preferredProperty)) {
-            throw new IllegalArgumentException("Value \"" + preferredProperty + "\" is not a valid property for type " + getType().getName() + ".");
+            throw new EntityException(format("The specified property name [%s] does not represent a valid property for type [%s].", preferredProperty, getType().getName()));
         }
         this.preferredProperty = preferredProperty;
     }
@@ -1299,4 +1517,44 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     }
 
+    /**
+     * Indicates if entity represents an instance of a persistent type.
+     *
+     * @return
+     */
+    public boolean isPersistent() {
+        return getType().isAnnotationPresent(MapEntityTo.class);
+    }
+
+    /** Indicates whether the editable state of the entity should be ignored durting mutation. */
+    public boolean isIgnoreEditableState() {
+        return ignoreEditableState;
+    }
+
+    /**
+     * The main intent of this method is to support entity modification in rare situation while it it being marked as read-only.
+     * Should be used with great care as it may alter the intended domain behaviour if used carelessly.
+     * At this stage there is no reason for this setter to be used as part of the domain logic. */
+    public void setIgnoreEditableState(final boolean ignoreEditableStateDuringSave) {
+        this.ignoreEditableState = ignoreEditableStateDuringSave;
+    }
+
+    /**
+     * Returns a list of proxied properties. Could return an empty set.
+     * This method should not be final due to the need for interception.
+     * 
+     * @return
+     */
+    public Set<String> proxiedPropertyNames() {
+        return Collections.emptySet();
+    }
+    
+    /**
+     * Indicates whether this instance represents a proxied id-only value.
+     * 
+     * @return
+     */
+    public boolean isIdOnlyProxy() {
+        return proxiedPropertyNames().contains(VERSION);
+    }
 }

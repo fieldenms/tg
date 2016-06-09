@@ -12,13 +12,13 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * Test validator for {@link AbstractBaseClass} intProp.
- * 
+ *
  * @author Yura
  */
 public class IntPropValidator implements IBeforeChangeEventHandler<Integer> {
 
     @Override
-    public Result handle(final MetaProperty property, final Integer newValue, final Integer oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Integer> property, final Integer newValue, final Integer oldValue, final Set<Annotation> mutatorAnnotations) {
         return Result.successful(property.getEntity());
     }
 

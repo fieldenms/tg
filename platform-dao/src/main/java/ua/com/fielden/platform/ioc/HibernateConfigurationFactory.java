@@ -11,6 +11,7 @@ import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 
 import com.google.inject.Guice;
 
@@ -40,6 +41,8 @@ public class HibernateConfigurationFactory {
 
     private final Properties props;
     private final DomainMetadata domainMetadata;
+    private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
+
     private final Configuration cfg = new Configuration();
     private final Configuration cfgManaged = new Configuration();
 
@@ -56,6 +59,7 @@ public class HibernateConfigurationFactory {
                 applicationEntityTypes, //
                 userMapTo, //
                 determineDbVersion(props));
+        idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
         cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
         cfgManaged.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
     }
@@ -126,6 +130,10 @@ public class HibernateConfigurationFactory {
 
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
+    }
+
+    public IdOnlyProxiedEntityTypeCache getIdOnlyProxiedEntityTypeCache() {
+        return idOnlyProxiedEntityTypeCache;
     }
 
     private Configuration setSafely(final Configuration cfg, final String propertyName, final String defaultValue) {

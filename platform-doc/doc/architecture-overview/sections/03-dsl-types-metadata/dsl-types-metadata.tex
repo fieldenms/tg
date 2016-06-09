@@ -29,14 +29,14 @@
       \def\platformpath{-- +(8.5cm,0cm) -- +(8.5cm,1.5cm) -- +(7.5cm,1.5cm) -- +(7.5cm,4.0cm) -- +(6.0cm,4.0cm) -- +(6.0cm,1.5cm) -- +(5.0cm,1.5cm) -- +(5.0cm,4.0cm) -- +(3.5cm,4.0cm) -- +(3.5cm,1.5cm) -- +(2.5cm,1.5cm) -- +(2.5cm,4.0cm) -- +(1.0cm,4.0cm) -- +(1.0cm,1.5cm) -- +(0.0cm,1.5cm) -- cycle}
       
       \draw (-1,-1.5) [platform] \platformpath
-	    node [below, text width=3.5cm, text centered, yshift=1.0cm, xshift=1.15cm, rotate=90] {DSL}
-	    node [below, text width=3.5cm, text centered, yshift=1.0cm, xshift=3.65cm, rotate=90] {Type System}
-	    node [below, text width=3.5cm, text centered, yshift=1.0cm, xshift=6.15cm, rotate=90] {Metadata}
-	    node [below, text centered,xshift=4.4cm, yshift=-0.2cm] {Trident Genesis Platform};
+	    node [text width=3.5cm, text centered, yshift=2.5cm, xshift=1.7cm, rotate=90] {DSL}
+	    node [text width=3.5cm, text centered, yshift=2.5cm, xshift=4.20cm, rotate=90] {Type System}
+	    node [text width=3.5cm, text centered, yshift=2.5cm, xshift=6.7cm, rotate=90] {Metadata}
+	    node [text centered,xshift=4.4cm, yshift=0.7cm] {Trident Genesis Platform};
 
       \def\apppath{-- +(0cm,0cm) -- +(0.75cm,0cm) -- +(0.75cm,2.5cm) -- +(2.75cm,2.5cm) -- +(2.75cm,0cm) -- +(3.25cm,0cm) -- +(3.25cm,2.5cm) -- +(5.25cm,2.5cm) -- +(5.25cm,0cm)-- +(5.75cm,0cm)-- +(5.75cm,2.5cm) -- +(7.75cm,2.5cm) -- +(7.75cm,0cm) -- +(8.5cm,0cm) -- +(8.5cm,3.75cm) -- +(0cm,3.75cm) -- cycle}
 
-      \draw (-1,0.25) [application] \apppath node [above, text centered,xshift=4.4cm, yshift=-1.2cm] {Business Application};
+      \draw (-1,0.25) [application] \apppath node [text centered,xshift=4.4cm, yshift=3.1cm] {Business Application};
     \end{tikzpicture} 
   \end{wrapfigure}
   
@@ -190,10 +190,10 @@
       \def\appathone{-- +(2.75cm,0cm) -- +(2.75cm,1.25cm) -- +(4.35cm,1.25cm) -- +(4.35cm,2cm) -- +(0cm,2cm) -- cycle}
       \def\appathtwo{+(1.6cm,1.25cm) -- +(1.6cm,0cm) -- +(4.35cm,0cm) -- +(4.35cm,2cm) -- +(0.15cm,2cm) -- +(0.15cm,1.25cm) -- cycle}
 
-      \draw (0,0) [platform] \platformpath  node [below, text centered,xshift=4.4cm, yshift=-0.1cm] {Trident Genesis Platform};
-      \draw (3,1.75) [reusableblock] \reusabledomain  node [below, text centered,xshift=1.5cm, scale=0.8] {Reusable Domain};
-      \draw (0,1.75) [application] \appathone node [above, text centered,xshift=2.0cm, yshift=-0.9cm, scale=0.8] {Business Application} node [above, text centered,xshift=1.5cm, yshift=-2.2cm, scale=1.5] {1};
-      \draw (4.65,1.75) [application] \appathtwo node [above, text centered,xshift=2.1cm, yshift=-0.15cm, scale=0.8] {Business Application } node [above, text centered,xshift=3.0cm, yshift=-1.4cm, scale=1.5] {2};
+      \draw (0,0) [platform] \platformpath  node [text centered,xshift=4.4cm, yshift=0.8cm] {Trident Genesis Platform};
+      \draw (3,1.75) [reusableblock] \reusabledomain  node [text centered, xshift=1.5cm, yshift=0.5cm, scale=0.8] {Reusable Domain};
+      \draw (0,1.75) [application] \appathone node [text centered,xshift=2.0cm, yshift=1.6cm, scale=0.8] {Business Application} node [text centered,xshift=1.4cm, yshift=0.75cm, scale=1.5] {1};
+      \draw (4.65,1.75) [application] \appathtwo node [text centered,xshift=0.9cm, yshift=0.35cm, scale=0.8] {Business Application } node [text centered, xshift=1.3cm, yshift=-0.5cm, scale=1.5] {2};
     \end{tikzpicture} 
     \vspace{-30pt}
   \end{wrapfigure}

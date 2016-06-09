@@ -7,11 +7,10 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Dummy entity for example/testing
- * 
+ *
  * @author Yura
  */
 @KeyType(String.class)
@@ -41,7 +40,6 @@ public class DummyEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     public DummyEntity setDummyEntity2Ref(final String dummyEntity2Ref) {
         this.dummyEntity2Ref = dummyEntity2Ref;
         return this;
@@ -52,7 +50,6 @@ public class DummyEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    @NotNull
     public DummyEntity setDummyEntity2(final DummyEntity2 dummyEntity2) {
         this.dummyEntity2 = dummyEntity2;
         return this;

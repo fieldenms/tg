@@ -21,7 +21,7 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Represents editor component for Money property type
- * 
+ *
  * @author Yura
  */
 public class MoneyField extends ValidationLayer<JTextField> {
@@ -37,7 +37,7 @@ public class MoneyField extends ValidationLayer<JTextField> {
 
     /**
      * Initializes instance with default {@link IParsingRule} and passed {@link Money} value
-     * 
+     *
      * @param value
      */
     public MoneyField(final Money value) {
@@ -46,7 +46,7 @@ public class MoneyField extends ValidationLayer<JTextField> {
 
     /**
      * Initializes instance with given {@link IParsingRule} and sets passed value as text inside
-     * 
+     *
      * @param value
      * @param parsingRule
      */
@@ -87,7 +87,7 @@ public class MoneyField extends ValidationLayer<JTextField> {
 
     /**
      * Interface determining parsing rule, that should convert {@link String}s into {@link Money} values.
-     * 
+     *
      * @author Yura
      */
     public static interface IParsingRule {
@@ -96,7 +96,7 @@ public class MoneyField extends ValidationLayer<JTextField> {
          * value.<br>
          * Should return unsuccessful {@link Result} with proper message and {@link Exception} set (instance is ignored), if it not possible to convert passed {@link String} value
          * to {@link Money} value.<br>
-         * 
+         *
          * @param value
          * @return
          */
@@ -109,6 +109,7 @@ public class MoneyField extends ValidationLayer<JTextField> {
      * Note : empty {@link String} is considered as legal value and represents null.
      */
     public static final IParsingRule defaultParsingRule = new IParsingRule() {
+        @Override
         public Result parseString(final String value) {
             if ("".equals(value)) {
                 return new Result(null, "");
@@ -124,7 +125,7 @@ public class MoneyField extends ValidationLayer<JTextField> {
                     amount = enteredAmount instanceof Double ? new BigDecimal(enteredAmount.doubleValue()) : new BigDecimal(enteredAmount.longValue());
                     if (amount.doubleValue() <= 0) {
                         // if negative, then could not parse
-                        return new Result(null, "Couldn't parse '" + value + "' value", new Exception());
+                        return new Result(null, new Exception("Couldn't parse '" + value + "' value"));
                     }
                 } catch (final Exception e) {
                     // the worst case - removing all commas and trying to parse like that
@@ -132,7 +133,7 @@ public class MoneyField extends ValidationLayer<JTextField> {
                     try {
                         amount = new BigDecimal(Double.valueOf(newValue));
                     } catch (final Exception exc2) {
-                        return new Result(null, "Couldn't parse '" + value + "' value", new Exception());
+                        return new Result(null, new Exception("Couldn't parse '" + value + "' value"));
                     }
                 }
             }
@@ -142,7 +143,7 @@ public class MoneyField extends ValidationLayer<JTextField> {
 
     /**
      * Example of usage of this class
-     * 
+     *
      * @param args
      */
     public static void main(final String[] args) {

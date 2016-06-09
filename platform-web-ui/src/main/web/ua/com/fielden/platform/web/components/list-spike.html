@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Iron list example</title>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+    <link rel="import" href="/resources/components/tg-number-selector.html">
+    <style>
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+</head>
+
+<body unresolved class="fullbleed">
+    <template id="app" is="dom-bind">
+        <div style="height:600px;width:300px;position:relative;">
+            <tg-number-selector></tg-number-selector>
+        </div>
+    </template>
+</body>
+<script>
+    var app = document.querySelector("#app");
+</script>
+
+</html>

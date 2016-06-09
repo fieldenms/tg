@@ -1,0 +1,95 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
+
+<dom-module id="tg-accordion">
+    <style>
+        :host {
+            position: relative;
+            display: block;
+        }
+        .iron-collapse-closed {
+            display: block !important;
+        }
+        .panel {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .heading {
+            background-color: #f5f5f5;
+            border-color: #ddd;
+            padding: 6px 15px;
+            cursor: pointer;
+        }
+        a {
+            margin-top: 0;
+            margin-bottom: 0;
+            font-size: 16px;
+            font-weight: 400;
+            color: #333;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        iron-collapse {
+            border-top: 1px solid #ddd;
+        }
+        iron-icon {
+            cursor: pointer;
+        }
+    </style>
+    <template>
+        <div class="panel layout vertical">
+            <div class="heading layout horizontal center justified" on-tap="_toggle">
+                <a>[[heading]]</a>
+                <iron-icon icon="[[_calcIcon(opened)]]"></iron-icon>
+            </div>
+            <iron-collapse opened="{{opened}}" id="collapse">
+                <content></content>
+            </iron-collapse>
+
+        </div>
+    </template>
+</dom-module>
+<script>
+    Polymer({
+
+        is: "tg-accordion",
+
+        properties: {
+            opened: {
+                type: Boolean,
+                reflectToAttribute: true,
+                value: function () {
+                    return false;
+                },
+                observer: "_openedChanged"
+            },
+            dontCloseOnTap: {
+                type: Boolean,
+                reflectToAttribute: true,
+                value: function () {
+                    return false;
+                }
+            },
+            heading: String
+        },
+
+        _calcIcon: function (isOpened) {
+            return "icons:" + (this.opened ? 'expand-less' : 'expand-more');
+        },
+
+        _toggle: function (e, detail, source) {
+            if ((this.opened && !this.dontCloseOnTap) || !this.opened) {
+                this.$.collapse.toggle();
+            }
+        },
+
+        _openedChanged: function (newValue, oldValue) {
+            this.fire('accordion-toggled', newValue);
+        }
+    });
+</script>

@@ -16,16 +16,37 @@ import com.google.inject.ImplementedBy;
 @ImplementedBy(DefaultUniversalConstants.class)
 public interface IUniversalConstants {
     /**
-     * Return a value indicating the current date/time.
+     * Returns a value indicating the current date/time.
      * 
      * @return
      */
     DateTime now();
 
     /**
-     * Return a value indicating the current locale.
+     * Returns a value indicating the current locale.
      * 
      * @return
      */
     Locale locale();
+    
+    /**
+     * Returns an application name.
+     * 
+     * @return
+     */
+    String appName();
+    
+    /**
+     * Returns an SMTP server IP address.
+     * 
+     * @return
+     */
+    String smptServer();
+    
+    /**
+     * Returns a generic application <code>From</code> email address that should be used when sending emails if no more specific email address is available.
+     * 
+     * @return
+     */
+    String fromEmailAddress();
 }

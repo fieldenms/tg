@@ -6,7 +6,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.query.FetchModel;
+import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.LogicalOperator;
 import ua.com.fielden.platform.entity.query.fluent.QueryTokens;
@@ -121,7 +121,7 @@ public class EntQueryGenerator1 {
         parseTokensIntoComponents(qryModel, orderModel, fetchModel), //
         resultType != null ? resultType : qryModel.getResultType(), //
         category, //
-        fetchModel == null ? null : new FetchModel(fetchModel, domainMetadataAnalyser), qryModel.isFilterable());
+        fetchModel == null ? null : new EntityRetrievalModel(fetchModel, domainMetadataAnalyser), qryModel.isFilterable());
     }
 
     private OrderBys1 produceOrderBys(final OrderingModel orderModel) {

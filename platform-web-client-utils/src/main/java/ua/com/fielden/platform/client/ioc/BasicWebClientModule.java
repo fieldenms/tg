@@ -2,12 +2,15 @@ package ua.com.fielden.platform.client.ioc;
 
 import java.util.Properties;
 
+import com.google.inject.Injector;
+import com.google.inject.Scopes;
+import com.google.inject.name.Names;
+
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaGenerator;
-import ua.com.fielden.platform.dao.IDaoFactory;
 import ua.com.fielden.platform.dao.IEntityAggregatesDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.IUserRoleDao;
@@ -19,21 +22,19 @@ import ua.com.fielden.platform.ioc.CommonRestFactoryModule;
 import ua.com.fielden.platform.rao.EntityAggregatesRao;
 import ua.com.fielden.platform.rao.GeneratedEntityRao;
 import ua.com.fielden.platform.rao.RestClientUtil;
-import ua.com.fielden.platform.rao.factory.RaoFactory;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.RestAuthorisationModel;
 import ua.com.fielden.platform.security.SecurityTokenControllerRao;
 import ua.com.fielden.platform.security.UserControllerRao;
 import ua.com.fielden.platform.security.UserRoleRao;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
-import ua.com.fielden.platform.security.provider.IUserController;
-import ua.com.fielden.platform.security.user.IUserDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
-import ua.com.fielden.platform.serialisation.impl.ISerialisationClassProvider;
-import ua.com.fielden.platform.serialisation.impl.TgKryo;
-import ua.com.fielden.platform.serialisation.impl.TgKryo0;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
+import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
 import ua.com.fielden.platform.swing.review.EntityMasterManager;
 import ua.com.fielden.platform.swing.review.IEntityMasterManager;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigRao;
@@ -43,35 +44,32 @@ import ua.com.fielden.platform.ui.config.MainMenuRao;
 import ua.com.fielden.platform.ui.config.api.EntityCentreConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityLocatorConfigControllerRao;
 import ua.com.fielden.platform.ui.config.api.EntityMasterConfigControllerRao;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.MainMenuItemControllerRao;
 import ua.com.fielden.platform.ui.config.api.MainMenuItemInvisibilityControllerRao;
 import ua.com.fielden.platform.update.IReferenceDependancyController;
 import ua.com.fielden.platform.update.ReferenceDependancyController;
 
-import com.google.inject.Injector;
-import com.google.inject.Scopes;
-import com.google.inject.name.Names;
-
 /**
  * Basic IoC module for client web applications, which should be enhanced by the application specific IoC module.
- * 
+ *
  * This IoC provides all the necessary bindings for:
  * <ul>
  * <li>Applications settings (refer {@link IApplicatonSettings});
  * <li>Serialisation mechanism;
- * <li>All essential RAO interfaces such as {@link IUserProvider}, {@link IReferenceDependancyController}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUserDao},
+ * <li>All essential RAO interfaces such as {@link IUserProvider}, {@link IReferenceDependancyController}, {@link IDaoFactory}, {@link IValueMatcherFactory}, {@link IUser},
  * {@link IAuthorisationModel} and more;
  * <li>Provides workflow sensitive application main menu configuration related bindings.
  * </ul>
- * 
+ *
  * @author TG Team
- * 
+ *
  */
+@Deprecated
 public class BasicWebClientModule extends CommonRestFactoryModule {
     protected final Properties props;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
@@ -104,20 +102,18 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
         bind(IReferenceDependancyController.class).to(ReferenceDependancyController.class);
         // serialisation related binding
         bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Scopes.SINGLETON);
-        bind(ISerialiser0.class).to(TgKryo0.class).in(Scopes.SINGLETON);
-        bind(ISerialiser.class).to(TgKryo.class).in(Scopes.SINGLETON);
+        bind(ISerialiser0.class).to(Serialiser0.class).in(Scopes.SINGLETON);
+        bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON);
         /////////////////////////////////////////////////////////////////////////
         /////////////// bind some required platform specific RAOs ///////////////
         /////////////////////////////////////////////////////////////////////////
         bind(IEntityAggregatesDao.class).to(EntityAggregatesRao.class).in(Scopes.SINGLETON);
         bind(IGeneratedEntityController.class).to(GeneratedEntityRao.class); // should not be a singleton
         // bind value matcher factory to support autocompleters and entity master factory
-        bind(IDaoFactory.class).to(RaoFactory.class).in(Scopes.SINGLETON);
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
         // security and user management
-        bind(IUserDao.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
+        bind(IUser.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
         bind(IUserRoleDao.class).to(UserRoleRao.class).in(Scopes.SINGLETON);
-        bind(IUserController.class).to(UserControllerRao.class).in(Scopes.SINGLETON);
         bind(ISecurityTokenController.class).to(SecurityTokenControllerRao.class).in(Scopes.SINGLETON);
         bind(IAuthorisationModel.class).to(RestAuthorisationModel.class).in(Scopes.SINGLETON);
 
@@ -132,24 +128,24 @@ public class BasicWebClientModule extends CommonRestFactoryModule {
         ////////////////////////////////////////////////////////////////////////
         bind(IMainMenuItemController.class).to(MainMenuItemControllerRao.class).in(Scopes.SINGLETON);
         bind(IMainMenu.class).to(MainMenuRao.class).in(Scopes.SINGLETON);
-        bind(IEntityMasterConfigController.class).to(EntityMasterConfigControllerRao.class).in(Scopes.SINGLETON);
-        bind(IEntityLocatorConfigController.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
-        bind(IEntityCentreConfigController.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
+        bind(IEntityMasterConfig.class).to(EntityMasterConfigControllerRao.class).in(Scopes.SINGLETON);
+        bind(IEntityLocatorConfig.class).to(EntityLocatorConfigControllerRao.class).in(Scopes.SINGLETON);
+        bind(IEntityCentreConfig.class).to(EntityCentreConfigControllerRao.class).in(Scopes.SINGLETON);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigRao.class).in(Scopes.SINGLETON);
-        bind(IMainMenuItemInvisibilityController.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
+        bind(IMainMenuItemInvisibility.class).to(MainMenuItemInvisibilityControllerRao.class).in(Scopes.SINGLETON); // this specific binding is required only for the main menu migration utility
         //////////////////////////////////////////////////////////////////////////////
         bind(IEntityMasterManager.class).to(EntityMasterManager.class).in(Scopes.SINGLETON);
     }
 
     /**
      * {@inheritDoc}
-     * 
-     * Additionally, initialises the REST utility instance with {@link ISerialiser} and {@link IUserController}.
+     *
+     * Additionally, initialises the REST utility instance with {@link ISerialiser} and {@link IUserEx}.
      */
     @Override
     public void setInjector(final Injector injector) {
         super.setInjector(injector);
         restUtil.initSerialiser(injector.getInstance(ISerialiser.class));
-        restUtil.setUserController(injector.getInstance(IUserController.class));
+        restUtil.setUserController(injector.getInstance(IUser.class));
     }
 }

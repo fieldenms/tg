@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonSetOperand;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 
@@ -11,7 +12,11 @@ abstract class AbstractSetOfOperands<T, ET extends AbstractEntity<?>> extends Ab
 
     @Override
     public <E extends Object> T values(final E... values) {
-        return copy(getParent(), getTokens().setOfValues(values));
+        if (values.length == 0) {
+            throw new EqlException("At least one value is expected when calling [values].");
+        } else {
+            return copy(getParent(), getTokens().setOfValues(values));
+        }
     }
 
     @Override

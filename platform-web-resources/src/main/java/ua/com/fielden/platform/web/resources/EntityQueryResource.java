@@ -23,7 +23,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.roa.HttpHeaders;
-import ua.com.fielden.platform.web.CompanionResourceFactory;
+import ua.com.fielden.platform.web.factories.CompanionResourceFactory;
 
 import com.google.inject.Injector;
 

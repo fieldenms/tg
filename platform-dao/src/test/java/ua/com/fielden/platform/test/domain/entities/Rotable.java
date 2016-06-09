@@ -3,11 +3,10 @@ package ua.com.fielden.platform.test.domain.entities;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 /**
  * Rotable business entity.
- * 
+ *
  * @author 01es
  */
 @KeyType(String.class)
@@ -20,7 +19,7 @@ public abstract class Rotable extends Equipment<String> {
     private RotableClass rotableClass;
     /**
      * This property can point to any descendant of RotableLocation with any type parameter.
-     * 
+     *
      * Using RotableLocation<?> upsets javac when trying to use instanceof or explicit type casting. Thus, the need to suppress warning unchecked.
      */
     @SuppressWarnings("unchecked")
@@ -38,7 +37,6 @@ public abstract class Rotable extends Equipment<String> {
         return status;
     }
 
-    @NotNull
     @Observable
     public Rotable setStatus(final RotableStatus status) {
         this.status = status;
@@ -55,7 +53,6 @@ public abstract class Rotable extends Equipment<String> {
     }
 
     @Observable
-    @NotNull
     @SuppressWarnings("unchecked")
     public Rotable setLocation(final RotableLocation location) {
         this.location = location;

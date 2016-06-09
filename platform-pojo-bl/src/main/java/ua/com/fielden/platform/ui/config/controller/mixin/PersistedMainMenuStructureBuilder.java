@@ -7,9 +7,9 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.IMainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibilityController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 
 import com.google.inject.Inject;
@@ -25,7 +25,7 @@ public final class PersistedMainMenuStructureBuilder implements IMainMenuStructu
     private final MainMenuItemMixin mixin;
 
     @Inject
-    public PersistedMainMenuStructureBuilder(final IMainMenu mmController, final IMainMenuItemController mmiController, final IEntityCentreConfigController eccController, final IEntityCentreAnalysisConfig ecacController, final IMainMenuItemInvisibilityController mmiiController, final EntityFactory factory, final User user) {
+    public PersistedMainMenuStructureBuilder(final IMainMenu mmController, final IMainMenuItemController mmiController, final IEntityCentreConfig eccController, final IEntityCentreAnalysisConfig ecacController, final IMainMenuItemInvisibility mmiiController, final EntityFactory factory, final User user) {
         mixin = new MainMenuItemMixin(mmController, mmiController, eccController, ecacController, mmiiController, factory);
         mixin.setUser(user);
     }

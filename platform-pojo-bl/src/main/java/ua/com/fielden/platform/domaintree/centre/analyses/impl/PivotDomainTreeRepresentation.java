@@ -202,8 +202,8 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
      * 
      */
     public static class PivotDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<PivotDomainTreeRepresentation> {
-        public PivotDomainTreeRepresentationSerialiser(final ISerialiser kryo) {
-            super(kryo);
+        public PivotDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {
+            super(serialiser);
         }
 
         @Override
@@ -212,7 +212,7 @@ public class PivotDomainTreeRepresentation extends AbstractAnalysisDomainTreeRep
             final EnhancementSet excludedProperties = readValue(buffer, EnhancementSet.class);
             final PivotAddToDistributionTickRepresentation firstTick = readValue(buffer, PivotAddToDistributionTickRepresentation.class);
             final PivotAddToAggregationTickRepresentation secondTick = readValue(buffer, PivotAddToAggregationTickRepresentation.class);
-            return new PivotDomainTreeRepresentation(kryo(), rootTypes, excludedProperties, firstTick, secondTick);
+            return new PivotDomainTreeRepresentation(serialiser(), rootTypes, excludedProperties, firstTick, secondTick);
         }
     }
 }

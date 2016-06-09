@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -7,69 +8,91 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.reflection.Finder;
 
 public class fetch<T extends AbstractEntity<?>> {
     public enum FetchCategory {
-        ALL, MINIMAL, KEY_AND_DESC, NONE
+        ALL, DEFAULT, KEY_AND_DESC, ID_AND_VERSTION, ID, ALL_INCL_CALC
     }
 
     private final Class<T> entityType;
     private final Map<String, fetch<? extends AbstractEntity<?>>> includedPropsWithModels = new HashMap<String, fetch<? extends AbstractEntity<?>>>();
-    private final Set<String> incudedProps = new HashSet<String>();
+    private final Set<String> includedProps = new HashSet<String>();
     private final Set<String> excludedProps = new HashSet<String>();
     private final FetchCategory fetchCategory;
+    private final boolean instrumented;
 
     /**
      * Used mainly for serialisation.
      */
     protected fetch() {
-        this(null, FetchCategory.NONE);
+        this(null, FetchCategory.ID_AND_VERSTION);
+    }
+
+    public fetch(final Class<T> entityType, final FetchCategory fetchCategory, final boolean instrumented) {
+        this.entityType = entityType;
+        this.fetchCategory = fetchCategory;
+        this.instrumented = instrumented;
     }
 
     public fetch(final Class<T> entityType, final FetchCategory fetchCategory) {
-        this.entityType = entityType;
-        this.fetchCategory = fetchCategory;
+        this(entityType, fetchCategory, false);
     }
-
+    
+    private void validate(final String propName) {
+        checkForExistence(propName);
+        checkForDuplicate(propName);
+    }
+    
     private void checkForDuplicate(final String propName) {
-        if (includedPropsWithModels.containsKey(propName) || incudedProps.contains(propName) || excludedProps.contains(propName)) {
-            throw new IllegalArgumentException("Property [" + propName + "] is already present within fetch model.");
+        if (includedPropsWithModels.containsKey(propName) || includedProps.contains(propName) || excludedProps.contains(propName)) {
+            throw new IllegalArgumentException("Property [" + propName + "] is already present within fetch model!");
+        }
+    }
+    
+    private void checkForExistence(final String propName) {
+        if (entityType != EntityAggregates.class && // 
+                !"id".equals(propName) && //
+                !"version".equals(propName) && //
+                !Finder.isPropertyPresent(entityType, propName)) {
+            throw new IllegalArgumentException("Property [" + propName + "] is not present within [" + entityType.getSimpleName() + "] entity!");
         }
     }
 
     private fetch<T> copy() {
-        final fetch<T> result = new fetch<T>(entityType, fetchCategory);
+        final fetch<T> result = new fetch<T>(entityType, fetchCategory, isInstrumented());
         result.includedPropsWithModels.putAll(includedPropsWithModels);
-        result.incudedProps.addAll(incudedProps);
+        result.includedProps.addAll(includedProps);
         result.excludedProps.addAll(excludedProps);
         return result;
     }
 
     /**
      * Should be used to indicate a name of the first level property that should be initialised in the retrieved entity instances.
-     * 
+     *
      * @param propName
      *            - Could be name of the primitive property (e.g. "desc", "numberOfPages"), entity property ("station"), composite type property ("cost", "cost.amount"), union
      *            entity property ("location", "location.workshop"), collectional property ("slots"), one-to-one association property ("financialDetails").
      * @return
      */
     public fetch<T> with(final String propName) {
-        checkForDuplicate(propName);
+        validate(propName);
         final fetch<T> result = copy();
-        result.incudedProps.add(propName);
+        result.includedProps.add(propName);
         return result;
     }
 
     /**
      * Should be used to indicate a name of the first level property that should not be initialised in the retrieved entity instances.
-     * 
+     *
      * @param propName
      *            - Could be name of the primitive property (e.g. "desc", "numberOfPages"), entity property ("station"), composite type property ("cost", "cost.amount"), union
      *            entity property ("location", "location.workshop"), collectional property ("slots"), one-to-one association property ("financialDetails").
      * @return
      */
     public fetch<T> without(final String propName) {
-        checkForDuplicate(propName);
+        validate(propName);
         final fetch<T> result = copy();
         result.excludedProps.add(propName);
         return result;
@@ -78,13 +101,13 @@ public class fetch<T extends AbstractEntity<?>> {
     /**
      * Should be used to indicate a name of the first level entity property that should be initialised in the retrieved entity instances and the model to indicate which
      * subproperties of the given property should be initialised as well.
-     * 
+     *
      * @param propName
      * @param fetchModel
      * @return
      */
     public fetch<T> with(final String propName, final fetch<? extends AbstractEntity<?>> fetchModel) {
-        checkForDuplicate(propName);
+        validate(propName);
         final fetch<T> result = copy();
         result.includedPropsWithModels.put(propName, fetchModel);
         return result;
@@ -94,16 +117,20 @@ public class fetch<T extends AbstractEntity<?>> {
         return entityType;
     }
 
-    public Map<String, fetch<? extends AbstractEntity<?>>> getIncludedPropsWithModels() {
-        return includedPropsWithModels;
+    public boolean isInstrumented() {
+        return instrumented;
     }
 
-    public Set<String> getIncudedProps() {
-        return incudedProps;
+    public Map<String, fetch<? extends AbstractEntity<?>>> getIncludedPropsWithModels() {
+        return Collections.unmodifiableMap(includedPropsWithModels);
+    }
+
+    public Set<String> getIncludedProps() {
+        return Collections.unmodifiableSet(includedProps);
     }
 
     public Set<String> getExcludedProps() {
-        return excludedProps;
+        return Collections.unmodifiableSet(excludedProps);
     }
 
     public FetchCategory getFetchCategory() {
@@ -117,8 +144,9 @@ public class fetch<T extends AbstractEntity<?>> {
         result = prime * result + ((entityType == null) ? 0 : entityType.hashCode());
         result = prime * result + ((excludedProps == null) ? 0 : excludedProps.hashCode());
         result = prime * result + ((fetchCategory == null) ? 0 : fetchCategory.hashCode());
+        result = prime * result + ((includedProps == null) ? 0 : includedProps.hashCode());
         result = prime * result + ((includedPropsWithModels == null) ? 0 : includedPropsWithModels.hashCode());
-        result = prime * result + ((incudedProps == null) ? 0 : incudedProps.hashCode());
+        result = prime * result + (instrumented ? 1231 : 1237);
         return result;
     }
 
@@ -151,6 +179,13 @@ public class fetch<T extends AbstractEntity<?>> {
         if (fetchCategory != other.fetchCategory) {
             return false;
         }
+        if (includedProps == null) {
+            if (other.includedProps != null) {
+                return false;
+            }
+        } else if (!includedProps.equals(other.includedProps)) {
+            return false;
+        }
         if (includedPropsWithModels == null) {
             if (other.includedPropsWithModels != null) {
                 return false;
@@ -158,11 +193,7 @@ public class fetch<T extends AbstractEntity<?>> {
         } else if (!includedPropsWithModels.equals(other.includedPropsWithModels)) {
             return false;
         }
-        if (incudedProps == null) {
-            if (other.incudedProps != null) {
-                return false;
-            }
-        } else if (!incudedProps.equals(other.incudedProps)) {
+        if (instrumented != other.instrumented) {
             return false;
         }
         return true;
@@ -177,9 +208,9 @@ public class fetch<T extends AbstractEntity<?>> {
 
     private String getString(final String currOffset) {
         final StringBuffer sb = new StringBuffer();
-        sb.append("\n" + currOffset + entityType.getSimpleName() + " [" + fetchCategory + "]");
-        if (incudedProps.size() > 0) {
-            sb.append("\n" + currOffset + "+ " + incudedProps);
+        sb.append("\n" + currOffset + entityType.getSimpleName() + " [" + fetchCategory + "]" + (isInstrumented() ? " instrumented" : ""));
+        if (includedProps.size() > 0) {
+            sb.append("\n" + currOffset + "+ " + includedProps);
         }
         if (excludedProps.size() > 0) {
             sb.append("\n" + currOffset + "- " + excludedProps);
@@ -197,15 +228,19 @@ public class fetch<T extends AbstractEntity<?>> {
             return FetchCategory.ALL;
         }
 
-        if (fetchCategory == FetchCategory.MINIMAL || second.fetchCategory == FetchCategory.MINIMAL) {
-            return FetchCategory.MINIMAL;
+        if (fetchCategory == FetchCategory.DEFAULT || second.fetchCategory == FetchCategory.DEFAULT) {
+            return FetchCategory.DEFAULT;
         }
 
         if (fetchCategory == FetchCategory.KEY_AND_DESC || second.fetchCategory == FetchCategory.KEY_AND_DESC) {
             return FetchCategory.KEY_AND_DESC;
         }
 
-        return FetchCategory.NONE;
+        if (fetchCategory == FetchCategory.ID_AND_VERSTION || second.fetchCategory == FetchCategory.ID_AND_VERSTION) {
+            return FetchCategory.ID_AND_VERSTION;
+        }
+
+        return FetchCategory.ID;
     }
 
     public fetch<?> unionWith(final fetch<?> second) {
@@ -214,9 +249,9 @@ public class fetch<T extends AbstractEntity<?>> {
         }
 
         final FetchCategory resultCategory = getMergedFetchCategory(second);
-        final fetch<T> result = new fetch<>(getEntityType(), resultCategory);
-        result.incudedProps.addAll(incudedProps);
-        result.incudedProps.addAll(second.incudedProps);
+        final fetch<T> result = new fetch<>(getEntityType(), resultCategory, (isInstrumented() || second.isInstrumented()));
+        result.includedProps.addAll(includedProps);
+        result.includedProps.addAll(second.includedProps);
         result.excludedProps.addAll(excludedProps);
         result.excludedProps.addAll(second.excludedProps);
         for (final Entry<String, fetch<? extends AbstractEntity<?>>> iterable_element : includedPropsWithModels.entrySet()) {
