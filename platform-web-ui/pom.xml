@@ -18,11 +18,6 @@
 			<artifactId>platform-pojo-bl</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>fielden</groupId>
-			<artifactId>platform-ui</artifactId>
-			<version>${project.version}</version>
-		</dependency>
 
 		<!-- other dependencies, including third party libs -->
 		<!-- transition from rule-ui! ("rule-core") <dependency> <groupId>edu.umd.cs</groupId>
