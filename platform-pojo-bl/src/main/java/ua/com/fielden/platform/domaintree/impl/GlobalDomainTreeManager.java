@@ -20,8 +20,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeRepresentation;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -54,6 +52,8 @@ import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import com.google.inject.Inject;
 
 /**
  * The global domain tree manager implementation.
@@ -186,7 +186,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
      */
     protected void validateMenuItemType(final Class<?> menuItemType) {
         try {
-            final Class<?> parentClassForMenuItems = ClassLoader.getSystemClassLoader().loadClass("ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport");
+            final Class<?> parentClassForMenuItems = ClassLoader.getSystemClassLoader().loadClass("ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport");
             if (!parentClassForMenuItems.isAssignableFrom(menuItemType)) {
                 error("The menu item type " + menuItemType.getSimpleName()
                         + " is not 'MiWithConfigurationSupport' descendant, which should be a parent type for menu items for all entity centres.");
@@ -484,37 +484,37 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED ============================================");
             logger.error("Unable to deserialise a entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
             + "] for current user [" + currentUser() + "]. The exception is the following: ", e);
-            
+
             logger.error("Started creation of default entity-centre configuration for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
             + "] for current user [" + currentUser() + "].");
-            
+
             init(menuItemType, name, createDefaultCentre(centreConfigurator, root, menuItemType), owning);
-            
+
             logger.error("Started saving of default entity-centre configuration for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
             + "] for current user [" + currentUser() + "].");
-            
+
             ecc.setConfigBody(getSerialiser().serialise(getEntityCentreManager(menuItemType, name)));
             saveCentre(getEntityCentreManager(menuItemType, name), ecc);
-            
+
             logger.error("Ended creation and saving of default entity-centre configuration for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
             + "] for current user [" + currentUser() + "]. For now it can be used.");
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
         }
     }
-    
+
     /**
-     * Checks whether the centre is stale on this server node, i.e. its version is lower than the one in the database. It is needed to update the centre instance in case where 
+     * Checks whether the centre is stale on this server node, i.e. its version is lower than the one in the database. It is needed to update the centre instance in case where
      * the centre is stale to be able to use relevant configuration for a) centre criteria changing b) previouslyRun centre context restoration etc.
      * <p>
      * Please note that the version / ID are not copied during centre copying process, that is why currentCentres' instance should be used instead of persistentCentre instance.
-     * 
+     *
      * @param centre
      * @return
      */
     public boolean isStale(final CentreDomainTreeManagerAndEnhancer centre) {
         final Long id = centre.getSavedEntityId();
         final Long version = centre.getSavedEntityVersion();
-        
+
         if (id == null) {
             logger.error("ID should exist.");
             throw new IllegalArgumentException("ID should exist.");
@@ -634,7 +634,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         // TODO kryo.register(CentreDomainTreeManager.class, new CentreDomainTreeManagerSerialiserWithTransientAnalyses(kryo));
         final ICentreDomainTreeManagerAndEnhancer copy = initCentreManagerCrossReferences(EntityUtils.deepCopy(centre, getSerialiser()));
         // TODO kryo.register(CentreDomainTreeManager.class);
-        
+
         // Performs copying of all defined custom annotations on generated types to provide the copy with the same annotations as original centre have.
         for (final Class<?> root: centre.getRepresentation().rootTypes()) {
             final Class<?> managedType = centre.getEnhancer().getManagedType(root);
@@ -643,7 +643,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 copy.getEnhancer().adjustManagedTypeAnnotations(root, annotationsToCopy);
             }
         }
-        
+
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         logger.debug(String.format("\t\t\tCopying centre... done in [%s].", pd.getSeconds() + " s " + pd.getMillis() + " ms"));
@@ -697,7 +697,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             final ICentreDomainTreeManagerAndEnhancer persistentCentre = persistentCentres.get(key(menuItemType, name));
             notInitiliasedError(persistentCentre, menuItemType, name);
             currentCentres.put(key(menuItemType, name), copyCentre(persistentCentre));
-    
+
             if (isFreezedEntityCentreManager(menuItemType, name)) {
                 unfreeze(menuItemType, name);
             }
@@ -718,7 +718,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             }
             notInitiliasedError(currentCentres.get(key(menuItemType, name)), menuItemType, name);
             notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
-            
+
             freezedCentres.put(key(menuItemType, name), persistentCentres.remove(key(menuItemType, name)));
             persistentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name))));
             currentCentres.put(key(menuItemType, name), copyCentre(currentCentres.get(key(menuItemType, name)))); // this is necessary to dispose current manager with listeners and get equal "fresh" instance
@@ -952,7 +952,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         if (persistentCentres != null) {
             validateMenuItemType(menuItemType);
             validateMenuItemTypeRootType(menuItemType);
-            
+
             notInitiliasedError(persistentCentres.get(key(menuItemType, name)), menuItemType, name);
             return !EntityUtils.equalsEx(currentCentres.get(key(menuItemType, name)), persistentCentres.get(key(menuItemType, name)));
         } else {
@@ -965,7 +965,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
         if (persistentCentres != null) {
             validateMenuItemType(menuItemType);
             validateMenuItemTypeRootType(menuItemType);
-            
+
             if (isFreezedEntityCentreManager(menuItemType, name)) {
                 error("Unable to Remove the 'freezed' entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title(menuItemType, name)
                 + "] for current user [" + currentUser() + "].");
@@ -978,13 +978,13 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                         + title(menuItemType, name) + "] for current user [" + currentUser() + "].");
             } else {
                 removeCentre(menuItemType, name);
-                
+
                 final EntityResultQueryModel<EntityCentreConfig> model = modelForCurrentUser(menuItemType.getName(), title(menuItemType, name));
                 final EntityCentreConfig ecc = entityCentreConfigController.getEntity(from(model).model());
-                
+
                 // remove all analyses dependencies
                 entityCentreAnalysisConfigController.delete(analysesForConcreteECCmodel(ecc));
-                
+
                 // remove an instance of EntityCentreConfig which should exist in DB
                 entityCentreConfigController.delete(ecc);
             }
@@ -1144,7 +1144,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
             throw new UnsupportedOperationException("avoidPersistentCentres switch is on.");
         }
     }
-    
+
     /**
      * Turns on the switch of 'not using persistentCentres' for {@link #isChangedEntityCentreManager(Class, String)}, {@link #discardEntityCentreManager(Class, String)} and other logic.
      * <p>
