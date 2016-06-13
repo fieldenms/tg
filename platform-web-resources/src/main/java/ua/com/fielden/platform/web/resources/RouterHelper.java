@@ -11,8 +11,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.file_reports.IReportDaoFactory;
 import ua.com.fielden.platform.web.factories.EntityInstanceResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityLifecycleResourceFactory;
-import ua.com.fielden.platform.web.factories.EntityQueryExportResourceFactory;
-import ua.com.fielden.platform.web.factories.EntityTypeResourceFactory;
 import ua.com.fielden.platform.web.factories.ReportResourceFactory;
 import ua.com.fielden.platform.web.factories.SnappyQueryRestlet;
 
@@ -33,8 +31,6 @@ public final class RouterHelper {
 
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void register(final Router router, final Class<DAO> daoType) {
         registerInstanceResource(router, daoType);
-        registerTypeResource(router, daoType);
-        registerExportResource(router, daoType);
         registerLifecycleResource(router, daoType);
     }
 
@@ -46,19 +42,6 @@ public final class RouterHelper {
         final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimise it
         final Restlet instanceResource = new EntityInstanceResourceFactory<T, DAO>(daoType, injector, factory);
         router.attach("/users/{username}/" + dao.getEntityType().getSimpleName() + "/{entity-id}", instanceResource);
-    }
-
-    public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerTypeResource(final Router router, final Class<DAO> daoType) {
-        final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimize it
-        final Restlet typeResource = new EntityTypeResourceFactory<T, DAO>(daoType, injector, factory, router);
-        router.attach("/users/{username}/" + dao.getEntityType().getSimpleName(), typeResource);
-        router.attach("/users/{username}/query/" + dao.getEntityType().getSimpleName(), typeResource);
-    }
-
-    public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerExportResource(final Router router, final Class<DAO> daoType) {
-        final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimize it
-        final Restlet queryExportResource = new EntityQueryExportResourceFactory<T, DAO>(router, daoType, injector);
-        router.attach("/users/{username}/export/" + dao.getEntityType().getSimpleName(), queryExportResource);
     }
 
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerLifecycleResource(final Router router, final Class<DAO> daoType) {
