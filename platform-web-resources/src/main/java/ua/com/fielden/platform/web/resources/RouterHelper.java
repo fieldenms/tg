@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.file_reports.IReportDaoFactory;
 import ua.com.fielden.platform.web.factories.EntityLifecycleResourceFactory;
 import ua.com.fielden.platform.web.factories.ReportResourceFactory;
-import ua.com.fielden.platform.web.factories.SnappyQueryRestlet;
 
 /**
  * Provides convenient methods for routing standard entity resources.
@@ -30,10 +29,6 @@ public final class RouterHelper {
 
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void register(final Router router, final Class<DAO> daoType) {
         registerLifecycleResource(router, daoType);
-    }
-
-    public void registerSnappyQueryResource(final Router router) {
-        router.attach("/users/{username}/snappyquery", new SnappyQueryRestlet(injector));
     }
 
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerLifecycleResource(final Router router, final Class<DAO> daoType) {
