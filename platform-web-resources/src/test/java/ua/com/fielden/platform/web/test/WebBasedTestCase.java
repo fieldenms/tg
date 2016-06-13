@@ -10,7 +10,6 @@ import org.restlet.Component;
 import org.restlet.Restlet;
 import org.restlet.data.Protocol;
 
-import ua.com.fielden.platform.rao.RestClientUtil;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 
 /**

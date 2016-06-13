@@ -86,7 +86,6 @@
 		<module>platform-gps-server</module>
 		<module>platform-web-resources</module>
 		<module>platform-pojo-bl</module>
-		<module>platform-rao</module>
 		<module>platform-web-ui</module>
 	</modules>
 
