@@ -1,13 +1,9 @@
 package ua.com.fielden.platform.web.centre.api.actions;
 
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
@@ -151,34 +147,6 @@ public final class EntityActionConfig {
     public static EntityActionConfig createNoActionConfig() {
         return new EntityActionConfig(null, null, null, null, null, null, null, null, null, true, true);
     }
-
-    /**
-     * A factory method for creating a configuration that indicates a need to invoke corresponding master for row entity.
-     *
-     * @return
-     */
-    public static EntityActionConfig createMasterInvocationActionConfig() {
-        return new EntityActionConfig(MasterInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
-    }
-
-    /**
-     * A factory method for creating a configuration that indicates a need to invoke corresponding master in dialog for row entity.
-     *
-     * @return
-     */
-    public static EntityActionConfig createMasterInDialogInvocationActionConfig() {
-        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
-    }
-
-    /**
-     * A factory method for creating a configuration that indicates a need to invoke corresponding master in dialog for row entity - convenience version, which allows setting preferred dimensions.
-     *
-     * @return
-     */
-    public static EntityActionConfig createMasterInDialogInvocationActionConfig(final int width, final int height, final PrefDim.Unit unit) {
-        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, PrefDim.mkDim(width, height, unit), false, true);
-    }
-
 
     /**
      * A factory method that creates a configuration for the required action.

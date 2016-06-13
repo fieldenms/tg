@@ -4,14 +4,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Ticker;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
-
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -28,8 +20,6 @@ import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.sample.domain.IMasterInDialogInvocationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.IMasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.ITgAuthor;
 import ua.com.fielden.platform.sample.domain.ITgAuthorRoyalty;
 import ua.com.fielden.platform.sample.domain.ITgAuthoriser;
@@ -68,8 +58,6 @@ import ua.com.fielden.platform.sample.domain.ITgWagonClassCompatibility;
 import ua.com.fielden.platform.sample.domain.ITgWagonSlot;
 import ua.com.fielden.platform.sample.domain.ITgWorkOrder;
 import ua.com.fielden.platform.sample.domain.ITgWorkshop;
-import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntityDao;
-import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntityDao;
 import ua.com.fielden.platform.sample.domain.TgAuthorDao;
 import ua.com.fielden.platform.sample.domain.TgAuthorRoyaltyDao;
 import ua.com.fielden.platform.sample.domain.TgAuthoriserDao;
@@ -114,9 +102,7 @@ import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.session.UserSession;
-import ua.com.fielden.platform.security.user.INewUserNotifier;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntityDao;
@@ -126,6 +112,14 @@ import ua.com.fielden.platform.test.entities.IComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntityKey;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+
+import com.google.common.base.Ticker;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 
 /**
  * Serve IoC module for platform related testing.
@@ -208,8 +202,6 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(IMigrationHistory.class).to(MigrationHistoryDao.class);
         bind(ICentreContextHolder.class).to(CentreContextHolderDao.class);
         bind(ISavingInfoHolder.class).to(SavingInfoHolderDao.class);
-        bind(IMasterInDialogInvocationFunctionalEntity.class).to(MasterInDialogInvocationFunctionalEntityDao.class);
-        bind(IMasterInvocationFunctionalEntity.class).to(MasterInvocationFunctionalEntityDao.class);
         bind(ITgPerson.class).to(TgPersonDao.class);
         bind(ITgAuthoriser.class).to(TgAuthoriserDao.class);
         bind(ITgOriginator.class).to(TgOriginatorDao.class);
