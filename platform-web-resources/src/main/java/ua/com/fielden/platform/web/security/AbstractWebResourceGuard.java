@@ -16,17 +16,16 @@ import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
-import org.restlet.data.Status;
 import org.restlet.security.ChallengeAuthenticator;
+
+import com.google.common.collect.Iterables;
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-
-import com.google.common.collect.Iterables;
-import com.google.inject.Injector;
 
 /**
  * This is a guard that is based on the new TG authentication scheme, developed as part of the Web UI initiative. It it used to restrict access to sensitive web resources.
