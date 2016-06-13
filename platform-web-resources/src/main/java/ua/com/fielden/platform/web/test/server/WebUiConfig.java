@@ -18,9 +18,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.inject.Inject;
-
-import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
@@ -96,7 +93,6 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
-import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
@@ -128,6 +124,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
+
+import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -300,7 +298,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     centre.getSecondTick().setWidth(TgEntityWithPropertyDependency.class, "dependentProp", 60);
                     return centre;
                 });
-        
+
         final EntityCentre<TgEntityWithPropertyDescriptor> propDescriptorCentre = new EntityCentre<>(MiTgEntityWithPropertyDescriptor.class, "Property Descriptor Example",
                 EntityCentreBuilder.centreFor(TgEntityWithPropertyDescriptor.class)
                 .runAutomatically()
@@ -962,7 +960,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             return incompleteEql.model();
         }
     }
-    
+
     /**
      * Value matcher for PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptor property for TgEntityWithPropertyDescriptor entity centre's criterion.
      *
@@ -983,7 +981,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             final List<PropertyDescriptor<TgPersistentEntityWithProperties>> matchedPropertyDescriptors = matcher.findMatches(searchString);
             return matchedPropertyDescriptors;
         }
-        
+
         @Override
         public List<PropertyDescriptor<TgPersistentEntityWithProperties>> findMatchesWithModel(final String searchString) {
             return findMatches(searchString);
@@ -1347,15 +1345,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addProp("this")
                     .order(2).asc()
                     .minWidth(60);
-        
+
         final IWithSummary<TgPersistentEntityWithProperties> afterSummary;
         if (withCalculatedAndCustomProperties) {
             afterSummary = afterMinWidthConf.withSummary("kount", "COUNT(SELF)", "Count:Number of entities");
         } else {
             afterSummary = afterMinWidthConf;
         }
-        
-                IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.withAction(EntityActionConfig.createMasterInDialogInvocationActionConfig())
+
+        IResultSetBuilder2Properties<TgPersistentEntityWithProperties> beforeAddProp = afterSummary.
+                withAction(action(EntityEditAction.class).
+                        withContext(context().withCurrentEntity().withSelectionCrit().build()).
+                        icon("editor:mode-edit").
+                        shortDesc("Edit entity").
+                        longDesc("Opens master for editing this entity").
+                        build())
                 .also()
                 .addProp("desc").
                         order(1).asc().
@@ -1368,7 +1372,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         build())
 
                 .also();
-                
+
                 if (withCalculatedAndCustomProperties) {
                 beforeAddProp = beforeAddProp.addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
                         withAction(action(TgStatusActivationFunctionalEntity.class).
@@ -1414,17 +1418,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 final IWithSummary<TgPersistentEntityWithProperties> beforeSummaryConf = beforeAddProp.addProp("integerProp")
                     .minWidth(42)
                     .withTooltip("desc");
-                
+
                     final IWithTooltip<TgPersistentEntityWithProperties> beforeSummaryConfForBigDecimalProp = (withCalculatedAndCustomProperties ? beforeSummaryConf.withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property") : beforeSummaryConf)
                 .also()
                 .addProp("bigDecimalProp")
                     .minWidth(68);
-                    
-                    final IAlsoSecondaryAction<TgPersistentEntityWithProperties> beforeRenderingCustomiserConfiguration = (withCalculatedAndCustomProperties ? 
+
+                    final IAlsoSecondaryAction<TgPersistentEntityWithProperties> beforeRenderingCustomiserConfiguration = (withCalculatedAndCustomProperties ?
                             beforeSummaryConfForBigDecimalProp
                                 .withSummary("max_of_dec", "MAX(bigDecimalProp)", "Max of decimal:Maximum of big decimal property")
                                 .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
-                                .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property") : 
+                                .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property") :
                                 beforeSummaryConfForBigDecimalProp)
                 .also()
                 .addProp("entityProp").minWidth(40)

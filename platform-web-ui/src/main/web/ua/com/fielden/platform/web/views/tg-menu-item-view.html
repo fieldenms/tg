@@ -104,46 +104,10 @@
                             detail.retrieve();
                         } else if (this.menuItem.view.type === 'master') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                                if (entity.id === null) {
-                                    postal.publish({
-                                        channel: "view",
-                                        topic: "master.new.created",
-                                        data: {
-                                            centreUuid: detail.centreUuid,
-                                            item: self.menuItem
-                                        }
-                                    });
-                                } else {
-                                    postal.publish({
-                                        channel: "view",
-                                        topic: "master.edit.created",
-                                        data: {
-                                            entityId: entity.id,
-                                            centreUuid: detail.centreUuid,
-                                            item: self.menuItem
-                                        }
-                                    });
-                                }
                                 self.fire("menu-item-view-loaded", self.menuItem);
                             };
                             detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
-                            detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
-                                //Send postal message that save was completed if it was succefull
-                                if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
-                                    postal.publish({
-                                        channel: "master",
-                                        topic: "save.start",
-                                        data: {
-                                            centreUuid: detail.centreUuid,
-                                            masterUuid: detail.uuid,
-                                            moduleId: detail.moduleId,
-                                            entity: potentiallySavedOrNewEntity,
-                                            item: self.menuItem,
-                                            selectedEntitiesInContext: [potentiallySavedOrNewEntity]
-                                        }
-                                    });
-                                }
-                            };
+                            detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
                             detail.retrieve();
                         } else {
                             self.fire("menu-item-view-loaded", self.menuItem);

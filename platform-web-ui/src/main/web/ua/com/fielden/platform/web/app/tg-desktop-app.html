@@ -5,7 +5,6 @@
 <link rel="import" href="/resources/views/tg-app-menu.html">
 <link rel="import" href="/resources/views/tg-app-view.html">
 <link rel="import" href="/resources/components/postal-lib.html">
-<link rel="import" href="/resources/app/tg-view-manager.html">
 
 <dom-module id="tg-desktop-app">
     <style>
@@ -14,7 +13,6 @@
         }
     </style>
     <template>
-        <tg-view-manager></tg-view-manager>
         <carbon-location id="location" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></carbon-location>
         <carbon-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></carbon-route>
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" animate-initial-selection>
