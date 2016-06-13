@@ -5,16 +5,10 @@ import org.restlet.routing.Router;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.file_reports.IReportDaoFactory;
-import ua.com.fielden.platform.web.factories.AttachmentDownloadResourceFactory;
-import ua.com.fielden.platform.web.factories.AttachmentInstanceResourceFactory;
-import ua.com.fielden.platform.web.factories.AttachmentQueryResourceFactory;
-import ua.com.fielden.platform.web.factories.AttachmentTypeResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityInstanceResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityLifecycleResourceFactory;
 import ua.com.fielden.platform.web.factories.EntityQueryExportResourceFactory;
@@ -48,29 +42,6 @@ public final class RouterHelper {
         router.attach("/users/{username}/snappyquery", new SnappyQueryRestlet(injector));
     }
 
-    /**
-     * Registers all the necessary resources for {@link Attachment} with the router.
-     *
-     * @param router
-     * @param location
-     */
-    public void registerAttachment(final Router router, final String location) {
-        final Restlet typeResource = new AttachmentTypeResourceFactory(location, injector, factory);
-        router.attach("/users/{username}/" + Attachment.class.getSimpleName(), typeResource);
-
-        final Restlet queryResource = new AttachmentQueryResourceFactory(injector, router);
-        router.attach("/users/{username}/query/" + Attachment.class.getSimpleName(), queryResource);
-
-        final Restlet queryExportResource = new EntityQueryExportResourceFactory<Attachment, IAttachment>(router, IAttachment.class, injector);
-        router.attach("/users/{username}/export/" + Attachment.class.getSimpleName(), queryExportResource);
-
-        final Restlet downloadResource = new AttachmentDownloadResourceFactory(location, injector);
-        router.attach("/users/{username}/download/" + Attachment.class.getSimpleName() + "/{entity-id}", downloadResource);
-
-        final Restlet instanceResource = new AttachmentInstanceResourceFactory(location, injector, factory);
-        router.attach("/users/{username}/" + Attachment.class.getSimpleName() + "/{entity-id}", instanceResource);
-    }
-    
     public <T extends AbstractEntity<?>, DAO extends IEntityDao<T>> void registerInstanceResource(final Router router, final Class<DAO> daoType) {
         final DAO dao = injector.getInstance(daoType); // needed just to get entity type... might need to optimise it
         final Restlet instanceResource = new EntityInstanceResourceFactory<T, DAO>(daoType, injector, factory);
