@@ -80,16 +80,12 @@
 	<modules>
 		<module>platform-annotations</module>
 		<module>platform-annotation-processor</module>
-		<module>platform-application-bootstrap</module>
 		<module>platform-db-evolution</module>
 		<module>platform-dao</module>
 		<module>platform-gps-server</module>
 		<module>platform-web-resources</module>
 		<module>platform-pojo-bl</module>
-		<module>platform-rao</module>
-		<module>platform-ui</module>
 		<module>platform-web-ui</module>
-		<module>platform-web-client-utils</module>
 	</modules>
 
 	<properties>

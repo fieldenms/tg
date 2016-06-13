@@ -13,11 +13,6 @@
 	<dependencies>
 		<dependency>
 			<groupId>fielden</groupId>
-			<artifactId>platform-ui</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>fielden</groupId>
 			<artifactId>platform-pojo-bl</artifactId>
 			<version>${project.version}</version>
 		</dependency>

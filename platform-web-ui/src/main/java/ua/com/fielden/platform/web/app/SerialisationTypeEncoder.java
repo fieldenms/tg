@@ -19,8 +19,8 @@ import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
-import ua.com.fielden.platform.swing.menu.MiType;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.ui.menu.MiType;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
 
 public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
