@@ -180,48 +180,6 @@
                 },
 
                 /**
-                 * The action to be invoked on EGI's 'edit' button.
-                 */
-                _editAction: {
-                    type: Function
-                },
-
-                /**
-                 * The action to be invoked on EGI's 'new' button.
-                 */
-                _newAction: {
-                    type: Function
-                },
-
-                /**
-                 * The action to be invoked on EGI's 'delete' button.
-                 */
-                _deleteAction: {
-                    type: Function
-                },
-
-                /**
-                 * The action to be bound to 'tg-primary-instance-action'.
-                 */
-                _showMaster: {
-                    type: Function
-                },
-
-                /**
-                 * Shows the master for current entity in dialog.
-                 */
-                _showMasterInDialog: {
-                    type: Function
-                },
-
-                /**
-                 * Shows the custom view (centre, master, user defined view) in dialog.
-                 */
-                _showCustomViewInDialog: {
-                    type: Function
-                },
-
-                /**
                  * Activates the insertion point
                  */
                 _activateInsertionPoint: {
@@ -388,90 +346,6 @@
                     });
                 };
 
-                self._editAction = (function () {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "edit.start",
-                        data: {
-                            entity: self._getContext(),
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                }).bind(self);
-
-                self._newAction = (function () {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "new.start",
-                        data: {
-                            entityType: self.entityType,
-                            simpleEntityType: self._simpleEntityType(),
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                }).bind(self);
-
-                self._deleteAction = (function () {
-                    console.log("The selected entities must be deleted here!");
-                }).bind(self);
-
-                self._showMaster = (function (action, entity) {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "edit.start",
-                        data: {
-                            entity: entity,
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                }).bind(self);
-
-                self._showMasterInDialog = (function (action, entity) {
-                    var fullTypeName = entity.type().notEnhancedFullClassName();
-                    var simpleTypeName = entity.type()._notEnhancedSimpleClassName();
-                    var closeEventChannel = self.uuid;
-                    var closeEventTopics = ['save.post.success', 'refresh.post.success'];
-
-                    action.componentUri = "/master_ui/" + fullTypeName;
-                    action.elementName = "tg-" + simpleTypeName + "-master";
-                    action.elementAlias = action.elementName + "-" + entity.id;
-
-                    var prefDim = null;
-                    if (action.prefDim) {
-                        if (typeof action.prefDim === 'string') {
-                            prefDim = JSON.parse(action.prefDim);
-                        } else {
-                            prefDim = action.prefDim;
-                        }
-                    }
-
-                    action.attrs = {
-                        entityId: entity.id,
-                        entityType: fullTypeName,
-                        currentState: 'EDIT',
-                        centreUuid: self.uuid,
-                        prefDim: prefDim
-                    };
-                    action.viewType = 'master';
-
-                    this.async(function () {
-                        this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
-                    }.bind(this), 1);
-
-                }).bind(this);
-
-                self._showCustomViewInDialog = (function (action) {
-                    this.async(function () {
-                        this.actionDialog.showDialog(action);
-                    }.bind(this), 1);
-                }).bind(this);
-
                 self._activateInsertionPoint = (function (insertionPointId, action) {
                     this.async(function () {
                         this.$[insertionPointId].activate(action);
@@ -588,30 +462,6 @@
                     Polymer.dom.flush();
                 }
 
-                ///////////////////////Edit Listeners/////////////////////////////////////
-                this.masterCreatedListener = postal.subscribe({
-                    channel: "centre_" + self.$.selection_criteria.uuid,
-                    topic: "edit.finish.created",
-                    callback: function (data, envelope) {
-                        console.log("-------- Masters Edit Created UUID: " + data.item.view.attrs.uuid + " ------------");
-                    }
-                });
-                this.masterShowListener = postal.subscribe({
-                    channel: "centre_" + self.$.selection_criteria.uuid,
-                    topic: "edit.finish.shown",
-                    callback: function (data, envelope) {
-                        console.log("-------- Masters Edit Shown UUID: " + data.item.view.attrs.uuid + " ------------");
-                    }
-                });
-                /////////////////////////New listener//////////////////////////////////////
-                this.masterNewListener = postal.subscribe({
-                    channel: "centre_" + self.$.selection_criteria.uuid,
-                    topic: "new.finish",
-                    callback: function (data, envelope) {
-                        console.log("-------- Masters New UUID: " + data.item.view.attrs.uuid + " ------------");
-                    }
-                });
-
                 ///////////////////////// Detail postSaved listener //////////////////////////////////////
                 this.masterSavedListener = postal.subscribe({
                     channel: "centre_" + self.$.selection_criteria.uuid,
@@ -628,9 +478,6 @@
             },
 
             detached: function () {
-                this.masterCreatedListener.unsubscribe();
-                this.masterShowListener.unsubscribe();
-                this.masterNewListener.unsubscribe();
                 this.masterSavedListener.unsubscribe();
             },
 

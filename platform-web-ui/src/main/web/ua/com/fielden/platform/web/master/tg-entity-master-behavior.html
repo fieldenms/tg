@@ -408,24 +408,6 @@
                 	}
                 }
 
-                
-                self.saveListener = postal.subscribe({
-                    channel: "master_"  + self.uuid,
-                    topic: "save.finish",
-                    callback: function(data, envelope) {
-                        postal.publish({
-                            channel: "centre_" + self.centreUuid,
-                            topic: "detail.saved",
-                            data: data
-                        });
-                        console.log("--------------saved finished for: " + self.uuid + "------------");
-                    }
-                });
-            },
-            
-            detached: function() {
-                console.log("-------master detached: " + this.uuid + "------------");
-                this.saveListener.unsubscribe();
             },
             
             /**
