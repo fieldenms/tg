@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.development;
+package ua.com.fielden.platform.entity_centre.review.development;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,6 +14,7 @@ import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAnd
 import ua.com.fielden.platform.domaintree.testing.ClassProviderForTestingPurposes;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTestingPurposes;

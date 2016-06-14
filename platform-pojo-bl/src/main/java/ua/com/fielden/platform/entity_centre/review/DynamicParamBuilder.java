@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review;
+package ua.com.fielden.platform.entity_centre.review;
 
 import java.util.HashMap;
 import java.util.List;
@@ -7,15 +7,15 @@ import java.util.Map.Entry;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.swing.review.development.EntityQueryCriteriaUtils;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.from;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.is;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.prepare;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.prepare;
 
 /**
  * The utility class that is a responsible for creating the map between property names and it's values.

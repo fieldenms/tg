@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.annotations;
+package ua.com.fielden.platform.entity_centre.review.annotations;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.development;
+package ua.com.fielden.platform.entity_centre.review.criteria;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
@@ -21,12 +21,12 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;

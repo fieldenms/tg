@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.development;
+package ua.com.fielden.platform.entity_centre.review.criteria;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 
@@ -37,6 +37,12 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity_centre.review.DynamicFetchBuilder;
+import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
+import ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder;
+import ua.com.fielden.platform.entity_centre.review.DynamicPropertyAnalyser;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
 import ua.com.fielden.platform.pagination.EmptyPage;
 import ua.com.fielden.platform.pagination.IPage;
@@ -44,12 +50,6 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.swing.review.DynamicFetchBuilder;
-import ua.com.fielden.platform.swing.review.DynamicOrderingBuilder;
-import ua.com.fielden.platform.swing.review.DynamicParamBuilder;
-import ua.com.fielden.platform.swing.review.DynamicPropertyAnalyser;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;

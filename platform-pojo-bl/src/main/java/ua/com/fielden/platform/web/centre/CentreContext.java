@@ -6,7 +6,7 @@ import java.util.List;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 
 /**
  * A structure that represents an execution context for an entity centre. Not all of its properties should or need to be populated. Depending on specific needs actions may choose

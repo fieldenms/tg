@@ -1,7 +1,7 @@
 /**
  *
  */
-package ua.com.fielden.platform.swing.review.annotations;
+package ua.com.fielden.platform.entity.annotation;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.TYPE;
@@ -11,11 +11,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 
 /**
- * Annotation to be used either on collectional properties or classes that require runtime information about their type parameters. Current it is used for annotating DAO/RAO
- * interfaces to indicate what entity type is managed by them, and also for indicating an intended type on collectional properties in descendants of {@link EntityQueryCriteria}.
+ * Annotation to be used either on collectional properties or classes that require runtime information about their type parameters. Current it is used for annotating DAO implementations of companion
+ * objects to indicate the managed entity type, and also for indicating an intended type on collectional properties in descendants of {@link EntityQueryCriteria}.
  * 
  * @author TG Team
  * 
@@ -24,7 +24,7 @@ import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 @Target({ FIELD, TYPE })
 public @interface EntityType {
     /** Describes the main type. */
-    Class<? extends AbstractEntity> value();
+    Class<? extends AbstractEntity<?>> value();
 
     /** Describes the main type's parameters if any. */
     Class<?>[] parameters() default {};

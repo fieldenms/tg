@@ -50,6 +50,9 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.validation.EntityExistsValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedLocatorEntityQueryCriteria;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -57,9 +60,6 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
-import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.development.EnhancedLocatorEntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -208,7 +208,7 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         final List<Annotation> annotations = new ArrayList<Annotation>();
         if (isEntity && !isSingle && EntityUtils.isCollectional(newPropertyType)) {
             annotations.add(new IsPropertyAnnotation(String.class, "--stub-link-property--").newInstance());
-            annotations.add(new EntityTypeAnnotation((Class<? extends AbstractEntity>) propertyType).newInstance());
+            annotations.add(new EntityTypeAnnotation((Class<? extends AbstractEntity<?>>) propertyType).newInstance());
         }
         if (isSingle && isRequired) {
             annotations.add(new RequiredAnnotation().newInstance());

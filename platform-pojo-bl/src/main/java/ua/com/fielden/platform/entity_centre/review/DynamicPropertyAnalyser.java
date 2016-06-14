@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review;
+package ua.com.fielden.platform.entity_centre.review;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 

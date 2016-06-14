@@ -6,9 +6,9 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ILocatorDomainTreeManager.ILocatorDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.review.development.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.development.EnhancedLocatorEntityQueryCriteria;
-import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedLocatorEntityQueryCriteria;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 
 /**
  * A contract for criteria generator.

@@ -2,8 +2,8 @@ package ua.com.fielden.platform.ui.menu.sample;
 
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 
 @EntityType(TgFetchProviderTestEntity.class)

@@ -1,5 +1,6 @@
-package ua.com.fielden.platform.swing.review;
+package ua.com.fielden.platform.entity_centre.review;
 
+import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -7,9 +8,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import java.util.HashSet;
 
-import junit.framework.Assert;
-
 import org.junit.Test;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
@@ -37,8 +38,6 @@ import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTe
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
-import com.google.inject.Injector;
-
 @SuppressWarnings("unchecked")
 public class ChartAnalysisQueryGenerationTest {
 
@@ -64,7 +63,7 @@ public class ChartAnalysisQueryGenerationTest {
     });;
     private final IReportQueryGenerator<MasterDomainEntity> queryGenerator;
 
-    private final Class<AbstractEntity<?>> masterKlass, slaveKlass, evenSlaveKlass, stringKeyKlass;
+    private final Class<AbstractEntity<?>> masterKlass, stringKeyKlass;
 
     {
         final IDomainTreeEnhancer dte = cdtme.getEnhancer();
@@ -101,8 +100,6 @@ public class ChartAnalysisQueryGenerationTest {
         queryGenerator = new ChartAnalysisQueryGenerator<>(MasterDomainEntity.class, cdtme, analysis);
 
         masterKlass = (Class<AbstractEntity<?>>) dte.getManagedType(MasterDomainEntity.class);
-        slaveKlass = (Class<AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp");
-        evenSlaveKlass = (Class<AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp.entityProp");
         stringKeyKlass = (Class<AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(masterKlass, "entityProp.entityProp.simpleEntityProp");
     }
 
@@ -140,7 +137,7 @@ public class ChartAnalysisQueryGenerationTest {
         final QueryExecutionModel<MasterDomainEntity, EntityResultQueryModel<MasterDomainEntity>> resultQuery = from(queryModel).with(orderingModel)//
         .with(fetchModel).model();
 
-        Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0).composeQuery());
+        assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0).composeQuery());
 
         firstTick.use(MasterDomainEntity.class, "firstGroup", false);
 
@@ -182,7 +179,7 @@ public class ChartAnalysisQueryGenerationTest {
         final QueryExecutionModel<MasterDomainEntity, EntityResultQueryModel<MasterDomainEntity>> resultQuery = from(queryModel).with(orderingModel)//
         .with(fetchModel).model();
 
-        Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0).composeQuery());
+        assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0).composeQuery());
 
         firstTick.use(MasterDomainEntity.class, "entityProp.entityProp.secondGroup", false);
 
@@ -227,7 +224,7 @@ public class ChartAnalysisQueryGenerationTest {
 
         final QueryExecutionModel<MasterDomainEntity, EntityResultQueryModel<MasterDomainEntity>> resultQuery = from(queryModel).with(orderingModel)//
         .with(fetchModel).model();
-        Assert.assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0).composeQuery());
+        assertEquals("The composed query model for analysis is incorrect", resultQuery, resultBundle.getQueries().get(0).composeQuery());
 
         firstTick.use(MasterDomainEntity.class, "entityProp.entityProp.simpleEntityProp", false);
 

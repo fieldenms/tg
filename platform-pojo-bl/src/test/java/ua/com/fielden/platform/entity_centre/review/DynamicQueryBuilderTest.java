@@ -1,11 +1,11 @@
-package ua.com.fielden.platform.swing.review;
+package ua.com.fielden.platform.entity_centre.review;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static ua.com.fielden.platform.swing.review.DynamicQueryBuilder.getEmptyValue;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.getEmptyValue;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -15,8 +15,9 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.UnsupportedTypeException;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.UnsupportedTypeException;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;

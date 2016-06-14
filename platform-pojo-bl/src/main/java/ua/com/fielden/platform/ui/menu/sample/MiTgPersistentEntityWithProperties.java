@@ -4,8 +4,8 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CentreManagerConfigurator;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 
 @EntityType(TgPersistentEntityWithProperties.class)

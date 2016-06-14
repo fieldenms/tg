@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.ui.menu.sample;
 
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 
 @EntityType(User.class)

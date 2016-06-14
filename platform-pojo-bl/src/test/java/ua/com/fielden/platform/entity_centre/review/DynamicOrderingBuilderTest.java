@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review;
+package ua.com.fielden.platform.entity_centre.review;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -10,7 +10,8 @@ import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.domaintree.ICalculatedProperty;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -26,8 +27,6 @@ import ua.com.fielden.platform.serialisation.api.impl.SerialiserForDomainTreesTe
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Injector;
 
 @SuppressWarnings({ "unchecked", "serial" })
 public class DynamicOrderingBuilderTest {
@@ -45,7 +44,6 @@ public class DynamicOrderingBuilderTest {
     }
 
     private static final Class<? extends AbstractEntity<?>> masterKlass;
-    private static final ICalculatedProperty firstCalc, secondCalc, thirdCalc;
 
     static {
         final IDomainTreeEnhancer dte = new DomainTreeEnhancer(serialiser, new HashSet<Class<?>>() {
@@ -65,10 +63,6 @@ public class DynamicOrderingBuilderTest {
         dte.apply();
 
         masterKlass = (Class<? extends AbstractEntity<?>>) dte.getManagedType(MasterEntity.class);
-
-        firstCalc = dte.getCalculatedProperty(MasterEntity.class, "firstCalc");
-        secondCalc = dte.getCalculatedProperty(MasterEntity.class, "entityProp.mutablyCheckedProp.secondCalc");
-        thirdCalc = dte.getCalculatedProperty(MasterEntity.class, "entityProp.entityProp.simpleEntityProp.thirdCalc");
     }
 
     @Test

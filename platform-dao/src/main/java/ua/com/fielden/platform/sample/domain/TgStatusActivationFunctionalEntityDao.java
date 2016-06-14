@@ -4,9 +4,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.sample.domain.mixin.TgStatusActivationFunctionalEntityMixin;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 import com.google.inject.Inject;
 

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review.development;
+package ua.com.fielden.platform.entity_centre.review.criteria;
 
 import java.util.List;
 import java.util.Map;

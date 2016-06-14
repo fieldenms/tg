@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.swing.review;
+package ua.com.fielden.platform.entity_centre.review;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -7,6 +7,7 @@ import java.util.List;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -15,7 +16,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -28,19 +28,29 @@ import ua.com.fielden.platform.types.Money;
 @KeyTitle(value = "Entity No", desc = "Key Property")
 @DescTitle(value = "Description", desc = "Description Property")
 @DescRequired
-public class CollectionParentEntity extends AbstractEntity<String> {
+public class EntityForQueryPropertyTesting extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     public static final String NOT_NULL_MSG = "Missing value";
 
+    private enum EnumType {
+        E1, E2
+    }
+
+    ////////// Unsupported types //////////
     @IsProperty
-    private CollectionParentEntity entity1;
+    private Boolean unsupportedProp1 = null;
+    @IsProperty
+    private EnumType unsupportedProp2 = EnumType.E1;
+
+    @IsProperty
+    private EntityForQueryPropertyTesting entity1;
     @IsProperty
     @CritOnly(Type.RANGE)
-    private CollectionParentEntity entity2;
+    private EntityForQueryPropertyTesting entity2;
     @IsProperty
     @CritOnly(Type.SINGLE)
-    private CollectionParentEntity entity3;
+    private EntityForQueryPropertyTesting entity3;
 
     @IsProperty
     @Title(value = "First Property", desc = "used for testing")
@@ -63,13 +73,13 @@ public class CollectionParentEntity extends AbstractEntity<String> {
     @Required
     private String strProp;
 
-    @IsProperty(CollectionParentEntity.class)
-    private List<CollectionParentEntity> entities = new ArrayList<CollectionParentEntity>();
+    @IsProperty(EntityForQueryPropertyTesting.class)
+    private List<EntityForQueryPropertyTesting> entities = new ArrayList<EntityForQueryPropertyTesting>();
 
     @IsProperty(CollectionParentEntity.class)
     private List<CollectionParentEntity> coll = new ArrayList<CollectionParentEntity>();
 
-    protected CollectionParentEntity() {
+    protected EntityForQueryPropertyTesting() {
     }
 
     public Integer getFirstProperty() {
@@ -77,7 +87,7 @@ public class CollectionParentEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public CollectionParentEntity setFirstProperty(final Integer property) {
+    public EntityForQueryPropertyTesting setFirstProperty(final Integer property) {
         this.firstProperty = property;
         return this;
     }
@@ -87,17 +97,17 @@ public class CollectionParentEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public CollectionParentEntity setObservableProperty(final Double observableProperty) {
+    public EntityForQueryPropertyTesting setObservableProperty(final Double observableProperty) {
         this.observableProperty = observableProperty;
         return this;
     }
 
-    public List<CollectionParentEntity> getEntities() {
+    public List<EntityForQueryPropertyTesting> getEntities() {
         return entities;
     }
 
     @Observable
-    public void setEntities(final List<CollectionParentEntity> entities) {
+    public void setEntities(final List<EntityForQueryPropertyTesting> entities) {
         this.entities.clear();
         this.entities.addAll(entities);
     }
@@ -112,12 +122,12 @@ public class CollectionParentEntity extends AbstractEntity<String> {
         this.coll.addAll(coll);
     }
 
-    public CollectionParentEntity getEntity1() {
+    public EntityForQueryPropertyTesting getEntity1() {
         return entity1;
     }
 
     @Observable
-    public void setEntity1(final CollectionParentEntity entity1) {
+    public void setEntity1(final EntityForQueryPropertyTesting entity1) {
         this.entity1 = entity1;
     }
 
@@ -157,22 +167,39 @@ public class CollectionParentEntity extends AbstractEntity<String> {
         this.bool = bool;
     }
 
-    public CollectionParentEntity getEntity2() {
+    public EntityForQueryPropertyTesting getEntity2() {
         return entity2;
     }
 
     @Observable
-    public void setEntity2(final CollectionParentEntity entity2) {
+    public void setEntity2(final EntityForQueryPropertyTesting entity2) {
         this.entity2 = entity2;
     }
 
-    public CollectionParentEntity getEntity3() {
+    public EntityForQueryPropertyTesting getEntity3() {
         return entity3;
     }
 
     @Observable
-    public void setEntity3(final CollectionParentEntity entity3) {
+    public void setEntity3(final EntityForQueryPropertyTesting entity3) {
         this.entity3 = entity3;
     }
 
+    public Boolean getUnsupportedProp1() {
+        return unsupportedProp1;
+    }
+
+    @Observable
+    public void setUnsupportedProp1(final Boolean unsupportedProp1) {
+        this.unsupportedProp1 = unsupportedProp1;
+    }
+
+    public EnumType getUnsupportedProp2() {
+        return unsupportedProp2;
+    }
+
+    @Observable
+    public void setUnsupportedProp2(final EnumType unsupportedProp2) {
+        this.unsupportedProp2 = unsupportedProp2;
+    }
 }

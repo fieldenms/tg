@@ -8,10 +8,10 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity2;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 /**
  * A companion object implementation for {@link EntityBasedOnAbstractPersistentEntity} used for testing.

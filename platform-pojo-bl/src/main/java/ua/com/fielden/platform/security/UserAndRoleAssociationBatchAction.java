@@ -4,8 +4,8 @@ import ua.com.fielden.platform.entity.AbstractBatchAction;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity_centre.review.annotations.AssociationAction;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
-import ua.com.fielden.platform.swing.review.annotations.AssociationAction;
 
 /**
  * Represents the user and role association batch action.
