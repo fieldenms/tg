@@ -15,11 +15,11 @@ import ua.com.fielden.platform.sample.domain.TgAuthoriser;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgOriginator;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.Validators;
 
-public class HandlingOfDeactivatableDependenciesTest extends AbstractDomainDrivenTestCase {
+public class HandlingOfDeactivatableDependenciesTest extends AbstractDaoTestCase {
 
     @Test
     public void active_person_with_active_authoriser_and_originator_deactivatable_dependencies_and_one_tangenital_dependeny_should_have_one_ref_count() {
@@ -138,6 +138,8 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDomainDrive
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         final TgPerson p1 = save(new_(TgPerson.class, "P1").setActive(true));
         save(new_composite(TgAuthoriser.class, p1).setActive(true));
         save(new_composite(TgOriginator.class, p1).setActive(true));
@@ -149,11 +151,6 @@ public class HandlingOfDeactivatableDependenciesTest extends AbstractDomainDrive
         final TgPerson p3 = save(new_(TgPerson.class, "P3").setActive(true));
         save(new_composite(TgOriginator.class, p3).setAssistant(p1).setActive(true));
         save(new_composite(TgAuthoriser.class, p3).setActive(false).setCategory(save(new_(TgCategory.class, "CAT1").setActive(true))));
-    }
-
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
     }
 
 }

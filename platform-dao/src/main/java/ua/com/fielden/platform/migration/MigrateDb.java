@@ -12,7 +12,6 @@ import org.hibernate.Transaction;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.security.user.IUser;
@@ -21,7 +20,7 @@ public class MigrateDb {
 
     /**
      * Checks whether servicing structures exists, and creates them in case of non-existence.
-     * 
+     *
      * @param ddl
      * @param conn
      * @throws Exception
@@ -46,8 +45,7 @@ public class MigrateDb {
         boolean foundFromRetriever = false;
         final Class fromRetrieverClass = getRetrieverClassBySimpleName(fromRetriever.trim(), retrieversClassesSequence);
 
-        for (int i = 0; i < retrieversClassesSequence.length; i++) {
-            final Class retrieverClass = retrieversClassesSequence[i];
+        for (final Class retrieverClass : retrieversClassesSequence) {
             if (!foundFromRetriever) {
                 if (retrieverClass.equals(fromRetrieverClass)) {
                     foundFromRetriever = true;
@@ -68,8 +66,7 @@ public class MigrateDb {
         boolean foundToRetriever = false;
         final Class toRetrieverClass = getRetrieverClassBySimpleName(toRetriever.trim(), retrieversClassesSequence);
 
-        for (int i = 0; i < retrieversClassesSequence.length; i++) {
-            final Class retrieverClass = retrieversClassesSequence[i];
+        for (final Class retrieverClass : retrieversClassesSequence) {
             if (!foundToRetriever) {
                 result.add(retrieverClass);
 
@@ -85,15 +82,14 @@ public class MigrateDb {
     private List<Class> limitedWithList(final String[] retrieverNames, final Class[] retrieversClassesSequence) {
         final List<Class> result = new ArrayList<Class>();
 
-        for (int i = 0; i < retrieverNames.length; i++) {
-            result.add(getRetrieverClassBySimpleName(retrieverNames[i].trim(), retrieversClassesSequence));
+        for (final String retrieverName : retrieverNames) {
+            result.add(getRetrieverClassBySimpleName(retrieverName.trim(), retrieversClassesSequence));
         }
 
         final List<Class> result2 = new ArrayList<Class>();
 
         // rearranging user limited subset of retrievers according to established retrievers sequence
-        for (int i = 0; i < retrieversClassesSequence.length; i++) {
-            final Class retrieverClass = retrieversClassesSequence[i];
+        for (final Class retrieverClass : retrieversClassesSequence) {
             if (result.contains(retrieverClass)) {
                 result2.add(retrieverClass);
             }
@@ -103,8 +99,7 @@ public class MigrateDb {
     }
 
     private Class getRetrieverClassBySimpleName(final String retieverClassSimpleName, final Class[] retrieversClassesSequence) {
-        for (int i = 0; i < retrieversClassesSequence.length; i++) {
-            final Class retrieverClass = retrieversClassesSequence[i];
+        for (final Class retrieverClass : retrieversClassesSequence) {
             if (retrieverClass.getSimpleName().equalsIgnoreCase(retieverClassSimpleName)) {
                 return retrieverClass;
             }
@@ -189,7 +184,7 @@ public class MigrateDb {
         }
     }
 
-    public void migrate(final String[] args, final Properties props, final List<String> ddl, final Class[] retrieversClassesSequence, final Injector injector, final Class<? extends AbstractEntity<?>> personClass)
+    public void migrate(final String[] args, final Properties props, final List<String> ddl, final Class[] retrieversClassesSequence, final Injector injector)
             throws Exception {
         final Map<CmdParams, String> cmdParams = retrieveCommandLineParams(args);
         final String limitToParamArgument = cmdParams.get(CmdParams.LIMIT_TO);
@@ -210,7 +205,7 @@ public class MigrateDb {
                 System.out.println(ddlStmt);
             }
         } else {
-            new DataMigrator(injector, hibernateUtil, factory, cmdParams.containsKey(CmdParams.SKIP_VALIDATIONS), cmdParams.containsKey(CmdParams.DETAILS), personClass, limitToRetrievers);//.populateData();
+            new DataMigrator(injector, hibernateUtil, factory, cmdParams.containsKey(CmdParams.SKIP_VALIDATIONS), cmdParams.containsKey(CmdParams.DETAILS), limitToRetrievers);//.populateData();
         }
         // reset passwords
         if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {

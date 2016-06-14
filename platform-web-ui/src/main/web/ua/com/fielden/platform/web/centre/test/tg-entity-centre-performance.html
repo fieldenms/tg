@@ -1,0 +1,234 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity-centre basic tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+    
+    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+    
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1">
+</head>
+
+<body>
+    <tg-reflector id="reflector"></tg-reflector>
+    <test-fixture id="CentreFixture">
+        <template>
+            <tg-MiTgPersistentEntityWithProperties1-centre id="centre" uuid="TEST_CENTRE"></tg-MiTgPersistentEntityWithProperties1-centre>
+        </template>
+    </test-fixture>
+    
+<script>
+    suite('entity centre', function() {
+        var centre, reflector, noOfIterations, _calcConfidenceInterval;
+        
+        setup(function() {
+            centre = fixture('CentreFixture');
+            reflector = document.querySelector('#reflector');
+            noOfIterations = 1000;
+            _calcConfidenceInterval = function (data) {
+                var n = data.length;
+                var sum = 0;
+                for (var index = 0; index < n; index++) {
+                    sum += data[index];
+                }
+                var x_ = sum * 1.0 / n; // "mean"
+                
+                var sum = 0;
+                for (var index = 0; index < n; index++) {
+                    var diff = data[index] - x_;
+                    sum += diff * diff;
+                }
+                sum = sum / n;
+                var sigma = Math.sqrt(sum); // standard deviation
+                
+                // The value of z(alfa / 2) is taken from z-table for confidence level of 99%, for example from here (http://www.statisticshowto.com/tables/z-table/).
+                // alfa = 0.99, alfa / 2 = 0.495, find that value inside the table and check intersections: 2.5 and 0.08 => z := 2.58
+                var z = 2.58;
+                var deltaX = z * (sigma / Math.sqrt(n));
+                
+                return [+((x_ - deltaX).toFixed(1)), +((x_ + deltaX).toFixed(1))];
+            };
+        });
+        
+        test('subsequent validations measuring', function (done) {
+            var start;
+            var count = 0;
+            var data = [];
+            
+            var _leftEditor = function (name) {
+                return centre.$.selection_criteria.$['editor_4_tgPersistentEntityWithProperties_' + name + '_is'];
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                var editor = _leftEditor('booleanProp');
+                console.log('_leftEditor(booleanProp) === ', editor);
+                
+                start = new Date().getTime();
+                editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                editor.commit();
+            };
+            
+            centre.$.selection_criteria._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
+                newValidationPromise.then(function(value) {
+                    count++;
+                    
+                    var time = new Date().getTime() - start;
+                    data.push(time);
+                    console.debug('Validated in ', time, ' millis (no ', count, ').');
+                    
+                    var editor = _leftEditor('booleanProp');
+                    console.log('_leftEditor(booleanProp) === ', editor);
+                    
+                    start = new Date().getTime();
+                    editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                    editor.commit();
+                    
+                    if (count >= noOfIterations) {
+                        console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
+                        done();
+                    }
+                }, function (error) {
+                    console.error("The action was rejected with error: " + error);
+                });
+            };
+            
+            centre.retrieve();
+        });
+        
+        test('subsequent savings measuring', function (done) {
+            var start;
+            var count = 0;
+            var data = [];
+            
+            var _leftEditor = function (name) {
+                return centre.$.selection_criteria.$['editor_4_tgPersistentEntityWithProperties_' + name + '_is'];
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                var editor = _leftEditor('booleanProp');
+                editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                editor.commit();
+            };
+            
+            centre.$.selection_criteria._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
+                // console.debug('_validationPromiseChanged:', newValidationPromise, oldValidationPromise);
+                newValidationPromise.then(function(value) {
+                    start = new Date().getTime();
+                    centre.save().then(function(value) {
+                        count++;
+                        
+                        var time = new Date().getTime() - start;
+                        data.push(time);
+                        console.debug('Saved in ', time, ' millis (no ', count, ').');
+                        
+                        if (count >= noOfIterations) {
+                            console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
+                            done();
+                        }
+                        
+                        var editor = _leftEditor('booleanProp');
+                        editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                        editor.commit();
+                    }, function (error) {
+                        console.error("Saving was rejected with error: " + error);
+                    });
+                }, function (error) {
+                    console.error("Validation was rejected with error: " + error);
+                });
+            };
+            
+            centre.retrieve();
+        });
+        
+        test('subsequent discardings measuring', function (done) {
+            var start;
+            var count = 0;
+            var data = [];
+            
+            var _leftEditor = function (name) {
+                return centre.$.selection_criteria.$['editor_4_tgPersistentEntityWithProperties_' + name + '_is'];
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                var editor = _leftEditor('booleanProp');
+                editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                editor.commit();
+            };
+            
+            centre.$.selection_criteria._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
+                // console.debug('_validationPromiseChanged:', newValidationPromise, oldValidationPromise);
+                newValidationPromise.then(function(value) {
+                    start = new Date().getTime();
+                    centre.discard().then(function(value) {
+                        count++;
+                        
+                        var time = new Date().getTime() - start;
+                        data.push(time);
+                        console.debug('Discarded in ', time, ' millis (no ', count, ').');
+                        
+                        if (count >= noOfIterations) {
+                            console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
+                            done();
+                        }
+                        
+                        var editor = _leftEditor('booleanProp');
+                        editor._editingValue = (editor._editingValue === 'true') ? 'false' : 'true';
+                        editor.commit();
+                    }, function (error) {
+                        console.error("Discarding was rejected with error: " + error);
+                    });
+                }, function (error) {
+                    console.error("Validation was rejected with error: " + error);
+                });
+            };
+            
+            centre.retrieve();
+        });
+        
+        test('subsequent runnings measuring', function (done) {
+            var start;
+            var count = 0;
+            var data = [];
+            var _createPostRunFunction = function () {
+                return function(value) {
+                    count++;
+                    
+                    var time = new Date().getTime() - start;
+                    data.push(time);
+                    console.debug('Running in ', time, ' millis (no ', count, ').');
+                    
+                    if (count >= noOfIterations) {
+                        console.debug('[c1; c2] = ', _calcConfidenceInterval(data));
+                        done();
+                    }
+                    
+                    start = new Date().getTime();
+                    centre.run().then(_createPostRunFunction(), function (error) {
+                        console.error("Running was rejected with error: " + error);
+                    });
+                };
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                start = new Date().getTime();
+                centre.run().then(_createPostRunFunction(), function (error) {
+                    console.error("Running was rejected with error: " + error);
+                });
+            };
+            
+            centre.retrieve();
+        });
+	});
+</script>
+
+</body>
+
+</html>

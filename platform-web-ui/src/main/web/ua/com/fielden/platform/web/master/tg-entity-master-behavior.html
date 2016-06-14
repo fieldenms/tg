@@ -408,24 +408,6 @@
                 	}
                 }
 
-                
-                self.saveListener = postal.subscribe({
-                    channel: "master_"  + self.uuid,
-                    topic: "save.finish",
-                    callback: function(data, envelope) {
-                        postal.publish({
-                            channel: "centre_" + self.centreUuid,
-                            topic: "detail.saved",
-                            data: data
-                        });
-                        console.log("--------------saved finished for: " + self.uuid + "------------");
-                    }
-                });
-            },
-            
-            detached: function() {
-                console.log("-------master detached: " + this.uuid + "------------");
-                this.saveListener.unsubscribe();
             },
             
             /**
@@ -566,9 +548,9 @@
              				null, null, 'true',
              				null, null, this.getMasterEntity);
              		
-             		this._validator().validate(preparedModifHolder, contextHolder);
+             		return this._validator().validate(preparedModifHolder, contextHolder);
             	 } else {
-             		this._validator().validate(preparedModifHolder, this.savingContext);
+             		return this._validator().validate(preparedModifHolder, this.savingContext);
              	}
              },
 
@@ -594,7 +576,7 @@
             	}
                 return this._ajaxSaver().generateRequest().completes;
             },
-
+            
             /**
              * Returns 'true' if the entity has been modified from original, 'false' otherwise.
              *
@@ -622,7 +604,6 @@
             		}
             	} 
             	
-            	// if all child nodes can be left, then check self if required
             	if (this.classList.contains('canLeave')) {
 	            	// create modif holder to analyze the currently bound entity on subject of its modifications
 	            	var modifHolder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);

@@ -51,7 +51,8 @@
         		class="paper-input-input custom-input boolean-input layout horizontal center"
         		checked="[[_isBooleanChecked(_editingValue)]]"
         		disabled$="[[_disabled]]"
-        		on-change="_onChange">[[propTitle]]</paper-checkbox>
+        		on-change="_onChange"
+                tooltip-text$="[[_getTooltip(_editingValue)]]">[[propTitle]]</paper-checkbox>
         	<content class=".property-action"></content>
         </tg-editor>
     </template>

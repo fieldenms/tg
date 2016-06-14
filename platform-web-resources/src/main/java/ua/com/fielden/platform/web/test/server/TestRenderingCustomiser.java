@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 
-public class TestRenderingCustomiser implements IRenderingCustomiser<AbstractEntity<?>, Map<String, Map<String, String>>> {
+public class TestRenderingCustomiser implements IRenderingCustomiser<AbstractEntity<?>, Map<String, Object>> {
     private final Map<String, String> statusColouringScheme = new HashMap<String, String>() {
         {
             put("dR", "yellow");
@@ -33,23 +33,43 @@ public class TestRenderingCustomiser implements IRenderingCustomiser<AbstractEnt
     };
 
     @Override
-    public Optional<Map<String, Map<String, String>>> getCustomRenderingFor(final AbstractEntity<?> entity) {
-        final Map<String, Map<String, String>> res = new HashMap<String, Map<String, String>>();
+    public Optional<Map<String, Object>> getCustomRenderingFor(final AbstractEntity<?> entity) {
+        final Map<String, Object> res = new HashMap<>();
         for (final String propName : properties) {
-            final Map<String, String> propStyle = new HashMap<String, String>();
-            propStyle.put("background-color", "palegreen");
+            final Map<String, Map<String, String>> propStyle = new HashMap<>();
+            final Map<String, String> backgroundStyles = new HashMap<>();
+            final Map<String, String> valueStyles = new HashMap<>();
+            propStyle.put("backgroundStyles", backgroundStyles);
+            propStyle.put("valueStyles", valueStyles);
+            backgroundStyles.put("background-color", "palegreen");
+            if (propName.equals("integerProp")) {
+                valueStyles.put("color", "blue");
+                final int value = ((Integer) entity.get("integerProp")).intValue();
+                if (value > 60 && value < 100) {
+                    valueStyles.put("visibility", "hidden");
+                }
+            }
             res.put(propName, propStyle);
         }
 
         final TgPersistentStatus currentStatus = entity.get("status");
         for (final Map.Entry<String, String> entry : statusColouringScheme.entrySet()) {
+            
+            final Map<String, Map<String, String>> propStyle = new HashMap<>();
+            res.put(entry.getKey(), propStyle);
+            
+            final Map<String, String> backgroundStyles = new HashMap<>();
+            final Map<String, String> valueStyles = new HashMap<>();
+            propStyle.put("backgroundStyles", backgroundStyles);
+            propStyle.put("valueStyles", valueStyles);
+            
+            // TODO uncomment to hide the "X" value in calculated properties, which is really needed only for data export
+            //valueStyles.put("visibility", "hidden");
             if (currentStatus != null && entry.getKey().equalsIgnoreCase(currentStatus.getKey())) {
-                res.put(entry.getKey(), new HashMap<String, String>() {
-                    {
-                        put("background-color", entry.getValue());
-                    }
-                });
+               backgroundStyles.put("background-color", entry.getValue());
             }
+            
+            
         }
         return Optional.of(res);
     };

@@ -42,7 +42,7 @@ public class TgTestAppAuthenticationModel implements IAuthenticationModel {
             }
             
             final User user = coUser.findByKeyAndFetch(fetchAll(User.class), username);
-            if (user != null) {
+            if (user != null && user.isActive()) {
                 final String hashPasswd = coUser.hashPasswd(password, user.getSalt());
                 if (!hashPasswd.equals(user.getPassword())) {
                     return result;

@@ -1,5 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/app/tg-app-config.html">
+
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
 
@@ -16,8 +18,14 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+        .input-layer {
+            text-align: right;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
     </style>
     <template>
+        <tg-app-config id="appConfig"></tg-app-config>
         <tg-editor 
     		id="editorDom" 
     		prop-title="[[propTitle]]"
@@ -26,7 +34,8 @@
     		action="[[action]]" 
     		_error="[[_error]]" 
     		_comm-value="[[_commValue]]" 
-    		_accepted-value="[[_acceptedValue]]" 
+    		_accepted-value="[[_acceptedValue]]"
+            _focused="[[focused]]"
     		debug="[[debug]]">
     		<input
     			id="input"
@@ -39,7 +48,11 @@
     			on-change="_onChange"
     			on-input="_onInput"
     			on-keydown="_onKeydown"
-    			disabled$="[[_disabled}}"/>
+                on-focus="_onFocus"
+                on-blur="_outFocus"
+    			disabled$="[[_disabled}}"
+                tooltip-text$="[[_getTooltip(_editingValue)]]"/>
+            <div class="input-layer">[[_formatText(_editingValue)]]</div>
     		<content class=".property-action"></content>
     	</tg-editor>
     </template>
@@ -74,6 +87,14 @@
                 //      there is a need to have a better more general understanding of the role for currency and tax at the platfrom level
                 var amount = (+strValue) 
                 return {'amount': amount};
+            },
+            
+            _formatText: function(valueToFormat) {
+                var value = this.convertFromString(valueToFormat);
+                if (value !== null) {
+                    return this.reflector().formatMoney(value, this.$.appConfig.locale);
+                }
+                return '';
             }
         });
     })()

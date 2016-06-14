@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  * @author TG Team
  *
  */
-public class ExportActionProducer extends DefaultEntityProducerWithContext<ExportAction, ExportAction> {
+public class ExportActionProducer extends DefaultEntityProducerWithContext<ExportAction> {
 
     @Inject
     public ExportActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -23,9 +23,7 @@ public class ExportActionProducer extends DefaultEntityProducerWithContext<Expor
     protected ExportAction provideDefaultValues(final ExportAction entity) {
         entity.setKey("EXPORT");
         entity.setCount(10);
-        if (getCentreContext() != null) {
-            entity.setContext(getCentreContext());
-        }
+        entity.resetMetaState();
         return entity;
     }
 }

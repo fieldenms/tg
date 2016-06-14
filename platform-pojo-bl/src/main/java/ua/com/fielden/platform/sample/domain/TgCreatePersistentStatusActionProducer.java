@@ -14,7 +14,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgCreatePersistentStatusActionProducer extends DefaultEntityProducerWithContext<TgCreatePersistentStatusAction, TgCreatePersistentStatusAction> implements IEntityProducer<TgCreatePersistentStatusAction> {
+public class TgCreatePersistentStatusActionProducer extends DefaultEntityProducerWithContext<TgCreatePersistentStatusAction> implements IEntityProducer<TgCreatePersistentStatusAction> {
 
     @Inject
     public TgCreatePersistentStatusActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -23,16 +23,15 @@ public class TgCreatePersistentStatusActionProducer extends DefaultEntityProduce
 
     @Override
     protected TgCreatePersistentStatusAction provideDefaultValues(final TgCreatePersistentStatusAction entity) {
-        if (getCentreContext() != null) {
-            entity.setContext(getCentreContext());
+        if (entity.getContext() != null) {
             final TgPersistentEntityWithProperties me = (TgPersistentEntityWithProperties) entity.getContext().getMasterEntity();
             if (me.isDirty()) {
                 throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
             }
         }
         
-        if (getChosenProperty() != null) {
-            entity.setActionProperty(getChosenProperty());
+        if (entity.getChosenProperty() != null) {
+            entity.setActionProperty(entity.getChosenProperty());
         }
         
         return entity;

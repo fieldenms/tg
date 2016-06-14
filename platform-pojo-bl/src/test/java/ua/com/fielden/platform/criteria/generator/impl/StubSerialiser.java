@@ -3,6 +3,7 @@ package ua.com.fielden.platform.criteria.generator.impl;
 import java.io.InputStream;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
@@ -55,5 +56,10 @@ public class StubSerialiser implements ISerialiser {
     public ISerialiserEngine getEngine(final SerialiserEngines serialiserEngine) {
         // TODO Auto-generated method stub
         return null;
+    }
+    
+    @Override
+    public void initJacksonEngine(final ISerialisationTypeEncoder serialisationTypeEncoder) {
+        // TODO Auto-generated method stub
     }
 }

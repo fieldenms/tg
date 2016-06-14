@@ -70,6 +70,21 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         return new EntityMaster<T>(entityType, entityProducerType, null, injector);
     }
     
+    /**
+     * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
+     * <p>
+     * This version specifies no producer, which means that default one will be used.
+     * 
+     * @param entityType
+     * @param injector
+     * @return
+     */
+    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<T> noUiFunctionalMaster(
+            final Class<T> entityType,
+            final Injector injector) {
+        return new EntityMaster<T>(entityType, null, null, injector);
+    }
+    
     private IMaster<T> createDefaultConfig(final Class<T> entityType) {
         return new NoUiMaster<T>(entityType);
     }
@@ -109,7 +124,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(entityType)) {
             return new DefaultEntityProducerForCompoundMenuItem(factory, entityType, coFinder);
         }
-        return new DefaultEntityProducerWithContext<T, T>(factory, entityType);
+        return new DefaultEntityProducerWithContext<T>(factory, entityType, coFinder);
     }
 
     /**

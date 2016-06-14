@@ -25,8 +25,8 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 public class AssignPropertiesBeforeTestTest extends AbstractDaoTestCase {
-    private final String loggedInUser = "LOGGED IN USER";
-    private final String otherUser = "OTHER USER";
+    private final String loggedInUser = "LOGGED_IN_USER";
+    private final String otherUser = "OTHER_USER";
 
     @Test
     public void assigned_before_save_user_should_be_the_logged_in_user_and_explanation_should_match_default_value() {
@@ -86,9 +86,9 @@ public class AssignPropertiesBeforeTestTest extends AbstractDaoTestCase {
         constants.setNow(dateTime("2014-11-23 02:47:00"));
 
         final IUser coUser = co(User.class);
-        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true));
+        final User lUser = coUser.save(new_(User.class, loggedInUser).setBase(true).setEmail(loggedInUser + "@unit-test.software").setActive(true));
         save(new_(TgPerson.class, loggedInUser).setUser(lUser));
-        final User oUser = coUser.save(new_(User.class, otherUser).setBase(true));
+        final User oUser = coUser.save(new_(User.class, otherUser).setBase(true).setEmail(otherUser + "@unit-test.software").setActive(true));
         save(new_(TgPerson.class, otherUser).setUser(oUser));
 
         final IUserProvider up = getInstance(IUserProvider.class);

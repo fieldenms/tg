@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.basic;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.review.development.EntityQueryCriteria;
+import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**

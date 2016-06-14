@@ -274,13 +274,16 @@
                 this._setIsRunning(false);
             },
 
-            _dialogClosed: function () {
-                // if there are current subscriptions they need to be unsubscribed
-                // due to dialog being closed
-                for (var index = 0; index < this._subscriptions.length; index++) {
-                    postal.unsubscribe(this._subscriptions[index]);
+            _dialogClosed: function (e) {
+                var target = e.target || e.srcElement;
+                if (target === this) {
+                    // if there are current subscriptions they need to be unsubscribed
+                    // due to dialog being closed
+                    for (var index = 0; index < this._subscriptions.length; index++) {
+                        postal.unsubscribe(this._subscriptions[index]);
+                    }
+                    this._subscriptions.length = 0;
                 }
-                this._subscriptions.length = 0;
             }
         });
     })();

@@ -22,6 +22,27 @@
         #input-container {
             @apply(--layout-flex);
         }
+
+        #input-container::content .input-layer {
+            font-size: 1rem;
+            line-height: 1.8rem;
+            display: none;
+            position: absolute;
+            pointer-events: none;
+            background-color: inherit;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        #input-container[has-layer][disabled]::content .input-layer,
+        #input-container[has-layer]:not([focused])::content .input-layer {
+            display: inherit;
+        }
+        #input-container[has-layer][disabled]::content .custom-input,
+        #input-container[has-layer]:not([focused])::content .custom-input {
+            opacity: 0;
+        }
         
         paper-input-container::shadow .add-on-content {
             position: relative;
@@ -121,8 +142,9 @@
             <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]">[[propTitle]]</label>
             <div class="main-container">
             	<content select=".prefix-custom-attributes"></content>
-                <div id="input-container" style$="[[_calcDecoratorPartStyle(_disabled)]]">
+                <div id="input-container" class="relative" style$="[[_calcDecoratorPartStyle(_disabled)]]" has-layer$="[[_hasLayer]]" disabled$="[[_disabled]]" focused$="[[_focused]]">
                     <content select=".custom-input"></content>
+                    <content id="layer_selector" select=".input-layer"></content>
                 </div>
                 <content select=".custom-icon-buttons"></content>
 				<content select=".property-action"></content>
@@ -158,10 +180,12 @@
             // No default values are allowed in this case.														   //
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             propTitle: String,
+            _focused: Boolean,
             _disabled: {
             	type: Boolean,
             	observer: '_disabledChanged'
             },
+            _hasLayer: Boolean,
             _editingValue: {
                 type: String,
                 notify: true
@@ -174,6 +198,10 @@
         },
         
         behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+
+        ready: function () {
+            this._hasLayer = Polymer.dom(this.$.layer_selector).getDistributedNodes().length > 0;
+        },
         
         attached: function () {
             this.async((function () {

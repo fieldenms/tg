@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.entity.annotation.factory;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 
 /**
  * A factory for convenient instantiation of {@link EntityType} annotations, which mainly should be used for dynamic property creation.
@@ -11,10 +11,10 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
  */
 public class EntityTypeAnnotation {
 
-    private final Class<? extends AbstractEntity> value;
+    private final Class<? extends AbstractEntity<?>> value;
     private Class<?>[] parameters = new Class<?>[] {};
 
-    public EntityTypeAnnotation(final Class<? extends AbstractEntity> value) {
+    public EntityTypeAnnotation(final Class<? extends AbstractEntity<?>> value) {
         this.value = value;
     }
 
@@ -32,7 +32,7 @@ public class EntityTypeAnnotation {
             }
 
             @Override
-            public Class<? extends AbstractEntity> value() {
+            public Class<? extends AbstractEntity<?>> value() {
                 return value;
             }
 
@@ -53,7 +53,7 @@ public class EntityTypeAnnotation {
             }
 
             @Override
-            public Class<? extends AbstractEntity> value() {
+            public Class<? extends AbstractEntity<?>> value() {
                 return original.value();
             }
 

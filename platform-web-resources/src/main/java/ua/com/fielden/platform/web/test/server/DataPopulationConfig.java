@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 
@@ -41,12 +42,12 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
             props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
             props.setProperty("workflow", "development");
-            props.setProperty("email.smtp", "192.168.1.8");
+            props.setProperty("email.smtp", "non-existing-server");
             props.setProperty("email.fromAddress", "tg@fielden.com.au");
 
             final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
             module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
-            injector = new ApplicationInjectorFactory().add(module).getInjector();
+            injector = new ApplicationInjectorFactory().add(module).add(new NewUserNotifierMockBindingModule()).getInjector();
             entityFactory = injector.getInstance(EntityFactory.class);
         } catch (final Exception e) {
             throw new IllegalStateException("Could not create data population configuration.", e);

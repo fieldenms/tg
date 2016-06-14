@@ -31,6 +31,7 @@ public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase {
 
     @Test
     public void testThatCanSaveAndRetrieveEntityWithMoney() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         final EntityWithMoney instance = entityFactory.newEntity(EntityWithMoney.class, "name", "desc");
         instance.setMoney(new Money(new BigDecimal(100000d), Currency.getInstance("USD")));
         // saving instance of MoneyClass
@@ -58,6 +59,7 @@ public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase {
 
     @Test
     public void testThatCanSaveAndRetrieveEntityWithSimpleMoney() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         final EntityWithSimpleMoney instance = entityFactory.newEntity(EntityWithSimpleMoney.class, "name", "desc");
         instance.setMoney(new Money(new BigDecimal(100000d), Currency.getInstance(Locale.getDefault())));
         // saving instance of MoneyClass

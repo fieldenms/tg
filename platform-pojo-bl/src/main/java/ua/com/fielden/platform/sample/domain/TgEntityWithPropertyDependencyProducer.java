@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.dao.EntityProducerWithNewEditActions;
+import com.google.inject.Inject;
+
+import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityProducer;
+import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-
-import com.google.inject.Inject;
 
 /**
  * A producer for new instances of entity {@link TgEntityWithPropertyDependency}.
@@ -13,18 +14,17 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgEntityWithPropertyDependencyProducer extends EntityProducerWithNewEditActions<TgEntityWithPropertyDependency, TgEntityWithPropertyDependency> implements IEntityProducer<TgEntityWithPropertyDependency> {
-    private final ITgEntityWithPropertyDependency coTgEntityWithPropertyDependency;
+public class TgEntityWithPropertyDependencyProducer extends DefaultEntityProducerWithContext<TgEntityWithPropertyDependency> implements IEntityProducer<TgEntityWithPropertyDependency> {
 
     @Inject
-    public TgEntityWithPropertyDependencyProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final ITgEntityWithPropertyDependency coTgEntityWithPropertyDependency) {
+    public TgEntityWithPropertyDependencyProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, TgEntityWithPropertyDependency.class, companionFinder);
-        this.coTgEntityWithPropertyDependency = coTgEntityWithPropertyDependency;
     }
 
     @Override
-    protected TgEntityWithPropertyDependency provideDefaultValuesForNewEntity(final TgEntityWithPropertyDependency entity) {
+    protected TgEntityWithPropertyDependency provideDefaultValuesForStandardNew(final TgEntityWithPropertyDependency entity, final EntityNewAction masterEntity) {
         entity.setKey("DUMMY");
+        entity.resetMetaState();
         return entity;
     }
 }

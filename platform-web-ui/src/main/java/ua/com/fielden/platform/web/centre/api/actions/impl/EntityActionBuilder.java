@@ -2,12 +2,17 @@ package ua.com.fielden.platform.web.centre.api.actions.impl;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
+import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder0;
+import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder0WithViews;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder1;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder2;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder3;
@@ -18,10 +23,14 @@ import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder8;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder9;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
+import ua.com.fielden.platform.web.view.master.api.compound.Compound;
 
-public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
+public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntityActionBuilder<T>, IEntityActionBuilder0<T>, IEntityActionBuilder0WithViews<T>, IEntityActionBuilder1<T>, IEntityActionBuilder2<T>, IEntityActionBuilder3<T>, IEntityActionBuilder4<T>, IEntityActionBuilder5<T>, IEntityActionBuilder6<T>, IEntityActionBuilder7<T> {
+    private Injector injector;
+    private IWebUiBuilder builder;
     private Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity;
     private CentreContextConfig context;
     private String icon;
@@ -42,6 +51,19 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
      */
     public static <T extends AbstractEntity<?>> IEntityActionBuilder0<T> action(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity) {
         return new EntityActionBuilder<T>().addAction(functionalEntity);
+    }
+    
+    /**
+     * A starting point to entity action configuration.
+     *
+     * @param functionalEntity
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> IEntityActionBuilder0WithViews<T> action(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity, final Injector injector, final IWebUiBuilder builder) {
+        final EntityActionBuilder<T> actionBuilder = new EntityActionBuilder<T>();
+        actionBuilder.injector = injector;
+        actionBuilder.builder = builder;
+        return actionBuilder.addAction(functionalEntity);
     }
 
     /**
@@ -76,7 +98,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     }
 
     @Override
-    public IEntityActionBuilder0<T> addAction(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity) {
+    public IEntityActionBuilder0WithViews<T> addAction(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity) {
         if (functionalEntity == null) {
             throw new IllegalArgumentException("Functional entity type should be provided.");
         }
@@ -173,4 +195,15 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
 		return this;
 	}
 
+    @Override
+    public IEntityActionBuilder0<T> withView(final EntityCentre<?> embeddedCentre) {
+        builder.register(Compound.detailsCentre(functionalEntity, builder.register(embeddedCentre), injector));
+        return this;
+    }
+    
+    @Override
+    public IEntityActionBuilder0<T> withView(final EntityMaster<?> embeddedMaster) {
+        builder.register(Compound.detailsMaster(functionalEntity, builder.register(embeddedMaster), injector));
+        return this;
+    }
 }

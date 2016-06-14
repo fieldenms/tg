@@ -13,7 +13,7 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgExportFunctionalEntityProducer extends DefaultEntityProducerWithContext<TgExportFunctionalEntity, TgExportFunctionalEntity> implements IEntityProducer<TgExportFunctionalEntity> {
+public class TgExportFunctionalEntityProducer extends DefaultEntityProducerWithContext<TgExportFunctionalEntity> implements IEntityProducer<TgExportFunctionalEntity> {
 
     @Inject
     public TgExportFunctionalEntityProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -22,13 +22,8 @@ public class TgExportFunctionalEntityProducer extends DefaultEntityProducerWithC
 
     @Override
     protected TgExportFunctionalEntity provideDefaultValues(final TgExportFunctionalEntity entity) {
-        entity.setKey("ANY");
-        if (getCentreContext() != null) {
-            entity.setContext(getCentreContext());
-        }
-        
-        if (getChosenProperty() != null) {
-            entity.setActionProperty(getChosenProperty());
+        if (entity.getChosenProperty() != null) {
+            entity.setActionProperty(entity.getChosenProperty());
         }
         return entity;
     }

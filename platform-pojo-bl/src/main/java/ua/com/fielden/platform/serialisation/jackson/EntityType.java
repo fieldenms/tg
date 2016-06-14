@@ -11,7 +11,6 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -26,10 +25,10 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @CompanionObject(IEntityType.class)
 public class EntityType extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
-
+    
     @IsProperty
-    @Title(value = "Number", desc = "Number of the type in context of other types for serialisation")
-    private Long _number;
+    @Title(value = "Identifier", desc = "Identifier of the type in context of other types for serialisation")
+    private String _identifier;
 
     @IsProperty(String.class)
     @Title(value = "Composite Keys", desc = "Composite key property names")
@@ -54,7 +53,21 @@ public class EntityType extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Is Persistent?", desc = "Indicated whether the associated entity type represents a persistent entity.")
     private boolean _persistent;
+    
+    @IsProperty
+    @Title(value = "Should Display Description?", desc = "Indicates whether editors for values of this type should display values descriptions")
+    private Boolean _displayDesc;
 
+    @Observable
+    public EntityType set_displayDesc(final Boolean _displayDesc) {
+        this._displayDesc = _displayDesc;
+        return this;
+    }
+
+    public Boolean get_displayDesc() {
+        return _displayDesc;
+    }
+    
     @Observable
     public EntityType set_persistent(final boolean _persistent) {
         this._persistent = _persistent;
@@ -120,15 +133,14 @@ public class EntityType extends AbstractEntity<String> {
     public List<String> get_compositeKeyNames() {
         return Collections.unmodifiableList(_compositeKeyNames);
     }
-
+    
     @Observable
-    public EntityType set_number(final Long _number) {
-        this._number = _number;
-        return this;
+    public EntityType set_identifier(final String _identifier) {
+        this._identifier = _identifier;
+        return this;       
+    }      
+    
+    public String get_identifier() {
+        return _identifier;
     }
-
-    public Long get_number() {
-        return _number;
-    }
-
 }

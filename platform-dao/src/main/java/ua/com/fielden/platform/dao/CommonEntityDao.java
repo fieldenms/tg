@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
@@ -36,6 +37,7 @@ import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.dao.handlers.IAfterSave;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -90,6 +92,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private final Logger logger = Logger.getLogger(this.getClass());
 
     private Session session;
+    private String transactionGuid;
 
     private DomainMetadata domainMetadata;
     
@@ -314,6 +317,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
 
+
+        // perform meta-data assignment to capture the information about this modification
+        if (entity instanceof AbstractPersistentEntity) {
+            assignLastModificationInfo((AbstractPersistentEntity<?>) entity);
+        }
+        
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
         // the easiest way to do that is to load entity by id using the current session
@@ -518,7 +527,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
 
         // process transactional assignments
+        if (entity instanceof AbstractPersistentEntity) {
+            assignCreationInfo((AbstractPersistentEntity<?>) entity);
+        }
         assignPropertiesBeforeSave(entity);
+        
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
 
@@ -661,6 +674,28 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     }
 
+    private void assignCreationInfo(final AbstractPersistentEntity<?> entity) {
+        // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes
+        // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
+        // thus, a check for VIRTUAL_USER as a current user 
+        if (!User.system_users.VIRTUAL_USER.name().equals(getUser().getKey())) {
+            entity.set(AbstractPersistentEntity.CREATED_BY, getUser());
+            entity.set(AbstractPersistentEntity.CREATED_DATE, universalConstants.now().toDate());
+            entity.set(AbstractPersistentEntity.CREATED_TRANSACTION_GUID, getTransactionGuid());
+        }
+    }
+    
+    private void assignLastModificationInfo(final AbstractPersistentEntity<?> entity) {
+        // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes
+        // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
+        // thus, a check for VIRTUAL_USER as a current user 
+        if (!User.system_users.VIRTUAL_USER.name().equals(getUser().getKey())) {
+            entity.set(AbstractPersistentEntity.LAST_UPDATED_BY, getUser());
+            entity.set(AbstractPersistentEntity.LAST_UPDATED_DATE, universalConstants.now().toDate());
+            entity.set(AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID, getTransactionGuid());
+        }
+    }
+    
     /**
      * Assigns values to all properties marked for assignment before save. This method should be used only during saving of new entities.
      *
@@ -867,6 +902,19 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     public void setSession(final Session session) {
         this.session = session;
+    }
+    
+    @Override
+    public String getTransactionGuid() {
+        if (StringUtils.isEmpty(transactionGuid)) {
+            throw new EntityCompanionException("Transaction GUID is missing.");
+        }
+        return transactionGuid;
+    }
+    
+    @Override
+    public void setTransactionGuid(final String guid) {
+        this.transactionGuid = guid;
     }
 
     /**

@@ -24,14 +24,22 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
+import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
+import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
+import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -142,6 +150,16 @@ public class SerialisationTestResource extends ServerResource {
                 // type equality
                 if (!EntityUtils.equalsEx(e1.getType(), e2.getType())) {
                     return Result.failure(format("e1 [%s] type [%s] does not equal to e2 [%s] type [%s].", e1, e1.getType(), e2, e2.getType()));
+                }
+                if (EntityUtils.isPropertyDescriptor(e1.getType())) {
+                    final PropertyDescriptor pd1 = (PropertyDescriptor) e1;
+                    final PropertyDescriptor pd2 = (PropertyDescriptor) e2;
+                    if (!EntityUtils.equalsEx(pd1.getEntityType(), pd2.getEntityType())) {
+                        return Result.failure(format("PropertyDescriptors equality: pd1 [%s] entityType [%s] does not equal to pd2 [%s] entityType [%s].", pd1, pd1.getEntityType(), pd2, pd2.getEntityType()));
+                    }
+                    if (!EntityUtils.equalsEx(pd1.getPropertyName(), pd2.getPropertyName())) {
+                        return Result.failure(format("PropertyDescriptors equality: pd1 [%s] propertyName [%s] does not equal to pd2 [%s] propertyName [%s].", pd1, pd1.getPropertyName(), pd2, pd2.getPropertyName()));
+                    }
                 }
                 // id equality
                 if (!EntityUtils.equalsEx(e1.getId(), e2.getId())) {
@@ -304,11 +322,45 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createEntityWithMapOfSameEntities(),
                 factory.createEntityWithCompositeKey(),
                 factory.createUninstrumentedEntity(),
-                factory.createGeneratedEntity(restUtil.getSerialiser(), false), // uninstrumented
-                factory.createGeneratedEntity(restUtil.getSerialiser(), true), // instrumented
+                createGeneratedEntity(restUtil.getSerialiser(), false), // uninstrumented
+                createGeneratedEntity(restUtil.getSerialiser(), true), // instrumented
                 factory.createInstrumentedEntityWithUninstrumentedProperty(),
-                factory.createUninstrumentedEntityWithInstrumentedProperty()
+                factory.createUninstrumentedEntityWithInstrumentedProperty(),
+                factory.createPropertyDescriptor(),
+                factory.createPropertyDescriptorInstrumented()
                 );
+    }
+    
+    private static AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final boolean instrumented) {
+        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+        
+        final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
+        try {
+            emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
+                    cl.startModification(EmptyEntity.class.getName())
+                        .modifyTypeName(new DynamicTypeNamingService().nextTypeName(EmptyEntity.class.getName()))
+                        .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEmptyEntity.class))
+                    .endModification();
+        } catch (final ClassNotFoundException e) {
+            throw Result.failure(e);
+        }
+        final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
+        tgJackson.registerNewEntityType(emptyEntityTypeEnhanced);
+        
+        final AbstractEntity<String> entity;
+        if (instrumented) {
+            entity = (AbstractEntity<String>) serialiser.factory().newEntity(emptyEntityTypeEnhanced, 159L);
+        } else {
+            entity = (AbstractEntity<String>) serialiser.factory().newPlainEntity(emptyEntityTypeEnhanced, 159L);
+            entity.setEntityFactory(serialiser.factory());
+        }
+
+        entity.beginInitialising();
+        entity.setKey("GENERATED+UNINSTRUMENTED");
+        entity.setDesc("GENERATED+UNINSTRUMENTED desc");
+        entity.endInitialising();
+        
+        return entity;
     }
     
     public List<AbstractEntity<?>> getEntities() {

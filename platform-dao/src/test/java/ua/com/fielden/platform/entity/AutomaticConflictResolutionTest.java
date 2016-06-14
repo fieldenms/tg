@@ -9,13 +9,12 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-public class AutomaticConflictResolutionTest extends AbstractDomainDrivenTestCase {
+public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
 
     @Test
     public void non_conflicting_changes_should_have_been_resolved() {
@@ -68,15 +67,12 @@ public class AutomaticConflictResolutionTest extends AbstractDomainDrivenTestCas
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));
         cat1 = save(cat1.setParent(cat1));
 
         save(new_(TgSystem.class, "Sys1").setActive(true).setCategory(cat1));
-    }
-
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
     }
 
 }

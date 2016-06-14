@@ -102,29 +102,13 @@
                     type: Boolean,
                     value: false
                 },
-                
+
                 /**
                  * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
                  */
                 enforcePostSaveRefresh: {
                     type: Boolean,
                     value: false
-                },
-
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-                //   prefix and default values specified in 'value' specificator of the property definition (or,       //
-                //   alternatively, computing function needs to be specified). 									       //
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                /**
-                 * The holder of EGI entities that 'should be updated'.
-                 */
-                _entitiesThatShouldBeUpdated: {
-                    type: Array,
-                    value: null
                 },
 
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +150,7 @@
 
                 _viewerDisabled: {
                     type: Boolean,
-                    computed: '_computeViewerDisabled(_criteriaLoaded)'
+                    computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun)'
                 },
 
                 _url: {
@@ -189,45 +173,10 @@
                 },
 
                 /**
-                 * The action to be invoked on EGI's 'edit' button.
+                 * Determines whether centre was runned or not if it was runned then the value should be 'yes' otherwise value is null.
                  */
-                _editAction: {
-                    type: Function
-                },
-
-                /**
-                 * The action to be invoked on EGI's 'new' button.
-                 */
-                _newAction: {
-                    type: Function
-                },
-
-                /**
-                 * The action to be invoked on EGI's 'delete' button.
-                 */
-                _deleteAction: {
-                    type: Function
-                },
-
-                /**
-                 * The action to be bound to 'tg-primary-instance-action'.
-                 */
-                _showMaster: {
-                    type: Function
-                },
-
-                /**
-                 * Shows the master for current entity in dialog.
-                 */
-                _showMasterInDialog: {
-                    type: Function
-                },
-
-                /**
-                 * Shows the custom view (centre, master, user defined view) in dialog.
-                 */
-                _showCustomViewInDialog: {
-                    type: Function
+                _wasRun: {
+                    type: String
                 },
 
                 /**
@@ -285,12 +234,12 @@
                 _activateResultSetView: {
                     type: Function
                 },
-                
+
                 _disablementCounter: {
                     type: Number,
                     value: 0
                 },
-                
+
                 currentState: {
                     type: String,
                     value: 'EDIT'
@@ -325,18 +274,18 @@
                 return _criteriaLoaded === false;
             },
 
-            _computeViewerDisabled: function (_criteriaLoaded) {
-                return _criteriaLoaded === false;
+            _computeViewerDisabled: function (_criteriaLoaded, _wasRun) {
+                return _criteriaLoaded === false || _wasRun !== "yes";
             },
-            
+
             _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
                 this.$.egi.entities = retrievedEntities;
             },
-            
+
             _retrievedTotalsChanged: function (retrievedTotals, oldValue) {
                 this.$.egi.totals = retrievedTotals;
             },
-            
+
             /**
              * Initialisation block. It has all children web components already initialised.
              */
@@ -346,29 +295,25 @@
                 self._selectedView = 0;
                 self._showProgress = false;
 
-                self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
+                self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
                     if (criteriaEntity === null || criteriaEntity.isValid()) {
                         if (typeof summary !== 'undefined') {
                             this.retrievedTotals = summary;
                         }
-                        if (isRefreshingConcreteEntities) {
-                            this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this._entitiesThatShouldBeUpdated);
-                        } else {
-                            this.retrievedEntities = resultEntities;
-                            this.$.egi.renderingHints = renderingHints;
-                            if (this._triggerRun && this._selectedView === 0) {
-                                this.async(function () {
-                                    this._selectedView = 1;
-                                }, 100);
-                                this._triggerRun = false;
-                            }
+                        this.retrievedEntities = resultEntities;
+                        this.$.egi.renderingHints = renderingHints;
+                        if (this._triggerRun && this._selectedView === 0) {
+                            this.async(function () {
+                                this._selectedView = 1;
+                            }, 100);
+                            this._triggerRun = false;
                         }
                     }
                 }).bind(self);
 
                 self._getSelectedEntities = (function () {
-                    return this.$.egi.getSelectedEntities();
+                    return this.$.egi.getAllSelectedEntities();
                 }).bind(self);
 
                 self._processSaverResponse = function (e) {
@@ -400,90 +345,6 @@
                         self.$.selection_criteria._postValidatedDefaultError(errorResult);
                     });
                 };
-
-                self._editAction = (function () {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "edit.start",
-                        data: {
-                            entity: self._getContext(),
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                }).bind(self);
-
-                self._newAction = (function () {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "new.start",
-                        data: {
-                            entityType: self.entityType,
-                            simpleEntityType: self._simpleEntityType(),
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                }).bind(self);
-
-                self._deleteAction = (function () {
-                    console.log("The selected entities must be deleted here!");
-                }).bind(self);
-
-                self._showMaster = (function (action, entity) {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "edit.start",
-                        data: {
-                            entity: entity,
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                }).bind(self);
-
-                self._showMasterInDialog = (function (action, entity) {
-                    var fullTypeName = entity.type().notEnhancedFullClassName();
-                    var simpleTypeName = entity.type()._notEnhancedSimpleClassName();
-                    var closeEventChannel = self.uuid;
-                    var closeEventTopics = ['save.post.success', 'refresh.post.success'];
-
-                    action.componentUri = "/master_ui/" + fullTypeName;
-                    action.elementName = "tg-" + simpleTypeName + "-master";
-                    action.elementAlias = action.elementName + "-" + entity.id;
-
-                    var prefDim = null;
-                    if (action.prefDim) {
-                        if (typeof action.prefDim === 'string') {
-                            prefDim = JSON.parse(action.prefDim);
-                        } else {
-                            prefDim = action.prefDim;
-                        }
-                    }
-
-                    action.attrs = {
-                        entityId: entity.id,
-                        entityType: fullTypeName,
-                        currentState: 'EDIT',
-                        centreUuid: self.uuid,
-                        prefDim: prefDim
-                    };
-                    action.viewType = 'master';
-
-                    this.async(function () {
-                        this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
-                    }.bind(this), 1);
-
-                }).bind(this);
-
-                self._showCustomViewInDialog = (function (action) {
-                    this.async(function () {
-                        this.actionDialog.showDialog(action);
-                    }.bind(this), 1);
-                }).bind(this);
 
                 self._activateInsertionPoint = (function (insertionPointId, action) {
                     this.async(function () {
@@ -541,7 +402,7 @@
                     this._ajaxDiscarder().body = JSON.stringify(customObject);
                     return this._ajaxDiscarder().generateRequest().completes;
                 }).bind(self);
-                
+
                 self.run = (function () {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
@@ -601,30 +462,6 @@
                     Polymer.dom.flush();
                 }
 
-                ///////////////////////Edit Listeners/////////////////////////////////////
-                this.masterCreatedListener = postal.subscribe({
-                    channel: "centre_" + self.$.selection_criteria.uuid,
-                    topic: "edit.finish.created",
-                    callback: function (data, envelope) {
-                        console.log("-------- Masters Edit Created UUID: " + data.item.view.attrs.uuid + " ------------");
-                    }
-                });
-                this.masterShowListener = postal.subscribe({
-                    channel: "centre_" + self.$.selection_criteria.uuid,
-                    topic: "edit.finish.shown",
-                    callback: function (data, envelope) {
-                        console.log("-------- Masters Edit Shown UUID: " + data.item.view.attrs.uuid + " ------------");
-                    }
-                });
-                /////////////////////////New listener//////////////////////////////////////
-                this.masterNewListener = postal.subscribe({
-                    channel: "centre_" + self.$.selection_criteria.uuid,
-                    topic: "new.finish",
-                    callback: function (data, envelope) {
-                        console.log("-------- Masters New UUID: " + data.item.view.attrs.uuid + " ------------");
-                    }
-                });
-
                 ///////////////////////// Detail postSaved listener //////////////////////////////////////
                 this.masterSavedListener = postal.subscribe({
                     channel: "centre_" + self.$.selection_criteria.uuid,
@@ -641,9 +478,6 @@
             },
 
             detached: function () {
-                this.masterCreatedListener.unsubscribe();
-                this.masterShowListener.unsubscribe();
-                this.masterNewListener.unsubscribe();
                 this.masterSavedListener.unsubscribe();
             },
 
@@ -682,7 +516,7 @@
              */
             currentPage: function () {
                 var self = this;
-                this.$.selection_criteria.currentPage()
+                return this.$.selection_criteria.currentPage()
                     .then(function () {
                         console.log("current page invocation");
                         self.runInsertionPointActions();
@@ -693,28 +527,28 @@
              * Starts the process of retrieving first page (only after run() has been already performed).
              */
             firstPage: function () {
-                this.$.selection_criteria.firstPage();
+                return this.$.selection_criteria.firstPage();
             },
 
             /**
              * Starts the process of retrieving last page (only after run() has been already performed).
              */
             lastPage: function () {
-                this.$.selection_criteria.lastPage();
+                return this.$.selection_criteria.lastPage();
             },
 
             /**
              * Starts the process of retrieving next page (only after run() has been already performed).
              */
             nextPage: function () {
-                this.$.selection_criteria.nextPage();
+                return this.$.selection_criteria.nextPage();
             },
 
             /**
              * Starts the process of retrieving prev page (only after run() has been already performed).
              */
             prevPage: function () {
-                this.$.selection_criteria.prevPage();
+                return this.$.selection_criteria.prevPage();
             },
 
             /**
@@ -727,15 +561,9 @@
             refreshEntities: function (entities) {
                 // if there is no data or refresh is enforeced then simply refresh the current page
                 if (this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0) {
-                    this.currentPage();
-                } else {
-                    if (entities !== null && entities.length > 0) {
-                        this.$.selection_criteria.refreshEntities(entities, (function (entities) {
-                            this._entitiesThatShouldBeUpdated = entities;
-                        }).bind(this)); // this._entitiesThatShouldBeUpdated
-                    } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
-                        this.currentPage();
-                    }
+                    return this.currentPage();
+                } else if (entities === null || entities.length === 0 || this.$.egi.containsAnyEntity(entities)) {
+                    return this.currentPage();
                 }
             },
 
@@ -754,7 +582,7 @@
             canNotCurrent: function (pageNumber, pageCount, isRunning) {
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canCurrent(pageNumber, pageCount));
             },
-            
+
             computeConfigButtonTooltip: function (staleCriteriaMessage) {
                 return staleCriteriaMessage === null ? 'Show selection criteria' : staleCriteriaMessage;
             },
@@ -779,6 +607,29 @@
             },
 
             /**
+             * Contract that allows one to determines whether this component can be closed/left or not.
+             */
+            canLeave: function () {
+                // Check whether selection criteria can be left.
+                var canLeaveThisCentre = this.$.selection_criteria.classList.contains('canLeave') && this.$.selection_criteria.canLeave();
+                var insertionPoints, insPoIndex, elementWithCanLeave, canLeaveChild;
+                if (canLeaveThisCentre) {
+                    return canLeaveThisCentre;
+                }
+                // Check whether all insertion points can be left.
+                insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');
+                for (insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
+                    elementWithCanLeave = insertionPoints[insPoIndex].querySelector('.canLeave');
+                    canLeaveChild = elementWithCanLeave && elementWithCanLeave.canLeave();
+                    if (canLeaveChild) {
+                        return canLeaveChild;
+                    }
+                }
+            },
+
+
+
+            /**
              * Computes URL for 'ajaxSaver' and 'ajaxDiscarder'.
              */
             _computeUrl: function (miType) {
@@ -796,10 +647,10 @@
                     });
                 }
             },
-            
+
             disableView: function () {
                 this._disablementCounter += 1;
-                if (this._disablementCounter > 0 && this.currentState !== 'VIEW') { 
+                if (this._disablementCounter > 0 && this.currentState !== 'VIEW') {
                     this.disableViewForDescendants();
                 }
             },

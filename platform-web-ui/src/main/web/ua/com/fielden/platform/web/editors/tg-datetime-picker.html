@@ -88,7 +88,8 @@
     			on-change="_onChange"
     			on-input="_onInput"
     			on-keydown="_onKeydown"
-    			disabled$="[[_disabled]]"/>
+    			disabled$="[[_disabled]]"
+                tooltip-text$="[[_getTooltip(_editingValue)]]"/>
             <content class=".property-action"></content>
             <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
         </tg-editor>
@@ -235,7 +236,9 @@
                     self._isAcceptingDateFromPicker = true;
                     var acceptedMoment = moment(this.$.datePicker.selectedDate)
                         .hour(this.$.datePicker.selectedHour)
-                        .minute(this.$.datePicker.selectedMinute);
+                        .minute(this.$.datePicker.selectedMinute)
+                        .seconds(this.$.datePicker.seconds)
+                        .milliseconds(this.$.datePicker.milis);
                     self._editingValue = self.reflector().millisDateRepresentation(acceptedMoment.valueOf());
                     self.decoratedInput().focus();
            		}.bind(domBind);
@@ -244,13 +247,17 @@
            			var dialog = this.$.dateDialog;
            			var datePicker = this.$.datePicker;
            			datePicker.selectedDate = null;
-                	datePicker.selectedHour = 0;
-                	datePicker.selectedMinute = 0;
+                	datePicker.selectedHour = self.timePortionToBecomeEndOfDay ? 23 : null;
+                	datePicker.selectedMinute = self.timePortionToBecomeEndOfDay ? 59 : null;
+                    datePicker.seconds = self.timePortionToBecomeEndOfDay ? 59 : 0;
+                    datePicker.milis = self.timePortionToBecomeEndOfDay ? 999 : 0; 
                 	
                     if (self._editingValue && self._editingValue.trim() !== '' && self._validMoment !== null) {
                         datePicker.selectedDate = self._validMoment.valueOf();
                         datePicker.selectedHour = self._validMoment.hour();
                         datePicker.selectedMinute = self._validMoment.minute();
+                        datePicker.seconds = self._validMoment.seconds();
+                        datePicker.milis = self._validMoment.milliseconds();
                     }
            			
                     Polymer.dom(document.body).appendChild(dialog);

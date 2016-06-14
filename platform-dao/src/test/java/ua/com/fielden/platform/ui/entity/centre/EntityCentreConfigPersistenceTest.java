@@ -65,12 +65,8 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
     protected void populateDomain() {
         super.populateDomain();
         
-        save(new_(User.class, "USER", "DESC").setBase(true).setPassword("PASSWD"));
+        save(new_(User.class, "USER", "DESC").setBase(true).setEmail("USER@unit-test.software").setPassword("PASSWD").setActive(true));
         save(new_(MainMenuItem.class, "type", "desc").setOrder(1));
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }

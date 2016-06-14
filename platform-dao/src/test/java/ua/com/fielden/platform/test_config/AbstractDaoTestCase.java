@@ -52,16 +52,16 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
         // It should always be used as the current user for data population activities
         final IUser coUser = co(User.class);
-        final User vu = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
+        final User vu = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true).setEmail(User.system_users.VIRTUAL_USER.name() + "@unit-test.software").setActive(true);
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUser(vu);
         
         // some tests require current person, thus, need to persist a person who would be a user at the same time
-        final User testUser = coUser.save(new_(User.class, UNIT_TEST_USER).setBase(true));
+        final User testUser = coUser.save(new_(User.class, UNIT_TEST_USER).setBase(true).setEmail(UNIT_TEST_USER + "@unit-test.software").setActive(true));
         save(new_(TgPerson.class, "Person who is a user").setUser(testUser));
 
         // add a test user role
-        final UserRole admin = save(new_(UserRole.class, UNIT_TEST_ROLE, "Test role with access to all security tokens."));
+        final UserRole admin = save(new_(UserRole.class, UNIT_TEST_ROLE, "Test role with access to all security tokens.").setActive(true));
         // associate the test role with the test user
         save(new_composite(UserAndRoleAssociation.class, testUser, admin));
         

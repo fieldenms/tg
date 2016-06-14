@@ -12,10 +12,10 @@ import org.junit.Test;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
-public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
+public class EntityExistValidationTest extends AbstractDaoTestCase {
 
 
     @Test
@@ -111,13 +111,10 @@ public class EntityExistValidationTest extends AbstractDomainDrivenTestCase {
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         final TgCategory cat1 = save(new_(TgCategory.class, "Cat1").setActive(true));
         save(new_(TgCategory.class, "Cat2").setActive(false).setParent(cat1));
-    }
-
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
     }
 
 }

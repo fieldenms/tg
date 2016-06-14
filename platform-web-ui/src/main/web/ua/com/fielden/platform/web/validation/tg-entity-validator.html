@@ -71,7 +71,7 @@
             	// previous implementation ser = this.$.serialiser.serialise(modifiedPropertiesHolder);
                 var ser = this.$.serialiser.serialise(this.$.serialiser.$.reflector.createSavingInfoHolder(modifiedPropertiesHolder, context));
                 this.$.ajaxSender.body = JSON.stringify(ser);
-                this.$.ajaxSender.generateRequest();
+                return this.$.ajaxSender.generateRequest().completes;
             },
 
             /**

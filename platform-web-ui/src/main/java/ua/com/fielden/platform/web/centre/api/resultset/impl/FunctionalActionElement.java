@@ -6,8 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
@@ -27,8 +25,6 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     public final EntityActionConfig entityActionConfig;
     public final int numberOfAction;
     private final FunctionalActionKind functionalActionKind;
-    private final boolean masterInvocationAction;
-    private final boolean masterInDialogInvocationAction;
     private final String chosenProperty;
     /** Should be <code>true</code> in case where functional action element is inside entity master, otherwise it is inside entity centre. */
     private boolean forMaster = false;
@@ -88,10 +84,6 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         this.entityActionConfig = entityActionConfig;
         this.numberOfAction = numberOfAction;
         this.functionalActionKind = functionalActionKind;
-        this.masterInvocationAction = this.entityActionConfig.functionalEntity.isPresent()
-                && MasterInvocationFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
-        this.masterInDialogInvocationAction = this.entityActionConfig.functionalEntity.isPresent()
-                && MasterInDialogInvocationFunctionalEntity.class.isAssignableFrom(this.entityActionConfig.functionalEntity.get());
 
         this.chosenProperty = chosenProperty;
     }
@@ -191,39 +183,16 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     @Override
     public final DomElement render() {
-        if (masterInvocationAction) {
-            DomElement pageAction = new DomElement("tg-page-action")
-                    .attr("class", "primary-action")
-                    .attr("action", masterInDialogInvocationAction ? "[[_showMasterInDialog]]" : "[[_showMaster]]")
-                    .attr("short-desc", "action description")
-                    .attr("icon", "editor:mode-edit")
-                    .attr("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
-            if (conf().prefDimForView.isPresent()) {
-                final PrefDim prefDim = conf().prefDimForView.get();
-                pageAction = pageAction.attr("pref-dim", format("{\"width\": %s, \"height\": %s, \"widthUnit\": \"%s\", \"heightUnit\": \"%s\"}", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value));
-            }
-            return pageAction;
-        } else {
-            // TODO tooltips to be enabled when ready
-            // final DomElement spanElement = new DomElement("span").attr("class", "span-tooltip").attr("tip", null).add(new InnerTextElement(conf().longDesc.isPresent() ? conf().longDesc.get()
-            //         : "Functional Action (NO DESC HAS BEEN SPECIFIED)"));
-
-            // return new DomElement("core-tooltip").attr("class", "delayed entity-specific-action").attr("tabIndex", "-1").add(uiActionElement).add(spanElement);
-            return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
-        }
+        return new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
     }
 
     @Override
     public String importPath() {
-        return masterInvocationAction ? "actions/tg-page-action" : widgetPath;
+        return widgetPath;
     }
 
     public FunctionalActionKind getFunctionalActionKind() {
         return functionalActionKind;
-    }
-
-    public boolean isMasterInvocationAction() {
-        return masterInvocationAction;
     }
 
     public boolean isDebug() {
@@ -262,8 +231,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.append("    entityType:'" + conf().functionalEntity.get().getName() + "', currentState:'EDIT', centreUuid: self.uuid,\n");
 
         if (conf().prefDimForView.isPresent()) {
-        	final PrefDim prefDim = conf().prefDimForView.get();
-        	attrs.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'},\n", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value));
+            final PrefDim prefDim = conf().prefDimForView.get();
+            attrs.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'},\n", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value));
         }
 
         attrs.append("},\n");

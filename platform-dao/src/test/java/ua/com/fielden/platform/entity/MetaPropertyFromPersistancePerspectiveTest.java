@@ -14,8 +14,8 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -24,7 +24,7 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  * 
  */
-public class MetaPropertyFromPersistancePerspectiveTest extends AbstractDomainDrivenTestCase {
+public class MetaPropertyFromPersistancePerspectiveTest extends AbstractDaoTestCase {
 
     @Test
     public void all_properties_should_be_not_dirty_and_marked_as_assigned() {
@@ -74,6 +74,8 @@ public class MetaPropertyFromPersistancePerspectiveTest extends AbstractDomainDr
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         final EntityWithMoney ewm1 = save(new_(EntityWithMoney.class, "key1", "desc").setMoney(new Money("20.00")).setDateTimeProperty((new DateTime("2009-03-01T11:00:55Z")).toDate()));
         save(new_(EntityWithMoney.class, "key2", "desc").setMoney(new Money("30.00")));
         save(new_(EntityWithMoney.class, "key3", "desc").setMoney(new Money("40.00")).setDateTimeProperty((new DateTime("2009-03-01T00:00:00Z")).toDate()));
@@ -82,8 +84,4 @@ public class MetaPropertyFromPersistancePerspectiveTest extends AbstractDomainDr
         save(new_composite(EntityWithDynamicCompositeKey.class, "key-1-1", ewm1).setDesc("soem desc"));
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }

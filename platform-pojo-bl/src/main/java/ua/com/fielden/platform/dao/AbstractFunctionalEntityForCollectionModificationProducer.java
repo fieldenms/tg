@@ -32,7 +32,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  * @author TG Team
  *
  */
-public abstract class AbstractFunctionalEntityForCollectionModificationProducer<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<?>> extends DefaultEntityProducerWithContext<T, T> implements IEntityProducer<T> {
+public abstract class AbstractFunctionalEntityForCollectionModificationProducer<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<?>> extends DefaultEntityProducerWithContext<T> implements IEntityProducer<T> {
     private final IEntityDao<T> companion;
     private final ICompanionObjectFinder companionFinder;
     private static final String TRY_AGAIN_MSG = "Please cancel this action and try again!";
@@ -61,11 +61,9 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
     
     @Override
     protected final T provideDefaultValues(final T entity) {
-        if (getCentreContext() == null) {
+        if (entity.getContext() == null) {
             return entity; // this is used for Cancel button (no context is needed)
         }
-        
-        entity.setContext(getCentreContext());
 
         final AbstractEntity<?> masterEntityFromContext = getMasterEntityFromContext(entity.getContext());
         if (masterEntityFromContext == null) {
