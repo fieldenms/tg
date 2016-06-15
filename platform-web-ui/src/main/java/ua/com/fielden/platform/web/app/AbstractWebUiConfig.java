@@ -7,12 +7,20 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.app.config.WebUiBuilder;
+import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
@@ -31,11 +39,11 @@ import com.google.inject.Injector;
  *
  */
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
-
+    private final Logger logger = Logger.getLogger(getClass());
     private final String title;
-    private final WebUiBuilder webUiBuilder;
-    private final MainMenuBuilder desktopMainMenuConfig;
-    private final MainMenuBuilder mobileMainMenuConfig;
+    private WebUiBuilder webUiBuilder;
+    private MainMenuBuilder desktopMainMenuConfig;
+    private MainMenuBuilder mobileMainMenuConfig;
     private Injector injector;
     /**
      * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
@@ -166,4 +174,47 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public Workflows workflow() {
         return workflow;
     }
+    
+    @Override
+    public void initConfiguration() {
+        final IGlobalDomainTreeManager gdtm = getUserSpecificGlobalManager();
+        if (gdtm != null) {
+            logger.error("Init config started. Clearing...");
+            this.webUiBuilder = new WebUiBuilder(this);
+            this.desktopMainMenuConfig = new MainMenuBuilder(this);
+            this.mobileMainMenuConfig = new MainMenuBuilder(this);
+            
+            for (final Class<?> miType: gdtm.entityCentreMenuItemTypes()) {
+                final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
+                globalManager.overrideCentre(miType, null, null);
+                
+                globalManager.overrideCentre(miType, CentreUpdater.FRESH_CENTRE_NAME, null);
+                globalManager.overrideCentre(miType, CentreUpdater.FRESH_CENTRE_NAME + CentreUpdater.DIFFERENCES_SUFFIX, null);
+                
+                globalManager.overrideCentre(miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME, null);
+                globalManager.overrideCentre(miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME + CentreUpdater.DIFFERENCES_SUFFIX, null);
+                
+                globalManager.overrideCentre(miType, CentreUpdater.SAVED_CENTRE_NAME, null);
+                globalManager.overrideCentre(miType, CentreUpdater.SAVED_CENTRE_NAME + CentreUpdater.DIFFERENCES_SUFFIX, null);
+            }
+            
+            logger.error("Init config started. Clearing...done");
+        }
+    }
+    
+    /**
+     * Returns the global manager for the user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
+     *
+     * @return
+     */
+    private IGlobalDomainTreeManager getUserSpecificGlobalManager() {
+        final IServerGlobalDomainTreeManager serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
+        final User user = injector.getInstance(IUserProvider.class).getUser();
+        if (user == null) { // the user is unknown at this stage!
+            return null; // no user-specific global exists for unknown user!
+        }
+        final String userName = user.getKey();
+        return serverGdtm.get(userName);
+    }
+
 }
