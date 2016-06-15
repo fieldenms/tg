@@ -210,13 +210,14 @@
                         var resultEntities = customObject.resultEntities || [];
                         var pageCount = customObject.pageCount || null;
                         var pageNumber = customObject.pageNumber;
+                        var action = ustomObject.action;
                         var metaValues = customObject.metaValues;
                         var centreChanged = customObject.isCentreChanged;
                         var renderingHints = customObject.renderingHints || [];
                         var summary = customObject.summary;
                         var staleCriteriaMessage = customObject.staleCriteriaMessage;
 
-                        self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage);
+                        self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, action, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage);
                     });
                 };
 
@@ -227,7 +228,7 @@
                 };
 
                 // calbacks, that will potentially be augmented by tg-action child elements: 
-                self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage) {
+                self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, action, metaValues, centreChanged, renderingHints, summary, staleCriteriaMessage) {
                     if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
                         this.staleCriteriaMessage = staleCriteriaMessage;
                     }

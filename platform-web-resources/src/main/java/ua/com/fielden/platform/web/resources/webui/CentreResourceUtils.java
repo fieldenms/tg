@@ -192,6 +192,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             resultantCustomObject.put("resultEntities", resultEntities);
             resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
             resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
+            resultantCustomObject.put("action", action);
             return new Pair<>(resultantCustomObject, resultEntities);
         }
         return new Pair<>(resultantCustomObject, null);
@@ -559,7 +560,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
                 companionFinder//
         ).getKey();
-        
+
         // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
         CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
         return appliedCriteriaEntity;
