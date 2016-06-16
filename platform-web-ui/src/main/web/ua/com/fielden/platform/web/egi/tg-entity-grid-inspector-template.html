@@ -1110,21 +1110,24 @@
             _getTooltip: function (entity, column, action) {
                 var property = entity.prop(column.property);
                 var validationResult = property.validationResult();
+                var value;
                 var tooltip = "";
                 if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
-                    tooltip = "<b>" + validationResult.message + "</b>";
+                    tooltip = validationResult.message && ("<b>" + validationResult.message + "</b>");
                 } else if (column.tooltipProperty) {
-                    tooltip = "<b>" + this._getValue(entity, column.tooltipProperty, "String").toString()  + "</b>"
+                    value = this._getValue(entity, column.tooltipProperty, "String").toString();
+                    tooltip = value && ("<b>" + value  + "</b>");
                 } else if (this.$.reflector.findTypeByName(column.type)) {
                     tooltip = this._generateEntityTooltip(entity, column);
                 } else {
-                    tooltip = "<b>" + this._getValue(entity, column.property, column.type).toString() + "</b>";
+                    value = this._getValue(entity, column.property, column.type).toString();
+                    tooltip = value && ("<b>" + value + "</b>");
                 }
                 if (column.columnDesc) {
-                    tooltip += "<br><br>" + column.columnDesc;
+                    tooltip += (tooltip && "<br><br>") + column.columnDesc;
                 }
                 if (action && (action.shortDesc || action.longDesc)) {
-                    tooltip += "<br><br>" + this._generateActionTooltip(action);
+                    tooltip += (tooltip && "<br><br>") + this._generateActionTooltip(action);
                 }
                 return tooltip;
             },
@@ -1137,7 +1140,7 @@
                 } catch (e) {
                     desc = "";
                 }
-                return "<b>" + key + "</b>" + (desc ? "<br>" + desc : "");
+                return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
             },
             
             _generateActionTooltip: function(action) {
@@ -1555,22 +1558,6 @@
             },
             
             /**
-             * Updates entities and removes non exisiting entities from the list of selected entities.
-             */
-            refreshEntities: function (newEntities) {
-                 this.egiModel.forEach(function (elem) {
-                     var selectedIndex;
-                     if (elem.selected && _findEntity(elem.entity, newEntities) < 0) {
-                         selectedIndex = _findEntity(elem.entity, this.selectedEntities);
-                         if (selectedIndex >= 0) {
-                            this.selectedEntities.splice(selectedIndex, 1);
-                         }
-                    }
-                }.bind(this));
-                this.entities = newEntities;
-            },
-            
-            /**
              * Determines whether property is boolean or not.
              */
             _isBooleanProp: function (entity, column) {
@@ -1666,6 +1653,20 @@
                 }.bind(this));
                 return selectedRows;
             },
+            
+            /**
+             * Clears the selection on current page.
+             */
+            clearPageSelection: function () {
+                var i;
+                for (i = 0; i < this.egiModel.length; i++) {
+                    if (this.egiModel[i].selected) {
+                        _processEntitySelection(this.selectedEntities, this.egiModel[i].entity, false);
+                        this.set("egiModel." + i + ".selected", false);
+                    }
+                }
+            },
+            
             /**
              * Clears selection.
              */
