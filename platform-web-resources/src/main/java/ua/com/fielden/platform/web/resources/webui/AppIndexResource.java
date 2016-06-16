@@ -11,10 +11,15 @@ import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
 
-import ua.com.fielden.platform.web.app.ISourceController;
-import ua.com.fielden.platform.web.resources.RestServerUtil;
-
 import com.google.common.base.Charsets;
+
+import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
  * Responds to GET request with a generated application specific index resource (for desktop and mobile web apps).
@@ -25,6 +30,10 @@ import com.google.common.base.Charsets;
  *
  */
 public class AppIndexResource extends DeviceProfileDifferentiatorResource {
+    private final IServerGlobalDomainTreeManager serverGdtm;
+    private final IWebUiConfig webUiConfig;
+    private final IUserProvider userProvider;
+    
     /**
      * Creates {@link AppIndexResource} instance.
      *
@@ -33,12 +42,28 @@ public class AppIndexResource extends DeviceProfileDifferentiatorResource {
      * @param request
      * @param response
      */
-    public AppIndexResource(final ISourceController sourceController, final RestServerUtil restUtil, final Context context, final Request request, final Response response) {
+    public AppIndexResource(
+            final ISourceController sourceController, 
+            final RestServerUtil restUtil,
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IWebUiConfig webUiConfig,
+            final IUserProvider userProvider,
+            final Context context, 
+            final Request request, 
+            final Response response) {
         super(sourceController, restUtil, context, request, response);
+        this.serverGdtm = serverGdtm;
+        this.webUiConfig = webUiConfig;
+        this.userProvider = userProvider;
     }
 
     @Override
     protected Representation get() throws ResourceException {
+        final IGlobalDomainTreeManager gdtm = serverGdtm.get(userProvider.getUser().getKey());
+        if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && gdtm != null) {
+            webUiConfig.initConfiguration();
+        }
+        
         final String source = sourceController().loadSource("/app/tg-app-index.html", deviceProfile());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
     }

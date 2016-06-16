@@ -26,9 +26,6 @@ import org.restlet.resource.ServerResource;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
@@ -39,7 +36,6 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -62,8 +58,6 @@ public class LoginResource extends ServerResource {
     private final IUserSession coUserSession;
     private final RestServerUtil restUtil;
     private final IUniversalConstants constants;
-    private final IServerGlobalDomainTreeManager serverGdtm;
-    private final IWebUiConfig webUiConfig;
 
     /**
      * Creates {@link LoginResource}.
@@ -77,8 +71,6 @@ public class LoginResource extends ServerResource {
             final IUser coUser,
             final IUserSession coUserSession,//
             final RestServerUtil restUtil,//
-            final IServerGlobalDomainTreeManager serverGdtm,
-            final IWebUiConfig webUiConfig,
             final Context context, //
             final Request request, //
             final Response response) {
@@ -91,8 +83,7 @@ public class LoginResource extends ServerResource {
         this.coUser = coUser;
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
-        this.serverGdtm = serverGdtm;
-        this.webUiConfig = webUiConfig;
+
     }
 
     @Override
@@ -107,12 +98,6 @@ public class LoginResource extends ServerResource {
                 userProvider.setUsername(auth.username, coUser);
                 final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
                 if (session.isPresent()) {
-                    
-                    final IGlobalDomainTreeManager gdtm = serverGdtm.get(auth.username);
-                    if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && gdtm != null) {
-                        webUiConfig.initConfiguration();
-                    }
-                    
                     // response needs to be provided with an authenticating cookie
                     assignAuthenticatingCookie(constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
                     // response needs to provide redirection instructions

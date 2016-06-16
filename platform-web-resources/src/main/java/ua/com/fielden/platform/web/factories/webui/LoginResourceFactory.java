@@ -8,14 +8,10 @@ import org.restlet.data.Method;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -57,8 +53,6 @@ public class LoginResourceFactory extends Restlet {
                     injector.getInstance(IUser.class),
                     injector.getInstance(IUserSession.class),
                     util,
-                    injector.getInstance(IServerGlobalDomainTreeManager.class),
-                    webUiConfig,
                     getContext(),
                     request,
                     response

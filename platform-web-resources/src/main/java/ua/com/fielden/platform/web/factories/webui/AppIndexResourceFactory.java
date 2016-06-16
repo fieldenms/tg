@@ -5,7 +5,10 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
 
@@ -18,10 +21,21 @@ import ua.com.fielden.platform.web.resources.webui.AppIndexResource;
 public class AppIndexResourceFactory extends Restlet {
     private final ISourceController sourceController;
     private final RestServerUtil restUtil;
+    private final IServerGlobalDomainTreeManager serverGdtm;
+    private final IWebUiConfig webUiConfig;
+    private final IUserProvider userProvider;
 
-    public AppIndexResourceFactory(final ISourceController sourceController, final RestServerUtil restUtil) {
+    public AppIndexResourceFactory(
+            final ISourceController sourceController, 
+            final RestServerUtil restUtil, 
+            final IServerGlobalDomainTreeManager serverGdtm,
+            final IWebUiConfig webUiConfig,
+            final IUserProvider userProvider) {
         this.sourceController = sourceController;
         this.restUtil = restUtil;
+        this.serverGdtm = serverGdtm;
+        this.webUiConfig = webUiConfig;
+        this.userProvider = userProvider;
     }
 
     @Override
@@ -29,7 +43,7 @@ public class AppIndexResourceFactory extends Restlet {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod()) {
-            new AppIndexResource(sourceController, restUtil, getContext(), request, response).handle();
+            new AppIndexResource(sourceController, restUtil, serverGdtm, webUiConfig, userProvider, getContext(), request, response).handle();
         }
     }
 }
