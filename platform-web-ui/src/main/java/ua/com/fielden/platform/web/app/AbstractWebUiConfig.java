@@ -176,45 +176,15 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
     
     @Override
-    public void initConfiguration() {
-        final IGlobalDomainTreeManager gdtm = getUserSpecificGlobalManager();
-        if (gdtm != null) {
-            logger.error("Init config started. Clearing...");
-            this.webUiBuilder = new WebUiBuilder(this);
-            this.desktopMainMenuConfig = new MainMenuBuilder(this);
-            this.mobileMainMenuConfig = new MainMenuBuilder(this);
-            
-            for (final Class<?> miType: gdtm.entityCentreMenuItemTypes()) {
-                final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
-                globalManager.overrideCentre(miType, null, null);
-                
-                globalManager.overrideCentre(miType, CentreUpdater.FRESH_CENTRE_NAME, null);
-                globalManager.overrideCentre(miType, CentreUpdater.FRESH_CENTRE_NAME + CentreUpdater.DIFFERENCES_SUFFIX, null);
-                
-                globalManager.overrideCentre(miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME, null);
-                globalManager.overrideCentre(miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME + CentreUpdater.DIFFERENCES_SUFFIX, null);
-                
-                globalManager.overrideCentre(miType, CentreUpdater.SAVED_CENTRE_NAME, null);
-                globalManager.overrideCentre(miType, CentreUpdater.SAVED_CENTRE_NAME + CentreUpdater.DIFFERENCES_SUFFIX, null);
-            }
-            
-            logger.error("Init config started. Clearing...done");
-        }
+    public final void clearConfiguration(final IGlobalDomainTreeManager gdtm) {
+        logger.error("Clearing configurations...");
+        this.webUiBuilder = new WebUiBuilder(this);
+        this.desktopMainMenuConfig = new MainMenuBuilder(this);
+        this.mobileMainMenuConfig = new MainMenuBuilder(this);
+        logger.error("Clearing configurations...done");
+        
+        logger.error(String.format("Clearing centres for user [%s]...", gdtm.getUserProvider().getUser()));
+        CentreUpdater.clearAllCentres(gdtm);
+        logger.error(String.format("Clearing centres for user [%s]...done", gdtm.getUserProvider().getUser()));
     }
-    
-    /**
-     * Returns the global manager for the user for this concrete thread (the user has been populated through the Web UI authentication mechanism -- see DefaultWebResourceGuard).
-     *
-     * @return
-     */
-    private IGlobalDomainTreeManager getUserSpecificGlobalManager() {
-        final IServerGlobalDomainTreeManager serverGdtm = injector.getInstance(IServerGlobalDomainTreeManager.class);
-        final User user = injector.getInstance(IUserProvider.class).getUser();
-        if (user == null) { // the user is unknown at this stage!
-            return null; // no user-specific global exists for unknown user!
-        }
-        final String userName = user.getKey();
-        return serverGdtm.get(userName);
-    }
-
 }

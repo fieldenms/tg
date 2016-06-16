@@ -674,7 +674,6 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
     public void overrideCentre(final Class<?> menuItemType, final String name, final ICentreDomainTreeManagerAndEnhancer mgr) {
         if (mgr == null) {
             currentCentres.remove(key(menuItemType, name));
-            // TODO centresOwning.remove(key(menuItemType, name));
         } else {
             currentCentres.put(key(menuItemType, name), initCentreManagerCrossReferences(mgr));
         }

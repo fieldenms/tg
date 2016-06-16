@@ -34,7 +34,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class CentreUpdater {
     private final static Logger logger = Logger.getLogger(CentreUpdater.class);
-    public static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
+    private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
     
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
     public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
@@ -543,5 +543,26 @@ public class CentreUpdater {
         final DateTime end = new DateTime();
         final Period pd = new Period(start, end);
         logger.debug(String.format("\t%s the '%s' centre for miType [%s] for user %s... done in [%s].", "overrideAndSaveDifferencesCentre" + (diffChanged ? "" : " (nothing has changed)"), name, miType.getSimpleName(), gdtm.getUserProvider().getUser(), pd.getSeconds() + " s " + pd.getMillis() + " ms"));
+    }
+    
+    /**
+     * Clears all cached instances of centre managers for concrete user's {@link IGlobalDomainTreeManager}.
+     * 
+     * @param gdtm
+     */
+    public static void clearAllCentres(final IGlobalDomainTreeManager gdtm) {
+        for (final Class<?> miType: gdtm.entityCentreMenuItemTypes()) {
+            final GlobalDomainTreeManager globalManager = (GlobalDomainTreeManager) gdtm;
+            globalManager.overrideCentre(miType, null, null);
+            
+            globalManager.overrideCentre(miType, FRESH_CENTRE_NAME, null);
+            globalManager.overrideCentre(miType, FRESH_CENTRE_NAME + DIFFERENCES_SUFFIX, null);
+            
+            globalManager.overrideCentre(miType, PREVIOUSLY_RUN_CENTRE_NAME, null);
+            globalManager.overrideCentre(miType, PREVIOUSLY_RUN_CENTRE_NAME + DIFFERENCES_SUFFIX, null);
+            
+            globalManager.overrideCentre(miType, SAVED_CENTRE_NAME, null);
+            globalManager.overrideCentre(miType, SAVED_CENTRE_NAME + DIFFERENCES_SUFFIX, null);
+        }
     }
 }

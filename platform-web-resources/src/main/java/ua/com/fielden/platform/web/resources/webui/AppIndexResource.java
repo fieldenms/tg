@@ -14,9 +14,9 @@ import org.restlet.resource.ResourceException;
 import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -59,8 +59,11 @@ public class AppIndexResource extends DeviceProfileDifferentiatorResource {
 
     @Override
     protected Representation get() throws ResourceException {
-        final IGlobalDomainTreeManager gdtm = serverGdtm.get(userProvider.getUser().getKey());
-        if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && gdtm != null) {
+        final User currentUser = userProvider.getUser();
+        if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && currentUser != null) {
+            // if application user hits refresh -- all configurations will be cleared (including cahced instances of centres). This is useful when using with JRebel -- no need to restart server after 
+            //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
+            webUiConfig.clearConfiguration(serverGdtm.get(currentUser.getKey()));
             webUiConfig.initConfiguration();
         }
         
