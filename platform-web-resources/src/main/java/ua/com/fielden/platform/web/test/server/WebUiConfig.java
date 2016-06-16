@@ -1160,6 +1160,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addTopAction(action(EntityDeleteAction.class).
                         withContext(context().withSelectedEntities().build()).
+                        postActionSuccess(new IPostAction() {
+
+                            @Override
+                            public JsCode build() {
+                                return new JsCode("self.$.egi.clearPageSelection()");
+                            }
+                        }).
                         icon("remove-circle-outline").
                         shortDesc("Delete selected").
                         longDesc("Deletes the selected entities").
