@@ -330,7 +330,7 @@
                             <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                                 <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                     <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
-                                        <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
+                                        <paper-checkbox class="blue body" hidden$="[[_isCheckboxesFixed(checkboxesFixed, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                     </div>
                                     <template is="dom-if" if="[[primaryAction]]">
                                         <div class="action-cell layout horizontal center no-flexible">
@@ -430,7 +430,7 @@
                                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                                         <div class="layout horizontal table-data-row" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                             <div class="table-cell layout horizontal center no-flexible" style="width:18px;" hidden$="[[!checkboxVisible]]" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]">
-                                                <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged"></paper-checkbox>
+                                                <paper-checkbox class="blue body" checked="[[egiEntity.selected]]" on-change="_selectionChanged" on-mousedown="_checkSelectionState" on-keydown="_checkSelectionState"></paper-checkbox>
                                             </div>
                                             <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                                 <div class="action-cell layout horizontal center no-flexible">
@@ -843,7 +843,12 @@
                 _bottomMargin: {
                     type: String,
                     value: "15px"
-                }
+                },
+                _rangeSelection: {
+                    type: Boolean,
+                    value: false
+                },
+                _lastSelectedIndex: Number
             },
 
             observers: [
@@ -856,6 +861,7 @@
                     ],
 
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior],
+            
             /**
              * Initialises selection model, primary action, secondary actions, property columns, card layout.
              */
@@ -924,7 +930,11 @@
                 }
                 progressBar.updateStyles();
             },
-
+            
+            _checkSelectionState: function(event) {
+                this._rangeSelection = event.shiftKey;
+            },
+            
             _mouseRowEnter: function (event, detail) {
                 var index = event.model.entityIndex;
                 this.set("egiModel." + index + ".over", true);
@@ -1352,19 +1362,45 @@
                 if (this.egiModel) {
                     index = e.model.entityIndex;
                     var target = e.target || e.srcElement;
-                    this.set("egiModel." + index + ".selected", target.checked);
-                    _processEntitySelection(this.selectedEntities, this.entities[index], target.checked);
+                    //Perform selection range selection or single selection.
+                    if (target.checked && this._rangeSelection && this._lastSelectedIndex >= 0) {
+                        this._selectRange(this._lastSelectedIndex, index);
+                    } else {
+                        this.set("egiModel." + index + ".selected", target.checked);
+                        _processEntitySelection(this.selectedEntities, this.entities[index], target.checked);
+                    }
+                    //Set up the last selection index (it will be used for range selection.)
+                    if (target.checked) {
+                        this._lastSelectedIndex = index;
+                    } else {
+                        this._lastSelectedIndex = -1;
+                    }
+                    //Set up selecteAll property.
                     if (this.selectedAll && !target.checked) {
                         this.selectedAll = false;
-                    } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {
-                        return elem.selected
-                    })) {
+                    } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) { return elem.selected })) {
                         this.selectedAll = true;
                     }
                     this.fire("egi-selection-changed", this.getSelectedEntities());
                 }
                 console.log("single checkbox: " + index, this.getSelectedRows());
             },
+            
+            /**
+             * Selects the range fromIndex toIndex of entities. 
+             */
+            _selectRange: function (fromIndex, toIndex) {
+                var from = fromIndex < toIndex ? fromIndex : toIndex;
+                var to  = fromIndex < toIndex ? toIndex : fromIndex;
+                var index;
+                for (index = from; index <= to; index++) {
+                    if (!this.egiModel[index].selected) {
+                        this.set("egiModel." + index + ".selected", true);
+                        _processEntitySelection(this.selectedEntities, this.entities[index], true);
+                    }
+                }
+            },
+            
             /**
              * Toggles the card's collapse panel for the specified entity.
              */
