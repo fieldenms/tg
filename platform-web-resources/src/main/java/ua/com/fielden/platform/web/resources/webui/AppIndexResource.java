@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import java.io.ByteArrayInputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.util.List;
 
 import org.restlet.Context;
 import org.restlet.Request;
@@ -60,7 +63,7 @@ public class AppIndexResource extends DeviceProfileDifferentiatorResource {
     @Override
     protected Representation get() throws ResourceException {
         final User currentUser = userProvider.getUser();
-        if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && currentUser != null) {
+        if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && isJRebelEnabled() && currentUser != null) {
             // if application user hits refresh -- all configurations will be cleared (including cahced instances of centres). This is useful when using with JRebel -- no need to restart server after 
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
             webUiConfig.clearConfiguration(serverGdtm.get(currentUser.getKey()));
@@ -69,5 +72,19 @@ public class AppIndexResource extends DeviceProfileDifferentiatorResource {
         
         final String source = sourceController().loadSource("/app/tg-app-index.html", deviceProfile());
         return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(source.getBytes(Charsets.UTF_8))));
+    }
+
+    /**
+     * Indicates whether JRebel was enabled in this instance of server JVM by using OS-specific '-agentpath:' VM argument (this is the preferred way to enable JRebel for java applications).
+     * 
+     * @return
+     */
+    private boolean isJRebelEnabled() {
+        final RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+        final List<String> arguments = runtimeMxBean.getInputArguments();
+        
+        return arguments.stream()
+            .filter(argument -> argument.startsWith("-agentpath:") && (argument.contains("jrebel64.") || argument.contains("jrebel32.")))
+            .count() > 0;
     }
 }
