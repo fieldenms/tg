@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -123,6 +124,11 @@ public interface IWebUiConfig {
      * Implement this in order to provide custom configurations for entity centre, master and other views.
      */
     void initConfiguration();
+    
+    /**
+     * Clears all centre, master and menu configurations that were initialised before. After that, clears all centre configurations for the application user represented by <code>gdtm</code> instance. 
+     */
+    void clearConfiguration(final IGlobalDomainTreeManager gdtm);
 
     /**
      * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented

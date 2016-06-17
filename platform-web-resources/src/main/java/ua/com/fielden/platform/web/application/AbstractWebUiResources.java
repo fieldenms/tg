@@ -11,6 +11,8 @@ import org.restlet.security.Authenticator;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.factories.webui.AppIndexResourceFactory;
@@ -111,7 +113,7 @@ public abstract class AbstractWebUiResources extends Application {
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 
         // Attach main application resource.
-        router.attach("/", new AppIndexResourceFactory(sourceController, restUtil));
+        router.attach("/", new AppIndexResourceFactory(sourceController, restUtil, injector.getInstance(IServerGlobalDomainTreeManager.class), webApp, injector.getInstance(IUserProvider.class)));
         router.attach("/app/tg-app-config.html", new WebUiPreferencesResourceFactory(sourceController, restUtil));
         router.attach("/app/tg-app.html", new MainWebUiComponentResourceFactory(sourceController, restUtil));
         // type meta info resource
