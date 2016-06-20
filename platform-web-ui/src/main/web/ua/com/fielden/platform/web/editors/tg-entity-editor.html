@@ -428,7 +428,7 @@
                 if (!inputText) {
                     this._searchQuery = "";
                 } else {
-                    this._searchQuery = replaceAll('*', '\\w*', inputText.toUpperCase());
+                    this._searchQuery = replaceAll('*', '%', inputText.toUpperCase());
                 }
 
                 // collect new matching values

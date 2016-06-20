@@ -17,7 +17,8 @@
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
 	Polymer.TgBehaviors.TgHighlightingBehavior = {
 	    _searchRegExp: function (str) {
-	        return new RegExp(RegExp.escape(str), 'gi');
+	        var pattern = RegExp.escape(str).replace(/%/gi, ".*");
+	        return new RegExp(pattern, 'gi');
 	    },
 	    
         /* 
@@ -29,7 +30,7 @@
             var parts = [];
             var text = str.toUpperCase();
             // if all is matched then return a single value
-            if ("\\w*" == searchQuery) {
+            if ("%" == searchQuery) {
                 parts.push({
                     part: str,
                     matched: false
