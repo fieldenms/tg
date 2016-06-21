@@ -5,7 +5,7 @@
     <template>
         <style>
             :host {
-                padding-left: 72px;
+                padding: 24px 0;
                 @apply(--layout-vertical);
             }
             .line {
@@ -14,19 +14,18 @@
             }
             .subheader {
                 color: #D2D2D2;
-                height: 48px;
-                font-size: 1.6rem
+                font-size: 1rem
             }
         </style>
         <div class="line"></div>
-        <div hidden$="[[!title]]" class="subheader layout horizontal center">[[title]]</div>
+        <div hidden$="[[!subheaderTitle]]" class="subheader layout horizontal center">[[subheaderTitle]]</div>
     </template>
     <script>
         Polymer({
             is: 'tg-subheader',
 
             properties: {
-                title: String
+                subheaderTitle: String
             },
         })
     </script>

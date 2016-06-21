@@ -1,6 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="/resources/components/tg-subheader.html">
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
@@ -32,8 +33,10 @@
                         this.componentsToLayout.push(item);
                     }.bind(this));
                 }
-                // removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
+                // Removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
+                // This method is not defined. Is it needed?
                 _removeAllLightDOMChildrenFrom(this);
+                
                 Polymer.dom.flush();
                 removeStylesAndClasses.bind(this)(this);
                 this.toggleClass("layout", true);
@@ -148,7 +151,9 @@
                 }
             },
             getNextElement = function (selectedElements, orderedElements, layoutElem) {
-                var notFoundElement, attribute, value, selectCondition, selectElem, selectIndex = getSelectIndex(layoutElem);
+                var elemToReturn, attribute, value, selectCondition, selectElem, subheaderElem, subheaderTitle;
+                var selectIndex = getSelectIndex(layoutElem);
+                var subHeaderIndex = getSubheaderIndex(layoutElem);
                 if (selectIndex >= 0) {
                     selectElem = layoutElem[selectIndex];
                     selectCondition = selectElem.split(':')[1].split('=');
@@ -157,12 +162,38 @@
                     if (selectedElements.length > 0 && selectedElements[0].hasAttribute(attribute) && selectedElements[0].getAttribute(attribute) === value) {
                         return selectedElements.splice(0, 1)[0];
                     }
+                } else if (subHeaderIndex >= 0) {
+                    elemToReturn = document.createElement('tg-subheader');
+                    subheaderElem = layoutElem[subHeaderIndex];
+                    subheaderTitle = subheaderElem.split(':')[1].trim();
+                    elemToReturn.subheaderTitle = subheaderTitle;
+                    return elemToReturn;
+                } else if (isEmptyCell(layoutElem)) {
+                    return document.createElement('div');
                 } else if (orderedElements.length > 0) {
                     return orderedElements.splice(0, 1)[0];
                 }
-                notFoundElement = document.createElement('div');
-                Polymer.dom(notFoundElement).innerHTML = "element not found!"
-                return notFoundElement;
+                elemToReturn = document.createElement('div');
+                Polymer.dom(elemToReturn).innerHTML = "element not found!"
+                return elemToReturn;
+            },
+            isEmptyCell = function (layoutElem) {
+                var elemIndex;
+                for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
+                    if ('skip' === layoutElem[elemIndex].trim()) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            getSubheaderIndex = function (layoutElem) {
+                var elemIndex;
+                for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
+                    if (typeof layoutElem[elemIndex] === 'string' && layoutElem[elemIndex].indexOf("subheader") >= 0) {
+                        return elemIndex;
+                    }
+                }
+                return -1;
             },
             hasArray = function (layoutElem) {
                 var elemIndex;
