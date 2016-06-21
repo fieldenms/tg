@@ -1,0 +1,33 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+
+<dom-module id="tg-subheader">
+    <template>
+        <style>
+            :host {
+                padding-left: 72px;
+                @apply(--layout-vertical);
+            }
+            .line {
+                height: 1px;
+                background-color: #D2D2D2;
+            }
+            .subheader {
+                color: #D2D2D2;
+                height: 48px;
+                font-size: 1.6rem
+            }
+        </style>
+        <div class="line"></div>
+        <div hidden$="[[!title]]" class="subheader layout horizontal center">[[title]]</div>
+    </template>
+    <script>
+        Polymer({
+            is: 'tg-subheader',
+
+            properties: {
+                title: String
+            },
+        })
+    </script>
+</dom-module>
