@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.test.server;
+package fielden.config;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +30,9 @@ import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntit
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
+import ua.com.fielden.platform.sample.domain.TgMessage;
+import ua.com.fielden.platform.sample.domain.TgMachine;
+import ua.com.fielden.platform.sample.domain.TgMessageMap;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -37,7 +40,7 @@ import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
  * @author TG Team
  *
  */
-public class TgTestApplicationDomain implements IApplicationDomainProvider {
+public class ApplicationDomain implements IApplicationDomainProvider {
     private static final List<Class<? extends AbstractEntity<?>>> entityTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
     private static final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<Class<? extends AbstractEntity<?>>>();
 
@@ -72,7 +75,10 @@ public class TgTestApplicationDomain implements IApplicationDomainProvider {
         add(NewEntityAction.class);
         add(ExportAction.class);
         add(TgDeletionTestEntity.class);
-   }
+           add(TgMessage.class);
+        add(TgMachine.class);
+        add(TgMessageMap.class);
+    }
 
     @Override
     public List<Class<? extends AbstractEntity<?>>> entityTypes() {

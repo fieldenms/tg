@@ -79,6 +79,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgCollectionalSerialisationParen
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDependency;
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity;
+import ua.com.fielden.platform.ui.menu.sample.MiTgMessage;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2;
@@ -192,6 +193,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
     public void initConfiguration() {
         configApp().setTimeFormat("HH:mm").setTimeWithMillisFormat("HH:mm:ss.SSS");
         // Add entity centres.
+        
+        TgMessageWebUiConfig.register(injector(), configApp());
 
         //Centre configuration for deletion test case entity.
         final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
@@ -843,6 +846,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addMenuItem("Deletion Centre").description("Deletion centre description").centre(deletionTestCentre).done()
                 .addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
                 .addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()
+                .addMenuItem("GPS-треки (Web)").description(
+                        "<html><h3>GPS-треки (Web)</h3>" + //
+                        "Забезпечує можливість перегляду, моніторингу й аналізу GPS повідомлень (у вигляді треків), отриманих від GPS-модулів, які встановлені на машини компанії." + //
+                        "Також дозволяє переглядати обчислений кілометраж у вигляді графіка і / або таблиці." + //
+                        "</html>"
+                ).centre(configApp().getCentre(MiTgMessage.class).get()).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
