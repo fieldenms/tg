@@ -30,13 +30,43 @@
             <paper-input label="floated label" always-float-label></paper-input>
             <paper-input label="floated label" always-float-label></paper-input>
             <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
         </tg-flex-layout>
     </template>
 </body>
 <script>
     var app = document.querySelector("#app");
     app._whenDesktop = function () {
-        return [[['flex','padding-right:20px'],['flex']],['subheader:Static title'],[['skip','flex','padding-right:20px'],['flex']],[['flex','padding-right:20px'],['flex']]];
+        return ['padding-left:16px',
+                /*['subheader:Subheader One','margin-top:0px','padding-bottom:32px'],*/
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['subheader:Subheader Two','padding-top:24px','padding-bottom:32px'],
+                ['padding-left:32px',['flex','padding-right:20px'],['skip', 'flex','padding-right:20px'],['flex']],
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['subheader:Subheader Tree','padding-top:24px','padding-bottom:32px'],
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['padding-left:32px',['flex: 2','padding-right:10px'],['skip','flex']]
+               ];
     };
     app._whenTablet = function () {
         return [[['flex','padding-right:20px'],['flex']],['subheader:Static title'],[['skip','flex','padding-right:20px'],['flex']],[['flex','padding-right:20px'],['flex']]];
