@@ -5,20 +5,21 @@
     <template>
         <style>
             :host {
-                padding: 24px 0;
                 @apply(--layout-vertical);
             }
             .line {
-                height: 1px;
-                background-color: #D2D2D2;
-            }
-            .subheader {
-                color: #D2D2D2;
-                font-size: 1rem
+                border-top: 1px solid rgba(0,0,0,.12);
+                box-sizing: border-box;
+                padding-top: 16px;
+                -webkit-font-smoothing: antialiased;
+                font-size: 1rem;
+                font-weight: 500;
+    			color: rgba(0, 0, 0, 0.55);
             }
         </style>
-        <div class="line"></div>
-        <div hidden$="[[!subheaderTitle]]" class="subheader layout horizontal center">[[subheaderTitle]]</div>
+        <div class="line">
+        	<div hidden$="[[!subheaderTitle]]" class="layout horizontal center">[[subheaderTitle]]</div>
+        </div>
     </template>
     <script>
         Polymer({
