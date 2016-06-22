@@ -6,6 +6,7 @@
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 
 <dom-module id="tg-custom-action-dialog">
     <template>
@@ -18,24 +19,46 @@
                 overflow: auto;
                 /* this is to make host scorable when needed */
                 box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+                @apply(--layout-vertical);
+
             }
+            /*paper-icon-button::shadow #ink {
+                width: 34px;
+                height: 34px;
+            }*/
             paper-icon-button {
-                color: var(--paper-deep-orange-300);
-                --paper-icon-button: {
-                    position: absolute;
-                    top: 0;
-                    right: 0;
-                    width: 34px;
-                    height: 34px;
-                };
+                width: 34px;
+                height: 34px;
+               /* padding: 0;
+                --iron-icon-width: 34px;
+                --iron-icon-height: 34px;*/
             }
-            paper-icon-button:hover {
+            paper-icon-button.close-button {
+                color: var(--paper-deep-orange-300);
+            }
+            paper-icon-button.close-button:hover {
                 color: var(--paper-deep-orange-600);
             }
+            paper-icon-button.minimize-button {
+                color: var(--paper-grey-300);
+            }
+            paper-icon-button.minimize-button:hover {
+                color: var(--paper-grey-600);
+            }
         </style>
+        <div class="title-bar layout horizontal justified center">
+            <div class="layout horizontal">
+                <span class="static-title">[[staticTitle]]</span>
+                <span class="dynamic-title" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]">|</span>
+                <span class="dynamic-title" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
+            </div>
+            <div>
+                <paper-icon-button class="minimize-button" icon="icons:remove-circle" on-tap="minimizeDialog"></paper-icon-button>
+                <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
+            </div>
+        </div>
         <tg-element-loader id="elementLoader"></tg-element-loader>
         <tg-toast id="toaster"></tg-toast>
-        <paper-icon-button icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
     </template>
 </dom-module>
 <script>
@@ -48,7 +71,8 @@
 
             listeners: {
                 'iron-overlay-opened': '_dialogOpened',
-                'iron-overlay-closed': '_dialogClosed'
+                'iron-overlay-closed': '_dialogClosed',
+                'tg-dynamic-title-changed': '_updateDynamicTitle'
             },
 
             properties: {
@@ -56,6 +80,12 @@
                     type: Boolean,
                     readOnly: true
                 },
+
+                /**
+                 * Title bar properties firs of them is static title and the other one is dynamic it can changed when user interacts with dialog.
+                 */
+                staticTitle: String,
+                dynamicTitle: String,
 
                 /* Postal subscription to events that trigger dialog closing.
                  * It gets populated in _showDialog and unsubscrived on dialog closed.
@@ -121,6 +151,14 @@
                 }
             },
 
+            _isTitleSplitterHidden: function (staticTitle, dynamicTitle) {
+                return !(staticTitle && dynamicTitle);
+            },
+
+            _updateDynamicTitle: function (e) {
+                this.dynamicTitle = e.detail;
+            },
+
             _closeDialogAndIndicateActionCompletion: function (action) {
                 if (this._lastAction) {
                     this._lastAction.isActionInProgress = false;
@@ -130,7 +168,7 @@
 
             _handleCloseEvent: function (data, envelope) {
                 if (data.canClose === true) {
-                	this._closeDialogAndIndicateActionCompletion(this._lastAction);
+                    this._closeDialogAndIndicateActionCompletion(this._lastAction);
                 }
             },
 
@@ -169,6 +207,7 @@
                     if (self.isRunning === false) {
                         self._lastAction = customAction;
                         self._setIsRunning(true);
+                        self.staticTitle = customAction.shortDesc;
 
                         self._getElement(customAction)
                             .then(function (element) {
@@ -179,8 +218,8 @@
                                             var key = customAction.elementAlias ? customAction.elementAlias : customAction.elementName;
                                             if (!self._cachedElements.hasOwnProperty(key)) {
                                                 if (typeof element['canBeCached'] === 'undefined' || element.canBeCached() === true) {
-            	                                    console.log("caching:", key);
-                                                	self._cachedElements[key] = element;
+                                                    console.log("caching:", key);
+                                                    self._cachedElements[key] = element;
                                                 }
                                             }
                                             self._showMaster(customAction, element, closeEventChannel, closeEventTopics);
@@ -250,19 +289,19 @@
             },
 
             /** 
-             * A convenience function acting as event listener for 'binding-entity-appeared' to focus and refit the opened dialog only after the entity is bound. 
+             * A convenience function acting as event listener for 'binding-entity-appeared' to focus and refit the opened dialog only after the entity is bound.
              * A named function was used in favoir of an anonymous one in order to avoid accumulation of event listeners.
              */
-            _focusAndRefit: function() {
+            _focusAndRefit: function () {
                 this.async(function () {
                     this.refit();
                 }.bind(this), 50);
                 if (this._lastElement.focusFirstInput) {
                     this._lastElement.focusFirstInput();
-                }                            
-    		},
+                }
+            },
 
-            
+
             _dialogOpened: function (e, detail, source) {
                 // the following refit does not always result in proper dialog centering due to the fact that UI is still being constructed at the time of opening
                 // a more appropriate place for refitting is post entity binding
