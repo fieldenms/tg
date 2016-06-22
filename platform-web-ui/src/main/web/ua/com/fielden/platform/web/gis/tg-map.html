@@ -1,6 +1,94 @@
-<link rel="import" href="/resources/components/require-lib.html">
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/gis/tg-gis-component.html">
 
 <dom-module id="tg-map">
+    <style>
+        :host {
+			display: inline-block;
+			width: 100%;
+		}
+		
+.map {
+    width: 100%;
+    height: 400px;
+    border: 1px solid #ccc;
+}
+.progress {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+    left: 400px;
+    top: 300px;
+    width: 200px;
+    height: 20px;
+    margin-top: -20px;
+    margin-left: -100px;
+    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 4px;
+    padding: 2px;
+}
+.progress-bar {
+    width: 0;
+    height: 100%;
+    background-color: #76A6FC;
+    border-radius: 4px;
+}
+.map-container {
+    height: 100%;
+    width: 100%;
+}
+
+/* * Unlike other icons, you can style `L.divIcon` with CSS.
+* These styles make each marker a circle with a border and centered text. */
+.count-icon {
+    background: #ff8888;
+    border: 5px solid rgba(255, 255, 255, 0.5);
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 50%;
+    line-height: 30px;
+}
+.img-overlay img {
+    margin: 0;
+    opacity: 1.0;
+    display: block;
+}
+.overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    /* height: 100%;
+    */
+    
+    height: 24px;
+    line-height: 24px;
+    background-color: transparent;
+    color: black;
+    font-weight: bold;
+    text-align: center;
+    vertical-align: middle;
+    /* margin-bottom: 0px;
+    */
+    font-size: 12px;
+}
+.img-overlay {
+    position: relative;
+    /* border: 1px #000 solid;
+    */
+    float: left;
+}
+.gps-marker-cluster {
+    background-color: transparent;
+}
+		
+		
+    </style>
     <template>
         <div class="map-container">
             <div class="progress">
@@ -19,7 +107,34 @@
             ready: function() { 
                 var self = this;
                 
-				require.config({
+                console.debug('map div = ', this.querySelector('.map'));
+                
+             	// initialize the map on the "map" div with a given center and zoom
+                /*var map = L.map(this.querySelector('.map'), {
+                    center: [51.505, -0.09],
+                    zoom: 13
+                });
+             	
+        		var osmLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+        		var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    			var osmAttrib = '&copy; ' + osmLink + ' Contributors';
+             	
+        		var osmMap = L.tileLayer(osmUrl, {
+        			maxZoom: 19,
+        			minZoom: 0,
+        			attribution: osmAttrib
+        		});
+        		
+        		osmMap.addTo(map);*/
+             	
+                /* L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+                    maxZoom: 18,
+                    id: 'your.mapbox.project.id',
+                    accessToken: 'your.mapbox.public.access.token'
+                }).addTo(map); */
+                
+				/* require.config({
 					paths: {
 						// 'gis' feature-specific library modules:
 						'leaflet': 'leaflet/leaflet', // AMD-compliant
@@ -114,7 +229,12 @@
 						window.gisComponent = _gisComponent;
 					}
 					return _gisComponent;
-				});
+				}); */
+				
+				var _gisComponent = new L.GIS.GisComponent(this.querySelector('.map'), this.querySelector('.progress'), this.querySelector('.progress-bar'));
+				if (typeof java !== 'undefined') {
+					window.gisComponent = _gisComponent;
+				}
             }
         });
     })();

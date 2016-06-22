@@ -1,10 +1,11 @@
-define([
+<!-- define([
 	'leaflet.googlemaps',
 	'leaflet.yandexmaps'
 ], function(
 	LeafletGoogleMaps, /* should not be used, use L.Google instead */
-	LeafletYandexMaps) { /* should not be used, use L.Yandex instead */
-
+	LeafletYandexMaps) { /* should not be used, use L.Yandex instead */ -->
+<script>
+(function() {
 	var BaseLayers = function() {
 		var self = this;
 
@@ -86,6 +87,8 @@ define([
 	BaseLayers.prototype.getYTrafficLayer = function() {
 		return this._ytraffic;
 	}
-
-	return BaseLayers;
-});
+	
+	L.GIS = L.GIS || {};
+	L.GIS.BaseLayers = BaseLayers;
+})();
+</script>

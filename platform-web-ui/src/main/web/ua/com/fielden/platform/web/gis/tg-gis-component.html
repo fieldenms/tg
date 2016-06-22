@@ -1,22 +1,13 @@
-define([
-	'log',
-	'leaflet',
-	'BaseLayers',
-	'EntityStyling',
-	'MarkerFactory',
-	'MarkerCluster',
-	'Select',
-	'Controls'
-], function(
-	log,
-	leaflet,
-	BaseLayers,
-	EntityStyling,
-	MarkerFactory,
-	MarkerCluster,
-	Select,
-	Controls) {
+<link rel="import" href="/resources/polymer/leaflet/leaflet-lib.html">
+<link rel="import" href="/resources/gis/tg-base-layers.html">
+<link rel="import" href="/resources/gis/tg-entity-styling.html">
+<link rel="import" href="/resources/gis/tg-marker-factory.html">
+<link rel="import" href="/resources/gis/tg-marker-cluster.html">
+<link rel="import" href="/resources/gis/tg-select.html">
+<link rel="import" href="/resources/gis/tg-controls.html">
 
+<script>
+(function() {
 	var GisComponent = function(mapDiv, progressDiv, progressBarDiv) {
 		// IMPORTANT: use the following reference in cases when you need some properties of the 
 		// GisComponent inside the functions or nested classes
@@ -24,20 +15,18 @@ define([
 		self._leafletIdToEntity = {};
 
 		// creating and configuring all layers
-		self._baseLayers = new BaseLayers();
+		self._baseLayers = new L.GIS.BaseLayers();
 
 		self._map = L.map(mapDiv, {
 			layers: [self._baseLayers.getBaseLayer("OpenStreetMap")], // only add one!
 			zoomControl: false, // add it later
 			loadingControl: false // add it later
-		})
-			.setView([49.841919, 24.0316], 18); // Lviv (Rynok Sq) has been centered
-
+		}).setView([49.841919, 24.0316], 18); // Lviv (Rynok Sq) has been centered
 
 		// create a factory for markers
 		self._markerFactory = self.createMarkerFactory();
 		self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
-		self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers);
+		self._controls = new L.GIS.Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers);
 
 		self._entityStyling = self.createEntityStyling();
 		self._geoJsonOverlay = L.geoJson([], {
@@ -59,22 +48,22 @@ define([
 				// var featureId = feature.id;
 				// self._select.setLeafletIdFor(featureId, self._geoJsonOverlay.getLayerId(layer));
 
-				// log("onEachFeature featureId = " + featureId + " ");	            
-				// log(layer);	            
+				// logger.debug("onEachFeature featureId = " + featureId + " ");	            
+				// logger.debug(layer);	            
 
 				layer.on('mouseover', function() {
-					// log("mouseover (entered):");
-					// log(layer);
+					// logger.debug("mouseover (entered):");
+					// logger.debug(layer);
 				});
 
 				layer.on('mouseout', function() {
-					// log("mouseout (leaved):");
-					// log(layer);
+					// logger.debug("mouseout (leaved):");
+					// logger.debug(layer);
 				});
 
 				layer.on('click', function() { // dblclick
-					// log("clicked:");
-					// log(layer);
+					// logger.debug("clicked:");
+					// logger.debug(layer);
 
 					self._select.selectById(featureId);
 				});
@@ -94,7 +83,7 @@ define([
 			return self._geoJsonOverlay.getLayer(leafletId);
 		}
 
-		self._select = new Select(self._map, getLayerByLeafletId, self._markerFactory);
+		self._select = new L.GIS.Select(self._map, getLayerByLeafletId, self._markerFactory);
 
 		self._map.fire('dataloading');
 
@@ -131,24 +120,24 @@ define([
 	};
 
 	GisComponent.prototype.createMarkerFactory = function() {
-		return new MarkerFactory();
+		return new L.GIS.MarkerFactory();
 	};
 
 	GisComponent.prototype.createMarkerCluster = function(map, markerFactory, progressDiv, progressBarDiv) {
-		return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
+		return new L.GIS.MarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 	};
 
 	GisComponent.prototype.createEntityStyling = function() {
-		return new EntityStyling();
+		return new L.GIS.EntityStyling();
 	};
 
 	GisComponent.prototype.initReload = function() {
-		log("initReload");
+		logger.debug("initReload");
 		this._map.fire('dataloading');
 	};
 
 	GisComponent.prototype.finishReload = function() {
-		log("finishReload");
+		logger.debug("finishReload");
 		this._map.fire('dataload');
 	};
 
@@ -159,32 +148,32 @@ define([
 
 	GisComponent.prototype.promoteEntityCentreString = function(entityCentreString) {
 		var self = this;
-		log("Entity centre JSON string parsing...");
+		logger.debug("Entity centre JSON string parsing...");
 		this._entityCentre = JSON.parse(entityCentreString);
-		log("Entity centre JSON string parsing ended.");
+		logger.debug("Entity centre JSON string parsing ended.");
 	};
 
 	GisComponent.prototype.promoteEntitiesString = function(entitiesString) {
 		var self = this;
-		log("Entities JSON string parsing...");
+		logger.debug("Entities JSON string parsing...");
 		this._entities = JSON.parse(entitiesString);
-		log("Entities JSON string parsing ended.");
+		logger.debug("Entities JSON string parsing ended.");
 
 		this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function(entity) {
 			entity.type = "Feature";
 			entity.geometry = self.createGeometry(entity);
 
-			// log('entity:');
-			// log(entity);
-			// log('entity.geometry:');
-			// log(entity.geometry);
+			// logger.debug('entity:');
+			// logger.debug(entity);
+			// logger.debug('entity.geometry:');
+			// logger.debug(entity.geometry);
 
 			if (entity.geometry) {
 				self._geoJsonOverlay.addData(entity);
 			} else {
 				// TODO do nothing in case when the entity has no visual representation
-				log("entity with no visual representation: ");
-				log(entity);
+				logger.debug("entity with no visual representation: ");
+				logger.debug(entity);
 			}				
 		}, function(entities) {
 			return self.createSummaryEntity(entities);
@@ -295,7 +284,7 @@ define([
 
 	GisComponent.prototype.getValue = function(entity, dotNotation) {
 		if (dotNotation.indexOf(".") > -1) {
-			// log(entity.properties["" + "lastMessage.properties.gpsTime" + ""]);
+			// logger.debug(entity.properties["" + "lastMessage.properties.gpsTime" + ""]);
 
 
 			// throw "[" + dotNotation + "] contains dot. Value = [" + (entity.properties["" + "lastMessage.properties.gpsTime" + ""]) + "].";
@@ -339,6 +328,8 @@ define([
 		var layerId = entity.id;
 		return this._geoJsonOverlay.getLayer(layerId); 
 	}
-
-	return GisComponent;
-});
+	
+	L.GIS = L.GIS || {};
+	L.GIS.GisComponent = GisComponent;
+})();
+</script>
