@@ -541,6 +541,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         "      ['padding:20px', "
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
+                        + format("['subheader:Other components', 'flex'],")
                         + format("[[%s], ['flex']],", fmr)
                         + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))

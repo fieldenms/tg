@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <title>Flex layout with subheader example</title>
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+    <link rel="import" href="tg-flex-layout.html">
+    <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
+
+    <style>
+        html {
+            font-size: 10pt;
+        }
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+        }
+    </style>
+
+</head>
+
+<body unresolved>
+    <template id="app" is="dom-bind">
+        <tg-flex-layout when-desktop="[[_whenDesktop()]]" when-tablet="[[_whenTablet()]]" when-mobile="[[_whenMobile()]]">
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+            <paper-input label="floated label" always-float-label></paper-input>
+        </tg-flex-layout>
+    </template>
+</body>
+<script>
+    var app = document.querySelector("#app");
+    app._whenDesktop = function () {
+        return ['padding-left:16px',
+                /*['subheader:Subheader One','margin-top:0px','padding-bottom:32px'],*/
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['subheader:Subheader Two','padding-top:24px','padding-bottom:32px'],
+                ['padding-left:32px',['flex','padding-right:20px'],['skip', 'flex','padding-right:20px'],['flex']],
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['subheader:Subheader Tree','padding-top:24px','padding-bottom:32px'],
+                ['padding-left:32px',['flex','padding-right:20px'],['flex','padding-right:20px'],['flex']],
+                ['padding-left:32px',['flex: 2','padding-right:10px'],['skip','flex']]
+               ];
+    };
+    app._whenTablet = function () {
+        return [[['flex','padding-right:20px'],['flex']],['subheader:Static title'],[['skip','flex','padding-right:20px'],['flex']],[['flex','padding-right:20px'],['flex']]];
+    };
+    app._whenMobile = function () {
+        return [[['flex','padding-right:20px'],['flex']],['subheader:Static title'],[['skip','flex','padding-right:20px'],['flex']],[['flex','padding-right:20px'],['flex']]];
+    };
+</script>
+
+</html>
