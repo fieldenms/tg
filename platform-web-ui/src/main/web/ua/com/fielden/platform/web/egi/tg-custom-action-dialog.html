@@ -105,6 +105,11 @@
                     value: ""
                 },
 
+                _wasMoved: {
+                    type: Boolean,
+                    value: false
+                },
+
                 /* Postal subscription to events that trigger dialog closing.
                  * It gets populated in _showDialog and unsubscrived on dialog closed.
                  */
@@ -185,6 +190,7 @@
                 case 'track':
                     this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
                     this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
+                    this._wasMoved = true;
                     break;
                 case 'end':
                     this.$.titleBar.style.cursor = 'default';
@@ -355,6 +361,13 @@
                         postal.unsubscribe(this._subscriptions[index]);
                     }
                     this._subscriptions.length = 0;
+                    this._wasMoved = false;
+                }
+            },
+
+            _onIronResize: function () {
+                if (!this._wasMoved) {
+                    Polymer.IronOverlayBehaviorImpl._onIronResize.call(this);
                 }
             }
         });
