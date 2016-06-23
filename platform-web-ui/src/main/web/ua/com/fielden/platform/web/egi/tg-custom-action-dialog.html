@@ -22,16 +22,22 @@
                 @apply(--layout-vertical);
 
             }
-            /*paper-icon-button::shadow #ink {
-                width: 34px;
-                height: 34px;
-            }*/
+            .title-bar {
+                padding: 0 16px;
+                height: 44px;
+                font-size: 18px;
+                background-color: var(--paper-blue-grey-900);
+            }
+            .static-title {
+                color: var(--paper-blue-grey-200);
+            }
+            .dynamic-title {
+                color: var(--paper-blue-grey-50);
+            }
             paper-icon-button {
-                width: 34px;
-                height: 34px;
-               /* padding: 0;
-                --iron-icon-width: 34px;
-                --iron-icon-height: 34px;*/
+                width: 22px;
+                height: 22px;
+                padding: 2px;
             }
             paper-icon-button.close-button {
                 color: var(--paper-deep-orange-300);
@@ -52,12 +58,14 @@
                 <span class="dynamic-title" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]">|</span>
                 <span class="dynamic-title" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
-            <div>
+            <div class="layout horizontal">
                 <paper-icon-button class="minimize-button" icon="icons:remove-circle" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
             </div>
         </div>
-        <tg-element-loader id="elementLoader"></tg-element-loader>
+        <div class="relative flex">
+            <tg-element-loader id="elementLoader"></tg-element-loader>
+        </div>
         <tg-toast id="toaster"></tg-toast>
     </template>
 </dom-module>
@@ -84,8 +92,14 @@
                 /**
                  * Title bar properties firs of them is static title and the other one is dynamic it can changed when user interacts with dialog.
                  */
-                staticTitle: String,
-                dynamicTitle: String,
+                staticTitle: {
+                    type: String,
+                    value: ""
+                },
+                dynamicTitle: {
+                    type: String,
+                    value: ""
+                },
 
                 /* Postal subscription to events that trigger dialog closing.
                  * It gets populated in _showDialog and unsubscrived on dialog closed.
