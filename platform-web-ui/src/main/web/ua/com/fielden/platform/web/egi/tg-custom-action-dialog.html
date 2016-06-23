@@ -26,7 +26,11 @@
                 padding: 0 16px;
                 height: 44px;
                 font-size: 18px;
+                cursor: default;
                 background-color: var(--paper-blue-grey-900);
+            }
+            .title-text {
+                pointer-events: none;
             }
             .static-title {
                 color: var(--paper-blue-grey-200);
@@ -52,8 +56,8 @@
                 color: var(--paper-grey-600);
             }
         </style>
-        <div class="title-bar layout horizontal justified center">
-            <div class="layout horizontal">
+        <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
+            <div class="title-text layout horizontal">
                 <span class="static-title">[[staticTitle]]</span>
                 <span class="dynamic-title" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]">|</span>
                 <span class="dynamic-title" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
@@ -171,6 +175,21 @@
 
             _updateDynamicTitle: function (e) {
                 this.dynamicTitle = e.detail;
+            },
+
+            _moveDialog: function (e) {
+                switch (e.detail.state) {
+                case 'start':
+                    this.$.titleBar.style.cursor = 'move';
+                    break;
+                case 'track':
+                    this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
+                    this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
+                    break;
+                case 'end':
+                    this.$.titleBar.style.cursor = 'default';
+                    break;
+                }
             },
 
             _closeDialogAndIndicateActionCompletion: function (action) {
