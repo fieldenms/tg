@@ -25,6 +25,7 @@
             .title-bar {
                 padding: 0 16px;
                 height: 44px;
+                min-height: 44px;
                 font-size: 18px;
                 cursor: default;
                 background-color: var(--paper-blue-grey-900);
@@ -63,11 +64,11 @@
                 <span class="dynamic-title" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div class="layout horizontal">
-                <paper-icon-button class="minimize-button" icon="icons:remove-circle" on-tap="minimizeDialog"></paper-icon-button>
+                <paper-icon-button class="minimize-button" style$="_getMinimiseIconStyle(_minimised)" icon="icons:arrow-drop-down-circle" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
             </div>
         </div>
-        <div class="relative flex">
+        <div hidden$=[[_minimised]] class="relative flex">
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
         <tg-toast id="toaster"></tg-toast>
@@ -106,6 +107,11 @@
                 },
 
                 _wasMoved: {
+                    type: Boolean,
+                    value: false
+                },
+                
+                _minimised: {
                     type: Boolean,
                     value: false
                 },
@@ -150,6 +156,11 @@
 
                 this._setIsRunning(false);
             },
+            
+            minimizeDialog: function () {
+                this._minimised = !this._minimised;
+                this.notifyResize();
+            },
 
             closeDialog: function () {
                 var canClose = true;
@@ -172,6 +183,14 @@
                 if (canClose === true) {
                     this._closeDialogAndIndicateActionCompletion(this._lastAction);
                 }
+            },
+            
+            _getMinimiseIconStyle: function (_minimised) {
+                var style = "";
+                if (_minimised) {
+                    style = "transform: scale(1, -1);"
+                }
+                return style;
             },
 
             _isTitleSplitterHidden: function (staticTitle, dynamicTitle) {
@@ -362,11 +381,12 @@
                     }
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
+                    this._minimised = false;
                 }
             },
 
             _onIronResize: function () {
-                if (!this._wasMoved) {
+                if (!this._wasMoved && !this._minimised) {
                     Polymer.IronOverlayBehaviorImpl._onIronResize.call(this);
                 }
             }
