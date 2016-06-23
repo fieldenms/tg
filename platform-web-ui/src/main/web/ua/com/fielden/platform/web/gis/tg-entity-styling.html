@@ -1,5 +1,5 @@
-define(['log'], function(log) {
-
+<script>
+(function() {
 	var EntityStyling = function() {};
 
 	/**
@@ -48,5 +48,7 @@ define(['log'], function(log) {
 		};
 	}
 
-	return EntityStyling;
-});
+	L.GIS = L.GIS || {};
+	L.GIS.EntityStyling = EntityStyling;
+})();
+</script>

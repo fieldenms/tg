@@ -1,12 +1,8 @@
-define([
-	'log',
-	'leaflet.markercluster',
-	'ProgressBarUpdater'
-], function(
-	log,
-	LeafletMarkercluster, /* should not be used, use L.markerClusterGroup instead */
-	ProgressBarUpdater) { 
+<link rel="import" href="/resources/gis/leaflet/markercluster/leaflet-markercluster.html">
+<link rel="import" href="/resources/gis/tg-progress-bar-updater.html">
 
+<script>
+(function() {
 	var MarkerCluster = function(_map, _markerFactory, progressDiv, progressBarDiv) {
 		var self = this;
 
@@ -14,7 +10,7 @@ define([
 		self._getMarkers = function() {
 			return self._gisMarkerClusterGroup;
 		};
-		self._progressBarUpdater = new ProgressBarUpdater(_map, self._getMarkers, progressDiv, progressBarDiv);
+		self._progressBarUpdater = new L.GIS.ProgressBarUpdater(_map, self._getMarkers, progressDiv, progressBarDiv);
 
 		self._gisMarkerClusterGroup = new L.MarkerClusterGroup({ // .extend
 			chunkedLoading: true,
@@ -80,5 +76,7 @@ define([
 		return this._gisMarkerClusterGroup;
 	}
 
-	return MarkerCluster;
-});
+	L.GIS = L.GIS || {};
+	L.GIS.MarkerCluster = MarkerCluster;
+})();
+</script>

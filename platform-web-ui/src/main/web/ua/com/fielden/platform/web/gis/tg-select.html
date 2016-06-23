@@ -1,10 +1,7 @@
-define([
-	'log',
-	'leaflet'
-], function(
-	log,
-	leaflet) {
+<link rel="import" href="/resources/polymer/leaflet/leaflet-lib.html">
 
+<script>
+(function() {
 	var Select = function(_map, _getLayerByLeafletId, _markerFactory) {
 		var self = this;
 
@@ -73,6 +70,8 @@ define([
 		this._selectTabularlyWithoutEventFiring(featureId);
 		this._prevId = featureId;
 	}
-
-	return Select;
-});
+	
+	L.GIS = L.GIS || {};
+	L.GIS.Select = Select;
+})();
+</script>

@@ -1,16 +1,10 @@
-define([
-	'log',
-	'leaflet',
-	'leaflet.draw',
-	'leaflet.loadingcontrol',
-	'leaflet.easybutton'
-], function(
-	log,
-	leaflet,
-	LeafletDraw, /* should not be used, use L.Draw instead */
-	LeafletLoadingcontrol, /* should not be used, use L.Control.Loading instead */
-	LeafletEasybutton) { /* should not be used, use L.easyButton instead */
+<link rel="import" href="/resources/polymer/leaflet/leaflet-lib.html">
+<link rel="import" href="/resources/gis/leaflet/draw/leaflet-draw.html">
+<link rel="import" href="/resources/gis/leaflet/controlloading/leaflet-controlloading.html">
+<link rel="import" href="/resources/gis/leaflet/easybutton/leaflet-easybutton.html">
 
+<script>
+(function() {
 	var Controls = function(_map, _markersClusterGroup, _baseLayers) {
 		var self = this;
 
@@ -20,14 +14,14 @@ define([
 
 		// firebug control
 		/*var firebugControl = new L.easyButton(
-	"fa-fire",
-	function() {
-		if (!document.getElementById('FirebugLite')){E = document['createElement' + 'NS'] && document.documentElement.namespaceURI;E = E ? document['createElement' + 'NS'](E, 'script') : document['createElement']('script');E['setAttribute']('id', 'FirebugLite');E['setAttribute']('src', 'https://getfirebug.com/' + 'firebug-lite.js' + '#startOpened');E['setAttribute']('FirebugLite', '4');(document['getElementsByTagName']('head')[0] || document['getElementsByTagName']('body')[0]).appendChild(E);E = new Image;E['setAttribute']('src', 'https://getfirebug.com/' + '#startOpened');}
-	},
-	"Firebug",
-	map
-);
-*/
+			"fa-fire",
+			function() {
+				if (!document.getElementById('FirebugLite')){E = document['createElement' + 'NS'] && document.documentElement.namespaceURI;E = E ? document['createElement' + 'NS'](E, 'script') : document['createElement']('script');E['setAttribute']('id', 'FirebugLite');E['setAttribute']('src', 'https://getfirebug.com/' + 'firebug-lite.js' + '#startOpened');E['setAttribute']('FirebugLite', '4');(document['getElementsByTagName']('head')[0] || document['getElementsByTagName']('body')[0]).appendChild(E);E = new Image;E['setAttribute']('src', 'https://getfirebug.com/' + '#startOpened');}
+			},
+			"Firebug",
+			map
+		);*/
+		
 		// fitToBounds control
 		var fitToBoundsControl = new L.easyButton(
 			"fa-compress",
@@ -92,14 +86,16 @@ define([
 
 		// GATHER ALL LAYERS AND ADD OVERLAYS CONTROL
 		var overlays = {
-			"GEO-json": self._markersClusterGroup,
+			"GEO-json": self._markersClusterGroup
 			// "GPS-tracks": gpsTracksOverlay,
-			"Traffic": self._baseLayers.getYTrafficLayer()
+			// "Traffic": self._baseLayers.getYTrafficLayer()
 		};
 
 		var overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), overlays);
 		self._map.addControl(overlaysControl);		
 	};
-
-	return Controls;
-});
+	
+	L.GIS = L.GIS || {};
+	L.GIS.Controls = Controls;
+})();
+</script>
