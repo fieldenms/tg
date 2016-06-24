@@ -1,7 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/resources/gis/tg-gis-component.html">
-
 <dom-module id="tg-map">
     <style>
         :host {
@@ -231,10 +229,10 @@
 					return _gisComponent;
 				}); */
 				
-				var _gisComponent = new L.GIS.GisComponent(this.querySelector('.map'), this.querySelector('.progress'), this.querySelector('.progress-bar'));
+				/* var _gisComponent = new L.GIS.GisComponent(this.querySelector('.map'), this.querySelector('.progress'), this.querySelector('.progress-bar'));
 				if (typeof java !== 'undefined') {
 					window.gisComponent = _gisComponent;
-				}
+				} */
             }
         });
     })();

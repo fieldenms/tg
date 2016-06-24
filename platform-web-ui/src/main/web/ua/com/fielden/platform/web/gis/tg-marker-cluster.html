@@ -34,7 +34,7 @@
 						return self._createCircleClusterIcon();
 
 						// self._markerFactory.createClusterIcon(
-						// 	'<div class="img-overlay"><img src="images/circle-orange.png" /><div class="overlay" >&#x2194</div></div>'
+						// 	'<div class="img-overlay"><img src="resources/gis/images/circle-orange.png" /><div class="overlay" >&#x2194</div></div>'
 						// );
 					}
 				}
@@ -43,7 +43,7 @@
 				}
 
 				return self._markerFactory.createClusterIcon(
-					'<div class="img-overlay"><img src="images/arrow-blue.png" style="-webkit-transform: rotate(' +
+					'<div class="img-overlay"><img src="resources/gis/images/arrow-blue.png" style="-webkit-transform: rotate(' +
 					chosenMarker.options.angle +
 					'deg); " /><div class="overlay" style="-webkit-transform: rotate(' +
 					(chosenMarker.options.angle + 90) +
@@ -62,8 +62,8 @@
 	}
 
 	MarkerCluster.prototype.getCircleClusterIconLocation = function() {
-		// TODO !!!!!!!!!!!!!!! images/circle-red.png images/circle-purple.png images/circle-orange.png
-		return 'images/circle-red.png';
+		// TODO !!!!!!!!!!!!!!! resources/gis/images/circle-red.png resources/gis/images/circle-purple.png resources/gis/images/circle-orange.png
+		return 'resources/gis/images/circle-red.png';
 	}
 
 	MarkerCluster.prototype._createCircleClusterIcon = function() {

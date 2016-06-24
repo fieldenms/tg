@@ -48,22 +48,22 @@
 				// var featureId = feature.id;
 				// self._select.setLeafletIdFor(featureId, self._geoJsonOverlay.getLayerId(layer));
 
-				// logger.debug("onEachFeature featureId = " + featureId + " ");	            
-				// logger.debug(layer);	            
+				// console.debug("onEachFeature featureId = " + featureId + " ");	            
+				// console.debug(layer);	            
 
 				layer.on('mouseover', function() {
-					// logger.debug("mouseover (entered):");
-					// logger.debug(layer);
+					// console.debug("mouseover (entered):");
+					// console.debug(layer);
 				});
 
 				layer.on('mouseout', function() {
-					// logger.debug("mouseout (leaved):");
-					// logger.debug(layer);
+					// console.debug("mouseout (leaved):");
+					// console.debug(layer);
 				});
 
 				layer.on('click', function() { // dblclick
-					// logger.debug("clicked:");
-					// logger.debug(layer);
+					// console.debug("clicked:");
+					// console.debug(layer);
 
 					self._select.selectById(featureId);
 				});
@@ -132,12 +132,12 @@
 	};
 
 	GisComponent.prototype.initReload = function() {
-		logger.debug("initReload");
+		console.debug("initReload");
 		this._map.fire('dataloading');
 	};
 
 	GisComponent.prototype.finishReload = function() {
-		logger.debug("finishReload");
+		console.debug("finishReload");
 		this._map.fire('dataload');
 	};
 
@@ -148,32 +148,32 @@
 
 	GisComponent.prototype.promoteEntityCentreString = function(entityCentreString) {
 		var self = this;
-		logger.debug("Entity centre JSON string parsing...");
+		console.debug("Entity centre JSON string parsing...");
 		this._entityCentre = JSON.parse(entityCentreString);
-		logger.debug("Entity centre JSON string parsing ended.");
+		console.debug("Entity centre JSON string parsing ended.");
 	};
 
 	GisComponent.prototype.promoteEntitiesString = function(entitiesString) {
 		var self = this;
-		logger.debug("Entities JSON string parsing...");
+		console.debug("Entities JSON string parsing...");
 		this._entities = JSON.parse(entitiesString);
-		logger.debug("Entities JSON string parsing ended.");
+		console.debug("Entities JSON string parsing ended.");
 
 		this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function(entity) {
 			entity.type = "Feature";
 			entity.geometry = self.createGeometry(entity);
 
-			// logger.debug('entity:');
-			// logger.debug(entity);
-			// logger.debug('entity.geometry:');
-			// logger.debug(entity.geometry);
+			// console.debug('entity:');
+			// console.debug(entity);
+			// console.debug('entity.geometry:');
+			// console.debug(entity.geometry);
 
 			if (entity.geometry) {
 				self._geoJsonOverlay.addData(entity);
 			} else {
 				// TODO do nothing in case when the entity has no visual representation
-				logger.debug("entity with no visual representation: ");
-				logger.debug(entity);
+				console.debug("entity with no visual representation: ");
+				console.debug(entity);
 			}				
 		}, function(entities) {
 			return self.createSummaryEntity(entities);
@@ -284,7 +284,7 @@
 
 	GisComponent.prototype.getValue = function(entity, dotNotation) {
 		if (dotNotation.indexOf(".") > -1) {
-			// logger.debug(entity.properties["" + "lastMessage.properties.gpsTime" + ""]);
+			// console.debug(entity.properties["" + "lastMessage.properties.gpsTime" + ""]);
 
 
 			// throw "[" + dotNotation + "] contains dot. Value = [" + (entity.properties["" + "lastMessage.properties.gpsTime" + ""]) + "].";

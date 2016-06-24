@@ -1,59 +1,51 @@
-define([
-	'log',
-	'GisComponent',
-	'MessageMarkerCluster',
-	'MessageEntityStyling',
-	'text!init/messageEntities.json',
-	'text!init/messageEntityCentre.json',
-	'MessageMarkerFactory'
-], function(
-	log,
-	GisComponent,
-	MessageMarkerCluster,
-	MessageEntityStyling,
-	entitiesString,
-	entityCentreString,
-	MessageMarkerFactory) {
+<link rel="import" href="/resources/gis/tg-gis-component.html">
+<link rel="import" href="/resources/gis/message/tg-message-marker-cluster.html">
+<link rel="import" href="/resources/gis/message/tg-message-entity-styling.html">
+<link rel="import" href="/resources/gis/message/tg-message-marker-factory.html">
 
+<script src="/resources/gis/message/init/messageEntities.js"></script>
+<script src="/resources/gis/message/init/messageEntityCentre.js"></script>
+<script>
+(function() {
 	var MessageGisComponent = function(mapDiv, progressDiv, progressBarDiv) {
 		var self = this;
-		self._entitiesString = entitiesString;
-		self._entityCentreString = entityCentreString;
+		self._entitiesString = L.GIS.messageEntitiesString;
+		self._entityCentreString = L.GIS.messageEntityCentreString;
 
-		GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
+		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
 	};
 
-	MessageGisComponent.prototype = Object.create(GisComponent.prototype);
+	MessageGisComponent.prototype = Object.create(L.GIS.GisComponent.prototype);
 	MessageGisComponent.prototype.constructor = MessageGisComponent;
 
 	MessageGisComponent.prototype.createMarkerCluster = function(map, markerFactory, progressDiv, progressBarDiv) {
-		return new MessageMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
+		return new L.GIS.MessageMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 	};
 
 	MessageGisComponent.prototype.initialise = function() {
 		// this._geoJsonOverlay.addData(new MessageInitialiser().geoJsonFeatures());
 		this.promoteEntityCentreString(this._entityCentreString);
-		log(this._entityCentre);
+		console.debug(this._entityCentre);
 
-		GisComponent.prototype.initialise.call(this);
+		L.GIS.GisComponent.prototype.initialise.call(this);
 
 		this.promoteEntitiesString(this._entitiesString);
-		log(this._entities);
+		console.debug(this._entities);
 	};
 
 	MessageGisComponent.prototype.createEntityStyling = function() {
-		return new MessageEntityStyling();
+		return new L.GIS.MessageEntityStyling();
 	};
 
 	MessageGisComponent.prototype.createMarkerFactory = function() {
-		return new MessageMarkerFactory();
+		return new L.GIS.MessageMarkerFactory();
 	};
 
 	MessageGisComponent.prototype.createGeometry = function(entity) {
 		var self = this;
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Message' || entity.properties._entityType === 'Summary_Message') {
-				return GisComponent.prototype.createGeometry.call(self, entity);
+				return L.GIS.GisComponent.prototype.createGeometry.call(self, entity);
 			} else {
 				throw "MessageGisComponent.prototype.createGeometry: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Message' or 'Summary_Message'."; // generates an exception
 			}
@@ -66,7 +58,7 @@ define([
 		if (entities.length > 0 && entities[0].properties._entityType) {
 			var entityType = entities[0].properties._entityType;
 			if (entityType === 'Message') {
-				return GisComponent.prototype.createSummaryEntity.call(this, entities);
+				return L.GIS.GisComponent.prototype.createSummaryEntity.call(this, entities);
 			}
 		}
 		return null;
@@ -76,7 +68,7 @@ define([
 		var self = this;
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Message') {
-				return GisComponent.prototype.createPopupContent.call(this, entity);
+				return L.GIS.GisComponent.prototype.createPopupContent.call(this, entity);
 			} else if (entity.properties._entityType === 'Summary_Message') {
 				var popupText = '' +
 					'Машина' + ': ' + this.valueToString(entity.properties["" + '_machine' + ""]);
@@ -89,5 +81,7 @@ define([
 		}
 	}
 
-	return MessageGisComponent;
-});
+	L.GIS = L.GIS || {};
+	L.GIS.MessageGisComponent = MessageGisComponent;
+})();
+</script>
