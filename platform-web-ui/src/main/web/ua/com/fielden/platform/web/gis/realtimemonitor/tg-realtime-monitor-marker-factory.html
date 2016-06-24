@@ -1,15 +1,14 @@
-define([
-	'MarkerFactory'
-], function(
-	MarkerFactory) { 
+<link rel="import" href="/resources/gis/tg-marker-factory.html">
 
+<script>
+(function() {
 	var RealtimeMonitorMarkerFactory= function() {
-		MarkerFactory.call(this);
+		L.GIS.MarkerFactory.call(this);
 
 		var self = this;
 	};
 
-	RealtimeMonitorMarkerFactory.prototype = Object.create(MarkerFactory.prototype);
+	RealtimeMonitorMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
 	RealtimeMonitorMarkerFactory.prototype.constructor = RealtimeMonitorMarkerFactory;
 
 	RealtimeMonitorMarkerFactory.prototype.createEntityMarker = function(entity, latlng) {
@@ -17,7 +16,7 @@ define([
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Machine') {
 				if (entity.properties.lastMessage) {
-					return MarkerFactory.prototype.createEntityMarker.call(self, entity.properties.lastMessage, latlng);
+					return L.GIS.MarkerFactory.prototype.createEntityMarker.call(self, entity.properties.lastMessage, latlng);
 				} else {
 					throw "RealtimeMonitorMarkerFactory.prototype.createEntityMarker: [" + entity + "] has no 'properties.lastMessage'. At this stage it should be strictly defined."; // generates an exception
 				}	
@@ -29,5 +28,7 @@ define([
 		}
 	}
 
-	return RealtimeMonitorMarkerFactory;
-});
+	L.GIS = L.GIS || {};
+	L.GIS.RealtimeMonitorMarkerFactory = RealtimeMonitorMarkerFactory;
+})();
+</script>

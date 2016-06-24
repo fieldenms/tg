@@ -1,52 +1,44 @@
-define([
-	'log',
-	'GisComponent',
-	'RealtimeMonitorMarkerCluster',
-	'RealtimeMonitorEntityStyling',
-	'text!init/realtimeMonitorEntities.json',
-	'text!init/realtimeMonitorEntityCentre.json',
-	'RealtimeMonitorMarkerFactory'
-], function(
-	log,
-	GisComponent,
-	RealtimeMonitorMarkerCluster,
-	RealtimeMonitorEntityStyling,
-	entitiesString,
-	entityCentreString,
-	RealtimeMonitorMarkerFactory) {
+<link rel="import" href="/resources/gis/tg-gis-component.html">
+<link rel="import" href="/resources/gis/realtimemonitor/tg-realtime-monitor-marker-cluster.html">
+<link rel="import" href="/resources/gis/realtimemonitor/tg-realtime-monitor-entity-styling.html">
+<link rel="import" href="/resources/gis/realtimemonitor/tg-realtime-monitor-marker-factory.html">
 
+<script src="/resources/gis/realtimemonitor/init/realtimeMonitorEntities.js"></script>
+<script src="/resources/gis/realtimemonitor/init/realtimeMonitorEntityCentre.js"></script>
+<script>
+(function() {
 	var RealtimeMonitorGisComponent = function(mapDiv, progressDiv, progressBarDiv) {
 		var self = this;
-		self._entitiesString = entitiesString;
-		self._entityCentreString = entityCentreString;
+		self._entitiesString = L.GIS.realtimeMonitorEntitiesString;
+		self._entityCentreString = L.GIS.realtimeMonitorEntityCentreString;
 
-		GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
+		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
 	};
 
-	RealtimeMonitorGisComponent.prototype = Object.create(GisComponent.prototype);
+	RealtimeMonitorGisComponent.prototype = Object.create(L.GIS.GisComponent.prototype);
 	RealtimeMonitorGisComponent.prototype.constructor = RealtimeMonitorGisComponent;
 
 	RealtimeMonitorGisComponent.prototype.createMarkerCluster = function(map, markerFactory, progressDiv, progressBarDiv) {
-		return new RealtimeMonitorMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
+		return new L.GIS.RealtimeMonitorMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 	};
 
 	RealtimeMonitorGisComponent.prototype.initialise = function() {
 		// this._geoJsonOverlay.addData(new RealtimeMonitorInitialiser().geoJsonFeatures());
 		this.promoteEntityCentreString(this._entityCentreString);
-		log(this._entityCentre);
+		console.debug(this._entityCentre);
 
-		GisComponent.prototype.initialise.call(this);
+		L.GIS.GisComponent.prototype.initialise.call(this);
 
 		this.promoteEntitiesString(this._entitiesString);
-		log(this._entities);
+		console.debug(this._entities);
 	};
 
 	RealtimeMonitorGisComponent.prototype.createEntityStyling = function() {
-		return new RealtimeMonitorEntityStyling();
+		return new L.GIS.RealtimeMonitorEntityStyling();
 	};
 
 	RealtimeMonitorGisComponent.prototype.createMarkerFactory = function() {
-		return new RealtimeMonitorMarkerFactory();
+		return new L.GIS.RealtimeMonitorMarkerFactory();
 	};
 
 	RealtimeMonitorGisComponent.prototype.createGeometry = function(entity) {
@@ -54,7 +46,7 @@ define([
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Machine') {
 				if (entity.properties.lastMessage) {
-					return GisComponent.prototype.createGeometry.call(self, entity.properties.lastMessage);
+					return L.GIS.GisComponent.prototype.createGeometry.call(self, entity.properties.lastMessage);
 				} else {
 					return null;
 				}				
@@ -74,7 +66,7 @@ define([
 		var self = this;
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Machine') {
-				return GisComponent.prototype.createPopupContent.call(this, entity);
+				return L.GIS.GisComponent.prototype.createPopupContent.call(this, entity);
 			} else {
 				throw "RealtimeMonitorGisComponent.prototype.createPopupContent: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Machine' only."; // generates an exception
 			}
@@ -82,6 +74,8 @@ define([
 			throw "RealtimeMonitorGisComponent.prototype.createPopupContent: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
 		}
 	}
-
-	return RealtimeMonitorGisComponent;
-});
+	
+	L.GIS = L.GIS || {};
+	L.GIS.RealtimeMonitorGisComponent = RealtimeMonitorGisComponent;
+})();
+</script>

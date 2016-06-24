@@ -1,22 +1,21 @@
-define([
-	'EntityStyling'
-], function(
-	EntityStyling) { 
+<link rel="import" href="/resources/gis/tg-entity-styling.html">
 
+<script>
+(function() {
 	var RealtimeMonitorEntityStyling = function() {
-		EntityStyling.call(this);
+		L.GIS.EntityStyling.call(this);
 
 		var self = this;
 	};
 
-	RealtimeMonitorEntityStyling.prototype = Object.create(EntityStyling.prototype);
+	RealtimeMonitorEntityStyling.prototype = Object.create(L.GIS.EntityStyling.prototype);
 	RealtimeMonitorEntityStyling.prototype.constructor = RealtimeMonitorEntityStyling;
 
 	RealtimeMonitorEntityStyling.prototype.getColor = function(entity) {
 		var self = this;
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Machine') {
-				return EntityStyling.prototype.getColor.call(self, entity.properties.lastMessage);
+				return L.GIS.EntityStyling.prototype.getColor.call(self, entity.properties.lastMessage);
 			} else {
 				throw "RealtimeMonitorEntityStyling.prototype.getColor: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Machine' only."; // generates an exception
 			}
@@ -25,5 +24,7 @@ define([
 		}
 	}
 
-	return RealtimeMonitorEntityStyling;
-});
+	L.GIS = L.GIS || {};
+	L.GIS.RealtimeMonitorEntityStyling = RealtimeMonitorEntityStyling;
+})();
+</script>
