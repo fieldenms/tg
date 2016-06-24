@@ -64,7 +64,7 @@
                 <span class="dynamic-title" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div class="layout horizontal">
-                <paper-icon-button class="minimize-button" style$="_getMinimiseIconStyle(_minimised)" icon="icons:arrow-drop-down-circle" on-tap="minimizeDialog"></paper-icon-button>
+                <paper-icon-button class="minimize-button" icon="icons:aspect-ratio" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
             </div>
         </div>
@@ -76,6 +76,7 @@
 </dom-module>
 <script>
     (function () {
+        var minimisedDialogs = [];
         Polymer({
 
             is: "tg-custom-action-dialog",
@@ -87,6 +88,10 @@
                 'iron-overlay-closed': '_dialogClosed',
                 'tg-dynamic-title-changed': '_updateDynamicTitle'
             },
+
+            observers: [
+                '_dilaogMinimised(_minimised, _lastElement)'
+            ],
 
             properties: {
                 isRunning: {
@@ -110,11 +115,17 @@
                     type: Boolean,
                     value: false
                 },
-                
+
                 _minimised: {
                     type: Boolean,
                     value: false
                 },
+                
+                /**
+                 * Properties those are used to remember the position of minimised dialog.
+                 */
+                _oldTop: String,
+                _oldLeft: String,
 
                 /* Postal subscription to events that trigger dialog closing.
                  * It gets populated in _showDialog and unsubscrived on dialog closed.
@@ -156,7 +167,7 @@
 
                 this._setIsRunning(false);
             },
-            
+
             minimizeDialog: function () {
                 this._minimised = !this._minimised;
                 this.notifyResize();
@@ -184,13 +195,31 @@
                     this._closeDialogAndIndicateActionCompletion(this._lastAction);
                 }
             },
-            
-            _getMinimiseIconStyle: function (_minimised) {
-                var style = "";
+
+            _dilaogMinimised: function (_minimised, _lastElement) {
                 if (_minimised) {
-                    style = "transform: scale(1, -1);"
+                    this._oldTop = this.style.top;
+                    this._oldLeft = this.style.left;
+                    this.style.removeProperty('left');
+                    this.style.removeProperty('top');
+                    this.style.width = "auto";
+                    this.style.height = "auto";
+                    this.style.bottom = '0';
+                    this.style.right = '0';
+                } else {
+                    this.style.removeProperty('bottom');
+                    this.style.removeProperty('right');
+                    this.style.left = this._oldLeft;
+                    this.style.top = this._oldTop;
+                    if (_lastElement.prefDim) {
+                        var prefDim = element.prefDim;
+                        this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                        this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                    } else {
+                        this.style.width = "auto";
+                        this.style.height = "auto";
+                    }
                 }
-                return style;
             },
 
             _isTitleSplitterHidden: function (staticTitle, dynamicTitle) {
@@ -202,18 +231,21 @@
             },
 
             _moveDialog: function (e) {
-                switch (e.detail.state) {
-                case 'start':
-                    this.$.titleBar.style.cursor = 'move';
-                    break;
-                case 'track':
-                    this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
-                    this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
-                    this._wasMoved = true;
-                    break;
-                case 'end':
-                    this.$.titleBar.style.cursor = 'default';
-                    break;
+                var target = e.target || e.srcElement;
+                if (target === this.$.titleBar) {
+                    switch (e.detail.state) {
+                    case 'start':
+                        this.$.titleBar.style.cursor = 'move';
+                        break;
+                    case 'track':
+                        this.style.left = parseInt(this.style.left) + e.detail.ddx + 'px';
+                        this.style.top = parseInt(this.style.top) + e.detail.ddy + 'px';
+                        this._wasMoved = true;
+                        break;
+                    case 'end':
+                        this.$.titleBar.style.removeProperty('cursor');
+                        break;
+                    }
                 }
             },
 
