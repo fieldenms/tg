@@ -28,7 +28,8 @@ public class TgMessageMapMaster implements IMaster<TgMessageMap> {
         // importPaths.add("gis/tg-gis-component");
         // importPaths.add("gis/message/tg-message-gis-component");
         // importPaths.add("gis/polygon/tg-polygon-gis-component");
-        importPaths.add("gis/realtimemonitor/tg-realtime-monitor-gis-component");
+        // importPaths.add("gis/realtimemonitor/tg-realtime-monitor-gis-component");
+        importPaths.add("gis/stop/tg-stop-gis-component");
         importPaths.add("gis/tg-map");
 
         final int funcActionSeq = 0; // used for both entity and property level functional actions
@@ -48,9 +49,9 @@ public class TgMessageMapMaster implements IMaster<TgMessageMap> {
                 .replace("<!--@tg-entity-master-content-->", tgMessageMap.toString())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
-                // use: L.GIS.GisComponent, L.GIS.MessageGisComponent, L.GIS.PolygonGisComponent, L.GIS.RealtimeMonitorGisComponent
+                // use: L.GIS.GisComponent, L.GIS.MessageGisComponent, L.GIS.PolygonGisComponent, L.GIS.RealtimeMonitorGisComponent, L.GIS.StopGisComponent
                 .replace("//@ready-callback", "self.classList.remove('canLeave'); "
-                        + "new L.GIS.RealtimeMonitorGisComponent(self.querySelector('.map'), self.querySelector('.progress'), self.querySelector('.progress-bar'));")
+                        + "new L.GIS.StopGisComponent(self.querySelector('.map'), self.querySelector('.progress'), self.querySelector('.progress-bar'));")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 

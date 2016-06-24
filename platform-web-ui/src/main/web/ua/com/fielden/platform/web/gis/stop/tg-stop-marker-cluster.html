@@ -1,0 +1,22 @@
+<link rel="import" href="/resources/gis/tg-marker-cluster.html">
+
+<script>
+(function() {
+	var StopMarkerCluster = function(_map, _markerFactory, progressDiv, progressBarDiv) {
+		L.GIS.MarkerCluster.call(this, _map, _markerFactory, progressDiv, progressBarDiv);
+
+		var self = this;
+	};
+
+	StopMarkerCluster.prototype = Object.create(L.GIS.MarkerCluster.prototype);
+	StopMarkerCluster.prototype.constructor = StopMarkerCluster;
+
+	StopMarkerCluster.prototype.getCircleClusterIconLocation = function() {
+		// return L.GIS.MarkerCluster.prototype.getCircleClusterIconLocation.call(this);
+		return 'resources/gis/images/circle-orange.png';
+	}
+	
+	L.GIS = L.GIS || {};
+	L.GIS.StopMarkerCluster = StopMarkerCluster;
+})();
+</script>

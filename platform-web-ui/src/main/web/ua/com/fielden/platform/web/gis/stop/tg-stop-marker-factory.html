@@ -1,22 +1,21 @@
-define([
-	'MarkerFactory'
-], function(
-	MarkerFactory) { 
+<link rel="import" href="/resources/gis/tg-marker-factory.html">
 
+<script>
+(function() {
 	var StopMarkerFactory= function() {
-		MarkerFactory.call(this);
+		L.GIS.MarkerFactory.call(this);
 
 		var self = this;
 	};
 
-	StopMarkerFactory.prototype = Object.create(MarkerFactory.prototype);
+	StopMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
 	StopMarkerFactory.prototype.constructor = StopMarkerFactory;
 
 	StopMarkerFactory.prototype.createEntityMarker = function(entity, latlng) {
 		var self = this;
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Message') {
-				return MarkerFactory.prototype.createEntityMarker.call(self, entity, latlng);
+				return L.GIS.MarkerFactory.prototype.createEntityMarker.call(self, entity, latlng);
 			} else {
 				throw "StopMarkerFactory.prototype.createEntityMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Message' only."; // generates an exception
 			}
@@ -25,5 +24,7 @@ define([
 		}
 	}
 
-	return StopMarkerFactory;
-});
+	L.GIS = L.GIS || {};
+	L.GIS.StopMarkerFactory = StopMarkerFactory;
+})();
+</script>

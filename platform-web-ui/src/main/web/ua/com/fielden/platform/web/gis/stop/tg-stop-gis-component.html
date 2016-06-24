@@ -1,54 +1,45 @@
-define([
-	'log',
-	'GisComponent',
-	'StopMarkerCluster',
-	'StopEntityStyling',
-	'text!init/stopEntities.json',
-	'text!init/stopEntityCentre.json',
-	'StopMarkerFactory'
-], function(
-	log,
-	GisComponent,
-	StopMarkerCluster,
-	StopEntityStyling,
-	entitiesString,
-	entityCentreString,
-	StopMarkerFactory) {
+<link rel="import" href="/resources/gis/tg-gis-component.html">
+<link rel="import" href="/resources/gis/stop/tg-stop-marker-cluster.html">
+<link rel="import" href="/resources/gis/stop/tg-stop-entity-styling.html">
+<link rel="import" href="/resources/gis/stop/tg-stop-marker-factory.html">
 
+<script src="/resources/gis/stop/init/stopEntities.js"></script>
+<script src="/resources/gis/stop/init/stopEntityCentre.js"></script>
+<script>
+(function() {
 	var StopGisComponent = function(mapDiv, progressDiv, progressBarDiv) {
 		var self = this;
-		self._entitiesString = entitiesString;
-		self._entityCentreString = entityCentreString;
+		self._entitiesString = L.GIS.stopEntitiesString;
+		self._entityCentreString = L.GIS.stopEntityCentreString;
 
-		GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
+		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
 	};
 
-	StopGisComponent.prototype = Object.create(GisComponent.prototype);
+	StopGisComponent.prototype = Object.create(L.GIS.GisComponent.prototype);
 	StopGisComponent.prototype.constructor = StopGisComponent;
 
 	StopGisComponent.prototype.createMarkerCluster = function(map, markerFactory, progressDiv, progressBarDiv) {
-		return new StopMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
+		return new L.GIS.StopMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 	};
 
 	StopGisComponent.prototype.createEntityStyling = function() {
-		return new StopEntityStyling();
+		return new L.GIS.StopEntityStyling();
 	};
 
 	StopGisComponent.prototype.createMarkerFactory = function() {
-		return new StopMarkerFactory();
+		return new L.GIS.StopMarkerFactory();
 	};
 
 	StopGisComponent.prototype.initialise = function() {
 		// TODO this._geoJsonOverlay.addData(new StopInitialiser().geoJsonFeatures());
 		this.promoteEntityCentreString(this._entityCentreString);
-		log(this._entityCentre);
+		console.debug(this._entityCentre);
 
-		GisComponent.prototype.initialise.call(this);
+		L.GIS.GisComponent.prototype.initialise.call(this);
 
 		this.promoteEntitiesString(this._entitiesString);
-		log(this._entities);
+		console.debug(this._entities);
 	};
-
 
 	StopGisComponent.prototype.createGeometry = function(entity) {
 		var self = this;
@@ -59,7 +50,7 @@ define([
 					coordinates: self.createCoordinatesFromStop(entity)
 				};
 			} else if (entity.properties._entityType === 'Message' || entity.properties._entityType === 'Summary_Message') {
-				return GisComponent.prototype.createGeometry.call(self, entity);
+				return L.GIS.GisComponent.prototype.createGeometry.call(self, entity);
 			} else {
 				throw "StopGisComponent.prototype.createGeometry: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Stop', 'Message' or 'Summary_Message'."; // generates an exception
 			}
@@ -92,7 +83,7 @@ define([
 		if (entities.length > 0 && entities[0].properties._entityType) {
 			var entityType = entities[0].properties._entityType;
 			if (entityType === 'Message') {
-				return GisComponent.prototype.createSummaryEntity.call(this, entities);
+				return L.GIS.GisComponent.prototype.createSummaryEntity.call(this, entities);
 			}
 		}
 		return null;
@@ -102,7 +93,7 @@ define([
 		var self = this;
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Stop') {
-				return GisComponent.prototype.createPopupContent.call(this, entity);
+				return L.GIS.GisComponent.prototype.createPopupContent.call(this, entity);
 			} else if (entity.properties._entityType === 'Message') {
 				var popupText = '' +
 					'Машина' + ': ' + this.valueToString(entity.properties["" + 'machine' + ""]) + "<br>" +
@@ -122,6 +113,8 @@ define([
 			throw "StopGisComponent.prototype.createPopupContent: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
 		}
 	}
-
-	return StopGisComponent;
-});
+	
+	L.GIS = L.GIS || {};
+	L.GIS.StopGisComponent = StopGisComponent;
+})();
+</script>
