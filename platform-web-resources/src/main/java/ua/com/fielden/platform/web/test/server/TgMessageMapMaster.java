@@ -26,7 +26,8 @@ public class TgMessageMapMaster implements IMaster<TgMessageMap> {
     public TgMessageMapMaster() {
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         // importPaths.add("gis/tg-gis-component");
-        importPaths.add("gis/message/tg-message-gis-component");
+        // importPaths.add("gis/message/tg-message-gis-component");
+        importPaths.add("gis/polygon/tg-polygon-gis-component");
         importPaths.add("gis/tg-map");
 
         final int funcActionSeq = 0; // used for both entity and property level functional actions
@@ -46,8 +47,9 @@ public class TgMessageMapMaster implements IMaster<TgMessageMap> {
                 .replace("<!--@tg-entity-master-content-->", tgMessageMap.toString())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
+                // use: L.GIS.GisComponent, L.GIS.MessageGisComponent, L.GIS.PolygonGisComponent
                 .replace("//@ready-callback", "self.classList.remove('canLeave'); "
-                        + "new L.GIS.MessageGisComponent(this.querySelector('.map'), this.querySelector('.progress'), this.querySelector('.progress-bar'));")
+                        + "new L.GIS.PolygonGisComponent(self.querySelector('.map'), self.querySelector('.progress'), self.querySelector('.progress-bar'));")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 

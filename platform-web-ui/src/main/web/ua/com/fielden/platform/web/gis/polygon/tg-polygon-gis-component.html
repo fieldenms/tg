@@ -1,52 +1,44 @@
-define([
-	'log',
-	'GisComponent',
-	'PolygonMarkerCluster',
-	'PolygonEntityStyling',
-	'text!init/polygonEntities.json',
-	'text!init/polygonEntityCentre.json',
-	'PolygonMarkerFactory'
-], function(
-	log,
-	GisComponent,
-	PolygonMarkerCluster,
-	PolygonEntityStyling,
-	entitiesString,
-	entityCentreString,
-	PolygonMarkerFactory) {
+<link rel="import" href="/resources/gis/tg-gis-component.html">
+<link rel="import" href="/resources/gis/polygon/tg-polygon-marker-cluster.html">
+<link rel="import" href="/resources/gis/polygon/tg-polygon-entity-styling.html">
+<link rel="import" href="/resources/gis/polygon/tg-polygon-marker-factory.html">
 
+<script src="/resources/gis/polygon/init/polygonEntities.js"></script>
+<script src="/resources/gis/polygon/init/polygonEntityCentre.js"></script>
+<script>
+(function() {
 	var PolygonGisComponent = function(mapDiv, progressDiv, progressBarDiv) {
 		var self = this;
-		self._entitiesString = entitiesString;
-		self._entityCentreString = entityCentreString;
+		self._entitiesString = L.GIS.polygonEntitiesString;
+		self._entityCentreString = L.GIS.polygonEntityCentreString;
 
-		GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
+		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
 	};
 
-	PolygonGisComponent.prototype = Object.create(GisComponent.prototype);
+	PolygonGisComponent.prototype = Object.create(L.GIS.GisComponent.prototype);
 	PolygonGisComponent.prototype.constructor = PolygonGisComponent;
 
 	PolygonGisComponent.prototype.createMarkerCluster = function(map, markerFactory, progressDiv, progressBarDiv) {
-		return new PolygonMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
+		return new L.GIS.PolygonMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 	};
 
 	PolygonGisComponent.prototype.createEntityStyling = function() {
-		return new PolygonEntityStyling();
+		return new L.GIS.PolygonEntityStyling();
 	};
 
 	PolygonGisComponent.prototype.createMarkerFactory = function() {
-		return new PolygonMarkerFactory();
+		return new L.GIS.PolygonMarkerFactory();
 	};
 
 	PolygonGisComponent.prototype.initialise = function() {
 		// TODO this._geoJsonOverlay.addData(new PolygonInitialiser().geoJsonFeatures());
 		this.promoteEntityCentreString(this._entityCentreString);
-		log(this._entityCentre);
+		console.debug(this._entityCentre);
 
-		GisComponent.prototype.initialise.call(this);
+		L.GIS.GisComponent.prototype.initialise.call(this);
 
 		this.promoteEntitiesString(this._entitiesString);
-		log(this._entities);
+		console.debug(this._entities);
 	};
 
 	PolygonGisComponent.prototype.sortCoords = function(coordinates) {
@@ -113,7 +105,7 @@ define([
 		var self = this;
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Polygon') {
-				return GisComponent.prototype.createPopupContent.call(this, entity);
+				return L.GIS.GisComponent.prototype.createPopupContent.call(this, entity);
 			} else if (entity.properties._entityType === 'Coordinate') {
 				var popupText = '' +
 					'Номер' + ': ' + this.valueToString(this.getValue(entity, 'order')) + "<br>" +
@@ -127,6 +119,8 @@ define([
 			throw "PolygonGisComponent.prototype.createPopupContent: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
 		}
 	}
-
-	return PolygonGisComponent;
-});
+	
+	L.GIS = L.GIS || {};
+	L.GIS.PolygonGisComponent = PolygonGisComponent;
+})();
+</script>

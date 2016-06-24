@@ -1,15 +1,14 @@
-define([
-	'EntityStyling'
-], function(
-	EntityStyling) { 
+<link rel="import" href="/resources/gis/tg-entity-styling.html">
 
+<script>
+(function() {
 	var PolygonEntityStyling = function() {
-		EntityStyling.call(this);
+		L.GIS.EntityStyling.call(this);
 
 		var self = this;
 	};
 
-	PolygonEntityStyling.prototype = Object.create(EntityStyling.prototype);
+	PolygonEntityStyling.prototype = Object.create(L.GIS.EntityStyling.prototype);
 	PolygonEntityStyling.prototype.constructor = PolygonEntityStyling;
 
 	PolygonEntityStyling.prototype.getColor = function(entity) {
@@ -27,5 +26,7 @@ define([
 		}
 	}
 
-	return PolygonEntityStyling;
-});
+	L.GIS = L.GIS || {};
+	L.GIS.PolygonEntityStyling = PolygonEntityStyling;
+})();
+</script>

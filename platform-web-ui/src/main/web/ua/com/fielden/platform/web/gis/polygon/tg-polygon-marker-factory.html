@@ -1,10 +1,9 @@
-define([
-	'MarkerFactory'
-], function(
-	MarkerFactory) { 
+<link rel="import" href="/resources/gis/tg-marker-factory.html">
 
+<script>
+(function() {
 	var PolygonMarkerFactory= function() {
-		MarkerFactory.call(this);
+		L.GIS.MarkerFactory.call(this);
 
 		var self = this;
 
@@ -21,7 +20,7 @@ define([
 		// TODO continue...
 	};
 
-	PolygonMarkerFactory.prototype = Object.create(MarkerFactory.prototype);
+	PolygonMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
 	PolygonMarkerFactory.prototype.constructor = PolygonMarkerFactory;
 
 	PolygonMarkerFactory.prototype.createEntityMarker = function(entity, latlng) {
@@ -41,5 +40,7 @@ define([
 		}
 	}
 
-	return PolygonMarkerFactory;
-});
+	L.GIS = L.GIS || {};
+	L.GIS.PolygonMarkerFactory = PolygonMarkerFactory;
+})();
+</script>
