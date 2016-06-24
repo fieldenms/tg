@@ -28,6 +28,10 @@
                 min-height: 44px;
                 font-size: 18px;
                 cursor: default;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
                 background-color: var(--paper-blue-grey-900);
             }
             .title-text {
@@ -120,7 +124,7 @@
                     type: Boolean,
                     value: false
                 },
-                
+
                 /**
                  * Properties those are used to remember the position of minimised dialog.
                  */
@@ -232,7 +236,7 @@
 
             _moveDialog: function (e) {
                 var target = e.target || e.srcElement;
-                if (target === this.$.titleBar) {
+                if (target === this.$.titleBar && !this._minimised) {
                     switch (e.detail.state) {
                     case 'start':
                         this.$.titleBar.style.cursor = 'move';
