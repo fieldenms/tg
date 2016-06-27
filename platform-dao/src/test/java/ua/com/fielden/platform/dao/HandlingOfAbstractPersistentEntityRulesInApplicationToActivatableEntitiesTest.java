@@ -1,11 +1,27 @@
 package ua.com.fielden.platform.dao;
 
 import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.Date;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -42,6 +58,58 @@ public class HandlingOfAbstractPersistentEntityRulesInApplicationToActivatableEn
         assertEquals(Integer.valueOf(1), updatedCat7.getRefCount());
     }
 
+    @Test
+    public void saving_new_activatable_entity_does_not_lead_to_changes_of_createdBy_user_refCount() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        up.setUsername(username, co(User.class));
+        final User currUser = up.getUser();
+        
+        final Integer originalUserRefCount = currUser.getRefCount();
+        
+        final TgCategory cat6 = save(new_(TgCategory.class, "Cat6").setActive(true));
+        assertEquals(currUser, cat6.getCreatedBy());
+        assertEquals(originalUserRefCount, cat6.getCreatedBy().getRefCount());
+    }
+    
+    @Test
+    public void updating_activatable_entity_does_not_lead_to_changes_of_lastUpdatedBy_user_refCount() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        up.setUsername(username, co(User.class));
+        final User currUser = up.getUser();
+        
+        final Integer originalUserRefCount = currUser.getRefCount();
+        assertEquals(Integer.valueOf(0), originalUserRefCount);
+        
+        save(co(TgCategory.class).findByKey(cat7).setDesc("some new desc"));
+        final TgCategory updatedCat7 = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), cat7); 
+        
+        assertEquals(currUser, updatedCat7.getLastUpdatedBy());
+        assertEquals(originalUserRefCount, updatedCat7.getLastUpdatedBy().getRefCount());
+    }
+    
+    @Test
+    public void deactivating_activatable_entity_does_not_lead_to_changes_of_lastUpdatedBy_and_createdBy_user_refCount_values() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        up.setUsername(username, co(User.class));
+        final User currUser = up.getUser();
+        
+        final TgCategory cat7Orig = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), cat7);
+        assertTrue(cat7Orig.isActive());
+        
+        final Integer origCreatedByUserRefCount = cat7Orig.getCreatedBy().getRefCount();
+        assertEquals(Integer.valueOf(0), origCreatedByUserRefCount); 
+        final Integer origUpdatedByUserRefCount = currUser.getRefCount();
+        assertEquals(Integer.valueOf(0), origUpdatedByUserRefCount);
+        
+        save(cat7Orig.setActive(false));
+        
+        final TgCategory updatedCat7 = co(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), cat7); 
+        
+        assertEquals(currUser, updatedCat7.getLastUpdatedBy());
+        assertEquals(Integer.valueOf(0), updatedCat7.getLastUpdatedBy().getRefCount());
+        assertEquals(cat7Orig.getCreatedBy(), updatedCat7.getCreatedBy());
+        assertEquals(Integer.valueOf(0), updatedCat7.getCreatedBy().getRefCount());
+    }
     
     @Override
     protected void populateDomain() {
