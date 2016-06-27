@@ -686,6 +686,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
     
     private void assignLastModificationInfo(final AbstractPersistentEntity<?> entity) {
+        // if the entity is activatable and the only dirty property is refCount than there is no need to update the last-updated-by info
+        if (entity instanceof ActivatableAbstractEntity) {
+            final List<MetaProperty<?>> dirty = entity.getDirtyProperties();
+            if (dirty.size() == 1 && ActivatableAbstractEntity.REF_COUNT.equals(dirty.get(0).getName())) {
+                return;
+            }
+        }
         // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes
         // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
         // thus, a check for VIRTUAL_USER as a current user 
