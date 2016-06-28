@@ -34,8 +34,14 @@
                 user-select: none;
                 background-color: var(--paper-blue-grey-900);
             }
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
             .title-text {
                 pointer-events: none;
+                overflow: hidden;
             }
             .static-title {
                 color: var(--paper-blue-grey-200);
@@ -62,10 +68,10 @@
             }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
-            <div class="title-text layout horizontal">
-                <span class="static-title">[[staticTitle]]</span>
-                <span class="dynamic-title" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]">|</span>
-                <span class="dynamic-title" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
+            <div class="title-text layout horizontal flex">
+                <span class="static-title truncate">[[staticTitle]]</span>
+                <span class="dynamic-title" style="padding: 0 5px" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]">|</span>
+                <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div class="layout horizontal">
                 <paper-icon-button class="minimize-button" icon="icons:aspect-ratio" on-tap="minimizeDialog"></paper-icon-button>
@@ -80,7 +86,6 @@
 </dom-module>
 <script>
     (function () {
-        var minimisedDialogs = [];
         Polymer({
 
             is: "tg-custom-action-dialog",
@@ -92,10 +97,6 @@
                 'iron-overlay-closed': '_dialogClosed',
                 'tg-dynamic-title-changed': '_updateDynamicTitle'
             },
-
-            observers: [
-                '_dilaogMinimised(_minimised, _lastElement)'
-            ],
 
             properties: {
                 isRunning: {
@@ -124,12 +125,6 @@
                     type: Boolean,
                     value: false
                 },
-
-                /**
-                 * Properties those are used to remember the position of minimised dialog.
-                 */
-                _oldTop: String,
-                _oldLeft: String,
 
                 /* Postal subscription to events that trigger dialog closing.
                  * It gets populated in _showDialog and unsubscrived on dialog closed.
@@ -174,6 +169,7 @@
 
             minimizeDialog: function () {
                 this._minimised = !this._minimised;
+                this._dialogMinimised();
                 this.notifyResize();
             },
 
@@ -200,23 +196,13 @@
                 }
             },
 
-            _dilaogMinimised: function (_minimised, _lastElement) {
-                if (_minimised) {
-                    this._oldTop = this.style.top;
-                    this._oldLeft = this.style.left;
-                    this.style.removeProperty('left');
-                    this.style.removeProperty('top');
+            _dialogMinimised: function () {
+                if (this._minimised) {
                     this.style.width = "auto";
                     this.style.height = "auto";
-                    this.style.bottom = '0';
-                    this.style.right = '0';
                 } else {
-                    this.style.removeProperty('bottom');
-                    this.style.removeProperty('right');
-                    this.style.left = this._oldLeft;
-                    this.style.top = this._oldTop;
-                    if (_lastElement.prefDim) {
-                        var prefDim = element.prefDim;
+                    if (this._lastElement && this._lastElement.prefDim) {
+                        var prefDim = this._lastElement.prefDim;
                         this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
                         this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
                     } else {
@@ -236,7 +222,7 @@
 
             _moveDialog: function (e) {
                 var target = e.target || e.srcElement;
-                if (target === this.$.titleBar && !this._minimised) {
+                if (target === this.$.titleBar) {
                     switch (e.detail.state) {
                     case 'start':
                         this.$.titleBar.style.cursor = 'move';

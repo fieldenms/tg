@@ -91,6 +91,12 @@
         iron-pages {
             padding: 8px 8px;
         }
+            
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
     <template>
 		<tg-reflector id="reflector"></tg-reflector>
@@ -118,7 +124,7 @@
                 <!-- Main Toolbar -->
                 <paper-toolbar id="mainToolbar" style="height: 44px;">
                     <!-- Application name -->
-                    <span style="font-size: 18px; height: 44px;">[[sectionTitle]]</span>
+                    <span class="truncate" style="font-size: 18px; height: 44px;">[[sectionTitle]]</span>
                 </paper-toolbar>
 
                 <!-- Main Content -->
