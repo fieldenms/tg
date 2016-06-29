@@ -41,13 +41,18 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         super(widgetPath, titleAndDesc, propName);
 
         // let's provide some sensible defaults for additional properties
-        // in most cases description is included, but not searched by
-        // whereas, in case of composite entities, all key members should be included and highlighted as they'are searched by
-        additionalProps.put(AbstractEntity.DESC, false);
+        // in most cases description is included if it exists for the type... also it is searched by default
+        if (EntityUtils.hasDescProperty(propType)) {
+            additionalProps.put(AbstractEntity.DESC, true);
+        }
+        // in case of composite entities that has more than one key member, all key members should be included and highlighted as they'are searched by
+        // in case of a single key member, displaying only the key is sufficient
         if (EntityUtils.isCompositeEntity(propType)) {
             final List<Field> members = Finder.getKeyMembers(propType);
-            for (final Field member: members) {
-                additionalProps.put(member.getName(), true);
+            if (members.size() > 1) {
+                for (final Field member: members) {
+                    additionalProps.put(member.getName(), true);
+                }
             }
         }
     }
