@@ -283,6 +283,10 @@
                         postal.unsubscribe(this._subscriptions[index]);
                     }
                     this._subscriptions.length = 0;
+                    
+                    if (this._lastAction && this._lastAction._previousActiveElement && typeof this._lastAction._previousActiveElement.focus === 'function') {
+                        this._lastAction._previousActiveElement.focus();
+                    }
                 }
             }
         });
