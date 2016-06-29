@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+<link rel="import" href="/resources/polymer/iron-test-helpers/mock-interactions.html">
 
 <link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
 
@@ -666,6 +667,10 @@
 
             _updatePressed: function (e) {
                 console.log("master saved");
+                
+                // this.save();
+                var saveButton = this.$$('tg-action[role="save"]').$.actionButton;
+                MockInteractions.tap(saveButton);
 
                 if (event.stopPropagation) event.stopPropagation();
                 if (event.preventDefault) event.preventDefault();
