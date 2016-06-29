@@ -1,4 +1,6 @@
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+
 <link rel="import" href="/resources/binding/tg-entity-binder-behavior.html">
 
 <script>
@@ -21,7 +23,6 @@
 
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgEntityMasterBehaviorImpl = {
-
             properties: {
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
                 ////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
@@ -657,11 +658,24 @@
             /** A helper method to assist in making the caching decision. Used as an optimisation technique. */
             canBeCached: function () {
                 return typeof this._currBindingEntity['skipUi'] === 'undefined';
-            }
+            },
+            
+            keyBindings: {
+                'ctrl+s': '_updatePressed'
+            },
 
+            _updatePressed: function (e) {
+                console.log("master saved");
+
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
+            }
         };
 
         Polymer.TgBehaviors.TgEntityMasterBehavior = [
+            Polymer.IronA11yKeysBehavior,
             Polymer.TgBehaviors.TgEntityBinderBehavior,
             Polymer.TgBehaviors.TgEntityMasterBehaviorImpl
         ];

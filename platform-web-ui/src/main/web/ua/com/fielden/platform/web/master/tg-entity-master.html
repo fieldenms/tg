@@ -1,7 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
 <link rel="import" href="/resources/polymer/iron-ajax/iron-ajax.html">
-<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 
 <link rel="import" href="/resources/validation/tg-entity-validator.html">
 <link rel="import" href="/resources/binding/tg-entity-binder.html">
@@ -73,33 +72,6 @@
                 type: String,
                 computed: '_computeUrl(entityType, entityId)'
             }
-        },
-
-        behaviors: [
-            Polymer.IronA11yKeysBehavior
-        ],
-
-        keyBindings: {
-            'ctrl+s': '_updatePressed'
-        },
-
-        _updatePressed: function (e) {
-            console.log("master saved");
-
-            if (event.stopPropagation) event.stopPropagation();
-            if (event.preventDefault) event.preventDefault();
-            event.cancelBubble = true;
-            event.returnValue = false;
-
-
-            //                console.log(event.detail);
-            //
-            //                if (this.preventDefault) {
-            //                    event.preventDefault();
-            //                }
-            //                this._setPressed(
-            //                    this.pressed + event.detail.combo + ' pressed!\n'
-            //                );
         },
 
         /**
