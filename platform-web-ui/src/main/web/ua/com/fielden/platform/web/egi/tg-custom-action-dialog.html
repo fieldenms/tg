@@ -1,6 +1,7 @@
 <link rel="import" href="/app/tg-element-loader.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -169,7 +170,48 @@
                 this.noCancelOnOutsideClick = true;
                 this.noCancelOnEscKey = true;
 
+                // Listen to mousedown or touchstart to be sure to be the first to capture
+                // clicks outside the overlay.
+                this._onCaptureClick = this._onCaptureClick.bind(this);
+                this._onCaptureFocus = this._onCaptureFocus.bind(this);
+                this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
+
                 this._setIsRunning(false);
+            },
+
+            attached: function () {
+                var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+                this.addEventListener(clickEvent, this._onCaptureClick, true);
+                this.addEventListener('focus', this._onCaptureFocus, true);
+                this.addEventListener('keydown', this._onCaptureKeyDown, true);
+            },
+
+            detached: function () {
+                var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+                this.removeEventListener(clickEvent, this._onCaptureClick, true);
+                this.removeEventListener('focus', this._onCaptureFocus, true);
+                this.removeEventListener('keydown', this._onCaptureKeyDown, true);
+            },
+
+            _onCaptureClick: function (event) {
+                if (this._manager.currentOverlay() !== this) {
+                    console.log("select overlay");
+                    this._manager.addOverlay(this);
+                }
+            },
+
+            _onCaptureFocus: function (event) {
+                if (this._manager.currentOverlay() !== this) {
+                    console.log("select overlay");
+                    this._manager.addOverlay(this);
+                }
+            },
+
+            _onCaptureKeyDown: function (event) {
+                if (Polymer.IronA11yKeysBehavior.keyboardEventMatchesKeys(event, 'tab') && this._manager.currentOverlay() !== this) {
+                    console.log("select overlay");
+                    this._manager.addOverlay(this);
+                }
             },
 
             minimizeDialog: function () {
