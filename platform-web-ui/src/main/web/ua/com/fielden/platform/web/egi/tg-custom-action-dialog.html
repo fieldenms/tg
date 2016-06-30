@@ -32,7 +32,7 @@
                 -moz-user-select: none;
                 -ms-user-select: none;
                 user-select: none;
-                background-color: var(--paper-blue-grey-900);
+                background-color: var(--paper-light-blue-600);
             }
             .truncate {
                 white-space: nowrap;
@@ -44,10 +44,15 @@
                 overflow: hidden;
             }
             .static-title {
-                color: var(--paper-blue-grey-200);
+                color: white;
             }
             .dynamic-title {
-                color: var(--paper-blue-grey-50);
+                color: white;
+            }
+            .vertical-splitter {
+                border-left: 1px solid white;
+                height: 1.5em;
+                margin: 0 5px
             }
             paper-icon-button {
                 width: 22px;
@@ -68,12 +73,12 @@
             }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
-            <div class="title-text layout horizontal flex">
+            <div class="title-text layout horizontal center flex">
                 <span class="static-title truncate">[[staticTitle]]</span>
-                <span class="dynamic-title" style="padding: 0 5px" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]">|</span>
+                <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
-            <div class="layout horizontal">
+            <div class="layout horizontal" style="margin-left:10px">
                 <paper-icon-button class="minimize-button" icon="icons:aspect-ratio" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
             </div>
