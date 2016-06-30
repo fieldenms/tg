@@ -1,4 +1,5 @@
 <!--@imports-->
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
@@ -55,7 +56,8 @@
         Polymer({
         	is: 'tg-@entity_type-master',
         	
-        	behaviors: [ Polymer.TgBehaviors.TgEntityMasterBehavior ],
+        	behaviors: [ 	Polymer.IronA11yKeysBehavior,
+        					Polymer.TgBehaviors.TgEntityMasterBehavior ],
         	
         	properties: {
         		/**
@@ -152,11 +154,32 @@
              */
             _toastGreeting: function () {
             	return this._masterDom()._toastGreeting();
-            }
+            },
             
-            /* _handleScroll: function(e) {
-               this.fire("scroll-container", e.target);
-            } */
+            /**
+             * Generated shortcut bindings to single function _shortcutPressed, which locates appropriate tg-action / tg-ui-action and invokes its function 'shortcutPressed'.
+             */
+            keyBindings: {
+                '@SHORTCUTS': '_shortcutPressed'
+            },
+            
+            _shortcutPressed: function (e) {
+                var shortcut = e.detail.combo;
+                console.debug('Master shortcut', shortcut, 'processing...');
+                
+                var action = this.$$('tg-action[shortcut="' + shortcut + '"]');
+                // Respect nodes that are disabled in the UI.
+                if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
+                    action.$.actionButton.focus();
+                    action._asyncRun();
+                }
+
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
+                console.debug('Master shortcut', shortcut, 'processing... done');
+            }
         });
     })();
 </script>

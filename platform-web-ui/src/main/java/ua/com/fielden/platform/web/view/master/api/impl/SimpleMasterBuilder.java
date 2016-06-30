@@ -26,6 +26,7 @@ import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig7;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig8;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfig;
@@ -36,7 +37,7 @@ import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 
-public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDone<T>, IEntityActionConfig7<T> {
+public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDone<T>, IEntityActionConfig8<T> {
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<Object> entityActions = new ArrayList<>();
@@ -64,16 +65,34 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public IEntityActionConfig7<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action) {
+    public IEntityActionConfig8<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig action) {
         entityActions.add(setRole(action, UI_ROLE.BUTTON));
         return this;
     }
     
     @Override
     public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
-        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction)), this);
+        final DefaultEntityAction defaultEntityAction = new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
+        final Optional<String> shortcut = getShortcut(masterAction);
+        if (shortcut.isPresent()) {
+            defaultEntityAction.setShortcut(shortcut.get()); // default value of shortcut if present
+        }
+        final EntityActionConfig<T> entityAction = new EntityActionConfig<>(defaultEntityAction, this);
         entityActions.add(entityAction);
         return entityAction;
+    }
+    
+    
+    private Optional<String> getShortcut(final MasterActions masterAction) {
+        if (MasterActions.REFRESH == masterAction) {
+            return Optional.of("ctrl+esc"); // TODO reserved on Windows (need to change?)
+        } else if (MasterActions.SAVE == masterAction) {
+            return Optional.of("ctrl+s");
+        } else if (MasterActions.VALIDATE == masterAction || MasterActions.EDIT == masterAction || MasterActions.VIEW == masterAction) {
+            return Optional.empty();
+        } else {
+            throw new UnsupportedOperationException(masterAction.toString());
+        }
     }
 
     private String getPostActionError(final MasterActions masterAction) {
@@ -176,10 +195,14 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
         // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions 
         final StringBuilder entityActionsStr = new StringBuilder();
+        final StringBuilder shortcuts = new StringBuilder();
         for (final Object action: entityActions) {
             if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {
                 final ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig<?> config = (ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig<?>) action;
                 importPaths.add(config.action().importPath());
+                if (config.action().shortcut() != null) {
+                    shortcuts.append(config.action().shortcut() + " ");
+                }
                 if (config.action() instanceof IRenderable) {
                     editorContainer.add(((IRenderable) config.action()).render());
                 }
@@ -211,7 +234,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                       + propertyActionsStr.toString())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
-                
+                .replace("@SHORTCUTS", shortcuts)
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivation + "");
 

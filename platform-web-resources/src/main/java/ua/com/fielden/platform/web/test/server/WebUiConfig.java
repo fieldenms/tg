@@ -517,6 +517,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     .icon("highlight-off")
                     .shortDesc("CANCEL")
                     .longDesc("Cancels any changes and closes the master (if in dialog)")
+                    .shortcut("ctrl+x") // overridden from default ctrl+esc
 
                 // ENTITY CUSTOM ACTIONS
                 .addAction(
@@ -534,6 +535,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
+                    // .shortDesc("SAVE")
+                    // .longDesc("SAVE")
+                    // .shortcut("ctrl+shift+s") // -- overridden from default ctrl+s
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 

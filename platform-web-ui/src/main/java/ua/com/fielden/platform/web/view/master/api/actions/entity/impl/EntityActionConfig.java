@@ -15,6 +15,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig5;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig6;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig7;
+import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig8;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractFunctionalAction;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
@@ -22,7 +23,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDone;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IEntityActionConfig6<T>, IEntityActionConfig7<T> {
+public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IEntityActionConfig6<T>, IEntityActionConfig7<T>, IEntityActionConfig8<T> {
 
     private final AbstractAction action;
     private final SimpleMasterBuilder<T> simpleMasterBuilder;
@@ -45,6 +46,12 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     @Override
     public IEntityActionConfig7<T> longDesc(final String longDesc) {
         action.setLongDesc(longDesc);
+        return this;
+    }
+    
+    @Override
+    public IEntityActionConfig8<T> shortcut(final String shortcut) {
+        action.setShortcut(shortcut);
         return this;
     }
 
@@ -89,7 +96,7 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public IEntityActionConfig7<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig) {
+    public IEntityActionConfig8<T> addAction(final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig) {
         return simpleMasterBuilder.addAction(actionConfig);
     }
 }
