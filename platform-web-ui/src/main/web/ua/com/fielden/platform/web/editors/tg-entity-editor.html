@@ -649,8 +649,9 @@
                 this.opened = true;
                 this.$.result.close();
                 this.processError(e, "search", function (errorResult) {
-                    self.postSearchedDefaultError(errorResult);
-                    //self.searching = false;
+                   	if (self.postSearchedDefaultError) {
+                    	self.postSearchedDefaultError(errorResult);
+                   	}
                 });
             },
 

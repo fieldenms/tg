@@ -475,7 +475,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     private boolean shouldProcessAsActivatable(final T entity, final MetaProperty<?> prop) {
         boolean shouldProcessAsActivatable;
-        if (prop.isActivatable() && entity instanceof ActivatableAbstractEntity) {
+        if (prop.isActivatable() && entity instanceof ActivatableAbstractEntity && isNotSpecialActivatableToBeSkipped(prop)) {
             final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
             final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
             if (ddAnnotation != null && prop.isKey()) {
@@ -487,6 +487,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             shouldProcessAsActivatable = false;
         }
         return shouldProcessAsActivatable;
+    }
+
+    private boolean isNotSpecialActivatableToBeSkipped(final MetaProperty<?> prop) {
+        return !AbstractPersistentEntity.CREATED_BY.equals(prop.getName()) && !AbstractPersistentEntity.LAST_UPDATED_BY.equals(prop.getName());
     }
 
     /**
@@ -594,7 +598,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableDirtyProperties(final T entity, final Set<String> keyMembers) {
         final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
         for (final MetaProperty<?> prop : entity.getProperties().values()) {
-            if (prop.isDirty() && prop.isActivatable()) {
+            if (prop.isDirty() && prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
                 addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
             }
         }
@@ -612,7 +616,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         for (final MetaProperty<?> prop : entity.getProperties().values()) {
             // proxied property is considered to be not dirty in this context
             final boolean notDirty = prop.isProxy() || !prop.isDirty(); 
-            if (notDirty && prop.isActivatable()) {
+            if (notDirty && prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
                 addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
             }
         }
@@ -686,6 +690,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     }
     
     private void assignLastModificationInfo(final AbstractPersistentEntity<?> entity) {
+        // if the entity is activatable and the only dirty property is refCount than there is no need to update the last-updated-by info
+        if (entity instanceof ActivatableAbstractEntity) {
+            final List<MetaProperty<?>> dirty = entity.getDirtyProperties();
+            if (dirty.size() == 1 && ActivatableAbstractEntity.REF_COUNT.equals(dirty.get(0).getName())) {
+                return;
+            }
+        }
         // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes
         // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
         // thus, a check for VIRTUAL_USER as a current user 
