@@ -107,11 +107,6 @@
             <!-- Drawer Scroll Header Panel -->
             <paper-scroll-header-panel drawer fixed id="drawer">
 
-                <!-- Drawer Toolbar -->
-                <paper-toolbar id="drawerToolbar" class="tool-bar">
-                    <span style="font-size: 18px; height: 44px;">[[menuTitle]]</span>
-                </paper-toolbar>
-
                 <!-- Drawer Content -->
                 <paper-menu attr-for-selected="data-route" selected="{{route}}">
 	            	<content id="menuItems" select=".menu-item"></content>        
@@ -120,12 +115,6 @@
 
             <!-- Main Area -->
             <paper-scroll-header-panel main fixed>
-
-                <!-- Main Toolbar -->
-                <paper-toolbar id="mainToolbar" style="height: 44px;">
-                    <!-- Application name -->
-                    <span class="truncate" style="font-size: 18px; height: 44px;">[[sectionTitle]]</span>
-                </paper-toolbar>
 
                 <!-- Main Content -->
                 <div>
@@ -151,7 +140,8 @@
         	
         	sectionTitle: {
         		type: String,
-        		value: '[[sectionTitle]]'
+        		value: '[[sectionTitle]]',
+                observer: '_sectionTitleChanged'
         	},
         	
         	/* active menu item */
@@ -331,6 +321,10 @@
                     }
                 });
             }
+        },
+        
+        _sectionTitleChanged: function (newValue, oldValue) {
+            this.fire('tg-dynamic-title-changed', newValue);
         },
         
         _refreshCompoundMaster: function (data, envelope) {
