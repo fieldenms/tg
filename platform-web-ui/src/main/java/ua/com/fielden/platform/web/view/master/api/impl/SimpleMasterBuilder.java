@@ -176,6 +176,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final StringBuilder propertyActionsStr = new StringBuilder();
         final DomElement editorContainer = layout.render();
         importPaths.add(layout.importPath());
+        final StringBuilder shortcuts = new StringBuilder();
         for (final WidgetSelector<T> widget : widgets) {
             importPaths.add(widget.widget().importPath());
 
@@ -185,6 +186,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = widget.widget().action().get();
                 if (!config.isNoAction()) {
                     final FunctionalActionElement el = FunctionalActionElement.newPropertyActionForMaster(config, funcActionSeq++, widget.propertyName);
+                    if (config.shortcut.isPresent()) {
+                        shortcuts.append(config.shortcut.get() + " ");
+                    }
                     importPaths.add(el.importPath());
                     editorContainer.add(widget.widget().render()
                             .add(el.render().clazz("property-action", "property-action-icon")));
@@ -195,7 +199,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
         // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions 
         final StringBuilder entityActionsStr = new StringBuilder();
-        final StringBuilder shortcuts = new StringBuilder();
         for (final Object action: entityActions) {
             if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {
                 final ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig<?> config = (ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig<?>) action;
@@ -213,6 +216,9 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = (ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig) action;
                 if (!config.isNoAction()) {
                     final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(config, funcActionSeq++);
+                    if (config.shortcut.isPresent()) {
+                        shortcuts.append(config.shortcut.get() + " ");
+                    }
                     importPaths.add(el.importPath());
                     editorContainer.add(el.render().clazz("primary-action"));
                     primaryActionObjects.append(prefix + el.createActionObject());

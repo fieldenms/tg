@@ -109,6 +109,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("ui-role", conf().role.toString());
         attrs.put("short-desc", getShortDesc());
         attrs.put("long-desc", conf().longDesc.isPresent() ? conf().longDesc.get() : "NOT SPECIFIED");
+        if (conf().shortcut.isPresent()) {
+            attrs.put("shortcut", conf().shortcut.get());
+        }
         attrs.put("icon", getIcon());
         attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
         attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());

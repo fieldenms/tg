@@ -168,10 +168,27 @@
                 console.debug('Master shortcut', shortcut, 'processing...');
                 
                 var action = this.$$('tg-action[shortcut="' + shortcut + '"]');
-                // Respect nodes that are disabled in the UI.
-                if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
-                    action.$.actionButton.focus();
-                    action._asyncRun();
+                if (action) {
+                    // Respect nodes that are disabled in the UI.
+                    if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
+                        action.$.actionButton.focus();
+                        action._asyncRun();
+                    }
+                } else {
+                    var uiAction = this.$$('tg-ui-action[shortcut="' + shortcut + '"]');
+                    if (uiAction) {
+                        // Respect nodes that are disabled in the UI.
+                        if (!uiAction.isActionInProgress) {
+                            if (uiAction.isIconButton) {
+                                uiAction.$.iActionButton.focus();
+                            } else {
+                                uiAction.$.bActionButton.focus();
+                            }
+                            uiAction._run();
+                        }
+                    } else {
+                        console.warn('The registered shortcut [' + shortcut + '] does not have its corresponding tg-action or tg-ui-action.');
+                    }
                 }
 
                 if (event.stopPropagation) event.stopPropagation();

@@ -508,6 +508,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .icon("add-circle")
                         .shortDesc("Create Status")
                         .longDesc("Creates new status and assignes it back to the Status property")
+                        .shortcut("ctrl+shift+l")
                         .build())
                 .also()
                 .addProp("colourProp").asColour()
@@ -531,6 +532,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .icon("trending-up")
                         .shortDesc("Export")
                         .longDesc("Export action")
+                        .shortcut("ctrl+shift+e")
                         .build())
 
                 .addAction(MasterActions.VALIDATE)

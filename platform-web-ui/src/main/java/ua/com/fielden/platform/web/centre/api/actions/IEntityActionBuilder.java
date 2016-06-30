@@ -24,6 +24,6 @@ public interface IEntityActionBuilder<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    IEntityActionBuilder7<T> noAction();
+    IEntityActionBuilder7a<T> noAction();
 
 }
