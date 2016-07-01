@@ -1178,7 +1178,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         icon("remove-circle-outline").
                         shortDesc("Delete selected").
                         longDesc("Deletes the selected entities").
-                        shortcut("ctrl+d").
+                        shortcut("ctrl+del").
                         build())
                 .also()
                 .addTopAction(CentreConfigActions.SORT_ACTION.mkAction())
