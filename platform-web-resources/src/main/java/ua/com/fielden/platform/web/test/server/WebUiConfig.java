@@ -1163,6 +1163,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 icon("add-circle-outline").
                                 shortDesc("Add new").
                                 longDesc("Start coninuous creatio of entities").
+                                shortcut("alt+n").
                                 build())
                 .also()
                 .addTopAction(action(EntityDeleteAction.class).
@@ -1177,6 +1178,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         icon("remove-circle-outline").
                         shortDesc("Delete selected").
                         longDesc("Deletes the selected entities").
+                        shortcut("ctrl+d").
                         build())
                 .also()
                 .addTopAction(CentreConfigActions.SORT_ACTION.mkAction())
