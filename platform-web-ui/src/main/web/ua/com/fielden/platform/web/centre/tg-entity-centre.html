@@ -178,14 +178,24 @@
         saveAsync: function () {
             var self = this;
             this.async(function () {
-                self.save();
+                var previousActiveElement = document.activeElement;
+                self.save().then(function() {
+                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+                        previousActiveElement.focus();
+                    }
+                });
             }, 100);
         },
 
         discardAsync: function () {
             var self = this;
             this.async(function () {
-                self.discard();
+                var previousActiveElement = document.activeElement;
+                self.discard().then(function() {
+                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+                        previousActiveElement.focus();
+                    }
+                });
             }, 100);
         },
 
