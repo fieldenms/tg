@@ -7,6 +7,7 @@
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
+<link rel="import" href="/resources/images/tg-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 
 <link rel="import" href="/resources/images/collapseExpand.html">
@@ -69,9 +70,13 @@
                 color: var(--paper-deep-orange-600);
             }
             paper-icon-button.minimize-button {
+				stroke: var(--paper-grey-300);
+				fill: var(--paper-grey-300);
                 color: var(--paper-grey-300);
             }
             paper-icon-button.minimize-button:hover {
+				stroke: var(--paper-grey-600);
+				fill: var(--paper-grey-600);
                 color: var(--paper-grey-600);
             }
         </style>
@@ -86,8 +91,8 @@
                 <!-- paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="collapseExpand:collapse" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="collapseExpand:expand" on-tap="minimizeDialog"></paper-icon-button-->
                 
-                <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="icons:expand-more" on-tap="minimizeDialog"></paper-icon-button>
-                <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="icons:expand-less" on-tap="minimizeDialog"></paper-icon-button>
+                <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="tg-icons:expand" on-tap="minimizeDialog"></paper-icon-button>
+                <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="tg-icons:collapse" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
             </div>
         </div>
