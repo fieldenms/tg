@@ -294,7 +294,7 @@
 
         <template is="dom-if" if="[[!cardLayout]]" restamp>
             <paper-material elevation="1" style="margin: 10px 10px;" class="layout vertical">
-                <div class="layout vertical data-table" tabindex="0">
+                <div id="elementToFocus" class="layout vertical data-table" tabindex="0">
                     <!--Table toolbar-->
                     <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                         <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>

@@ -51,10 +51,10 @@
 
         <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
-        <iron-pages selected="[[_selectedView]]" on-scroll="_handleScroll">
+        <iron-pages selected="[[_selectedView]]" on-scroll="_handleScroll" on-iron-select="_pageSelectionChanged">
             <div class="fit">
                 <paper-material>
-                    <tg-selection-view>
+                    <tg-selection-view id="selectionView">
                         <content select=".custom-selection-criteria"></content>
                         <div class="selection-criteria-buttons layout horizontal justified" style="padding: 0 24px 24px 24px;">
                             <div class="layout horizontal">
@@ -165,6 +165,14 @@
          */
         _confirmationDialog: function () {
             return this.$.confirmationDialog;
+        },
+        
+        _pageSelectionChanged : function () {
+            if (this._selectedView === 0) {
+                this.$.selectionView.focus();
+            } else if (this._selectedView === 1) {
+                this.querySelector(".custom-egi").$$("#elementToFocus").focus();
+            }
         },
 
         saveAsync: function () {
