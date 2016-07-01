@@ -1,4 +1,7 @@
 (function () {
+    SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function(elem) {
+        return elem.getScreenCTM().inverse().multiply(this.getScreenCTM());
+    };
 
     var dayDuration  = 24 * 60 * 60 * 1000;
     var weekDuration = 7 * dayDuration;
