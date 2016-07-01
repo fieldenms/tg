@@ -516,10 +516,14 @@
              */
             currentPage: function () {
                 var self = this;
+                var previousActiveElement = document.activeElement;
                 return this.$.selection_criteria.currentPage()
                     .then(function () {
                         console.log("current page invocation");
                         self.runInsertionPointActions();
+                        if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+                            previousActiveElement.focus();
+                        }
                     });
             },
 
@@ -527,28 +531,48 @@
              * Starts the process of retrieving first page (only after run() has been already performed).
              */
             firstPage: function () {
-                return this.$.selection_criteria.firstPage();
+                var previousActiveElement = document.activeElement;
+                return this.$.selection_criteria.firstPage().then(function() {
+                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+                        previousActiveElement.focus();
+                    }
+                });
             },
 
             /**
              * Starts the process of retrieving last page (only after run() has been already performed).
              */
             lastPage: function () {
-                return this.$.selection_criteria.lastPage();
+                var previousActiveElement = document.activeElement;
+                return this.$.selection_criteria.lastPage().then(function() {
+                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+                        previousActiveElement.focus();
+                    }
+                });
             },
 
             /**
              * Starts the process of retrieving next page (only after run() has been already performed).
              */
             nextPage: function () {
-                return this.$.selection_criteria.nextPage();
+                var previousActiveElement = document.activeElement;
+                return this.$.selection_criteria.nextPage().then(function() {
+                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+                        previousActiveElement.focus();
+                    }
+                });
             },
 
             /**
              * Starts the process of retrieving prev page (only after run() has been already performed).
              */
             prevPage: function () {
-                return this.$.selection_criteria.prevPage();
+                var previousActiveElement = document.activeElement;
+                return this.$.selection_criteria.prevPage().then(function() {
+                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+                        previousActiveElement.focus();
+                    }
+                });
             },
 
             /**

@@ -25,7 +25,6 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.ISimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig0;
-import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig7;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig8;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
@@ -41,14 +40,14 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<Object> entityActions = new ArrayList<>();
-    
+
     private final FlexLayout layout = new FlexLayout();
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     private Class<T> entityType;
     private boolean saveOnActivation = false;
-    
+
 
 
     @Override
@@ -69,7 +68,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         entityActions.add(setRole(action, UI_ROLE.BUTTON));
         return this;
     }
-    
+
     @Override
     public IEntityActionConfig0<T> addAction(final MasterActions masterAction) {
         final DefaultEntityAction defaultEntityAction = new DefaultEntityAction(masterAction.name(), getPostAction(masterAction), getPostActionError(masterAction));
@@ -81,11 +80,11 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         entityActions.add(entityAction);
         return entityAction;
     }
-    
-    
+
+
     private Optional<String> getShortcut(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
-            return Optional.of("ctrl+esc"); // TODO reserved on Windows (need to change?)
+            return Optional.of("esc");
         } else if (MasterActions.SAVE == masterAction) {
             return Optional.of("ctrl+s");
         } else if (MasterActions.VALIDATE == masterAction || MasterActions.EDIT == masterAction || MasterActions.VIEW == masterAction) {
@@ -197,7 +196,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             }
         }
 
-        // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions 
+        // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions
         final StringBuilder entityActionsStr = new StringBuilder();
         for (final Object action: entityActions) {
             if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {
@@ -226,17 +225,17 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             }
 
         }
-        
-        
+
+
         final String primaryActionObjectsString = primaryActionObjects.toString();
-        
+
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", createImports(importPaths))
                 .replace("@entity_type", entityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->", editorContainer.toString()) // TODO should contain prop actions
-                .replace("//@ready-callback", 
-                        layout.code().toString() + "\n" 
-                      + entityActionsStr.toString() + "\n" 
+                .replace("//@ready-callback",
+                        layout.code().toString() + "\n"
+                      + entityActionsStr.toString() + "\n"
                       + propertyActionsStr.toString())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
