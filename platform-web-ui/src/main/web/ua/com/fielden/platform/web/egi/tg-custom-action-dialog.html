@@ -329,6 +329,7 @@
              * closeEventTopics -- event topics that should be listened to on the channel to close this dialog.
              */
             showDialog: function (customAction, closeEventChannel, closeEventTopics) {
+                this.dynamicTitle = null;
                 if (this.opened === true) {
                     this.$.toaster.text = 'Please close the currently open dialog.';
                     this.$.toaster.hasMore = true;
