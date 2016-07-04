@@ -321,6 +321,8 @@
                     }
                 });
             }
+            //Needed to set the dynamic title
+            this.fire('tg-dynamic-title-changed', this.sectionTitle);
         },
         
         _sectionTitleChanged: function (newValue, oldValue) {
