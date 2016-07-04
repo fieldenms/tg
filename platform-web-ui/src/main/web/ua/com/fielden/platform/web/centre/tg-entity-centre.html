@@ -169,9 +169,14 @@
         
         _pageSelectionChanged : function () {
             if (this._selectedView === 0) {
-                this.$.selectionView.focus();
+                if (this.$.selectionView && typeof this.$.selectionView.focus === 'function') {
+                    this.$.selectionView.focus();
+                }
             } else if (this._selectedView === 1) {
-                this.querySelector(".custom-egi").$$("#elementToFocus").focus();
+                var elementToFocus = this.querySelector(".custom-egi").$$("#elementToFocus");
+                if (elementToFocus && typeof elementToFocus.focus === 'function') {
+                    elementToFocus.focus();
+                }
             }
         },
 
