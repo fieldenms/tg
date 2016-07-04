@@ -173,11 +173,6 @@
                 /** A master element that corresponds to the _lastAction. */
                 _lastElement: {
                     type: Object
-                },
-                
-                /** Lat element that was active.*/
-                _lastActiveElement : {
-                    type: Object
                 }
             },
 
@@ -190,7 +185,6 @@
                 // clicks outside the overlay.
                 this._onCaptureClick = this._onCaptureClick.bind(this);
                 this._onCaptureFocus = this._onCaptureFocus.bind(this);
-                this._onFocusOut = this._onFocusOut.bind(this);
                 this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
 
                 this._setIsRunning(false);
@@ -200,7 +194,6 @@
                 var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
                 this.addEventListener(clickEvent, this._onCaptureClick, true);
                 this.addEventListener('focus', this._onCaptureFocus, true);
-                this.addEventListener('focusout', this._onFocusOut, true);
                 this.addEventListener('keydown', this._onCaptureKeyDown, true);
             },
 
@@ -208,7 +201,6 @@
                 var clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
                 this.removeEventListener(clickEvent, this._onCaptureClick, true);
                 this.removeEventListener('focus', this._onCaptureFocus, true);
-                this.removeEventListener('focusout', this._onFocusOut, true);
                 this.removeEventListener('keydown', this._onCaptureKeyDown, true);
             },
 
@@ -220,18 +212,10 @@
             },
 
             _onCaptureFocus: function (event) {
-                if (this._lastActiveElement && typeof this._lastActiveElement.focus === 'function') {
-                    this._lastActiveElement.focus();
-                    this._lastActiveElement = null;
-                }
                 if (this._manager.currentOverlay() !== this) {
                     console.log("select overlay");
                     this._manager.addOverlay(this);
                 }
-            },
-            
-            _onFocusOut: function (event) {
-                this._lastActiveElement = event.target || event.srcElement;
             },
 
             _onCaptureKeyDown: function (event) {
