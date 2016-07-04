@@ -46,6 +46,15 @@
 
         behaviors: [Polymer.TgBehaviors.TgActionBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
         
+        properties: {
+            /**
+             * Keyboard shortcut combination to invoke this action on entity master.
+             */
+            shortcut: {
+                type: String
+            }
+        },
+        
         _asyncRun: function () {
             // it is critical to execute the actual logic that is intended for an on-tap action in async
             // with a relatively long delay to make sure that all required changes

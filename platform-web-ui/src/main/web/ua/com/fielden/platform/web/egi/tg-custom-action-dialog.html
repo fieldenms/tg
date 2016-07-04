@@ -110,6 +110,10 @@
                 'iron-overlay-closed': '_dialogClosed',
                 'tg-dynamic-title-changed': '_updateDynamicTitle'
             },
+            
+            hostAttributes: {
+                'tabindex' : '0'
+            },
 
             properties: {
                 isRunning: {
@@ -459,6 +463,10 @@
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
                     this._minimised = false;
+                    
+                    if (this._lastAction && this._lastAction._previousActiveElement && typeof this._lastAction._previousActiveElement.focus === 'function') {
+                        this._lastAction._previousActiveElement.focus();
+                    }
                 }
             },
 

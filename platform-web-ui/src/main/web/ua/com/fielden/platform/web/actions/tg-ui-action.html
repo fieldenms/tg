@@ -218,7 +218,14 @@
             longDesc: {
             	type: String
             },
-
+            
+            /**
+             * Keyboard shortcut combination to invoke this action on master or centre.
+             */
+            shortcut: {
+                type: String
+            },
+            
             /**
              * The icon specificator (string id).
              */
@@ -335,7 +342,12 @@
             _isSpinnerRequired: {
             	type: Boolean,
             	value: false
-            }
+            },
+            
+            /**
+             * It is used to restore focus after action execution.
+             */
+            _previousActiveElement: Object
         },
         
         behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
@@ -348,6 +360,8 @@
             
             self._run = (function () {
                 console.log(this.shortDesc + ": execute");
+                
+                self._previousActiveElement = document.activeElement;
 
                 if (this.preAction) {
                     var result = this.preAction(this)
@@ -427,6 +441,10 @@
                     
                     // action execution completes
                     self.isActionInProgress = false;
+                    
+                    if (this.noUI === true && self._previousActiveElement && typeof self._previousActiveElement.focus === 'function') {
+                        self._previousActiveElement.focus();
+                    }
                 };
 
                 master.postSavedError = function (errorResult) {
@@ -435,6 +453,9 @@
                 	if (this.noUI === true) {
                 		// action execution completed, althoug in error from saving
                     	self.isActionInProgress = false;
+                        if (self._previousActiveElement && typeof self._previousActiveElement.focus === 'function') {
+                            self._previousActiveElement.focus();
+                        }
                 	} else {
                         this.focusFirstInput();
                 	}

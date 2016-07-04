@@ -215,9 +215,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       // NOTE: We make the assumption that any overlay that completes a transition
       // will call into focusOverlay to kick the process back off. Currently:
       // transitionend -> _applyFocus -> focusOverlay.
-      if (current && !current.transitioning) {
+      if (current && !current.transitioning && !this.alreadyHasFocus(current)) { // TODO TG Team patch
         current._applyFocus();
       }
+    },
+    
+    /**
+     * TODO TG Team patch: why do we need to apply focus to the whole overlay (line 219) in case where
+     * the overlay descendant already has the focus?
+     *
+     * This function just checks whether target has focus on itself or on some of its descendants.
+     */
+    alreadyHasFocus: function (target) {
+      var activeElement = document.activeElement;
+      if (activeElement) {
+          var node = activeElement.parentNode;
+          while (node != null) {
+              if (node === target) {
+                  return true;
+              }
+              node = node.parentNode;
+          }
+          return false;
+      }
+      return false;
     },
 
     /**
