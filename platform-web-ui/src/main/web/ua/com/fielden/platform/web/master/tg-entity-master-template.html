@@ -98,6 +98,8 @@
             attached: function () {
                 var self = this;
                 self.async(function() {
+                    self.keyEventTarget = self._getKeyEventTarget();
+                    
                     self.primaryAction = [
                         //generatedPrimaryActions
                     ];
@@ -108,6 +110,14 @@
                 }, 1);
             	
             	//@attached-callback
+            },
+            
+            _getKeyEventTarget: function () {
+                var parent = this;
+                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                    parent = parent.parentElement;
+                }
+                return parent || this;
             },
             
             _masterDom: function () {
