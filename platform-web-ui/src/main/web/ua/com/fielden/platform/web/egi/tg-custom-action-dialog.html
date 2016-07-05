@@ -10,8 +10,6 @@
 <link rel="import" href="/resources/images/tg-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 
-<link rel="import" href="/resources/images/collapseExpand.html">
-
 <dom-module id="tg-custom-action-dialog">
     <template>
         <style>
@@ -87,10 +85,6 @@
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
             <div class="layout horizontal" style="margin-left:10px">
-            	<!-- collapse and expand icons are inverted... that is "collapse" actually means "expand" -->
-                <!-- paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="collapseExpand:collapse" on-tap="minimizeDialog"></paper-icon-button>
-                <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="collapseExpand:expand" on-tap="minimizeDialog"></paper-icon-button-->
-                
                 <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="tg-icons:expand" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="tg-icons:collapse" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
