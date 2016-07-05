@@ -346,6 +346,7 @@
                         self._lastAction = customAction;
                         self._setIsRunning(true);
                         self.staticTitle = customAction.shortDesc;
+                        this.dynamicTitle = null;
 
                         self._getElement(customAction)
                             .then(function (element) {
