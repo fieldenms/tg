@@ -167,7 +167,7 @@
             return this.$.confirmationDialog;
         },
 
-        _pageSelectionChanged: function () {
+        _pageSelectionChanged: function (event) {
             var egi = this.querySelector(".custom-egi");
             var selectionCriteria = this.$.selectionView;
             if (this._selectedView === 0) {
@@ -181,6 +181,10 @@
                     elementToFocus.focus();
                 }
             }
+            if (event.stopPropagation) event.stopPropagation();
+            if (event.preventDefault) event.preventDefault();
+            event.cancelBubble = true;
+            event.returnValue = false;
         },
 
         _configViewBindings: function (prevView, newView) {
