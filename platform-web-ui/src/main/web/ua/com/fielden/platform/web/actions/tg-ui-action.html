@@ -370,6 +370,9 @@
                     promise.then(function(value) {
                         self.showDialog(self);
                     }, function (error) {
+                        if (self._previousActiveElement && typeof self._previousActiveElement.focus === 'function') {
+                            self._previousActiveElement.focus();
+                        }
                         console.log("The action was rejected with error: " + error);
                     });
                 } else {
