@@ -59,23 +59,29 @@
             paper-icon-button {
                 width: 22px;
                 height: 22px;
-                padding: 2px;
+                padding: 0px;
             }
             paper-icon-button.close-button {
-                color: var(--paper-deep-orange-300);
+				stroke: var(--paper-grey-100);
+				fill: var(--paper-grey-100);
+                color: var(--paper-grey-100);
             }
             paper-icon-button.close-button:hover {
-                color: var(--paper-deep-orange-600);
-            }
-            paper-icon-button.minimize-button {
 				stroke: var(--paper-grey-300);
 				fill: var(--paper-grey-300);
                 color: var(--paper-grey-300);
             }
+            paper-icon-button.minimize-button {
+            	width: 19px;
+                height: 19px;
+				stroke: var(--paper-grey-100);
+				fill: var(--paper-grey-100);
+                color: var(--paper-grey-100);
+            }
             paper-icon-button.minimize-button:hover {
-				stroke: var(--paper-grey-600);
-				fill: var(--paper-grey-600);
-                color: var(--paper-grey-600);
+				stroke: var(--paper-grey-300);
+				fill: var(--paper-grey-300);
+                color: var(--paper-grey-300);
             }
         </style>
         <div id="titleBar" class="title-bar layout horizontal justified center" on-track="_moveDialog">
@@ -84,7 +90,7 @@
                 <span class="vertical-splitter self-stretch" hidden$="[[_isTitleSplitterHidden(staticTitle, dynamicTitle)]]"></span>
                 <span class="dynamic-title truncate" hidden$="[[!dynamicTitle]]">[[dynamicTitle]]</span>
             </div>
-            <div class="layout horizontal" style="margin-left:10px">
+            <div class="layout horizontal center" style="margin-left:10px">
                 <paper-icon-button hidden=[[!_minimised]] class="minimize-button" icon="tg-icons:expandMin" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button hidden=[[_minimised]] class="minimize-button" icon="tg-icons:collapseMin" on-tap="minimizeDialog"></paper-icon-button>
                 <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
