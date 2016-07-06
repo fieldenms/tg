@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
-<svg id="collapse" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<svg id="collapse" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
  <metadata id="metadata7">
   <rdf:RDF>
    <cc:Work rdf:about="">
@@ -10,13 +10,9 @@
    </cc:Work>
   </rdf:RDF>
  </metadata>
- <g id="layer1" transform="translate(0 -1028.4)">
-  <g id="g3805">
-   <path id="path3765-3" d="m13.348 7.6384c0 1.2698-1.0293 2.2991-2.2991 2.2991s-2.2991-1.0293-2.2991-2.2991 1.0293-2.2991 2.2991-2.2991c1.2624 0 2.2887 1.0179 2.299 2.2802" fill-opacity="0" transform="matrix(4.9954 0 0 4.9954 -43.195 1002.2)" stroke="#000" stroke-linecap="square" stroke-width=".23562"/>
-   <g id="g3873" transform="matrix(.71349 .70066 -.70066 .71349 732.04 289.99)" stroke-width="0">
-    <path id="path3853" transform="matrix(.63444 -.10919 .14291 .48635 20.431 1031)" d="m-7.2321 11.455-8.2181-1.8624-8.2181-1.8624 5.722-6.1859 5.722-6.1859 2.4962 8.0483z"/>
-    <path id="path3853-3" transform="matrix(-.63388 .11242 -.14539 -.48561 3.6011 1048.8)" d="m-7.2321 11.455-8.2181-1.8624-8.2181-1.8624 5.722-6.1859 5.722-6.1859 2.4962 8.0483z"/>
-   </g>
-  </g>
+ <g id="g3005" stroke-width="0">
+  <path id="path3853" d="m10.321 19.59-2.9554-2.911-2.9556-2.912 3.4106-0.505 3.4104-0.506-0.455 3.417z"/>
+  <path id="path3853-3" d="m13.649 4.4608 2.9703 2.8962 2.9703 2.8962-3.4079 0.52318-3.4079 0.52318 0.43757-3.4194z"/>
+  <path id="path3765-3-3" d="m12 2.1525c-5.4317 0-9.8475 4.4158-9.8475 9.8475 0 5.4315 4.4158 9.8475 9.8475 9.8475s9.8475-4.4159 9.8475-9.8475v-0.08028c-0.045-5.3999-4.448-9.7675-9.848-9.7675zm0 1.2845c4.7069 0 8.5246 3.7762 8.563 8.4827v0.08028c0 4.7346-3.8285 8.563-8.563 8.563s-8.563-3.828-8.563-8.563c0-4.7344 3.8285-8.563 8.563-8.563z"/>
  </g>
 </svg>
