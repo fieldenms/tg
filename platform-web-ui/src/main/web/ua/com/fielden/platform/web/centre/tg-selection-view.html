@@ -27,8 +27,23 @@
                 'tabindex' : '0'
             },
             
-            keyBindings: {
+            _ownKeyBindings: {
                 'ctrl+s ctrl+e esc f5': '_processShortcut'  
+            },
+            
+            attached: function () {
+                var self = this;
+                this.async(function () {
+                    self.keyEventTarget = self._getKeyEventTarget();
+                }, 1);
+            },
+            
+            _getKeyEventTarget: function () {
+                var parent = this;
+                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                    parent = parent.parentElement;
+                }
+                return parent || this;
             },
             
             _processShortcut: function (e) {

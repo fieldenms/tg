@@ -166,12 +166,16 @@
         _confirmationDialog: function () {
             return this.$.confirmationDialog;
         },
-        
-        _pageSelectionChanged : function () {
+
+        _pageSelectionChanged: function () {
+            var egi = this.querySelector(".custom-egi");
+            var selectionCriteria = this.$.selectionView;
             if (this._selectedView === 0) {
-                this.$.selectionView.focus();
+                this._configViewBindings(egi, selectionCriteria);
+                selectionCriteria.focus();
             } else if (this._selectedView === 1) {
-                var elementToFocus = this.querySelector(".custom-egi").$$("#elementToFocus");
+                this._configViewBindings(selectionCriteria, egi);
+                var elementToFocus = egi.$$("#elementToFocus");
                 //Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing. 
                 if (elementToFocus && typeof elementToFocus.focus === 'function') {
                     elementToFocus.focus();
@@ -179,11 +183,19 @@
             }
         },
 
+        _configViewBindings: function (prevView, newView) {
+            prevView.removeOwnKeyBindings();
+            var ownKeyBindings = newView._ownKeyBindings;
+            for (var shortcuts in ownKeyBindings) {
+                newView.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
+            }
+        },
+
         saveAsync: function () {
             var self = this;
             this.async(function () {
                 var previousActiveElement = document.activeElement;
-                self.save().then(function() {
+                self.save().then(function () {
                     if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
                         previousActiveElement.focus();
                     }
@@ -195,7 +207,7 @@
             var self = this;
             this.async(function () {
                 var previousActiveElement = document.activeElement;
-                self.discard().then(function() {
+                self.discard().then(function () {
                     if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
                         previousActiveElement.focus();
                     }
