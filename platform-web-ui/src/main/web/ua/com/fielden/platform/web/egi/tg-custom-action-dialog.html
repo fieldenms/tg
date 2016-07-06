@@ -295,6 +295,10 @@
                         break;
                     }
                 }
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
             },
 
             _closeDialogAndIndicateActionCompletion: function (action) {
