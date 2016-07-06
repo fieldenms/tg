@@ -1,84 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
-
-<svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   id="expand"
-   height="24"
-   width="24"
-   version="1.1"
-   inkscape:version="0.48.4 r9939"
-   sodipodi:docname="expand.svg">
-  <defs
-     id="defs12" />
-  <sodipodi:namedview
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1"
-     objecttolerance="10"
-     gridtolerance="10"
-     guidetolerance="10"
-     inkscape:pageopacity="0"
-     inkscape:pageshadow="2"
-     inkscape:window-width="1615"
-     inkscape:window-height="1026"
-     id="namedview10"
-     showgrid="true"
-     inkscape:zoom="19.666667"
-     inkscape:cx="5.7502114"
-     inkscape:cy="12"
-     inkscape:window-x="65"
-     inkscape:window-y="24"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="g3805">
-    <inkscape:grid
-       type="xygrid"
-       id="grid3802" />
-  </sodipodi:namedview>
-  <metadata
-     id="metadata7">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <g
-     id="g3805"
-     transform="translate(0,-1028.4)">
-    <g
-       id="g3796"
-       transform="matrix(0.90175978,0,0,0.90175978,1.1788824,102.20917)">
-      <path
-         id="path3765-3"
-         d="m 12,1029.508 c -6.0078377,0 -10.8920705,4.8842 -10.8920705,10.892 0,6.0077 4.8842328,10.8921 10.8920705,10.8921 6.007838,0 10.892071,-4.8843 10.892071,-10.8921 l 0,-0.089 C 22.843341,1034.3387 17.972826,1029.5078 12,1029.5078 z m 0,1.4207 c 5.206188,0 9.428888,4.1767 9.471366,9.3825 l 0,0.089 c 0,5.2368 -4.234661,9.4714 -9.471366,9.4714 -5.2367048,0 -9.4713657,-4.2346 -9.4713657,-9.4714 0,-5.2366 4.2346609,-9.4713 9.4713657,-9.4713 z"
-         style="fill-opacity:1;stroke-width:0;stroke-linecap:square;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
-         inkscape:connector-curvature="0" />
-      <g
-         id="g3873"
-         transform="matrix(0.6948,0.68230608,-0.68230608,0.6948,713.16508,309.69217)"
-         style="stroke-width:0">
-        <path
-           id="path3853"
-           transform="matrix(0.63444,-0.10919,0.14291,0.48635,20.431,1031)"
-           d="m -7.2321,11.455 -8.2181,-1.8624 -8.2181,-1.8624 5.722,-6.1859 5.722,-6.1859 2.4962,8.0483 z"
-           inkscape:connector-curvature="0" />
-        <path
-           id="path3853-3"
-           transform="matrix(-0.63388,0.11242,-0.14539,-0.48561,3.6011,1048.8)"
-           d="m -7.2321,11.455 -8.2181,-1.8624 -8.2181,-1.8624 5.722,-6.1859 5.722,-6.1859 2.4962,8.0483 z"
-           inkscape:connector-curvature="0" />
-      </g>
+<svg id="expand" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+ <metadata id="metadata7">
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g id="g3805" transform="translate(0,-1028.4)">
+  <g id="g3010">
+   <g id="g3004" stroke-width="0">
+    <path id="path3765-3" d="m12 1030.6c-5.4176 0-9.822 4.4044-9.822 9.8219s4.4044 9.8221 9.822 9.8221 9.822-4.4045 9.822-9.8221v-0.08c-0.04394-5.3856-4.436-9.7419-9.822-9.7419zm0 1.2811c4.6947 0 8.5026 3.7664 8.5409 8.4608v0.08c0 4.7224-3.8186 8.541-8.5409 8.541-4.7222 0-8.5409-3.8186-8.5409-8.541 0-4.7221 3.8186-8.5408 8.5409-8.5408z"/>
+    <g id="g3873" transform="matrix(.56046 .55039 -.55039 .56046 577.6 450.97)">
+     <path id="path3853" transform="matrix(.63444 -.10919 .14291 .48635 20.431 1031)" d="m-7.2321 11.455-8.2181-1.8624-8.2181-1.8624 5.722-6.1859 5.722-6.1859 2.4962 8.0483z"/>
+     <path id="path3853-3" transform="matrix(-.63388 .11242 -.14539 -.48561 3.6011 1048.8)" d="m-7.2321 11.455-8.2181-1.8624-8.2181-1.8624 5.722-6.1859 5.722-6.1859 2.4962 8.0483z"/>
     </g>
+   </g>
   </g>
+ </g>
 </svg>
