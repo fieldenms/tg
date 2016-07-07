@@ -17,12 +17,14 @@
              */
             persistActiveElement: function () {
                 var self = this;
-                console.debug('persistActiveElement: initiator', self, 'elem', document.activeElement);
-                console.trace();
-                _previousActiveElements.push({
-                    initiator: self,
-                    elem: document.activeElement
-                });
+                // if (document.activeElement !== document.body) {
+                    console.debug('persistActiveElement: initiator', self, 'elem', document.activeElement);
+                    console.trace();
+                    _previousActiveElements.push({
+                        initiator: self,
+                        elem: document.activeElement
+                    });
+                //}
             },
             
             /**
@@ -36,7 +38,9 @@
                         console.debug('restoreActiveElement:', _previousActiveElementAndInitiator);
                         console.trace();
                         if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem.focus === 'function') {
-                            _previousActiveElementAndInitiator.elem.focus();
+                            // if (window.getComputedStyle(_previousActiveElementAndInitiator.elem)['pointer-events'] !== 'none' /* && someElement.offsetHeight > 0*/     /* _previousActiveElementAndInitiator.elem.style.visibility !='hidden' && _previousActiveElementAndInitiator.elem.display !='none' && _previousActiveElementAndInitiator.elem.disabled != true*/ ) {
+                                _previousActiveElementAndInitiator.elem.focus();
+                            // }
                         }
                         
                         // if there are any 'notRestored' initiators, the we should try to restore the oldest unrestored initiator (however it is possible that it will wait)
@@ -50,7 +54,7 @@
                             console.debug('restoreActiveElement: initiator', this, 'should wait.');
                             _notRestoredInitiators.push(this);
                         } else {
-                            console.warn('restoreActiveElement: initiator', last.initiator, 'does not exist on the stack of [initiator; activeElem] elements. It will be disregarded.');
+                            console.warn('restoreActiveElement: initiator', this, 'does not exist on the stack of [initiator; activeElem] elements. It will be disregarded.');
                         }
                     }
                 }

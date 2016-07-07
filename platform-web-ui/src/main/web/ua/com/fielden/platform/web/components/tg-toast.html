@@ -7,6 +7,7 @@
 <link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
 <link rel="import" href="/resources/polymer/paper-toast/paper-toast.html">
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <!-- <core-style id="toast-progress-indicator">
     paper-spinner { position: absolute; top: 9px; right: 9px; padding: 0px; margin: 0px;}
@@ -73,6 +74,8 @@
         	
         	is: 'tg-toast',
         	
+        	behaviors: [ Polymer.TgBehaviors.TgFocusRestorationBehavior ],
+        	
         	properties: {
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
             	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
@@ -130,12 +133,14 @@
         	},
 
             _showMessageDlg: function (event) {
+                var self = this;
                 // need to open dialog asynchronously for it to open on mobile devices 
                 this.async(function () {
                     // build and display the dialog
                     var domBind = document.createElement('template', 'dom-bind');
 
                     domBind._dialogClosed = function() {
+                        self.restoreActiveElement();
                         Polymer.dom(document.body).removeChild(this);
                         Polymer.dom.flush();
                     }.bind(domBind);
@@ -176,6 +181,7 @@
                     Polymer.dom.flush();
 
                     this.async(function () {
+                        self.persistActiveElement();
                         domBind.$.msgDialog.open();
                     }, 100);
                     
