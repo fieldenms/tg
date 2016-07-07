@@ -7,6 +7,7 @@
          * focus restoration logic.
          */
         var _previousActiveElements = [];
+        var _notRestoredInitiators = [];
         
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgFocusRestorationBehavior = {
@@ -15,17 +16,53 @@
              * Persists active element to be restored later in method 'restoreActiveElement'.
              */
             persistActiveElement: function () {
-                _previousActiveElements.push(document.activeElement);
+                var self = this;
+                console.debug('persistActiveElement: initiator', self, 'elem', document.activeElement);
+                console.trace();
+                _previousActiveElements.push({
+                    initiator: self,
+                    elem: document.activeElement
+                });
             },
             
             /**
              * Tries to restores focus on previously persisted active element.
              */
             restoreActiveElement: function () {
-                var _previousActiveElement = _previousActiveElements.pop();
-                if (_previousActiveElement && typeof _previousActiveElement.focus === 'function') {
-                    _previousActiveElement.focus();
+                if (_previousActiveElements.length > 0) {
+                    var last = _previousActiveElements[_previousActiveElements.length - 1];
+                    if (last.initiator === this) {
+                        var _previousActiveElementAndInitiator = _previousActiveElements.pop();
+                        console.debug('restoreActiveElement:', _previousActiveElementAndInitiator);
+                        console.trace();
+                        if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem.focus === 'function') {
+                            _previousActiveElementAndInitiator.elem.focus();
+                        }
+                        
+                        // if there are any 'notRestored' initiators, the we should try to restore the oldest unrestored initiator (however it is possible that it will wait)
+                        if (_notRestoredInitiators.length > 0) {
+                            var lastInitiator = _notRestoredInitiators.shift();
+                            lastInitiator.restoreActiveElement();
+                        }
+                    } else {
+                        // if 'this' exists on the stack then it should wait for restoration
+                        if (this._existsOnStack()) {
+                            console.debug('restoreActiveElement: initiator', this, 'should wait.');
+                            _notRestoredInitiators.push(this);
+                        } else {
+                            console.warn('restoreActiveElement: initiator', last.initiator, 'does not exist on the stack of [initiator; activeElem] elements. It will be disregarded.');
+                        }
+                    }
                 }
+            },
+            
+            _existsOnStack: function () {
+                for (var index = 0; index < _previousActiveElements.length; index++) {
+                    if (_previousActiveElements[index].initiator === this) {
+                        return true;
+                    }
+                }
+                return false;
             }
         };
     })();

@@ -1499,6 +1499,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         icon("editor:mode-edit").
                         shortDesc("Edit entity").
                         longDesc("Opens master for editing this entity").
+                        // withNoParentCentreRefresh().
                         build())
                 //                .addPrimaryAction(
                 //                        EntityActionConfig.createMasterInvocationActionConfig()
