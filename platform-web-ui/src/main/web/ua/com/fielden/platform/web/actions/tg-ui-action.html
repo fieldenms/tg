@@ -1,14 +1,16 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/app/tg-reflector.html">
-<link rel="import" href="/resources/serialisation/tg-serialiser.html">
-<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">  
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 
 <link rel="import" href="/resources/components/postal-lib.html">
+
+<link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <dom-module id="tg-ui-action">
     <template>
@@ -342,15 +344,10 @@
             _isSpinnerRequired: {
             	type: Boolean,
             	value: false
-            },
-            
-            /**
-             * It is used to restore focus after action execution.
-             */
-            _previousActiveElement: Object
+            }
         },
         
-        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
         
         /**
          * Initialisation block.
@@ -361,7 +358,7 @@
             self._run = (function () {
                 console.log(this.shortDesc + ": execute");
                 
-                self._previousActiveElement = document.activeElement;
+                self.persistActiveElement();
 
                 if (this.preAction) {
                     var result = this.preAction(this)
@@ -370,9 +367,7 @@
                     promise.then(function(value) {
                         self.showDialog(self);
                     }, function (error) {
-                        if (self._previousActiveElement && typeof self._previousActiveElement.focus === 'function') {
-                            self._previousActiveElement.focus();
-                        }
+                        self.restoreActiveElement();
                         console.log("The action was rejected with error: " + error);
                     });
                 } else {
@@ -445,8 +440,8 @@
                     // action execution completes
                     self.isActionInProgress = false;
                     
-                    if (this.noUI === true && self._previousActiveElement && typeof self._previousActiveElement.focus === 'function') {
-                        self._previousActiveElement.focus();
+                    if (this.noUI === true) {
+                        self.restoreActiveElement();
                     }
                 };
 
@@ -456,9 +451,7 @@
                 	if (this.noUI === true) {
                 		// action execution completed, althoug in error from saving
                     	self.isActionInProgress = false;
-                        if (self._previousActiveElement && typeof self._previousActiveElement.focus === 'function') {
-                            self._previousActiveElement.focus();
-                        }
+                        self.restoreActiveElement();
                 	} else {
                         this.focusFirstInput();
                 	}

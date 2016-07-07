@@ -1,0 +1,32 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<script>
+    (function () {
+        /**
+         * It is used to restore focus after action execution. This is global variable that holds previously active element that is relevant for 
+         * focus restoration logic.
+         */
+        var _previousActiveElements = [];
+        
+        Polymer.TgBehaviors = Polymer.TgBehaviors || {};
+        Polymer.TgBehaviors.TgFocusRestorationBehavior = {
+            
+            /**
+             * Persists active element to be restored later in method 'restoreActiveElement'.
+             */
+            persistActiveElement: function () {
+                _previousActiveElements.push(document.activeElement);
+            },
+            
+            /**
+             * Tries to restores focus on previously persisted active element.
+             */
+            restoreActiveElement: function () {
+                var _previousActiveElement = _previousActiveElements.pop();
+                if (_previousActiveElement && typeof _previousActiveElement.focus === 'function') {
+                    _previousActiveElement.focus();
+                }
+            }
+        };
+    })();
+</script>

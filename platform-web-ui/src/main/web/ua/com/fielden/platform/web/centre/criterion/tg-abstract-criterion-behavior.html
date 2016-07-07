@@ -1,6 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
+
 <style is="custom-style">
     .meta-value-editor paper-button {
         color: var(--paper-light-blue-500);
@@ -13,7 +15,7 @@
 </style>
 <script>
     Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-    Polymer.TgBehaviors.TgAbstractCriterionBehavior = {
+    Polymer.TgBehaviors.TgAbstractCriterionBehaviorImpl = {
 
         properties: {
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +86,6 @@
         _createMetaValuesDialog: function () {
             var self = this;
             var domBind = document.createElement('template', 'dom-bind');
-            var _previousActiveElement;
 
             domBind._orNullBind = self._orNull;
             domBind._notBind = self._not;
@@ -99,9 +100,7 @@
                 Polymer.dom(document.body).removeChild(dialog);
                 Polymer.dom(document.body).removeChild(this);
                 Polymer.dom.flush();
-                if (_previousActiveElement && typeof _previousActiveElement.focus === 'function') {
-                    _previousActiveElement.focus();
-                }
+                self.restoreActiveElement();
             }.bind(domBind);
 
             domBind._cancelMetaValuesBind = function () {
@@ -128,7 +127,7 @@
 
             domBind.open = function () {
                 var dialog = this.$.metaValueEditor;
-                _previousActiveElement = document.activeElement;
+                self.persistActiveElement();
                 Polymer.dom(document.body).appendChild(dialog);
                 Polymer.dom.flush();
                 // let's open the dialog with magical async...
@@ -206,4 +205,10 @@
             throw "not implemented";
         }
     };
+    
+	
+	Polymer.TgBehaviors.TgAbstractCriterionBehavior = [
+		Polymer.TgBehaviors.TgFocusRestorationBehavior,
+		Polymer.TgBehaviors.TgAbstractCriterionBehaviorImpl
+	];
 </script>

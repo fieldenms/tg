@@ -468,8 +468,8 @@
                     this._wasMoved = false;
                     this._minimised = false;
                     
-                    if (this._lastAction && this._lastAction._previousActiveElement && typeof this._lastAction._previousActiveElement.focus === 'function') {
-                        this._lastAction._previousActiveElement.focus();
+                    if (this._lastAction) {
+                        this._lastAction.restoreActiveElement();
                     }
                 }
             },
