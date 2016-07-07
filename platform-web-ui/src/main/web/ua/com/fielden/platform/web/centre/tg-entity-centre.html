@@ -8,6 +8,7 @@
 <link rel="import" href="/resources/components/tg-confirmation-dialog.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/centre/tg-selection-view.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
 
@@ -126,7 +127,7 @@
             }
         },
 
-        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+        behaviors: [ Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior ],
 
         _staleCriteriaMessageChanged: function (newValue, oldValue) {
             console.debug('_staleCriteriaMessageChanged:', newValue, oldValue);
@@ -198,11 +199,9 @@
         saveAsync: function () {
             var self = this;
             this.async(function () {
-                var previousActiveElement = document.activeElement;
+                self.persistActiveElement();
                 self.save().then(function () {
-                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
-                        previousActiveElement.focus();
-                    }
+                    self.restoreActiveElement();
                 });
             }, 100);
         },
@@ -210,11 +209,9 @@
         discardAsync: function () {
             var self = this;
             this.async(function () {
-                var previousActiveElement = document.activeElement;
+                self.persistActiveElement();
                 self.discard().then(function () {
-                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
-                        previousActiveElement.focus();
-                    }
+                    self.restoreActiveElement();
                 });
             }, 100);
         },
