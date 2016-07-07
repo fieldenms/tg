@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/sse/tg-sse-behavior.html">
 <link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <script>
     (function () {
@@ -516,14 +517,12 @@
              */
             currentPage: function () {
                 var self = this;
-                var previousActiveElement = document.activeElement;
+                self.persistActiveElement();
                 return this.$.selection_criteria.currentPage()
                     .then(function () {
                         console.log("current page invocation");
                         self.runInsertionPointActions();
-                        if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
-                            previousActiveElement.focus();
-                        }
+                        self.restoreActiveElement();
                     });
             },
 
@@ -531,11 +530,10 @@
              * Starts the process of retrieving first page (only after run() has been already performed).
              */
             firstPage: function () {
-                var previousActiveElement = document.activeElement;
+                var self = this;
+                self.persistActiveElement();
                 return this.$.selection_criteria.firstPage().then(function() {
-                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
-                        previousActiveElement.focus();
-                    }
+                    self.restoreActiveElement();
                 });
             },
 
@@ -543,11 +541,10 @@
              * Starts the process of retrieving last page (only after run() has been already performed).
              */
             lastPage: function () {
-                var previousActiveElement = document.activeElement;
+                var self = this;
+                self.persistActiveElement();
                 return this.$.selection_criteria.lastPage().then(function() {
-                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
-                        previousActiveElement.focus();
-                    }
+                    self.restoreActiveElement();
                 });
             },
 
@@ -555,11 +552,10 @@
              * Starts the process of retrieving next page (only after run() has been already performed).
              */
             nextPage: function () {
-                var previousActiveElement = document.activeElement;
+                var self = this;
+                self.persistActiveElement();
                 return this.$.selection_criteria.nextPage().then(function() {
-                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
-                        previousActiveElement.focus();
-                    }
+                    self.restoreActiveElement();
                 });
             },
 
@@ -567,11 +563,10 @@
              * Starts the process of retrieving prev page (only after run() has been already performed).
              */
             prevPage: function () {
-                var previousActiveElement = document.activeElement;
+                var self = this;
+                self.persistActiveElement();
                 return this.$.selection_criteria.prevPage().then(function() {
-                    if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
-                        previousActiveElement.focus();
-                    }
+                    self.restoreActiveElement();
                 });
             },
 
@@ -698,7 +693,7 @@
             }
         };
 
-        Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgSseBehavior];
+        Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgSseBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior];
 
     })();
 </script>
