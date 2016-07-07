@@ -95,7 +95,7 @@
          * Creates the 'Run' function. Overridden (with necessary 'super' call!) in order to invoke 'action' and to handle spinner appropriately.
          */
         _createRun: function () {
-		    var runFunction = Polymer.TgBehaviors.TgAbstractActionBehavior._createRun.call(this);
+		    var runFunction = Polymer.TgBehaviors.TgAbstractActionBehavior[1]._createRun.call(this);
 		    var self = this;
     		return (function () {
     			runFunction.call(this);
@@ -198,7 +198,7 @@
             }
 
             // do the super stuff
-            Polymer.TgBehaviors.TgAbstractActionBehavior._afterExecution.call(this);
+            Polymer.TgBehaviors.TgAbstractActionBehavior[1]._afterExecution.call(this);
 
             // Make spinner invisible
             this.$.spinner.style.visibility = 'hidden';

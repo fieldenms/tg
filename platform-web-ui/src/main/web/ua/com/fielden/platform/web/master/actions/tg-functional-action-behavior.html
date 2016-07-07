@@ -65,7 +65,7 @@
          * Creates the 'Run' function. Overridden (with necessary 'super' call!) in order to initiate '_actionExecutor' ajax call with appropriately serialised functional entity (from 'preAction').
          */
         _createRun: function () {
-		    var runFunction = Polymer.TgBehaviors.TgAbstractActionBehavior._createRun.call(this);
+		    var runFunction = Polymer.TgBehaviors.TgAbstractActionBehavior[1]._createRun.call(this);
 
     		return (function () {
     			runFunction.call(this);

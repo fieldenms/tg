@@ -1,8 +1,9 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <script>
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-	Polymer.TgBehaviors.TgAbstractActionBehavior = {
+	Polymer.TgBehaviors.TgAbstractActionBehaviorImpl = {
         properties: {
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
@@ -87,12 +88,7 @@
             _disabled: {
             	type: Boolean,
             	computed: "_isDisabled(enabledStates, currentState, _innerEnabled)"
-            },
-            
-            /**
-             * It is used to restore focus after action execution.
-             */
-            _previousActiveElement: Object
+            }
         },
         
         ready: function () {
@@ -106,11 +102,11 @@
         	var self = this;
         	
         	return (function () {
-                self._previousActiveElement = document.activeElement;
+                self.persistActiveElement();
 
 	            this._innerEnabled = false;
 	            console.log(this.shortDesc + ": execute");
-	        }).bind(self);       	
+	        }).bind(self);
         },
 
         /**
@@ -127,10 +123,12 @@
         _afterExecution: function () {
             console.log(this.shortDesc + ": after execution");
             this._innerEnabled = true;
-            
-            if (this._previousActiveElement && typeof this._previousActiveElement.focus === 'function') {
-                this._previousActiveElement.focus();
-            }
+            this.restoreActiveElement();
         }
     };
+	
+	Polymer.TgBehaviors.TgAbstractActionBehavior = [
+		Polymer.TgBehaviors.TgFocusRestorationBehavior,
+		Polymer.TgBehaviors.TgAbstractActionBehaviorImpl
+	];
 </script>
