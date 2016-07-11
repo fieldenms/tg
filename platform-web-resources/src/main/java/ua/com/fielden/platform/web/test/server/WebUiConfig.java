@@ -200,7 +200,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 withContext(context().withSelectionCrit().build()).
                                 icon("add-circle-outline").
                                 shortDesc("Add new").
-                                longDesc("Add new delete action").
+                                longDesc("Add new action").
+                                shortcut("alt+n").
                                 withNoParentCentreRefresh().
                                 build())
                         .also()
@@ -209,6 +210,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 icon("remove-circle-outline").
                                 shortDesc("Delete selected").
                                 longDesc("Deletes the selected entities").
+                                shortcut("alt+d").
                                 build())
                         .addProp("this").also()
                         .addProp("desc")

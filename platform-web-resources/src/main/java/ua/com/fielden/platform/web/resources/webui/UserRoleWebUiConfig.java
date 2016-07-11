@@ -153,6 +153,7 @@ public class UserRoleWebUiConfig {
                         .icon("add-circle-outline")
                         .shortDesc("Add new User Role")
                         .longDesc("Initiates creation of a new User Role.")
+                        .shortcut("alt+n")
                         .build();
             }
 
@@ -181,6 +182,7 @@ public class UserRoleWebUiConfig {
                         .icon("remove-circle-outline")
                         .shortDesc(desc)
                         .longDesc(desc)
+                        .shortcut("alt+d")
                         .build();
             }
 

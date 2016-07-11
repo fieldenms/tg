@@ -157,6 +157,7 @@ public class UserWebUiConfig {
                         .icon("add-circle-outline")
                         .shortDesc("Add new User")
                         .longDesc("Initiates creation of a new User.")
+                        .shortcut("alt+n")
                         .build();
             }
 
@@ -185,6 +186,7 @@ public class UserWebUiConfig {
                         .icon("remove-circle-outline")
                         .shortDesc(desc)
                         .longDesc(desc)
+                        .shortcut("alt+d")
                         .build();
             }
 
