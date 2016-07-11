@@ -251,6 +251,7 @@
            			var datePicker = this.$.datePicker;
                     
                     dialog.noCancelOnEscKey = false;
+                    dialog.noAutoFocus = true;
                     
            			datePicker.selectedDate = null;
                 	datePicker.selectedHour = self.timePortionToBecomeEndOfDay ? 23 : null;
