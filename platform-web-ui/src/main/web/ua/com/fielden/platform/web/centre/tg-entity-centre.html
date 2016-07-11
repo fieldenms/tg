@@ -7,6 +7,8 @@
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-confirmation-dialog.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/centre/tg-selection-view.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <link rel="import" href="/resources/polymer/iron-pages/iron-pages.html">
 
@@ -20,7 +22,9 @@
             background-color: #0288D1;
             color: #fff;
             @apply(--layout-horizontal);
-            @apply(--layout-center-justified);
+
+@apply(--layout-center-justified);
+
         }
         .selection-criteria {
             background-color: white;
@@ -45,27 +49,25 @@
 
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError"></iron-ajax>
         <iron-ajax id="ajaxDiscarder" url="[[_url]]" method="PUT" handle-as="json" on-response="_processDiscarderResponse" on-error="_processDiscarderError"></iron-ajax>
-        
+
         <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
-        <iron-pages selected="[[_selectedView]]" on-scroll="_handleScroll">
+        <iron-pages selected="[[_selectedView]]" on-scroll="_handleScroll" on-iron-select="_pageSelectionChanged">
             <div class="fit">
                 <paper-material>
-                    <div class="selection-criteria layout vertical">
-                        <div style="overflow:auto; padding: 24px;">
-                            <content select=".custom-selection-criteria"></content>
-                        </div>
-                        <div class="layout horizontal justified" style="padding: 0 24px 24px 24px;">
+                    <tg-selection-view id="selectionView">
+                        <content select=".custom-selection-criteria"></content>
+                        <div class="selection-criteria-buttons layout horizontal justified" style="padding: 0 24px 24px 24px;">
                             <div class="layout horizontal">
-                                <paper-button id="saver" raised roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]" tooltip-text="Save configuration">Save</paper-button>
-                                <paper-button id="discarder" raised roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard configuration">Discard</paper-button>
+                                <paper-button id="saver" raised shortcut="ctrl+s" roll="button" on-tap="saveAsync" disabled$="[[_saverDisabled]]" tooltip-text="Save configuration">Save</paper-button>
+                                <paper-button id="discarder" raised shortcut="esc" roll="button" on-tap="discardAsync" disabled$="[[_discarderDisabled]]" tooltip-text="Discard configuration">Discard</paper-button>
                             </div>
                             <div class="layout horizontal">
-                                <paper-button id="view" raised roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]"  tooltip-text="Show result view">View</paper-button>
-                                <paper-button id="runner" raised roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result">Run</paper-button>
+                                <paper-button id="view" raised shortcut="ctrl+e" roll="button" on-tap="_activateResultSetView" disabled$="[[_viewerDisabled]]" tooltip-text="Show result view">View</paper-button>
+                                <paper-button id="runner" raised shortcut="f5" roll="button" on-tap="runAsync" style="margin-right: 0px;" disabled$="[[_runnerDisabled]]" tooltip-text="Execute entity centre and show result">Run</paper-button>
                             </div>
                         </div>
-                    </div>
+                    </tg-selection-view>
                 </paper-material>
             </div>
             <div class="fit">
@@ -124,9 +126,9 @@
                 observer: '_staleCriteriaMessageChanged'
             }
         },
-        
-        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
-        
+
+        behaviors: [ Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior ],
+
         _staleCriteriaMessageChanged: function (newValue, oldValue) {
             console.debug('_staleCriteriaMessageChanged:', newValue, oldValue);
         },
@@ -158,25 +160,59 @@
         _reflector: function () {
             return this.$.serialiser.$.reflector;
         },
-        
+
         /**
          * Returns the confirmation dialog for this centre.
          */
-        _confirmationDialog: function() {
+        _confirmationDialog: function () {
             return this.$.confirmationDialog;
+        },
+
+        _pageSelectionChanged: function (event) {
+            var egi = this.querySelector(".custom-egi");
+            var selectionCriteria = this.$.selectionView;
+            if (this._selectedView === 0) {
+                this._configViewBindings(egi, selectionCriteria);
+                selectionCriteria.focus();
+            } else if (this._selectedView === 1) {
+                this._configViewBindings(selectionCriteria, egi);
+                var elementToFocus = egi.$$("#elementToFocus");
+                //Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing. 
+                if (elementToFocus && typeof elementToFocus.focus === 'function') {
+                    elementToFocus.focus();
+                }
+            }
+            if (event.stopPropagation) event.stopPropagation();
+            if (event.preventDefault) event.preventDefault();
+            event.cancelBubble = true;
+            event.returnValue = false;
+        },
+
+        _configViewBindings: function (prevView, newView) {
+            prevView.removeOwnKeyBindings();
+            var ownKeyBindings = newView._ownKeyBindings;
+            for (var shortcuts in ownKeyBindings) {
+                newView.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
+            }
         },
 
         saveAsync: function () {
             var self = this;
             this.async(function () {
-                self.save();
+                self.persistActiveElement();
+                self.save().then(function () {
+                    self.restoreActiveElement();
+                });
             }, 100);
         },
 
         discardAsync: function () {
             var self = this;
             this.async(function () {
-                self.discard();
+                self.persistActiveElement();
+                self.discard().then(function () {
+                    self.restoreActiveElement();
+                });
             }, 100);
         },
 

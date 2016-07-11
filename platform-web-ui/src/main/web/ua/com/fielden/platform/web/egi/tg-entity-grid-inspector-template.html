@@ -7,11 +7,13 @@
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
 <link rel="import" href="/resources/egi/tg-secondary-action-button.html">
 
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-collapse/iron-collapse.html">
+<link rel="import" href="/resources/polymer/iron-test-helpers/mock-interactions.html">
 
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
@@ -36,7 +38,7 @@
     <style>
         /*miscellanea styles*/
         .lock-layer {
-            opacity:0.5;
+            opacity: 0.5;
             display: none;
             background-color: white;
         }
@@ -292,7 +294,7 @@
 
         <template is="dom-if" if="[[!cardLayout]]" restamp>
             <paper-material elevation="1" style="margin: 10px 10px;" class="layout vertical">
-                <div class="layout vertical data-table">
+                <div id="elementToFocus" class="layout vertical data-table" tabindex="0">
                     <!--Table toolbar-->
                     <div class="grid-toolbar layout horizontal wrap" hidden$="[[!toolbarVisible]]">
                         <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
@@ -850,7 +852,7 @@
                 },
                 _lastSelectedIndex: Number
             },
-
+            
             observers: [
                         '_desktopShortLayoutChanged(shortLayout.desktop)',
                         '_tabletShortLayoutChanged(shortLayout.tablet)',
@@ -860,8 +862,59 @@
                         '_mobileLongLayoutChanged(longLayout.mobile)'
                     ],
 
-            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior],
-            
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.IronResizableBehavior, Polymer.IronA11yKeysBehavior],
+
+            /**
+             * Generated shortcut bindings to single function _shortcutPressed, which locates appropriate tg-action / tg-ui-action and invokes its function 'shortcutPressed'.
+             */
+            _ownKeyBindings: {
+                '@SHORTCUTS': '_shortcutPressed'
+            },
+
+            _shortcutPressed: function (e) {
+                var shortcut = e.detail.combo;
+                console.debug('Master shortcut', shortcut, 'processing...');
+
+                var iconButton = this.querySelector('paper-icon-button[shortcut="' + shortcut + '"]');
+                if (iconButton) {
+                    // Respect nodes that are disabled in the UI.
+                    if (window.getComputedStyle(iconButton)['pointer-events'] !== 'none') {
+                        iconButton.focus();
+                        MockInteractions.tap(iconButton);
+                    }
+                } else {
+                    var action = this.querySelector('tg-action[shortcut="' + shortcut + '"]');
+                    if (action) {
+                        // Respect nodes that are disabled in the UI.
+                        if (window.getComputedStyle(action.$.actionButton)['pointer-events'] !== 'none') {
+                            action.$.actionButton.focus();
+                            action._asyncRun();
+                        }
+                    } else {
+                        var uiAction = this.querySelector('tg-ui-action[shortcut="' + shortcut + '"]');
+                        if (uiAction) {
+                            // Respect nodes that are disabled in the UI.
+                            if (!uiAction.isActionInProgress) {
+                                if (uiAction.isIconButton) {
+                                    uiAction.$.iActionButton.focus();
+                                } else {
+                                    uiAction.$.bActionButton.focus();
+                                }
+                                uiAction._run();
+                            }
+                        } else {
+                            console.warn('The registered shortcut [' + shortcut + '] does not have its corresponding tg-action or tg-ui-action.');
+                        }
+                    }
+                }
+
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
+                console.debug('Master shortcut', shortcut, 'processing... done');
+            },
+
             /**
              * Initialises selection model, primary action, secondary actions, property columns, card layout.
              */
@@ -914,7 +967,19 @@
             },
 
             attached: function () {
+                var self = this;
                 this._updateTableSizeAsync();
+                this.async(function () {
+                    self.keyEventTarget = self._getKeyEventTarget();
+                }, 1)
+            },
+            
+            _getKeyEventTarget: function () {
+                var parent = this;
+                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                    parent = parent.parentElement;
+                }
+                return parent || this;
             },
 
             updateProgress: function (percentage, clazz, isVisible) {
@@ -930,11 +995,11 @@
                 }
                 progressBar.updateStyles();
             },
-            
-            _checkSelectionState: function(event) {
+
+            _checkSelectionState: function (event) {
                 this._rangeSelection = event.shiftKey;
             },
-            
+
             _mouseRowEnter: function (event, detail) {
                 var index = event.model.entityIndex;
                 this.set("egiModel." + index + ".over", true);
@@ -1126,7 +1191,7 @@
                     tooltip = validationResult.message && ("<b>" + validationResult.message + "</b>");
                 } else if (column.tooltipProperty) {
                     value = this._getValue(entity, column.tooltipProperty, "String").toString();
-                    tooltip = value && ("<b>" + value  + "</b>");
+                    tooltip = value && ("<b>" + value + "</b>");
                 } else if (this.$.reflector.findTypeByName(column.type)) {
                     tooltip = this._generateEntityTooltip(entity, column);
                 } else {
@@ -1141,7 +1206,7 @@
                 }
                 return tooltip;
             },
-            
+
             _generateEntityTooltip: function (entity, column) {
                 var key = this._getValue(entity, column.property, column.type);
                 var desc;
@@ -1152,8 +1217,8 @@
                 }
                 return (key && ("<b>" + key + "</b>")) + (desc ? "<br>" + desc : "");
             },
-            
-            _generateActionTooltip: function(action) {
+
+            _generateActionTooltip: function (action) {
                 var shortDesc = "<b>" + action.shortDesc + "</b>";
                 var longDesc;
                 if (shortDesc) {
@@ -1162,12 +1227,12 @@
                     longDesc = action.longDesc ? "<b>" + action.longDesc + "</b>" : "";
                 }
                 var tooltip = shortDesc + longDesc;
-                return tooltip && "<div style='display:flex;'>" + 
+                return tooltip && "<div style='display:flex;'>" +
                     "<div style='margin-right:10px;'>With action: </div>" +
                     "<div style='flex-grow:1;'>" + tooltip + "</div>" +
                     "</div>"
             },
- 
+
             _getTotalTooltip: function (summary) {
                 var tooltip = summary.columnTitle ? "<b>" + summary.columnTitle + "</b>" : "";
                 tooltip += summary.columnDesc ? (tooltip ? "<br>" + summary.columnDesc : summary.columnDesc) : "";
@@ -1378,20 +1443,22 @@
                     //Set up selecteAll property.
                     if (this.selectedAll && !target.checked) {
                         this.selectedAll = false;
-                    } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) { return elem.selected })) {
+                    } else if (this.egiModel.length > 0 && this.egiModel.every(function (elem) {
+                        return elem.selected
+                    })) {
                         this.selectedAll = true;
                     }
                     this.fire("egi-selection-changed", this.getSelectedEntities());
                 }
                 console.log("single checkbox: " + index, this.getSelectedRows());
             },
-            
+
             /**
-             * Selects the range fromIndex toIndex of entities. 
+             * Selects the range fromIndex toIndex of entities.
              */
             _selectRange: function (fromIndex, toIndex) {
                 var from = fromIndex < toIndex ? fromIndex : toIndex;
-                var to  = fromIndex < toIndex ? toIndex : fromIndex;
+                var to = fromIndex < toIndex ? toIndex : fromIndex;
                 var index;
                 for (index = from; index <= to; index++) {
                     if (!this.egiModel[index].selected) {
@@ -1400,7 +1467,7 @@
                     }
                 }
             },
-            
+
             /**
              * Toggles the card's collapse panel for the specified entity.
              */
@@ -1528,7 +1595,8 @@
             },
 
             _calculateFixedColsWidth: function (numOfFixedCols) {
-                var colIndex, fixedColsWidth = 0, numOfFixedPaddings = 0;
+                var colIndex, fixedColsWidth = 0,
+                    numOfFixedPaddings = 0;
                 for (colIndex = 0; colIndex < numOfFixedCols; colIndex++) {
                     if (this.columns[colIndex].width > 0) {
                         fixedColsWidth += this.columns[colIndex].width;
@@ -1579,7 +1647,7 @@
                     }
                 }
             },
-            
+
             /**
              * Returns true if egi conatains at least one entity from entitiesToSearch list, otherwise returns false.
              */
@@ -1592,7 +1660,7 @@
                 }
                 return false;
             },
-            
+
             /**
              * Determines whether property is boolean or not.
              */
@@ -1689,7 +1757,7 @@
                 }.bind(this));
                 return selectedRows;
             },
-            
+
             /**
              * Clears the selection on current page.
              */
@@ -1702,7 +1770,7 @@
                     }
                 }
             },
-            
+
             /**
              * Clears selection.
              */

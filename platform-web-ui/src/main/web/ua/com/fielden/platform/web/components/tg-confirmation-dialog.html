@@ -17,7 +17,7 @@
     <script>
         (function () {
             var dialogModel = document.createElement('template', 'dom-bind');
-            dialogModel.innerHTML = '<paper-dialog id="confirmDialog" class="confirm-dialog layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">' +
+            dialogModel.innerHTML = '<paper-dialog id="confirmDialog" class="confirm-dialog layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-canceled="dialogCanceled">' +
                 '<div style="padding: 20px;">[[message]]</div>' +
                 '<div class="buttons">' +
                 '<template is="dom-repeat" items="[[buttons]]">' +
@@ -25,24 +25,33 @@
                 '</template>' +
                 '</div>' +
                 '</paper-dialog>';
+            
             dialogModel.showDialog = function () {
                 var dialog = dialogModel.$.confirmDialog;
 
+                dialog.noCancelOnEscKey = false;
+                
                 this.async(function () {
                     dialog.open();
                 }, 1);
-            }
+            };
+            
             Polymer.dom(document.body).appendChild(dialogModel);
             Polymer.dom.flush();
 
             Polymer({
                 is: 'tg-confirmation-dialog',
-
+                
                 _showConfirmationDialog: function (message, buttons) {
                     dialogModel.message = message;
                     dialogModel.buttons = buttons;
 
                     return new Promise(function (resolve, reject) {
+                        
+                        dialogModel.dialogCanceled = function (e) {
+                            reject("ESC");
+                        };
+                        
                         dialogModel._action = function (e) {
                             var button = e.model.item;
                             if (button.confirm) {
@@ -50,7 +59,8 @@
                             } else {
                                 reject(button.name);
                             }
-                        }
+                        };
+                        
                         dialogModel.showDialog();
                     });
                 }

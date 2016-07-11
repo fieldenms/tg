@@ -508,6 +508,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .icon("add-circle")
                         .shortDesc("Create Status")
                         .longDesc("Creates new status and assignes it back to the Status property")
+                        .shortcut("ctrl+shift+l")
                         .build())
                 .also()
                 .addProp("colourProp").asColour()
@@ -517,6 +518,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     .icon("highlight-off")
                     .shortDesc("CANCEL")
                     .longDesc("Cancels any changes and closes the master (if in dialog)")
+                    // .shortcut("ctrl+x") // overridden from default esc
 
                 // ENTITY CUSTOM ACTIONS
                 .addAction(
@@ -530,10 +532,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .icon("trending-up")
                         .shortDesc("Export")
                         .longDesc("Export action")
+                        .shortcut("ctrl+shift+e")
                         .build())
 
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
+                    // .shortDesc("SAVE")
+                    // .longDesc("SAVE")
+                    // .shortcut("ctrl+shift+s") // -- overridden from default ctrl+s
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
@@ -1157,6 +1163,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 icon("add-circle-outline").
                                 shortDesc("Add new").
                                 longDesc("Start coninuous creatio of entities").
+                                shortcut("alt+n").
                                 build())
                 .also()
                 .addTopAction(action(EntityDeleteAction.class).
@@ -1171,6 +1178,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         icon("remove-circle-outline").
                         shortDesc("Delete selected").
                         longDesc("Deletes the selected entities").
+                        shortcut("alt+d").
                         build())
                 .also()
                 .addTopAction(CentreConfigActions.SORT_ACTION.mkAction())
@@ -1491,6 +1499,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         icon("editor:mode-edit").
                         shortDesc("Edit entity").
                         longDesc("Opens master for editing this entity").
+                        // withNoParentCentreRefresh().
                         build())
                 //                .addPrimaryAction(
                 //                        EntityActionConfig.createMasterInvocationActionConfig()
@@ -1561,19 +1570,19 @@ public class WebUiConfig extends AbstractWebUiConfig {
         //                .also()
         //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
-//                if (isComposite) {
-//                    return scl.addInsertionPoint(
-//                            action(TgCentreInvokerWithCentreContext.class)
-//                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                                .icon("assignment-ind")
-//                                .shortDesc("Insertion Point")
-//                                .longDesc("Functional context-dependent Insertion Point")
-//                                .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
-//                                .withNoParentCentreRefresh()
-//                                .build(),
-//                            InsertionPoints.RIGHT)
-//                            .build();
-//                }
+        //        if (isComposite) {
+        //            return scl.addInsertionPoint(
+        //                    action(TgCentreInvokerWithCentreContext.class)
+        //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+        //                            .icon("assignment-ind")
+        //                            .shortDesc("Insertion Point")
+        //                            .longDesc("Functional context-dependent Insertion Point")
+        //                            .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
+        //                            .withNoParentCentreRefresh()
+        //                            .build(),
+        //                    InsertionPoints.RIGHT)
+        //                    .build();
+        //        }
         return scl.build();
     }
 

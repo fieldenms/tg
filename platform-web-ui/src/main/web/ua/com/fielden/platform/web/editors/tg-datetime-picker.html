@@ -240,10 +240,18 @@
                     self._editingValue = self.reflector().millisDateRepresentation(acceptedMoment.valueOf());
                     self.decoratedInput().focus();
            		}.bind(domBind);
+                
+                domBind._dialogCanceled = function() {
+                    this._cancelDateBind();
+                }.bind(domBind);
            		
            		domBind.open = function () {
            			var dialog = this.$.dateDialog;
            			var datePicker = this.$.datePicker;
+                    
+                    dialog.noCancelOnEscKey = false;
+                    dialog.noAutoFocus = true;
+                    
            			datePicker.selectedDate = null;
                 	datePicker.selectedHour = self.timePortionToBecomeEndOfDay ? 23 : null;
                 	datePicker.selectedMinute = self.timePortionToBecomeEndOfDay ? 59 : null;
@@ -269,7 +277,7 @@
            		
             	var div = domBind.content.ownerDocument.createElement('div');
             	div.innerHTML = 
-            	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind">' +
+            	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-canceled="_dialogCanceled">' +
                     '<tg-calendar id="datePicker" pick-time></tg-calendar>' +
                     '<div class="buttons">' +
                         '<paper-button dialog-dismiss affirmative on-tap="_cancelDateBind">Cancel</paper-button>' +

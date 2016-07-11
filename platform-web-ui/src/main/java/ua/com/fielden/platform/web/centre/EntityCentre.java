@@ -164,7 +164,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
         final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
-        
+
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp property : resultSetProps.get()) {
                 if (property.propName.isPresent()) {
@@ -188,7 +188,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
         cdtmae.getEnhancer().apply();
-        
+
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp property : resultSetProps.get()) {
                 if (property.propName.isPresent()) {
@@ -679,8 +679,29 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                                 .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType).toString()))));
             }
         }
+
+        logger.debug("Initiating top-level actions' shortcuts...");
+        final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
+        final StringBuilder shortcuts = new StringBuilder();
+
+        for (final String shortcut : dslDefaultConfig.getToolbarConfig().getAvailableShortcuts()) {
+            shortcuts.append(shortcut + " ");
+        }
+
+        if (topLevelActions.isPresent()) {
+
+            for (int i = 0; i < topLevelActions.get().size(); i++) {
+                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
+                final EntityActionConfig config = topLevelAction.getKey();
+                if (config.shortcut.isPresent()) {
+                    shortcuts.append(config.shortcut.get() + " ");
+                }
+            }
+        }
+
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/egi/tg-entity-grid-inspector-template.html");
         final String egiStr = text.
+                replace("@SHORTCUTS", shortcuts).
                 replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
                 replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
                 replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() + "").

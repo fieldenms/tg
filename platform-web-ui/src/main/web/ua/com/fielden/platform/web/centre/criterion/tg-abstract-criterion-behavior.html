@@ -1,6 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles.html">
 
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
+
 <style is="custom-style">
     .meta-value-editor paper-button {
         color: var(--paper-light-blue-500);
@@ -13,7 +15,7 @@
 </style>
 <script>
     Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-    Polymer.TgBehaviors.TgAbstractCriterionBehavior = {
+    Polymer.TgBehaviors.TgAbstractCriterionBehaviorImpl = {
 
         properties: {
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -98,6 +100,7 @@
                 Polymer.dom(document.body).removeChild(dialog);
                 Polymer.dom(document.body).removeChild(this);
                 Polymer.dom.flush();
+                self.restoreActiveElement();
             }.bind(domBind);
 
             domBind._cancelMetaValuesBind = function () {
@@ -124,6 +127,7 @@
 
             domBind.open = function () {
                 var dialog = this.$.metaValueEditor;
+                self.persistActiveElement();
                 Polymer.dom(document.body).appendChild(dialog);
                 Polymer.dom.flush();
                 // let's open the dialog with magical async...
@@ -201,4 +205,10 @@
             throw "not implemented";
         }
     };
+    
+	
+	Polymer.TgBehaviors.TgAbstractCriterionBehavior = [
+		Polymer.TgBehaviors.TgFocusRestorationBehavior,
+		Polymer.TgBehaviors.TgAbstractCriterionBehaviorImpl
+	];
 </script>

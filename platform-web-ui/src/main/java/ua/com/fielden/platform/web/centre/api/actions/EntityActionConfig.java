@@ -22,6 +22,7 @@ public final class EntityActionConfig {
     public final Optional<String> icon;
     public final Optional<String> shortDesc;
     public final Optional<String> longDesc;
+    public final Optional<String> shortcut;
     public final Optional<IPreAction> preAction;
     public final Optional<IPostAction> successPostAction;
     public final Optional<IPostAction> errorPostAction;
@@ -41,6 +42,7 @@ public final class EntityActionConfig {
             final String icon,
             final String shortDesc,
             final String longDesc,
+            final String shortcut,
             final IPreAction preAction,
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
@@ -69,6 +71,7 @@ public final class EntityActionConfig {
             enhancedLongDesc = TitlesDescsGetter.getEntityTitleAndDesc(functionalEntity).getValue();
         }
         this.longDesc = Optional.ofNullable(enhancedLongDesc);
+        this.shortcut = Optional.ofNullable(shortcut);
         this.preAction = Optional.ofNullable(preAction);
         this.successPostAction = Optional.ofNullable(successPostAction);
         this.errorPostAction = Optional.ofNullable(errorPostAction);
@@ -85,13 +88,14 @@ public final class EntityActionConfig {
             final String icon,
             final String shortDesc,
             final String longDesc,
+            final String shortcut,
             final IPreAction preAction,
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
             final PrefDim prefDimForView,
             final boolean noAction,
             final boolean shouldRefreshParentCentreAfterSave) {
-        this(functionalEntity, context, icon, shortDesc, longDesc, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON);
+        this(functionalEntity, context, icon, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON);
     }
 
 
@@ -105,6 +109,7 @@ public final class EntityActionConfig {
                 ac.icon.isPresent() ? ac.icon.get() : null,
                 ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
                 ac.longDesc.isPresent() ? ac.longDesc.get() : null,
+                ac.shortcut.isPresent() ? ac.shortcut.get() : null,
                 ac.preAction.isPresent() ? ac.preAction.get() : null,
                 ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
                 ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
@@ -129,6 +134,7 @@ public final class EntityActionConfig {
                 ac.icon.isPresent() ? ac.icon.get() : null,
                 ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
                 ac.longDesc.isPresent() ? ac.longDesc.get() : null,
+                ac.shortcut.isPresent() ? ac.shortcut.get() : null,
                 ac.preAction.isPresent() ? ac.preAction.get() : null,
                 ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
                 ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
@@ -145,7 +151,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createNoActionConfig() {
-        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, true, true);
+        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, null, true, true);
     }
 
     /**
@@ -167,6 +173,7 @@ public final class EntityActionConfig {
             final String icon,
             final String shortDesc,
             final String longDesc,
+            final String shortcut,
             final IPreAction preAction,
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
@@ -179,6 +186,7 @@ public final class EntityActionConfig {
                 icon,
                 shortDesc,
                 longDesc,
+                shortcut,
                 preAction,
                 successPostAction,
                 errorPostAction,
@@ -205,6 +213,7 @@ public final class EntityActionConfig {
         result = prime * result + ((functionalEntity == null) ? 0 : functionalEntity.hashCode());
         result = prime * result + ((icon == null) ? 0 : icon.hashCode());
         result = prime * result + ((longDesc == null) ? 0 : longDesc.hashCode());
+        result = prime * result + ((shortcut == null) ? 0 : shortcut.hashCode());
         result = prime * result + (noAction ? 1231 : 1237);
         result = prime * result + ((preAction == null) ? 0 : preAction.hashCode());
         result = prime * result + ((shortDesc == null) ? 0 : shortDesc.hashCode());
@@ -256,6 +265,13 @@ public final class EntityActionConfig {
                 return false;
             }
         } else if (!longDesc.equals(other.longDesc)) {
+            return false;
+        }
+        if (shortcut == null) {
+            if (other.shortcut != null) {
+                return false;
+            }
+        } else if (!shortcut.equals(other.shortcut)) {
             return false;
         }
         if (noAction != other.noAction) {

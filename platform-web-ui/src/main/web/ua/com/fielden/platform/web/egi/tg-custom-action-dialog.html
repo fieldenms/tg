@@ -9,6 +9,7 @@
 <link rel="import" href="/resources/components/tg-toast.html">
 <link rel="import" href="/resources/images/tg-icons.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <dom-module id="tg-custom-action-dialog">
     <template>
@@ -108,12 +109,16 @@
 
             is: "tg-custom-action-dialog",
 
-            behaviors: [Polymer.IronOverlayBehavior],
+            behaviors: [Polymer.IronA11yKeysBehavior, Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
 
             listeners: {
                 'iron-overlay-opened': '_dialogOpened',
                 'iron-overlay-closed': '_dialogClosed',
                 'tg-dynamic-title-changed': '_updateDynamicTitle'
+            },
+            
+            hostAttributes: {
+                'tabindex' : '0'
             },
 
             properties: {
@@ -176,9 +181,14 @@
                     type: Object
                 }
             },
+            
+            keyBindings: {
+                'alt+x': 'closeDialog',
+                'alt+m': 'minimizeDialog'
+            },
 
             ready: function () {
-                this.noAutoFocus = false;
+                this.noAutoFocus = true;
                 this.noCancelOnOutsideClick = true;
                 this.noCancelOnEscKey = true;
 
@@ -227,9 +237,16 @@
             },
 
             minimizeDialog: function () {
+                if (!this._minimised) {
+                    this.persistActiveElement();
+                    this.focus();
+                }
                 this._minimised = !this._minimised;
                 this._dialogMinimised();
                 this.notifyResize();
+                if (!this._minimised) {
+                    this.restoreActiveElement();
+                } 
             },
 
             closeDialog: function () {
@@ -296,11 +313,18 @@
                         break;
                     }
                 }
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
             },
 
             _closeDialogAndIndicateActionCompletion: function (action) {
                 if (this._lastAction) {
                     this._lastAction.isActionInProgress = false;
+                }
+                if (this._minimised) {
+                    this.restoreActiveElement();
                 }
                 this.close();
             },
@@ -341,6 +365,9 @@
                     this.$.toaster.showProgress = false;
                     this.$.toaster.show();
                     console.log("The dialog is already opened and should be closed be being used again.");
+                    if (customAction) {
+                        customAction.restoreActiveElement();
+                    }
                 } else {
                     var self = this;
                     if (self.isRunning === false) {
@@ -366,6 +393,9 @@
                                         })
                                         .catch(function () {
                                             self._setIsRunning(false);
+                                            if (self._lastAction) {
+                                                self._lastAction.restoreActiveElement();
+                                            }
                                         });
                                 } else {
                                     return Promise.resolve()
@@ -374,6 +404,9 @@
                                         })
                                         .catch(function () {
                                             self._setIsRunning(false);
+                                            if (self._lastAction) {
+                                                self._lastAction.restoreActiveElement();
+                                            }
                                         });
                                 }
                             })
@@ -384,6 +417,9 @@
 	                                                      <b>Error cause:</b><br>' + error.message;
                                 self.$.toaster.showProgress = false;
                                 self.$.toaster.show();
+                                if (self._lastAction) {
+                                    self._lastAction.restoreActiveElement();
+                                }
                             });
                     }
                 }
@@ -464,6 +500,10 @@
                     this._subscriptions.length = 0;
                     this._wasMoved = false;
                     this._minimised = false;
+                    
+                    if (this._lastAction) {
+                        this._lastAction.restoreActiveElement();
+                    }
                 }
             },
 
