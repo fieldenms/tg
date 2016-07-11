@@ -17,14 +17,12 @@
              */
             persistActiveElement: function () {
                 var self = this;
-                // if (document.activeElement !== document.body) {
-                    console.debug('persistActiveElement: initiator', self, 'elem', document.activeElement);
-                    console.trace();
-                    _previousActiveElements.push({
-                        initiator: self,
-                        elem: document.activeElement
-                    });
-                //}
+                console.debug('persistActiveElement: initiator', self, 'elem', document.activeElement);
+                console.trace();
+                _previousActiveElements.push({
+                    initiator: self,
+                    elem: document.activeElement
+                });
             },
             
             /**
@@ -38,12 +36,10 @@
                         console.debug('restoreActiveElement:', _previousActiveElementAndInitiator);
                         console.trace();
                         if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem.focus === 'function') {
-                            // if (window.getComputedStyle(_previousActiveElementAndInitiator.elem)['pointer-events'] !== 'none' /* && someElement.offsetHeight > 0*/     /* _previousActiveElementAndInitiator.elem.style.visibility !='hidden' && _previousActiveElementAndInitiator.elem.display !='none' && _previousActiveElementAndInitiator.elem.disabled != true*/ ) {
-                                _previousActiveElementAndInitiator.elem.focus();
-                            // }
+                            _previousActiveElementAndInitiator.elem.focus();
                         }
                         
-                        // if there are any 'notRestored' initiators, the we should try to restore the oldest unrestored initiator (however it is possible that it will wait)
+                        // if there are any 'notRestored' initiators, then we should try to restore the oldest unrestored initiator (however it is possible that it will wait)
                         if (_notRestoredInitiators.length > 0) {
                             var lastInitiator = _notRestoredInitiators.shift();
                             lastInitiator.restoreActiveElement();
