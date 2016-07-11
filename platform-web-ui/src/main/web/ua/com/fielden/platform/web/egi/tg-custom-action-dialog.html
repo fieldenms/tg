@@ -344,6 +344,9 @@
                     this.$.toaster.showProgress = false;
                     this.$.toaster.show();
                     console.log("The dialog is already opened and should be closed be being used again.");
+                    if (customAction) {
+                        customAction.restoreActiveElement();
+                    }
                 } else {
                     var self = this;
                     if (self.isRunning === false) {
@@ -369,6 +372,9 @@
                                         })
                                         .catch(function () {
                                             self._setIsRunning(false);
+                                            if (self._lastAction) {
+                                                self._lastAction.restoreActiveElement();
+                                            }
                                         });
                                 } else {
                                     return Promise.resolve()
@@ -377,6 +383,9 @@
                                         })
                                         .catch(function () {
                                             self._setIsRunning(false);
+                                            if (self._lastAction) {
+                                                self._lastAction.restoreActiveElement();
+                                            }
                                         });
                                 }
                             })
@@ -387,6 +396,9 @@
 	                                                      <b>Error cause:</b><br>' + error.message;
                                 self.$.toaster.showProgress = false;
                                 self.$.toaster.show();
+                                if (self._lastAction) {
+                                    self._lastAction.restoreActiveElement();
+                                }
                             });
                     }
                 }
