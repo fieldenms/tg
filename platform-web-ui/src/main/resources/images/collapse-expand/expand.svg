@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
-<svg id="expand" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<svg id="expand" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
  <metadata id="metadata7">
   <rdf:RDF>
    <cc:Work rdf:about="">
@@ -10,11 +10,15 @@
    </cc:Work>
   </rdf:RDF>
  </metadata>
- <g id="layer1" transform="translate(0 -1028.4)">
-  <g id="g3804">
-   <path id="path3765-3" d="m13.348 7.6384c0 1.2698-1.0293 2.2991-2.2991 2.2991s-2.2991-1.0293-2.2991-2.2991 1.0293-2.2991 2.2991-2.2991c1.2624 0 2.2887 1.0179 2.299 2.2802" fill-opacity="0" transform="matrix(4.9954 0 0 4.9954 -43.195 1002.2)" stroke="#000" stroke-linecap="square" stroke-width=".23562"/>
-   <path id="path3853" d="m-7.2321 11.455-8.2181-1.8624-8.2181-1.8624 5.722-6.1859 5.722-6.1859 2.4962 8.0483z" transform="matrix(.52918 .36662 -.23880 .44714 17.173 1047.2)" stroke-width="0"/>
-   <path id="path3853-3" d="m-7.2321 11.455-8.2181-1.8624-8.2181-1.8624 5.722-6.1859 5.722-6.1859 2.4962 8.0483z" transform="matrix(-.53104 -.36392 .23652 -.44835 6.845 1033.6)" stroke-width="0"/>
+ <g id="g3805" transform="translate(0,-1028.4)">
+  <g id="g3010">
+   <g id="g3004" stroke-width="0">
+    <path id="path3765-3" d="m12 1030.6c-5.4176 0-9.822 4.4044-9.822 9.8219s4.4044 9.8221 9.822 9.8221 9.822-4.4045 9.822-9.8221v-0.08c-0.04394-5.3856-4.436-9.7419-9.822-9.7419zm0 1.2811c4.6947 0 8.5026 3.7664 8.5409 8.4608v0.08c0 4.7224-3.8186 8.541-8.5409 8.541-4.7222 0-8.5409-3.8186-8.5409-8.541 0-4.7221 3.8186-8.5408 8.5409-8.5408z"/>
+    <g id="g3873" transform="matrix(.56046 .55039 -.55039 .56046 577.6 450.97)">
+     <path id="path3853" transform="matrix(.63444 -.10919 .14291 .48635 20.431 1031)" d="m-7.2321 11.455-8.2181-1.8624-8.2181-1.8624 5.722-6.1859 5.722-6.1859 2.4962 8.0483z"/>
+     <path id="path3853-3" transform="matrix(-.63388 .11242 -.14539 -.48561 3.6011 1048.8)" d="m-7.2321 11.455-8.2181-1.8624-8.2181-1.8624 5.722-6.1859 5.722-6.1859 2.4962 8.0483z"/>
+    </g>
+   </g>
   </g>
  </g>
 </svg>
