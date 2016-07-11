@@ -27,10 +27,8 @@ public class TgDummyActionDao extends CommonEntityDao<TgDummyAction> implements 
             Thread.sleep(3000);
         } catch (InterruptedException e) {
         }
-        
-        throw new IllegalArgumentException("EX");
 
-        // return super.save(entity);
+        return super.save(entity);
     }
 
 }
