@@ -8,6 +8,7 @@
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <link rel="import" href="/resources/images/collapseExpand.html">
 
@@ -103,7 +104,7 @@
 
             is: "tg-custom-action-dialog",
 
-            behaviors: [Polymer.IronOverlayBehavior],
+            behaviors: [Polymer.IronA11yKeysBehavior, Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
 
             listeners: {
                 'iron-overlay-opened': '_dialogOpened',
@@ -175,6 +176,11 @@
                     type: Object
                 }
             },
+            
+            keyBindings: {
+                'alt+x': 'closeDialog',
+                'alt+m': 'minimizeDialog'
+            },
 
             ready: function () {
                 this.noAutoFocus = true;
@@ -226,9 +232,16 @@
             },
 
             minimizeDialog: function () {
+                if (!this._minimised) {
+                    this.persistActiveElement();
+                    this.focus();
+                }
                 this._minimised = !this._minimised;
                 this._dialogMinimised();
                 this.notifyResize();
+                if (!this._minimised) {
+                    this.restoreActiveElement();
+                } 
             },
 
             closeDialog: function () {
@@ -304,6 +317,9 @@
             _closeDialogAndIndicateActionCompletion: function (action) {
                 if (this._lastAction) {
                     this._lastAction.isActionInProgress = false;
+                }
+                if (this._minimised) {
+                    this.restoreActiveElement();
                 }
                 this.close();
             },
