@@ -216,10 +216,14 @@
                 domBind.open = function () {
                     this.$.dropdown.open();
                 }.bind(domBind);
+                
+                //domBind._colorPickerOpened = function () {
+                //    this.$.dropdown.focus();
+                //}.bind(domBind);
 
                 var div = domBind.content.ownerDocument.createElement('div');
                 div.innerHTML =
-                    '<iron-dropdown  id="dropdown">' +
+                    '<iron-dropdown id="dropdown" >' + // tabindex="0" on-iron-overlay-opened="_colorPickerOpened" 
                     '<div class="dropdown-content">' +
                     '<div class="layout vertical" style="margin:10px 10px 10px 10px;">' +
                     '<div class="layout horizontal">' +

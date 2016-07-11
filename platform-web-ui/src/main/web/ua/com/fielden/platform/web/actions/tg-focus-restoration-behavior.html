@@ -41,8 +41,15 @@
                         
                         // if there are any 'notRestored' initiators, then we should try to restore the oldest unrestored initiator (however it is possible that it will wait)
                         if (_notRestoredInitiators.length > 0) {
-                            var lastInitiator = _notRestoredInitiators.shift();
-                            lastInitiator.restoreActiveElement();
+                            var copy = _notRestoredInitiators.slice();
+                            for (var index = 0; index < copy.length; index++) {
+                                var initiator = copy[index];
+                                var foundIndex = _notRestoredInitiators.indexOf(initiator);
+                                if (foundIndex >= 0) {
+                                    _notRestoredInitiators.splice(foundIndex, 1);
+                                    initiator.restoreActiveElement();
+                                }
+                            }
                         }
                     } else {
                         // if 'this' exists on the stack then it should wait for restoration
