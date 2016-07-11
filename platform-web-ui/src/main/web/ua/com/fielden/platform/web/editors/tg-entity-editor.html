@@ -68,7 +68,7 @@
             </div>
             <content class=".property-action"></content>
         </tg-editor>
-        <tg-entity-editor-result id="result" no-auto-focus on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed" retrieve-container-sizes="[[_retrieveContainerSizes]]"></tg-entity-editor-result>
+        <tg-entity-editor-result id="result" no-auto-focus on-iron-overlay-opened="_resultOpened" on-iron-overlay-closed="_resultClosed" on-iron-overlay-canceled="_resultCanceled" retrieve-container-sizes="[[_retrieveContainerSizes]]"></tg-entity-editor-result>
 
         <iron-ajax id="ajaxSearcher" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" on-error="_processSearcherError"></iron-ajax>
         <tg-serialiser id="serialiser"></tg-serialiser>
@@ -537,7 +537,13 @@
                 Polymer.dom(document.body).removeChild(this.$.result);
                 Polymer.dom.flush();
             },
-
+            
+            _resultCanceled : function (event, detail) {
+                if (detail.keyCode && detail.keyCode === 27) {
+                    this._focusInput();
+                }
+            },
+            
             /* This method handles an explicit user action for accepting selected values from an autocompleted list.
              * However, there is no guarantee that there are actually selected values.
              */
