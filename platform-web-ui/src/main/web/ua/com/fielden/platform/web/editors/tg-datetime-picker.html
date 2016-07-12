@@ -221,15 +221,15 @@
             	
             	domBind._closedBind = function(e) {
             		var dialog = this.$.dateDialog;
+                    //Removes the registered key down listener.
+                    document.removeEventListener('keydown', this._onCaptureKeyDown, true);
+                    
             		Polymer.dom(document.body).removeChild(dialog);
             		Polymer.dom(document.body).removeChild(this);
             		Polymer.dom.flush();
+                    self.decoratedInput().focus();
             	}.bind(domBind);
             	
-            	domBind._cancelDateBind = function() {
-            		self.decoratedInput().focus();
-           		};
-           		
             	domBind._acceptDateBind = function() {
                     self._isAcceptingDateFromPicker = true;
                     var acceptedMoment = moment(this.$.datePicker.selectedDate)
@@ -238,19 +238,14 @@
                         .seconds(this.$.datePicker.seconds)
                         .milliseconds(this.$.datePicker.milis);
                     self._editingValue = self.reflector().millisDateRepresentation(acceptedMoment.valueOf());
-                    self.decoratedInput().focus();
+                    //self.decoratedInput().focus();
            		}.bind(domBind);
                 
-                domBind._dialogCanceled = function() {
-                    this._cancelDateBind();
-                }.bind(domBind);
-           		
            		domBind.open = function () {
            			var dialog = this.$.dateDialog;
            			var datePicker = this.$.datePicker;
                     
                     dialog.noCancelOnEscKey = false;
-                    dialog.noAutoFocus = true;
                     
            			datePicker.selectedDate = null;
                 	datePicker.selectedHour = self.timePortionToBecomeEndOfDay ? 23 : null;
@@ -274,13 +269,25 @@
                     	dialog.open();
                     }.bind(this), 1);
            		}.bind(domBind);
+                
+                domBind._onCaptureKeyDown = function (e) {
+                    var dialog = this.$.dateDialog;
+                    if (e.keyCode === 13) {
+                        this._acceptDateBind();
+                        dialog.close();
+                    }
+                }.bind(domBind);
+                
+                domBind._dialogOpened = function () {
+                    document.addEventListener('keydown', this._onCaptureKeyDown, true);
+                }.bind(domBind);
            		
             	var div = domBind.content.ownerDocument.createElement('div');
             	div.innerHTML = 
-            	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-canceled="_dialogCanceled">' +
+            	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_dialogOpened">' +
                     '<tg-calendar id="datePicker" pick-time></tg-calendar>' +
                     '<div class="buttons">' +
-                        '<paper-button dialog-dismiss affirmative on-tap="_cancelDateBind">Cancel</paper-button>' +
+                        '<paper-button dialog-dismiss affirmative>Cancel</paper-button>' +
                         '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +
                     '</div>' +
                 '</paper-dialog>';
