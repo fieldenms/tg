@@ -396,6 +396,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .postActionSuccess(new PostActionSuccess(""
                                 + "self.setEditorValue4Property('requiredValidatedProp', functionalEntity, 'value');\n"
                                 + "self.setEditorValue4Property('entityProp', functionalEntity, 'parentEntity');\n"
+                                + "self.save(functionalEntity);\n"
                                 )) // self.retrieve()
                         .postActionError(new PostActionError(""))
                         .icon("trending-up")

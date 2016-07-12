@@ -221,6 +221,13 @@
                 shouldRefreshParentCentreAfterSave: {
                     type: Boolean,
                     value: true
+                },
+                
+                _continuations: {
+                    type: Object,
+                    value: function () {
+                        return {};
+                    }
                 }
             },
 
@@ -303,6 +310,19 @@
                             return this._reflector().createSavingInfoHolder(this._reset(holder), this.savingContext);
                         }).bind(this);
                     }
+                    
+                    var _exeptionOccured = potentiallySavedOrNewEntity.exceptionOccured();
+                    if (_exeptionOccured !== null && _exeptionOccured.ex && _exeptionOccured.ex.initiatingEntityTypeStr) {
+                        console.debug('CONTINUATION OCCURED', _exeptionOccured.ex.initiatingEntityTypeStr);
+                        var elementName = 'tg-' + _exeptionOccured.ex.initiatingEntityTypeStr + '-master';
+                        var action = this.querySelector('tg-ui-action[element-name="' + elementName + '"]');
+                        console.debug('CONTINUATION OCCURED action = ', action);
+                        
+                        this.async(function () {
+                            console.debug('CONTINUATION OCCURED action running');
+                            action._run();
+                        }, 300);
+                    }
 
                     this.enableView();
                     return potentiallySavedOrNewEntity.isValidWithoutSavingException();
@@ -350,12 +370,16 @@
 
                 }).bind(self);
 
-                self.save = (function () {
+                self.save = (function (newContinuation) {
                     this.disableView();
                     var self = this;
                     if (self._savingInProgress()) {
                         var SimultaneousSaveException = self._getSimultaneousSaveExceptionType();
                         throw new SimultaneousSaveException();
+                    }
+                    
+                    if (newContinuation) {
+                        this._continuations[newContinuation.type().notEnhancedFullClassName()] = newContinuation;
                     }
 
                     // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process, 
@@ -570,9 +594,9 @@
                         null, null, 'true',
                         null, null, this.getMasterEntity);
 
-                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, contextHolder)));
+                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, contextHolder, this._continuations)));
                 } else {
-                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, this.savingContext)));
+                    this._ajaxSaver().body = JSON.stringify(this._serialiser().serialise(this._reflector().createSavingInfoHolder(modifiedPropertiesHolder, this.savingContext, this._continuations)));
                 }
                 return this._ajaxSaver().generateRequest().completes;
             },

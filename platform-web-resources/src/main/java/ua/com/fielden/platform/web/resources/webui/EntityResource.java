@@ -213,6 +213,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
+        if (savingInfoHolder.getModifHolder() != null && savingInfoHolder.getModifHolder().containsKey("@@continuations")) {
+            System.out.println("@@continuations! " + savingInfoHolder.getModifHolder().get("@@continuations"));
+        }
         final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
         final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied);
