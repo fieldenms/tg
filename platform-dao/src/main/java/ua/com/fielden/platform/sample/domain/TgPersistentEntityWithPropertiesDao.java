@@ -73,8 +73,12 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             //newEntity.setRequiredValidatedProp(null);
             return newEntity;
         } else {
-            throw Result.failure(new ContinuationException(TgExportFunctionalEntity.class));
-            // return saved;
+            if (getContinuation(TgExportFunctionalEntity.class).isPresent()) {
+                // TODO do some domain-driven stuff upon getContinuation(TgExportFunctionalEntity.class) instance
+                return saved;
+            } else {
+                throw Result.failure(new ContinuationException(TgExportFunctionalEntity.class));
+            }
         }
     }
 

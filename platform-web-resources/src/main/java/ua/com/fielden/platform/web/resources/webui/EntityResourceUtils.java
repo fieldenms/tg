@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -629,10 +630,22 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * Just saves the entity.
      *
      * @param entity
+     * @param continuations -- continuations of the entity to be used during saving
+     * 
      * @return
      */
-    public T save(final T entity) {
-        return co.save(entity);
+    public T save(final T entity, final Optional<List<AbstractEntity<?>>> continuations) {
+        final boolean continuationsPresent = continuations.isPresent();
+        if (continuationsPresent) {
+            co.setContinuations(continuations.get());
+        } else {
+            co.clearContinuations();
+        }
+        final T saved = co.save(entity);
+        if (continuationsPresent) {
+            co.clearContinuations();
+        }
+        return saved;
     }
 
     /**

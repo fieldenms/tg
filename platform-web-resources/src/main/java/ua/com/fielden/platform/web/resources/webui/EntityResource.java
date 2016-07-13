@@ -213,12 +213,14 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
-        if (savingInfoHolder.getContinuations() != null && !savingInfoHolder.getContinuations().isEmpty()) {
-            System.out.println("CONTINUATIONS: " + savingInfoHolder.getContinuations());
+        final Optional<List<AbstractEntity<?>>> continuations = savingInfoHolder.getContinuations() != null && !savingInfoHolder.getContinuations().isEmpty() ? 
+                Optional.of(savingInfoHolder.getContinuations()) : Optional.empty();
+        if (continuations.isPresent()) {
+            System.out.println("CONTINUATIONS: " + continuations.get());
         }
         final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
-        final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied);
+        final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied, continuations);
         return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(potentiallySavedWithException.getKey()), potentiallySavedWithException.getValue());
     }
 
@@ -413,15 +415,16 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * toast message, however, will show the message, that was thrown during saving as exceptional (not first validation error of the entity).
      *
      * @param validatedEntity
+     * @param continuations -- continuations of the entity to be used during saving
      *
      * @return if saving was successful -- returns saved entity with no exception if saving was unsuccessful with exception -- returns <code>validatedEntity</code> (to be bound to
      *         appropriate entity master) and thrown exception (to be shown in toast message)
      */
-    private Pair<T, Optional<Exception>> save(final T validatedEntity) {
+    private Pair<T, Optional<Exception>> save(final T validatedEntity, final Optional<List<AbstractEntity<?>>> continuations) {
         T savedEntity;
         try {
             // try to save the entity with its companion 'save' method
-            savedEntity = utils.save(validatedEntity);
+            savedEntity = utils.save(validatedEntity, continuations);
         } catch (final Exception exception) {
             // Some exception can be thrown inside 1) its companion 'save' method OR 2) CommonEntityDao 'save' during its internal validation.
             // Return entity back to the client after its unsuccessful save with the exception that was thrown during saving

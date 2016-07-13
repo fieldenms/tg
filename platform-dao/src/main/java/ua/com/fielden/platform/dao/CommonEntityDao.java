@@ -1051,8 +1051,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final List<? extends AbstractEntity<?>> entities) {
-        Set<Long> ids = new HashSet<>();
-        for (AbstractEntity<?> entity : entities) {
+        final Set<Long> ids = new HashSet<>();
+        for (final AbstractEntity<?> entity : entities) {
             ids.add(entity.getId());
         }
         return batchDelete(ids);
@@ -1252,5 +1252,25 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
         return (C) co;
     }
-
+    
+    private final Map<Class<? extends AbstractEntity<?>>, AbstractEntity<?>> continuations = new HashMap<>();
+    
+    @Override
+    public void setContinuations(final List<AbstractEntity<?>> continuations) {
+        clearContinuations();
+        for (final AbstractEntity<?> continuation: continuations) {
+            this.continuations.put(continuation.getDerivedFromType(), continuation);
+        }
+    }
+    
+    @Override
+    public void clearContinuations() {
+        this.continuations.clear();
+    }
+    
+    @Override
+    @SuppressWarnings("unchecked")
+    public <E extends AbstractEntity<?>> Optional<E> getContinuation(final Class<E> type) {
+        return Optional.ofNullable((E) this.continuations.get(type));
+    }
 }

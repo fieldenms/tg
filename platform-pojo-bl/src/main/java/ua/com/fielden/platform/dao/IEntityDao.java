@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -398,5 +399,24 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     IFetchProvider<T> getFetchProvider();
+
+    /**
+     * Sets a list of continuations into this companion object to be used for saving.
+     * 
+     * @param continuations
+     */
+    void setContinuations(final List<AbstractEntity<?>> continuations);
+
+    /**
+     * Clears continuations in this companion object.
+     */
+    void clearContinuations();
     
+    /**
+     * A convenient way to obtain continuation instance (if exists) by its type.
+     * 
+     * @param type -- the type of continuation functional entity
+     * @return
+     */
+    <E extends AbstractEntity<?>> Optional<E> getContinuation(final Class<E> type);
 }
