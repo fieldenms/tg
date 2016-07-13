@@ -1208,7 +1208,7 @@
                 savingInfoHolder['centreContextHolder'] = savingContext;
         	}
         	
-        	if (continuationsMap && Object.getOwnPropertyNames(continuationsMap).length > 0) {
+        	if (typeof continuationsMap !== 'undefined') {
         	    var continuations = [];
         	    for (var continuationType in continuationsMap) {
         	        if (continuationsMap.hasOwnProperty(continuationType)) {
