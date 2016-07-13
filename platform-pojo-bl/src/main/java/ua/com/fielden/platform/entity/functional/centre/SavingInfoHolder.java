@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.functional.centre;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +32,21 @@ public class SavingInfoHolder extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Centre context holder", desc = "Centre context holder")
     private CentreContextHolder centreContextHolder;
+    
+    @IsProperty(AbstractEntity.class)
+    @Title("Continuations")
+    private final ArrayList<AbstractEntity<?>> continuations = new ArrayList<AbstractEntity<?>>();
+    
+    @Observable
+    protected SavingInfoHolder setContinuations(final ArrayList<AbstractEntity<?>> continuations) {
+        this.continuations.clear();
+        this.continuations.addAll(continuations);
+        return this;
+    }
+
+    public ArrayList<AbstractEntity<?>> getContinuations() {
+        return /* Collections.unmodifiableList( */ continuations /* ) */;
+    }
 
     @Observable
     public SavingInfoHolder setCentreContextHolder(final CentreContextHolder centreContextHolder) {

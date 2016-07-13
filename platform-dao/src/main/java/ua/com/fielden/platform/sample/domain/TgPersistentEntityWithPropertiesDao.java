@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.ContinuationException;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -72,7 +73,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             //newEntity.setRequiredValidatedProp(null);
             return newEntity;
         } else {
-            throw Result.failure(new Continuation(TgExportFunctionalEntity.class));
+            throw Result.failure(new ContinuationException(TgExportFunctionalEntity.class));
             // return saved;
         }
     }

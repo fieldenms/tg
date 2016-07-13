@@ -143,6 +143,8 @@
 
                 /**
                  * Starts the process of entity saving (based on _currBindingEntity).
+                 *
+                 * @param newContinuation -- newly appeared continuation [functional entity] to be stored for current initiating entity that is edited by this tg-entity-master
                  */
                 save: {
                     type: Function
@@ -223,6 +225,16 @@
                     value: true
                 },
                 
+                /**
+                 * The map of saved continuation functional entities and their types.
+                 *
+                 * Continuation functional entity master pops-up after unsuccessful saving with concrete 'continuation' exception.
+                 * After the user edits and saves continuation functional entity master -- the saved functional entity is stored 
+                 * in this '_continuations' object.
+                 *
+                 * It is necessary to understand that '_continuations' are associated with the same 'saving' session for the same 
+                 * 'initiating entity' and will be resetted after the success of the save (or after refresh).
+                 */
                 _continuations: {
                     type: Object,
                     value: function () {
@@ -309,19 +321,27 @@
                             this._reflector().setCustomProperty(this.savingContext, "@@funcEntityType", this.entityType);
                             return this._reflector().createSavingInfoHolder(this._reset(holder), this.savingContext);
                         }).bind(this);
+                        
+                        // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after successful save
+                        this._continuations = {};
                     }
                     
-                    var _exeptionOccured = potentiallySavedOrNewEntity.exceptionOccured();
-                    if (_exeptionOccured !== null && _exeptionOccured.ex && _exeptionOccured.ex.initiatingEntityTypeStr) {
-                        console.debug('CONTINUATION OCCURED', _exeptionOccured.ex.initiatingEntityTypeStr);
-                        var elementName = 'tg-' + _exeptionOccured.ex.initiatingEntityTypeStr + '-master';
+                    var _exceptionOccured = potentiallySavedOrNewEntity.exceptionOccured();
+                    // if continuation exception has been occured -- find its 'tg-ui-action' and '_run' it (if it does not exist -- then it should be created)
+                    if (_exceptionOccured !== null && _exceptionOccured.ex && _exceptionOccured.ex.continuationTypeStr) {
+                        console.debug('CONTINUATION: type = ', _exceptionOccured.ex.continuationTypeStr);
+                        var elementName = 'tg-' + _exceptionOccured.ex.continuationTypeStr + '-master';
+                        // TODO consider multiple tg-ui-actions for the same continuationType?
                         var action = this.querySelector('tg-ui-action[element-name="' + elementName + '"]');
-                        console.debug('CONTINUATION OCCURED action = ', action);
+                        if (!action) {
+                            // TODO implement: action = createAndAddToDOM(elementName, ...);
+                        }
+                        console.debug('CONTINUATION: action = ', action);
                         
                         this.async(function () {
-                            console.debug('CONTINUATION OCCURED action running');
+                            console.debug('CONTINUATION: action running started');
                             action._run();
-                        }, 300);
+                        }, 300); // TODO remove async? reduce timeout?
                     }
 
                     this.enableView();
@@ -378,6 +398,8 @@
                         throw new SimultaneousSaveException();
                     }
                     
+                    // if continuation has been passed into saving function (in postSaveSuccess callback of continuation's tg-ui-action)
+                    // then it should be stored locally in _continuations map.
                     if (newContinuation) {
                         this._continuations[newContinuation.type().notEnhancedFullClassName()] = newContinuation;
                     }
@@ -581,6 +603,15 @@
             //////////////////////////////////////// SAVING ////////////////////////////////////////
             _savingInProgress: function () {
                 return this._ajaxSaver().loading;
+            },
+            
+            /**
+             * Overridden from tg-entity-binder-behavior to reset _continuations.
+             */
+            _resetState: function () {
+                Polymer.TgBehaviors.TgEntityBinderBehavior._resetState.call(this);
+                // need to reset _continuations after 'refresh', 'continuous saving'. See also _postSavedDefault for specific resetting after save.
+                this._continuations = {};
             },
 
             /**
