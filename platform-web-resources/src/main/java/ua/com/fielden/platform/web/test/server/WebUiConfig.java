@@ -42,6 +42,7 @@ import ua.com.fielden.platform.sample.domain.ExportActionProducer;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
+import ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
@@ -115,6 +116,7 @@ import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfi
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
+import ua.com.fielden.platform.web.test.server.config.TgAcknowledgeWarningsWebUiConfig;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -236,6 +238,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .addAction(MasterActions.SAVE)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopTabletMasterLayout).done();
         configApp().addMaster(new EntityMaster<TgDeletionTestEntity>(TgDeletionTestEntity.class, TgDeletionTestEntityProducer.class, deletionMaster, injector()));
+        
+        TgAcknowledgeWarningsWebUiConfig.register(injector(), configApp());
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
@@ -396,7 +400,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .postActionSuccess(new PostActionSuccess(""
                                 + "self.setEditorValue4Property('requiredValidatedProp', functionalEntity, 'value');\n"
                                 + "self.setEditorValue4Property('entityProp', functionalEntity, 'parentEntity');\n"
-                                + "self.save(functionalEntity);\n"
                                 )) // self.retrieve()
                         .postActionError(new PostActionError(""))
                         .icon("trending-up")
@@ -537,6 +540,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .longDesc("Export action")
                         .shortcut("ctrl+shift+e")
                         .build())
+                .addAction(
+                        action(TgAcknowledgeWarnings.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(new PostActionSuccess("self.save(functionalEntity);\n"))
+                        .shortDesc("Acknowledge")
+                        .build())
 
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
@@ -552,14 +561,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
                         + format("['subheader:Other components', 'flex'],")
                         + format("[[%s], ['flex']],", fmr)
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], ['flex'], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]")
                         .replace("fmr", fmr)
                         .replace("actionMr", actionMr))
@@ -570,7 +579,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]")
                         .replace("fmr", fmr)
                         .replace("actionMr", actionMr))
