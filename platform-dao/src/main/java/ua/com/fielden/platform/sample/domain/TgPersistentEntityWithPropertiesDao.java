@@ -76,6 +76,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             if (getContinuation(TgAcknowledgeWarnings.class).isPresent()) {
                 // TODO do some domain-driven stuff upon getContinuation(TgAcknowledgeWarnings.class) instance
                 System.out.println("Acknowledged? = " + getContinuation(TgAcknowledgeWarnings.class).get().getAcknowledged());
+                // throw Result.failure("Unknown failure after continuation has been successfully saved.");
                 return saved;
             } else {
                 // return saved;

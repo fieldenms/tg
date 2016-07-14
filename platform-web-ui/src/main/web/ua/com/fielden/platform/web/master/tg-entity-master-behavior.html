@@ -357,6 +357,11 @@
                             console.debug('CONTINUATION: action running started');
                             action._run();
                         }, 300); // TODO remove async? reduce timeout?
+                    } else if (_exceptionOccured !== null) {
+                        this.enableView();
+                        
+                        // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after unsuccessful save due to non-continuation exception
+                        this._continuations = {};
                     } else {
                         this.enableView();
                     }
