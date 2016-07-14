@@ -19,6 +19,11 @@
         SimultaneousSaveException.prototype.toString = function () {
             return this.message;
         }
+        
+        var selectEnabledEditor = function (editor) {
+            var selectedElement = editor.querySelector('.custom-input:not([hidden]):not([disabled])');
+            return (selectedElement && selectedElement.querySelector('textarea')) || selectedElement;
+        }
 
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgEntityMasterBehaviorImpl = {
@@ -426,7 +431,19 @@
              */
             focusFirstInput: function () {
                 this.async(function () {
-                    (this.querySelector('input:not([hidden]):not([disabled])') || this).focus();
+                    var editors = this.querySelectorAll('tg-editor');
+                    var editorIndex, firstInput, selectedElement;
+                    for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
+                        selectedElement = selectEnabledEditor(editors[editorIndex]);
+                        firstInput = firstInput || selectedElement;
+                        if (editors[editorIndex]._error) {
+                            if (selectedElement) {
+                                selectedElement.focus();
+                                return;
+                            }
+                        }
+                    }
+                    (firstInput || this).focus();
                 }.bind(this), 100);
             },
 
