@@ -543,7 +543,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(
                         action(TgAcknowledgeWarnings.class)
                         .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess("self.save(functionalEntity);\n"))
+                        .postActionSuccess(new PostActionSuccess("self.save(functionalEntity).then(Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null),      function (value) { console.log('AJAX PROMISE CATCH', value);}     );\n"))
                         .shortDesc("Acknowledge")
                         .build())
 
