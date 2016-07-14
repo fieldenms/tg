@@ -335,9 +335,23 @@
                         // TODO consider multiple tg-ui-actions for the same continuationType?
                         var action = this.querySelector('tg-ui-action[element-name="' + elementName + '"]');
                         
+                        /* if (action) {
+                            Polymer.dom(action.parentNode).removeChild(action);
+                            // Polymer.dom(this).removeChild(action);
+                            Polymer.dom.flush();
+                            action = null;
+                        }
+                        
                         if (!action) {
                             // TODO implement: action = createAndAddToDOM(elementName, ...);
-                        }
+                            var dialogModel = document.createElement('template', 'dom-bind');
+                            dialogModel.innerHTML = "<tg-ui-action id='blabla' ui-role='BUTTON' short-desc='Acknowledge' long-desc='Tg Acknowledge Warnings entity' icon='editor:mode-edit' should-refresh-parent-centre-after-save component-uri='/master_ui/ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings' element-name='tg-TgAcknowledgeWarnings-master' number-of-action='12' element-alias='tg-TgAcknowledgeWarnings-master_12_PRIMARY_RESULT_SET' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[primaryAction.12.attrs]]' pre-action='[[primaryAction.12.preAction]]' post-action-success='[[primaryAction.12.postActionSuccess]]' post-action-error='[[primaryAction.12.postActionError]]' require-selection-criteria='false' require-selected-entities='NONE' require-master-entity='true' class='primary-action'></tg-ui-action>";
+                            
+                            Polymer.dom(this).appendChild(dialogModel);
+                            Polymer.dom.flush();
+                            
+                            action = dialogModel.$.blabla;
+                        } */
                         
                         // if found continuation action has not been enhanced yet to be able to enable parent master view after action completion (when isActionInProgress becomes false) -- then perform such enhancement:
                         if (action._wasEnhancedToEnableParentView !== true) {
