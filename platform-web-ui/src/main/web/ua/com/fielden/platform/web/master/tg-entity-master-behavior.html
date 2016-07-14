@@ -333,8 +333,22 @@
                         var elementName = 'tg-' + _exceptionOccured.ex.continuationTypeStr + '-master';
                         // TODO consider multiple tg-ui-actions for the same continuationType?
                         var action = this.querySelector('tg-ui-action[element-name="' + elementName + '"]');
+                        
                         if (!action) {
                             // TODO implement: action = createAndAddToDOM(elementName, ...);
+                        }
+                        
+                        // if found continuation action has not been enhanced yet to be able to enable parent master view after action completion (when isActionInProgress becomes false) -- then perform such enhancement:
+                        if (action._wasEnhancedToEnableParentView !== true) {
+                            var old_actionProgressStatusChanged = action._actionProgressStatusChanged.bind(action);
+                            var _self = this;
+                            action._actionProgressStatusChanged = (function (newValue, oldValue) {
+                                old_actionProgressStatusChanged(newValue, oldValue);
+                                if (newValue === false) {
+                                    _self.enableView();
+                                }
+                            }).bind(action);
+                            action._wasEnhancedToEnableParentView = true;
                         }
                         console.debug('CONTINUATION: action = ', action);
                         
@@ -342,9 +356,10 @@
                             console.debug('CONTINUATION: action running started');
                             action._run();
                         }, 300); // TODO remove async? reduce timeout?
+                    } else {
+                        this.enableView();
                     }
 
-                    this.enableView();
                     return potentiallySavedOrNewEntity.isValidWithoutSavingException();
                 }).bind(self);
 

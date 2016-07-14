@@ -78,6 +78,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 System.out.println("Acknowledged? = " + getContinuation(TgAcknowledgeWarnings.class).get().getAcknowledged());
                 return saved;
             } else {
+                // return saved;
                 throw Result.failure(new ContinuationException(TgAcknowledgeWarnings.class));
             }
         }
