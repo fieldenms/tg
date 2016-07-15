@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 
 import org.joda.time.DateTime;
 
@@ -73,14 +74,23 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             //newEntity.setRequiredValidatedProp(null);
             return newEntity;
         } else {
-            if (getContinuation(TgAcknowledgeWarnings.class).isPresent()) {
-                // TODO do some domain-driven stuff upon getContinuation(TgAcknowledgeWarnings.class) instance
-                System.out.println("Acknowledged? = " + getContinuation(TgAcknowledgeWarnings.class).get().getAcknowledged());
-                // throw Result.failure("Unknown failure after continuation has been successfully saved.");
-                return saved;
+            if (getContinuation("acknowledgedForTheFirstTime").isPresent()) {
+                final TgAcknowledgeWarnings continuation = this.<TgAcknowledgeWarnings>getContinuation("acknowledgedForTheFirstTime").get();
+                System.out.println("Acknowledged (first)? = " + continuation.getAcknowledged());
+                
+                if (getContinuation("acknowledgedForTheSecondTime").isPresent()) {
+                    final TgAcknowledgeWarnings secondContinuation = this.<TgAcknowledgeWarnings>getContinuation("acknowledgedForTheSecondTime").get();
+                    System.out.println("Acknowledged (second)? = " + secondContinuation.getAcknowledged());
+                    
+                    return saved;
+                    // throw Result.failure("Unknown failure after continuation has been successfully saved.");
+                } else {
+                    // return saved;
+                    throw Result.failure(new ContinuationException(TgAcknowledgeWarnings.class, "acknowledgedForTheSecondTime"));
+                }
             } else {
                 // return saved;
-                throw Result.failure(new ContinuationException(TgAcknowledgeWarnings.class));
+                throw Result.failure(new ContinuationException(TgAcknowledgeWarnings.class, "acknowledgedForTheFirstTime"));
             }
         }
     }

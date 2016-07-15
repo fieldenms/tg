@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityI
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +21,8 @@ import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import org.restlet.resource.ServerResource;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -45,8 +48,6 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * The web resource for entity serves as a back-end mechanism of entity retrieval, saving and deletion. It provides a base implementation for handling the following methods:
@@ -213,8 +214,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
-        final Optional<List<AbstractEntity<?>>> continuations = savingInfoHolder.getContinuations() != null && !savingInfoHolder.getContinuations().isEmpty() ? 
-                Optional.of(savingInfoHolder.getContinuations()) : Optional.empty();
+        final Optional<Map<String, AbstractEntity<?>>> continuations = savingInfoHolder.getContinuations() != null && !savingInfoHolder.getContinuations().isEmpty() ? 
+                Optional.of(createContinuationsMap(savingInfoHolder.getContinuations(), savingInfoHolder.getContinuationProperties())) : Optional.empty();
         if (continuations.isPresent()) {
             System.out.println("CONTINUATIONS: " + continuations.get());
         }
@@ -222,6 +223,14 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
 
         final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied, continuations);
         return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(potentiallySavedWithException.getKey()), potentiallySavedWithException.getValue());
+    }
+
+    private Map<String, AbstractEntity<?>> createContinuationsMap(final List<AbstractEntity<?>> continuations, final List<String> continuationProperties) {
+        final Map<String, AbstractEntity<?>> map = new LinkedHashMap<>();
+        for (int index = 0; index < continuations.size(); index++) {
+            map.put(continuationProperties.get(index), continuations.get(index));
+        }
+        return map;
     }
 
     /**
@@ -420,7 +429,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return if saving was successful -- returns saved entity with no exception if saving was unsuccessful with exception -- returns <code>validatedEntity</code> (to be bound to
      *         appropriate entity master) and thrown exception (to be shown in toast message)
      */
-    private Pair<T, Optional<Exception>> save(final T validatedEntity, final Optional<List<AbstractEntity<?>>> continuations) {
+    private Pair<T, Optional<Exception>> save(final T validatedEntity, final Optional<Map<String, AbstractEntity<?>>> continuations) {
         T savedEntity;
         try {
             // try to save the entity with its companion 'save' method

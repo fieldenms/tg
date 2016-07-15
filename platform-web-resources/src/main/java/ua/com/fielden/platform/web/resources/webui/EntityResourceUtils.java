@@ -634,7 +634,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * 
      * @return
      */
-    public T save(final T entity, final Optional<List<AbstractEntity<?>>> continuations) {
+    public T save(final T entity, final Optional<Map<String, AbstractEntity<?>>> continuations) {
         final boolean continuationsPresent = continuations.isPresent();
         if (continuationsPresent) {
             co.setContinuations(continuations.get());

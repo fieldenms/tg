@@ -1210,12 +1210,15 @@
         	
         	if (typeof continuationsMap !== 'undefined') {
         	    var continuations = [];
-        	    for (var continuationType in continuationsMap) {
-        	        if (continuationsMap.hasOwnProperty(continuationType)) {
-        	            continuations.push(continuationsMap[continuationType]);
+        	    var continuationProperties = [];
+        	    for (var continuationProperty in continuationsMap) {
+        	        if (continuationsMap.hasOwnProperty(continuationProperty)) {
+        	            continuations.push(continuationsMap[continuationProperty]);
+        	            continuationProperties.push(continuationProperty);
         	        }
         	    }
         	    savingInfoHolder['continuations'] = continuations;
+        	    savingInfoHolder['continuationProperties'] = continuationProperties;
         	}
             return savingInfoHolder;
         },

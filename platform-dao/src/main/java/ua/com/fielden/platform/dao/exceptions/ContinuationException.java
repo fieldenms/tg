@@ -14,14 +14,17 @@ public class ContinuationException extends RuntimeException {
     private static final long serialVersionUID = 1L;
     
     public final String continuationTypeStr;
+    public final String continuationProperty;
 
     /**
      * Creates continuation exception based on <code>continuationType</code>.
      * 
      * @param continuationType -- functional entity type that represents continuation
+     * @param continuationProperty -- the property on companion object into which continuation will arrive
      */
-    public ContinuationException(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> continuationType) {
-        super("Continuation for [" + continuationType.getSimpleName() + "] entity.");
-        this.continuationTypeStr = continuationType.getSimpleName();
+    public ContinuationException(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> continuationType, final String continuationProperty) {
+        super("Continuation for [" + continuationType.getSimpleName() + "] entity and property [" + continuationProperty + "].");
+        this.continuationTypeStr = continuationType.getName();
+        this.continuationProperty = continuationProperty;
     }
 }

@@ -1253,13 +1253,13 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return (C) co;
     }
     
-    private final Map<Class<? extends AbstractEntity<?>>, AbstractEntity<?>> continuations = new HashMap<>();
+    private final Map<String, AbstractEntity<?>> continuations = new HashMap<>();
     
     @Override
-    public void setContinuations(final List<AbstractEntity<?>> continuations) {
+    public void setContinuations(final Map<String, AbstractEntity<?>> continuations) {
         clearContinuations();
-        for (final AbstractEntity<?> continuation: continuations) {
-            this.continuations.put(continuation.getDerivedFromType(), continuation);
+        for (final Map.Entry<String, AbstractEntity<?>> propAndContinuation: continuations.entrySet()) {
+            this.continuations.put(propAndContinuation.getKey(), propAndContinuation.getValue());
         }
     }
     
@@ -1270,7 +1270,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     @Override
     @SuppressWarnings("unchecked")
-    public <E extends AbstractEntity<?>> Optional<E> getContinuation(final Class<E> type) {
-        return Optional.ofNullable((E) this.continuations.get(type));
+    public <E extends AbstractEntity<?>> Optional<E> getContinuation(final String continuationProperty) {
+        return Optional.ofNullable((E) this.continuations.get(continuationProperty));
     }
 }

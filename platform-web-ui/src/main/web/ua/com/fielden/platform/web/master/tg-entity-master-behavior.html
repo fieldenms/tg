@@ -330,26 +330,31 @@
                     var _exceptionOccured = potentiallySavedOrNewEntity.exceptionOccured();
                     // if continuation exception has been occured -- find its 'tg-ui-action' and '_run' it (if it does not exist -- then it should be created)
                     if (_exceptionOccured !== null && _exceptionOccured.ex && _exceptionOccured.ex.continuationTypeStr) {
-                        console.debug('CONTINUATION: type = ', _exceptionOccured.ex.continuationTypeStr);
-                        var elementName = 'tg-' + _exceptionOccured.ex.continuationTypeStr + '-master';
-                        // TODO consider multiple tg-ui-actions for the same continuationType?
-                        var action = this.querySelector('tg-ui-action[element-name="' + elementName + '"]');
+                        var continuationType = this._reflector().findTypeByName(_exceptionOccured.ex.continuationTypeStr); // continuation functional entity type
+                        if (continuationType === null) {
+                            throw 'Continuation type [' + _exceptionOccured.ex.continuationTypeStr + '] was not registered.';
+                        }
+                        var continuationProperty = _exceptionOccured.ex.continuationProperty; // the property name that uniquely identifies continuation in saving session of initiating entity on this master (will be set on companion object)
+                        var elementName = 'tg-' + continuationType._simpleClassName() + '-master';
+                        var actionDesc = continuationType._simpleClassName() + '-' + continuationProperty;
                         
+                        var action = this.querySelector('tg-ui-action[continuation-property="' + continuationProperty + '"]');
                         if (!action) {
                             var actionModel = document.createElement('template', 'dom-bind');
                             actionModel.innerHTML = 
                                 "<tg-ui-action " +
                                      "hidden " +
                                      "id='continuationAction' " +
-                                     "ui-role='BUTTON' " +
-                                     "short-desc='Acknowledge' " +
-                                     "long-desc='Tg Acknowledge Warnings entity' " +
+                                     "ui-role='BUTTON' " + // it does not matter -- hidden
+                                     "short-desc='" + actionDesc + "' " +
+                                     "long-desc='" + actionDesc + "' " +
                                      "icon='editor:mode-edit' " +
-                                     "should-refresh-parent-centre-after-save " +
-                                     "component-uri='/master_ui/ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings' " +
-                                     "element-name='tg-TgAcknowledgeWarnings-master' " +
-                                     "number-of-action='12' " +
-                                     "element-alias='tg-TgAcknowledgeWarnings-master_12_PRIMARY_RESULT_SET' " +
+                                     // "should-refresh-parent-centre-after-save " + // is not needed -- continuation actions are the actions on tg-entity-master, this parameter is not applicable
+                                     "component-uri='/master_ui/" + continuationType.fullClassName() + "' " +
+                                     "continuation-property='" + continuationProperty + "' " +
+                                     "element-name='" + elementName + "' " +
+                                     // "number-of-action='...' " + // numberOfAction is not needed (it is used directly for compound master menu items and insertion points -- no intersection with continuations)
+                                     "element-alias='" + elementName + "_" + continuationProperty + "_CONTINUATION' " +
                                      "show-dialog='[[_showDialog]]' " +
                                      "create-context-holder='[[_createContextHolder]]' " +
                                      "attrs='[[attrs]]' " +
@@ -372,27 +377,25 @@
                             actionModel.primaryAction = self.primaryAction;
                             
                             actionModel.preAction = function (action) {
-                                console.log('preAction: Acknowledge');
+                                console.log('preAction: ' + actionDesc);
                                 return Promise.resolve(true);
                             };
                             actionModel.postActionSuccess = function (functionalEntity) {
-                                console.log('postActionSuccess: Acknowledge', functionalEntity);
-                                self.save(functionalEntity)
+                                console.log('postActionSuccess: ' + actionDesc, functionalEntity);
+                                self.save(functionalEntity, continuationProperty)
                                     .then(
                                         Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null),
                                         function (value) { console.log('AJAX PROMISE CATCH', value); }
                                     );
                             };
                             actionModel.postActionError = function (functionalEntity) {
-                                console.log('postActionError: Acknowledge', functionalEntity);
+                                console.log('postActionError: ' + actionDesc, functionalEntity);
                             };
                             actionModel.attrs = {
-                                entityType:'ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings', currentState:'EDIT', centreUuid: self.uuid,
+                                entityType:continuationType.fullClassName(), currentState:'EDIT', centreUuid: self.uuid
                             };
-                        }
-                        
-                        // if found continuation action has not been enhanced yet to be able to enable parent master view after action completion (when isActionInProgress becomes false) -- then perform such enhancement:
-                        if (action._wasEnhancedToEnableParentView !== true) {
+                            
+                            // newly created continuation action should be enhanced to be able to enable parent master view after action completion (when isActionInProgress becomes false)
                             var old_actionProgressStatusChanged = action._actionProgressStatusChanged.bind(action);
                             var _self = this;
                             action._actionProgressStatusChanged = (function (newValue, oldValue) {
@@ -401,14 +404,8 @@
                                     _self.enableView();
                                 }
                             }).bind(action);
-                            action._wasEnhancedToEnableParentView = true;
                         }
-                        console.debug('CONTINUATION: action = ', action);
-                        
-                        this.async(function () {
-                            console.debug('CONTINUATION: action running started');
-                            action._run();
-                        }, 300); // TODO remove async? reduce timeout?
+                        action._run();
                     } else if (_exceptionOccured !== null) {
                         this.enableView();
                         
@@ -463,7 +460,7 @@
 
                 }).bind(self);
 
-                self.save = (function (newContinuation) {
+                self.save = (function (newContinuation, continuationProperty) {
                     this.disableView();
                     var self = this;
                     if (self._savingInProgress()) {
@@ -474,7 +471,7 @@
                     // if continuation has been passed into saving function (in postSaveSuccess callback of continuation's tg-ui-action)
                     // then it should be stored locally in _continuations map.
                     if (newContinuation) {
-                        this._continuations[newContinuation.type().notEnhancedFullClassName()] = newContinuation;
+                        this._continuations[continuationProperty] = newContinuation;
                     }
 
                     // cancel previous validation requests except the last one -- if it exists then saving process will be chained on top of that last validation process, 

@@ -401,11 +401,11 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     IFetchProvider<T> getFetchProvider();
 
     /**
-     * Sets a list of continuations into this companion object to be used for saving.
+     * Sets a map of continuations into this companion object to be used for saving.
      * 
      * @param continuations
      */
-    void setContinuations(final List<AbstractEntity<?>> continuations);
+    void setContinuations(final Map<String, AbstractEntity<?>> continuations);
 
     /**
      * Clears continuations in this companion object.
@@ -413,10 +413,10 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     void clearContinuations();
     
     /**
-     * A convenient way to obtain continuation instance (if exists) by its type.
+     * A convenient way to obtain continuation instance (if exists) by its <code>continuationProperty</code>.
      * 
-     * @param type -- the type of continuation functional entity
+     * @param continuationProperty -- companion object property that identifies continuation
      * @return
      */
-    <E extends AbstractEntity<?>> Optional<E> getContinuation(final Class<E> type);
+    <E extends AbstractEntity<?>> Optional<E> getContinuation(final String continuationProperty);
 }

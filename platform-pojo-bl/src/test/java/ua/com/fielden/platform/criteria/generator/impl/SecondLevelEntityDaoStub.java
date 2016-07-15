@@ -180,21 +180,21 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
         // TODO Auto-generated method stub
         return null;
     }
-    
+
     @Override
-    public void setContinuations(final List<AbstractEntity<?>> continuations) {
+    public void setContinuations(final Map<String, AbstractEntity<?>> continuations) {
         // TODO Auto-generated method stub
         
     }
-    
+
     @Override
     public void clearContinuations() {
         // TODO Auto-generated method stub
         
     }
-    
+
     @Override
-    public <E extends AbstractEntity<?>> Optional<E> getContinuation(final Class<E> type) {
+    public <E extends AbstractEntity<?>> Optional<E> getContinuation(final String continuationProperty) {
         // TODO Auto-generated method stub
         return null;
     }

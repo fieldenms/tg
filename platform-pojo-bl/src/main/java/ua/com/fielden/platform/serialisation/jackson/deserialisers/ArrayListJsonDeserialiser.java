@@ -47,6 +47,8 @@ public class ArrayListJsonDeserialiser extends StdDeserializer<ArrayList> {
                 final String entityTypeId = el.get("@id_ref") != null ? el.get("@id_ref").asText().substring(0, el.get("@id_ref").asText().indexOf("#")) : el.get("@id").asText().substring(0, el.get("@id").asText().indexOf("#"));
                 final Class<?> instanceType = serialisationTypeEncoder.decode(entityTypeId);
                 list.add(mapper.readValue(el.traverse(mapper), instanceType));
+            } else if (el.isTextual()) {
+                list.add(el.asText());
             } else {
                 throw new UnsupportedOperationException("ListJsonDeserialiser does not support node [" + el + "] with type [" + el.getNodeType() + "] at this stage."); // not supported
             }

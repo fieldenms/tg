@@ -37,6 +37,21 @@ public class SavingInfoHolder extends AbstractEntity<String> {
     @Title("Continuations")
     private final ArrayList<AbstractEntity<?>> continuations = new ArrayList<AbstractEntity<?>>();
     
+    @IsProperty(String.class)
+    @Title("Continuation Properties")
+    private final ArrayList<String> continuationProperties = new ArrayList<>();
+    
+    @Observable
+    protected SavingInfoHolder setContinuationProperties(final ArrayList<String> continuationProperties) {
+        this.continuationProperties.clear();
+        this.continuationProperties.addAll(continuationProperties);
+        return this;
+    }
+
+    public ArrayList<String> getContinuationProperties() {
+        return /* Collections.unmodifiableList( */ continuationProperties /* ) */;
+    }
+    
     @Observable
     protected SavingInfoHolder setContinuations(final ArrayList<AbstractEntity<?>> continuations) {
         this.continuations.clear();
