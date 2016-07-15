@@ -346,8 +346,8 @@
                                      "hidden " +
                                      "id='continuationAction' " +
                                      "ui-role='BUTTON' " + // it does not matter -- hidden
-                                     "short-desc='" + actionDesc + "' " +
-                                     "long-desc='" + actionDesc + "' " +
+                                     "short-desc='" + continuationType.entityTitle() + "' " +
+                                     "long-desc='" + continuationType.entityDesc() + "' " +
                                      "icon='editor:mode-edit' " +
                                      // "should-refresh-parent-centre-after-save " + // is not needed -- continuation actions are the actions on tg-entity-master, this parameter is not applicable
                                      "component-uri='/master_ui/" + continuationType.fullClassName() + "' " +

@@ -85,12 +85,11 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                     return saved;
                     // throw Result.failure("Unknown failure after continuation has been successfully saved.");
                 } else {
-                    // return saved;
-                    throw Result.failure(new ContinuationException(TgAcknowledgeWarnings.class, "acknowledgedForTheSecondTime"));
+                    throw Result.failure(new ContinuationException("Warnings need acknowledgement (second time)", TgAcknowledgeWarnings.class, "acknowledgedForTheSecondTime"));
                 }
             } else {
                 // return saved;
-                throw Result.failure(new ContinuationException(TgAcknowledgeWarnings.class, "acknowledgedForTheFirstTime"));
+                throw Result.failure(new ContinuationException("Warnings need acknowledgement (first time)", TgAcknowledgeWarnings.class, "acknowledgedForTheFirstTime"));
             }
         }
     }

@@ -17,14 +17,25 @@ public class ContinuationException extends RuntimeException {
     public final String continuationProperty;
 
     /**
-     * Creates continuation exception based on <code>continuationType</code>.
-     * 
+     * Creates continuation exception based on its type, property and custom error message.
+     *
+     * @param customMessage -- custom exception message to be shown in toast
+     * @param continuationType -- functional entity type that represents continuation
+     * @param continuationProperty -- the property on companion object into which continuation will arrive
+     */
+    public ContinuationException(final String customMessage, final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> continuationType, final String continuationProperty) {
+        super(customMessage);
+        this.continuationTypeStr = continuationType.getName();
+        this.continuationProperty = continuationProperty;
+    }
+    
+    /**
+     * Creates continuation exception based on type and property.
+     *
      * @param continuationType -- functional entity type that represents continuation
      * @param continuationProperty -- the property on companion object into which continuation will arrive
      */
     public ContinuationException(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> continuationType, final String continuationProperty) {
-        super("Continuation for [" + continuationType.getSimpleName() + "] entity and property [" + continuationProperty + "].");
-        this.continuationTypeStr = continuationType.getName();
-        this.continuationProperty = continuationProperty;
+        this("Continuation for [" + continuationType.getSimpleName() + "] entity and property [" + continuationProperty + "].", continuationType, continuationProperty);
     }
 }
