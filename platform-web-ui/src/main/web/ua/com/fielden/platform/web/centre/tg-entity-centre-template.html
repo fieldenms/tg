@@ -262,6 +262,14 @@
                 }, 1);
             },
             
+            addOwnKeyBindings: function () {
+                this._dom().addOwnKeyBindings();
+            },
+            
+            removeOwnKeyBindings: function () {
+                this._dom().removeOwnKeyBindings();
+            },
+            
             _isRunningChanged: function (newValue, oldValue) {
                 if (newValue) {
                     this.disableView();
