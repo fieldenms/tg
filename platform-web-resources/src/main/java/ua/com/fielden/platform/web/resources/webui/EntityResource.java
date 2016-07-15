@@ -216,9 +216,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
         final Optional<Map<String, AbstractEntity<?>>> continuations = savingInfoHolder.getContinuations() != null && !savingInfoHolder.getContinuations().isEmpty() ? 
                 Optional.of(createContinuationsMap(savingInfoHolder.getContinuations(), savingInfoHolder.getContinuationProperties())) : Optional.empty();
-        if (continuations.isPresent()) {
-            System.out.println("CONTINUATIONS: " + continuations.get());
-        }
         final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
         final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied, continuations);

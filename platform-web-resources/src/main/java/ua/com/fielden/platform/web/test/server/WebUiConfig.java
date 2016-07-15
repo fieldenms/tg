@@ -540,12 +540,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .longDesc("Export action")
                         .shortcut("ctrl+shift+e")
                         .build())
-//                .addAction(
-//                        action(TgAcknowledgeWarnings.class)
-//                        .withContext(context().withMasterEntity().build())
-//                        .postActionSuccess(new PostActionSuccess("self.save(functionalEntity).then(Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null),      function (value) { console.log('AJAX PROMISE CATCH', value);}     );\n"))
-//                        .shortDesc("Acknowledge")
-//                        .build())
 
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)
@@ -561,14 +555,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
                         + format("['subheader:Other components', 'flex'],")
                         + format("[[%s], ['flex']],", fmr)
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr)
+                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr)
                         + "    ]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], ['flex'], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]")
                         .replace("fmr", fmr)
                         .replace("actionMr", actionMr))
@@ -579,7 +573,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
+                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
                         + "]")
                         .replace("fmr", fmr)
                         .replace("actionMr", actionMr))

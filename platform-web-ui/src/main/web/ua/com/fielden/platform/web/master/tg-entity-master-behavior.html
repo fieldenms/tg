@@ -146,6 +146,7 @@
                  * Starts the process of entity saving (based on _currBindingEntity).
                  *
                  * @param newContinuation -- newly appeared continuation [functional entity] to be stored for current initiating entity that is edited by this tg-entity-master
+                 * @param continuationProperty -- property name identifier of newly appeared continuation
                  */
                 save: {
                     type: Function
@@ -227,14 +228,14 @@
                 },
                 
                 /**
-                 * The map of saved continuation functional entities and their types.
+                 * The map of saved continuation functional entities by their property name identifiers.
                  *
                  * Continuation functional entity master pops-up after unsuccessful saving with concrete 'continuation' exception.
                  * After the user edits and saves continuation functional entity master -- the saved functional entity is stored 
                  * in this '_continuations' object.
                  *
                  * It is necessary to understand that '_continuations' are associated with the same 'saving' session for the same 
-                 * 'initiating entity' and will be resetted after the success of the save (or after refresh).
+                 * 'initiating entity' and will be resetted after the success of the save (or after refresh, validate).
                  */
                 _continuations: {
                     type: Object,
