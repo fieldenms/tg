@@ -680,7 +680,7 @@
              */
             _resetState: function () {
                 Polymer.TgBehaviors.TgEntityBinderBehavior._resetState.call(this);
-                // need to reset _continuations after 'refresh', 'continuous saving'. See also _postSavedDefault for specific resetting after save.
+                // need to reset _continuations after 'refresh', 'continuous saving'. See also _postSavedDefault for specific resetting after save. See also _postValidatedDefault for resetting after validation.
                 this._continuations = {};
             },
 
