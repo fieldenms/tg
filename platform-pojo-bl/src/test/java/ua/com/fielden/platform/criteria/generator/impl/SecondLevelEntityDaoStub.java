@@ -3,10 +3,8 @@ package ua.com.fielden.platform.criteria.generator.impl;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import ua.com.fielden.platform.dao.QueryExecutionModel;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -177,24 +175,6 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
 
     @Override
     public IFetchProvider<SecondLevelEntity> getFetchProvider() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void setContinuations(final Map<String, AbstractEntity<?>> continuations) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void clearContinuations() {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public <E extends AbstractEntity<?>> Optional<E> getContinuation(final String continuationProperty) {
         // TODO Auto-generated method stub
         return null;
     }

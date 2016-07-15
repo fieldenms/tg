@@ -27,6 +27,7 @@ import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
@@ -636,6 +637,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      */
     public T save(final T entity, final Optional<Map<String, AbstractEntity<?>>> continuations) {
         final boolean continuationsPresent = continuations.isPresent();
+        final CommonEntityDao<T> co = (CommonEntityDao<T>) this.co;
         if (continuationsPresent) {
             co.setContinuations(continuations.get());
         } else {

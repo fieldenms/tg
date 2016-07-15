@@ -1051,8 +1051,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final List<? extends AbstractEntity<?>> entities) {
-        final Set<Long> ids = new HashSet<>();
-        for (final AbstractEntity<?> entity : entities) {
+        Set<Long> ids = new HashSet<>();
+        for (AbstractEntity<?> entity : entities) {
             ids.add(entity.getId());
         }
         return batchDelete(ids);
@@ -1255,7 +1255,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     private final Map<String, AbstractEntity<?>> continuations = new HashMap<>();
     
-    @Override
+    /**
+     * Sets a map of continuations into this companion object to be used for saving.
+     * 
+     * @param continuations
+     */
     public void setContinuations(final Map<String, AbstractEntity<?>> continuations) {
         clearContinuations();
         for (final Map.Entry<String, AbstractEntity<?>> propAndContinuation: continuations.entrySet()) {
@@ -1263,12 +1267,19 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
     
-    @Override
+    /**
+     * Clears continuations in this companion object.
+     */
     public void clearContinuations() {
         this.continuations.clear();
     }
     
-    @Override
+    /**
+     * A convenient way to obtain continuation instance (if exists) by its <code>continuationProperty</code>.
+     * 
+     * @param continuationProperty -- companion object property that identifies continuation
+     * @return
+     */
     @SuppressWarnings("unchecked")
     public <E extends AbstractEntity<?>> Optional<E> getContinuation(final String continuationProperty) {
         return Optional.ofNullable((E) this.continuations.get(continuationProperty));
