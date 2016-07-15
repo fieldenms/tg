@@ -540,12 +540,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .longDesc("Export action")
                         .shortcut("ctrl+shift+e")
                         .build())
-                .addAction(
-                        action(TgAcknowledgeWarnings.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess("self.save(functionalEntity).then(Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null),      function (value) { console.log('AJAX PROMISE CATCH', value);}     );\n"))
-                        .shortDesc("Acknowledge")
-                        .build())
+//                .addAction(
+//                        action(TgAcknowledgeWarnings.class)
+//                        .withContext(context().withMasterEntity().build())
+//                        .postActionSuccess(new PostActionSuccess("self.save(functionalEntity).then(Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null),      function (value) { console.log('AJAX PROMISE CATCH', value);}     );\n"))
+//                        .shortDesc("Acknowledge")
+//                        .build())
 
                 .addAction(MasterActions.VALIDATE)
                 .addAction(MasterActions.SAVE)

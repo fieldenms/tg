@@ -335,28 +335,61 @@
                         // TODO consider multiple tg-ui-actions for the same continuationType?
                         var action = this.querySelector('tg-ui-action[element-name="' + elementName + '"]');
                         
-                        /* var _parentNode = null;
-                        if (action) {
-                            _parentNode = action.parentNode;
-                            Polymer.dom(action.parentNode).removeChild(action);
-                            // Polymer.dom(this).removeChild(action);
-                            Polymer.dom.flush();
-                            action = null;
-                        }
-                        
                         if (!action) {
-                            // TODO implement: action = createAndAddToDOM(elementName, ...);
-                            var dialogModel = document.createElement('template', 'dom-bind');
-                            dialogModel.innerHTML = "<tg-ui-action id='blabla' hidden ui-role='BUTTON' short-desc='Acknowledge' long-desc='Tg Acknowledge Warnings entity' icon='editor:mode-edit' should-refresh-parent-centre-after-save component-uri='/master_ui/ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings' element-name='tg-TgAcknowledgeWarnings-master' number-of-action='12' element-alias='tg-TgAcknowledgeWarnings-master_12_PRIMARY_RESULT_SET' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[primaryAction.12.attrs]]' pre-action='[[primaryAction.12.preAction]]' post-action-success='[[primaryAction.12.postActionSuccess]]' post-action-error='[[primaryAction.12.postActionError]]' require-selection-criteria='false' require-selected-entities='NONE' require-master-entity='true' class='primary-action'></tg-ui-action>";
+                            var actionModel = document.createElement('template', 'dom-bind');
+                            actionModel.innerHTML = 
+                                "<tg-ui-action " +
+                                     "hidden " +
+                                     "id='continuationAction' " +
+                                     "ui-role='BUTTON' " +
+                                     "short-desc='Acknowledge' " +
+                                     "long-desc='Tg Acknowledge Warnings entity' " +
+                                     "icon='editor:mode-edit' " +
+                                     "should-refresh-parent-centre-after-save " +
+                                     "component-uri='/master_ui/ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings' " +
+                                     "element-name='tg-TgAcknowledgeWarnings-master' " +
+                                     "number-of-action='12' " +
+                                     "element-alias='tg-TgAcknowledgeWarnings-master_12_PRIMARY_RESULT_SET' " +
+                                     "show-dialog='[[_showDialog]]' " +
+                                     "create-context-holder='[[_createContextHolder]]' " +
+                                     "attrs='[[attrs]]' " +
+                                     "pre-action='[[preAction]]' " +
+                                     "post-action-success='[[postActionSuccess]]' " +
+                                     "post-action-error='[[postActionError]]' " +
+                                     "require-selection-criteria='false' " +
+                                     "require-selected-entities='NONE' " +
+                                     "require-master-entity='true' " +
+                                     "class='primary-action'> " +
+                                 "</tg-ui-action>";
                             
-                            Polymer.dom(_parentNode).appendChild(dialogModel);
+                            Polymer.dom(this.root).appendChild(actionModel);
                             Polymer.dom.flush();
                             
-                            action = dialogModel.$.blabla;
+                            action = actionModel.$.continuationAction;
                             
-                            dialogModel._showDialog = self._showDialog;
-                            dialogModel._createContextHolder = self._createContextHolder;
-                        } */
+                            actionModel._showDialog = self._showDialog;
+                            actionModel._createContextHolder = self._createContextHolder;
+                            actionModel.primaryAction = self.primaryAction;
+                            
+                            actionModel.preAction = function (action) {
+                                console.log('preAction: Acknowledge');
+                                return Promise.resolve(true);
+                            };
+                            actionModel.postActionSuccess = function (functionalEntity) {
+                                console.log('postActionSuccess: Acknowledge', functionalEntity);
+                                self.save(functionalEntity)
+                                    .then(
+                                        Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null),
+                                        function (value) { console.log('AJAX PROMISE CATCH', value); }
+                                    );
+                            };
+                            actionModel.postActionError = function (functionalEntity) {
+                                console.log('postActionError: Acknowledge', functionalEntity);
+                            };
+                            actionModel.attrs = {
+                                entityType:'ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings', currentState:'EDIT', centreUuid: self.uuid,
+                            };
+                        }
                         
                         // if found continuation action has not been enhanced yet to be able to enable parent master view after action completion (when isActionInProgress becomes false) -- then perform such enhancement:
                         if (action._wasEnhancedToEnableParentView !== true) {
