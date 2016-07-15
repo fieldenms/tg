@@ -153,6 +153,10 @@ public abstract class DomainDrivenDataPopulation {
         return (T) provider.find(type);
     }
 
+    public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type) {
+        return (T) provider.find(type);
+    }
+
     public final Date date(final String dateTime) {
         return formatter.parseDateTime(dateTime).toDate();
     }
@@ -194,7 +198,7 @@ public abstract class DomainDrivenDataPopulation {
      * @param entityClass
      * @return
      */
-    protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
+    public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
         return factory.newEntity(entityClass);
     }
 
