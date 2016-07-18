@@ -1245,18 +1245,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         .filter(mp -> !mp.isValidWithRequiredCheck() && mp.getFirstFailure() != null)
         .findFirst().map(mp -> mp.getFirstFailure());
         
-//        Result firstFailure = null;
-//        for (final MetaProperty<?> property : properties.values()) {
-//            // if invalid return first error
-//            if (!property.isProxy() && !property.isValidWithRequiredCheck() && firstFailure == null) { // 1. process isValid() that triggers requiredness checking. 2. saves the first failure
-//                firstFailure = property.getFirstFailure();
-//            }
-//        }
-        
         
         // returns first failure if exists or successful result if there was no failure.
         return firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
-//        return firstFailure != null ? firstFailure : new Result(this, "Entity " + this + " is valid.");
     }
 
     /**
