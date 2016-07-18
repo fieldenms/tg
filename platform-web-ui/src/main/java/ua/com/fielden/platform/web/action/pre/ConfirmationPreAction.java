@@ -10,7 +10,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
  * A standard confirmation pre-action.
- * 
+ *
  * @author TG Team
  *
  */
@@ -21,10 +21,10 @@ public class ConfirmationPreAction implements IPreAction {
 
     private enum ConfirmationButtons {
 
-        YES("{name:'Yes', confirm:true}"),
-        NO("{name:'No', confirm:false}"),
-        OK("{name:'Ok', confirm:true}"),
-        CANCEL("{name:'Cancel', confirm:false}");
+        YES("{name:'Yes', confirm:true, autofocus:true}"),
+        NO("{name:'No'}"),
+        OK("{name:'Ok', confirm:true, autofocus:true}"),
+        CANCEL("{name:'Cancel'}");
 
 
         private final String code;
@@ -41,19 +41,19 @@ public class ConfirmationPreAction implements IPreAction {
     }
 
 
-    /** 
+    /**
      * A convenient factory method to produce a confirmation dialog with buttons NO and YES.
-     * 
+     *
      * @param msg
      * @return
      */
     public static ConfirmationPreAction yesNo(final String msg) {
         return new ConfirmationPreAction(msg, ConfirmationButtons.NO, ConfirmationButtons.YES);
     }
-    
-    /** 
+
+    /**
      * A convenient factory method to produce a confirmation dialog with buttons CANCEL and OK.
-     * 
+     *
      * @param msg
      * @return
      */

@@ -171,6 +171,7 @@ public class Compound {
                         .withContext(centreContextConfig)
                         .icon(icon)
                         .shortDesc(shortDesc)
+                        .shortcut("alt+n")
                         .prefDimForView(prefDim)
                         .withNoParentCentreRefresh()
                         .build();
@@ -180,6 +181,7 @@ public class Compound {
                         .icon(icon)
                         .shortDesc(shortDesc)
                         .longDesc(longDesc)
+                        .shortcut("alt+n")
                         .prefDimForView(prefDim)
                         .withNoParentCentreRefresh()
                         .build();
@@ -189,6 +191,7 @@ public class Compound {
                 return action(openCompoundMasterActionType)
                         .withContext(centreContextConfig)
                         .shortDesc(shortDesc)
+                        .shortcut("alt+n")
                         .prefDimForView(prefDim)
                         .withNoParentCentreRefresh()
                         .build();
@@ -197,6 +200,7 @@ public class Compound {
                         .withContext(centreContextConfig)
                         .shortDesc(shortDesc)
                         .longDesc(longDesc)
+                        .shortcut("alt+n")
                         .prefDimForView(prefDim)
                         .withNoParentCentreRefresh()
                         .build();
