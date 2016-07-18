@@ -1051,8 +1051,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final List<? extends AbstractEntity<?>> entities) {
-        Set<Long> ids = new HashSet<>();
-        for (AbstractEntity<?> entity : entities) {
+        final Set<Long> ids = new HashSet<>();
+        for (final AbstractEntity<?> entity : entities) {
             ids.add(entity.getId());
         }
         return batchDelete(ids);
