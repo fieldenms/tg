@@ -25,6 +25,7 @@ import org.junit.Before;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
+import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -37,7 +38,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  * @author TG Team
  *
  */
-public abstract class AbstractDomainDrivenTestCase {
+public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData {
     transient private final Logger logger = Logger.getLogger(this.getClass());
 
     private static final List<String> dataScript = new ArrayList<String>();
@@ -181,25 +182,30 @@ public abstract class AbstractDomainDrivenTestCase {
         }
     }
 
+    @Override
     public final <T> T getInstance(final Class<T> type) {
         return config.getInstance(type);
     }
 
+    @Override
     public <T extends AbstractEntity<?>> T save(final T instance) {
         @SuppressWarnings("unchecked")
         final IEntityDao<T> pp = provider.find((Class<T>) instance.getType());
         return pp.save(instance);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type) {
         return (T) provider.find(type);
     }
 
+    @Override
     public final Date date(final String dateTime) {
         return formatter.parseDateTime(dateTime).toDate();
     }
 
+    @Override
     public final DateTime dateTime(final String dateTime) {
         return formatter.parseDateTime(dateTime);
     }
@@ -212,6 +218,7 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param desc
      * @return
      */
+    @Override
     public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
         return factory.newEntity(entityClass, key, desc);
     }
@@ -223,6 +230,7 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param key
      * @return
      */
+    @Override
     public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
         return factory.newByKey(entityClass, key);
     }
@@ -235,6 +243,7 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param keys
      * @return
      */
+    @Override
     public <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys) {
         return keys.length == 0 ? new_(entityClass) : factory.newByKey(entityClass, keys);
     }
@@ -245,6 +254,7 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param entityClass
      * @return
      */
+    @Override
     public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
         return factory.newEntity(entityClass);
     }
