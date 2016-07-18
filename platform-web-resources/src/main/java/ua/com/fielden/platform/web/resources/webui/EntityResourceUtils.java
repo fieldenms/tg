@@ -639,13 +639,13 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         final boolean continuationsPresent = continuations.isPresent();
         final CommonEntityDao<T> co = (CommonEntityDao<T>) this.co;
         if (continuationsPresent) {
-            co.setContinuations(continuations.get());
+            co.setMoreData(continuations.get());
         } else {
-            co.clearContinuations();
+            co.clearMoreData();
         }
         final T saved = co.save(entity);
         if (continuationsPresent) {
-            co.clearContinuations();
+            co.clearMoreData();
         }
         return saved;
     }

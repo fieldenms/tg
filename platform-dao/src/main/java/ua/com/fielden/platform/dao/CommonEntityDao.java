@@ -1253,35 +1253,48 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return (C) co;
     }
     
-    private final Map<String, AbstractEntity<?>> continuations = new HashMap<>();
+    private final Map<String, AbstractEntity<?>> moreData = new HashMap<>();
     
     /**
-     * Sets a map of continuations into this companion object to be used for saving.
+     * Replaces any previously provided "more data" with new "more data".
+     * This is a bulk operation that is mainly needed for the infrastructural integration.
      * 
-     * @param continuations
+     * @param moreData
      */
-    public void setContinuations(final Map<String, AbstractEntity<?>> continuations) {
-        clearContinuations();
-        for (final Map.Entry<String, AbstractEntity<?>> propAndContinuation: continuations.entrySet()) {
-            this.continuations.put(propAndContinuation.getKey(), propAndContinuation.getValue());
-        }
+    public CommonEntityDao<?> setMoreData(final Map<String, AbstractEntity<?>> moreData) {
+        clearMoreData();
+        this.moreData.putAll(moreData);
+        return this;
+    }
+    
+    /**
+     * A convenient method to set a single "more data" instance for a given key. 
+     * Mostly useful for unit tests.
+     * 
+     * @param key
+     * @param moreData
+     * @return
+     */
+    public CommonEntityDao<T> setMoreData(final String key, final AbstractEntity<?> moreData) {
+        this.moreData.put(key, moreData);
+        return this;
     }
     
     /**
      * Clears continuations in this companion object.
      */
-    public void clearContinuations() {
-        this.continuations.clear();
+    public void clearMoreData() {
+        this.moreData.clear();
     }
     
     /**
-     * A convenient way to obtain continuation instance (if exists) by its <code>continuationProperty</code>.
+     * A convenient way to obtain "more data" by key. An empty optional is return if there was no "more data" found.
      * 
-     * @param continuationProperty -- companion object property that identifies continuation
+     * @param key -- companion object property that identifies continuation
      * @return
      */
     @SuppressWarnings("unchecked")
-    public <E extends AbstractEntity<?>> Optional<E> getContinuation(final String continuationProperty) {
-        return Optional.ofNullable((E) this.continuations.get(continuationProperty));
+    public <E extends AbstractEntity<?>> Optional<E> moreData(final String key) {
+        return Optional.ofNullable((E) this.moreData.get(key));
     }
 }
