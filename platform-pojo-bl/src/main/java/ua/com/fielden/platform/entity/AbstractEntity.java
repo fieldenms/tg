@@ -72,6 +72,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -1245,12 +1246,43 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         .filter(mp -> !mp.isValidWithRequiredCheck() && mp.getFirstFailure() != null)
         .findFirst().map(mp -> mp.getFirstFailure());
         
-        
         // returns first failure if exists or successful result if there was no failure.
         return firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
     }
+    
+    /**
+     * Returns either empty or a list of warnings associated with entity's non-proxied properties.
+     * 
+     * @return
+     */
+    public final List<Warning> warnings() {
+        if (!isInstrumented()) {
+            throw new EntityException(format("Uninstrumented entity [%s] should not be checked for warnings.", getType().getName()));
+        }
+        // iterate over properties to collect all warnings
+        final List<Warning> warnings = nonProxiedProperties()
+        .filter(mp -> mp.hasWarnings())
+        .map(mp -> mp.getFirstWarning())
+        .collect(Collectors.toList());
+        
+        return warnings;
+    }
+    
+    public final boolean hasWarnings() {
+        if (!isInstrumented()) {
+            throw new EntityException(format("Uninstrumented entity [%s] should not be checked for warnings.", getType().getName()));
+        }
+        // iterate over properties in search of the first with warning
+        final java.util.Optional<Boolean> res = nonProxiedProperties()
+        .filter(mp -> mp.hasWarnings())
+        .findFirst().map(mp -> true);
+        
+        return res.isPresent();
+    }
 
     /**
+     * A convenient getter to obtain an entity factory.
+     * 
      * @return {@link EntityFactory} which created this {@link AbstractEntity}
      */
     public final EntityFactory getEntityFactory() {
