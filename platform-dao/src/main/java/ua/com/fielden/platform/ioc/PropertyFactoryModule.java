@@ -6,19 +6,21 @@ import java.util.Properties;
 
 import org.hibernate.SessionFactory;
 
+import com.google.inject.Injector;
+import com.google.inject.Scopes;
+
+import ua.com.fielden.platform.dao.CommonEntityAggregatesDao;
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.EntityAggregatesDao;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.DefaultCompanionObjectFinderImpl;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.property.DaoMetaPropertyFactory;
+import ua.com.fielden.platform.entity.query.IEntityAggregates;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
-
-import com.google.inject.Injector;
-import com.google.inject.Scopes;
 
 /**
  * Hibernate driven module required for correct instantiation of entities.
@@ -53,7 +55,8 @@ public class PropertyFactoryModule extends TransactionalModule {
         // bind property factory
         bind(IMetaPropertyFactory.class).to(DaoMetaPropertyFactory.class).in(Scopes.SINGLETON);
         // bind entity aggregates DAO
-        bind(IEntityAggregatesDao.class).to(EntityAggregatesDao.class);
+        bind(IEntityAggregatesOperations.class).to(EntityAggregatesDao.class);
+        bind(IEntityAggregates.class).to(CommonEntityAggregatesDao.class);
 
     }
 
