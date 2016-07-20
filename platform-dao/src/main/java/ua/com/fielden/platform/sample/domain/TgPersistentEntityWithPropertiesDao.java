@@ -60,6 +60,26 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             }
         }
         
+        
+        // let's demonstrate a simple approach to implementing user's warning acknowledgement
+        // this example, albeit artificially, also demonstrates not just one but two sequential requests for additional user input in a form of acknowledgement 
+        if (entity.hasWarnings()) {
+            if (moreData("acknowledgedForTheFirstTime").isPresent()) {
+                final TgAcknowledgeWarnings continuation = this.<TgAcknowledgeWarnings> moreData("acknowledgedForTheFirstTime").get();
+                System.out.println("Acknowledged (first)? = " + continuation.getAcknowledged());
+
+                if (moreData("acknowledgedForTheSecondTime").isPresent()) {
+                    final TgAcknowledgeWarnings secondContinuation = this.<TgAcknowledgeWarnings> moreData("acknowledgedForTheSecondTime").get();
+                    System.out.println("Acknowledged (second)? = " + secondContinuation.getAcknowledged());
+                } else {
+                    throw new NeedMoreData("Warnings need acknowledgement (second time)", TgAcknowledgeWarnings.class, "acknowledgedForTheSecondTime");
+                }
+            } else {
+                throw new NeedMoreData("Warnings need acknowledgement (first time)", TgAcknowledgeWarnings.class, "acknowledgedForTheFirstTime");
+            }
+        }
+        
+        
         final boolean wasNew = false; // !entity.isPersisted();
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);
@@ -72,25 +92,9 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             //newEntity.setRequiredValidatedProp(1);
             //newEntity.setRequiredValidatedProp(null);
             return newEntity;
-        } else {
-            if (moreData("acknowledgedForTheFirstTime").isPresent()) {
-                final TgAcknowledgeWarnings continuation = this.<TgAcknowledgeWarnings>moreData("acknowledgedForTheFirstTime").get();
-                System.out.println("Acknowledged (first)? = " + continuation.getAcknowledged());
-                
-                if (moreData("acknowledgedForTheSecondTime").isPresent()) {
-                    final TgAcknowledgeWarnings secondContinuation = this.<TgAcknowledgeWarnings>moreData("acknowledgedForTheSecondTime").get();
-                    System.out.println("Acknowledged (second)? = " + secondContinuation.getAcknowledged());
-                    
-                    return saved;
-                    // throw Result.failure("Unknown failure after continuation has been successfully saved.");
-                } else {
-                    throw new NeedMoreData("Warnings need acknowledgement (second time)", TgAcknowledgeWarnings.class, "acknowledgedForTheSecondTime");
-                }
-            } else {
-                return saved;
-                //throw new NeedMoreData("Warnings need acknowledgement (first time)", TgAcknowledgeWarnings.class, "acknowledgedForTheFirstTime");
-            }
         }
+        
+        return saved;
     }
 
     @Override
