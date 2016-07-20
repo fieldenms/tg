@@ -6,8 +6,8 @@ import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /** 
@@ -24,9 +24,23 @@ public class TgAcknowledgeWarnings extends AbstractFunctionalEntityWithCentreCon
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @MapTo
     @Title(value = "Acknowledged?", desc = "Acknowledged?")
     private boolean acknowledged;
+
+    @IsProperty
+    @Title(value = "All warnings", desc = "Desc")
+    @Readonly
+    private String allWarnings;
+
+    @Observable
+    public TgAcknowledgeWarnings setAllWarnings(final String allWarnings) {
+        this.allWarnings = allWarnings;
+        return this;
+    }
+
+    public String getAllWarnings() {
+        return allWarnings;
+    }
 
     @Observable
     public TgAcknowledgeWarnings setAcknowledged(final boolean acknowledged) {
