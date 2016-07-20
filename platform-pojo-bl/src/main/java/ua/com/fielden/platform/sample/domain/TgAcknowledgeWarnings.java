@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.ContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(ITgAcknowledgeWarnings.class)
 @EntityTitle(value = "Acknowledge warnings", desc = "Acknowledge warnings of the current initiating entity")
-public class TgAcknowledgeWarnings extends AbstractFunctionalEntityWithCentreContext<String> {
+public class TgAcknowledgeWarnings extends ContinuationData<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty

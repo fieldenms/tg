@@ -2,6 +2,7 @@ package ua.com.fielden.platform.continuation;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.ContinuationData;
 import ua.com.fielden.platform.error.Result;
 
 /**
@@ -16,11 +17,11 @@ import ua.com.fielden.platform.error.Result;
 public class NeedMoreData extends Result {
     private static final long serialVersionUID = 1L;
 
-    public NeedMoreData(final String customMessage, final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> dataType, final String dataKey) {
+    public NeedMoreData(final String customMessage, final Class<? extends ContinuationData<?>> dataType, final String dataKey) {
         super(new NeedMoreDataException(customMessage, dataType, dataKey));
     }
     
-    public NeedMoreData(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> dataType, final String dataKey) {
+    public NeedMoreData(final Class<? extends ContinuationData<?>> dataType, final String dataKey) {
         super(new NeedMoreDataException(dataType, dataKey));
     }
     
