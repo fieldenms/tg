@@ -557,20 +557,21 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 if (prop.getValue() != null) {
                     // need to update refCount for the activatable entity
                     final ActivatableAbstractEntity<?> value = prop.getValue();
-                    final CommonEntityDao co = getCoFinder().find(value.getType());
-
-                    // get the latest value from the database, reassign it and update its ref count
-                    final fetch fetch = FetchModelReconstructor.reconstruct(value);
-                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) co.findById(value.getId(), fetch);
-                    entity.beginInitialising();
-                    entity.set(prop.getName(), persistedValue);
-                    entity.endInitialising();
-                    final Result assignmentResult = prop.revalidate(false);
-
-                    if (!assignmentResult.isSuccessful()) {
-                        throw assignmentResult;
+                    final ActivatableAbstractEntity<?>  persistedEntity = (ActivatableAbstractEntity<?> ) getSession().load(value.getType(), value.getId());
+                    // the returned value could already be inactive due to some concurrent modification
+                    // therefore it is critical to ensure that the property of the current entity being saved can still accept the obtained value if it is inactive
+                    if (!persistedEntity.isActive()) {
+                        entity.beginInitialising();
+                        entity.set(prop.getName(), persistedEntity);
+                        entity.endInitialising();
+                        
+                        final Result res = prop.revalidate(false);
+                        if (!res.isSuccessful()) {
+                            throw res;
+                        }
                     }
-                    co.save(persistedValue.incRefCount());
+                    persistedEntity.setIgnoreEditableState(true);
+                    getSession().update(persistedEntity.incRefCount());
                 }
             }
         }
