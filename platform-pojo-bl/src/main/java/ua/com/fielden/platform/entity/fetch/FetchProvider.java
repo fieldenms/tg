@@ -312,7 +312,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
 
     private static FetchProvider<AbstractEntity<?>> createDefaultFetchProviderForEntityTypedProperty(final Class<AbstractEntity<?>> propertyType) {
         // default fetch provider for entity-typed property should be with key and desc properties and without instrumentation
-        return new FetchProvider<AbstractEntity<?>>(propertyType, true, true);
+        return new FetchProvider<AbstractEntity<?>>(propertyType, true, false);
     }
 
     /**
