@@ -23,12 +23,30 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     transient private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
     transient private final Logger logger = Logger.getLogger(this.getClass());
 
+    /**
+     * A convenient copy method.
+     * 
+     * @return
+     */
+    public QueryExecutionModel<T, Q> copy() {
+        return new QueryExecutionModel<T, Q>(this.queryModel, this.orderModel, this.fetchModel, this.paramValues, this.lightweight);
+    }
+    
     protected QueryExecutionModel() {
         queryModel = null;
         orderModel = null;
         fetchModel = null;
         paramValues = null;
         lightweight = false;
+    }
+    
+    protected QueryExecutionModel(final Q queryModel, final OrderingModel orderModel, final fetch<T> fetchModel, final Map<String, Object> paramValues, final boolean lightweight) {
+        this.queryModel = queryModel;
+        this.orderModel = orderModel;
+        this.fetchModel = fetchModel;
+        this.paramValues = new HashMap<String, Object>();
+        this.paramValues.putAll(paramValues);
+        this.lightweight = lightweight;
     }
 
     private QueryExecutionModel(final Builder<T, Q> builder) {
