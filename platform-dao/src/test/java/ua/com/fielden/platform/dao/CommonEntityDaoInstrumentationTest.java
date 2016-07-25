@@ -228,6 +228,41 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
         assertFalse(entity.isInstrumented());
     }
 
+    @Test
+    public void by_default_get_all_entities_with_lightweight_EQL_model_returns_uninstrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("money.amount").gt().val(20).model())
+                .with(fetchAll(EntityWithMoney.class))
+                .with(orderBy().prop("key").asc().model()).lightweight().model();
+
+        final List<EntityWithMoney> entities = co(EntityWithMoney.class).getAllEntities(qem);
+        assertTrue(entities.size() > 0);
+        assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
+    }
+
+    @Test
+    public void uninstrumented_get_all_entities_with_EQL_model_returns_uninstrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("money.amount").gt().val(20).model())
+                .with(fetchAll(EntityWithMoney.class))
+                .with(orderBy().prop("key").asc().model()).model();
+
+        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getAllEntities(qem);
+        assertTrue(entities.size() > 0);
+        assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
+    }
+
+    @Test
+    public void uninstrumented_get_all_entities_with_lightweight_EQL_model_returns_uninstrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("money.amount").gt().val(20).model())
+                .with(fetchAll(EntityWithMoney.class))
+                .with(orderBy().prop("key").asc().model()).lightweight().model();
+
+        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getAllEntities(qem);
+        assertTrue(entities.size() > 0);
+        assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
+    }
 
     @Override
     protected void populateDomain() {
