@@ -144,16 +144,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     IPage<T> firstPage(final int pageCapacity);
 
     /**
-     * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
-     *
-     * @param Equery
-     * @param pageCapacity
-     * @param pageNo
-     * @return
-     */
-    IPage<T> getPage(final int pageNo, final int pageCapacity);
-
-    /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query model (new EntityQuery).
      *
      * @param pageCapacity
@@ -174,6 +164,16 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     default IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
         throw new UnsupportedOperationException("Not supported.");
     }
+
+    /**
+     * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
+     *
+     * @param Equery
+     * @param pageCapacity
+     * @param pageNo
+     * @return
+     */
+    IPage<T> getPage(final int pageNo, final int pageCapacity);
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query model (new EntityQuery).
@@ -204,6 +204,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     default Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int pageCapacity) {
+        if (!instrumented()) qem.lightweight();
         final Spliterator<T> spliterator = new SequentialPageSpliterator<>(this, qem, pageCapacity);
         return StreamSupport.stream(spliterator, false);
     }
