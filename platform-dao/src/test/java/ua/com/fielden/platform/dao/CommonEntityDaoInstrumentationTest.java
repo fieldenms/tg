@@ -191,6 +191,43 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
     }
+    
+    @Test
+    public void by_default_get_entity_with_lightweight_EQL_model_returns_uninstrumented_instance() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("key").eq().val("KEY1").model())
+                .with(fetchAll(EntityWithMoney.class))
+                .lightweight().model();
+
+        final EntityWithMoney entity = co(EntityWithMoney.class).getEntity(qem);
+        assertTrue(entity !=  null);
+        assertFalse(entity.isInstrumented());
+    }
+
+    @Test
+    public void uninstrumented_get_entity_returns_uninstrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("key").eq().val("KEY1").model())
+                .with(fetchAll(EntityWithMoney.class))
+                .model();
+
+        final EntityWithMoney entity = co(EntityWithMoney.class).uninstrumented().getEntity(qem);
+        assertTrue(entity !=  null);
+        assertFalse(entity.isInstrumented());
+    }
+
+    @Test
+    public void uninstrumented_get_entity_with_lightweight_EQL_model_returns_uninstrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("key").eq().val("KEY1").model())
+                .with(fetchAll(EntityWithMoney.class))
+                .lightweight().model();
+
+        final EntityWithMoney entity = co(EntityWithMoney.class).uninstrumented().getEntity(qem);
+        assertTrue(entity !=  null);
+        assertFalse(entity.isInstrumented());
+    }
+
 
     @Override
     protected void populateDomain() {
