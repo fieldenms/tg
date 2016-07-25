@@ -30,11 +30,16 @@ import ua.com.fielden.platform.security.user.User;
 public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMonitor {
     static final int DEFAULT_PAGE_CAPACITY = 25;
 
-    //    /**
-    //     * Username should be provided for every DAO instance in order to support data filtering and auditing.
-    //     */
-    //    void setUsername(final String username);
 
+    /**
+     * This is a mixin method that should indicate whether data retrieval should follow the instrumented or uninstrumented strategy for entity instantiation during retrieval.
+     * 
+     * @return
+     */
+    default boolean instrumented() {
+        return true;
+    }
+    
     /**
      * Returns provided name.
      *
