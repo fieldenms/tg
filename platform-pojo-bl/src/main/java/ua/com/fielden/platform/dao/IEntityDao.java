@@ -197,6 +197,31 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
 
     /**
+     * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
+     * found then a null value is returned.
+     *
+     * @param model
+     * @return
+     */
+    T getEntity(final QueryExecutionModel<T, ?> model);
+
+    /**
+     * Returns all entities produced by the provided query.
+     *
+     * @param quert
+     * @return
+     */
+    List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
+
+    /**
+     * Returns first entities produced by the provided query.
+     *
+     * @param quert
+     * @return
+     */
+    List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
+
+    /**
      * Returns a non-parallel stream with the data based on the provided query.
      * 
      * @param qem -- EQL model
@@ -351,15 +376,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     boolean entityWithKeyExists(final Object... keyValues);
 
     /**
-     * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
-     * found then a null value is returned.
-     *
-     * @param model
-     * @return
-     */
-    T getEntity(final QueryExecutionModel<T, ?> model);
-
-    /**
      * Returns a number of entities retrieved using the provided model.
      *
      * @param model
@@ -368,22 +384,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
 
     int count(final EntityResultQueryModel<T> model);
-
-    /**
-     * Returns all entities produced by the provided query.
-     *
-     * @param quert
-     * @return
-     */
-    List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
-
-    /**
-     * Returns first entities produced by the provided query.
-     *
-     * @param quert
-     * @return
-     */
-    List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
 
     /**
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.
