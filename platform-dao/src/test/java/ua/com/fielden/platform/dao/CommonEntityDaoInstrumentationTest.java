@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 
@@ -298,6 +299,39 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
         final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().getFirstEntities(qem, 10);
         assertTrue(entities.size() > 0);
         assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
+    }
+    
+    @Test
+    public void by_default_stream_with_lightweight_EQL_model_returns_uninstrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("money.amount").gt().val(20).model())
+                .with(fetchAll(EntityWithMoney.class))
+                .with(orderBy().prop("key").asc().model()).lightweight().model();
+
+        final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).stream(qem);
+        assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
+    }
+
+    @Test
+    public void uninstrumented_stream_with_EQL_model_returns_uninstrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("money.amount").gt().val(20).model())
+                .with(fetchAll(EntityWithMoney.class))
+                .with(orderBy().prop("key").asc().model()).model();
+
+        final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).uninstrumented().stream(qem);
+        assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
+    }
+
+    @Test
+    public void uninstrumented_stream_with_lightweight_EQL_model_returns_uninstrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("money.amount").gt().val(20).model())
+                .with(fetchAll(EntityWithMoney.class))
+                .with(orderBy().prop("key").asc().model()).lightweight().model();
+
+        final Stream<EntityWithMoney> stream = co(EntityWithMoney.class).uninstrumented().stream(qem);
+        assertEquals("All entities are instrumented", co(EntityWithMoney.class).count(qem.getQueryModel()), stream.filter(e -> !e.isInstrumented()).count());
     }
 
     @Override
