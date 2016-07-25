@@ -455,9 +455,9 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      * @param propertyTitles
      * @throws IOException
      */
-    public void export(final String fileName, final QueryExecutionModel<T, ?> query, final String[] propertyNames, final String[] propertyTitles) throws IOException {
+    public void export(final String fileName, final QueryExecutionModel<T, ?> qem, final String[] propertyNames, final String[] propertyTitles) throws IOException {
         final byte[] content;
-        query.lightweight();
+        final QueryExecutionModel<T, ?> query = qem.lightweight();
         if (getManagedType().equals(getEntityClass())) {
             content = dao.export(query, propertyNames, propertyTitles);
         } else {

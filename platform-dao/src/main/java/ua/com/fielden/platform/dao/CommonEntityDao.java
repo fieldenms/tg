@@ -31,6 +31,10 @@ import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.implementation.FixedValue;
+import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -64,6 +68,7 @@ import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -120,6 +125,18 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
     private final boolean hasSaveOverridden;
 
+    public <E extends IEntityDao<T>> E uninstrumented() {
+        final Class<?> coType = PropertyTypeDeterminator.stripIfNeeded(getClass());
+        
+        final Class<?> newCoType = new ByteBuddy().subclass(coType)
+                .method(ElementMatchers.named("instrumented")).intercept(FixedValue.value(false))
+                .make()
+                .load(ClassLoader.getSystemClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
+                .getLoaded();
+        
+        return (E) injector.getInstance(newCoType);
+    }
+    
     /**
      * A principle constructor.
      *
@@ -300,7 +317,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // let's make sure that entity is not a duplicate
         final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants, idOnlyProxiedEntityTypeCache);
-        final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).model());
+        final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).lightweight().model());
         final int count = ids.size();
         if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
             throw new EntityCompanionException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()));
@@ -826,20 +843,24 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
+        
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
-        return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+        return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(qem, pageNumber, pageCapacity);
     }
 
     @Override
     @SessionRequired
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
-        return getEntitiesOnPage(query, null, null);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
+        return getEntitiesOnPage(qem, null, null);
     }
 
     @Override
     @SessionRequired
     public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
-        return getEntitiesOnPage(query, 0, numberOfEntities);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
+        return getEntitiesOnPage(qem, 0, numberOfEntities);
     }
 
     /**
@@ -857,7 +878,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
-        return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
+        return new EntityQueryPage(qem, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
     }
 
     /**
@@ -867,28 +889,33 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
-        return new EntityQueryPage(model, summaryModel, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
+        return new EntityQueryPage(qem, summaryModel, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
     }
 
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
-        return getPage(model, pageNo, 0, pageCapacity);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
+        return getPage(qem, pageNo, 0, pageCapacity);
     }
 
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
-        final Pair<Integer, Integer> numberOfPagesAndCount = pageCount > 0 ? Pair.pair(pageCount, pageCount * pageCapacity) : evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
+        
+        final Pair<Integer, Integer> numberOfPagesAndCount = pageCount > 0 ? Pair.pair(pageCount, pageCount * pageCapacity) : evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity);
 
         final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
-        return new EntityQueryPage(model, pageNumber, pageCapacity, numberOfPagesAndCount);
+        return new EntityQueryPage(qem, pageNumber, pageCapacity, numberOfPagesAndCount);
     }
 
     @Override
     @SessionRequired
     public T getEntity(final QueryExecutionModel<T, ?> model) {
-        final List<T> data = getFirstEntities(model, 2);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
+        final List<T> data = getFirstEntities(qem, 2);
         if (data.size() > 1) {
             throw new UnexpectedNumberOfReturnedEntities(format("The provided query model leads to retrieval of more than one entity (%s).", data.size()));
         }
