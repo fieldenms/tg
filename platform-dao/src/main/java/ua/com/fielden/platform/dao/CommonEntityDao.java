@@ -68,6 +68,7 @@ import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -125,7 +126,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private final boolean hasSaveOverridden;
 
     public <E extends IEntityDao<T>> E uninstrumented() {
-        final Class<?> coType = getEntityType().getAnnotation(CompanionObject.class).value();
+        final Class<?> coType = PropertyTypeDeterminator.stripIfNeeded(getClass());
         
         final Class<?> newCoType = new ByteBuddy().subclass(coType)
                 .method(ElementMatchers.named("instrumented")).intercept(FixedValue.value(false))
@@ -832,6 +833,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return count(model, Collections.<String, Object> emptyMap());
     }
 
+    private QueryExecutionModel<T, ?> mkLightweight(final QueryExecutionModel<T, ?> queryModel) {
+        final QueryExecutionModel<T, ?> qem = queryModel.copy();
+        qem.lightweight();
+        return qem;
+    }
+    
     /**
      * Fetches the results of the specified page based on the request of the given instance of {@link QueryExecutionModel}.
      *
@@ -842,23 +849,24 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        if (!instrumented()) queryModel.lightweight();
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(queryModel) : queryModel;
+        
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
-        return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+        return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(qem, pageNumber, pageCapacity);
     }
 
     @Override
     @SessionRequired
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
-        if (!instrumented()) query.lightweight();
-        return getEntitiesOnPage(query, null, null);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(query) : query;
+        return getEntitiesOnPage(qem, null, null);
     }
 
     @Override
     @SessionRequired
     public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
-        if (!instrumented()) query.lightweight();
-        return getEntitiesOnPage(query, 0, numberOfEntities);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(query) : query;
+        return getEntitiesOnPage(qem, 0, numberOfEntities);
     }
 
     /**
@@ -876,8 +884,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
-        if (!instrumented()) model.lightweight();
-        return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(model) : model;
+        return new EntityQueryPage(qem, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
     }
 
     /**
@@ -887,33 +895,33 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
-        if (!instrumented()) model.lightweight();
-        return new EntityQueryPage(model, summaryModel, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(model) : model;
+        return new EntityQueryPage(qem, summaryModel, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
     }
 
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
-        if (!instrumented()) model.lightweight();
-        return getPage(model, pageNo, 0, pageCapacity);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(model) : model;
+        return getPage(qem, pageNo, 0, pageCapacity);
     }
 
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
-        if (!instrumented()) model.lightweight();
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(model) : model;
         
-        final Pair<Integer, Integer> numberOfPagesAndCount = pageCount > 0 ? Pair.pair(pageCount, pageCount * pageCapacity) : evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity);
+        final Pair<Integer, Integer> numberOfPagesAndCount = pageCount > 0 ? Pair.pair(pageCount, pageCount * pageCapacity) : evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity);
 
         final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
-        return new EntityQueryPage(model, pageNumber, pageCapacity, numberOfPagesAndCount);
+        return new EntityQueryPage(qem, pageNumber, pageCapacity, numberOfPagesAndCount);
     }
 
     @Override
     @SessionRequired
     public T getEntity(final QueryExecutionModel<T, ?> model) {
-        if (!instrumented()) model.lightweight();
-        final List<T> data = getFirstEntities(model, 2);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(model) : model;
+        final List<T> data = getFirstEntities(qem, 2);
         if (data.size() > 1) {
             throw new UnexpectedNumberOfReturnedEntities(format("The provided query model leads to retrieval of more than one entity (%s).", data.size()));
         }
