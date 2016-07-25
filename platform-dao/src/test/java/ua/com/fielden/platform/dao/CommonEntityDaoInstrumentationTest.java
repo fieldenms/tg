@@ -1,24 +1,13 @@
 package ua.com.fielden.platform.dao;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static org.junit.Assert.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+
+import java.util.List;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
@@ -90,7 +79,68 @@ public class CommonEntityDaoInstrumentationTest extends AbstractDaoTestCase {
         assertFalse(entity.isInstrumented());
     }
 
-    
+    @Test
+    public void by_default_first_page_returns_instrumented_instances() {
+        final List<EntityWithMoney> entities = co(EntityWithMoney.class).firstPage(10).data();
+        assertTrue(entities.size() > 0);
+        assertEquals("All entities are instrumented", entities.size(), entities.stream().filter(e -> e.isInstrumented()).count());
+    }
+
+    @Test
+    public void uninstrumented_first_page_returns_uninstrumented_instances() {
+        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().firstPage(10).data();
+        assertTrue(entities.size() > 0);
+        assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
+    }
+
+    @Test
+    public void by_default_first_page_with_EQL_model_returns_instrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("money.amount").gt().val(20).model())
+                .with(fetchAll(EntityWithMoney.class))
+                .with(orderBy().prop("key").asc().model()).model();
+
+        final List<EntityWithMoney> entities = co(EntityWithMoney.class).firstPage(qem, 10).data();
+        assertTrue(entities.size() > 0);
+        assertEquals("All entities are instrumented", entities.size(), entities.stream().filter(e -> e.isInstrumented()).count());
+    }
+
+    @Test
+    public void by_default_first_page_with_lightweight_EQL_model_returns_uninstrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("money.amount").gt().val(20).model())
+                .with(fetchAll(EntityWithMoney.class))
+                .with(orderBy().prop("key").asc().model()).lightweight().model();
+
+        final List<EntityWithMoney> entities = co(EntityWithMoney.class).firstPage(qem, 10).data();
+        assertTrue(entities.size() > 0);
+        assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
+    }
+
+    @Test
+    public void uninstrumented_first_page_with_EQL_model_returns_uninstrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("money.amount").gt().val(20).model())
+                .with(fetchAll(EntityWithMoney.class))
+                .with(orderBy().prop("key").asc().model()).model();
+
+        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().firstPage(qem, 10).data();
+        assertTrue(entities.size() > 0);
+        assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
+    }
+
+    @Test
+    public void uninstrumented_first_page_with_lightweight_EQL_model_returns_uninstrumented_instances() {
+        final QueryExecutionModel<EntityWithMoney, EntityResultQueryModel<EntityWithMoney>> qem = 
+                from(select(EntityWithMoney.class).where().prop("money.amount").gt().val(20).model())
+                .with(fetchAll(EntityWithMoney.class))
+                .with(orderBy().prop("key").asc().model()).lightweight().model();
+
+        final List<EntityWithMoney> entities = co(EntityWithMoney.class).uninstrumented().firstPage(qem, 10).data();
+        assertTrue(entities.size() > 0);
+        assertEquals("All entities are instrumented", 0, entities.stream().filter(e -> e.isInstrumented()).count());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
