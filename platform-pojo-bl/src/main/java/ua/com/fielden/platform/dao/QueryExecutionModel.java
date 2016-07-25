@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.dao;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,7 +20,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     private final OrderingModel orderModel;
     private final fetch<T> fetchModel;
     private final Map<String, Object> paramValues;
-    private boolean lightweight;
+    private final boolean lightweight;
     transient private final ValuePreprocessor valuePreprocessor = new ValuePreprocessor();
     transient private final Logger logger = Logger.getLogger(this.getClass());
 
@@ -92,7 +93,7 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
     }
 
     public Map<String, Object> getParamValues() {
-        return paramValues;
+        return Collections.unmodifiableMap(paramValues);
     }
 
     public boolean isLightweight() {
@@ -107,8 +108,8 @@ public final class QueryExecutionModel<T extends AbstractEntity<?>, Q extends Qu
         return new Builder<EntityAggregates, AggregatedResultQueryModel>(queryModel);
     }
 
-    public void lightweight() {
-        this.lightweight = true;
+    public QueryExecutionModel<T, Q> lightweight() {
+        return new QueryExecutionModel<T, Q>(this.queryModel, this.orderModel, this.fetchModel, this.paramValues, true);
     }
     
     public static class Builder<T extends AbstractEntity<?>, Q extends QueryModel<T>> {

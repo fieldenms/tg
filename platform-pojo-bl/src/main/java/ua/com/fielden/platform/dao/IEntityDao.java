@@ -204,8 +204,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     default Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int pageCapacity) {
-        if (!instrumented()) qem.lightweight();
-        final Spliterator<T> spliterator = new SequentialPageSpliterator<>(this, qem, pageCapacity);
+        final Spliterator<T> spliterator = new SequentialPageSpliterator<>(this, !instrumented() ? qem.lightweight() : qem, pageCapacity);
         return StreamSupport.stream(spliterator, false);
     }
     

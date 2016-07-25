@@ -833,12 +833,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return count(model, Collections.<String, Object> emptyMap());
     }
 
-    private QueryExecutionModel<T, ?> mkLightweight(final QueryExecutionModel<T, ?> queryModel) {
-        final QueryExecutionModel<T, ?> qem = queryModel.copy();
-        qem.lightweight();
-        return qem;
-    }
-    
     /**
      * Fetches the results of the specified page based on the request of the given instance of {@link QueryExecutionModel}.
      *
@@ -849,7 +843,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(queryModel) : queryModel;
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
         
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
         return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(qem, pageNumber, pageCapacity);
@@ -858,14 +852,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(query) : query;
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
         return getEntitiesOnPage(qem, null, null);
     }
 
     @Override
     @SessionRequired
     public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(query) : query;
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
         return getEntitiesOnPage(qem, 0, numberOfEntities);
     }
 
@@ -884,7 +878,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(model) : model;
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         return new EntityQueryPage(qem, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
     }
 
@@ -895,21 +889,21 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(model) : model;
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         return new EntityQueryPage(qem, summaryModel, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
     }
 
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(model) : model;
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         return getPage(qem, pageNo, 0, pageCapacity);
     }
 
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(model) : model;
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         
         final Pair<Integer, Integer> numberOfPagesAndCount = pageCount > 0 ? Pair.pair(pageCount, pageCount * pageCapacity) : evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity);
 
@@ -920,7 +914,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public T getEntity(final QueryExecutionModel<T, ?> model) {
-        final QueryExecutionModel<T, ?> qem = !instrumented() ? mkLightweight(model) : model;
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
         final List<T> data = getFirstEntities(qem, 2);
         if (data.size() > 1) {
             throw new UnexpectedNumberOfReturnedEntities(format("The provided query model leads to retrieval of more than one entity (%s).", data.size()));

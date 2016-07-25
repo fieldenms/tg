@@ -69,8 +69,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 final Class<T> entityType = co.getEntityType();
                 final EntityResultQueryModel<T> query = select(entityType).where().prop("id").eq().val(newValue.getId()).model();
                 final fetch<T> fm = fetchOnly(entityType).with(ACTIVE);
-                final QueryExecutionModel<T, EntityResultQueryModel<T>> qem = from(query).with(fm).model();
-                qem.lightweight();
+                final QueryExecutionModel<T, EntityResultQueryModel<T>> qem = from(query).with(fm).lightweight().model();
                 final T ent = co.getEntity(qem);
                 exists = (ent != null);
                 // two possible cases:
