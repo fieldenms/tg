@@ -41,6 +41,15 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     }
     
     /**
+     * A factory method that creates an instance of the same companion object it is invoked on, but with method {@link #instrumented()} returning <code>false</code>.
+     * 
+     * @return
+     */
+    default <E extends IEntityDao<T>> E uninstrumented() {
+        throw new UnsupportedOperationException("This method should be overriden by descendants.");
+    }
+    
+    /**
      * Returns provided name.
      *
      * @return

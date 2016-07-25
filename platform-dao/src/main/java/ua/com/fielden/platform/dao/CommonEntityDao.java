@@ -33,6 +33,7 @@ import com.google.inject.Injector;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -123,11 +124,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
     private final boolean hasSaveOverridden;
 
-    public <E extends CommonEntityDao<T>> E uninsturmented() {
+    public <E extends IEntityDao<T>> E uninstrumented() {
         final Class<?> coType = getEntityType().getAnnotation(CompanionObject.class).value();
         
         final Class<?> newCoType = new ByteBuddy().subclass(coType)
-                .method(ElementMatchers.named("instrumented")).defaultValue(false)
+                .method(ElementMatchers.named("instrumented")).intercept(FixedValue.value(false))
                 .make()
                 .load(ClassLoader.getSystemClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
                 .getLoaded();
