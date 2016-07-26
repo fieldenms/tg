@@ -17,6 +17,7 @@ import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
@@ -55,7 +56,10 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
     private static boolean domainPopulated = false;
 
     private static IDomainDrivenTestCaseConfiguration createConfig() {
+        final long startTime = System.currentTimeMillis();
+        System.out.println(format("Started createConfig() at %s...", new DateTime(startTime)));
         try {
+            
             final Properties testProps = new Properties();
             final FileInputStream in = new FileInputStream("src/test/resources/test.properties");
             testProps.load(in);
@@ -80,9 +84,14 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
 
             final String configClassName = testProps.getProperty("config-domain");
             final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
+            final long mach1Time = System.currentTimeMillis();
+            System.out.println(format("\tbefore instantiating %s ... %s", type.getName(), new Duration(startTime, mach1Time).getStandardSeconds()));
             return type.newInstance();
         } catch (final Exception e) {
             throw new IllegalStateException(e);
+        } finally {
+            final long finishTime = System.currentTimeMillis();
+            System.out.println(format("Finished createConfig() at %s with total duration of %s", new DateTime(finishTime), new Duration(startTime, finishTime).getStandardSeconds()));
         }
     }
 
@@ -107,6 +116,8 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
 
     @Before
     public final void beforeTest() throws Exception {
+        final long startTime = System.currentTimeMillis();
+        System.out.println(format("Started beforeTest() at %s...", new DateTime(startTime)));
         final Connection conn = createConnection();
         Optional<Exception> raisedEx = Optional.empty();
 
@@ -152,6 +163,9 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
             domainPopulated = false;
             throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
         }
+        
+        final long finishTime = System.currentTimeMillis();
+        System.out.println(format("Finished beforeTest() at %s with total duration of %s", new DateTime(finishTime), new Duration(startTime, finishTime).getStandardSeconds()));
     }
 
     private void exec(final List<String> statements, final Connection conn) throws SQLException {

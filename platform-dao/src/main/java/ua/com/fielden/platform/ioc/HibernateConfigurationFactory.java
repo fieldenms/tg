@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.ioc;
 
+import static java.lang.String.format;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cfg.Configuration;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
@@ -53,15 +57,38 @@ public class HibernateConfigurationFactory {
             final MapEntityTo userMapTo)
             throws Exception {
         this.props = props;
+        final long startTime = System.currentTimeMillis();
+        System.out.println(format("\t\t\t\t\tBuidling domain metadata started at %s...", new DateTime(startTime)));
+
         domainMetadata = new DomainMetadata(//
                 defaultHibernateTypes,//
                 Guice.createInjector(new HibernateUserTypesModule()), //
                 applicationEntityTypes, //
                 userMapTo, //
                 determineDbVersion(props));
+        
+        final long mach1Time = System.currentTimeMillis();
+        System.out.println(format("\t\t\t\t\tbuilding domain metadata completed in %s", new Duration(startTime, mach1Time).getMillis()));
+        
         idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);
-        cfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
-        cfgManaged.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata));
+
+        final long mach2Time = System.currentTimeMillis();
+        System.out.println(format("\t\t\t\t\tIdOnlyProxiedEntityTypeCache completed in %s", new Duration(mach1Time, mach2Time).getMillis()));
+
+        
+        final String generatedMappings = new HibernateMappingsGenerator().generateMappings(domainMetadata);
+        cfg.addXML(generatedMappings);
+        
+        final long mach3Time = System.currentTimeMillis();
+        System.out.println(format("\t\t\t\t\tcfg.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata)) completed in %s", new Duration(mach2Time, mach3Time).getMillis()));
+
+        
+        cfgManaged.addXML(generatedMappings);
+
+        final long mach4Time = System.currentTimeMillis();
+        System.out.println(format("\t\t\t\t\tcfgManaged.addXML(new HibernateMappingsGenerator().generateMappings(domainMetadata)) completed in %s", new Duration(mach3Time, mach4Time).getMillis()));
+
+    
     }
 
     private DbVersion determineDbVersion(final Properties props) {
