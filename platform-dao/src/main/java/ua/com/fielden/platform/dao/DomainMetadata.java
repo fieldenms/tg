@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,12 +49,16 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.type.BooleanType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.YesNoType;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -73,8 +76,6 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Injector;
 
 public class DomainMetadata {
     private static final TypeResolver typeResolver = new TypeResolver();
@@ -97,10 +98,10 @@ public class DomainMetadata {
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
-    private final Map<Class<?>, Object> hibTypesDefaults = new HashMap<>();
-    private final Map<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata<?>> persistedEntityMetadataMap = new HashMap<>();
-    private final Map<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> modelledEntityMetadataMap = new HashMap<>();
-    private final Map<Class<? extends AbstractEntity<?>>, PureEntityMetadata> pureEntityMetadataMap = new HashMap<>();
+    private final ConcurrentMap<Class<?>, Object> hibTypesDefaults;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata<?>> persistedEntityMetadataMap;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> modelledEntityMetadataMap;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, PureEntityMetadata> pureEntityMetadataMap;
 
     private Injector hibTypesInjector;
     private final DomainMetadataExpressionsGenerator dmeg = new DomainMetadataExpressionsGenerator();
@@ -120,6 +121,11 @@ public class DomainMetadata {
         this.dbVersion = dbVersion;
         this.userMapTo = userMapTo;
 
+        this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
+        this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
+        this.modelledEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
+        this.pureEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
+        
         // initialise meta-data for basic entity properties, which is RDBMS dependent
         if (dbVersion != DbVersion.ORACLE) {
             id = new PropertyColumn("_ID");
@@ -149,7 +155,9 @@ public class DomainMetadata {
         this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
 
         this.hibTypesInjector = hibTypesInjector;
-        for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
+
+        // the following operations are a bit heave and benefit from parallel processing
+        entityTypes.parallelStream().forEach(entityType -> {
             try {
                 switch (baseInfoForDomainMetadata.getCategory(entityType)) {
                 case PERSISTED:
@@ -170,7 +178,7 @@ public class DomainMetadata {
                 e.printStackTrace();
                 throw new IllegalStateException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
             }
-        }
+        });
         
         //System.out.println(printEntitiesMetadataSummary("Persistent entities metadata summary:", persistedEntityMetadataMap));
         //System.out.println(printEntitiesMetadataSummary("Synthetic entities metadata summary:", modelledEntityMetadataMap));

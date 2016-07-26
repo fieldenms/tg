@@ -1,20 +1,25 @@
 package ua.com.fielden.platform.entity.query;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.utils.Pair;
 
 public class IdOnlyProxiedEntityTypeCache {
 
@@ -29,11 +34,14 @@ public class IdOnlyProxiedEntityTypeCache {
     }
 
     private Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> buildMap(final DomainMetadata domainMetadata) {
-        final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> typesMap = new HashMap<>();
-        for (final Entry<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata<?>> entityTypeMetadataEntry : domainMetadata.getPersistedEntityMetadataMap().entrySet()) {
-            typesMap.put(entityTypeMetadataEntry.getKey(), produceIdOnlyProxiedResultType(entityTypeMetadataEntry.getKey(), entityTypeMetadataEntry.getValue().getProps().values()));
-        }
-        return typesMap;
+        // the following operations are a bit heave and benefit from parallel processing
+        return domainMetadata.getPersistedEntityMetadataMap().entrySet().parallelStream()
+        .map(entry -> {
+            final Class<? extends AbstractEntity<?>> key = entry.getKey();
+            final Class<? extends AbstractEntity<?>> proxyType = produceIdOnlyProxiedResultType(key, entry.getValue().getProps().values());
+            return Pair.<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>>pair(key, proxyType);
+        })
+        .collect(Collectors.toMap(v -> v.getKey(), v -> v.getValue()));
     }
 
     private <T extends AbstractEntity<?>> Class<? extends T> produceIdOnlyProxiedResultType(final Class<T> originalType, final Collection<PropertyMetadata> propsMetadata) {
