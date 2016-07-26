@@ -78,25 +78,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.format_sql", "true");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.hbm2ddl.auto", "create");
 
-            final Connection conn = createConnection();
-            //final Statement st = conn.createStatement();
-            //st.execute("DROP ALL OBJECTS");
-            //st.close();
-            
-            
-         // Find all tables and truncate them
-            final Statement s = conn.createStatement();
-            final Set<String> tables = new HashSet<String>();
-            final ResultSet rs = s.executeQuery("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES  where TABLE_SCHEMA='PUBLIC'");
-            while (rs.next()) {
-                tables.add(rs.getString(1));
-            }
-            rs.close();
-            for (String table : tables) {
-                s.executeUpdate("TRUNCATE TABLE " + table);
-            }
-            conn.close();
-
             final String configClassName = testProps.getProperty("config-domain");
             final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
             final long mach1Time = System.currentTimeMillis();
