@@ -53,10 +53,12 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
     private final EntityFactory factory = config.getEntityFactory();
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final Collection<PersistedEntityMetadata> entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
+    private final Collection<PersistedEntityMetadata<?>> entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
 
     private static boolean domainPopulated = false;
 
+    private static final String baseDir = "./src/test/resources/db";
+    
     private static IDomainDrivenTestCaseConfiguration createConfig() {
         final long startTime = System.currentTimeMillis();
         System.out.println(format("Started createConfig() at %s...", new DateTime(startTime)));
@@ -69,7 +71,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
 
             // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
             //      This should be modified once correct db schema generation is implemented
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", "jdbc:h2:./src/test/resources/db/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE");
+            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", format("jdbc:h2:%s/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE", baseDir));
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.username", "sa");

@@ -98,7 +98,7 @@ public class DomainMetadata {
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
     private final Map<Class<?>, Object> hibTypesDefaults = new HashMap<>();
-    private final Map<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata> persistedEntityMetadataMap = new HashMap<>();
+    private final Map<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata<?>> persistedEntityMetadataMap = new HashMap<>();
     private final Map<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> modelledEntityMetadataMap = new HashMap<>();
     private final Map<Class<? extends AbstractEntity<?>>, PureEntityMetadata> pureEntityMetadataMap = new HashMap<>();
 
@@ -558,7 +558,7 @@ public class DomainMetadata {
         return hibTypesDefaults;
     }
 
-    public Collection<PersistedEntityMetadata> getPersistedEntityMetadatas() {
+    public Collection<PersistedEntityMetadata<?>> getPersistedEntityMetadatas() {
         return Collections.unmodifiableCollection(persistedEntityMetadataMap.values());
     }
 
@@ -566,7 +566,7 @@ public class DomainMetadata {
         return dbVersion;
     }
 
-    public Map<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata> getPersistedEntityMetadataMap() {
+    public Map<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata<?>> getPersistedEntityMetadataMap() {
         return persistedEntityMetadataMap;
     }
 

@@ -30,7 +30,7 @@ public class IdOnlyProxiedEntityTypeCache {
 
     private Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> buildMap(final DomainMetadata domainMetadata) {
         final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> typesMap = new HashMap<>();
-        for (final Entry<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata> entityTypeMetadataEntry : domainMetadata.getPersistedEntityMetadataMap().entrySet()) {
+        for (final Entry<Class<? extends AbstractEntity<?>>, PersistedEntityMetadata<?>> entityTypeMetadataEntry : domainMetadata.getPersistedEntityMetadataMap().entrySet()) {
             typesMap.put(entityTypeMetadataEntry.getKey(), produceIdOnlyProxiedResultType(entityTypeMetadataEntry.getKey(), entityTypeMetadataEntry.getValue().getProps().values()));
         }
         return typesMap;
