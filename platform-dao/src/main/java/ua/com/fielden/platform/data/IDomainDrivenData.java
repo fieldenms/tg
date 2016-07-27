@@ -41,35 +41,52 @@ public interface IDomainDrivenData {
     Date date(final String dateTime);
 
     DateTime dateTime(final String dateTime);
+    
+    default boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+    
+    default boolean useSavedDataPopulationScript() {
+        return false;
+    }
+
 
     default void setupUser(final User.system_users defaultUser, final String emailDomain) {
-        // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
-        // It should always be used as the current user for data population activities
-        final IUser coUser = co(User.class);
-        final User u = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
-        final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUser(u);
+        if (useSavedDataPopulationScript()) {
+            final IUser coUser = co(User.class);
+            final User su = coUser.findUser(defaultUser.name());
+            final IUserProvider up = getInstance(IUserProvider.class);
+            up.setUser(su);
+        } else {
 
-        final User _su = coUser.save(new_(User.class, defaultUser.name()).setBase(true).setEmail(defaultUser + "@" + emailDomain).setActive(true));
-        final User su = coUser.resetPasswd(_su, _su.getKey());
+            // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
+            // It should always be used as the current user for data population activities
+            final IUser coUser = co(User.class);
+            final User u = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
+            final IUserProvider up = getInstance(IUserProvider.class);
+            up.setUser(u);
 
-        final UserRole admin = save(new_(UserRole.class, "ADMIN", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
+            final User _su = coUser.save(new_(User.class, defaultUser.name()).setBase(true).setEmail(defaultUser + "@" + emailDomain).setActive(true));
+            final User su = coUser.resetPasswd(_su, _su.getKey());
 
-        save(new_composite(UserAndRoleAssociation.class, su, admin));
-        try {
-            final IApplicationSettings settings = getInstance(IApplicationSettings.class);
-            final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
-            final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));
-            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
-            for (final SecurityTokenNode securityNode : topNodes) {
-                alg.search(securityNode, predicate);
+            final UserRole admin = save(new_(UserRole.class, "ADMIN", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
+
+            save(new_composite(UserAndRoleAssociation.class, su, admin));
+            try {
+                final IApplicationSettings settings = getInstance(IApplicationSettings.class);
+                final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
+                final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
+                final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));
+                final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
+                for (final SecurityTokenNode securityNode : topNodes) {
+                    alg.search(securityNode, predicate);
+                }
+            } catch (final Exception e) {
+                throw new IllegalStateException(e);
             }
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
 
-        up.setUser(su);
+            up.setUser(su);
+        }
     }
 
 }
