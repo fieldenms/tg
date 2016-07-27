@@ -4,10 +4,7 @@ import static java.lang.String.format;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -21,11 +18,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.joda.time.Duration;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
@@ -68,8 +63,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
     private static final String baseDir = "./src/test/resources/db";
     
     private static IDomainDrivenTestCaseConfiguration createConfig() {
-        final long startTime = System.currentTimeMillis();
-        System.out.println(format("Started createConfig() at %s...", new DateTime(startTime)));
         try {
             
             final Properties testProps = new Properties();
@@ -90,14 +83,9 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
 
             final String configClassName = testProps.getProperty("config-domain");
             final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
-            final long mach1Time = System.currentTimeMillis();
-            System.out.println(format("\tbefore instantiating %s ... %s", type.getName(), new Duration(startTime, mach1Time).getStandardSeconds()));
             return type.newInstance();
         } catch (final Exception e) {
             throw new IllegalStateException(e);
-        } finally {
-            final long finishTime = System.currentTimeMillis();
-            System.out.println(format("Finished createConfig() at %s with total duration of %s", new DateTime(finishTime), new Duration(startTime, finishTime).getStandardSeconds()));
         }
     }
 
@@ -126,8 +114,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
             throw new IllegalStateException("useSavedDataPopulationScript() && saveDataPopulationScriptToFile() should not be true at the same time.");
         }
         
-        final long startTime = System.currentTimeMillis();
-        System.out.println(format("Started beforeTest() at %s...", new DateTime(startTime)));
         final Connection conn = createConnection();
         Optional<Exception> raisedEx = Optional.empty();
 
@@ -160,8 +146,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
             throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
         }
         
-        final long finishTime = System.currentTimeMillis();
-        System.out.println(format("Finished beforeTest() at %s with total duration of %s", new DateTime(finishTime), new Duration(startTime, finishTime).getStandardSeconds()));
     }
 
     private void restoreDataFromFile(final Connection conn) throws Exception {
