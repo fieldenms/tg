@@ -3,6 +3,7 @@ rebel.xml
 *.orig
 *.aux
 *.db
+*.script
 *.backup
 *.tex~
 *.bib~

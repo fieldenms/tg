@@ -8,7 +8,7 @@ import java.util.List;
 import org.junit.Test;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
@@ -18,7 +18,7 @@ import ua.com.fielden.platform.utils.Validators;
 
 public class CountActiveDependenciesTest extends AbstractDaoTestCase {
 
-    private final IEntityAggregatesDao coAggregates = getInstance(IEntityAggregatesDao.class);
+    private final IEntityAggregatesOperations coAggregates = getInstance(IEntityAggregatesOperations.class);
     private final IApplicationDomainProvider domainProvider = getInstance(IApplicationDomainProvider.class);
 
     @Test

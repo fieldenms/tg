@@ -6,15 +6,17 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.order
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.dynamic.DynamicType.Builder;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.implementation.FixedValue;
+import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -61,7 +63,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
         final EntityResultQueryModel<T> query = select(entityType).model();
         query.setFilterable(getFilterable());
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
-        return from(query).with(orderBy).model();
+        return instrumented() ? from(query).with(orderBy).model() : from(query).with(orderBy).lightweight().model();
     }
 
     protected QueryExecutionModel<T, EntityResultQueryModel<T>> getDefaultQueryExecutionModel() {
@@ -92,7 +94,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
         try {
             final EntityResultQueryModel<T> query = select(getEntityType()).where().prop(AbstractEntity.ID).eq().val(id).model();
             query.setFilterable(getFilterable());
-            return getEntity(from(query).with(fetchModel).model());
+            return getEntity(instrumented() ? from(query).with(fetchModel).model(): from(query).with(fetchModel).lightweight().model());
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
@@ -119,7 +121,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     @Override
     public T findByKeyAndFetch(final fetch<T> fetchModel, final Object... keyValues) {
         try {
-            return getEntity(from((createQueryByKey(keyValues))).with(fetchModel).model());
+            return getEntity(instrumented() ? from((createQueryByKey(keyValues))).with(fetchModel).model() : from((createQueryByKey(keyValues))).with(fetchModel).lightweight().model());
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }

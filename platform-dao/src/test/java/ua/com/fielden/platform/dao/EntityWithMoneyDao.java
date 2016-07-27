@@ -20,7 +20,7 @@ import ua.com.fielden.platform.utils.Pair;
  * 
  */
 @EntityType(EntityWithMoney.class)
-public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> {
+public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> implements IEntityWithMoney {
 
     @Inject
     protected EntityWithMoneyDao(final IFilter filter) {
