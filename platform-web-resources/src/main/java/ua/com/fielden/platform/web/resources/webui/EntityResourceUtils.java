@@ -470,19 +470,18 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 }
                 return matchedPropertyDescriptors.size() == 1 ? matchedPropertyDescriptors.get(0) : null;
             } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType);
                 
                 final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
                 /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList((String) reflectedValue))).//
                 /*      */model();
                 final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, type, propertyName).fetchModel()).model();
                 try {
+                    final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType).uninstrumented();
                     return propertyCompanion.getEntity(qem);
                 } catch (final UnexpectedNumberOfReturnedEntities e) {
                     return null;
                 }
             } else {
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType);
     
                 final String[] keys = MiscUtilities.prepare(Arrays.asList((String) reflectedValue));
                 final String key;
@@ -494,6 +493,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     key = keys[0];
                 }
                 
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType).uninstrumented();
                 return propertyCompanion.findByKeyAndFetch(fetchForProperty(companionFinder, type, propertyName).fetchModel(), key);
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
