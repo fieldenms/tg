@@ -1092,7 +1092,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new EntityCompanionException("No entities ids have been provided for deletion.");
         }
 
-        return new EntityBatchDeleterByIds<T>(getSession(), domainMetadata.getPersistedEntityMetadataMap().get(getEntityType())).deleteEntities(propName, entitiesIds);
+        return new EntityBatchDeleterByIds<T>(getSession(), (PersistedEntityMetadata<T>) domainMetadata.getPersistedEntityMetadataMap().get(getEntityType())).deleteEntities(propName, entitiesIds);
     }
 
     protected EntityFactory getEntityFactory() {

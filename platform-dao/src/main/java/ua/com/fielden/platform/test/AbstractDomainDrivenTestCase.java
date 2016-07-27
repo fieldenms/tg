@@ -2,7 +2,10 @@ package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -11,6 +14,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -22,6 +26,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
+
+import com.google.common.io.Files;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
@@ -50,12 +56,15 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
     private final EntityFactory factory = config.getEntityFactory();
     private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final Collection<PersistedEntityMetadata> entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
+    private final Collection<PersistedEntityMetadata<?>> entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
 
     private static boolean domainPopulated = false;
 
+    private static final String baseDir = "./src/test/resources/db";
+    
     private static IDomainDrivenTestCaseConfiguration createConfig() {
         try {
+            
             final Properties testProps = new Properties();
             final FileInputStream in = new FileInputStream("src/test/resources/test.properties");
             testProps.load(in);
@@ -63,7 +72,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
 
             // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
             //      This should be modified once correct db schema generation is implemented
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", "jdbc:h2:./src/test/resources/db/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE");
+            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", format("jdbc:h2:%s/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE", baseDir));
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.username", "sa");
@@ -71,12 +80,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.show_sql", "false");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.format_sql", "true");
             IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.hbm2ddl.auto", "create");
-
-            final Connection conn = createConnection();
-            final Statement st = conn.createStatement();
-            st.execute("DROP ALL OBJECTS");
-            st.close();
-            conn.close();
 
             final String configClassName = testProps.getProperty("config-domain");
             final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
@@ -107,6 +110,10 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
 
     @Before
     public final void beforeTest() throws Exception {
+        if (useSavedDataPopulationScript() && saveDataPopulationScriptToFile()) {
+            throw new IllegalStateException("useSavedDataPopulationScript() && saveDataPopulationScriptToFile() should not be true at the same time.");
+        }
+        
         final Connection conn = createConnection();
         Optional<Exception> raisedEx = Optional.empty();
 
@@ -116,6 +123,9 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
             exec(dataScript, conn);
         } else {
             try {
+                if (useSavedDataPopulationScript()) {
+                    restoreDataFromFile(conn);
+                }
                 populateDomain();
             } catch (final Exception ex) {
                 raisedEx = Optional.of(ex);
@@ -123,26 +133,9 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
             }
 
             // record data population statements
-            final Statement st = conn.createStatement();
-            final ResultSet set = st.executeQuery("SCRIPT");
-            while (set.next()) {
-                final String result = set.getString(1).trim();
-                final String upperCasedResult = result.toUpperCase();
-                if (!upperCasedResult.startsWith("INSERT INTO PUBLIC.UNIQUE_ID")
-                        && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {
-                    // resultant script should NOT be UPPERCASED in order not to upperCase for e.g. values,
-                    // that was perhaps lover cased while populateDomain() invocation was performed
-                    dataScript.add(result);
-                }
+            if (!useSavedDataPopulationScript()) {
+                recordDataPopulationScript(conn);
             }
-            set.close();
-            st.close();
-
-            // create truncate statements
-            for (final PersistedEntityMetadata<?> entry : entityMetadatas) {
-                truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
-            }
-
             domainPopulated = true;
         }
 
@@ -152,8 +145,75 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
             domainPopulated = false;
             throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
         }
+        
     }
 
+    private void restoreDataFromFile(final Connection conn) throws Exception {
+        dataScript.clear();
+        final File dataPopulationScriptFile = new File(dataScriptFile);
+        if (!dataPopulationScriptFile.exists()) {
+            throw new IllegalStateException(format("File %s with data population script is missing.", dataScriptFile));
+        }
+        dataScript.addAll(Files.readLines(dataPopulationScriptFile, StandardCharsets.UTF_8));
+
+        truncateScript.clear();
+        final File truncateTablesScriptFile = new File(truncateScriptFile);
+        if (!truncateTablesScriptFile.exists()) {
+            throw new IllegalStateException(format("File %s with table truncation script is missing.", truncateTablesScriptFile));
+        }
+        truncateScript.addAll(Files.readLines(truncateTablesScriptFile, StandardCharsets.UTF_8));
+
+        exec(dataScript, conn);
+    }
+
+    private void recordDataPopulationScript(final Connection conn) throws Exception {
+        final Statement st = conn.createStatement();
+        final ResultSet set = st.executeQuery("SCRIPT");
+        while (set.next()) {
+            final String result = set.getString(1).trim();
+            final String upperCasedResult = result.toUpperCase();
+            if (!upperCasedResult.startsWith("INSERT INTO PUBLIC.UNIQUE_ID")
+                    && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {
+                // resultant script should NOT be UPPERCASED in order not to upperCase for e.g. values,
+                // that was perhaps lover cased while populateDomain() invocation was performed
+                dataScript.add(result.replace("\n", " "));
+            }
+        }
+        set.close();
+        st.close();
+        
+        // create truncate statements
+        for (final PersistedEntityMetadata<?> entry : entityMetadatas) {
+            truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
+        }
+        
+        if (saveDataPopulationScriptToFile()) {
+            // flush data population script to file for later use
+            try (PrintWriter out = new PrintWriter(dataScriptFile, StandardCharsets.UTF_8.name())) {
+                final StringBuilder builder = new StringBuilder();
+                for (final Iterator<String> iter = dataScript.iterator(); iter.hasNext();) {
+                    final String line = iter.next();
+                    builder.append(line + (line.endsWith(";") ? "\n" : " "));
+                }
+                out.print(builder.toString());
+            }
+
+            // flush table truncation script to file for later use
+            try (PrintWriter out = new PrintWriter(truncateScriptFile, StandardCharsets.UTF_8.name())) {
+                final StringBuilder builder = new StringBuilder();
+                for (final Iterator<String> iter = truncateScript.iterator(); iter.hasNext();) {
+                    final String line = iter.next();
+                    builder.append(line + (line.endsWith(";") && iter.hasNext() ? "\n" : " "));
+                }
+                out.print(builder.toString());
+            }
+        }
+
+    }
+
+    private final String dataScriptFile = format("%s/data-%s.script", baseDir, getClass().getName());
+    private final String truncateScriptFile = format("%s/truncate-%s.script", baseDir, getClass().getName());
+    
     private void exec(final List<String> statements, final Connection conn) throws SQLException {
         final Statement st = conn.createStatement();
         for (final String stmt : statements) {
