@@ -2,7 +2,6 @@ package ua.com.fielden.platform.ioc;
 
 import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.matcher.Matchers.subclassesOf;
-import static java.lang.String.format;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,8 +10,6 @@ import java.util.Properties;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.ISessionEnabled;
@@ -57,24 +54,13 @@ public abstract class TransactionalModule extends EntityModule {
     public TransactionalModule(final Properties props, final Map<Class, Class> defaultHibernateTypes, final List<Class<? extends AbstractEntity<?>>> applicationEntityTypes)
             throws Exception {
 
-        final long startTime = System.currentTimeMillis();
-        System.out.println(format("\t\t\t\tHibernateConfigurationFactory started at %s...", new DateTime(startTime)));
-
         final HibernateConfigurationFactory hcf = new HibernateConfigurationFactory(//
                 props, //
                 defaultHibernateTypes, //
                 applicationEntityTypes,//
                 getUserMapTo());
         
-        final long mach1Time = System.currentTimeMillis();
-        System.out.println(format("\t\t\t\tHibernateConfigurationFactory creation completed in %s", new Duration(startTime, mach1Time).getMillis()));
-
-        
-        
         final Configuration cfg = hcf.build();
-
-        final long mach2Time = System.currentTimeMillis();
-        System.out.println(format("\t\t\t\thcf.build() completed in %s", new Duration(mach1Time, mach2Time).getMillis()));
 
         interceptor = new ProxyInterceptor();
         hibernateUtil = new HibernateUtil(interceptor, cfg);
@@ -84,8 +70,6 @@ public abstract class TransactionalModule extends EntityModule {
         this.idOnlyProxiedEntityTypeCache = hcf.getIdOnlyProxiedEntityTypeCache();
         this.applicationEntityTypes = applicationEntityTypes;
         
-        final long mach3Time = System.currentTimeMillis();
-        System.out.println(format("\t\t\t\tThe rest completed in %s", new Duration(mach2Time, mach3Time).getMillis()));
     }
 
     protected void initHibernateConfig(final EntityFactory factory) {
