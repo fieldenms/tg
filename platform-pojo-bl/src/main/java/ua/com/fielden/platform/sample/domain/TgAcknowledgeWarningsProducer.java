@@ -21,7 +21,11 @@ public class TgAcknowledgeWarningsProducer extends DefaultEntityProducerWithCont
 
     @Override
     public TgAcknowledgeWarnings provideDefaultValues(final TgAcknowledgeWarnings entity) {
-        final String warnings = getMasterEntity().warnings().stream().map(w -> w.getMessage()).reduce("\n", (String a, String b) -> a + b + "\n");
-        return entity.setAllWarnings(warnings);
+        if (getMasterEntity() != null) {
+            final String warnings = getMasterEntity().warnings().stream().map(w -> w.getMessage()).reduce("\n", (String a, String b) -> a + b + "\n");
+            entity.setAllWarnings(warnings);
+        }
+        
+        return entity;
     }
 }
