@@ -44,6 +44,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.ContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.Required;
@@ -1281,7 +1282,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return (C) co;
     }
     
-    private final Map<String, AbstractEntity<?>> moreData = new HashMap<>();
+    private final Map<String, ContinuationData<?>> moreData = new HashMap<>();
     
     /**
      * Replaces any previously provided "more data" with new "more data".
@@ -1289,7 +1290,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * 
      * @param moreData
      */
-    public CommonEntityDao<?> setMoreData(final Map<String, AbstractEntity<?>> moreData) {
+    public CommonEntityDao<?> setMoreData(final Map<String, ContinuationData<?>> moreData) {
         clearMoreData();
         this.moreData.putAll(moreData);
         return this;
@@ -1303,7 +1304,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param moreData
      * @return
      */
-    public CommonEntityDao<T> setMoreData(final String key, final AbstractEntity<?> moreData) {
+    public CommonEntityDao<T> setMoreData(final String key, final ContinuationData<?> moreData) {
         this.moreData.put(key, moreData);
         return this;
     }
@@ -1322,7 +1323,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     @SuppressWarnings("unchecked")
-    public <E extends AbstractEntity<?>> Optional<E> moreData(final String key) {
+    public <E extends ContinuationData<?>> Optional<E> moreData(final String key) {
         return Optional.ofNullable((E) this.moreData.get(key));
     }
 }

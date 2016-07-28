@@ -3,9 +3,11 @@ package ua.com.fielden.platform.entity.functional.centre;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -33,9 +35,9 @@ public class SavingInfoHolder extends AbstractEntity<String> {
     @Title(value = "Centre context holder", desc = "Centre context holder")
     private CentreContextHolder centreContextHolder;
     
-    @IsProperty(AbstractEntity.class)
+    @IsProperty(ContinuationData.class)
     @Title("Continuations")
-    private final ArrayList<AbstractEntity<?>> continuations = new ArrayList<AbstractEntity<?>>();
+    private final ArrayList<ContinuationData<?>> continuations = new ArrayList<>();
     
     @IsProperty(String.class)
     @Title("Continuation Properties")
@@ -53,13 +55,13 @@ public class SavingInfoHolder extends AbstractEntity<String> {
     }
     
     @Observable
-    protected SavingInfoHolder setContinuations(final ArrayList<AbstractEntity<?>> continuations) {
+    protected SavingInfoHolder setContinuations(final List<ContinuationData<?>> continuations) {
         this.continuations.clear();
         this.continuations.addAll(continuations);
         return this;
     }
 
-    public ArrayList<AbstractEntity<?>> getContinuations() {
+    public ArrayList<ContinuationData<?>> getContinuations() {
         return /* Collections.unmodifiableList( */ continuations /* ) */;
     }
 
