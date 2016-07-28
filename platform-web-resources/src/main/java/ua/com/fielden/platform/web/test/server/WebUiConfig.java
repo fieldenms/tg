@@ -42,6 +42,7 @@ import ua.com.fielden.platform.sample.domain.ExportActionProducer;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
+import ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
@@ -115,6 +116,7 @@ import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfi
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
+import ua.com.fielden.platform.web.test.server.config.TgAcknowledgeWarningsWebUiConfig;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -236,6 +238,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .addAction(MasterActions.SAVE)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopTabletMasterLayout).done();
         configApp().addMaster(new EntityMaster<TgDeletionTestEntity>(TgDeletionTestEntity.class, TgDeletionTestEntityProducer.class, deletionMaster, injector()));
+        
+        TgAcknowledgeWarningsWebUiConfig.register(injector(), configApp());
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)

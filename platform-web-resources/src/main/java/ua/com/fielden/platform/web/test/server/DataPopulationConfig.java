@@ -15,6 +15,8 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
+import fielden.config.ApplicationDomain;
+
 /**
  * Provides Web UI Testing Server specific implementation of {@link IDomainDrivenTestCaseConfiguration} to be used for creation and population of the target development database
  * from within of IDE.
@@ -45,7 +47,7 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             props.setProperty("email.smtp", "non-existing-server");
             props.setProperty("email.fromAddress", "tg@fielden.com.au");
 
-            final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
+            final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
             module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
             injector = new ApplicationInjectorFactory().add(module).add(new NewUserNotifierMockBindingModule()).getInjector();
             entityFactory = injector.getInstance(EntityFactory.class);

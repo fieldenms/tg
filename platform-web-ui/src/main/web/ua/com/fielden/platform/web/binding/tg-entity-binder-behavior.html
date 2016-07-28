@@ -469,6 +469,11 @@
                     if (!validatedEntity.isValid()) {
                         this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
                     }
+                    
+                    // in case where _continuations property exists (only in tg-entity-master) there is a need to reset continuations (they become stale after any change in initiating entity)
+                    if (typeof this._continuations === 'object') {
+                        this._continuations = {};
+                    }
 
                     var newBindingEntity = this._postEntityReceived(validatedEntity, false);
                     // custom external action

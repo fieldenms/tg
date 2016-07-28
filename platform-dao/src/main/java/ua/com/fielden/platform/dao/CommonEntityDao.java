@@ -44,6 +44,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.ContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.Required;
@@ -1079,8 +1080,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final List<? extends AbstractEntity<?>> entities) {
-        Set<Long> ids = new HashSet<>();
-        for (AbstractEntity<?> entity : entities) {
+        final Set<Long> ids = new HashSet<>();
+        for (final AbstractEntity<?> entity : entities) {
             ids.add(entity.getId());
         }
         return batchDelete(ids);
@@ -1280,5 +1281,49 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
         return (C) co;
     }
-
+    
+    private final Map<String, ContinuationData<?>> moreData = new HashMap<>();
+    
+    /**
+     * Replaces any previously provided "more data" with new "more data".
+     * This is a bulk operation that is mainly needed for the infrastructural integration.
+     * 
+     * @param moreData
+     */
+    public CommonEntityDao<?> setMoreData(final Map<String, ContinuationData<?>> moreData) {
+        clearMoreData();
+        this.moreData.putAll(moreData);
+        return this;
+    }
+    
+    /**
+     * A convenient method to set a single "more data" instance for a given key. 
+     * Mostly useful for unit tests.
+     * 
+     * @param key
+     * @param moreData
+     * @return
+     */
+    public CommonEntityDao<T> setMoreData(final String key, final ContinuationData<?> moreData) {
+        this.moreData.put(key, moreData);
+        return this;
+    }
+    
+    /**
+     * Clears continuations in this companion object.
+     */
+    public void clearMoreData() {
+        this.moreData.clear();
+    }
+    
+    /**
+     * A convenient way to obtain "more data" by key. An empty optional is return if there was no "more data" found.
+     * 
+     * @param key -- companion object property that identifies continuation
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends ContinuationData<?>> Optional<E> moreData(final String key) {
+        return Optional.ofNullable((E) this.moreData.get(key));
+    }
 }

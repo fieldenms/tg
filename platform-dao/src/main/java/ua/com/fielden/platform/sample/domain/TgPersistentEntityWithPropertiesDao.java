@@ -10,6 +10,7 @@ import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -59,6 +60,27 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             }
         }
         
+        
+        // IMPORTANT: the following IF statement needs to be turned off (e.g. commented or && false added to the condition) for the purpose of running web unit test.
+        // let's demonstrate a simple approach to implementing user's warning acknowledgement
+        // this example, albeit artificially, also demonstrates not just one but two sequential requests for additional user input in a form of acknowledgement 
+        if (entity.hasWarnings()) {
+            if (!moreData("acknowledgedForTheFirstTime").isPresent()) {
+                throw new NeedMoreData("Warnings need acknowledgement (first time)", TgAcknowledgeWarnings.class, "acknowledgedForTheFirstTime");
+            } else {
+                final TgAcknowledgeWarnings continuation = this.<TgAcknowledgeWarnings> moreData("acknowledgedForTheFirstTime").get();
+                System.out.println("Acknowledged (first)? = " + continuation.getAcknowledged());
+
+                if (!moreData("acknowledgedForTheSecondTime").isPresent()) {
+                    throw new NeedMoreData("Warnings need acknowledgement (second time)", TgAcknowledgeWarnings.class, "acknowledgedForTheSecondTime");
+                } else {
+                    final TgAcknowledgeWarnings secondContinuation = this.<TgAcknowledgeWarnings> moreData("acknowledgedForTheSecondTime").get();
+                    System.out.println("Acknowledged (second)? = " + secondContinuation.getAcknowledged());
+                }
+            }
+        }
+        
+        
         final boolean wasNew = false; // !entity.isPersisted();
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);
@@ -71,9 +93,9 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             //newEntity.setRequiredValidatedProp(1);
             //newEntity.setRequiredValidatedProp(null);
             return newEntity;
-        } else {
-            return saved;
         }
+        
+        return saved;
     }
 
     @Override

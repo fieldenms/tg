@@ -9,6 +9,7 @@ import java.util.SortedSet;
 
 import org.joda.time.DateTime;
 
+import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -57,7 +58,7 @@ import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFacto
  */
 public class PopulateDb extends DomainDrivenDataPopulation {
 
-    private final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
+    private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
 
     private PopulateDb(final IDomainDrivenTestCaseConfiguration config) {
         super(config);

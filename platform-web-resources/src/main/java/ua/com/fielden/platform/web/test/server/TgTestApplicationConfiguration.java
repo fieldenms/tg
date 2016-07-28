@@ -6,6 +6,7 @@ import org.restlet.Component;
 
 import com.google.inject.Injector;
 
+import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserEmailNotifierBindingModule;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
@@ -36,7 +37,7 @@ public class TgTestApplicationConfiguration extends Component {
         // /////////////////////////////////////////////////////
         try {
             // create application IoC module and injector
-            final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
+            final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
             final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
             injector = new ApplicationInjectorFactory().add(module).add(new NewUserEmailNotifierBindingModule()).getInjector();
 

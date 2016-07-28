@@ -1198,14 +1198,27 @@
         /**
          * Creates the holder of modified properties and some savingContext.
          */
-        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext) {
+        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext, continuationsMap) {
         	var reflector = this;
             var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
             savingInfoHolder.id = null;
-            savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
+            savingInfoHolder['modifHolder'] = modifiedPropertiesHolder;
         	
         	if (savingContext) { // if saving context was defined (not 'undefined'):
-                savingInfoHolder["centreContextHolder"] = savingContext;
+                savingInfoHolder['centreContextHolder'] = savingContext;
+        	}
+        	
+        	if (typeof continuationsMap !== 'undefined') {
+        	    var continuations = [];
+        	    var continuationProperties = [];
+        	    for (var continuationProperty in continuationsMap) {
+        	        if (continuationsMap.hasOwnProperty(continuationProperty)) {
+        	            continuations.push(continuationsMap[continuationProperty]);
+        	            continuationProperties.push(continuationProperty);
+        	        }
+        	    }
+        	    savingInfoHolder['continuations'] = continuations;
+        	    savingInfoHolder['continuationProperties'] = continuationProperties;
         	}
             return savingInfoHolder;
         },
