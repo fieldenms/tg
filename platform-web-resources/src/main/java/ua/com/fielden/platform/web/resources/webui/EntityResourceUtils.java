@@ -27,6 +27,7 @@ import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -53,6 +54,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -639,6 +641,14 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     public T save(final T entity, final Optional<Map<String, ContinuationData<?>>> continuations) {
         final boolean continuationsPresent = continuations.isPresent();
         final CommonEntityDao<T> co = (CommonEntityDao<T>) this.co;
+        
+        if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null)) {
+            throw new NeedMoreData("Warnings need acknowledgement", TgAcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
+        } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null) {
+            entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
+        }
+
+        
         if (continuationsPresent) {
             co.setMoreData(continuations.get());
         } else {
