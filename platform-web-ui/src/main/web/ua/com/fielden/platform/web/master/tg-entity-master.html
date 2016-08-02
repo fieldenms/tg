@@ -7,8 +7,14 @@
 
 <dom-module id="tg-entity-master">
     <style>
+        :host::content {
+            @apply(--layout-vertical);
+        }
         :host::content tg-flex-layout {
             background-color: white;
+        }
+        .property-editors-container {
+            overflow: auto;
         }
     </style>
     <template>
@@ -20,6 +26,10 @@
         <iron-ajax id="ajaxRetriever" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError" loading="{{_saverLoading}}"></iron-ajax>
 
+        <content select=".action-bar"></content>
+        <div class="property-editors-container">
+            <content select=".property-editors"></content>
+        </div>
         <content></content>
     </template>
 </dom-module>
@@ -38,13 +48,6 @@
 
             entityType: String,
             entityId: String,
-
-//            keyEventTarget: {
-//                type: Object,
-//                value: function () {
-//                    return document.body;
-//                }
-//            },
 
             _postValidatedDefault: Function,
             _postValidatedDefaultError: Function,

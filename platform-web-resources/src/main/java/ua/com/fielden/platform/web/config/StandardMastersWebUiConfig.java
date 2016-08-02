@@ -54,10 +54,9 @@ public class StandardMastersWebUiConfig {
                 //
                 + format("['horizontal', 'justified', 'margin-bottom:20px', 'margin-left:25px', [%s], [%s]],", inner, outer)
                 //                                  selected
-                + format("['horizontal', 'justified', [%s]],", outer)
-                //                                                               Cancel  Export
-                + format("['margin-top: 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionMr, actionMr)
+                + format("['horizontal', 'justified', [%s]]", outer)
                 + "]");
+        final String buttonPanelLayout = format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionMr, actionMr);
         final IMaster<EntityExportAction> masterConfig = new SimpleMasterBuilder<EntityExportAction>()
                 .forEntity(EntityExportAction.class)
                 .addProp("all").asCheckbox()
@@ -76,6 +75,8 @@ public class StandardMastersWebUiConfig {
                 .addAction(MasterActions.SAVE)
                 /*      */.shortDesc("EXPORT")
                 /*      */.longDesc("Export action")
+
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), buttonPanelLayout)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), masterLayout)
                 .done();
         final EntityMaster<EntityExportAction> master = new EntityMaster<EntityExportAction>(

@@ -160,7 +160,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     }
 
     private EntityMaster<ExportAction> createExportActionMaster() {
-        final String bottomButtonPanel = "['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
+        final String bottomButtonPanel = "['horizontal', 'padding: 20px 20px 0 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
         final String actionButton = "'margin: 10px', 'width: 110px'";
         final IMaster<ExportAction> masterConfig = new SimpleMasterBuilder<ExportAction>()
                 .forEntity(ExportAction.class)
@@ -170,11 +170,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.shortDesc("CANCEL")
                 /*      */.longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         " ['padding:20px', "
-                        + " [['flex']],"
-                        + format(bottomButtonPanel, actionButton, actionButton)
-                        + "]"))
+                        + " [['flex']]]"))
                 .done();
         final EntityMaster<ExportAction> master = new EntityMaster<ExportAction>(
                 ExportAction.class,
@@ -225,16 +224,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                      key
                 + format("['justified', [%s]],", outer)
                 //                      desc
-                + format("['justified', [%s]],", outer)
-                + format("['margin-top: 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionStyle, actionStyle)
+                + format("['justified', [%s]]", outer)
                 + "]");
+        final String actionBarLayout = format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionStyle, actionStyle);
         @SuppressWarnings("unchecked")
         final IMaster<TgDeletionTestEntity> deletionMaster = masterBuilder.forEntity(TgDeletionTestEntity.class)
             .addProp("key").asSinglelineText().also()//
             .addProp("desc").asSinglelineText().also()
             .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancels current changes if any or refresh the data")
             .addAction(MasterActions.SAVE)
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopTabletMasterLayout).done();
+            .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), actionBarLayout)
+            .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopTabletMasterLayout).done();
         configApp().addMaster(new EntityMaster<TgDeletionTestEntity>(TgDeletionTestEntity.class, TgDeletionTestEntityProducer.class, deletionMaster, injector()));
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
@@ -545,34 +545,26 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
+                        format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
                         + format("['subheader:Other components', 'flex'],")
-                        + format("[[%s], ['flex']],", fmr)
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr)
-                        + "    ]"))
+                        + format("[[%s], ['flex']]", fmr)+ "]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
-                        + "[[fmr], ['flex'], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]")
-                        .replace("fmr", fmr)
-                        .replace("actionMr", actionMr))
+                        + "[[fmr], ['flex'], ['flex']]]").replace("fmr", fmr))
                 .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
                         + "[[fmr], ['flex']],"
-                        + "[[fmr], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]")
-                        .replace("fmr", fmr)
-                        .replace("actionMr", actionMr))
+                        + "[[fmr], ['flex']]]").replace("fmr", fmr))
                 .done();
 
         final IMaster<TgEntityForColourMaster> masterConfigForColour = new SimpleMasterBuilder<TgEntityForColourMaster>().forEntity(TgEntityForColourMaster.class)
@@ -610,20 +602,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build())
                 .addAction(MasterActions.VALIDATE).addAction(MasterActions.SAVE).addAction(MasterActions.EDIT).addAction(MasterActions.VIEW)
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
+                        "['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]".replace("actionMr", actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['padding:20px', "
                         + "[[fmr], ['flex']],"
+                        + "[['flex']]]").replace("fmr", fmr))
+                .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
+                        + "[[fmr],['flex']],"
+                        + "[['flex']]]").replace("fmr", fmr))
+                .setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
                         + "[['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
-                                + "[[fmr],['flex']],"
-                                + "[['flex']],"
-                                + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                                + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).setLayoutFor(Device.MOBILE, Optional.empty(), ("['padding:20px',"
-                                        + "[['flex']],"
-                                        + "[['flex']],"
-                                        + "[['flex']],"
-                                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                                        + "]").replaceAll("fmr", fmr).replaceAll("actionMr", actionMr)).done();
+                        + "[['flex']],"
+                        + "[['flex']]]").replace("fmr", fmr)).done();
 
         final IMaster<TgEntityWithPropertyDependency> masterConfigForPropDependencyExample = new SimpleMasterBuilder<TgEntityWithPropertyDependency>()
             .forEntity(TgEntityWithPropertyDependency.class)
@@ -642,11 +632,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .addAction(MasterActions.EDIT)
             .addAction(MasterActions.VIEW)
 
+            .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
+                    format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr))
             .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                    "      ['padding:20px', "
-                    + format("[[%s], [%s], ['flex']],", fmr, fmr)
-                    + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
-                    + "    ]"))
+                    "['padding:20px', "
+                    + format("[[%s], [%s], ['flex']]", fmr, fmr)
+                    + "]"))
             .done();
 
         final IMaster<TgCollectionalSerialisationParent> masterConfigForCollSerialisationTest = new SimpleMasterBuilder<TgCollectionalSerialisationParent>()
@@ -666,11 +657,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
+                        format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', "
-                        + format("[[%s], [%s], ['flex']],", fmr, fmr)
-                        + format("['margin-top: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr)
-                        + "    ]"))
+                        "['padding:20px', "
+                        + format("[[%s], [%s], ['flex']]", fmr, fmr)
+                        + "]"))
                 .done();
 
         final IMaster<TgFunctionalEntityWithCentreContext> masterConfigForFunctionalEntity = new SimpleMasterBuilder<TgFunctionalEntityWithCentreContext>()
@@ -688,18 +680,14 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
+                        "['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]".replace("actionMr", actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), ("['vertical', 'justified', 'margin:20px', "
-                        + "[[mr], [mr]], "
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
+                        + "[[mr], [mr]]]").replace("mr", mr))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['vertical', 'margin:20px',"
-                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], [mr]],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("mr", mr).replaceAll("actionMr", actionMr))
+                        + "['horizontal', 'justified', ['flex', 'margin-right: 20px'], [mr]]]").replace("mr", mr))
                 .setLayoutFor(Device.MOBILE, Optional.empty(), ("['margin:20px',"
-                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']],"
-                        + "['margin-top: 20px', 'wrap', [actionMr],[actionMr],[actionMr],[actionMr],[actionMr]]"
-                        + "]").replaceAll("actionMr", actionMr))
+                        + "['justified', ['flex', 'margin-right: 20px'], ['flex']]]"))
                 .done();
 
         final EntityMaster<TgPersistentEntityWithProperties> entityMaster = new EntityMaster<TgPersistentEntityWithProperties>(
@@ -924,9 +912,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 + "  ['vertical', "
                 + "      ['width:300px', 'flex'], "
                 + "      ['width:300px', 'flex']"
-                + "  ],"
-                + "  ['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', ['margin: 10px', 'width: 110px', 'flex'], ['margin: 10px', 'width: 110px', 'flex']]"
-                + "]";
+                + "  ]]";
+        final String actionBarLayout = "['horizontal', 'padding: 20px 20px 0 20px', 'justify-content: center', 'wrap', ['margin: 10px', 'width: 110px', 'flex'], ['margin: 10px', 'width: 110px', 'flex']]";
         final IMaster<TgCreatePersistentStatusAction> config =
                 new SimpleMasterBuilder<TgCreatePersistentStatusAction>().forEntity(TgCreatePersistentStatusAction.class)
                 .addProp("statusCode").asSinglelineText()
@@ -935,6 +922,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCLE").longDesc("Cancles the action")
                 .addAction(MasterActions.SAVE)
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), actionBarLayout)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)

@@ -6,8 +6,6 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 
 import java.util.Optional;
 
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterProducer;
@@ -20,6 +18,8 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
+import com.google.inject.Injector;
+
 /**
  * {@link UserRole} Web UI configuration.
  *
@@ -28,8 +28,8 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  */
 public class CentreConfigurationWebUiConfig {
     private static final String actionButton = "'margin: 10px', 'width: 110px'";
-    private static final String bottomButtonPanel = "['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
-    
+    private static final String bottomButtonPanel = "['horizontal', 'padding: 20px 20px 0 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
+
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
 
     public CentreConfigurationWebUiConfig(final Injector injector) {
@@ -49,10 +49,10 @@ public class CentreConfigurationWebUiConfig {
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE).shortDesc("SORT").longDesc("Sorting action")
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', 'width:500px', "
-                        + format("['flex', ['flex']],")
-                        + format(bottomButtonPanel, actionButton, actionButton)
+                        + format("['flex', ['flex']]")
                         + "    ]"))
                 .done();
         return new EntityMaster<CentreConfigUpdater>(
@@ -61,7 +61,7 @@ public class CentreConfigurationWebUiConfig {
                 masterConfig,
                 injector);
     }
-    
+
     public static enum CentreConfigActions {
         SORT_ACTION {
             @Override
@@ -80,7 +80,7 @@ public class CentreConfigurationWebUiConfig {
                         .withNoParentCentreRefresh()
                         .build();
             }
-            
+
         };
 
         public abstract EntityActionConfig mkAction();

@@ -20,10 +20,11 @@ import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractAction;
 import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractFunctionalAction;
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
+import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDone;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
-public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IEntityActionConfig6<T>, IEntityActionConfig7<T>, IEntityActionConfig8<T> {
+public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IEntityActionConfig6<T>, IEntityActionConfig7<T>, IEntityActionConfig8<T>, IActionBarLayoutConfig1<T> {
 
     private final AbstractAction action;
     private final SimpleMasterBuilder<T> simpleMasterBuilder;
@@ -39,6 +40,11 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
+    public IActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+        return simpleMasterBuilder.setActionBarLayoutFor(device, Optional.empty(), flexString);
+    }
+
+    @Override
     public ILayoutConfigWithDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
         return simpleMasterBuilder.setLayoutFor(device, orientation, flexString);
     }
@@ -48,7 +54,7 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
         action.setLongDesc(longDesc);
         return this;
     }
-    
+
     @Override
     public IEntityActionConfig8<T> shortcut(final String shortcut) {
         action.setShortcut(shortcut);
