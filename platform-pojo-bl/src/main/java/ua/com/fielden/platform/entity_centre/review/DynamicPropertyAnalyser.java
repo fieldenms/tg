@@ -8,6 +8,7 @@ import java.util.Collection;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -222,6 +223,10 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
     public String getCriteriaFullName() {
         Class<?> keyType = getPropertyType();
         String propertyName = getAnalysingProperty();
+        // properties of type PropertyDescription do not need any prepending of "key" 
+        if (PropertyDescriptor.class.isAssignableFrom(keyType)) {
+            return propertyName;
+        }
         while (AbstractEntity.class.isAssignableFrom(keyType)) {
             if (isEmpty(propertyName)) {
                 propertyName += "key";
