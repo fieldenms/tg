@@ -344,6 +344,13 @@
             _isSpinnerRequired: {
             	type: Boolean,
             	value: false
+            },
+            
+            /**
+             * In case where this tg-ui-action represents continuation action, continuationProperty uniquely identifies continuation in saving session of parent initiating entity (will be set into companion object).
+             */
+            continuationProperty: {
+                type: String
             }
         },
         

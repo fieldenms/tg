@@ -195,6 +195,24 @@
                 newView.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
             }
         },
+        
+        addOwnKeyBindings: function () {
+            var egi = this.querySelector(".custom-egi");
+            var selectionCriteria = this.$.selectionView;
+            if (this._selectedView === 0) {
+                this._configViewBindings(egi, selectionCriteria);
+            } else if (this._selectedView === 1) {
+                this._configViewBindings(selectionCriteria, egi);
+            }
+        },
+        
+        removeOwnKeyBindings: function () {
+            if (this._selectedView === 0) {
+                this.$.selectionView.removeOwnKeyBindings();
+            } else if (this._selectedView === 1) {
+                this.querySelector(".custom-egi").removeOwnKeyBindings();
+            }
+        },
 
         saveAsync: function () {
             var self = this;

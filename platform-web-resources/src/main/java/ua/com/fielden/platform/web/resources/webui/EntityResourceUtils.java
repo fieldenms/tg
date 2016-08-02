@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -26,6 +27,7 @@ import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
@@ -34,6 +36,7 @@ import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.ContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -470,19 +473,18 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 }
                 return matchedPropertyDescriptors.size() == 1 ? matchedPropertyDescriptors.get(0) : null;
             } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType);
                 
                 final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
                 /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList((String) reflectedValue))).//
                 /*      */model();
                 final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, type, propertyName).fetchModel()).model();
                 try {
+                    final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType).uninstrumented();
                     return propertyCompanion.getEntity(qem);
                 } catch (final UnexpectedNumberOfReturnedEntities e) {
                     return null;
                 }
             } else {
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType);
     
                 final String[] keys = MiscUtilities.prepare(Arrays.asList((String) reflectedValue));
                 final String key;
@@ -494,6 +496,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     key = keys[0];
                 }
                 
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType).uninstrumented();
                 return propertyCompanion.findByKeyAndFetch(fetchForProperty(companionFinder, type, propertyName).fetchModel(), key);
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
@@ -629,10 +632,23 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * Just saves the entity.
      *
      * @param entity
+     * @param continuations -- continuations of the entity to be used during saving
+     * 
      * @return
      */
-    public T save(final T entity) {
-        return co.save(entity);
+    public T save(final T entity, final Optional<Map<String, ContinuationData<?>>> continuations) {
+        final boolean continuationsPresent = continuations.isPresent();
+        final CommonEntityDao<T> co = (CommonEntityDao<T>) this.co;
+        if (continuationsPresent) {
+            co.setMoreData(continuations.get());
+        } else {
+            co.clearMoreData();
+        }
+        final T saved = co.save(entity);
+        if (continuationsPresent) {
+            co.clearMoreData();
+        }
+        return saved;
     }
 
     /**

@@ -392,7 +392,12 @@
  		},
         
         _sectionRouteChanged: function (newRoute, oldRoute) {
+            var oldSection = Polymer.dom(this).querySelector('tg-master-menu-item-section[data-route=' + oldRoute + ']');
          	var action = Polymer.dom(this).querySelector('tg-ui-action[data-route=' + newRoute + ']');
+            
+            if (oldSection && oldSection._element && typeof oldSection._element.removeOwnKeyBindings === 'function') {
+                oldSection._element.removeOwnKeyBindings();
+            }
  			action._run();
  		}
     });

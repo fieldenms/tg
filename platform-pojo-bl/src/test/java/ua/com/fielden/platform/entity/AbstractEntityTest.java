@@ -21,6 +21,8 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity1;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity2;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity3;
@@ -45,8 +47,6 @@ import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
-
-import com.google.inject.Injector;
 
 /**
  * Unit test for :
@@ -1210,4 +1210,50 @@ public class AbstractEntityTest {
                         TitlesDescsGetter.getEntityTitleAndDesc(Entity.class).getKey()),
                 descProperty.getFirstFailure().getMessage());
     }
+    
+    @Test
+    public void warnings_are_empty_for_entity_without_any_properties_with_warnings() {
+        final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+        entity.setIntProp(20);
+        
+        assertFalse(entity.hasWarnings());
+        assertTrue(entity.warnings().isEmpty());
+    }
+    
+    @Test
+    public void number_of_warnings_is_equal_to_number_of_entity_properties_with_warnings() {
+        final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+        entity.setSelfRefProp(entity);
+        entity.setIntProp(120);
+        
+        assertTrue(entity.hasWarnings());
+        assertEquals(2, entity.warnings().size());
+    }
+    
+    @Test
+    public void one_warning_is_identified_for_entity_with_one_property_in_error_and_one_property_with_warning() {
+        final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+        entity.setSelfRefProp(null);
+        entity.setIntProp(120);
+        
+        assertFalse(entity.isValid().isSuccessful());
+        assertTrue(entity.hasWarnings());
+        assertEquals(1, entity.warnings().size());
+    }
+    
+    @Test
+    public void warnings_are_identified_correctly_after_reassigning_the_property_value_to_valid_one() {
+        final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+
+        // assign warning triggering value
+        entity.setIntProp(120);
+        assertTrue(entity.hasWarnings());
+        assertEquals(1, entity.warnings().size());
+
+        // assign warning clearing value
+        entity.setIntProp(20);
+        assertFalse(entity.hasWarnings());
+        assertEquals(0, entity.warnings().size());
+    }
+
 }

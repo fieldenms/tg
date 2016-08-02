@@ -9,6 +9,7 @@ import java.util.SortedSet;
 
 import org.joda.time.DateTime;
 
+import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -57,7 +58,7 @@ import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFacto
  */
 public class PopulateDb extends DomainDrivenDataPopulation {
 
-    private final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
+    private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
 
     private PopulateDb(final IDomainDrivenTestCaseConfiguration config) {
         super(config);
@@ -87,17 +88,17 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
         // It should always be used as the current user for data population activities
-        final IUser coUser = ao(User.class);
+        final IUser coUser = co(User.class);
         final User u = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUser(u);
 
         final User _su = coUser.save(new_(User.class, User.system_users.SU.name()).setBase(true).setEmail("SU@demoapp.com").setActive(true));
         final User su = coUser.resetPasswd(_su, _su.getKey());
-        final User _demo = ao(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su).setEmail("DEMO@demoapp.com").setActive(true));
+        final User _demo = co(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su).setEmail("DEMO@demoapp.com").setActive(true));
         final User demo = coUser.resetPasswd(_demo, _demo.getKey());
 
-        final ITgPerson aoPerson = (ITgPerson) ao(TgPerson.class);
+        final ITgPerson aoPerson = (ITgPerson) co(TgPerson.class);
         aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());
         aoPerson.populateNew("Demo", "User", "Demo User", "DEMO");
 
@@ -208,7 +209,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final TgCollectionalSerialisationParent csp1 = (TgCollectionalSerialisationParent) save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
         save(new_composite(TgCollectionalSerialisationChild.class, csp1, "1").setDesc("desc1"));
-        
+
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY1").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY2"));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY3").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
@@ -226,7 +227,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
             final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, ao(SecurityRoleAssociation.class));
+            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));
             final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
             for (final SecurityTokenNode securityNode : topNodes) {
                 alg.search(securityNode, predicate);
