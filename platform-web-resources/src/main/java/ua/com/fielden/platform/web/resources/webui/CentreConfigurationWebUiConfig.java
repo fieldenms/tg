@@ -28,7 +28,7 @@ import com.google.inject.Injector;
  */
 public class CentreConfigurationWebUiConfig {
     private static final String actionButton = "'margin: 10px', 'width: 110px'";
-    private static final String bottomButtonPanel = "['horizontal', 'padding: 20px 20px 0 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
+    private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
 
     public final EntityMaster<CentreConfigUpdater> centreConfigUpdater;
 

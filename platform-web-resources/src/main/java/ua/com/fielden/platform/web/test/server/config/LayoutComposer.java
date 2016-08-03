@@ -11,7 +11,7 @@ public class LayoutComposer {
     public final static String COMPONENT_WITH_PADDING = "['flex', 'margin-right: " + MARGIN_PIX + "']";
 
     public final static String MASTER_LAYOUT_SPECIFICATION = "'horizontal','justified',";
-    public final static String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 20px 20px 0 20px', 'wrap', 'justify-content: center',";
+    public final static String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 20px', 'wrap', 'justify-content: center',";
     public final static String MASTER_ACTION_SPECIFICATION = "'margin: 10px', 'width: 110px'";
 
     /**

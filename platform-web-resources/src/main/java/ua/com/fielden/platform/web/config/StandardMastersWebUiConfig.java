@@ -56,7 +56,7 @@ public class StandardMastersWebUiConfig {
                 //                                  selected
                 + format("['horizontal', 'justified', [%s]]", outer)
                 + "]");
-        final String buttonPanelLayout = format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionMr, actionMr);
+        final String buttonPanelLayout = format("['horizontal', 'padding: 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionMr, actionMr);
         final IMaster<EntityExportAction> masterConfig = new SimpleMasterBuilder<EntityExportAction>()
                 .forEntity(EntityExportAction.class)
                 .addProp("all").asCheckbox()

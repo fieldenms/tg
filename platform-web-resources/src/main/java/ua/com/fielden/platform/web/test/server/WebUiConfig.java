@@ -42,7 +42,6 @@ import ua.com.fielden.platform.sample.domain.ExportActionProducer;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
@@ -162,7 +161,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     }
 
     private EntityMaster<ExportAction> createExportActionMaster() {
-        final String bottomButtonPanel = "['horizontal', 'padding: 20px 20px 0 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
+        final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
         final String actionButton = "'margin: 10px', 'width: 110px'";
         final IMaster<ExportAction> masterConfig = new SimpleMasterBuilder<ExportAction>()
                 .forEntity(ExportAction.class)
@@ -228,7 +227,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //                      desc
                 + format("['justified', [%s]]", outer)
                 + "]");
-        final String actionBarLayout = format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionStyle, actionStyle);
+        final String actionBarLayout = format("['horizontal', 'padding: 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionStyle, actionStyle);
         @SuppressWarnings("unchecked")
         final IMaster<TgDeletionTestEntity> deletionMaster = masterBuilder.forEntity(TgDeletionTestEntity.class)
             .addProp("key").asSinglelineText().also()//
@@ -238,7 +237,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), actionBarLayout)
             .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopTabletMasterLayout).done();
         configApp().addMaster(new EntityMaster<TgDeletionTestEntity>(TgDeletionTestEntity.class, TgDeletionTestEntityProducer.class, deletionMaster, injector()));
-        
+
         TgAcknowledgeWarningsWebUiConfig.register(injector(), configApp());
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
@@ -917,7 +916,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 + "      ['width:300px', 'flex'], "
                 + "      ['width:300px', 'flex']"
                 + "  ]]";
-        final String actionBarLayout = "['horizontal', 'padding: 20px 20px 0 20px', 'justify-content: center', 'wrap', ['margin: 10px', 'width: 110px', 'flex'], ['margin: 10px', 'width: 110px', 'flex']]";
+        final String actionBarLayout = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', ['margin: 10px', 'width: 110px', 'flex'], ['margin: 10px', 'width: 110px', 'flex']]";
         final IMaster<TgCreatePersistentStatusAction> config =
                 new SimpleMasterBuilder<TgCreatePersistentStatusAction>().forEntity(TgCreatePersistentStatusAction.class)
                 .addProp("statusCode").asSinglelineText()
