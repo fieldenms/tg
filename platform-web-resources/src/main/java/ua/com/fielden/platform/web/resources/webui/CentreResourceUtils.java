@@ -55,6 +55,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
@@ -481,8 +482,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * <p>
      * Note: the control of which centreContext's parts should be initialised is provided by the client (there are generated meta-information like 'requireSelectedEntities',
      * 'requireMasterEntity').
-     *
+     * @param actionConfig TODO
      * @param centreContextHolder
+     *
      * @return
      */
     public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(
@@ -494,11 +496,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final EntityFactory entityFactory,
             final AbstractEntity<?> masterContext,
             final ArrayList<AbstractEntity<?>> selectedEntities,
-            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity) {
+            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity, 
+            final Optional<EntityActionConfig> config) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
         context.setSelectedEntities((List<T>) selectedEntities);
         context.setMasterEntity(masterContext);
+        
+        if (config.isPresent() && config.get().context.isPresent() && config.get().context.get().withComputedFunction()) {
+            context.setComputedFunction(config.get().context.get().computedFunction);
+        }
+        
         return context;
     }
 
@@ -511,7 +519,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
-        System.err.println("===========miType = " + centreContextHolder.getCustomObject().get("@@miType") + "=======ACTION_IDENTIFIER = [" + centreContextHolder.getCustomObject().get("@@actionKind") + "; " + centreContextHolder.getCustomObject().get("@@actionNumber") + "]");
         if (centreContextHolder.getCustomObject().get("@@miType") == null || isEmpty(centreContextHolder.getModifHolder())) {
             return null;
         }

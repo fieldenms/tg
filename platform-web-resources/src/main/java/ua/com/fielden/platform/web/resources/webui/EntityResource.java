@@ -46,6 +46,8 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -177,7 +179,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                                     utils.entityFactory(),
                                     masterEntity,
                                     centreContextHolder.getSelectedEntities(),
-                                    CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator)//
+                                    CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator),
+                                    Optional.empty()
                             ),
                             centreContextHolder.getChosenProperty(),
                             null /* compound master entity id */,
@@ -390,6 +393,25 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             }
 
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. criteriaEntity.");
+            final Optional<EntityActionConfig> actionConfig;
+            if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
+                System.err.println("===========miType = " + centreContextHolder.getCustomObject().get("@@miType") + "=======ACTION_IDENTIFIER = [" + centreContextHolder.getCustomObject().get("@@actionKind") + "; " + centreContextHolder.getCustomObject().get("@@actionNumber") + "]");
+
+                final Class<? extends MiWithConfigurationSupport<?>> miType;
+                try {
+                    miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getCustomObject().get("@@miType"));
+                } catch (final ClassNotFoundException e) {
+                    throw new IllegalStateException(e);
+                }
+                final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(miType);
+                actionConfig = Optional.of(centre.actionConfig(
+                                    FunctionalActionKind.valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")), 
+                                    Integer.valueOf((String) centreContextHolder.getCustomObject().get("@@actionNumber")
+                                )));
+            } else {
+                actionConfig = Optional.empty();
+            }
+            
             final CentreContext<T, AbstractEntity<?>> centreContext = CentreResourceUtils.createCentreContext(
                     webUiConfig,
                     companionFinder,
@@ -399,7 +421,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     utils.entityFactory(),
                     masterContext,
                     centreContextHolder.getSelectedEntities(),
-                    criteriaEntity);
+                    criteriaEntity,
+                    actionConfig);
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
             applied = utils.constructEntity(
                     modifiedPropertiesHolder,

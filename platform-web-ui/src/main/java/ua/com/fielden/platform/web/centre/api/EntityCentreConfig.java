@@ -29,6 +29,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -684,6 +685,23 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> getResultSetCustomPropAssignmentHandlerType() {
         return Optional.ofNullable(resultSetCustomPropAssignmentHandlerType);
+    }
+    
+    /**
+     * Returns action configuration for concrete action kind and its number in that kind's space.
+     * 
+     * @param actionKind
+     * @param actionNumber
+     * @return
+     */
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        if (FunctionalActionKind.TOP_LEVEL == actionKind) {
+            if (!getTopLevelActions().isPresent()) {
+                throw new IllegalArgumentException("No top-level action exists.");
+            }
+            return getTopLevelActions().get().get(actionNumber).getKey();
+        } // TODO implement other types
+        throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }
 
     public Optional<List<Pair<EntityActionConfig, Optional<String>>>> getTopLevelActions() {

@@ -30,7 +30,8 @@ class EntityCentreContextSelector3<T extends AbstractEntity<?>> implements IEnti
                 false,
                 false,
                 withSelectionCrit,
-                withMasterEntity
+                withMasterEntity,
+                null
                );
     }
 
