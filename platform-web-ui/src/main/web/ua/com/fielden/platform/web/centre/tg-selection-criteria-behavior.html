@@ -567,23 +567,25 @@
             /**
              * Create context holder with custom '@@miType' property.
              */
-            createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
+            createContextHolder: function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
                 var self = this;
                 var modifHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                 return this._createContextHolder(function () {
                     return self._reset(modifHolder);
-                }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
+                }, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
             },
 
             /**
              * Create context holder with custom '@@miType' property.
              */
-            _createContextHolder: function (modifHolderGetter, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
+            _createContextHolder: function (modifHolderGetter, requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
                 var contextHolder = this._reflector().createContextHolder(
                     requireSelectionCriteria, requireSelectedEntities, requireMasterEntity,
                     modifHolderGetter, this.getSelectedEntities, this.getMasterEntity
                 );
                 this._reflector().setCustomProperty(contextHolder, "@@miType", this.miType);
+                this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
+                this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
                 return contextHolder;
             },
 

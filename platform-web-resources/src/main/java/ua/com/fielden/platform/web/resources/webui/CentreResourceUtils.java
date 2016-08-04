@@ -511,6 +511,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @return
      */
     public static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForContext(final CentreContextHolder centreContextHolder, final ICompanionObjectFinder companionFinder, final IGlobalDomainTreeManager gdtm, final ICriteriaGenerator critGenerator) {
+        System.err.println("===========miType = " + centreContextHolder.getCustomObject().get("@@miType") + "=======ACTION_IDENTIFIER = [" + centreContextHolder.getCustomObject().get("@@actionKind") + "; " + centreContextHolder.getCustomObject().get("@@actionNumber") + "]");
         if (centreContextHolder.getCustomObject().get("@@miType") == null || isEmpty(centreContextHolder.getModifHolder())) {
             return null;
         }
@@ -559,7 +560,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
                 companionFinder//
         ).getKey();
-        
+
         // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
         CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
         return appliedCriteriaEntity;
