@@ -342,6 +342,9 @@
                     this._outFocus(e);
                     // There is no need to proceed with search if user moved out of the search field
                     this._cancelSearch();
+                    // There is a need to invoke result closing handler manuall as this does not happen upon input loosing focus, although,
+                    // the overlay itself does get closed
+                    this._resultClosed();
                 }).bind(this);
 
                 this._retrieveContainerSizes = function () {
