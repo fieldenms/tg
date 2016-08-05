@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -705,6 +706,20 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 throw new IllegalArgumentException("No primary result-set action exists.");
             }
             return getResultSetPrimaryEntityAction().get();
+        } else if (FunctionalActionKind.SECONDARY_RESULT_SET == actionKind) {
+            if (!getResultSetSecondaryEntityActions().isPresent()) {
+                throw new IllegalArgumentException("No secondary result-set action exists.");
+            }
+            return getResultSetSecondaryEntityActions().get().get(actionNumber);
+        } else if (FunctionalActionKind.PROP == actionKind) {
+            if (!getResultSetProperties().isPresent()) {
+                throw new IllegalArgumentException("No result-set property exists.");
+            }
+            return getResultSetProperties().get().stream()
+                    .filter(resultSetProp -> resultSetProp.propAction.isPresent())
+                    .map(resultSetProp -> resultSetProp.propAction.get())
+                    .collect(Collectors.toList())
+                    .get(actionNumber);
         } // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }
