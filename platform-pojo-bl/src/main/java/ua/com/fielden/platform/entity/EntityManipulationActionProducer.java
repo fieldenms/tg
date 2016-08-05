@@ -23,9 +23,8 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
             final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) entity.getContext();
             final AbstractEntity<?> currEntity = context.getSelectedEntities().size() == 0 ? null : context.getCurrEntity();
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> selCrit = context.getSelectionCrit();
-            final Class<AbstractEntity<?>> entityType = selCrit == null ?
-                    (currEntity == null ? null : DynamicEntityClassLoader.getOriginalType(currEntity.getType()))
-                    : selCrit.getEntityClass();
+            final Class<AbstractEntity<?>> entityType = context.getComputation().isPresent() ? (Class<AbstractEntity<?>>) context.getComputation().get().apply(entity) :
+                    selCrit == null ? (currEntity == null ? null : DynamicEntityClassLoader.getOriginalType(currEntity.getType())) : selCrit.getEntityClass();
             if (entityType == null) {
                 throw new IllegalStateException("Please add selection criteria or current entity to the context of the functional entity with type: " + entity.getType().getName());
             } else {

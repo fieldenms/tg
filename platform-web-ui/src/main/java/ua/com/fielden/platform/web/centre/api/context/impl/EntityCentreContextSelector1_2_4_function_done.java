@@ -24,12 +24,12 @@ class EntityCentreContextSelector1_2_4_function_done<T extends AbstractEntity<?>
     private final boolean withAllSelectedEntities;
     private final boolean withSelectionCrit;
     private final boolean withMasterEntity;
-    private final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation;
+    private final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation;
 
     public EntityCentreContextSelector1_2_4_function_done(
             final boolean withCurrentEntity, final boolean withAllSelectedEntities,
             final boolean withSelectionCrit, final boolean withMasterEntity,
-            final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+            final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
         this.withCurrentEntity = withCurrentEntity;
         this.withAllSelectedEntities = withAllSelectedEntities;
         this.withSelectionCrit = withSelectionCrit;
@@ -69,7 +69,7 @@ class EntityCentreContextSelector1_2_4_function_done<T extends AbstractEntity<?>
     }
 
     @Override
-    public IEntityCentreContextSelectorDone<T> withComputation(final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+    public IEntityCentreContextSelectorDone<T> withComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
         return new EntityCentreContextSelector1_2_4_function_done<T>(withCurrentEntity, withAllSelectedEntities, withSelectionCrit, withMasterEntity, computation);
     }
 

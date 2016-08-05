@@ -22,8 +22,6 @@ import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import org.restlet.resource.ServerResource;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -51,6 +49,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * The web resource for entity serves as a back-end mechanism of entity retrieval, saving and deletion. It provides a base implementation for handling the following methods:
@@ -167,6 +167,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
                     final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, utils.entityFactory(), centreContextHolder, 0);
+                    final Optional<EntityActionConfig> actionConfig = EntityResource.restoreActionConfig(webUiConfig, centreContextHolder);
 
                     final T entity = utils.createValidationPrototypeWithContext(
                             null,
@@ -180,7 +181,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                                     masterEntity,
                                     centreContextHolder.getSelectedEntities(),
                                     CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator),
-                                    Optional.empty()
+                                    actionConfig
                             ),
                             centreContextHolder.getChosenProperty(),
                             null /* compound master entity id */,
@@ -218,7 +219,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
-        final Optional<Map<String, ContinuationData<?>>> continuations = savingInfoHolder.getContinuations() != null && !savingInfoHolder.getContinuations().isEmpty() ? 
+        final Optional<Map<String, ContinuationData<?>>> continuations = savingInfoHolder.getContinuations() != null && !savingInfoHolder.getContinuations().isEmpty() ?
                 Optional.of(createContinuationsMap(savingInfoHolder.getContinuations(), savingInfoHolder.getContinuationProperties())) : Optional.empty();
         final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
@@ -393,25 +394,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             }
 
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. criteriaEntity.");
-            final Optional<EntityActionConfig> actionConfig;
-            if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
-                System.err.println("===========miType = " + centreContextHolder.getCustomObject().get("@@miType") + "=======ACTION_IDENTIFIER = [" + centreContextHolder.getCustomObject().get("@@actionKind") + "; " + centreContextHolder.getCustomObject().get("@@actionNumber") + "]");
+            final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
 
-                final Class<? extends MiWithConfigurationSupport<?>> miType;
-                try {
-                    miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getCustomObject().get("@@miType"));
-                } catch (final ClassNotFoundException e) {
-                    throw new IllegalStateException(e);
-                }
-                final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(miType);
-                actionConfig = Optional.of(centre.actionConfig(
-                                    FunctionalActionKind.valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")), 
-                                    Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")
-                                )));
-            } else {
-                actionConfig = Optional.empty();
-            }
-            
             final CentreContext<T, AbstractEntity<?>> centreContext = CentreResourceUtils.createCentreContext(
                     webUiConfig,
                     companionFinder,
@@ -435,6 +419,36 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         }
         logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): finished.");
         return applied;
+    }
+
+    /**
+     * In case where centreContextHolder represents the context of centre's action (top-level, primary, secondary or prop) -- this method determines the action configuration.
+     * Action configuration is necessary to be used for 'computation' part of the context.
+     *
+     * @param webUiConfig
+     * @param centreContextHolder
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> Optional<EntityActionConfig> restoreActionConfig(final IWebUiConfig webUiConfig, final CentreContextHolder centreContextHolder) {
+        final Optional<EntityActionConfig> actionConfig;
+        if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
+            System.err.println("===========miType = " + centreContextHolder.getCustomObject().get("@@miType") + "=======ACTION_IDENTIFIER = [" + centreContextHolder.getCustomObject().get("@@actionKind") + "; " + centreContextHolder.getCustomObject().get("@@actionNumber") + "]");
+
+            final Class<? extends MiWithConfigurationSupport<?>> miType;
+            try {
+                miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getCustomObject().get("@@miType"));
+            } catch (final ClassNotFoundException e) {
+                throw new IllegalStateException(e);
+            }
+            final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(miType);
+            actionConfig = Optional.of(centre.actionConfig(
+                                FunctionalActionKind.valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
+                                Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")
+                            )));
+        } else {
+            actionConfig = Optional.empty();
+        }
+        return actionConfig;
     }
 
     /**

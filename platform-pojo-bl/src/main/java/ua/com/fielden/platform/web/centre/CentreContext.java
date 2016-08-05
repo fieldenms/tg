@@ -45,7 +45,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
     /**
      * The computation function used to calculate additional information for action on entity centre.
      */
-    private Optional<Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object>> computation = Optional.empty();
+    private Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> computation = Optional.empty();
 
 
     public T getCurrEntity() {
@@ -91,7 +91,11 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s\n,\ncomputation=%s\n]", selectionCrit, selectedEntities, masterEntity, computation);
     }
 
-    public void setComputation(final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+    public void setComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
         this.computation = Optional.of(computation);
+    }
+
+    public Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> getComputation() {
+        return computation;
     }
 }

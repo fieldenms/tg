@@ -50,7 +50,7 @@ class EntityCentreContextSelector0<T extends AbstractEntity<?>> implements IEnti
     }
 
     @Override
-    public IEntityCentreContextSelectorDone<T> withComputation(final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+    public IEntityCentreContextSelectorDone<T> withComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
         return new EntityCentreContextSelector1_2_4_function_done<T>(withCurrentEntity, withAllSelectedEntities, false, false, computation);
     }
 

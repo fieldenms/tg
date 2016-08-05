@@ -17,14 +17,14 @@ public final class CentreContextConfig {
     public final boolean withAllSelectedEntities;
     public final boolean withSelectionCrit;
     public final boolean withMasterEntity;
-    public final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation;
+    public final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation;
 
     public CentreContextConfig(
             final boolean withCurrentEtity,
             final boolean withAllSelectedEntities,
             final boolean withSelectionCrit,
             final boolean withMasterEntity,
-            final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation
+            final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation
             ) {
         this.withCurrentEtity = withCurrentEtity;
         this.withAllSelectedEntities = withAllSelectedEntities;

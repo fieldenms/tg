@@ -7,5 +7,5 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 
 public interface IEntityCentreContextSelectorFunction<T extends AbstractEntity<?>> extends IEntityCentreContextSelectorDone<T> {
 
-    IEntityCentreContextSelectorDone<T> withComputation(Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation);
+    IEntityCentreContextSelectorDone<T> withComputation(Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation);
 }
