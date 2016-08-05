@@ -486,7 +486,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * <p>
      * Note: the control of which centreContext's parts should be initialised is provided by the client (there are generated meta-information like 'requireSelectedEntities',
      * 'requireMasterEntity').
-     * @param actionConfig TODO
+     * 
+     * @param actionConfig - the configuration of action for which this context is restored (used to restore computation function). It is not mandatory to 
+     *  specify this parameter as non-empty -- at this stage only centre actions are enabled with 'computation' part of the context.
      * @param centreContextHolder
      *
      * @return
