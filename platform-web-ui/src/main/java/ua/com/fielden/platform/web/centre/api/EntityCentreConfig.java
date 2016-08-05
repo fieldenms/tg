@@ -686,10 +686,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     public Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> getResultSetCustomPropAssignmentHandlerType() {
         return Optional.ofNullable(resultSetCustomPropAssignmentHandlerType);
     }
-    
+
     /**
      * Returns action configuration for concrete action kind and its number in that kind's space.
-     * 
+     *
      * @param actionKind
      * @param actionNumber
      * @return
@@ -700,6 +700,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 throw new IllegalArgumentException("No top-level action exists.");
             }
             return getTopLevelActions().get().get(actionNumber).getKey();
+        } else if (FunctionalActionKind.PRIMARY_RESULT_SET == actionKind) {
+            if (!getResultSetPrimaryEntityAction().isPresent()) {
+                throw new IllegalArgumentException("No primary result-set action exists.");
+            }
+            return getResultSetPrimaryEntityAction().get();
         } // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }

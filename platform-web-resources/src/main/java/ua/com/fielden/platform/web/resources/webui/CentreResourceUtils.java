@@ -496,17 +496,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final EntityFactory entityFactory,
             final AbstractEntity<?> masterContext,
             final ArrayList<AbstractEntity<?>> selectedEntities,
-            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity, 
+            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
             final Optional<EntityActionConfig> config) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
         context.setSelectedEntities((List<T>) selectedEntities);
         context.setMasterEntity(masterContext);
-        
-        if (config.isPresent() && config.get().context.isPresent() && config.get().context.get().withComputedFunction()) {
-            context.setComputedFunction(config.get().context.get().computedFunction);
+
+        if (config.isPresent() && config.get().context.isPresent() && config.get().context.get().withComputation()) {
+            context.setComputation(config.get().context.get().computation);
         }
-        
+
         return context;
     }
 

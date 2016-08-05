@@ -3,9 +3,12 @@ package ua.com.fielden.platform.web.centre;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 
 /**
@@ -39,6 +42,11 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      */
     private M masterEntity;
 
+    /**
+     * The computation function used to calculate additional information for action on entity centre.
+     */
+    private Optional<Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object>> computation = Optional.empty();
+
 
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
@@ -55,7 +63,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
 	public void setSelectedEntities(final List<T> selectedEntities) {
         this.selectedEntities.clear();
         if (selectedEntities != null) {
-        	for (AbstractEntity<?> el: selectedEntities) {
+        	for (final AbstractEntity<?> el: selectedEntities) {
         		// let's be smart about types and try to handle the situation with generated types
         		this.selectedEntities.add((T) el.copy(el.getDerivedFromType()));
         	}
@@ -80,6 +88,10 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
 
     @Override
     public String toString() {
-        return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s\n]", selectionCrit, selectedEntities, masterEntity);
+        return String.format("Centre Context: [\nselectionCrit = %s,\nselectedEntities = %s,\nmasterEntity=%s\n,\ncomputation=%s\n]", selectionCrit, selectedEntities, masterEntity, computation);
+    }
+
+    public void setComputation(final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        this.computation = Optional.of(computation);
     }
 }

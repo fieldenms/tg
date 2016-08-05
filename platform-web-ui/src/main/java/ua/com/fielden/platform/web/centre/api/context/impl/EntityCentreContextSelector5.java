@@ -1,10 +1,14 @@
 package ua.com.fielden.platform.web.centre.api.context.impl;
 
+import java.util.function.Function;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector1;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector4;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector5;
+import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
 
 /**
  * Default implementation for the entity centre context selector API.
@@ -37,17 +41,22 @@ class EntityCentreContextSelector5<T extends AbstractEntity<?>> implements IEnti
 
     @Override
     public IEntityCentreContextSelector1<T> withCurrentEntity() {
-        return new EntityCentreContextSelector1_2_4_done<T>(true, false, withSelectionCrit, withMasterEntity);
+        return new EntityCentreContextSelector1_2_4_function_done<T>(true, false, withSelectionCrit, withMasterEntity, null);
     }
 
     @Override
     public IEntityCentreContextSelector1<T> withSelectedEntities() {
-        return new EntityCentreContextSelector1_2_4_done<T>(false, true, withSelectionCrit, withMasterEntity);
+        return new EntityCentreContextSelector1_2_4_function_done<T>(false, true, withSelectionCrit, withMasterEntity, null);
     }
 
     @Override
     public IEntityCentreContextSelector4<T> withSelectionCrit() {
-        return new EntityCentreContextSelector1_2_4_done<T>(false, false, true, withMasterEntity);
+        return new EntityCentreContextSelector1_2_4_function_done<T>(false, false, true, withMasterEntity, null);
+    }
+
+    @Override
+    public IEntityCentreContextSelectorDone<T> withComputation(final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        return new EntityCentreContextSelector1_2_4_function_done<T>(false, false, withSelectionCrit, withMasterEntity, computation);
     }
 
 }

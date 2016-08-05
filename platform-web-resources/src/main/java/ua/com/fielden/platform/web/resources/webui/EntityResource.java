@@ -406,7 +406,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                 final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(miType);
                 actionConfig = Optional.of(centre.actionConfig(
                                     FunctionalActionKind.valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")), 
-                                    Integer.valueOf((String) centreContextHolder.getCustomObject().get("@@actionNumber")
+                                    Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")
                                 )));
             } else {
                 actionConfig = Optional.empty();

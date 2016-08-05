@@ -17,7 +17,7 @@ public final class CentreContextConfig {
     public final boolean withAllSelectedEntities;
     public final boolean withSelectionCrit;
     public final boolean withMasterEntity;
-    public final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computedFunction;
+    public final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation;
 
     public CentreContextConfig(
             final boolean withCurrentEtity,
@@ -30,14 +30,14 @@ public final class CentreContextConfig {
         this.withAllSelectedEntities = withAllSelectedEntities;
         this.withSelectionCrit = withSelectionCrit;
         this.withMasterEntity = withMasterEntity;
-        this.computedFunction = computedFunction;
+        this.computation = computedFunction;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((computedFunction == null) ? 0 : computedFunction.hashCode());
+        result = prime * result + ((computation == null) ? 0 : computation.hashCode());
         result = prime * result + (withAllSelectedEntities ? 1231 : 1237);
         result = prime * result + (withCurrentEtity ? 1231 : 1237);
         result = prime * result + (withMasterEntity ? 1231 : 1237);
@@ -57,11 +57,11 @@ public final class CentreContextConfig {
             return false;
         }
         final CentreContextConfig other = (CentreContextConfig) obj;
-        if (computedFunction == null) {
-            if (other.computedFunction != null) {
+        if (computation == null) {
+            if (other.computation != null) {
                 return false;
             }
-        } else if (!computedFunction.equals(other.computedFunction)) { // TODO Function type does not redeclare equals and hashCode. Please, investigate implications.
+        } else if (!computation.equals(other.computation)) { // TODO Function type does not redeclare equals and hashCode. Please, investigate implications.
             return false;
         }
         if (withAllSelectedEntities != other.withAllSelectedEntities) {
@@ -78,9 +78,9 @@ public final class CentreContextConfig {
         }
         return true;
     }
-    
-    public final boolean withComputedFunction() {
-        return this.computedFunction != null;
+
+    public final boolean withComputation() {
+        return this.computation != null;
     }
 
 //    @Override
@@ -109,7 +109,7 @@ public final class CentreContextConfig {
 //        return  (this.withAllSelectedEntities == that.withAllSelectedEntities) &&
 //                (this.withCurrentEtity == that.withCurrentEtity) &&
 //                (this.withMasterEntity == that.withMasterEntity) &&
-//                (this.withSelectionCrit == that.withSelectionCrit) && 
+//                (this.withSelectionCrit == that.withSelectionCrit) &&
 //                (this.withComputedFunction == that.withComputedFunction);
 //    }
 
