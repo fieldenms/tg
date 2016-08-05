@@ -24,24 +24,29 @@ public final class CentreContextConfig {
             final boolean withAllSelectedEntities,
             final boolean withSelectionCrit,
             final boolean withMasterEntity,
-            final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computedFunction
+            final Function<? extends AbstractFunctionalEntityWithCentreContext<?>, Object> computation
             ) {
         this.withCurrentEtity = withCurrentEtity;
         this.withAllSelectedEntities = withAllSelectedEntities;
         this.withSelectionCrit = withSelectionCrit;
         this.withMasterEntity = withMasterEntity;
-        this.computation = computedFunction;
+        this.computation = computation;
+    }
+
+    public final boolean withComputation() {
+        return this.computation != null;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((computation == null) ? 0 : computation.hashCode());
         result = prime * result + (withAllSelectedEntities ? 1231 : 1237);
         result = prime * result + (withCurrentEtity ? 1231 : 1237);
         result = prime * result + (withMasterEntity ? 1231 : 1237);
         result = prime * result + (withSelectionCrit ? 1231 : 1237);
+        // WARN: please note that CentreContextConfig with non-identical (in sense of object references) 'computation' functions will not be equal and will not produce the same hashCode.
+        result = prime * result + ((computation == null) ? 0 : computation.hashCode());
         return result;
     }
 
@@ -50,67 +55,24 @@ public final class CentreContextConfig {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
+        if (!(obj instanceof CentreContextConfig)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final CentreContextConfig other = (CentreContextConfig) obj;
+
+        final CentreContextConfig that = (CentreContextConfig) obj;
+
+        // WARN: please note that CentreContextConfig with non-identical (in sense of object references) 'computation' functions will not be equal and will not produce the same hashCode.
         if (computation == null) {
-            if (other.computation != null) {
+            if (that.computation != null) {
                 return false;
             }
-        } else if (!computation.equals(other.computation)) { // TODO Function type does not redeclare equals and hashCode. Please, investigate implications.
+        } else if (!computation.equals(that.computation)) {
             return false;
         }
-        if (withAllSelectedEntities != other.withAllSelectedEntities) {
-            return false;
-        }
-        if (withCurrentEtity != other.withCurrentEtity) {
-            return false;
-        }
-        if (withMasterEntity != other.withMasterEntity) {
-            return false;
-        }
-        if (withSelectionCrit != other.withSelectionCrit) {
-            return false;
-        }
-        return true;
+        return (this.withAllSelectedEntities == that.withAllSelectedEntities) &&
+                (this.withCurrentEtity == that.withCurrentEtity) &&
+                (this.withMasterEntity == that.withMasterEntity)  &&
+                (this.withSelectionCrit == that.withSelectionCrit);
     }
-
-    public final boolean withComputation() {
-        return this.computation != null;
-    }
-
-//    @Override
-//    public int hashCode() {
-//        final int prime = 31;
-//        int result = 1;
-//        result = prime * result + (withAllSelectedEntities ? 1231 : 1237);
-//        result = prime * result + (withCurrentEtity ? 1231 : 1237);
-//        result = prime * result + (withMasterEntity ? 1231 : 1237);
-//        result = prime * result + (withSelectionCrit ? 1231 : 1237);
-//        result = prime * result + (withComputedFunction ? 1231 : 1237);
-//        return result;
-//    }
-//
-//    @Override
-//    public boolean equals(final Object obj) {
-//        if (this == obj) {
-//            return true;
-//        }
-//        if (!(obj instanceof CentreContextConfig)) {
-//            return false;
-//        }
-//
-//        final CentreContextConfig that = (CentreContextConfig) obj;
-//
-//        return  (this.withAllSelectedEntities == that.withAllSelectedEntities) &&
-//                (this.withCurrentEtity == that.withCurrentEtity) &&
-//                (this.withMasterEntity == that.withMasterEntity) &&
-//                (this.withSelectionCrit == that.withSelectionCrit) &&
-//                (this.withComputedFunction == that.withComputedFunction);
-//    }
 
 }

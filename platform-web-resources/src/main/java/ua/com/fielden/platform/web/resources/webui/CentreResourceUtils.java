@@ -469,6 +469,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             if (config.withMasterEntity) {
                 context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, 0));
             }
+
+            if (config.withComputation()) {
+                context.setComputation(config.computation);
+            }
             return Optional.of(context);
         } else {
             return Optional.empty();

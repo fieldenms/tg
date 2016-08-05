@@ -152,8 +152,8 @@ public class EntityCentreContextSelectorTest {
 
     @Test
     public void context_with_selected_entities_and_master_entity_and_selection_crit_and_computed_function() {
-       final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computedFunction = entity -> entity.getType();
-       final CentreContextConfig config = context().withSelectedEntities().withMasterEntity().withSelectionCrit().withComputation(computedFunction).build();
-       assertEquals(new CentreContextConfig(false, true, true, true, computedFunction), config);
+       final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation = entity -> entity.getType();
+       final CentreContextConfig config = context().withSelectedEntities().withMasterEntity().withSelectionCrit().withComputation(computation).build();
+       assertEquals(new CentreContextConfig(false, true, true, true, computation), config);
     }
 }
