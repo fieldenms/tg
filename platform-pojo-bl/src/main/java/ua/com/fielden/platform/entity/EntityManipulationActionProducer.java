@@ -23,8 +23,17 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
             final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) entity.getContext();
             final AbstractEntity<?> currEntity = context.getSelectedEntities().size() == 0 ? null : context.getCurrEntity();
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> selCrit = context.getSelectionCrit();
-            final Class<AbstractEntity<?>> entityType = context.getComputation().isPresent() ? (Class<AbstractEntity<?>>) context.getComputation().get().apply(entity) :
-                    selCrit == null ? (currEntity == null ? null : DynamicEntityClassLoader.getOriginalType(currEntity.getType())) : selCrit.getEntityClass();
+            final Class<AbstractEntity<?>> entityType;
+            if (context.getComputation().isPresent()) {
+                final Object computed = context.getComputation().get().apply(entity);
+                if (computed instanceof Class) { // it is assumed that computation function returns custom entity type of tg-entity-master to be displayed.
+                    entityType = (Class<AbstractEntity<?>>) computed;
+                } else {
+                    entityType = determineEntityType(currEntity, selCrit);
+                }
+            } else {
+                entityType = determineEntityType(currEntity, selCrit);
+            }
             if (entityType == null) {
                 throw new IllegalStateException("Please add selection criteria or current entity to the context of the functional entity with type: " + entity.getType().getName());
             } else {
@@ -35,5 +44,17 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
             }
         }
         return entity;
+    }
+
+    /**
+     * Determines the type of tg-entity-master to be displayed from a) selCrit or b) currEntity depending on whether it is {@link EntityNewAction} or {@link EntityEditAction}.
+     * 
+     * @param currEntity
+     * @param selCrit
+     * @return
+     */
+    private Class<AbstractEntity<?>> determineEntityType(final AbstractEntity<?> currEntity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> selCrit) {
+        return selCrit != null ? selCrit.getEntityClass() :
+               currEntity != null ? DynamicEntityClassLoader.getOriginalType(currEntity.getType()) : null;
     }
 }
