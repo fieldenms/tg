@@ -247,6 +247,10 @@
                     value: function () {
                         return {};
                     }
+                },
+                
+                focusFirstInputBound: {
+                    type: Function
                 }
             },
 
@@ -255,6 +259,8 @@
              */
             ready: function () {
                 var self = this;
+                
+                self.focusFirstInputBound = self.focusFirstInput.bind(self);
 
                 self._processSaverResponse = function (e) {
                     self._processResponse(e, "save", function (potentiallySavedOrNewEntity, exceptionOccured) {
@@ -551,12 +557,14 @@
                     var editors = this.querySelectorAll('tg-editor');
                     var editorIndex, firstInput, selectedElement;
                     for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
-                        selectedElement = selectEnabledEditor(editors[editorIndex]);
-                        firstInput = firstInput || selectedElement;
-                        if (editors[editorIndex]._error) {
-                            if (selectedElement) {
-                                selectedElement.focus();
-                                return;
+                        if (editors[editorIndex].offsetParent !== null) {
+                            selectedElement = selectEnabledEditor(editors[editorIndex]);
+                            firstInput = firstInput || selectedElement;
+                            if (editors[editorIndex]._error) {
+                                if (selectedElement) {
+                                    selectedElement.focus();
+                                    return;
+                                }
                             }
                         }
                     }

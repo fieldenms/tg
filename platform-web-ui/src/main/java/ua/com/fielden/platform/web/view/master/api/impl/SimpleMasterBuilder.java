@@ -79,11 +79,22 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         if (shortcut.isPresent()) {
             defaultEntityAction.setShortcut(shortcut.get()); // default value of shortcut if present
         }
+        final Optional<String> focusingCallback = getFocusingCallback(masterAction);
+        if (focusingCallback.isPresent()) {
+            defaultEntityAction.setFocusingCallback(focusingCallback.get()); // default value of focusingCallback if present
+        }
         final EntityActionConfig<T> entityAction = new EntityActionConfig<>(defaultEntityAction, this);
         entityActions.add(entityAction);
         return entityAction;
     }
 
+    private Optional<String> getFocusingCallback(final MasterActions masterAction) {
+        if (MasterActions.SAVE == masterAction) {
+            return Optional.of("focusFirstInputBound");
+        } else {
+            return Optional.empty();
+        }
+    }
 
     private Optional<String> getShortcut(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
