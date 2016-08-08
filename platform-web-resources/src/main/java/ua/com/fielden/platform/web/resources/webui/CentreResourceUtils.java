@@ -471,7 +471,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             }
 
             if (config.withComputation()) {
-                context.setComputation(config.computation);
+                context.setComputation(config.computation.get());
             }
             return Optional.of(context);
         } else {
@@ -510,7 +510,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         context.setMasterEntity(masterContext);
 
         if (config.isPresent() && config.get().context.isPresent() && config.get().context.get().withComputation()) {
-            context.setComputation(config.get().context.get().computation);
+            context.setComputation(config.get().context.get().computation.get());
         }
 
         return context;
