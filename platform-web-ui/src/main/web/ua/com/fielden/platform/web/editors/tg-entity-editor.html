@@ -537,8 +537,11 @@
                     this.opened = false;
                     this._onChange();
                 }
-                Polymer.dom(document.body).removeChild(this.$.result);
-                Polymer.dom.flush();
+                var elementExists = Polymer.dom(document.body).querySelector("#result");
+                if (elementExists) {
+                	Polymer.dom(document.body).removeChild(this.$.result);
+                	Polymer.dom.flush();
+                }
             },
             
             _resultCanceled : function (event, detail) {
