@@ -66,15 +66,15 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
         // this example, albeit artificially, also demonstrates not just one but two sequential requests for additional user input in a form of acknowledgement 
         if (entity.hasWarnings()) {
             if (!moreData("acknowledgedForTheFirstTime").isPresent()) {
-                throw new NeedMoreData("Warnings need acknowledgement (first time)", TgAcknowledgeWarnings.class, "acknowledgedForTheFirstTime");
+                throw new NeedMoreData("Warnings need acknowledgement (first time)", AcknowledgeWarnings.class, "acknowledgedForTheFirstTime");
             } else {
-                final TgAcknowledgeWarnings continuation = this.<TgAcknowledgeWarnings> moreData("acknowledgedForTheFirstTime").get();
+                final AcknowledgeWarnings continuation = this.<AcknowledgeWarnings> moreData("acknowledgedForTheFirstTime").get();
                 System.out.println("Acknowledged (first)? = " + continuation.getAcknowledged());
 
                 if (!moreData("acknowledgedForTheSecondTime").isPresent()) {
-                    throw new NeedMoreData("Warnings need acknowledgement (second time)", TgAcknowledgeWarnings.class, "acknowledgedForTheSecondTime");
+                    throw new NeedMoreData("Warnings need acknowledgement (second time)", AcknowledgeWarnings.class, "acknowledgedForTheSecondTime");
                 } else {
-                    final TgAcknowledgeWarnings secondContinuation = this.<TgAcknowledgeWarnings> moreData("acknowledgedForTheSecondTime").get();
+                    final AcknowledgeWarnings secondContinuation = this.<AcknowledgeWarnings> moreData("acknowledgedForTheSecondTime").get();
                     System.out.println("Acknowledged (second)? = " + secondContinuation.getAcknowledged());
                 }
             }

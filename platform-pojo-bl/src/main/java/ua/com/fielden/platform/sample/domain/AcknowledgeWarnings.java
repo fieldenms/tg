@@ -18,9 +18,9 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
-@CompanionObject(ITgAcknowledgeWarnings.class)
+@CompanionObject(IAcknowledgeWarnings.class)
 @EntityTitle(value = "Acknowledge warnings", desc = "Acknowledge warnings of the current initiating entity")
-public class TgAcknowledgeWarnings extends ContinuationData<String> {
+public class AcknowledgeWarnings extends ContinuationData<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
@@ -33,7 +33,7 @@ public class TgAcknowledgeWarnings extends ContinuationData<String> {
     private String allWarnings;
 
     @Observable
-    public TgAcknowledgeWarnings setAllWarnings(final String allWarnings) {
+    public AcknowledgeWarnings setAllWarnings(final String allWarnings) {
         this.allWarnings = allWarnings;
         return this;
     }
@@ -43,7 +43,7 @@ public class TgAcknowledgeWarnings extends ContinuationData<String> {
     }
 
     @Observable
-    public TgAcknowledgeWarnings setAcknowledged(final boolean acknowledged) {
+    public AcknowledgeWarnings setAcknowledged(final boolean acknowledged) {
         this.acknowledged = acknowledged;
         return this;
     }

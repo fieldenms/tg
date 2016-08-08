@@ -16,7 +16,7 @@ import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.migration.MigrationError;
 import ua.com.fielden.platform.migration.MigrationHistory;
 import ua.com.fielden.platform.migration.MigrationRun;
-import ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings;
+import ua.com.fielden.platform.sample.domain.AcknowledgeWarnings;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.SecurityTokenInfo;
@@ -68,6 +68,6 @@ public class PlatformDomainTypes {
         types.add(EntityEditAction.class);
         types.add(EntityDeleteAction.class);
         types.add(EntityExportAction.class);
-        types.add(TgAcknowledgeWarnings.class);
+        types.add(AcknowledgeWarnings.class);
     }
 }

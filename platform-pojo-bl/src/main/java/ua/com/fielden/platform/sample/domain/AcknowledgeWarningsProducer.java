@@ -7,20 +7,20 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
 /**
- * A producer for new instances of entity {@link TgAcknowledgeWarnings} to fill its respective property with the actual warnings.
+ * A producer for new instances of entity {@link AcknowledgeWarnings} to fill its respective property with the actual warnings.
  *
  * @author TG Team
  *
  */
-public class TgAcknowledgeWarningsProducer extends DefaultEntityProducerWithContext<TgAcknowledgeWarnings> {
+public class AcknowledgeWarningsProducer extends DefaultEntityProducerWithContext<AcknowledgeWarnings> {
 
     @Inject
-    public TgAcknowledgeWarningsProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
-        super(factory, TgAcknowledgeWarnings.class, companionFinder);
+    public AcknowledgeWarningsProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
+        super(factory, AcknowledgeWarnings.class, companionFinder);
     }
 
     @Override
-    public TgAcknowledgeWarnings provideDefaultValues(final TgAcknowledgeWarnings entity) {
+    public AcknowledgeWarnings provideDefaultValues(final AcknowledgeWarnings entity) {
         if (getMasterEntity() != null) {
             final String warnings = getMasterEntity().warnings().stream().map(w -> w.getMessage()).reduce("\n", (String a, String b) -> a + b + "\n");
             entity.setAllWarnings(warnings);

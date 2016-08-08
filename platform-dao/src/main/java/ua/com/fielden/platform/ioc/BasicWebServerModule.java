@@ -33,8 +33,8 @@ import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
-import ua.com.fielden.platform.sample.domain.ITgAcknowledgeWarnings;
-import ua.com.fielden.platform.sample.domain.TgAcknowledgeWarningsDao;
+import ua.com.fielden.platform.sample.domain.IAcknowledgeWarnings;
+import ua.com.fielden.platform.sample.domain.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
@@ -214,7 +214,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
         
         // warnings acknowledgement binding
-        bind(ITgAcknowledgeWarnings.class).to(TgAcknowledgeWarningsDao.class);
+        bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
     }
 
     public Properties getProps() {

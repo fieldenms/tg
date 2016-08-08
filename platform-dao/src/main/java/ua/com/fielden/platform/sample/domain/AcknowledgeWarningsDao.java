@@ -8,22 +8,22 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 
 /** 
- * DAO implementation for companion object {@link ITgAcknowledgeWarnings}.
+ * DAO implementation for companion object {@link IAcknowledgeWarnings}.
  * 
  * @author Developers
  *
  */
-@EntityType(TgAcknowledgeWarnings.class)
-public class TgAcknowledgeWarningsDao extends CommonEntityDao<TgAcknowledgeWarnings> implements ITgAcknowledgeWarnings {
+@EntityType(AcknowledgeWarnings.class)
+public class AcknowledgeWarningsDao extends CommonEntityDao<AcknowledgeWarnings> implements IAcknowledgeWarnings {
 
     @Inject
-    public TgAcknowledgeWarningsDao(final IFilter filter) {
+    public AcknowledgeWarningsDao(final IFilter filter) {
         super(filter);
     }
 
     @Override
     @SessionRequired
-    public TgAcknowledgeWarnings save(final TgAcknowledgeWarnings entity) {
+    public AcknowledgeWarnings save(final AcknowledgeWarnings entity) {
         System.out.println("Master entity for continuation: " + entity.getContext().getMasterEntity());
         
         return super.save(entity);

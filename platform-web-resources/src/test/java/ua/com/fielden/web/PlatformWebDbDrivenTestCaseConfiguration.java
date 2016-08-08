@@ -29,7 +29,7 @@ import ua.com.fielden.platform.persistence.ProxyInterceptor;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.MoneyUserType;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings;
+import ua.com.fielden.platform.sample.domain.AcknowledgeWarnings;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -90,7 +90,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(UserAndRoleAssociationBatchAction.class);
             domainTypes.add(SecurityRoleAssociation.class);
             domainTypes.add(SecurityRoleAssociationBatchAction.class);
-            domainTypes.add(TgAcknowledgeWarnings.class);
+            domainTypes.add(AcknowledgeWarnings.class);
             domainTypes.add(Attachment.class);
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
             final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);

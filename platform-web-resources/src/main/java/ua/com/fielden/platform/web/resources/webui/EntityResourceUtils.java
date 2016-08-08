@@ -54,7 +54,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings;
+import ua.com.fielden.platform.sample.domain.AcknowledgeWarnings;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -651,9 +651,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         final Result isValid = firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
         
         if (isValid.isSuccessful()) {
-            if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null || !((TgAcknowledgeWarnings) continuations.get().get("_acknowledgedForTheFirstTime")).getAcknowledged() )) {
-                throw new NeedMoreData("Warnings need acknowledgement", TgAcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
-            } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null && ((TgAcknowledgeWarnings) continuations.get().get("_acknowledgedForTheFirstTime")).getAcknowledged()) {
+            if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null || !((AcknowledgeWarnings) continuations.get().get("_acknowledgedForTheFirstTime")).getAcknowledged() )) {
+                throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
+            } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null && ((AcknowledgeWarnings) continuations.get().get("_acknowledgedForTheFirstTime")).getAcknowledged()) {
                 entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
             }
         }
