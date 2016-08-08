@@ -3,6 +3,9 @@ package ua.com.fielden.platform.ioc;
 import java.util.Map;
 import java.util.Properties;
 
+import com.google.inject.Scopes;
+import com.google.inject.name.Names;
+
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
@@ -30,6 +33,8 @@ import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
+import ua.com.fielden.platform.sample.domain.ITgAcknowledgeWarnings;
+import ua.com.fielden.platform.sample.domain.TgAcknowledgeWarningsDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
@@ -77,9 +82,6 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ISortingProperty;
 import ua.com.fielden.platform.web.centre.SortingPropertyDao;
-
-import com.google.inject.Scopes;
-import com.google.inject.name.Names;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -210,6 +212,9 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
+        
+        // warnings acknowledgement binding
+        bind(ITgAcknowledgeWarnings.class).to(TgAcknowledgeWarningsDao.class);
     }
 
     public Properties getProps() {

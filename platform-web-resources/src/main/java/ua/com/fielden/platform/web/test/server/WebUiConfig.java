@@ -42,7 +42,6 @@ import ua.com.fielden.platform.sample.domain.ExportActionProducer;
 import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ITgPersistentStatus;
-import ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentProducer;
