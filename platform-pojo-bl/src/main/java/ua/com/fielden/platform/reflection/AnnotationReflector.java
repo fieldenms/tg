@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -39,7 +40,7 @@ public final class AnnotationReflector {
     private final static Logger logger = Logger.getLogger(AnnotationReflector.class);
 
     /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
-    private final static Map<FieldOrMethodKey, Map<Class<? extends Annotation>, Annotation>> annotations = new HashMap<>();
+    private final static ConcurrentHashMap<FieldOrMethodKey, Map<Class<? extends Annotation>, Annotation>> annotations = new ConcurrentHashMap<>();
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
