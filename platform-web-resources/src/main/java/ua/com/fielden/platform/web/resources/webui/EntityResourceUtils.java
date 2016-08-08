@@ -642,12 +642,21 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         final boolean continuationsPresent = continuations.isPresent();
         final CommonEntityDao<T> co = (CommonEntityDao<T>) this.co;
         
-        if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null)) {
-            throw new NeedMoreData("Warnings need acknowledgement", TgAcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
-        } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null) {
-            entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
+        // iterate over properties in search of the first invalid one (without required checks)
+        final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
+        .filter(mp -> mp.getFirstFailure() != null)
+        .findFirst().map(mp -> mp.getFirstFailure());
+        
+        // returns first failure if exists or successful result if there was no failure.
+        final Result isValid = firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
+        
+        if (isValid.isSuccessful()) {
+            if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null)) {
+                throw new NeedMoreData("Warnings need acknowledgement", TgAcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
+            } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null) {
+                entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
+            }
         }
-
         
         if (continuationsPresent) {
             co.setMoreData(continuations.get());
