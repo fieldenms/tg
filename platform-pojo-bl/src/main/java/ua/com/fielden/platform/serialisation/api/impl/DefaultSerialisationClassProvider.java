@@ -11,8 +11,8 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.sample.domain.AcknowledgeWarnings;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.user.SecurityTokenInfo;

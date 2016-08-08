@@ -110,12 +110,12 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.config.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.resources.webui.AcknowledgeWarningsWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
-import ua.com.fielden.platform.web.test.server.config.AcknowledgeWarningsWebUiConfig;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;

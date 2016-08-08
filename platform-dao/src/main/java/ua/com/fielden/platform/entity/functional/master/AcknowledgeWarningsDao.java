@@ -1,10 +1,12 @@
-package ua.com.fielden.platform.sample.domain;
+package ua.com.fielden.platform.entity.functional.master;
 
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
+import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.query.IFilter;
 
 /** 

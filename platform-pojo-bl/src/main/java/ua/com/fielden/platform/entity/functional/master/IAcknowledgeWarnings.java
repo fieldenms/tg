@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.sample.domain;
+package ua.com.fielden.platform.entity.functional.master;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 
