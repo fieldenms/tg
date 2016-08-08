@@ -1,6 +1,8 @@
 package ua.com.fielden.platfrom.web.centre.api.context.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
 import java.util.function.Function;
@@ -8,6 +10,9 @@ import java.util.function.Function;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.either.Left;
+import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 
 /**
@@ -151,9 +156,23 @@ public class EntityCentreContextSelectorTest {
     }
 
     @Test
-    public void context_with_selected_entities_and_master_entity_and_selection_crit_and_computed_function() {
+    public void context_referentially_identical_computation_components_are_equal() {
        final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation = entity -> entity.getType();
-       final CentreContextConfig config = context().withSelectedEntities().withMasterEntity().withSelectionCrit().withComputation(computation).build();
+       final Either<Exception, CentreContextConfig> either = Try(() -> context().withSelectedEntities().withMasterEntity().withSelectionCrit().withComputation(computation).build());
+       assertTrue(either instanceof Right);
+       final CentreContextConfig config = ((Right<Exception, CentreContextConfig>) either).value;
        assertEquals(new CentreContextConfig(false, true, true, true, computation), config);
+       assertTrue(config.computation.isPresent());
+       assertEquals(computation, config.computation.get());
+    }
+
+    @Test
+    public void configuring_context_with_null_computation_is_restriected() {
+        assertTrue(Try(() -> context().withSelectionCrit().withComputation(null).build()) instanceof Left);
+        assertTrue(Try(() -> context().withMasterEntity().withComputation(null).build()) instanceof Left);
+        assertTrue(Try(() -> context().withSelectedEntities().withComputation(null).build()) instanceof Left);
+        assertTrue(Try(() -> context().withSelectedEntities().withMasterEntity().withComputation(null).build()) instanceof Left);
+        assertTrue(Try(() -> context().withSelectedEntities().withMasterEntity().withSelectionCrit().withComputation(null).build()) instanceof Left);
+       
     }
 }

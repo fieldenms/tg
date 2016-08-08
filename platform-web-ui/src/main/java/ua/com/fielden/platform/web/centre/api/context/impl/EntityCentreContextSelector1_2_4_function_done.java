@@ -10,6 +10,7 @@ import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelect
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector4;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorFunction;
+import ua.com.fielden.platform.web.centre.api.context.exceptions.CentreContextConfigException;
 
 /**
  * Default implementation for the entity centre context selector API.
@@ -70,6 +71,9 @@ class EntityCentreContextSelector1_2_4_function_done<T extends AbstractEntity<?>
 
     @Override
     public IEntityCentreContextSelectorDone<T> withComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        if (computation == null) {
+            throw new CentreContextConfigException("The computational component of the context cannot be set as value null.");
+        }
         return new EntityCentreContextSelector1_2_4_function_done<T>(withCurrentEntity, withAllSelectedEntities, withSelectionCrit, withMasterEntity, computation);
     }
 
