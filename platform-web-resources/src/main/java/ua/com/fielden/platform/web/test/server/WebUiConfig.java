@@ -969,7 +969,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         @Override
         protected EntityResultQueryModel<TgPersistentEntityWithProperties> completeEqlBasedOnContext(final CentreContext<TgPersistentEntityWithProperties, ?> context, final String searchString, final ICompoundCondition0<TgPersistentEntityWithProperties> incompleteEql) {
-            System.out.println("EntityPropValueMatcherForCentre: CONTEXT == " + getContext());
+            System.out.println("EntityPropValueMatcherForCentre: CONTEXT == " + getContext() + " getContext().getComputation() = " + getContext().getComputation());
             return incompleteEql.model();
         }
     }
@@ -1121,6 +1121,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
+            System.out.println("DetailsCentreQueryEnhancer: computation function == " + context.get().getComputation());
             if (context.get().getMasterEntity() != null) {
                 System.out.println("DetailsCentreQueryEnhancer: master entity holder == " + context.get().getMasterEntity());
                 final TgCentreInvokerWithCentreContext funcEntity = (TgCentreInvokerWithCentreContext) context.get().getMasterEntity();
@@ -1276,7 +1277,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 //*    */.setDefaultValue(range().integer().not().setFromValueExclusive(1).setToValueExclusive(2).canHaveNoValue().value())
                 .also()
                 .addCrit("entityProp").asMulti().autocompleter(TgPersistentEntityWithProperties.class)
-                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
+                .withMatcher(EntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/ withComputation(entity -> 3).build())
                 .lightDesc()
                 //*    */.setDefaultValue(multi().string().not().setValues("C*", "D*").canHaveNoValue().value())
                 .also()
@@ -1556,7 +1557,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
         if (withQueryEnhancer) {
-            afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().build());
+            afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().withComputation(entity -> 5).build());
         } else {
             afterQueryEnhancerConf = beforeEnhancerConfiguration;
         }

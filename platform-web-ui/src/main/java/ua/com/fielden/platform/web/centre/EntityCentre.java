@@ -582,6 +582,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public String getName() {
         return name;
     }
+    
+    /**
+     * Returns action configuration for concrete action kind and its number in that kind's space.
+     * 
+     * @param actionKind
+     * @param actionNumber
+     * @return
+     */
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        return dslDefaultConfig.actionConfig(actionKind, actionNumber);
+    }
 
     /**
      * Returns the value that indicates whether centre must run automatically or not.
@@ -1193,7 +1204,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue() != null
                 && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().isPresent()
                 ? dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().get()
-                : new CentreContextConfig(false, false, false, false);
+                : new CentreContextConfig(false, false, false, false, null);
     }
 
     /**

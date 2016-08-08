@@ -367,8 +367,8 @@
                     }
                 }).bind(self);
 
-                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
-                    return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
+                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
+                    return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
                 }).bind(self);
 
                 self.save = (function () {

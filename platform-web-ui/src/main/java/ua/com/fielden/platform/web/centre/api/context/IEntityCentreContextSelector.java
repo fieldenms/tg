@@ -8,4 +8,5 @@ public interface IEntityCentreContextSelector<T extends AbstractEntity<?>> {
 
     IEntityCentreContextSelector3<T> withSelectionCrit();
     IEntityCentreContextSelector5<T> withMasterEntity();
+
 }
