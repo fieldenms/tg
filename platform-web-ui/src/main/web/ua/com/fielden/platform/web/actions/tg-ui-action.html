@@ -190,6 +190,16 @@
             	type: String
             },
             
+            /**
+             * String representation of functional action kind as defined by java class FunctionalActionKind.
+             *
+             * This property, along with numberOfAction, forms action identifier in context of parent centre. This is now used only for centre 
+             * actions.
+             */
+            actionKind: {
+            	type: String
+            },
+            
             attrs: {
             	type: Object
             },
@@ -504,7 +514,7 @@
         _createContextHolderForAction: function () {
         	var self = this;
             // creates the context and
-            var context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity);
+            var context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.actionKind, self.numberOfAction);
             // enhances it with the information of 'currentEntity' (primary / secondary actions) and
             if (self.currentEntity) {
             	self._enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);

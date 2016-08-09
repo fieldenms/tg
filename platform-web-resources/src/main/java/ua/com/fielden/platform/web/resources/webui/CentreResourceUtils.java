@@ -55,6 +55,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
@@ -468,6 +469,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             if (config.withMasterEntity) {
                 context.setMasterEntity(EntityResource.restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, entityFactory, centreContextHolder, 0));
             }
+
+            if (config.withComputation()) {
+                context.setComputation(config.computation.get());
+            }
             return Optional.of(context);
         } else {
             return Optional.empty();
@@ -481,8 +486,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * <p>
      * Note: the control of which centreContext's parts should be initialised is provided by the client (there are generated meta-information like 'requireSelectedEntities',
      * 'requireMasterEntity').
-     *
+     * 
+     * @param actionConfig - the configuration of action for which this context is restored (used to restore computation function). It is not mandatory to 
+     *  specify this parameter as non-empty -- at this stage only centre actions are enabled with 'computation' part of the context.
      * @param centreContextHolder
+     *
      * @return
      */
     public static <T extends AbstractEntity<?>> CentreContext<T, AbstractEntity<?>> createCentreContext(
@@ -494,11 +502,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final EntityFactory entityFactory,
             final AbstractEntity<?> masterContext,
             final ArrayList<AbstractEntity<?>> selectedEntities,
-            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity) {
+            final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
+            final Optional<EntityActionConfig> config) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
         context.setSelectedEntities((List<T>) selectedEntities);
         context.setMasterEntity(masterContext);
+
+        if (config.isPresent() && config.get().context.isPresent() && config.get().context.get().withComputation()) {
+            context.setComputation(config.get().context.get().computation.get());
+        }
+
         return context;
     }
 
@@ -559,7 +573,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 CentreUtils.getOriginalManagedType(validationPrototype.getType(), originalCdtmae),
                 companionFinder//
         ).getKey();
-        
+
         // need to commit changed fresh centre after modifiedPropertiesHolder has been applied!
         CentreUpdater.commitCentre(gdtm, miType, CentreUpdater.FRESH_CENTRE_NAME);
         return appliedCriteriaEntity;
