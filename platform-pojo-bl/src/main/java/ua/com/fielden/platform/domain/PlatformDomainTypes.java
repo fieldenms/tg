@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
+import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.migration.MigrationError;
 import ua.com.fielden.platform.migration.MigrationHistory;
@@ -69,5 +70,6 @@ public class PlatformDomainTypes {
         types.add(EntityDeleteAction.class);
         types.add(EntityExportAction.class);
         types.add(AcknowledgeWarnings.class);
+        types.add(PropertyWarning.class);
     }
 }

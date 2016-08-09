@@ -70,13 +70,13 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 throw new NeedMoreData("Warnings need acknowledgement (first time)", AcknowledgeWarnings.class, "acknowledgedForTheFirstTime");
             } else {
                 final AcknowledgeWarnings continuation = this.<AcknowledgeWarnings> moreData("acknowledgedForTheFirstTime").get();
-                System.out.println("Acknowledged (first)? = " + continuation.getAcknowledged());
+                System.out.println("Acknowledged (first)? = " + continuation.getWarnings());
 
                 if (!moreData("acknowledgedForTheSecondTime").isPresent()) {
                     throw new NeedMoreData("Warnings need acknowledgement (second time)", AcknowledgeWarnings.class, "acknowledgedForTheSecondTime");
                 } else {
                     final AcknowledgeWarnings secondContinuation = this.<AcknowledgeWarnings> moreData("acknowledgedForTheSecondTime").get();
-                    System.out.println("Acknowledged (second)? = " + secondContinuation.getAcknowledged());
+                    System.out.println("Acknowledged (second)? = " + secondContinuation.getWarnings());
                 }
             }
         }

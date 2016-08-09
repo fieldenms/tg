@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.entity.functional.master;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import ua.com.fielden.platform.entity.ContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -7,7 +11,6 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /** 
@@ -22,33 +25,19 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @EntityTitle(value = "Acknowledge warnings", desc = "Acknowledge warnings of the current initiating entity")
 public class AcknowledgeWarnings extends ContinuationData<String> {
     private static final long serialVersionUID = 1L;
-
-    @IsProperty
-    @Title(value = "Acknowledged?", desc = "Acknowledged?")
-    private boolean acknowledged;
-
-    @IsProperty
-    @Title(value = "All warnings", desc = "Desc")
-    @Readonly
-    private String allWarnings;
+    
+    @IsProperty(PropertyWarning.class)
+    @Title(value = "Warnings", desc = "A list of user property warnings")
+    private Set<PropertyWarning> warnings = new LinkedHashSet<PropertyWarning>();
 
     @Observable
-    public AcknowledgeWarnings setAllWarnings(final String allWarnings) {
-        this.allWarnings = allWarnings;
+    protected AcknowledgeWarnings setWarnings(final Set<PropertyWarning> warnings) {
+        this.warnings.clear();
+        this.warnings.addAll(warnings);
         return this;
     }
 
-    public String getAllWarnings() {
-        return allWarnings;
-    }
-
-    @Observable
-    public AcknowledgeWarnings setAcknowledged(final boolean acknowledged) {
-        this.acknowledged = acknowledged;
-        return this;
-    }
-
-    public boolean getAcknowledged() {
-        return acknowledged;
+    public Set<PropertyWarning> getWarnings() {
+        return Collections.unmodifiableSet(warnings);
     }
 }

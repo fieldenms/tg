@@ -651,9 +651,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         final Result isValid = firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
         
         if (isValid.isSuccessful()) {
-            if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null || !((AcknowledgeWarnings) continuations.get().get("_acknowledgedForTheFirstTime")).getAcknowledged() )) {
+            if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null)) {
                 throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
-            } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null && ((AcknowledgeWarnings) continuations.get().get("_acknowledgedForTheFirstTime")).getAcknowledged()) {
+            } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null) {
                 entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
             }
         }

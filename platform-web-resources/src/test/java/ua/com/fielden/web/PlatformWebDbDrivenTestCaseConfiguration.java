@@ -18,8 +18,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
+import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
@@ -91,6 +91,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(SecurityRoleAssociation.class);
             domainTypes.add(SecurityRoleAssociationBatchAction.class);
             domainTypes.add(AcknowledgeWarnings.class);
+            domainTypes.add(PropertyWarning.class);
             domainTypes.add(Attachment.class);
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
             final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);

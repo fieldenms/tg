@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.entity.functional.master;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -22,8 +26,15 @@ public class AcknowledgeWarningsProducer extends DefaultEntityProducerWithContex
     @Override
     public AcknowledgeWarnings provideDefaultValues(final AcknowledgeWarnings entity) {
         if (getMasterEntity() != null) {
-            final String warnings = getMasterEntity().warnings().stream().map(w -> w.getMessage()).reduce("\n", (String a, String b) -> a + b + "\n");
-            entity.setAllWarnings(warnings);
+            final Set<PropertyWarning> propertyWarnings = getMasterEntity()
+                    .nonProxiedProperties()
+                    .filter(mp -> mp.hasWarnings())
+                    .map(mp -> {
+                        return factory().newEntity(PropertyWarning.class, CriteriaReflector.getCriteriaTitleAndDesc(getMasterEntity().getType(), mp.getName()).getKey(), mp.getFirstWarning().getMessage());
+                    })
+                    .collect(Collectors.toSet());
+            entity.setWarnings(propertyWarnings);
+            entity.getProperty("warnings").resetState();
         }
         
         return entity;

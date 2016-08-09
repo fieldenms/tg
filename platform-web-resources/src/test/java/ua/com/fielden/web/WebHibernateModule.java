@@ -16,6 +16,8 @@ import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
+import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
+import ua.com.fielden.platform.entity.functional.master.PropertyWarningDao;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
@@ -111,6 +113,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
+        bind(IPropertyWarning.class).to(PropertyWarningDao.class);
         bindConstant().annotatedWith(Names.named("attachments.location")).to(".");
         bind(IAttachment.class).to(AttachmentDao.class);
         bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);

@@ -30,6 +30,8 @@ import ua.com.fielden.platform.entity.IEntityExportAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
+import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
+import ua.com.fielden.platform.entity.functional.master.PropertyWarningDao;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -215,6 +217,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         
         // warnings acknowledgement binding
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
+        bind(IPropertyWarning.class).to(PropertyWarningDao.class);
     }
 
     public Properties getProps() {

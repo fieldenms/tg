@@ -33,13 +33,12 @@ public class AcknowledgeWarningsWebUiConfig {
     }
 
     private EntityMaster<AcknowledgeWarnings> createMaster(final Injector injector) {
-        final String layout = LayoutComposer.mkGridForMaster(640, 2, 1);
+        final String layout = LayoutComposer.mkGridForMaster(640, 1, 1);
 
         final IMaster<AcknowledgeWarnings> masterConfig = new SimpleMasterBuilder<AcknowledgeWarnings>().forEntity(AcknowledgeWarnings.class)
-                .addProp("acknowledged").asCheckbox().also()
-                .addProp("allWarnings").asMultilineText().also()
+                .addProp("warnings").asCollectionalEditor().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
-                .addAction(MasterActions.SAVE)
+                .addAction(MasterActions.SAVE).shortDesc("Acknowledge").longDesc("Acknowledge warnings and continue saving")
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
