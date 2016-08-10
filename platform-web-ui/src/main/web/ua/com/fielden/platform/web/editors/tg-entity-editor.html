@@ -342,6 +342,9 @@
                     this._outFocus(e);
                     // There is no need to proceed with search if user moved out of the search field
                     this._cancelSearch();
+                    if (this.$.result.opened) {
+                        this.$.result.cancel(e)
+                    }
                 }).bind(this);
 
                 this._retrieveContainerSizes = function () {
