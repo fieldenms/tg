@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.functional.master;
 
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
@@ -32,7 +33,7 @@ public class AcknowledgeWarningsProducer extends DefaultEntityProducerWithContex
                     .map(mp -> {
                         return factory().newEntity(PropertyWarning.class, CriteriaReflector.getCriteriaTitleAndDesc(getMasterEntity().getType(), mp.getName()).getKey(), mp.getFirstWarning().getMessage());
                     })
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toCollection(() -> new TreeSet<PropertyWarning>()));
             entity.setWarnings(propertyWarnings);
             entity.getProperty("warnings").resetState();
         }
