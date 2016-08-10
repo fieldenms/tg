@@ -44,6 +44,8 @@
 		        var edDependentProp = master.$.editor_4_dependentProp;
 		        
  	            master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+ 	                assert.deepEqual(bindingEntity['@@touchedProps'].names, ['property'], 'After changing "property" touchedProperties names should be ["property"].');
+ 	                
 	                assert.strictEqual(edProperty._editingValue, 'IS', "_editingValue should be 'IS'.");
 	                assert.strictEqual(edProperty._commValue, 'IS', "_commValue should be 'IS'.");
 	                assert.strictEqual(edProperty._acceptedValue, 'IS', "_acceptedValue should be 'IS'.");
@@ -55,11 +57,20 @@
 	                assert.strictEqual(bindingEntity.get("property"), 'IS', "Binding 'property' value should be 'IS' after modification.");
 	                assert.strictEqual(validatedEntity.get("dependentProp"), 'InService', "'dependentProp' value should be 'InService' after 'property' ACE.");
 	                assert.strictEqual(bindingEntity.get("dependentProp"), 'InService', "Binding 'dependentProp' value should be 'InService' after 'property' ACE.");
-
-	                done();
+	                
+	                // the following code is intended to check whether touchedProps are reset after retrieval [START]
+		            master.postRetrieved = function (entity, bindingEntity, customObject) {
+		                assert.deepEqual(bindingEntity['@@touchedProps'].names, [], 'After second retrieval touchedProperties names should be empty.');
+		                done();
+		            };
+	                
+	                master.retrieve();
+	                // the following code is intended to check whether touchedProps are reset after retrieval [END]
 	            };
 
 	            master.postRetrieved = function (entity, bindingEntity, customObject) {
+	                assert.deepEqual(bindingEntity['@@touchedProps'].names, [], 'After retrieval touchedProperties names should be empty.');
+	                
 	                assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
 	                assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
 	                assert.strictEqual(edProperty._acceptedValue, null, "_acceptedValue should be empty on start (null).");
@@ -84,6 +95,8 @@
 		        var edDependentProp = master.$.editor_4_dependentProp;
 		        
  	            master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+ 	                assert.deepEqual(bindingEntity['@@touchedProps'].names, ['property'], 'After changing "property" touchedProperties names should be ["property"].');
+ 	                
 	                assert.strictEqual(edProperty._editingValue, 'IS', "_editingValue should be 'IS'.");
 	                assert.strictEqual(edProperty._commValue, 'IS', "_commValue should be 'IS'.");
 	                assert.strictEqual(edProperty._acceptedValue, 'IS', "_acceptedValue should be 'IS'.");
@@ -97,6 +110,8 @@
 	                assert.strictEqual(bindingEntity.get("dependentProp"), 'InService', "Binding 'dependentProp' value should be 'InService' after 'property' ACE.");
 	                
 	 	            master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+	 	                assert.deepEqual(bindingEntity['@@touchedProps'].names, ['property', 'dependentProp'], 'After changing "dependentProperty" sequentially to "property" touchedProperties names should be ["property", "dependentProp"].');
+	 	                
 		                assert.strictEqual(edProperty._editingValue, 'IS', "_editingValue should be 'IS'.");
 		                assert.strictEqual(edProperty._commValue, 'IS', "_commValue should be 'IS'.");
 		                assert.strictEqual(edProperty._acceptedValue, 'IS', "_acceptedValue should be 'IS'.");
@@ -109,7 +124,23 @@
 		                assert.strictEqual(validatedEntity.get("dependentProp"), null, "'dependentProp' value should become empty after explicit modification.");
 		                assert.strictEqual(bindingEntity.get("dependentProp"), null, "Binding 'dependentProp' value should become empty after explicit modification.");
 
-		                done();
+		                // the following code is intended to check whether touchedProps are NOT reset after unsuccessful save -- key is missing [START]
+			            master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
+			                assert.deepEqual(bindingEntity['@@touchedProps'].names, ['property', 'dependentProp'], 'After unsuccessful saving touchedProperties names should remain ["property", "dependentProp"].');
+			                
+			                // the following code is intended to check whether touchedProps are reset after successfull save [START]
+				            master.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
+				                assert.deepEqual(bindingEntity['@@touchedProps'].names, [], 'After successful saving touchedProperties names should be empty.');
+				                done();
+				            };
+			                
+				            bindingEntity.set("key", "KEY_" + (new Date()).getTime());
+			                master.save();
+			                // the following code is intended to check whether touchedProps are reset after successful save [END]
+			            };
+		                
+		                master.save();
+		                // the following code is intended to check whether touchedProps are NOT reset after unsuccessful save -- key is missing [END]
 		            };
 		            
 	                edDependentProp._editingValue = '';
@@ -117,6 +148,8 @@
 	            };
 
 	            master.postRetrieved = function (entity, bindingEntity, customObject) {
+ 	                assert.deepEqual(bindingEntity['@@touchedProps'].names, [], 'After retrieval touchedProperties names should be empty.');
+	                
 	                assert.strictEqual(edProperty._editingValue, '', "_editingValue should be empty on start (empty string).");
 	                assert.strictEqual(edProperty._commValue, '', "_commValue should be empty on start (empty string).");
 	                assert.strictEqual(edProperty._acceptedValue, null, "_acceptedValue should be empty on start (null).");
