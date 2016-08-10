@@ -2,8 +2,6 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import java.util.Optional;
 
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsProducer;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -13,9 +11,11 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
-/** 
+
+import com.google.inject.Injector;
+/**
  * {@link AcknowledgeWarnings} Web UI configuration.
- * 
+ *
  * @author Developers
  *
  */
