@@ -198,7 +198,7 @@ public abstract class AbstractSource implements ISource {
         private Class type;
         private Object hibType;
         boolean nullable = false;
-        ExpressionModel expressionModel;
+        private ExpressionModel expressionModel;
 
         public PurePropInfo(final String name, final Class type, final Object hibType, final boolean nullable) {
             super();

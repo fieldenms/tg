@@ -353,7 +353,16 @@ public class RestServerUtil {
                 if (thrownResult.isSuccessful()) {
                     throw Result.failure(String.format("The successful result [%s] was thrown during unsuccesful saving of entity [%s]. This is most likely programming error.", thrownResult, entity));
                 }
-                if (ex != entity.isValid()) {
+                
+                // iterate over properties in search of the first invalid one (without required checks)
+                final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
+                .filter(mp -> mp.getFirstFailure() != null)
+                .findFirst().map(mp -> mp.getFirstFailure());
+                
+                // returns first failure if exists or successful result if there was no failure.
+                final Result isValid = firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
+                
+                if (ex != isValid) {
                     // Log the server side error only in case where exception, that was thrown, does not equal to validation result of the entity (by reference).
                     // Please, note that the Results, that are thrown in companion objects, often represents validation results of some complimentary entities during saving.
                     // For example, see ServiceRepairSubmitActionDao save method, which internally invokes saveWorkOrder(serviceRepair) method of ServiceRepairDao, where during saving of workOrder

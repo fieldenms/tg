@@ -570,8 +570,8 @@ public class EntQuery implements ISingleOperand {
                     final Pair<PropResolutionInfo, ISource> propResolutionResult = performPropResolveAction(sourceCandidates);
                     final PropResolutionInfo pri = propResolutionResult.getKey();
                     propResolutionResult.getValue().addReferencingProp(pri);
-                    if (pri.getProp().expressionModel != null && !pri.getEntProp().isExpression()) {
-                        pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, paramValues, pri.getProp().expressionModel).getResult().getValue());
+                    if (pri.getProp().getExpressionModel() != null && !pri.getEntProp().isExpression()) {
+                        pri.getEntProp().setExpression((Expression) new StandAloneExpressionBuilder(generator, paramValues, pri.getProp().getExpressionModel()).getResult().getValue());
                     }
                 }
 

@@ -38,7 +38,7 @@ public class UniversalConstantsForTesting implements IUniversalConstants {
     }
 
     @Override
-    public String smptServer() {
+    public String smtpServer() {
         return smtpServer != null ? smtpServer : "192.168.1.8";
     }
 

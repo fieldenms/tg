@@ -5,6 +5,7 @@ import static java.util.Locale.getDefault;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -26,7 +27,9 @@ import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
+import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -37,6 +40,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.ContinuationData;
+import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -45,6 +49,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -53,6 +58,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -465,17 +471,11 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
             if (EntityUtils.isPropertyDescriptor(entityPropertyType)) {
                 final Class<AbstractEntity<?>> enclosingEntityType = (Class<AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, propertyName).value();
-                final List<PropertyDescriptor<AbstractEntity<?>>> allPropertyDescriptors = Finder.getPropertyDescriptors(enclosingEntityType);
-                final PojoValueMatcher<PropertyDescriptor<AbstractEntity<?>>> matcher = new PojoValueMatcher<>(allPropertyDescriptors, AbstractEntity.KEY, allPropertyDescriptors.size());
-                final List<PropertyDescriptor<AbstractEntity<?>>> matchedPropertyDescriptors = matcher.findMatches((String) reflectedValue);
-                if (matchedPropertyDescriptors.size() > 1) {
-                    return null; // multiple property descriptors match -- need to show 'No entity with key [...] has been found.' message
-                }
-                return matchedPropertyDescriptors.size() == 1 ? matchedPropertyDescriptors.get(0) : null;
+                return extractPropertyDescriptor((String) reflectedValue, enclosingEntityType).orElse(null);
             } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
-                
+                final String compositeKeyAsString = buildSearchByValue(propertyType, entityPropertyType, (String) reflectedValue);
                 final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
-                /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList((String) reflectedValue))).//
+                /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList(compositeKeyAsString))).//
                 /*      */model();
                 final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetchForProperty(companionFinder, type, propertyName).fetchModel()).model();
                 try {
@@ -485,7 +485,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     return null;
                 }
             } else {
-    
                 final String[] keys = MiscUtilities.prepare(Arrays.asList((String) reflectedValue));
                 final String key;
                 if (keys.length > 1) {
@@ -589,6 +588,75 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     }
 
     /**
+     * If one of the composite key members is of type {@link PropertyDescriptor} then the search-by value needs to be modified by converting the provided string representation
+     * for property descriptors to the required form.
+     * 
+     * @param propertyType
+     * @param entityPropertyType
+     * @param compositeKeyAsString
+     * @return
+     */
+    private static String buildSearchByValue(final Class<?> propertyType, final Class<AbstractEntity<?>> entityPropertyType, final String compositeKeyAsString) {
+        // if one or more composite key members are of type ProperyDescriptor then those values need to be converted to a DB aware representation
+        // regrettable this process is error prone due to a potential use of the key member separator as part of property titles...
+        final List<Field> keyMembers = Finder.getKeyMembers(entityPropertyType);
+        final boolean hasPropDescKeyMembers = keyMembers.stream().filter(f -> EntityUtils.isPropertyDescriptor(f.getType())).findFirst().map(f -> true).orElse(false);
+        // do we have key members of type PropertyDescriptor
+        if (!hasPropDescKeyMembers) {
+            return compositeKeyAsString;
+        } else {
+            final StringBuilder convertedKeyValue = new StringBuilder();
+            String keyValues = compositeKeyAsString; // mutable!
+            final String keyMemberSeparator = Reflector.getKeyMemberSeparator((Class<? extends AbstractEntity<DynamicEntityKey>>) propertyType);
+            for (int index = 0; index < keyMembers.size(); index++) {
+                final boolean isLastKeyMember = index == keyMembers.size() - 1;
+                final int separatorIndex = isLastKeyMember ? keyValues.length() : keyValues.indexOf(keyMemberSeparator);
+                // there must be exactly keyMembers.size() - 1 separators
+                // but just in case let's validate the found index
+                if (separatorIndex < 0) {
+                    throw new IllegalArgumentException(format("Composite key value [%s] must have [%s] separators.", compositeKeyAsString, keyMembers.size() - 1));
+                }
+                final String value = isLastKeyMember ? keyValues : keyValues.substring(0, separatorIndex);
+                keyValues = isLastKeyMember ? "" : keyValues.substring(separatorIndex + 1);
+                
+                final Field field = keyMembers.get(index);
+                if (EntityUtils.isPropertyDescriptor(field.getType())) {
+                    final Class<AbstractEntity<?>> enclosingEntityType = (Class<AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, entityPropertyType, field.getName()).value();
+                    final Optional<PropertyDescriptor<AbstractEntity<?>>> propDesc = extractPropertyDescriptor(value, enclosingEntityType);
+                    if (!propDesc.isPresent()) {
+                        throw new IllegalArgumentException(format("Could not convert value [%s] to a property descriptor within type [%s].", value, enclosingEntityType.getSimpleName()));
+                    }
+                    convertedKeyValue.append(propDesc.get().toString());
+                } else {
+                    convertedKeyValue.append(value);
+                }
+                
+                if (index < keyMembers.size() - 1) {
+                    convertedKeyValue.append(keyMemberSeparator);
+                }
+            }
+            return convertedKeyValue.toString();
+        }
+    }
+
+    /**
+     * Tries to extract a property descriptor from a given string value.
+     * 
+     * @param reflectedValue
+     * @param matcher
+     * @return
+     */
+    private static Optional<PropertyDescriptor<AbstractEntity<?>>> extractPropertyDescriptor(final String value, final Class<AbstractEntity<?>> enclosingEntityType) {
+        final List<PropertyDescriptor<AbstractEntity<?>>> allPropertyDescriptors = Finder.getPropertyDescriptors(enclosingEntityType);
+        final PojoValueMatcher<PropertyDescriptor<AbstractEntity<?>>> matcher = new PojoValueMatcher<>(allPropertyDescriptors, AbstractEntity.KEY, allPropertyDescriptors.size());
+        final List<PropertyDescriptor<AbstractEntity<?>>> matchedPropertyDescriptors = matcher.findMatches(value);
+        if (matchedPropertyDescriptors.size() != 1) {
+            return Optional.empty();
+        }
+        return Optional.of(matchedPropertyDescriptors.get(0));
+    }
+
+    /**
      * Restores the holder of modified properties into the map [propertyName; webEditorSpecificValue].
      *
      * @param envelope
@@ -639,6 +707,23 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     public T save(final T entity, final Optional<Map<String, ContinuationData<?>>> continuations) {
         final boolean continuationsPresent = continuations.isPresent();
         final CommonEntityDao<T> co = (CommonEntityDao<T>) this.co;
+        
+        // iterate over properties in search of the first invalid one (without required checks)
+        final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
+        .filter(mp -> mp.getFirstFailure() != null)
+        .findFirst().map(mp -> mp.getFirstFailure());
+        
+        // returns first failure if exists or successful result if there was no failure.
+        final Result isValid = firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
+        
+        if (isValid.isSuccessful()) {
+            if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null)) {
+                throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
+            } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null) {
+                entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
+            }
+        }
+        
         if (continuationsPresent) {
             co.setMoreData(continuations.get());
         } else {

@@ -97,7 +97,7 @@ public class LoginInitiateResetResource extends ServerResource {
                     getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
                 } else {
                     final String emailBody = makePasswordRestEmail(constants.appName(), appUri, user);
-                    final SmtpEmailSender sender = new SmtpEmailSender(constants.smptServer());
+                    final SmtpEmailSender sender = new SmtpEmailSender(constants.smtpServer());
                     sender.sendPlainMessage(constants.fromEmailAddress(), 
                                             user.getEmail(), 
                                             format("[%s] Please reset your password", constants.appName()), 

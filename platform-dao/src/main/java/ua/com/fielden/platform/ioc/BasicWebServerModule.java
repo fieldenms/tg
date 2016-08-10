@@ -3,6 +3,9 @@ package ua.com.fielden.platform.ioc;
 import java.util.Map;
 import java.util.Properties;
 
+import com.google.inject.Scopes;
+import com.google.inject.name.Names;
+
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
@@ -25,6 +28,10 @@ import ua.com.fielden.platform.entity.IEntityDeleteAction;
 import ua.com.fielden.platform.entity.IEntityEditAction;
 import ua.com.fielden.platform.entity.IEntityExportAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
+import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
+import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
+import ua.com.fielden.platform.entity.functional.master.PropertyWarningDao;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -77,9 +84,6 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ISortingProperty;
 import ua.com.fielden.platform.web.centre.SortingPropertyDao;
-
-import com.google.inject.Scopes;
-import com.google.inject.name.Names;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -210,6 +214,10 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
+        
+        // warnings acknowledgement binding
+        bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
+        bind(IPropertyWarning.class).to(PropertyWarningDao.class);
     }
 
     public Properties getProps() {

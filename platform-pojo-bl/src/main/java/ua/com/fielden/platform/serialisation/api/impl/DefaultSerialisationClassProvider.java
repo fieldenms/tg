@@ -11,6 +11,8 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
+import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
@@ -199,6 +201,8 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.add(CentreConfigUpdater.class);
         types.add(SortingProperty.class);
         types.add(PropertyDescriptor.class);
+        types.add(AcknowledgeWarnings.class);
+        types.add(PropertyWarning.class);
     }
 
     private List<Class<?>> typesForSerialisationTesting() {

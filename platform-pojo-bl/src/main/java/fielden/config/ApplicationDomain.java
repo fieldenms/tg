@@ -30,7 +30,6 @@ import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntit
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
-import ua.com.fielden.platform.sample.domain.TgAcknowledgeWarnings;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -73,7 +72,6 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(NewEntityAction.class);
         add(ExportAction.class);
         add(TgDeletionTestEntity.class);
-        add(TgAcknowledgeWarnings.class);
     }
 
     @Override
