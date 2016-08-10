@@ -49,6 +49,10 @@
             padding-left: 16px;
             width: calc(100% - 40px);
         }
+        .without-pad {
+            @apply(--layout-vertical);
+            width: calc(100% - 40px);
+        }
         .primary {
             font-size: 10pt;
             padding-bottom: 3px;
@@ -91,16 +95,16 @@
             _on-input="[[_onInput]]"
             _on-keydown="[[_onKeydown]]">
             <input is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
-            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_entities)]]" multi-selection>
+            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview, _entities)]]" multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(item.sorting)]]">
-                          <iron-icon icon$="[[iconForItem(selected)]]" hidden$="[[!_sortingIconHidden(item)]]" class="star"></iron-icon>
-                          <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(item)]]">
+                          <iron-icon icon$="[[iconForItem(selected)]]" hidden$="[[_selectingIconHidden(_forReview, item)]]" class="star"></iron-icon>
+                          <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                               <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                               <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
                           </div>
-                          <div class="pad" tooltip-text$="[[_calcItemTooltip(item)]]">
+                          <div class$="[[_computedPadClass(_forReview)]]" tooltip-text$="[[_calcItemTooltip(item)]]">
                               <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
                               <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
                           </div>
@@ -193,6 +197,14 @@
                 	}).bind(this);
             	}
             },
+            
+            /**
+             * Indicates that this collectional editor is 'for review' only and will not be selectable and no icon will exist before each item.
+             */
+            _forReview: {
+                type: Boolean,
+                value: false
+            }
         },
         
         observers: [
@@ -235,7 +247,10 @@
             this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
             
             var selEntities = [];
-            var chosenIds = this.entity.get('chosenIds');
+            var chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
+            if (typeof this.entity.chosenIds === 'undefined') {
+                this._forReview = true;
+            }
             
             this._originalChosenIds = [];
             
@@ -298,6 +313,16 @@
             return classes;
         },
         
+        _computedPadClass: function (_forReview) {
+            var classes = '';
+            if (!_forReview) {
+              classes += ' pad';
+            } else {
+              classes += ' without-pad';
+            }
+            return classes;
+        },
+        
         iconForItem: function (isSelected) {
             return isSelected ? 'star' : 'star-border';
         },
@@ -306,12 +331,16 @@
             return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
         },
         
-        _sortingIconHidden: function (item) {
-            return typeof item.sorting === 'undefined';
+        _selectingIconHidden: function (_forReview, item) {
+            return _forReview || (typeof item.sorting !== 'undefined');
         },
         
-        _isSelectionEnabled: function (_entities) {
-            return _entities.length > 0 && this._sortingIconHidden(_entities[0]);
+        _sortingIconHidden: function (_forReview, item) {
+            return _forReview || (typeof item.sorting === 'undefined');
+        },
+        
+        _isSelectionEnabled: function (_forReview, _entities) {
+            return !_forReview && _entities.length > 0 && this._sortingIconHidden(_forReview, _entities[0]);
         },
         
         _caclulateSortingIconStyle: function (sorting)  {

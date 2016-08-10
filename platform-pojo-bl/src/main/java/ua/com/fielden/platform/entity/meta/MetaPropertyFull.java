@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -453,6 +454,21 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             }
         }
         return null;
+    }
+    
+    /**
+     * Removes all validation warnings (not errors) from the propety.
+     */
+    public synchronized final void clearWarnings() {
+        for (final ValidationAnnotation va : validators.keySet()) {
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
+            for (final Iterator<Result> iter = annotationHandlers.values().iterator(); iter.hasNext(); ) {
+                final Result result = iter.next(); 
+                if (result != null && result.isWarning()) {
+                    iter.remove();
+                }
+            }
+        }
     }
 
     /**
