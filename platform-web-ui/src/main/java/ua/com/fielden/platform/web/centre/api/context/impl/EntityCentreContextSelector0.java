@@ -1,10 +1,15 @@
 package ua.com.fielden.platform.web.centre.api.context.impl;
 
+import java.util.function.Function;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector0;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector1;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector2;
+import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
+import ua.com.fielden.platform.web.centre.api.context.exceptions.CentreContextConfigException;
 
 /**
  * Default implementation for the entity centre context selector API.
@@ -30,20 +35,28 @@ class EntityCentreContextSelector0<T extends AbstractEntity<?>> implements IEnti
                 withCurrentEntity,
                 withAllSelectedEntities,
                 false,
-                false
+                false,
+                null
                );
     }
 
     @Override
     public IEntityCentreContextSelector1<T> withSelectionCrit() {
-        return new EntityCentreContextSelector1_2_4_done<T>(withCurrentEntity, withAllSelectedEntities, true, false);
+        return new EntityCentreContextSelector1_2_4_function_done<T>(withCurrentEntity, withAllSelectedEntities, true, false, null);
     }
 
     @Override
     public IEntityCentreContextSelector2<T> withMasterEntity() {
-        return new EntityCentreContextSelector1_2_4_done<T>(withCurrentEntity, withAllSelectedEntities, false, true);
+        return new EntityCentreContextSelector1_2_4_function_done<T>(withCurrentEntity, withAllSelectedEntities, false, true, null);
     }
 
+    @Override
+    public IEntityCentreContextSelectorDone<T> withComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        if (computation == null) {
+            throw new CentreContextConfigException("The computational component of the context cannot be set as value null.");
+        }
+        return new EntityCentreContextSelector1_2_4_function_done<T>(withCurrentEntity, withAllSelectedEntities, false, false, computation);
+    }
 
 
 }

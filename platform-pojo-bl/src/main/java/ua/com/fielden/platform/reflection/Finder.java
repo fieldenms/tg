@@ -10,6 +10,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,6 +27,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,16 +68,26 @@ public class Finder {
     // ======================================================================================================
     ///////////////////////////////////// Finding/getting MetaProperties and PropertyDescriptors ////////////
     /**
-     * Produces a list of property descriptors for a given entity type, including properties inherited from super a super type.
+     * Produces a list of property descriptors for a given entity type, including properties inherited from a super type.
      *
      * @param <T>
      * @param entityType
      * @return
      */
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType) {
+        return getPropertyDescriptors(entityType, f -> false);
+    }
+
+    /**
+     * The same as above, but provides a way to skip some properties. This could be convenient at times when some more system level properties should be avoided.
+     * 
+     */
+    public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final Predicate<Field> shouldSkip) {
         final List<PropertyDescriptor<T>> result = new ArrayList<PropertyDescriptor<T>>();
         for (final Field field : findProperties(entityType)) {
-            result.add(new PropertyDescriptor<T>(entityType, field.getName()));
+            if (!shouldSkip.test(field)) {
+                result.add(new PropertyDescriptor<T>(entityType, field.getName()));
+            }
         }
         return result;
     }
@@ -88,6 +100,7 @@ public class Finder {
      * @param factory
      * @return
      */
+    @Deprecated
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final EntityFactory factory) {
         final List<PropertyDescriptor<T>> result = new ArrayList<PropertyDescriptor<T>>();
         for (final Field field : findProperties(entityType)) {

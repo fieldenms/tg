@@ -12,6 +12,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICaseWhenFunctionWhen;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneExprOperationAndClose;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -59,7 +60,7 @@ public class DomainMetadataExpressionsGenerator {
     }
 
     private String getKeyMemberConcatenationExpression(final Field keyMember) {
-        if (EntityUtils.isEntityType(keyMember.getType())) {
+        if (PropertyDescriptor.class != keyMember.getType() && EntityUtils.isEntityType(keyMember.getType())) {
             return keyMember.getName() + ".key";
         } else {
             return keyMember.getName();

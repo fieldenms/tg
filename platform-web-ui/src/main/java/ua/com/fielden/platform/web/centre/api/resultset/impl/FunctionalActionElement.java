@@ -118,6 +118,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
         attrs.put("element-name", elementName);
         attrs.put("number-of-action", numberOfAction);
+        attrs.put("action-kind", functionalActionKind);
         attrs.put("element-alias", elementName + "_" + numberOfAction + "_" + functionalActionKind);
 
         // in case of an menu item action show-dialog assignment happens within tg-master-menu

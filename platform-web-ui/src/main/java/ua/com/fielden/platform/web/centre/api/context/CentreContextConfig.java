@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.web.centre.api.context;
 
+import java.util.Optional;
+import java.util.function.Function;
+
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -10,30 +14,40 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public final class CentreContextConfig {
-    public final boolean withCurrentEtity;
-    public final boolean withAllSelectedEntities;
-    public final boolean withSelectionCrit;
-    public final boolean withMasterEntity;
+    public final Boolean withCurrentEtity;
+    public final Boolean withAllSelectedEntities;
+    public final Boolean withSelectionCrit;
+    public final Boolean withMasterEntity;
+    public final Optional<Function<AbstractFunctionalEntityWithCentreContext<?>, Object>> computation;
 
     public CentreContextConfig(
             final boolean withCurrentEtity,
             final boolean withAllSelectedEntities,
             final boolean withSelectionCrit,
-            final boolean withMasterEntity) {
+            final boolean withMasterEntity,
+            final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation
+            ) {
         this.withCurrentEtity = withCurrentEtity;
         this.withAllSelectedEntities = withAllSelectedEntities;
         this.withSelectionCrit = withSelectionCrit;
         this.withMasterEntity = withMasterEntity;
+        this.computation = Optional.ofNullable(computation);
+    }
+
+    public final boolean withComputation() {
+        return this.computation.isPresent();
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (withAllSelectedEntities ? 1231 : 1237);
-        result = prime * result + (withCurrentEtity ? 1231 : 1237);
-        result = prime * result + (withMasterEntity ? 1231 : 1237);
-        result = prime * result + (withSelectionCrit ? 1231 : 1237);
+        result = prime * result + withAllSelectedEntities.hashCode();
+        result = prime * result + withCurrentEtity.hashCode();
+        result = prime * result + withMasterEntity.hashCode();
+        result = prime * result + withSelectionCrit.hashCode();
+        // WARN: CentreContextConfig instances with referentially different 'computation' values yield different hash codes.
+        result = prime * result + computation.hashCode();
         return result;
     }
 
@@ -48,10 +62,12 @@ public final class CentreContextConfig {
 
         final CentreContextConfig that = (CentreContextConfig) obj;
 
-        return  (this.withAllSelectedEntities == that.withAllSelectedEntities) &&
+        // WARN: CentreContextConfig instances with referentially different 'computation' values are considered different
+        return (this.withAllSelectedEntities == that.withAllSelectedEntities) &&
                 (this.withCurrentEtity == that.withCurrentEtity) &&
                 (this.withMasterEntity == that.withMasterEntity)  &&
-                (this.withSelectionCrit == that.withSelectionCrit);
+                (this.withSelectionCrit == that.withSelectionCrit) &&
+                computation.equals(that.computation);
     }
 
 }
