@@ -9,10 +9,6 @@
 
 <dom-module id="tg-entity-master">
     <style>
-        :host::content {
-            @apply(--layout-vertical);
-
-        }
         :host::content tg-flex-layout {
             background-color: white;
         }
@@ -32,14 +28,15 @@
 
         <iron-ajax id="ajaxRetriever" url="[[_url]]" method="PUT" handle-as="json" on-response="_processRetrieverResponse" on-error="_processRetrieverError"></iron-ajax>
         <iron-ajax id="ajaxSaver" url="[[_url]]" method="POST" handle-as="json" on-response="_processSaverResponse" on-error="_processSaverError" loading="{{_saverLoading}}"></iron-ajax>
-
-        <div id="editorContainer" class="property-editors-container flex" on-scroll="_contentScrolled">
-            <content select=".property-editors"></content>
+        <div id="masterContainer" class="layout vertical">
+            <div id="editorContainer" class="property-editors-container flex" on-scroll="_contentScrolled">
+                <content select=".property-editors"></content>
+            </div>
+            <div id="actionContainer">
+                <content select=".action-bar"></content>
+            </div>
+            <content></content>
         </div>
-        <div id="actionContainer">
-            <content select=".action-bar"></content>
-        </div>
-        <content></content>
     </template>
 </dom-module>
 
