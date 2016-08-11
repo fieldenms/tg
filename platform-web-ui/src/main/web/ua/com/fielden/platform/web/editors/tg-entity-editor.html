@@ -491,7 +491,6 @@
                         result.open();
                     }
                     result.notifyResize();
-                    //self.async(result.notifyResize, 1);
                 }, 100);
             },
 
@@ -523,11 +522,18 @@
             },
 
             _resultOpened: function (e) {
-                this.opened = true;
-                this.async(function () {
-                    this.$.result.highlightMatchedParts();
-                }.bind(this), 100);
-
+                var self = this;
+                var activeElement = document.activeElement;
+                if (self.$.input === activeElement || /* if the autocompleter in focus */ 
+                    document.body === activeElement   /* or no other input or button in focus then show found values */) {
+                    self.opened = true;
+	                self.async(function () {
+	                    self.$.result.highlightMatchedParts();
+	                }, 100);
+                } else {
+                    self.opened = true;
+                    self.$.result.cancel(e);
+                }
             },
 
             _resultClosed: function (e) {
