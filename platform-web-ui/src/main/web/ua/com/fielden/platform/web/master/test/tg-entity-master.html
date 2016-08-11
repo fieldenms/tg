@@ -432,7 +432,7 @@
 	                // value ok?
 	                assert.ok(validatedEntity.get("entityProp"), "The property should be initialised.");
 	                assert.instanceOf(validatedEntity.get("entityProp"), reflector.getEntityPrototype(), "The property should be of entity type.");
-	                assert.strictEqual(validatedEntity.get("entityProp").get("key"), "KEY1", "The entity response property should be entity instance with appropriate key.");
+	                assert.strictEqual(validatedEntity.get("entityProp").get("key"), "KEY1", "The entity response property should be entity instance with appropriate key (validate).");
 
 	                // value is changed?
 	                assert.strictEqual(validatedEntity.prop("entityProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
@@ -451,7 +451,7 @@
 	                // value ok?
 	                assert.ok(entity.get("entityProp"), "The property should be initialised.");
 	                assert.instanceOf(entity.get("entityProp"), reflector.getEntityPrototype(), "The property should be of entity type.");
-	                assert.strictEqual(entity.get("entityProp").get("key"), "KEY3", "The entity response property should be entity instance with appropriate key.");
+	                assert.strictEqual(entity.get("entityProp").get("key"), "KEY3", "The entity response property should be entity instance with appropriate key (retrieve).");
 
 	                // value is changed?
 	                assert.strictEqual(entity.prop("entityProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
@@ -465,7 +465,7 @@
 
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("entityProp", "KEY1");
+	                bindingEntity.setAndRegisterPropertyTouch("entityProp", "KEY1");
 
 	                master.validate();
 	            };
