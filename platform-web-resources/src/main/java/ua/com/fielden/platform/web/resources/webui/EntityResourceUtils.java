@@ -229,7 +229,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     if (!isEntityStale) {
                         // do nothing
                     } else {
-                        final Object originalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
+                        final Object originalValue = convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
                         final Object actualValue = entity.get(name);
                         if (EntityUtils.isStale(originalValue, actualValue)) {
                             logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), actualValue, originalValue));
@@ -281,8 +281,9 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param isEntityStale
      */
     private static <M extends AbstractEntity<?>> void applyPropertyValue(final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale) {
-        final Object val = shouldApplyOriginalValue ? valAndOrigVal.get("origVal") : valAndOrigVal.get("val");
-        final Object newValue = convert(type, name, val, companionFinder);
+        final String reflectedValueName = shouldApplyOriginalValue ? "origVal" : "val";
+        final Object val = valAndOrigVal.get(reflectedValueName);
+        final Object newValue = convert(type, name, val, reflectedValueId(valAndOrigVal, reflectedValueName), companionFinder);
         if (notFoundEntity(type, name, val, newValue)) {
             final String msg = String.format("No entity with key [%s] has been found.", val);
             logger.info(msg);
@@ -290,7 +291,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         } else if (!isEntityStale) {
             enforceSet(shouldApplyOriginalValue, name, entity, newValue);
         } else {
-            final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), companionFinder);
+            final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
             final Object actualValue = entity.get(name);
             if (EntityUtils.isConflicting(newValue, staleOriginalValue, actualValue)) {
                 logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), actualValue, staleOriginalValue, newValue));
@@ -298,6 +299,22 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             } else {
                 enforceSet(shouldApplyOriginalValue, name, entity, newValue);
             }
+        }
+    }
+    
+    /**
+     * Extracts reflected value ID for 'val' or 'origVal' reflectedValueName if it exists.
+     * 
+     * @param valAndOrigVal
+     * @param reflectedValueName
+     * @return
+     */
+    private static Optional<Long> reflectedValueId(final Map<String, Object> valAndOrigVal, final String reflectedValueName) {
+        final Object reflectedValueId = valAndOrigVal.get(reflectedValueName + "Id");
+        if (reflectedValueId == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(extractLongValueFrom(reflectedValueId));
         }
     }
     
@@ -453,9 +470,11 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @param type
      * @param propertyName
      * @param reflectedValue
+     * @param reflectedValueId -- in case where the property is entity-typed, this parameter represent an optional ID of the entity-typed value returned from the client application
+     * 
      * @return
      */
-    private static <M extends AbstractEntity<?>> Object convert(final Class<M> type, final String propertyName, final Object reflectedValue, final ICompanionObjectFinder companionFinder) {
+    private static <M extends AbstractEntity<?>> Object convert(final Class<M> type, final String propertyName, final Object reflectedValue, final Optional<Long> reflectedValueId, final ICompanionObjectFinder companionFinder) {
         if (reflectedValue == null) {
             return null;
         }
@@ -472,6 +491,10 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             if (EntityUtils.isPropertyDescriptor(entityPropertyType)) {
                 final Class<AbstractEntity<?>> enclosingEntityType = (Class<AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, propertyName).value();
                 return extractPropertyDescriptor((String) reflectedValue, enclosingEntityType).orElse(null);
+            } else if (reflectedValueId.isPresent()) {
+                // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType).uninstrumented();
+                return propertyCompanion.findById(reflectedValueId.get(), fetchForProperty(companionFinder, type, propertyName).fetchModel());
             } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
                 final String compositeKeyAsString = buildSearchByValue(propertyType, entityPropertyType, (String) reflectedValue);
                 final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
@@ -573,17 +596,27 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             }
             return resultSet;
         } else if (Long.class.isAssignableFrom(propertyType)) {
-            if (reflectedValue instanceof Integer) {
-                return ((Integer) reflectedValue).longValue();
-            } else if (reflectedValue instanceof Long) {
-                return reflectedValue;
-            } else if (reflectedValue instanceof BigInteger) {
-                return ((BigInteger) reflectedValue).longValue();
-            } else {
-                throw new IllegalStateException(String.format("Unknown number type for 'reflectedValue' (%s) - can not convert to Long.", reflectedValue));
-            }
+            return extractLongValueFrom(reflectedValue);
         } else {
             throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s].", type.getSimpleName(), propertyName, reflectedValue));
+        }
+    }
+
+    /**
+     * Extracts from number-like <code>reflectedValue</code> its {@link Long} representation.
+     * 
+     * @param reflectedValue
+     * @return
+     */
+    private static Long extractLongValueFrom(final Object reflectedValue) {
+        if (reflectedValue instanceof Integer) {
+            return ((Integer) reflectedValue).longValue();
+        } else if (reflectedValue instanceof Long) {
+            return (Long) reflectedValue;
+        } else if (reflectedValue instanceof BigInteger) {
+            return ((BigInteger) reflectedValue).longValue();
+        } else {
+            throw new IllegalStateException(String.format("Unknown number type for 'reflectedValue' (%s) - can not convert to Long.", reflectedValue));
         }
     }
 
