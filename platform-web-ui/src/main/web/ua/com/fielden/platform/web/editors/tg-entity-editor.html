@@ -342,8 +342,15 @@
                     this._outFocus(e);
                     // There is no need to proceed with search if user moved out of the search field
                     this._cancelSearch();
-                    if (this.$.result.opened) {
-                        this.$.result.cancel(e)
+                    
+                    // check whether relatedTarget has anything to do with this.$.result
+                    // if it is then there is no need to cancel the overlay, which is this.$.result
+                    var parent = e.relatedTarget;
+                    while (parent !== null && parent !== this.$.result) {
+                        parent = parent.parentElement;
+                    }
+                    if (this.$.result.opened && parent !== this.$.result) {
+                        this.$.result.cancel(e);
                     }
                 }).bind(this);
 
