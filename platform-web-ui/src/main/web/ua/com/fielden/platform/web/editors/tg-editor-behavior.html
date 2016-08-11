@@ -546,6 +546,10 @@
                     names.push(propertyName);
                     counts.push(1);
                 }
+                // need to reset previously cached ID after the property was modified (touched) by the user -- the cached ID becomes stale in that case, and server-side reconstruction of entity-typed property should be KEY-based instead of ID-based. 
+                if (typeof bindingEntity['@' + propertyName + '_id'] !== 'undefined') {
+                    delete bindingEntity['@' + propertyName + '_id'];
+                }
                 console.log('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
             },
 
