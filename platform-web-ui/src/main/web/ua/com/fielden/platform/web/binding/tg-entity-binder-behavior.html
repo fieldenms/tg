@@ -627,6 +627,16 @@
                 delete modifiedPropertiesHolder['@modified']; // remove it not to serialise this purely technical property
                 return modifiedPropertiesHolder;
             },
+            
+            /**
+             * If value is entity-typed and has its ID -- returns it, otherwise returns null.
+             */
+            _extractEntityValueId: function (value) {
+                if (this._reflector().isEntity(value) && value['id'] !== null) {
+                    return value['id'];
+                }
+                return null;
+            },
 
             _extractModifiedPropertiesHolder: function (bindingEntity, _originalBindingEntity) {
                 var modPropHolder = {
@@ -641,6 +651,8 @@
                     bindingEntity.traverseProperties(function (propertyName) {
                         var value = bindingEntity.get(propertyName);
                         var originalValue = _originalBindingEntity.get(propertyName);
+                        var fullEntity = bindingEntity['@@origin'];
+                        var ids = [ self._extractEntityValueId(fullEntity.get(propertyName)), self._extractEntityValueId(fullEntity.getOriginal(propertyName)) ];
                         // VERY IMPORTANT: the property is considered to be 'modified'
                         //                 in the case when its value does not equal to original value.
                         // 
@@ -654,11 +666,17 @@
                                 "origVal": originalValue
                             };
                             modPropHolder["@modified"] = true;
+                            if (ids[0] !== null) {
+                                modPropHolder[propertyName]['valId'] = ids[0];
+                            }
                         } else {
                             // the property is 'unmodified'
                             modPropHolder[propertyName] = {
                                 "origVal": originalValue
                             };
+                        }
+                        if (ids[1] !== null) {
+                            modPropHolder[propertyName]['origValId'] = ids[1];
                         }
                     });
                 }
