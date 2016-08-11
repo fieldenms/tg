@@ -320,6 +320,11 @@
 
                     // isRefreshingProcess should be 'true' to reset old binding information in case where 'continuously created' entity arrive
                     var newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, isContinuouslyCreated);
+                    
+                    if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                        // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
+                        newBindingEntity["@@touchedProps"] = { names: [], counts: [] };
+                    }
 
                     // custom external action
                     if (this.postSaved) {
