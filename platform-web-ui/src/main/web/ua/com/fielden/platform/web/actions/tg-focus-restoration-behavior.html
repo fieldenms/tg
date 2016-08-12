@@ -14,14 +14,20 @@
             
             /**
              * Persists active element to be restored later in method 'restoreActiveElement'.
+             *
+             * @param focusingCallback -- custom function to be used for focus restoration. If null -- no focus restoration will occur. If undefined -- 
+             * focus restoration will occur for document.activeElement
              */
-            persistActiveElement: function () {
+            persistActiveElement: function (focusingCallback) {
+                if (focusingCallback === null) {
+                    return;
+                }
                 var self = this;
                 console.debug('persistActiveElement: initiator', self, 'elem', document.activeElement);
                 console.trace();
                 _previousActiveElements.push({
                     initiator: self,
-                    elem: document.activeElement
+                    elem: focusingCallback ? focusingCallback : document.activeElement
                 });
             },
             
@@ -35,7 +41,9 @@
                         var _previousActiveElementAndInitiator = _previousActiveElements.pop();
                         console.debug('restoreActiveElement:', _previousActiveElementAndInitiator);
                         console.trace();
-                        if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem.focus === 'function') {
+                        if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem === 'function') {
+                            _previousActiveElementAndInitiator.elem();
+                        } else if (_previousActiveElementAndInitiator.elem && typeof _previousActiveElementAndInitiator.elem.focus === 'function') {
                             _previousActiveElementAndInitiator.elem.focus();
                         }
                         

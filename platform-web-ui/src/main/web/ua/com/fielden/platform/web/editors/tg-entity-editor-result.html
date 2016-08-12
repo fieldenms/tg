@@ -246,7 +246,9 @@
 						// put the composed for the current item HTML into the content of paper-item
 						var id = this._makeId(index);
 						var paperItem = Polymer.dom(this.root).querySelector("#" + id);
-						Polymer.dom(paperItem).innerHTML = html;
+						if (paperItem) {
+							Polymer.dom(paperItem).innerHTML = html;
+						}
 					}
 					Polymer.dom.flush();
 				}.bind(this));

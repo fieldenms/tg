@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
+import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionConfig8;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
+import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDone;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
@@ -36,12 +38,13 @@ import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 
-public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDone<T>, IEntityActionConfig8<T> {
+public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDone<T>, IEntityActionConfig8<T>, IActionBarLayoutConfig1<T> {
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<Object> entityActions = new ArrayList<>();
 
     private final FlexLayout layout = new FlexLayout();
+    private final FlexLayout actionBarLayout = new FlexLayout();
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
@@ -76,11 +79,22 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         if (shortcut.isPresent()) {
             defaultEntityAction.setShortcut(shortcut.get()); // default value of shortcut if present
         }
+        final Optional<String> focusingCallback = getFocusingCallback(masterAction);
+        if (focusingCallback.isPresent()) {
+            defaultEntityAction.setFocusingCallback(focusingCallback.get()); // default value of focusingCallback if present
+        }
         final EntityActionConfig<T> entityAction = new EntityActionConfig<>(defaultEntityAction, this);
         entityActions.add(entityAction);
         return entityAction;
     }
 
+    private Optional<String> getFocusingCallback(final MasterActions masterAction) {
+        if (MasterActions.SAVE == masterAction) {
+            return Optional.of("focusFirstInputBound");
+        } else {
+            return Optional.empty();
+        }
+    }
 
     private Optional<String> getShortcut(final MasterActions masterAction) {
         if (MasterActions.REFRESH == masterAction) {
@@ -173,7 +187,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final StringBuilder primaryActionObjects = new StringBuilder();
 
         final StringBuilder propertyActionsStr = new StringBuilder();
-        final DomElement editorContainer = layout.render();
+        final DomElement editorContainer = layout.render().clazz("property-editors");
         importPaths.add(layout.importPath());
         final StringBuilder shortcuts = new StringBuilder();
         for (final WidgetSelector<T> widget : widgets) {
@@ -197,6 +211,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         }
 
         // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions
+        final DomElement actionContainer = actionBarLayout.render().clazz("action-bar");
         final StringBuilder entityActionsStr = new StringBuilder();
         for (final Object action: entityActions) {
             if (action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig) {
@@ -206,7 +221,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                     shortcuts.append(config.action().shortcut() + " ");
                 }
                 if (config.action() instanceof IRenderable) {
-                    editorContainer.add(((IRenderable) config.action()).render());
+                    actionContainer.add(((IRenderable) config.action()).render());
                 }
                 if (config.action() instanceof IExecutable) {
                     entityActionsStr.append(((IExecutable) config.action()).code().toString());
@@ -219,22 +234,23 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                         shortcuts.append(config.shortcut.get() + " ");
                     }
                     importPaths.add(el.importPath());
-                    editorContainer.add(el.render().clazz("primary-action"));
+                    actionContainer.add(el.render().clazz("primary-action"));
                     primaryActionObjects.append(prefix + el.createActionObject());
                 }
             }
 
         }
 
-
+        final DomElement elementContainer = new DomContainer().add(editorContainer, actionContainer);
         final String primaryActionObjectsString = primaryActionObjects.toString();
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", createImports(importPaths))
                 .replace("@entity_type", entityType.getSimpleName())
-                .replace("<!--@tg-entity-master-content-->", editorContainer.toString()) // TODO should contain prop actions
+                .replace("<!--@tg-entity-master-content-->", elementContainer.toString()) // TODO should contain prop actions
                 .replace("//@ready-callback",
                         layout.code().toString() + "\n"
+                      + actionBarLayout.code().toString() + "\n"
                       + entityActionsStr.toString() + "\n"
                       + propertyActionsStr.toString())
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
@@ -294,6 +310,15 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
             return Optional.ofNullable(valueMatcherForProps.get(propName));
         }
 
+    }
+
+    @Override
+    public IActionBarLayoutConfig1<T> setActionBarLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+        if (device == null || orientation == null) {
+            throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
+        }
+        actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
+        return this;
     }
 
 }
