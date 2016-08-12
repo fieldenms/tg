@@ -19,7 +19,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                 .replace("<!--@imports-->", "<link rel='import' href='/app/tg-element-loader.html'>\n")
                 .replace("@entity_type", entityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->",
-                         "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
+                          "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
                         + "    import=" + getImportUri(embededMasterType)
                         + "    element-name=" + getElementName(embededMasterType)
                         + "    attrs='[[_calcAttrs(_currBindingEntity)]]'"

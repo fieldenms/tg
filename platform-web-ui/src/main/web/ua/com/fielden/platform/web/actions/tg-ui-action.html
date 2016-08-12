@@ -431,7 +431,7 @@
                 master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
 
                 master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
-                    this.focusFirstInput();
+                    //this.focusFirstInput();
                     
                     postal.publish({
                         channel: "centre_" + this.centreUuid,
@@ -470,7 +470,7 @@
                     	self.isActionInProgress = false;
                         self.restoreActiveElement();
                 	} else {
-                        this.focusFirstInput();
+                        //this.focusFirstInput();
                 	}
                 };
                 

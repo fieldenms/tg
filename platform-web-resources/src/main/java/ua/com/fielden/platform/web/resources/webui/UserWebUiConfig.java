@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.security.user.User.*;
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.security.user.User.EMAIL;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
 import java.util.Optional;
-
-import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
@@ -27,6 +26,8 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
+import com.google.inject.Injector;
+
 /**
  * {@link User} Web UI configuration.
  *
@@ -35,8 +36,8 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  */
 public class UserWebUiConfig {
     private static final String actionButton = "'margin: 10px', 'width: 110px'";
-    private static final String bottomButtonPanel = "['horizontal', 'margin-top: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
-    
+    private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
+
     public final EntityMaster<UserRolesUpdater> rolesUpdater;
     public final EntityCentre<User> centre;
     public final EntityMaster<User> master;
@@ -60,11 +61,11 @@ public class UserWebUiConfig {
                 + format("[[%s], [%s]], ", fmr, fmrLast)
                 + format("['flex']")
                 + "]";
-        
+
         final EntityCentre<User> userCentre = new EntityCentre<>(MiUser.class, "Users",
                 EntityCentreBuilder.centreFor(User.class)
                 .runAutomatically()
-                .addTopAction(UserActions.NEW_ACTION.mkAction()).also()                
+                .addTopAction(UserActions.NEW_ACTION.mkAction()).also()
                 .addTopAction(UserActions.DELETE_ACTION.mkAction())
                 .addCrit("this").asMulti().autocompleter(User.class).also()
                 .addCrit("basedOnUser").asMulti().autocompleter(User.class).also()
@@ -94,15 +95,14 @@ public class UserWebUiConfig {
     private static EntityMaster<User> createMaster(final Injector injector) {
         final String fmr = "'flex', 'margin-right: 20px', 'width: 200px'";
         final String fmrLast = "'flex', 'width: 200px'";
-        
-        final String layout = 
+
+        final String layout =
             "['padding:20px', "
             + format("[[%s], [%s]], ", fmr, fmrLast) // key, basedOnUser
             + format("[[%s], [%s]], ", fmr, fmrLast) // active, base
-            +        "['flex'], " // email
-            + format(bottomButtonPanel, actionButton, actionButton)
+            +        "['flex']" // email
             + "]";
-        
+
         final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
                 .forEntity(User.class)
                 .addProp("key").asSinglelineText().also()
@@ -112,6 +112,7 @@ public class UserWebUiConfig {
                 .addProp("email").asSinglelineText().also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .done();
         return new EntityMaster<User>(
@@ -134,10 +135,10 @@ public class UserWebUiConfig {
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
 
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', 'width:750px', "
-                        + format("['flex', ['flex']],")
-                        + format(bottomButtonPanel, actionButton, actionButton)
+                        + format("['flex', ['flex']]")
                         + "    ]"))
                 .done();
         return new EntityMaster<UserRolesUpdater>(
@@ -146,9 +147,9 @@ public class UserWebUiConfig {
                 masterConfig,
                 injector);
     }
-    
+
     private static enum UserActions {
-        
+
         NEW_ACTION {
             @Override
             public EntityActionConfig mkAction() {
@@ -162,7 +163,7 @@ public class UserWebUiConfig {
             }
 
         },
-        
+
         EDIT_ACTION {
             @Override
             public EntityActionConfig mkAction() {
@@ -175,7 +176,7 @@ public class UserWebUiConfig {
             }
 
         },
-        
+
         DELETE_ACTION {
             @Override
             public EntityActionConfig mkAction() {
@@ -191,7 +192,7 @@ public class UserWebUiConfig {
             }
 
         },
-        
+
         MANAGE_ROLES_ACTION {
             @Override
             public EntityActionConfig mkAction() {
@@ -202,7 +203,7 @@ public class UserWebUiConfig {
                         .longDesc("Add/remove user roles.")
                         .build();
             }
-            
+
         };
 
         public abstract EntityActionConfig mkAction();
