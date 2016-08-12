@@ -641,6 +641,9 @@
                     bindingEntity.traverseProperties(function (propertyName) {
                         var value = bindingEntity.get(propertyName);
                         var originalValue = _originalBindingEntity.get(propertyName);
+                        var valId = bindingEntity['@' + propertyName + '_id'];
+                        var origValId = _originalBindingEntity['@' + propertyName + '_id'];
+                        
                         // VERY IMPORTANT: the property is considered to be 'modified'
                         //                 in the case when its value does not equal to original value.
                         // 
@@ -654,11 +657,17 @@
                                 "origVal": originalValue
                             };
                             modPropHolder["@modified"] = true;
+                            if (typeof valId !== 'undefined') {
+                                modPropHolder[propertyName]['valId'] = valId;
+                            }
                         } else {
                             // the property is 'unmodified'
                             modPropHolder[propertyName] = {
                                 "origVal": originalValue
                             };
+                        }
+                        if (typeof origValId !== 'undefined') {
+                            modPropHolder[propertyName]['origValId'] = origValId;
                         }
                     });
                 }
@@ -728,20 +737,34 @@
                     if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
                         if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
                             // bind the received from server property value
-                            bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));
+                            var fullValue = entity.get(propertyName);
+                            bindingView[propertyName] = self._reflector().convert(fullValue);
+                            if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
+                                bindingView['@' + propertyName + '_id'] = fullValue['id'];
+                            }
                         } else { // otherwise, this entity instance has already been received before and should be handled accordingly
                             if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
                                 // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
                                 //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
                                 //   invalid 'attempted value' -- but originalVal exists and should be used in this case!
                                 bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
+                                if (typeof previousModifiedPropertiesHolder[propertyName].origValId !== 'undefined') {
+                                    bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].origValId;
+                                }
                             } else {
                                 bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                                if (typeof previousModifiedPropertiesHolder[propertyName].valId !== 'undefined') {
+                                    bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].valId;
+                                }
                             }
                         }
                         bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                     } else {
-                    	bindingView[propertyName] = self._reflector().convert(entity.get(propertyName));
+                        var fullValue = entity.get(propertyName);
+                    	bindingView[propertyName] = self._reflector().convert(fullValue);
+                        if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
+                            bindingView['@' + propertyName + '_id'] = fullValue['id'];
+                        }
 
                         var value = entity.get(propertyName);
                         if (self._reflector().isEntity(value)) {
@@ -781,7 +804,11 @@
                 originalBindingView["version"] = entity["version"];
 
                 entity.traverseProperties(function (propertyName) {
-                    originalBindingView[propertyName] = self._reflector().convert(entity.getOriginal(propertyName));
+                    var fullValue = entity.getOriginal(propertyName);
+                    originalBindingView[propertyName] = self._reflector().convert(fullValue);
+                    if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
+                        originalBindingView['@' + propertyName + '_id'] = fullValue['id'];
+                    }
                 });
 
                 // console.log("       entity + originalBindingView", entity, bindingView);

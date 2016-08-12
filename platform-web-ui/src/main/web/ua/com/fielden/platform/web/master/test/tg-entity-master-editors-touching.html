@@ -134,7 +134,7 @@
 				                done();
 				            };
 			                
-				            bindingEntity.set("key", "KEY_" + (new Date()).getTime());
+				            bindingEntity.setAndRegisterPropertyTouch("key", "KEY_" + (new Date()).getTime());
 			                master.save();
 			                // the following code is intended to check whether touchedProps are reset after successful save [END]
 			            };
