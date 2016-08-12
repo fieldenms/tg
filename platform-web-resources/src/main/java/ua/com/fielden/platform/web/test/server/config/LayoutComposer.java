@@ -11,7 +11,7 @@ public class LayoutComposer {
     public final static String COMPONENT_WITH_PADDING = "['flex', 'margin-right: " + MARGIN_PIX + "']";
 
     public final static String MASTER_LAYOUT_SPECIFICATION = "'horizontal','justified',";
-    public final static String MASTER_ACTION_LAYOUT_SPECIFICATION = "'margin-top: 20px', 'wrap', 'justify-content: center',";
+    public final static String MASTER_ACTION_LAYOUT_SPECIFICATION = "'horizontal', 'padding: 20px', 'wrap', 'justify-content: center',";
     public final static String MASTER_ACTION_SPECIFICATION = "'margin: 10px', 'width: 110px'";
 
     /**
@@ -98,7 +98,7 @@ public class LayoutComposer {
         for (int row = 0; row < rowNumber; row++) {
             appendRow(layout, MASTER_LAYOUT_SPECIFICATION, colNumber);
         }
-        layout.append("[").append(MASTER_ACTION_LAYOUT_SPECIFICATION).append(",[").append(MASTER_ACTION_SPECIFICATION).append("],[").append(MASTER_ACTION_SPECIFICATION).append("]]");
+        layout.deleteCharAt(layout.length() - 1);
         layout.append("]");
         return layout.toString();
     }
@@ -126,7 +126,7 @@ public class LayoutComposer {
         for (final int colsInRow : colsPerSecondRowOnwards) {
             appendRow(layout, MASTER_LAYOUT_SPECIFICATION, colsInRow);
         }
-        layout.append("[").append(MASTER_ACTION_LAYOUT_SPECIFICATION).append(",[").append(MASTER_ACTION_SPECIFICATION).append("],[").append(MASTER_ACTION_SPECIFICATION).append("]]");
+        layout.deleteCharAt(layout.length() - 1);
         layout.append("]");
         return layout.toString();
     }
@@ -149,7 +149,7 @@ public class LayoutComposer {
         for (int row = 0; row < rowNumber; row++) {
             appendRow(layout, MASTER_LAYOUT_SPECIFICATION, colNumber);
         }
-        layout.append("[").append(MASTER_ACTION_LAYOUT_SPECIFICATION).append(",[").append(MASTER_ACTION_SPECIFICATION).append("],[").append(MASTER_ACTION_SPECIFICATION).append("]]");
+        layout.deleteCharAt(layout.length() - 1);
         layout.append("]");
         return layout.toString();
     }
@@ -175,8 +175,14 @@ public class LayoutComposer {
         for (final int colsInRow : colsPerSecondRowOnwards) {
             appendRow(layout, MASTER_LAYOUT_SPECIFICATION, colsInRow);
         }
-        layout.append("[").append(MASTER_ACTION_LAYOUT_SPECIFICATION).append(",[").append(MASTER_ACTION_SPECIFICATION).append("],[").append(MASTER_ACTION_SPECIFICATION).append("]]");
+        layout.deleteCharAt(layout.length() - 1);
         layout.append("]");
+        return layout.toString();
+    }
+
+    public static String mkActionLayoutForMaster() {
+        final StringBuilder layout = new StringBuilder();
+        layout.append("[").append(MASTER_ACTION_LAYOUT_SPECIFICATION).append(",[").append(MASTER_ACTION_SPECIFICATION).append("],[").append(MASTER_ACTION_SPECIFICATION).append("]]");
         return layout.toString();
     }
 }

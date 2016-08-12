@@ -197,6 +197,9 @@
                 this._onCaptureClick = this._onCaptureClick.bind(this);
                 this._onCaptureFocus = this._onCaptureFocus.bind(this);
                 this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
+                
+                this._focusWhenOpenedthis = this._focusWhenOpened.bind(this);
+                this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
 
                 this._setIsRunning(false);
             },
@@ -458,11 +461,31 @@
                     // let's open the dialog with magical async...
                     // this ensures that the dialog is opened after its relocation to body and after all layouting is done
                     this.async(function () {
-                        this.addEventListener('binding-entity-appeared', this._focusAndRefit.bind(this));
+                        this.addEventListener('binding-entity-appeared', this._focusWhenOpened);
+                        this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
                         this._focusAndRefit(); // this is a legacy support
                         this.open();
                     }.bind(this), 200);
                 }
+            },
+            
+            /**
+             * Listener that listens binding entity appeared event and focuses first input. 
+             */
+            _focusWhenOpened: function (e) {
+                if (this._lastElement.focusFirstInput) {
+                    this._lastElement.focusFirstInput();
+                }
+            },
+            
+            /**
+             * Listener that listens binding entity appeared event and refits loaded master. 
+             */
+            _fitWhenFirstTimeOpened : function (e) {
+                this.async(function () {
+                    this.refit();
+                }.bind(this), 50);
+                this.removeEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
             },
 
             /** 

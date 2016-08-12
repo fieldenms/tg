@@ -20,6 +20,11 @@
         SimultaneousSaveException.prototype.toString = function () {
             return this.message;
         }
+        
+        var selectEnabledEditor = function (editor) {
+            var selectedElement = editor.querySelector('.custom-input:not([hidden]):not([disabled])');
+            return (selectedElement && selectedElement.querySelector('textarea')) || selectedElement;
+        }
 
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgEntityMasterBehaviorImpl = {
@@ -242,6 +247,10 @@
                     value: function () {
                         return {};
                     }
+                },
+                
+                focusFirstInputBound: {
+                    type: Function
                 }
             },
 
@@ -250,6 +259,8 @@
              */
             ready: function () {
                 var self = this;
+                
+                self.focusFirstInputBound = self.focusFirstInput.bind(self);
 
                 self._processSaverResponse = function (e) {
                     self._processResponse(e, "save", function (potentiallySavedOrNewEntity, exceptionOccured) {
@@ -548,7 +559,24 @@
              */
             focusFirstInput: function () {
                 this.async(function () {
-                    (this.querySelector('input:not([hidden]):not([disabled])') || this).focus();
+                    var editors = this.querySelectorAll('tg-editor');
+                    var editorIndex, firstInput, selectedElement;
+                    for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
+                        if (editors[editorIndex].offsetParent !== null) {
+                            selectedElement = selectEnabledEditor(editors[editorIndex]);
+                            firstInput = firstInput || selectedElement;
+                            if (editors[editorIndex]._error) {
+                                if (selectedElement) {
+                                    selectedElement.focus();
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    // if the input has been identified then focus it, otherwise do nothing
+                    if (firstInput) {
+                    	firstInput.focus();
+                    }
                 }.bind(this), 100);
             },
 

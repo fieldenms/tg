@@ -36,6 +36,9 @@ public class DefaultEntityAction extends AbstractAction implements IRenderable, 
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
 
         attrs.put("role", this.name().toLowerCase());
+        if (focusingCallback() != null) {
+            attrs.put("focusing-callback", "[[" + focusingCallback() + "]]");
+        }
         attrs.put("event-channel", "[[centreUuid]]");
         final String actionSelector = "_actions." + this.name();
 

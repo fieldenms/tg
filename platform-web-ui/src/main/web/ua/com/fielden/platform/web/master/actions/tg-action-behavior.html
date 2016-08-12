@@ -85,7 +85,16 @@
 	         */
 	        run: {
             	type: Function
-            } 
+            },
+            
+            /**
+             * Custom focusing calback which will be called after action is executed. Please, note that standard focus restoration logic is still
+             * working (see tg-abstract-action-behavior's methods _createRun and _afterExecution).
+             */
+            focusingCallback: {
+                type: Function,
+                value: null
+            }
         },
 
         ready: function () {
@@ -100,6 +109,8 @@
 		    var self = this;
     		return (function () {
     			runFunction.call(this);
+    			
+  			    self.persistActiveElement(self.focusingCallback);
 
                 if (this._startSpinnerTimer) {
                     clearTimeout(this._startSpinnerTimer);
@@ -167,6 +178,8 @@
 
             // Make spinner invisible
             this.$.spinner.style.visibility = 'hidden';
+            
+            this.restoreActiveElement();
         }
     };
 	
