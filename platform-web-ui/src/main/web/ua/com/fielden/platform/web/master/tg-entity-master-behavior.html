@@ -573,7 +573,10 @@
                             }
                         }
                     }
-                    firstInput && firstInput.focus();
+                    // if the input has been identified then focus it, otherwise do nothing
+                    if (firstInput) {
+                    	firstInput.focus();
+                    }
                 }.bind(this), 100);
             },
 
