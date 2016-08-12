@@ -11,6 +11,13 @@
 <dom-module id="tg-@entity_type-master"> <!-- TODO layout vertical -->
     <template>
     	<style>
+            tg-entity-master[with-dimensions]::shadow #masterContainer{
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                right: 0;
+                left: 0;
+            }
     		.property-action-icon {
             	--tg-ui-action-width: 1.9rem;
                 --tg-ui-action-height: 1.9rem;
@@ -102,6 +109,9 @@
             
             attached: function () {
                 var self = this;
+                if (self.prefDim) {
+                    self._masterDom().setAttribute('with-dimensions', 'true');
+                }
                 self.async(function() {
                     self.keyEventTarget = self._getKeyEventTarget();
                     
