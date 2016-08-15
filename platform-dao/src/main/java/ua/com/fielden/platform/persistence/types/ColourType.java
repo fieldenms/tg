@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.persistence.types;
 
+import static java.lang.String.*;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,10 +11,16 @@ import org.hibernate.HibernateException;
 import org.hibernate.usertype.UserType;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.persistence.types.exceptions.UserTypeException;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.markers.IColourType;
 
+/**
+ * This is user type to assist Hibernated in mapping properties of type {@link Colour}.
+ *  
+ * @author TG Developers
+ *
+ */
 public class ColourType implements UserType, IColourType {
 
 	private static final int[] SQL_TYPES = { Types.VARCHAR };
@@ -37,8 +44,7 @@ public class ColourType implements UserType, IColourType {
         try {
             return new Colour((String) argument);
         } catch (final Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Could not instantiate instance of '" + Colour.class.getName() + " with value [" + argument + "] due to: " + e.getMessage());
+            throw new UserTypeException(format("Could not instantiate instance of [%s] with value [%s] due to: %s.", Colour.class.getName(), argument, e.getMessage()));
         }
 	}
 
@@ -51,8 +57,7 @@ public class ColourType implements UserType, IColourType {
 			try {
 				result = new Colour(name);
 			} catch (final Exception e) {
-				e.printStackTrace();
-				throw new HibernateException("Colour for value '" + name + "' could not be instantiated");
+				throw new UserTypeException(format("Colour for value [%s] could not be instantiated.", name));
 			}
 		}
 		return result;
@@ -70,8 +75,7 @@ public class ColourType implements UserType, IColourType {
 	}
 
 	@Override
-	public Object assemble(final Serializable cached, final Object owner)
-			throws HibernateException {
+	public Object assemble(final Serializable cached, final Object owner) throws HibernateException {
 		return cached;
 	}
 
@@ -81,14 +85,12 @@ public class ColourType implements UserType, IColourType {
 	}
 
 	@Override
-	public Serializable disassemble(final Object value)
-			throws HibernateException {
+	public Serializable disassemble(final Object value) throws HibernateException {
 		return (Serializable) value;
 	}
 
 	@Override
-	public boolean equals(final Object x, final Object y)
-			throws HibernateException {
+	public boolean equals(final Object x, final Object y) throws HibernateException {
 		if (x == y) {
 			return true;
 		}
@@ -109,8 +111,7 @@ public class ColourType implements UserType, IColourType {
 	}
 
 	@Override
-	public Object replace(final Object original, final Object target,
-			final Object owner) throws HibernateException {
+	public Object replace(final Object original, final Object target, final Object owner) throws HibernateException {
 		return original;
 	}
 }
