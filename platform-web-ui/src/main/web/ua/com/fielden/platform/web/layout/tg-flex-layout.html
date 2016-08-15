@@ -20,7 +20,29 @@
 <script>
     (function () {
         'use strict'
-        var setLayout = function (layout) {
+        var keyWords = {
+                "skip": function (selectedElements, orderedElements, layoutElem) {
+                    return document.createElement('div');
+                },
+                "select": function (selectedElements, orderedElements, layoutElem) {
+                    var selectCondition = layoutElem.split(':')[1].split('=');
+                    var attribute = selectCondition[0].trim();
+                    if (selectedElements.length > 0 && selectedElements[0].hasAttribute(attribute) && selectedElements[0].getAttribute(attribute) === selectCondition[1].trim()) {
+                        return selectedElements.splice(0, 1)[0];
+                    }
+                },
+                "subheader": function (selectedElements, orderedElements, layoutElem) {
+                    var elemToReturn = document.createElement('tg-subheader');
+                    elemToReturn.subheaderTitle = layoutElem.split(':')[1].trim();
+                    return elemToReturn;
+                },
+                "html": function (selectedElements, orderedElements, layoutElem) {
+                    var elemToReturn = document.createElement('div');
+                    elemToReturn.innerHTML = layoutElem.split(':').slice(1).join(':').trim();
+                    return elemToReturn;
+                }
+            },
+            setLayout = function (layout) {
                 var contentIndex = 0,
                     selectedElements = [],
                     orderedElements = [];
@@ -36,7 +58,7 @@
                 // Removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
                 // This method is not defined. Is it needed?
                 _removeAllLightDOMChildrenFrom(this);
-                
+
                 Polymer.dom.flush();
                 removeStylesAndClasses.bind(this)(this);
                 this.toggleClass("layout", true);
@@ -90,19 +112,23 @@
                 return null;
             },
             setDebugStyle = function (element) {
-                element.style.border = "1px dashed red";
+                if (element.style) {
+                    element.style.border = "1px dashed red";
+                }
             },
             removeDebugStyle = function (element) {
-                element.style.removeProperty("border");
+                if (element.style) {
+                    element.style.removeProperty("border");
+                }
             },
             removeStylesAndClasses = function (element) {
-                if (element.stylesToRemove) {
+                if (element.style && element.stylesToRemove) {
                     element.stylesToRemove.forEach(function (style) {
                         element.style.removeProperty(style);
                     });
                     delete element.stylesToRemove;
                 }
-                if (element.classesToRemove) {
+                if (element.classList && element.classesToRemove) {
                     element.classesToRemove.forEach(function (className) {
                         this.toggleClass(className, false, element);
                     }.bind(this));
@@ -115,7 +141,7 @@
                     trimmedLayoutElement = layoutElem.trim();
                     if (layoutElem.indexOf(':') >= 0) {
                         styleValues = layoutElem.split(":");
-                        if (styleValues[0].trim() !== 'select') {
+                        if (!keyWords[styleValues[0].trim()]) {
                             container.style[styleValues[0].trim()] = styleValues[1].trim();
                             container.stylesToRemove = container.stylesToRemove || [];
                             container.stylesToRemove.push(styleValues[0].trim());
@@ -151,58 +177,27 @@
                 }
             },
             getNextElement = function (selectedElements, orderedElements, layoutElem) {
-                var elemToReturn, attribute, value, selectCondition, selectElem, subheaderElem, subheaderTitle;
-                var selectIndex = getSelectIndex(layoutElem);
-                var subHeaderIndex = getSubheaderIndex(layoutElem);
-                if (selectIndex >= 0) {
-                    selectElem = layoutElem[selectIndex];
-                    selectCondition = selectElem.split(':')[1].split('=');
-                    attribute = selectCondition[0].trim();
-                    value = selectCondition[1].trim();
-                    if (selectedElements.length > 0 && selectedElements[0].hasAttribute(attribute) && selectedElements[0].getAttribute(attribute) === value) {
-                        return selectedElements.splice(0, 1)[0];
+                var elemToReturn = findKeyWordElement(selectedElements, orderedElements, layoutElem);
+                if (!elemToReturn) {
+                    if (orderedElements.length > 0) {
+                        elemToReturn = orderedElements.splice(0, 1)[0];
+                    } else {
+                        elemToReturn = document.createElement('div');
+                        elemToReturn.innerHTML = "element not found!";
                     }
-                } else if (subHeaderIndex >= 0) {
-                    elemToReturn = document.createElement('tg-subheader');
-                    subheaderElem = layoutElem[subHeaderIndex];
-                    subheaderTitle = subheaderElem.split(':')[1].trim();
-                    elemToReturn.subheaderTitle = subheaderTitle;
-                    return elemToReturn;
-                } else if (isEmptyCell(layoutElem)) {
-                    return document.createElement('div');
-                } else if (orderedElements.length > 0) {
-                    return orderedElements.splice(0, 1)[0];
                 }
-                elemToReturn = document.createElement('div');
-                Polymer.dom(elemToReturn).innerHTML = "element not found!"
                 return elemToReturn;
             },
-            isEmptyCell = function (layoutElem) {
-                var elemIndex;
+            findKeyWordElement = function(selectedElements, orderedElements, layoutElem) {
+                var elemIndex, keyWord, keyWordFunction;
                 for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
-                    if ('skip' === layoutElem[elemIndex].trim()) {
-                        return true;
+                    if (typeof layoutElem[elemIndex] === 'string') {
+                        keyWord = layoutElem[elemIndex].split(':')[0].trim();
+                        if (keyWords[keyWord]) {
+                            return keyWords[keyWord](selectedElements, orderedElements, layoutElem[elemIndex]);
+                        }
                     }
                 }
-                return false;
-            },
-            getSubheaderIndex = function (layoutElem) {
-                var elemIndex;
-                for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
-                    if (typeof layoutElem[elemIndex] === 'string' && layoutElem[elemIndex].indexOf("subheader") >= 0) {
-                        return elemIndex;
-                    }
-                }
-                return -1;
-            },
-            hasArray = function (layoutElem) {
-                var elemIndex;
-                for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
-                    if (Array.isArray(layoutElem[elemIndex])) {
-                        return true;
-                    }
-                }
-                return false;
             },
             getSelectIndex = function (layoutElem) {
                 var elemIndex;
@@ -212,6 +207,18 @@
                     }
                 }
                 return -1;
+            },
+            /**
+             * Determines whether layout has array as one of it's element.
+             */
+            hasArray = function (layoutElem) {
+                var elemIndex;
+                for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
+                    if (Array.isArray(layoutElem[elemIndex])) {
+                        return true;
+                    }
+                }
+                return false;
             };
         Polymer({
 
