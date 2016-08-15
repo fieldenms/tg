@@ -2,8 +2,6 @@ package ua.com.fielden.platform.web.view.master;
 
 import java.util.Optional;
 
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
 import ua.com.fielden.platform.dao.DefaultEntityProducerForCompoundMenuItem;
@@ -21,6 +19,8 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+
+import com.google.inject.Injector;
 
 /**
  * Represents entity master.
@@ -57,7 +57,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
 
     /**
      * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
-     * 
+     *
      * @param entityType
      * @param entityProducerType
      * @param injector
@@ -69,12 +69,12 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
             final Injector injector) {
         return new EntityMaster<T>(entityType, entityProducerType, null, injector);
     }
-    
+
     /**
      * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
      * <p>
      * This version specifies no producer, which means that default one will be used.
-     * 
+     *
      * @param entityType
      * @param injector
      * @return
@@ -84,7 +84,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
             final Injector injector) {
         return new EntityMaster<T>(entityType, null, null, injector);
     }
-    
+
     private IMaster<T> createDefaultConfig(final Class<T> entityType) {
         return new NoUiMaster<T>(entityType);
     }
@@ -179,6 +179,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
                     .replace("@entity_type", entityType.getSimpleName())
                     .replace("<!--@tg-entity-master-content-->", "")
                     .replace("//@ready-callback", "")
+                    .replace("@prefDim", "null")
                     .replace("@noUiValue", "true")
                     .replace("@saveOnActivationValue", "true");
 

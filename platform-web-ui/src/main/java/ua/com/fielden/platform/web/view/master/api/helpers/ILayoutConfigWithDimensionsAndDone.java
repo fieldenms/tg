@@ -9,6 +9,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * @author TG Team
  *
  */
-public interface ILayoutConfigWithDone<T extends AbstractEntity<?>> extends ILayoutConfig<T>, IComplete<T> {
+public interface ILayoutConfigWithDimensionsAndDone<T extends AbstractEntity<?>> extends ILayoutConfig<T>, IDimensions<T>, IComplete<T> {
 
 }

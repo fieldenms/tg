@@ -40,6 +40,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         + "    }\n"
                         + "}.bind(this);\n"
                         + "this.addEventListener('after-load', this._assignPostSavedHandlersForEmbeddedMaster.bind(this));\n")
+                .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 
