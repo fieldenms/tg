@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
 
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -30,15 +32,16 @@ import ua.com.fielden.platform.web.view.master.api.actions.entity.IEntityActionC
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.DefaultEntityAction;
 import ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
+import ua.com.fielden.platform.web.view.master.api.helpers.IComplete;
 import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfig;
-import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDone;
+import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDimensionsAndDone;
 import ua.com.fielden.platform.web.view.master.api.helpers.IPropertySelector;
 import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 
-public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDone<T>, IEntityActionConfig8<T>, IActionBarLayoutConfig1<T> {
+public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig8<T>, IActionBarLayoutConfig1<T> {
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<Object> entityActions = new ArrayList<>();
@@ -49,6 +52,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     private Class<T> entityType;
+    private Optional<PrefDim> prefDim = Optional.empty();
     private boolean saveOnActivation = false;
 
 
@@ -86,6 +90,12 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final EntityActionConfig<T> entityAction = new EntityActionConfig<>(defaultEntityAction, this);
         entityActions.add(entityAction);
         return entityAction;
+    }
+
+    @Override
+    public IComplete<T> withDimensions(final PrefDim prefDim) {
+        this.prefDim = Optional.ofNullable(prefDim);
+        return this;
     }
 
     private Optional<String> getFocusingCallback(final MasterActions masterAction) {
@@ -168,7 +178,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     }
 
     @Override
-    public ILayoutConfigWithDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+    public ILayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
         if (device == null || orientation == null) {
             throw new IllegalArgumentException("Device and orientation (optional) are required for specifying the layout.");
         }
@@ -241,8 +251,18 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
         }
 
+        final StringBuilder prefDimBuilder = new StringBuilder();
+
+        if (prefDim.isPresent()) {
+            final PrefDim dims = prefDim.get();
+            prefDimBuilder.append(format("{'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'}", dims.width, dims.height, dims.widthUnit.value, dims.heightUnit.value));
+        } else {
+            prefDimBuilder.append("null");
+        }
+
         final DomElement elementContainer = new DomContainer().add(editorContainer, actionContainer);
         final String primaryActionObjectsString = primaryActionObjects.toString();
+        final String dimensionsString = prefDimBuilder.toString();
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", createImports(importPaths))
@@ -256,6 +276,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 .replace("//generatedPrimaryActions", primaryActionObjectsString.length() > prefixLength ? primaryActionObjectsString.substring(prefixLength)
                         : primaryActionObjectsString)
                 .replace("@SHORTCUTS", shortcuts)
+                .replace("@prefDim", dimensionsString)
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivation + "");
 
@@ -320,5 +341,4 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
         return this;
     }
-
 }

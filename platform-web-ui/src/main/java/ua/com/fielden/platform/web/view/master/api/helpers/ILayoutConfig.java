@@ -13,5 +13,5 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
  *
  */
 public interface ILayoutConfig<T extends AbstractEntity<?>> {
-    ILayoutConfigWithDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString);
+    ILayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString);
 }

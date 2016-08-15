@@ -71,6 +71,14 @@
             },
         	
         	properties: {
+                /**
+                 * Preferred dimensions.
+                 */
+                prefDim: {
+                    type: Object,
+                    value: @prefDim
+                },
+                
         		/**
         		 * The property which indicates whether entity master is 'UI-less'.
         		 */
@@ -95,6 +103,7 @@
              */
             ready: function () {
                 var self = this;
+                self.isMasterTemplate = true;
                 self._registrationListener = self._registrationListener.bind(self);
                 self.classList.add("canLeave");
                 
@@ -111,9 +120,14 @@
                 var self = this;
                 if (self.prefDim) {
                     self._masterDom().setAttribute('with-dimensions', 'true');
+                } else {
+                    self._masterDom().removeAttribute('with-dimensions');
                 }
                 self.async(function() {
                     self.keyEventTarget = self._getKeyEventTarget();
+                    if (self._shouldOverridePrefDim()) {
+                        self.keyEventTarget.prefDim = self.prefDim;
+                    }
                     
                     self.primaryAction = [
                         //generatedPrimaryActions
@@ -157,6 +171,17 @@
                     }
                 }
                 Polymer.IronA11yKeysBehavior.removeOwnKeyBindings.call(this);
+            },
+            
+            _shouldOverridePrefDim: function () {
+                var parent = this.parentElement;
+                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                    if (parent.isMasterTemplate && parent.prefDim) {
+                        return false;
+                    }
+                    parent = parent.parentElement;
+                }
+                return true;
             },
             
             _registrationListener: function (e) {
