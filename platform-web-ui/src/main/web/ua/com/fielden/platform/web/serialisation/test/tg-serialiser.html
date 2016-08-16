@@ -168,6 +168,7 @@
                     assert.deepEqual(find(entities, "EntityWithInteger").type().entityTitle(), "Entity With Integer", "EntityWithInteger has incorrect title.");
                     assert.deepEqual(find(entities, "EntityWithInteger").type().entityDesc(), "Entity With Integer entity", "EntityWithInteger has incorrect desc.");
                     assert.deepEqual(find(entities, "EntityWithColour").type().prop("prop").title(), "Colour prop", "EntityWithColour property has incorrect title.");
+                    assert.deepEqual(find(entities, "EntityWithHyperlink").type().prop("prop").title(), "Hyperlink prop", "EntityWithHyperlink property has incorrect title.");
 
                     // check EntityTypeProp properties
                     assert.deepEqual(find(entities, "EntityWithBigDecimal").type().prop("prop").isSecrete(), true, "EntityWithBigDecimal property should be secrete.");

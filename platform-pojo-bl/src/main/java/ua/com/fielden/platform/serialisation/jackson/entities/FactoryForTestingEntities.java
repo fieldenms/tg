@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -209,6 +210,12 @@ public class FactoryForTestingEntities {
     public EntityWithColour createEntityWithColour() {
         final EntityWithColour entity = createPersistedEntity(EntityWithColour.class, 1L, "key", "description");
         entity.setProp(Colour.WHITE);
+        return finalise(entity);
+    }
+    
+    public EntityWithHyperlink createEntityWithHyperlink() {
+        final EntityWithHyperlink entity = createPersistedEntity(EntityWithHyperlink.class, 1L, "key", "description");
+        entity.setProp(new Hyperlink("http://www.amazon.com/date"));
         return finalise(entity);
     }
 

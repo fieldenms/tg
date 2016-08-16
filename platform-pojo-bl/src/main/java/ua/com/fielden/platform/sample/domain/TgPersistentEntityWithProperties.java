@@ -28,7 +28,6 @@ import ua.com.fielden.platform.sample.domain.validators.DateValidator;
 import ua.com.fielden.platform.sample.domain.validators.EntityValidator;
 import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithColour;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IColourType;

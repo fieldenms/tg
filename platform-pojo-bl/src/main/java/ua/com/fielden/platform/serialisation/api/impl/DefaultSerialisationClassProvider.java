@@ -29,6 +29,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithColour;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithCompositeKey;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDate;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDefiner;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithHyperlink;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
@@ -229,8 +230,8 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
                 EntityWithCompositeKey.class,
                 EntityWithMoney.class,
                 EntityWithPolymorphicAEProp.class,
-                EntityWithColour.class
-                               
+                EntityWithColour.class,
+                EntityWithHyperlink.class
                 );
     }
 
