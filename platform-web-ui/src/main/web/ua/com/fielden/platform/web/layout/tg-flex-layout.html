@@ -8,6 +8,11 @@
 <dom-module id="tg-flex-layout">
 
     <template>
+        <style>
+            :host::content .hidden-with-subheader {
+                display: none !important;
+            }
+        </style>
         <tg-app-config id="appConfig"></tg-app-config>
         <iron-media-query query="[[_calcMobileQuery()]]" on-query-matches-changed="_mobileChanged"></iron-media-query>
         <iron-media-query query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
@@ -21,29 +26,44 @@
     (function () {
         'use strict'
         var keyWords = {
-                "skip": function (selectedElements, orderedElements, layoutElem) {
+                "skip": function (selectedElements, orderedElements, layoutElem, subheader) {
                     return document.createElement('div');
                 },
-                "select": function (selectedElements, orderedElements, layoutElem) {
+                "select": function (selectedElements, orderedElements, layoutElem, subheader) {
                     var selectCondition = layoutElem.split(':')[1].split('=');
                     var attribute = selectCondition[0].trim();
                     if (selectedElements.length > 0 && selectedElements[0].hasAttribute(attribute) && selectedElements[0].getAttribute(attribute) === selectCondition[1].trim()) {
                         return selectedElements.splice(0, 1)[0];
                     }
                 },
-                "subheader": function (selectedElements, orderedElements, layoutElem) {
+                "subheader": function (selectedElements, orderedElements, layoutElem, subheader) {
                     var elemToReturn = document.createElement('tg-subheader');
                     elemToReturn.subheaderTitle = layoutElem.split(':')[1].trim();
+                    elemToReturn.setAttribute("subheader", subheader + 1);
+                    elemToReturn.addEventListener("click", createSubheaderClick.bind(this)(subheader + 1));
                     return elemToReturn;
                 },
-                "html": function (selectedElements, orderedElements, layoutElem) {
+                "html": function (selectedElements, orderedElements, layoutElem, subheader) {
                     var elemToReturn = document.createElement('div');
                     elemToReturn.innerHTML = layoutElem.split(':').slice(1).join(':').trim();
                     return elemToReturn;
                 }
             },
+            setSubheaderAttribute = function (elem, subheader) {
+                elem.setAttribute("relative-to-subheader", subheader);
+                return elem;
+            },
+            createSubheaderClick = function (subheader) {
+                return function (e) {
+                    var elemsToManage = this.querySelectorAll("[relative-to-subheader='" + subheader + "']");
+                    var elemIndex, elem;
+                    for (elemIndex = 0; elemIndex < elemsToManage.length; elemIndex++) {
+                        elemsToManage[elemIndex].classList.toggle("hidden-with-subheader");
+                    }
+                }.bind(this);
+            },
             setLayout = function (layout) {
-                var contentIndex = 0,
+                var subheader = 0,
                     selectedElements = [],
                     orderedElements = [];
                 if (!Array.isArray(layout)) {
@@ -71,7 +91,7 @@
                 orderedElements = this.componentsToLayout.slice();
                 splitElements.bind(this)(selectedElements, orderedElements, layout);
                 layout.forEach((function (layoutElem) {
-                    contentIndex = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, true);
+                    subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
                 }).bind(this));
                 this.fire('layout-finished', layout);
             },
@@ -135,8 +155,9 @@
                     delete element.classesToRemove;
                 }
             },
-            createFlexCell = function (container, layoutElem, selectedElements, orderedElements, horizontal) {
+            createFlexCell = function (container, layoutElem, selectedElements, orderedElements, subheader, horizontal) {
                 var rowElement, styleValues, trimmedLayoutElement;
+                var newSubheader = subheader;
                 if (typeof layoutElem === "string") {
                     trimmedLayoutElement = layoutElem.trim();
                     if (layoutElem.indexOf(':') >= 0) {
@@ -156,7 +177,7 @@
                     }
                 } else if (Array.isArray(layoutElem)) {
                     if (!hasArray(layoutElem)) {
-                        rowElement = getNextElement(selectedElements, orderedElements, layoutElem);
+                        rowElement = getNextElement.bind(this)(selectedElements, orderedElements, layoutElem, subheader);
                         removeStylesAndClasses.bind(this)(rowElement);
                     } else {
                         rowElement = document.createElement("div");
@@ -165,19 +186,25 @@
                             this.toggleClass(horizontal ? "horizontal" : "vertical", true, rowElement);
                         }
                     }
+                    if (rowElement.hasAttribute("subheader")) {
+                        newSubheader = +rowElement.getAttribute("subheader");
+                    } else {
+                        setSubheaderAttribute(rowElement, newSubheader);
+                    }
                     if (this.debug) {
                         setDebugStyle(rowElement);
                     } else {
                         removeDebugStyle(rowElement);
                     }
                     layoutElem.forEach((function (columnLayout) {
-                        createFlexCell.bind(this)(rowElement, columnLayout, selectedElements, orderedElements, !horizontal);
+                        newSubheader = createFlexCell.bind(this)(rowElement, columnLayout, selectedElements, orderedElements, newSubheader, !horizontal);
                     }).bind(this));
                     Polymer.dom(container).appendChild(rowElement);
                 }
+                return newSubheader;
             },
-            getNextElement = function (selectedElements, orderedElements, layoutElem) {
-                var elemToReturn = findKeyWordElement(selectedElements, orderedElements, layoutElem);
+            getNextElement = function (selectedElements, orderedElements, layoutElem, subheader) {
+                var elemToReturn = findKeyWordElement.bind(this)(selectedElements, orderedElements, layoutElem, subheader);
                 if (!elemToReturn) {
                     if (orderedElements.length > 0) {
                         elemToReturn = orderedElements.splice(0, 1)[0];
@@ -188,13 +215,13 @@
                 }
                 return elemToReturn;
             },
-            findKeyWordElement = function(selectedElements, orderedElements, layoutElem) {
+            findKeyWordElement = function (selectedElements, orderedElements, layoutElem, subheader) {
                 var elemIndex, keyWord, keyWordFunction;
                 for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
                     if (typeof layoutElem[elemIndex] === 'string') {
                         keyWord = layoutElem[elemIndex].split(':')[0].trim();
                         if (keyWords[keyWord]) {
-                            return keyWords[keyWord](selectedElements, orderedElements, layoutElem[elemIndex]);
+                            return keyWords[keyWord].bind(this)(selectedElements, orderedElements, layoutElem[elemIndex], subheader);
                         }
                     }
                 }
