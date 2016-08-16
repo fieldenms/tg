@@ -16,9 +16,9 @@ import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.markers.IColourType;
 
 /**
- * This is user type to assist Hibernated in mapping properties of type {@link Colour}.
+ * This is a user type to assist Hibernated in mapping properties of type {@link Colour}.
  *  
- * @author TG Developers
+ * @author TG Team
  *
  */
 public class ColourType implements UserType, IColourType {
@@ -44,7 +44,7 @@ public class ColourType implements UserType, IColourType {
         try {
             return new Colour((String) argument);
         } catch (final Exception e) {
-            throw new UserTypeException(format("Could not instantiate instance of [%s] with value [%s] due to: %s.", Colour.class.getName(), argument, e.getMessage()));
+            throw new UserTypeException(format("Could not instantiate instance of [%s] with value [%s] due to: %s.", Colour.class.getName(), argument, e.getMessage()), e);
         }
 	}
 
@@ -57,7 +57,7 @@ public class ColourType implements UserType, IColourType {
 			try {
 				result = new Colour(name);
 			} catch (final Exception e) {
-				throw new UserTypeException(format("Colour for value [%s] could not be instantiated.", name));
+				throw new UserTypeException(format("Colour for value [%s] could not be instantiated.", name), e);
 			}
 		}
 		return result;
