@@ -191,8 +191,12 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
             // flush data population script to file for later use
             try (PrintWriter out = new PrintWriter(dataScriptFile, StandardCharsets.UTF_8.name())) {
                 final StringBuilder builder = new StringBuilder();
-                for (final String line : dataScript) {
-                    builder.append(line + (line.endsWith(";") ? "\n" : " "));
+                for (final Iterator<String> iter = dataScript.iterator(); iter.hasNext();) {
+                    final String line = iter.next();
+                    builder.append(line);
+                    if (iter.hasNext()) {
+                        builder.append("\n");
+                    }
                 }
                 out.print(builder.toString());
             }
@@ -202,7 +206,10 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
                 final StringBuilder builder = new StringBuilder();
                 for (final Iterator<String> iter = truncateScript.iterator(); iter.hasNext();) {
                     final String line = iter.next();
-                    builder.append(line + (line.endsWith(";") && iter.hasNext() ? "\n" : " "));
+                    builder.append(line);
+                    if (iter.hasNext()) {
+                        builder.append("\n");
+                    }
                 }
                 out.print(builder.toString());
             }
