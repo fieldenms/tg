@@ -40,12 +40,15 @@ import ua.com.fielden.platform.serialisation.jackson.TgJacksonModule;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ArrayListJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ArraysArrayListJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ColourJsonDeserialiser;
+import ua.com.fielden.platform.serialisation.jackson.deserialisers.HyperlinkJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.MoneyJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.ResultJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.ColourJsonSerialiser;
+import ua.com.fielden.platform.serialisation.jackson.serialisers.HyperlinkJsonSerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.MoneyJsonSerialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.ResultJsonSerialiser;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.DefinersExecutor;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -87,6 +90,9 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
         
         this.module.addSerializer(Colour.class, new ColourJsonSerialiser());
         this.module.addDeserializer(Colour.class, new ColourJsonDeserialiser());
+        
+        this.module.addSerializer(Hyperlink.class, new HyperlinkJsonSerialiser());
+        this.module.addDeserializer(Hyperlink.class, new HyperlinkJsonDeserialiser());
 
         this.module.addSerializer(Result.class, new ResultJsonSerialiser(this));
         this.module.addDeserializer(Result.class, new ResultJsonDeserialiser<Result>(this));
