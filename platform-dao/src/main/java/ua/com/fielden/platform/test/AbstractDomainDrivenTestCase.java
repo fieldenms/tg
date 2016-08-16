@@ -61,10 +61,10 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
     private static boolean domainPopulated = false;
 
     private static final String baseDir = "./src/test/resources/db";
-    
+
     private static IDomainDrivenTestCaseConfiguration createConfig() {
         try {
-            
+
             final Properties testProps = new Properties();
             final FileInputStream in = new FileInputStream("src/test/resources/test.properties");
             testProps.load(in);
@@ -113,7 +113,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
         if (useSavedDataPopulationScript() && saveDataPopulationScriptToFile()) {
             throw new IllegalStateException("useSavedDataPopulationScript() && saveDataPopulationScriptToFile() should not be true at the same time.");
         }
-        
+
         final Connection conn = createConnection();
         Optional<Exception> raisedEx = Optional.empty();
 
@@ -145,7 +145,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
             domainPopulated = false;
             throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
         }
-        
+
     }
 
     private void restoreDataFromFile(final Connection conn) throws Exception {
@@ -176,23 +176,22 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
                     && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {
                 // resultant script should NOT be UPPERCASED in order not to upperCase for e.g. values,
                 // that was perhaps lover cased while populateDomain() invocation was performed
-                dataScript.add(result.replace("\n", " "));
+                dataScript.add(result.replace("\n", " ").replace("\r", " "));
             }
         }
         set.close();
         st.close();
-        
+
         // create truncate statements
         for (final PersistedEntityMetadata<?> entry : entityMetadatas) {
             truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
         }
-        
+
         if (saveDataPopulationScriptToFile()) {
             // flush data population script to file for later use
             try (PrintWriter out = new PrintWriter(dataScriptFile, StandardCharsets.UTF_8.name())) {
                 final StringBuilder builder = new StringBuilder();
-                for (final Iterator<String> iter = dataScript.iterator(); iter.hasNext();) {
-                    final String line = iter.next();
+                for (final String line : dataScript) {
                     builder.append(line + (line.endsWith(";") ? "\n" : " "));
                 }
                 out.print(builder.toString());
@@ -213,7 +212,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
 
     private final String dataScriptFile = format("%s/data-%s.script", baseDir, getClass().getName());
     private final String truncateScriptFile = format("%s/truncate-%s.script", baseDir, getClass().getName());
-    
+
     private void exec(final List<String> statements, final Connection conn) throws SQLException {
         final Statement st = conn.createStatement();
         for (final String stmt : statements) {
