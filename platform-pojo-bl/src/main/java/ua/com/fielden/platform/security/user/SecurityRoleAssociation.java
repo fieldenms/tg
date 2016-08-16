@@ -5,7 +5,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -32,7 +32,7 @@ public class SecurityRoleAssociation extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     @CompositeKeyMember(1)
     @MapTo("TOKEN")
-    @PersistedType(userType = ISecurityTokenType.class)
+    @PersistentType(userType = ISecurityTokenType.class)
     private Class<? extends ISecurityToken> securityToken;
 
     @IsProperty

@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
@@ -28,7 +28,7 @@ public class EntityWithSimpleMoney extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo("MONEY")
-    @PersistedType(userType = ISimpleMoneyType.class)
+    @PersistentType(userType = ISimpleMoneyType.class)
     private Money money;
 
     protected EntityWithSimpleMoney() {

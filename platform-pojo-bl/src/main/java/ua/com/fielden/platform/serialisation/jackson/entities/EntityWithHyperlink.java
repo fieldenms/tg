@@ -10,7 +10,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.markers.IColourType;
+import ua.com.fielden.platform.types.markers.IHyperlinkType;
 
 /**
  * Master entity object.
@@ -19,23 +21,23 @@ import ua.com.fielden.platform.types.markers.IColourType;
  *
  */
 @KeyType(String.class)
-@CompanionObject(IEntityWithColour.class)
+@CompanionObject(IEntityWithHyperlink.class)
 @MapEntityTo
-public class EntityWithColour extends AbstractEntity<String> {
+public class EntityWithHyperlink extends AbstractEntity<String> {
 
     @IsProperty
-    @PersistentType(userType = IColourType.class)
-    @Title(value = "Colour prop", desc = "Colour prop description")
-    @MapTo("COLOUR")
-    private Colour prop;
-
+    @Title(value = "Hyperlink prop", desc = "Hyperlink prop description")
+    @MapTo
+    @PersistentType(userType = IHyperlinkType.class)
+    private Hyperlink prop;
+    
     @Observable
-    public EntityWithColour setProp(final Colour prop) {
+    public EntityWithHyperlink setProp(final Hyperlink prop) {
         this.prop = prop;
         return this;
     }
 
-    public Colour getProp() {
+    public Hyperlink getProp() {
         return prop;
     }
 }

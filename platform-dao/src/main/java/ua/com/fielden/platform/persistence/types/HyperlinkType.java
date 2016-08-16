@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.persistence.types;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,15 +14,16 @@ import org.hibernate.usertype.UserType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.types.exceptions.UserTypeException;
 import ua.com.fielden.platform.types.Colour;
-import ua.com.fielden.platform.types.markers.IColourType;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.markers.IHyperlinkType;
 
 /**
- * This is a user type to assist Hibernated in mapping properties of type {@link Colour}.
+ * This is a user type to assist Hibernated in mapping properties of type {@link Hyperlink}.
  *  
  * @author TG Team
  *
  */
-public class ColourType implements UserType, IColourType {
+public class HyperlinkType implements UserType, IHyperlinkType {
 
 	private static final int[] SQL_TYPES = { Types.VARCHAR };
 
@@ -32,7 +34,7 @@ public class ColourType implements UserType, IColourType {
 
 	@Override
 	public Class<?> returnedClass() {
-		return Colour.class;
+		return Hyperlink.class;
 	}
 
 	@Override
@@ -42,20 +44,19 @@ public class ColourType implements UserType, IColourType {
         }
 
         try {
-            return new Colour((String) argument);
+            return new Hyperlink((String) argument);
         } catch (final Exception e) {
             throw new UserTypeException(format("Could not instantiate instance of [%s] with value [%s] due to: %s.", Colour.class.getName(), argument, e.getMessage()), e);
         }
 	}
 
 	@Override
-	public Object nullSafeGet(final ResultSet resultSet, final String[] names,
-			final Object owner) throws HibernateException, SQLException {
+	public Object nullSafeGet(final ResultSet resultSet, final String[] names, final Object owner) throws HibernateException, SQLException {
 		final String name = resultSet.getString(names[0]);
 		Object result = null;
 		if (!resultSet.wasNull()) {
 			try {
-				result = new Colour(name);
+				result = new Hyperlink(name);
 			} catch (final Exception e) {
 				throw new UserTypeException(format("Colour for value [%s] could not be instantiated.", name), e);
 			}
@@ -64,9 +65,7 @@ public class ColourType implements UserType, IColourType {
 	}
 
 	@Override
-	public void nullSafeSet(final PreparedStatement preparedStatement,
-			final Object value, final int index) throws HibernateException,
-			SQLException {
+	public void nullSafeSet(final PreparedStatement preparedStatement, final Object value, final int index) throws HibernateException, SQLException {
 		if (null == value) {
 			preparedStatement.setNull(index, Types.VARCHAR);
 		} else {

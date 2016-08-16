@@ -2,6 +2,7 @@ package ua.com.fielden.platform.sample.domain;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -14,11 +15,14 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Optional;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IHyperlinkType;
 
 @KeyTitle("Author")
 @KeyType(DynamicEntityKey.class)
@@ -45,6 +49,12 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     @Optional
     @CompositeKeyMember(3)
     private String patronymic;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Web", desc = "A web page")
+    @PersistentType(userType = IHyperlinkType.class)
+    private Hyperlink webpage;
 
     @IsProperty
     private Money honorarium;
@@ -137,4 +147,15 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
         this.surname = surname;
         return this;
     }
+    
+    @Observable
+    public TgAuthor setWebpage(final Hyperlink webpage) {
+        this.webpage = webpage;
+        return this;
+    }
+
+    public Hyperlink getWebpage() {
+        return webpage;
+    }
+
 }

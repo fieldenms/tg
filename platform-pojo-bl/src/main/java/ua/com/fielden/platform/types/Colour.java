@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.types;
 
+import ua.com.fielden.platform.types.exceptions.ValueObjectException;
+
 public class Colour {
     private final String hashlessUppercasedColourValue;
 
@@ -15,7 +17,7 @@ public class Colour {
     private void validateColourValue(final String colourValue) {
         if (!colourValue.matches("\\p{XDigit}{3}|\\p{XDigit}{6}")) {
             if (!(colourValue == "")) {
-                throw new IllegalArgumentException("Colour value string must be composed of either 3 or 6 hexadecimal chars");
+                throw new ValueObjectException("Colour value string must be composed of either 3 or 6 hexadecimal chars");
             }
         }
     }

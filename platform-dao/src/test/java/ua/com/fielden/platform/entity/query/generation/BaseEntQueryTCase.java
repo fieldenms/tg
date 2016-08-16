@@ -18,6 +18,8 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.type.YesNoType;
 
+import com.google.inject.Guice;
+
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
 import ua.com.fielden.platform.dao.PropertyCategory;
@@ -33,6 +35,7 @@ import ua.com.fielden.platform.entity.query.generation.elements.EntValue;
 import ua.com.fielden.platform.entity.query.generation.elements.ISingleOperand;
 import ua.com.fielden.platform.entity.query.generation.elements.ISource;
 import ua.com.fielden.platform.entity.query.generation.elements.OperandsBasedSet;
+import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -61,8 +64,6 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-
-import com.google.inject.Guice;
 
 public class BaseEntQueryTCase {
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<Class, Class>();
@@ -103,13 +104,13 @@ public class BaseEntQueryTCase {
         hibTypeDefaults.put(Money.class, SimpleMoneyType.class);
     }
 
-    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
+    protected static final DomainMetadata DOMAIN_METADATA = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()), PlatformTestDomainTypes.entityTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
 
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER = new DomainMetadataAnalyser(DOMAIN_METADATA);
 
-    private static final EntQueryGenerator qb = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, null, null, Guice.createInjector(new HibernateUserTypesModule()).getInstance(IUniversalConstants.class));
+    private static final EntQueryGenerator qb = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, null, null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IUniversalConstants.class));
 
-    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null, Guice.createInjector(new HibernateUserTypesModule()).getInstance(IUniversalConstants.class));
+    private static final EntQueryGenerator qbwf = new EntQueryGenerator(DOMAIN_METADATA_ANALYSER, new SimpleUserFilter(), null, Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule()).getInstance(IUniversalConstants.class));
 
     protected static EntQuery entSourceQry(final QueryModel qryModel) {
         return qb.generateEntQueryAsSourceQuery(qryModel, new HashMap<String, Object>(), qryModel.getResultType());
