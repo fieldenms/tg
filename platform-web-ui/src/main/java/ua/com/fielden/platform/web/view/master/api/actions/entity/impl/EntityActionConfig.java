@@ -21,7 +21,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.impl.AbstractFunction
 import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.helpers.IActionBarLayoutConfig1;
-import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDone;
+import ua.com.fielden.platform.web.view.master.api.helpers.ILayoutConfigWithDimensionsAndDone;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityActionConfig0<T>, IEntityActionConfig1<T>, IEntityActionConfig2<T>, IEntityActionConfig3<T>, IEntityActionConfig4<T>, IEntityActionConfig5<T>, IEntityActionConfig6<T>, IEntityActionConfig7<T>, IEntityActionConfig8<T>, IActionBarLayoutConfig1<T> {
@@ -45,7 +45,7 @@ public class EntityActionConfig<T extends AbstractEntity<?>> implements IEntityA
     }
 
     @Override
-    public ILayoutConfigWithDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
+    public ILayoutConfigWithDimensionsAndDone<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
         return simpleMasterBuilder.setLayoutFor(device, orientation, flexString);
     }
 

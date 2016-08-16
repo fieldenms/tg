@@ -138,6 +138,10 @@
                     type: String,
                     value: ""
                 },
+                prefDim: {
+                    type: Object,
+                    observer: "_prefDimChanged"
+                },
 
                 _wasMoved: {
                     type: Boolean,
@@ -217,6 +221,16 @@
                 this.removeEventListener('focus', this._onCaptureFocus, true);
                 this.removeEventListener('keydown', this._onCaptureKeyDown, true);
             },
+            
+            _prefDimChanged: function (newValue, oldValue) {
+                if (newValue) {
+                    this.style.width = (typeof newValue.width === 'function' ? newValue.width() : newValue.width) + newValue.widthUnit;
+                    this.style.height = (typeof newValue.height === 'function' ? newValue.height() : newValue.height) + newValue.heightUnit;
+                } else {
+                    this.style.width = 'auto';
+                    this.style.height = 'auto';
+                }
+            },
 
             _onCaptureClick: function (event) {
                 if (this._manager.currentOverlay() !== this) {
@@ -280,10 +294,9 @@
                     this.style.width = "auto";
                     this.style.height = "auto";
                 } else {
-                    if (this._lastElement && this._lastElement.prefDim) {
-                        var prefDim = this._lastElement.prefDim;
-                        this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                        this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                    if (this.prefDim) {
+                        this.style.width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
+                        this.style.height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
                     } else {
                         this.style.width = "auto";
                         this.style.height = "auto";
@@ -448,14 +461,6 @@
                         }
                     }
 
-                    if (element.prefDim) {
-                        var prefDim = element.prefDim;
-                        this.style.width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                        this.style.height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-                    } else {
-                        this.style.width = "auto";
-                        this.style.height = "auto";
-                    }
                     this.updateStyles();
                     this.refit();
                     // let's open the dialog with magical async...

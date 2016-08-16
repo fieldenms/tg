@@ -18,14 +18,15 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.xml.DOMConfigurator;
 
+import com.google.common.base.Charsets;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
-
-import com.google.common.base.Charsets;
-import com.google.inject.Injector;
 
 /**
  * A set of utilities to facilitate Web UI application vulcanization.
@@ -35,13 +36,51 @@ import com.google.inject.Injector;
  */
 public class VulcanizingUtility {
     private final static Logger logger = Logger.getLogger(VulcanizingUtility.class);
+    
+    public static String[] unixCommands(final String prefix) {
+        return new String[] {"/bin/bash", prefix + "-script.sh"};
+    }
+    
+    public static String[] windowsCommands(final String prefix) {
+        // JVM arguments (brackets should be removed): [src/main/resources/application.properties "C:/Program Files/nodejs;C:/Users/Yuriy/AppData/Roaming/npm"]
+        return new String[] {"CMD", "/c", "vulcanize", "-p", "\"vulcan/\"", "/" + prefix + "-startup-resources-origin.html", "^>", prefix + "-startup-resources-origin-vulcanized.html"};
+        // OTHER WAY: create three files login-script.bat, desktop-script.bat and mobile-script.bat and place them where similar *.sh scripts reside.
+        // Contents of the login-script.bat file should be following (brackets should be removed): [vulcanize -p "vulcan/" /login-startup-resources-origin.html ^> login-startup-resources-origin-vulcanized.html].
+        // UNCOMMENT: return new String[] {"CMD", "/c", prefix + "-script.bat"};  
+    }
+    
+    protected static Pair<Properties, String[]> processVmArguments(final String[] args) {
+        if (args.length < 1) {
+            throw new IllegalArgumentException(""
+                    + "One or two arguments are expected: \n"
+                    + "\t1st is the path to the application properties file;\n"
+                    + "\t2nd is the additional paths to be added to the PATH env. variable.\n");
+        }
+        
+        if (args.length > 2) {
+            logger.warn("There are more than 2 arguments. Only first two will be used, the rest will be ignored.");
+        }
+        final String propertyFile;
+        final String paths;
+        if (args.length == 1) {
+            propertyFile = args[0];
+            paths = "";
+        } else {
+            propertyFile = args[0];
+            paths = args[1];
+        }
+        
+        final Properties props = retrieveApplicationPropertiesAndConfigureLogging(propertyFile);
+        final String[] additionalPaths = paths.split(File.pathSeparator);
+        return Pair.pair(props, additionalPaths);
+    }
 
     /**
      * Retrieves application properties from the specified file.
      *
      * @return
      */
-    public static Properties retrieveApplicationPropertiesAndConfigureLogging(final String fileName) {
+    private static Properties retrieveApplicationPropertiesAndConfigureLogging(final String fileName) {
         InputStream st = null;
         Properties props = null;
         try {
@@ -109,7 +148,7 @@ public class VulcanizingUtility {
         logger.info("\t------------------------------");
 
         logger.info("\tVulcanizing login resources...");
-        vulcanizeStartupResourcesFor("login", DeviceProfile.MOBILE, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("login"), additionalPaths, logger);
+        vulcanizeStartupResourcesFor("login", DeviceProfile.MOBILE, sourceController, loginTargetPlatformSpecificPath, commandMaker.apply("login"), additionalPaths, logger, dir);
         logger.info("\tVulcanized login resources.");
 
         logger.info("\t------------------------------");
@@ -119,16 +158,22 @@ public class VulcanizingUtility {
 
         logger.info("\tVulcanizing mobile resources...");
         downloadSpecificGeneratedResourcesFor(DeviceProfile.MOBILE, sourceController, logger);
-        vulcanizeStartupResourcesFor("mobile", DeviceProfile.MOBILE, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("mobile"), additionalPaths, logger);
+        vulcanizeStartupResourcesFor("mobile", DeviceProfile.MOBILE, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("mobile"), additionalPaths, logger, dir);
         logger.info("\tVulcanized mobile resources.");
         logger.info("\t------------------------------");
 
         logger.info("\tVulcanizing desktop resources...");
         downloadSpecificGeneratedResourcesFor(DeviceProfile.DESKTOP, sourceController, logger);
-        vulcanizeStartupResourcesFor("desktop", DeviceProfile.DESKTOP, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("desktop"), additionalPaths, logger);
+        vulcanizeStartupResourcesFor("desktop", DeviceProfile.DESKTOP, sourceController, mobileAndDesktopAppSpecificPath, commandMaker.apply("desktop"), additionalPaths, logger, dir);
         logger.info("\tVulcanized desktop resources.");
         logger.info("\t------------------------------");
 
+        clearObsoleteResources(dir);
+
+        logger.info("Vulcanized.");
+    }
+
+    private static void clearObsoleteResources(final File dir) {
         logger.info("\tClear obsolete files...");
         try {
             FileUtils.deleteDirectory(dir);
@@ -137,8 +182,6 @@ public class VulcanizingUtility {
             throw new IllegalStateException(e);
         }
         logger.info("\tCleared obsolete files.");
-
-        logger.info("Vulcanized.");
     }
 
     private static void downloadCommonGeneratedResources(final IWebUiConfig webUiConfig, final ISourceController sourceController, final Logger logger) {
@@ -176,7 +219,8 @@ public class VulcanizingUtility {
             final String targetAppSpecificPath,
             final String[] commands,
             final String[] additionalPaths,
-            final Logger logger) {
+            final Logger logger,
+            final File dir) {
 
         if (additionalPaths == null) {
             throw new IllegalArgumentException("Argument additionalPaths cannot be null, but can be empty if no additiona paths are required for the PATH env. variable.");
@@ -211,6 +255,10 @@ public class VulcanizingUtility {
 
         } catch (final IOException | InterruptedException e) {
             logger.error(e.getMessage(), e);
+            
+            // need to clear obsolete resources in case of vulcanization failure
+            clearObsoleteResources(dir);
+            
             throw new IllegalStateException(e);
         }
         logger.info("\t\tVulcanized [" + prefix + "-startup-resources-origin.html].");
