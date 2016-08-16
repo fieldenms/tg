@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Money;
@@ -37,7 +37,7 @@ public class EntityWithMoney extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo("MONEY")
-    @PersistedType(userType = IMoneyUserType.class)
+    @PersistentType(userType = IMoneyUserType.class)
     private Money money;
     @IsProperty
     @MapTo("DATE_TIME")

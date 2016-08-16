@@ -70,7 +70,7 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Optional;
-import ua.com.fielden.platform.entity.annotation.PersistedType;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
@@ -406,7 +406,7 @@ public class DomainMetadata {
      * @throws Exception
      * @throws
      */
-    private Object getHibernateType(final Class javaType, final PersistedType persistedType, final boolean entity) {
+    private Object getHibernateType(final Class javaType, final PersistentType persistedType, final boolean entity) {
         final String hibernateTypeName = persistedType != null ? persistedType.value() : null;
         final Class hibernateUserTypeImplementor = persistedType != null ? persistedType.userType() : Void.class;
 
@@ -457,7 +457,7 @@ public class DomainMetadata {
         final Boolean compositeKeyMemberOptionalityInfo = getCompositeKeyMemberOptionalityInfo(entityType, propName);
         final boolean isCompositeKeyMember = compositeKeyMemberOptionalityInfo != null;
         final boolean isRequired = isAnnotationPresent(field, Required.class);
-        final PersistedType persistedType = getPersistedType(entityType, propName);
+        final PersistentType persistedType = getPersistedType(entityType, propName);
         final boolean nullable = !(isRequired || (isCompositeKeyMember && !compositeKeyMemberOptionalityInfo));
 
         final Object hibernateType = getHibernateType(javaType, persistedType, isEntity);
@@ -510,7 +510,7 @@ public class DomainMetadata {
         final boolean aggregatedExpression = CalculatedPropertyCategory.AGGREGATED_EXPRESSION.equals(getAnnotation(calculatedPropfield, Calculated.class).category());
 
         final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-        final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+        final PersistentType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
         final Object hibernateType = getHibernateType(javaType, persistedType, false);
 
         final ExpressionModel expressionModel = dmeg.extractExpressionModelFromCalculatedProperty(entityType, calculatedPropfield);
@@ -520,7 +520,7 @@ public class DomainMetadata {
 
     private PropertyMetadata getOneToOnePropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
         final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-        final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+        final PersistentType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
         final Object hibernateType = getHibernateType(javaType, persistedType, true);
 
         //final ExpressionModel expressionModel = expr().prop("id").model(); // 1-2-1 is not required to exist -- that's why need longer formula -- that's why 1-2-1 is in fact implicitly calculated nullable prop
@@ -530,7 +530,7 @@ public class DomainMetadata {
 
     private PropertyMetadata getSyntheticPropInfo(final Class<? extends AbstractEntity<?>> entityType, final Field calculatedPropfield) throws Exception {
         final Class javaType = determinePropertyType(entityType, calculatedPropfield.getName()); // redetermines prop type in platform understanding (e.g. type of Set<MeterReading> readings property will be MeterReading;
-        final PersistedType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
+        final PersistentType persistedType = getPersistedType(entityType, calculatedPropfield.getName());
         final Object hibernateType = getHibernateType(javaType, persistedType, false);
         final PropertyCategory propCat = hibernateType instanceof ICompositeUserTypeInstantiate ? SYNTHETIC_COMPONENT_HEADER : SYNTHETIC;
         return new PropertyMetadata.Builder(calculatedPropfield.getName(), calculatedPropfield.getType(), true).hibType(hibernateType).type(propCat).build();
@@ -554,8 +554,8 @@ public class DomainMetadata {
         return isCompositeKeyMember ? isOptionalCompositeKeyMember : null;
     }
 
-    private PersistedType getPersistedType(final Class entityType, final String propName) {
-        return getPropertyAnnotation(PersistedType.class, entityType, propName);
+    private PersistentType getPersistedType(final Class entityType, final String propName) {
+        return getPropertyAnnotation(PersistentType.class, entityType, propName);
     }
 
     private Calculated getCalculatedPropExpression(final Class entityType, final String propName) {
