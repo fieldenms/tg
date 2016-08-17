@@ -518,6 +518,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("colourProp").asColour()
                 .also()
+                .addProp("hyperlinkProp").asHyperlink()
+                .also()
 
                 .addAction(MasterActions.REFRESH)
                     .icon("highlight-off")
@@ -549,13 +551,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                        format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
+                        format("['horizontal', 'padding: 20px 20px 20px 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
                         + format("['subheader:Other components', 'flex'],")
-                        + format("[[%s], ['flex']]", fmr)+ "]"))
+                        + format("[[%s], [%s], ['flex']]", fmr, fmr)+ "]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
