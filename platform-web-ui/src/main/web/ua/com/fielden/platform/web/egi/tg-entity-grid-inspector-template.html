@@ -350,7 +350,7 @@
                                                     <iron-icon class="table-icon" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
                                                 </template>
                                                 <template is="dom-if" if="[[_isHyperlinkProp(egiEntity.entity, column)]]">
-                                                    <a href="[[_getValue(egiEntity.entity, column.property, column.type)]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</a>
+                                                    <a href$="[[_getValue(egiEntity.entity, column.property, column.type)]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</a>
                                                 </template>
                                                 <template is="dom-if" if="[[_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]">
                                                     <div class="truncate relative" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
