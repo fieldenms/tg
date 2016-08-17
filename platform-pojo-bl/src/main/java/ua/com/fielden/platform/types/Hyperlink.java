@@ -64,7 +64,7 @@ public class Hyperlink {
                     HTTP.name().toLowerCase(), HTTPS.name().toLowerCase(), FTP.name().toLowerCase(), FTPS.name().toLowerCase() });
 
             if (!validator.isValid(value)) {
-                throw new ValueObjectException(format("Value [%s] for a hyperlink does specify any of the supported protocols.", value));
+                throw new ValueObjectException(format("Value [%s] is not a valid hyperlink.", value));
             }
         }
 
