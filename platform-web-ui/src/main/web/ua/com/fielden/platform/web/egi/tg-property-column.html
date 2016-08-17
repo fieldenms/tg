@@ -38,11 +38,14 @@
                 this.customAction = Polymer.dom(this.$.action_selector).getDistributedNodes().length > 0 ? Polymer.dom(this.$.action_selector).getDistributedNodes()[0] : null;
             },
 
+            /** Executes a custom action and returns true if the action was provided. Otherwise, simply returns false to indicate that there was no custom action to be executed. */
             runAction: function (entity) {
                 if (this.customAction) {
                     this.customAction.currentEntity = entity;
                     this.customAction._run();
+                    return true;
                 }
+                return false;
             }
         });
     })();
