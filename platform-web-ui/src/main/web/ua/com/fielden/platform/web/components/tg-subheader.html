@@ -1,4 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
+
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 
 <dom-module id="tg-subheader">
@@ -6,19 +10,35 @@
         <style>
             :host {
                 @apply(--layout-vertical);
+
             }
             .line {
-                border-top: 1px solid rgba(0,0,0,.12);
+                border-top: 1px solid rgba(0, 0, 0, .12);
                 box-sizing: border-box;
                 padding-top: 16px;
                 -webkit-font-smoothing: antialiased;
                 font-size: 1rem;
                 font-weight: 500;
-    			color: rgba(0, 0, 0, 0.55);
+                color: rgba(0, 0, 0, 0.55);
+            }
+            .title[collapsible],
+            iron-icon[collapsible] {
+                cursor: pointer;
+            }
+            iron-icon {
+                --iron-icon-width: 1em;
+                --iron-icon-height: 1em;
+            }
+            iron-icon:not([collapsible]) {
+                visibility: hidden;
+            }
+            iron-icon[opened] {
+                transform: rotate(90deg);
             }
         </style>
-        <div class="line">
-        	<div hidden$="[[!subheaderTitle]]" class="layout horizontal center">[[subheaderTitle]]</div>
+        <div class="line layout horizontal center">
+            <iron-icon icon="av:play-arrow" opened$="[[!closed]]" collapsible$="[[collapsible]]"></iron-icon>
+            <div hidden$="[[!subheaderTitle]]" class="title layout horizontal center" collapsible$="[[collapsible]]">[[subheaderTitle]]</div>
         </div>
     </template>
     <script>
@@ -26,8 +46,49 @@
             is: 'tg-subheader',
 
             properties: {
-                subheaderTitle: String
+                subheaderTitle: String,
+
+                collapsible: {
+                    type: Boolean,
+                    reflectToAttribute: true,
+                    value: false
+                },
+
+                closed: {
+                    type: Boolean,
+                    reflectToAttribute: true,
+                    value: false
+                },
+
+                relativeElements: {
+                    type: Array
+                }
             },
+
+            ready: function () {
+                this.relativeElements = [];
+                this._toggleSubheaderHandler = this._toggleSubheaderHandler.bind(this);
+
+                this.addEventListener('click', this._toggleSubheaderHandler);
+            },
+
+            addRelativeElement: function (element) {
+                this.relativeElements.push(element);
+                element.setAttribute('relative-to-subheader', +this.getAttribute('subheader'));
+                if (this.collapsible && this.closed) {
+                    element.classList.toggle('hidden-with-subheader', true);
+                }
+            },
+
+            _toggleSubheaderHandler: function (e) {
+                var elemIndex;
+                if (this.collapsible) {
+                    this.closed = !this.closed;
+                    for (elemIndex = 0; elemIndex < this.relativeElements.length; elemIndex++) {
+                        this.relativeElements[elemIndex].classList.toggle("hidden-with-subheader", this.closed);
+                    }
+                }
+            }
         })
     </script>
 </dom-module>

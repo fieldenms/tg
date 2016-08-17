@@ -37,11 +37,13 @@
                     }
                 },
                 "subheader": function (selectedElements, orderedElements, layoutElem, subheader) {
-                    var elemToReturn = document.createElement('tg-subheader');
-                    elemToReturn.subheaderTitle = layoutElem.split(':')[1].trim();
-                    elemToReturn.setAttribute("subheader", subheader + 1);
-                    elemToReturn.addEventListener("click", createSubheaderClick.bind(this)(subheader + 1));
-                    return elemToReturn;
+                    return createSubheader.bind(this)(layoutElem, false, false, subheader);
+                },
+                "subheader-opened": function (selectedElements, orderedElements, layoutElem, subheader) {
+                    return createSubheader.bind(this)(layoutElem, true, false, subheader);
+                },
+                "subheader-closed": function (selectedElements, orderedElements, layoutElem, subheader) {
+                    return createSubheader.bind(this)(layoutElem, true, true, subheader);
                 },
                 "html": function (selectedElements, orderedElements, layoutElem, subheader) {
                     var elemToReturn = document.createElement('div');
@@ -49,21 +51,18 @@
                     return elemToReturn;
                 }
             },
-            setSubheaderAttribute = function (elem, subheader) {
-                elem.setAttribute("relative-to-subheader", subheader);
-                return elem;
-            },
-            createSubheaderClick = function (subheader) {
-                return function (e) {
-                    var elemsToManage = this.querySelectorAll("[relative-to-subheader='" + subheader + "']");
-                    var elemIndex, elem;
-                    for (elemIndex = 0; elemIndex < elemsToManage.length; elemIndex++) {
-                        elemsToManage[elemIndex].classList.toggle("hidden-with-subheader");
-                    }
-                }.bind(this);
+            createSubheader = function (layoutElem, collapsible, closed, subheader) {
+                var elemToReturn = document.createElement('tg-subheader');
+                elemToReturn.subheaderTitle = layoutElem.split(':')[1].trim();
+                elemToReturn.setAttribute("subheader", (subheader && +subheader.getAttribute('subheader') + 1) || 0);
+                if (collapsible) {
+                    elemToReturn.collapsible = true;
+                    elemToReturn.closed = closed;
+                }
+                return elemToReturn;
             },
             setLayout = function (layout) {
-                var subheader = 0,
+                var subheader,
                     selectedElements = [],
                     orderedElements = [];
                 if (!Array.isArray(layout)) {
@@ -93,6 +92,7 @@
                 layout.forEach((function (layoutElem) {
                     subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
                 }).bind(this));
+                Polymer.dom.flush();
                 this.fire('layout-finished', layout);
             },
             splitElements = function (selectedElements, orderedElements, layout) {
@@ -142,18 +142,19 @@
                 }
             },
             removeStylesAndClasses = function (element) {
-                if (element.style && element.stylesToRemove) {
+                if (element.stylesToRemove) {
                     element.stylesToRemove.forEach(function (style) {
                         element.style.removeProperty(style);
                     });
                     delete element.stylesToRemove;
                 }
-                if (element.classList && element.classesToRemove) {
+                if (element.classesToRemove) {
                     element.classesToRemove.forEach(function (className) {
                         this.toggleClass(className, false, element);
                     }.bind(this));
                     delete element.classesToRemove;
                 }
+                this.toggleClass("hidden-with-subheader", false, element);
             },
             createFlexCell = function (container, layoutElem, selectedElements, orderedElements, subheader, horizontal) {
                 var rowElement, styleValues, trimmedLayoutElement;
@@ -177,7 +178,7 @@
                     }
                 } else if (Array.isArray(layoutElem)) {
                     if (!hasArray(layoutElem)) {
-                        rowElement = getNextElement.bind(this)(selectedElements, orderedElements, layoutElem, subheader);
+                        rowElement = getNextElement.bind(this)(selectedElements, orderedElements, layoutElem, newSubheader);
                         removeStylesAndClasses.bind(this)(rowElement);
                     } else {
                         rowElement = document.createElement("div");
@@ -186,10 +187,10 @@
                             this.toggleClass(horizontal ? "horizontal" : "vertical", true, rowElement);
                         }
                     }
-                    if (rowElement.hasAttribute("subheader")) {
-                        newSubheader = +rowElement.getAttribute("subheader");
-                    } else {
-                        setSubheaderAttribute(rowElement, newSubheader);
+                    if (rowElement.tagName === 'TG-SUBHEADER') {
+                        newSubheader = rowElement;
+                    } else if (newSubheader) {
+                        newSubheader.addRelativeElement(rowElement);
                     }
                     if (this.debug) {
                         setDebugStyle(rowElement);
