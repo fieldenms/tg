@@ -1074,16 +1074,22 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<AbstractEntity<?>> {
         @Override
         public void assignValues(final AbstractEntity<?> entity) {
-            if ("DR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("dR", "X");
-            } else if ("IS".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("iS", "X");
-            } else if ("IR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("iR", "X");
-            } else if ("ON".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("oN", "X");
-            } else if ("SR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("sR", "X");
+            
+            final AbstractEntity<?> status = (AbstractEntity<?>) entity.get("status");
+            if (status == null) {
+                System.out.println(format("Status is null for entity [%s].", entity));
+            } else {
+                if ("DR".equals(status.getKey())) {
+                    entity.set("dR", "X");
+                } else if ("IS".equals(status.getKey())) {
+                    entity.set("iS", "X");
+                } else if ("IR".equals(status.getKey())) {
+                    entity.set("iR", "X");
+                } else if ("ON".equals(status.getKey())) {
+                    entity.set("oN", "X");
+                } else if ("SR".equals(status.getKey())) {
+                    entity.set("sR", "X");
+                }
             }
         }
     }
@@ -1449,7 +1455,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("compositeProp").minWidth(110)
                 .also()
-                .addProp("stringProp").minWidth(50)
+                .addProp("stringProp").minWidth(50).also()
+                .addProp("colourProp").width(40).also()
+                .addProp("hyperlinkProp").minWidth(200)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["
                 //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
