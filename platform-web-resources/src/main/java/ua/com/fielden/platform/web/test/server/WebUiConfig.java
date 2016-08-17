@@ -1076,7 +1076,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<AbstractEntity<?>> {
         @Override
         public void assignValues(final AbstractEntity<?> entity) {
-            
+
             final AbstractEntity<?> status = (AbstractEntity<?>) entity.get("status");
             if (status == null) {
                 System.out.println(format("Status is null for entity [%s].", entity));
@@ -1459,7 +1459,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("stringProp").minWidth(50).also()
                 .addProp("colourProp").width(40).also()
-                .addProp("hyperlinkProp").minWidth(200)
+                .addProp("hyperlinkProp").minWidth(500)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["
                 //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
