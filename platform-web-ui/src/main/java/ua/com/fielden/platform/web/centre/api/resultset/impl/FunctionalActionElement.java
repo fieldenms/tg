@@ -2,11 +2,15 @@ package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
 import static java.lang.String.format;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.action.post.SubsequentActionsExecutorPostAction;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
@@ -28,6 +32,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final String chosenProperty;
     /** Should be <code>true</code> in case where functional action element is inside entity master, otherwise it is inside entity centre. */
     private boolean forMaster = false;
+    private final List<FunctionalActionElement> childActions = new ArrayList<>();
 
     /**
      * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
@@ -224,9 +229,15 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         }
         attrs.append("},\n");
 
-        attrs.append("postActionSuccess: function (functionalEntity) {\n");
-        attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.get() + "', functionalEntity);\n");
+        attrs.append("postActionSuccess: function (functionalEntity, master) {\n");
+        attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.get() + "', functionalEntity, master);\n");
         if (conf().successPostAction.isPresent()) {
+            if (conf().successPostAction.get() instanceof SubsequentActionsExecutorPostAction) {
+                final SubsequentActionsExecutorPostAction subseqPostAction = (SubsequentActionsExecutorPostAction) conf().successPostAction.get();
+                for (final Pair<EntityActionConfig, Boolean> actionAndInterrupter : subseqPostAction.getSubsequentActions()) {
+                    childActions.add(new FunctionalActionElement(actionAndInterrupter.getKey(), 0, FunctionalActionKind.SUBSEQUENT, null));
+                }
+            }
             attrs.append(conf().successPostAction.get().build().toString());
         }
         attrs.append("},\n");
@@ -241,8 +252,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
         attrs.append("},\n");
 
-        attrs.append("postActionError: function (functionalEntity) {\n");
-        attrs.append("    console.log('postActionError: " + conf().shortDesc.get() + "', functionalEntity);\n");
+        attrs.append("postActionError: function (functionalEntity, master) {\n");
+        attrs.append("    console.log('postActionError: " + conf().shortDesc.get() + "', functionalEntity, master);\n");
         if (conf().errorPostAction.isPresent()) {
             attrs.append(conf().errorPostAction.get().build().toString());
         }
@@ -256,5 +267,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     public void setForMaster(final boolean forMaster) {
         this.forMaster = forMaster;
+    }
+    
+    public List<FunctionalActionElement> getChildActions() {
+        return childActions;
     }
 }

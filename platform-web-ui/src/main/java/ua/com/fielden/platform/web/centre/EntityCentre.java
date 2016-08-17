@@ -847,6 +847,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         logger.debug("Initiating functional actions...");
         final StringBuilder functionalActionsObjects = new StringBuilder();
+        final StringBuilder subsequentActionsObjects = new StringBuilder();
 
         final DomContainer functionalActionsDom = new DomContainer();
 
@@ -856,6 +857,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 importPaths.add(el.importPath());
                 groupElement.add(el.render());
                 functionalActionsObjects.append(prefix + createActionObject(el));
+                
+                for (final FunctionalActionElement childAction: el.getChildActions()) {
+                    importPaths.add(childAction.importPath());
+                    groupElement.add(childAction.render().clazz("subsequent-action").attr("hidden", null));
+                    subsequentActionsObjects.append(prefix + createActionObject(childAction));
+                }
             }
             functionalActionsDom.add(groupElement);
         }
@@ -930,6 +937,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
 
         final String funcActionString = functionalActionsObjects.toString();
+        final String subsequentActionString = subsequentActionsObjects.toString();
         final String secondaryActionString = secondaryActionsObjects.toString();
         final String insertionPointActionsString = insertionPointActionsObjects.toString();
         final String primaryActionObjectString = primaryActionObject.toString();
@@ -955,6 +963,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace("<!--@criteria_editors-->", editorContainer.toString()).
                 replace("<!--@egi_columns-->", egiColumns.toString()).
                 replace("//generatedActionObjects", funcActionString.length() > prefixLength ? funcActionString.substring(prefixLength) : funcActionString).
+                replace("//subsequentActionObjects", subsequentActionString.length() > prefixLength ? subsequentActionString.substring(prefixLength) : subsequentActionString).
                 replace("//generatedSecondaryActions", secondaryActionString.length() > prefixLength ? secondaryActionString.substring(prefixLength) : secondaryActionString).
                 replace("//generatedInsertionPointActions", insertionPointActionsString.length() > prefixLength ? insertionPointActionsString.substring(prefixLength)
                         : insertionPointActionsString).

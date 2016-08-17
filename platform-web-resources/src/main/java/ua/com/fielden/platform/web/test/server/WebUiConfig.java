@@ -12,11 +12,14 @@ import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.con
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
@@ -85,7 +88,9 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
+import ua.com.fielden.platform.web.action.post.SubsequentActionsExecutorPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -93,6 +98,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
@@ -125,8 +131,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
-
-import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -1226,6 +1230,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withCurrentEntity().build()).
+                                postActionSuccess(new SubsequentActionsExecutorPostAction(new ArrayList<Pair<EntityActionConfig, Boolean>>() {{
+                                    add(Pair.pair(
+                                            action(TgExportFunctionalEntity.class)
+                                            .withContext(context().withMasterEntity().build())
+                                            .postActionSuccess(new PostActionSuccess(""
+                                                    + "console.debug('SEQUENTIAL EXPORT', functionalEntity, self, master);\n"
+                                                    ))
+                                            .postActionError(new PostActionError(""))
+                                            .icon("trending-up")
+                                            .shortDesc("Export")
+                                            .longDesc("Export action")
+                                            .shortcut("ctrl+shift+e")
+                                            .build(),
+                                       true));
+                                }})).
                                 icon("assignment").
                                 shortDesc("Function 3").
                                 longDesc("Functional context-dependent action 3").

@@ -37,27 +37,27 @@ public class TgExportFunctionalEntityDao extends CommonEntityDao<TgExportFunctio
 
         try {
             Thread.sleep(3000);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             e.printStackTrace();
         }
         
-        final TgPersistentEntityWithProperties me = (TgPersistentEntityWithProperties) context.getMasterEntity();
-        System.out.println(format("IS MASTER ENTITY DIRTY? %s", me.isDirty()));
-        if (me.isDirty()) {
-            throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
-        }
-        
-        System.out.println(format("IS CHOSEN PROPERTY PRESENT? %s", entity.getActionProperty()));
-        
-        if (me.getRequiredValidatedProp() != null && me.getRequiredValidatedProp() < 300) {
-            entity.setValue(300);
-            entity.setParentEntity(co.findByKeyAndFetch(fetchAll(TgPersistentEntityWithProperties.class), "DEMO01"));
-        } else if (me.getRequiredValidatedProp() == null) {
-            entity.setValue(99);
-        } else {
-            entity.setValue(me.getRequiredValidatedProp());
-            entity.setParentEntity(me.getEntityProp());
-        }
+//        final TgPersistentEntityWithProperties me = (TgPersistentEntityWithProperties) context.getMasterEntity();
+//        System.out.println(format("IS MASTER ENTITY DIRTY? %s", me.isDirty()));
+//        if (me.isDirty()) {
+//            throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
+//        }
+//        
+//        System.out.println(format("IS CHOSEN PROPERTY PRESENT? %s", entity.getActionProperty()));
+//        
+//        if (me.getRequiredValidatedProp() != null && me.getRequiredValidatedProp() < 300) {
+//            entity.setValue(300);
+//            entity.setParentEntity(co.findByKeyAndFetch(fetchAll(TgPersistentEntityWithProperties.class), "DEMO01"));
+//        } else if (me.getRequiredValidatedProp() == null) {
+//            entity.setValue(99);
+//        } else {
+//            entity.setValue(me.getRequiredValidatedProp());
+//            entity.setParentEntity(me.getEntityProp());
+//        }
         
         return entity;
     }

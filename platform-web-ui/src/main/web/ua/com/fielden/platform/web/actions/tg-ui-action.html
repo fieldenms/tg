@@ -446,11 +446,11 @@
                     
                     if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
                     	if (self.postActionSuccess) {
-	                        self.postActionSuccess(potentiallySavedOrNewEntity);
+	                        self.postActionSuccess(potentiallySavedOrNewEntity, this);
                     	}
                     } else {
                     	if (self.postActionError) {
-	                        self.postActionError(potentiallySavedOrNewEntity);
+	                        self.postActionError(potentiallySavedOrNewEntity, this);
                     	}
                     }
                     
