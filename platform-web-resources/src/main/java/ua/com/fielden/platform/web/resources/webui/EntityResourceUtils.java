@@ -27,7 +27,6 @@ import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -60,6 +59,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
@@ -584,9 +584,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
         } else if (Colour.class.isAssignableFrom(propertyType)) {
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
-
             final String hashlessUppercasedColourValue = (String) map.get("hashlessUppercasedColourValue");
             return hashlessUppercasedColourValue == null ? null : new Colour(hashlessUppercasedColourValue);
+        } else if (Hyperlink.class.isAssignableFrom(propertyType)) {
+            final Map<String, Object> map = (Map<String, Object>) reflectedValue;
+            final String linkValue = (String) map.get("value");
+            return linkValue == null ? null : new Hyperlink(linkValue);
         } else if (PropertyTypeDeterminator.isCollectional(type, propertyName) && Set.class.isAssignableFrom(Finder.findFieldByName(type, propertyName).getType()) && Long.class.isAssignableFrom(propertyType)) {
             final List<Object> list = (ArrayList<Object>) reflectedValue;
             final Set<Long> resultSet = new LinkedHashSet<>();
@@ -601,7 +604,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
         } else {
-            throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s].", type.getSimpleName(), propertyName, reflectedValue));
+            throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
         }
     }
 
