@@ -12,6 +12,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.IDecimalConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IEmailConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IFileConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHiddenTextConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.IHyperlinkConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IMoneyConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IMultilineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IPhoneNumberConfig;
@@ -50,5 +51,6 @@ public interface IWidgetSelector<T extends AbstractEntity<?>> {
     IPhoneNumberConfig<T> asPhoneNumber();
     IEmailConfig<T> asEmail();
     IColourConfig<T> asColour();
+    IHyperlinkConfig<T> asHyperlink();
 
 }
