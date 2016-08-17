@@ -851,18 +851,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final DomContainer functionalActionsDom = new DomContainer();
 
+        int subsequentActionsCount = -1;
         for (final List<FunctionalActionElement> group : actionGroups) {
             final DomElement groupElement = new DomElement("div").clazz("entity-specific-action", "group");
             for (final FunctionalActionElement el : group) {
                 importPaths.add(el.importPath());
                 groupElement.add(el.render());
                 functionalActionsObjects.append(prefix + createActionObject(el));
-                
-                for (final FunctionalActionElement childAction: el.getChildActions()) {
-                    importPaths.add(childAction.importPath());
-                    groupElement.add(childAction.render().clazz("subsequent-action").attr("hidden", null));
-                    subsequentActionsObjects.append(prefix + createActionObject(childAction));
-                }
+                subsequentActionsCount = renderSubsequentActions(el, groupElement, importPaths, prefix, subsequentActionsObjects, subsequentActionsCount);
             }
             functionalActionsDom.add(groupElement);
         }
@@ -879,6 +875,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             importPaths.add(el.importPath());
             primaryActionDom.add(el.render().clazz("primary-action").attr("hidden", null));
             primaryActionObject.append(prefix + createActionObject(el));
+            subsequentActionsCount = renderSubsequentActions(el, primaryActionDom, importPaths, prefix, subsequentActionsObjects, subsequentActionsCount);
         }
 
         //////////////////// Primary result-set action [END] //////////////
@@ -899,6 +896,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             importPaths.add(el.importPath());
             secondaryActionsDom.add(el.render().clazz("secondary-action").attr("hidden", null));
             secondaryActionsObjects.append(prefix + createActionObject(el));
+            subsequentActionsCount = renderSubsequentActions(el, secondaryActionsDom, importPaths, prefix, subsequentActionsObjects, subsequentActionsCount);
         }
 
         logger.debug("Initiating insertion point actions...");
@@ -918,6 +916,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             importPaths.add(el.importPath());
             insertionPointActionsDom.add(el.render().clazz("insertion-point-action").attr("hidden", null));
             insertionPointActionsObjects.append(prefix + createActionObject(el));
+            subsequentActionsCount = renderSubsequentActions(el, insertionPointActionsDom, importPaths, prefix, subsequentActionsObjects, subsequentActionsCount);
         }
         importPaths.add(dslDefaultConfig.getToolbarConfig().importPath());
 
@@ -989,6 +988,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
         logger.debug("Done.");
         return representation;
+    }
+
+    private int renderSubsequentActions(final FunctionalActionElement el, final DomElement domPartToRender, final LinkedHashSet<String> importPaths, final String prefix, final StringBuilder subsequentActionsObjects, final int subsequentActionsCount) {
+        int subsequentActionsCountVar = subsequentActionsCount;
+        for (final FunctionalActionElement childAction: el.getChildActions()) {
+            childAction.setNumberOfAction(++subsequentActionsCountVar);
+            importPaths.add(childAction.importPath());
+            domPartToRender.add(childAction.render().clazz("subsequent-action").attr("hidden", null));
+            subsequentActionsObjects.append(prefix + createActionObject(childAction));
+        }
+        return subsequentActionsCountVar;
     }
 
     /**

@@ -156,6 +156,7 @@ public class PropertyColumnElement implements IRenderable, IImportable {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP) {
             columnElement.add(action.get().render());
+            // TODO need to somehow render here subsequent actions: subsequentActionsCount = renderSubsequentActions(el, groupElement, importPaths, prefix, subsequentActionsObjects, subsequentActionsCount);
         }
         if (hasSummary()) {
             summary.forEach(summary -> columnElement.add(summary.render()));

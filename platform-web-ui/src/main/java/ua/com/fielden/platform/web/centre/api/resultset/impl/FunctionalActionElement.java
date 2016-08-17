@@ -27,12 +27,13 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private final String widgetPath;
     private boolean debug = false;
     public final EntityActionConfig entityActionConfig;
-    public final int numberOfAction;
+    public int numberOfAction;
     private final FunctionalActionKind functionalActionKind;
     private final String chosenProperty;
     /** Should be <code>true</code> in case where functional action element is inside entity master, otherwise it is inside entity centre. */
     private boolean forMaster = false;
     private final List<FunctionalActionElement> childActions = new ArrayList<>();
+    private String identifier;
 
     /**
      * Creates {@link FunctionalActionElement} from <code>entityActionConfig</code>.
@@ -159,6 +160,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("require-selected-entities", "null");
             attrs.put("require-master-entity", "null");
         }
+        if (identifier != null) {
+            attrs.put("identifier", identifier);
+            // attrs.put("id", identifier);
+        }
 
         return attrs;
     }
@@ -234,8 +239,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         if (conf().successPostAction.isPresent()) {
             if (conf().successPostAction.get() instanceof SubsequentActionsExecutorPostAction) {
                 final SubsequentActionsExecutorPostAction subseqPostAction = (SubsequentActionsExecutorPostAction) conf().successPostAction.get();
-                for (final Pair<EntityActionConfig, Boolean> actionAndInterrupter : subseqPostAction.getSubsequentActions()) {
-                    childActions.add(new FunctionalActionElement(actionAndInterrupter.getKey(), 0, FunctionalActionKind.SUBSEQUENT, null));
+                for (final Pair<EntityActionConfig, String> actionAndIdentifier : subseqPostAction.getSubsequentActions()) {
+                    childActions.add(new FunctionalActionElement(actionAndIdentifier.getKey(), -1, FunctionalActionKind.SUBSEQUENT, null).setIdentifier(actionAndIdentifier.getValue()));
                 }
             }
             attrs.append(conf().successPostAction.get().build().toString());
@@ -271,5 +276,14 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     
     public List<FunctionalActionElement> getChildActions() {
         return childActions;
+    }
+    
+    public void setNumberOfAction(final int numberOfAction) {
+        this.numberOfAction = numberOfAction;
+    }
+    
+    public FunctionalActionElement setIdentifier(final String identifier) {
+        this.identifier = identifier;
+        return this;
     }
 }

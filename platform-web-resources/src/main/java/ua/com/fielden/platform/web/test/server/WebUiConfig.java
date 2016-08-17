@@ -1230,7 +1230,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addTopAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withCurrentEntity().build()).
-                                postActionSuccess(new SubsequentActionsExecutorPostAction(new ArrayList<Pair<EntityActionConfig, Boolean>>() {{
+                                postActionSuccess(new SubsequentActionsExecutorPostAction(new ArrayList<Pair<EntityActionConfig, String>>() {{
                                     add(Pair.pair(
                                             action(TgExportFunctionalEntity.class)
                                             .withContext(context().withMasterEntity().build())
@@ -1243,7 +1243,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                             .longDesc("Export action")
                                             .shortcut("ctrl+shift+e")
                                             .build(),
-                                       true));
+                                       "SUBSEQUENT1"));
                                 }})).
                                 icon("assignment").
                                 shortDesc("Function 3").
@@ -1544,6 +1544,21 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addSecondaryAction(
                         action(TgFunctionalEntityWithCentreContext.class).
                                 withContext(context().withSelectedEntities().build()).
+                                postActionSuccess(new SubsequentActionsExecutorPostAction(new ArrayList<Pair<EntityActionConfig, String>>() {{
+                                    add(Pair.pair(
+                                            action(TgExportFunctionalEntity.class)
+                                            .withContext(context().withMasterEntity().build())
+                                            .postActionSuccess(new PostActionSuccess(""
+                                                    + "console.debug('SEQUENTIAL EXPORT 2', functionalEntity, self, master);\n"
+                                                    ))
+                                            .postActionError(new PostActionError(""))
+                                            .icon("trending-up")
+                                            .shortDesc("Export")
+                                            .longDesc("Export action")
+                                            .shortcut("ctrl+shift+e")
+                                            .build(),
+                                        "SUBSEQUENT2"));
+                                }})).
                                 icon("assignment-turned-in").
                                 shortDesc("Function 3").
                                 longDesc("Functional context-dependent action 3").

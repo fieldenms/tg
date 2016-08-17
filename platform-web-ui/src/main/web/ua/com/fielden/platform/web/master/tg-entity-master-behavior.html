@@ -397,16 +397,16 @@
                                 console.log('preAction: ' + actionDesc);
                                 return Promise.resolve(true);
                             };
-                            actionModel.postActionSuccess = function (functionalEntity) {
-                                console.log('postActionSuccess: ' + actionDesc, functionalEntity);
+                            actionModel.postActionSuccess = function (functionalEntity, master) {
+                                console.log('postActionSuccess: ' + actionDesc, functionalEntity, master);
                                 self.save(functionalEntity, continuationProperty)
                                     .then(
                                         Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.centreUuid, 'save', postal, null),
                                         function (value) { console.log('AJAX PROMISE CATCH', value); }
                                     );
                             };
-                            actionModel.postActionError = function (functionalEntity) {
-                                console.log('postActionError: ' + actionDesc, functionalEntity);
+                            actionModel.postActionError = function (functionalEntity, master) {
+                                console.log('postActionError: ' + actionDesc, functionalEntity, master);
                             };
                             actionModel.attrs = {
                                 entityType:continuationType.fullClassName(), currentState:'EDIT', centreUuid: self.uuid

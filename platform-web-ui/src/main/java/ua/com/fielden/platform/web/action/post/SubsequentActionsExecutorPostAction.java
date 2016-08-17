@@ -15,17 +15,17 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
  *
  */
 public class SubsequentActionsExecutorPostAction implements IPostAction {
-    private final List<Pair<EntityActionConfig, Boolean>> subsequentActions;
+    private final List<Pair<EntityActionConfig, String>> subsequentActions;
     
-    public SubsequentActionsExecutorPostAction(final List<Pair<EntityActionConfig, Boolean>> subsequentActions) {
+    public SubsequentActionsExecutorPostAction(final List<Pair<EntityActionConfig, String>> subsequentActions) {
         this.subsequentActions = subsequentActions;
     }
 
     @Override
     public JsCode build() {
         final JsCode jsCode = new JsCode(
-                "console.debug('SEQUENTIAL ACTION STARTS FOR: ', functionalEntity, self, master);\n"
-              + "var subsequentAction = self.querySelector('tg-ui-action[element-name=\"' + 'tg-TgExportFunctionalEntity-master' + '\"]');\n"
+                "console.debug('SEQUENTIAL ACTION STARTS FOR IDENTIFIER: ', '" + subsequentActions.get(0).getValue() + "', functionalEntity, self, master);\n"
+              + "var subsequentAction = self.querySelector('tg-ui-action[identifier=\"" + subsequentActions.get(0).getValue() + "\"]');\n"
               //    + "master.entityType = 'TgExportFunctionalEntity';\n"
               + "subsequentAction.createContextHolder = master._createContextHolder;\n"
               + "subsequentAction._run();\n"
@@ -33,7 +33,7 @@ public class SubsequentActionsExecutorPostAction implements IPostAction {
         return jsCode;
     }
     
-    public List<Pair<EntityActionConfig, Boolean>> getSubsequentActions() {
+    public List<Pair<EntityActionConfig, String>> getSubsequentActions() {
         return Collections.unmodifiableList(subsequentActions);
     }
 }
