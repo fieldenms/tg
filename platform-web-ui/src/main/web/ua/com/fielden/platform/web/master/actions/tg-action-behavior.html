@@ -125,7 +125,12 @@
                     .then(  // first a handler for successful promise execution
                             Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.eventChannel, self.role, postal, self._afterExecution.bind(self)),
                             // and in case of some exceptional situation let's provide a trivial catch handler
-                            function (value) { console.log('AJAX PROMISE CATCH', value);});
+                            function (value) { 
+                                console.log('AJAX PROMISE CATCH', value);
+                                if (self.postActionError) {
+                                    self.postActionError();
+                                }                                
+                            });
                 }
             }).bind(this);
         },

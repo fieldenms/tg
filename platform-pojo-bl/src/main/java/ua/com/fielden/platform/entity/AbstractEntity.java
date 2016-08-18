@@ -9,6 +9,7 @@ import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -643,7 +644,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             setter.setAccessible(isAccessible);
             return this;
         } catch (final Exception e) {
-            throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e);
+            // let's be a little more intelligent about handling instances of InvocationTargetException to report errors without the unnecessary nesting
+            if (e instanceof InvocationTargetException && e.getCause() != null) {
+                // the cause of type Result should be reported as is
+                if (e.getCause() instanceof Result) {
+                    throw (Result) e.getCause();
+                } else { // otherwise wrap the cause in EntityException 
+                    throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e.getCause());
+                }
+            } else {
+                throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e);
+            }
         }
     }
 
