@@ -32,7 +32,7 @@
             iron-icon:not([collapsible]) {
                 visibility: hidden;
             }
-            iron-icon[opened] {
+            iron-icon[open] {
                 fill: none;
                 stroke: rgba(0, 0, 0, 0.55);
                 stroke-width: 2;
@@ -42,7 +42,7 @@
             }
         </style>
         <div class="line layout horizontal center">
-            <iron-icon icon="av:play-arrow" opened$="[[!closed]]" collapsible$="[[collapsible]]"></iron-icon>
+            <iron-icon icon="av:play-arrow" open$="[[!closed]]" collapsible$="[[collapsible]]"></iron-icon>
             <div hidden$="[[!subheaderTitle]]" class="title layout horizontal center" collapsible$="[[collapsible]]">[[subheaderTitle]]</div>
         </div>
     </template>
