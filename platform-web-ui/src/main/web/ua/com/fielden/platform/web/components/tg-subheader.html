@@ -26,13 +26,18 @@
                 cursor: pointer;
             }
             iron-icon {
-                --iron-icon-width: 1em;
-                --iron-icon-height: 1em;
+                --iron-icon-width: 1.2em;
+                --iron-icon-height: 1.2em;
             }
             iron-icon:not([collapsible]) {
                 visibility: hidden;
             }
             iron-icon[opened] {
+                fill: none;
+                stroke: rgba(0, 0, 0, 0.55);
+                stroke-width: 2;
+                stroke-linecap: round;
+                stroke-linejoin: round;
                 transform: rotate(90deg);
             }
         </style>
