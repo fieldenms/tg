@@ -11,6 +11,9 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -54,7 +57,8 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
 
     private final ICompanionObjectFinder provider = config.getInstance(ICompanionObjectFinder.class);
     private final EntityFactory factory = config.getEntityFactory();
-    private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private final Collection<PersistedEntityMetadata<?>> entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
 
@@ -268,12 +272,16 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
 
     @Override
     public final Date date(final String dateTime) {
-        return formatter.parseDateTime(dateTime).toDate();
+        try {
+            return formatter.parse(dateTime);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException(format("Could not parse value [%s].", dateTime));
+        }
     }
 
     @Override
     public final DateTime dateTime(final String dateTime) {
-        return formatter.parseDateTime(dateTime);
+        return jodaFormatter.parseDateTime(dateTime);
     }
 
     /**
