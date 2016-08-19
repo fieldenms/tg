@@ -17,7 +17,6 @@ public class EntityExportActionProducer extends DefaultEntityProducerWithContext
     protected EntityExportAction provideDefaultValues(final EntityExportAction entity) {
         entity.setAll(true);
         entity.setKey("Export");
-        entity.resetMetaState();
         return entity;
     }
 }

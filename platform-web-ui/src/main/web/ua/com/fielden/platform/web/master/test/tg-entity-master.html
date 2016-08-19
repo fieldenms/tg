@@ -105,7 +105,7 @@
 				    assert.strictEqual(entity.get("producerInitProp").get("key"), "DEFAULT_KEY", "The entity response property should be entity instance with appropriate key.");
 				
 				    // value is changed?
-				    assert.strictEqual(entity.prop("producerInitProp").isChangedFromOriginal(), true, "Instance meta-prop should be not changedFromOriginal.");
+				    assert.strictEqual(entity.prop("producerInitProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal, because all properties get their state reset in default producer implementation (DefaultEntityProducerWithContext).");
 				
 				    // value validationresult?
 				    assert.strictEqual(entity.prop("producerInitProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
@@ -122,7 +122,7 @@
 				    assert.strictEqual(entity.get("domainInitProp"), "ok", "The entity response property should be correct.");
 				
 				    // value is changed?
-				    assert.strictEqual(entity.prop("domainInitProp").isChangedFromOriginal(), true, "Instance meta-prop should be not changedFromOriginal.");
+				    assert.strictEqual(entity.prop("domainInitProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal, because all properties get their state reset in default producer implementation (DefaultEntityProducerWithContext).");
 				
 				    // value validationresult?
 				    assert.strictEqual(entity.prop("domainInitProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");

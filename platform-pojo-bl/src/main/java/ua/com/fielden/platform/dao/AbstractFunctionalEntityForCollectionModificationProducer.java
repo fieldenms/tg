@@ -4,8 +4,10 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -35,7 +37,7 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 public abstract class AbstractFunctionalEntityForCollectionModificationProducer<MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<?>> extends DefaultEntityProducerWithContext<T> implements IEntityProducer<T> {
     private final IEntityDao<T> companion;
     private final ICompanionObjectFinder companionFinder;
-    private static final String TRY_AGAIN_MSG = "Please cancel this action and try again!";
+    private static final String TRY_AGAIN_MSG = "Please cancel this action and try again.";
     
     @Inject
     public AbstractFunctionalEntityForCollectionModificationProducer(final EntityFactory factory, final Class<T> actionType, final ICompanionObjectFinder companionFinder) {
@@ -80,18 +82,25 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
         entity.setRefetchedMasterEntity(refetchedMasterEntity);
         // IMPORTANT: it is necessary to reset state for "key" property after its change.
         //   This is necessary to make the property marked as 'not changed from original' (origVal == val == 'DEMO') to be able not to re-apply afterwards
-        //   the initial value against "key" property
+        //   the initial value against "key" property. Resetting will be done in DefaultEntityProducerWithContext.
         entity.setKey(refetchedMasterEntity.getId());
-        entity.getProperty(AbstractEntity.KEY).resetState();
         
         final T previouslyPersistedAction = retrieveActionFor(refetchedMasterEntity, companion, entityType, entity.isPersistent());
-        
-        // IMPORTANT: it is necessary not to reset state for "surrogateVersion" property after its change.
-        //   This is necessary to leave the property marked as 'changed from original' (origVal == null) to be able to apply afterwards
-        //   the initial value against '"surrogateVersion", that was possibly changed by another user'
         entity.setSurrogateVersion(surrogateVersion(previouslyPersistedAction));
 
         return provideCurrentlyAssociatedValues(entity, refetchedMasterEntity);
+    }
+    
+    /**
+     * IMPORTANT: it is necessary NOT to reset state for "surrogateVersion" property after its change.
+     * This is necessary to leave the property marked as 'changed from original' (origVal == null) to be able to apply afterwards
+     * the initial value against '"surrogateVersion", that was possibly changed by another user'.
+     * 
+     * @return
+     */
+    @Override
+    protected final List<String> skipPropertiesForMetaStateResetting() {
+        return Arrays.asList("surrogateVersion");
     }
     
     /**
