@@ -3,6 +3,8 @@ package ua.com.fielden.platform.sample.domain;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.Date;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.Calculated;
@@ -23,6 +25,7 @@ import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IHyperlinkType;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 @KeyTitle("Author")
 @KeyType(DynamicEntityKey.class)
@@ -55,6 +58,17 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "Web", desc = "A web page")
     @PersistentType(userType = IHyperlinkType.class)
     private Hyperlink webpage;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "DOB (UTC)", desc = "Date of birth in UTC")
+    @PersistentType(userType = IUtcDateTimeType.class)
+    private Date utcDob;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "DOB", desc = "Date of birth in Local")
+    private Date dob;
 
     @IsProperty
     private Money honorarium;
@@ -158,4 +172,23 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
         return webpage;
     }
 
+    @Observable
+    public TgAuthor setUtcDob(final Date utcDob) {
+        this.utcDob = utcDob;
+        return this;
+    }
+
+    public Date getUtcDob() {
+        return utcDob;
+    }
+
+    @Observable
+    public TgAuthor setDob(final Date dob) {
+        this.dob = dob;
+        return this;
+    }
+
+    public Date getDob() {
+        return dob;
+    }
 }
