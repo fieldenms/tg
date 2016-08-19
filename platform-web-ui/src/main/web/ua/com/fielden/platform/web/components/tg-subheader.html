@@ -72,27 +72,49 @@
 
             ready: function () {
                 this.relativeElements = [];
-                this._toggleSubheaderHandler = this._toggleSubheaderHandler.bind(this);
+                this.toggle = this.toggle.bind(this);
 
-                this.addEventListener('click', this._toggleSubheaderHandler);
+                this.addEventListener('click', this.toggle);
             },
 
             addRelativeElement: function (element) {
                 this.relativeElements.push(element);
-                element.setAttribute('relative-to-subheader', +this.getAttribute('subheader'));
+                element.$$relativeSubheader$$ = this;
                 if (this.collapsible && this.closed) {
                     element.classList.toggle('hidden-with-subheader', true);
                 }
             },
 
-            _toggleSubheaderHandler: function (e) {
-                var elemIndex;
+            removeAllRelatedComponents: function () {
+                this.relativeElements.forEach(function (relativeElement) {
+                    delete relativeElement.$$relativeSubheader$$;
+                    relativeElement.classList.toggle("hidden-with-subheader", false);
+                });
+            },
+
+            toggle: function () {
                 if (this.collapsible) {
                     this.closed = !this.closed;
-                    for (elemIndex = 0; elemIndex < this.relativeElements.length; elemIndex++) {
-                        this.relativeElements[elemIndex].classList.toggle("hidden-with-subheader", this.closed);
-                    }
+                    this._syncRelativeElements();
                 }
+            },
+
+            open: function () {
+                if (this.collapsible && this.closed) {
+                    this.toggle();
+                }
+            },
+
+            close: function () {
+                if (this.collapsible && !this.closed) {
+                    this.toggle();
+                }
+            },
+
+            _syncRelativeElements: function () {
+                this.relativeElements.forEach(function (relativeElement) {
+                    relativeElement.classList.toggle("hidden-with-subheader", this.closed);
+                }.bind(this));
             }
         })
     </script>
