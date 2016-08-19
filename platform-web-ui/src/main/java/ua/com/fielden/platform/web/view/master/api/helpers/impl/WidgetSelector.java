@@ -18,6 +18,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.IDecimalConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IEmailConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IFileConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHiddenTextConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.IHyperlinkConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IMoneyConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IMultilineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IPhoneNumberConfig;
@@ -31,6 +32,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.collectional.impl.Col
 import ua.com.fielden.platform.web.view.master.api.widgets.colour.impl.ColourWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.decimal.impl.DecimalWidget;
+import ua.com.fielden.platform.web.view.master.api.widgets.hyperlink.impl.HyperlinkWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.CheckboxConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.CollectionalEditorConfig;
@@ -39,6 +41,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.ColourConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DateTimePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DecimalConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.EntityAutocompletionConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.HyperlinkConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.MoneyConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.MultilineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.SinglelineTextConfig;
@@ -167,6 +170,12 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
     public IColourConfig<T> asColour() {
         widget = new ColourWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new ColourConfig<>((ColourWidget) widget, smBuilder);
+    }
+
+    @Override
+    public IHyperlinkConfig<T> asHyperlink() {
+        widget = new HyperlinkWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
+        return new HyperlinkConfig<>((HyperlinkWidget) widget, smBuilder);
     }
 
     public AbstractWidget widget() {

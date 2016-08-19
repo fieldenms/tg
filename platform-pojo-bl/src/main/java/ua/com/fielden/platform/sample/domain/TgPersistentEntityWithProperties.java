@@ -29,8 +29,10 @@ import ua.com.fielden.platform.sample.domain.validators.EntityValidator;
 import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.IColourType;
+import ua.com.fielden.platform.types.markers.IHyperlinkType;
 
 /**
  * Master entity object.
@@ -164,6 +166,22 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Colour prop", desc = "Colour prop description")
     @MapTo
     private Colour colourProp;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Hyperlink", desc = "A property of type Hyperlink.")
+    @PersistentType(userType = IHyperlinkType.class)
+    private Hyperlink hyperlinkProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setHyperlinkProp(final Hyperlink hyperlinkProp) {
+        this.hyperlinkProp = hyperlinkProp;
+        return this;
+    }
+
+    public Hyperlink getHyperlinkProp() {
+        return hyperlinkProp;
+    }
     
     @Observable
     public TgPersistentEntityWithProperties setColourProp(final Colour prop) {
