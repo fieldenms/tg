@@ -26,10 +26,10 @@ import org.joda.time.DateTime;
  * <p>
  * For example, if a property is bound to a date picker component then nanos are lost, which is recognised as change.
  * 
- * @author 01es
+ * @author TG Team
  * 
  */
-public class DateTimeType extends MutableType implements IdentifierType, LiteralType {
+public class DateTimeType extends MutableType implements IdentifierType<Date>, LiteralType<Date> {
     private static final long serialVersionUID = 1L;
 
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
@@ -46,8 +46,8 @@ public class DateTimeType extends MutableType implements IdentifierType, Literal
 
     @Override
     public void set(final PreparedStatement st, final Object value, final int index) throws SQLException {
-        final DateTime xdate = value instanceof Timestamp ? new DateTime(((Timestamp) value).getTime()) : new DateTime(((java.util.Date) value).getTime());
-        st.setTimestamp(index, new Timestamp(xdate.getMillis()));
+        final long millis = value instanceof Timestamp ? ((Timestamp) value).getTime() : ((java.util.Date) value).getTime();
+        st.setTimestamp(index, new Timestamp(millis));
     }
 
     @Override
@@ -65,6 +65,8 @@ public class DateTimeType extends MutableType implements IdentifierType, Literal
             return false;
         }
 
+        // DateTime is clever in handling Timestamp and Date, which are otherwise different objects
+        // using DateTime for equality is just a simple trick to avoid type checking
         final DateTime xdate = new DateTime(x);
         final DateTime ydate = new DateTime(y);
 
@@ -90,12 +92,12 @@ public class DateTimeType extends MutableType implements IdentifierType, Literal
         return new Timestamp(((java.util.Date) value).getTime());
     }
 
-    public Object stringToObject(final String xml) throws Exception {
+    public Date stringToObject(final String xml) throws Exception {
         return DateFormat.getDateInstance().parse(xml);
     }
 
-    public String objectToSQLString(final Object value, final Dialect dialect) throws Exception {
-        return '\'' + new Timestamp(((java.util.Date) value).getTime()).toString() + '\'';
+    public String objectToSQLString(final Date value, final Dialect dialect) throws Exception {
+        return '\'' + new Timestamp(value.getTime()).toString() + '\'';
     }
 
     @Override
