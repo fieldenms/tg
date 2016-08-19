@@ -24,7 +24,6 @@ public class TgEntityWithPropertyDependencyProducer extends DefaultEntityProduce
     @Override
     protected TgEntityWithPropertyDependency provideDefaultValuesForStandardNew(final TgEntityWithPropertyDependency entity, final EntityNewAction masterEntity) {
         entity.setKey("DUMMY");
-        entity.resetMetaState();
         return entity;
     }
 }
