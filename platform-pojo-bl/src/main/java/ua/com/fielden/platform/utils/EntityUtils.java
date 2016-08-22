@@ -1060,7 +1060,7 @@ public class EntityUtils {
     }
 
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {
-        return FetchProviderFactory.createDefaultFetchProvider(entityType, true);
+        return FetchProviderFactory.createDefaultFetchProvider(entityType, false);
     }
 
     /**
@@ -1075,7 +1075,7 @@ public class EntityUtils {
     }
     
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType) {
-        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, true);
+        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
     }
 
     
