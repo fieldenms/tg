@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.web.layout.api;
 
-public interface IAlignment {
+public interface IAlignment extends IFlex {
 
-    IFlex start();
+    IFlex startAligned();
 
-    IFlex center();
+    IFlex centerAligned();
 
-    IFlex end();
+    IFlex endAligned();
 }

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.layout.api;
 
-public interface IDirection {
+public interface IDirection extends IJustification {
 
     IJustification horizontal();
 

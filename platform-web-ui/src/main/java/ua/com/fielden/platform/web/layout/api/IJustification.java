@@ -1,15 +1,15 @@
 package ua.com.fielden.platform.web.layout.api;
 
-public interface IJustification {
+public interface IJustification extends IAlignment {
 
-    IAlignment start();
+    IAlignment startJustified();
 
-    IAlignment center();
+    IAlignment centerJustified();
 
-    IAlignment end();
+    IAlignment endJustified();
 
     IAlignment justified();
 
-    IAlignment around();
+    IAlignment aroundJustified();
 
 }

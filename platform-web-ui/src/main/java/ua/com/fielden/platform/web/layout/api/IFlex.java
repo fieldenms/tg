@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.web.layout.api;
 
-public interface IFlex {
+public interface IFlex extends ISelect {
 
-    IQuantifier flex();
+    ISelect flex();
 
-    IQuantifier flex(int ratio);
+    ISelect flex(int ratio);
 
-    IQuantifier flexNone();
+    ISelect flexNone();
 
-    IQuantifier flexAuto();
+    ISelect flexAuto();
 }
