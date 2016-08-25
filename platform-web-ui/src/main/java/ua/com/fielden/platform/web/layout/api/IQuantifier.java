@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.layout.api;
 
-public interface IQuantifier {
+public interface IQuantifier extends IForEachLayoutSetter {
 
-    IGap repeat(int times);
+    ILayoutCell repeat(int times);
 
 }

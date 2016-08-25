@@ -1,22 +1,40 @@
 package ua.com.fielden.platform.web.layout.api;
 
+import ua.com.fielden.platform.dom.DomElement;
+
 /**
  * Represents the cell to layout.
  *
  * @author TG Team
  *
  */
-public interface ILayoutCell {
+public interface ILayoutCell extends IQuantifier {
 
-    //cell(ICell)
+    ILayoutCell cell(final IFlexContainerLayout container, final IFlexLayout layout);
 
-    IQuantifier skip();
+    ILayoutCell cell(final IFlexContainerLayout container);
 
-    IQuantifier html(String html);
+    ILayoutCell cell(final IFlexLayout layout);
 
-    IQuantifier subheader(String title);
+    ILayoutCell cell();
 
-    IQuantifier subheaderOpen(String title);
+    ILayoutCell skip(final IFlexLayout layout);
 
-    IQuantifier subheaderClosed(String title);
+    ILayoutCell skip();
+
+    ILayoutCell html(final DomElement dom, final IFlexLayout layout);
+
+    ILayoutCell html(final DomElement dom);
+
+    ILayoutCell subheader(final String title, final IFlexLayout layout);
+
+    ILayoutCell subheader(final String title);
+
+    ILayoutCell subheaderOpen(final String title, final IFlexLayout layout);
+
+    ILayoutCell subheaderOpen(final String title);
+
+    ILayoutCell subheaderClosed(final String title, final IFlexLayout layout);
+
+    ILayoutCell subheaderClosed(final String title);
 }

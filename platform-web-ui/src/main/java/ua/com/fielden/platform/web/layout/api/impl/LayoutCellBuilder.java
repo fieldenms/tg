@@ -22,7 +22,7 @@ public class LayoutCellBuilder implements ICell {
     private final Map<String, String> styles = new HashMap<>();
     private final Set<String> classes = new HashSet<>();
 
-    private Optional<Pair<String, String>> select = Optional.empty();
+    private Optional<Pair<String, String>> optionalSelect = Optional.empty();
 
     public static ICell layout() {
         return new LayoutCellBuilder(null);
@@ -134,7 +134,7 @@ public class LayoutCellBuilder implements ICell {
 
     @Override
     public ILayoutCellCompleted select(final String property, final String value) {
-        select = Optional.of(new Pair<>(property, value));
+        optionalSelect = Optional.of(new Pair<>(property, value));
         return this;
     }
 
@@ -151,8 +151,8 @@ public class LayoutCellBuilder implements ICell {
                         append(classes.stream().map(clazz -> "\"" + clazz + "\"").collect(Collectors.joining(", "))).
                         append(classes.isEmpty() ? "" : styles.isEmpty() ? "" : ", ").
                         append(styles.entrySet().stream().map(entry -> "\"" + entry.getKey() + ":" + entry.getValue() + "\"").collect(Collectors.joining(", "))).
-                        append(classes.isEmpty() && styles.isEmpty() ? "" : !select.isPresent() ? "" : ", ").
-                        append(select.isPresent() ? "\"select:" + select.get().getKey() + "=" + select.get().getValue() : "\"");
+                        append(classes.isEmpty() && styles.isEmpty() ? "" : !optionalSelect.isPresent() ? "" : ", ").
+                        append(optionalSelect.isPresent() ? "\"select:" + optionalSelect.get().getKey() + "=" + optionalSelect.get().getValue() : "\"");
                 return layout.toString();
             }
         };
