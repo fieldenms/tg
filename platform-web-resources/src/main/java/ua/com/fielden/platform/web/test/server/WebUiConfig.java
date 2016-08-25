@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.yesNo;
@@ -22,6 +22,7 @@ import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWith
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
+import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
@@ -34,7 +35,9 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.sample.domain.ExportAction;
@@ -518,6 +521,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("colourProp").asColour()
                 .also()
+                .addProp("hyperlinkProp").asHyperlink()
+                .also()
 
                 .addAction(MasterActions.REFRESH)
                     .icon("highlight-off")
@@ -549,13 +554,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                        format("['horizontal', 'padding: 20px 20px 0 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
+                        format("['horizontal', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), (
                         "      ['padding:20px', "
+                        + format("['subheader-open:Other components', 'flex'],")
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
+                        + format("['subheader-open:Other components', 'flex'],")
                         + format("[[%s], [%s], [%s], [%s], ['flex']],", fmr, fmr, fmr, fmr)
-                        + format("['subheader:Other components', 'flex'],")
-                        + format("[[%s], ['flex']]", fmr)+ "]"))
+                        + format("['subheader-open:Other components', 'flex'],")
+                        + format("[[%s], [%s], ['flex']]", fmr, fmr)+ "]"))
                 .setLayoutFor(Device.TABLET, Optional.empty(), ("['padding:20px',"
                         + "[[fmr], [fmr], ['flex']],"
                         + "[[fmr], [fmr], ['flex']],"
@@ -1074,16 +1081,22 @@ public class WebUiConfig extends AbstractWebUiConfig {
     private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<AbstractEntity<?>> {
         @Override
         public void assignValues(final AbstractEntity<?> entity) {
-            if ("DR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("dR", "X");
-            } else if ("IS".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("iS", "X");
-            } else if ("IR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("iR", "X");
-            } else if ("ON".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("oN", "X");
-            } else if ("SR".equals(((AbstractEntity<?>) entity.get("status")).getKey())) {
-                entity.set("sR", "X");
+
+            final AbstractEntity<?> status = (AbstractEntity<?>) entity.get("status");
+            if (status == null) {
+                System.out.println(format("Status is null for entity [%s].", entity));
+            } else {
+                if ("DR".equals(status.getKey())) {
+                    entity.set("dR", "X");
+                } else if ("IS".equals(status.getKey())) {
+                    entity.set("iS", "X");
+                } else if ("IR".equals(status.getKey())) {
+                    entity.set("iR", "X");
+                } else if ("ON".equals(status.getKey())) {
+                    entity.set("oN", "X");
+                } else if ("SR".equals(status.getKey())) {
+                    entity.set("sR", "X");
+                }
             }
         }
     }
@@ -1140,7 +1153,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 return where.prop("status").eq().val(justUpdatedEntity.getStatus());
             }
 
-            return where.prop("status").eq().val(coStatus.findByKey("IS"));
+            // here're two examples of how one could implemented constrains on subproperties as part of query enhancer, which suffers from EQL 2 limitation of not being able to parse
+            // dotnotated expressions in this context
+
+            // Approach 1:  Use subquery for in/notIn.
+            final EntityResultQueryModel<TgPersistentStatus> query = select(TgPersistentStatus.class).where().prop("key").in().values("IS", "IR").model();
+            return where.prop("status").in().model(query);
+            
+            // Approach 2: Use subquery for exists/notExists
+            //final EntityResultQueryModel<TgPersistentStatus> query = select(TgPersistentStatus.class).where().prop("key").in().values("IS", "IR").and().prop("id").eq().extProp("status").model();
+            //return where.exists(query);
         }
     }
 
@@ -1449,7 +1471,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("compositeProp").minWidth(110)
                 .also()
-                .addProp("stringProp").minWidth(50)
+                .addProp("stringProp").minWidth(50).also()
+                .addProp("colourProp").width(40).also()
+                .addProp("hyperlinkProp").minWidth(500)
                 //                .setCollapsedCardLayoutFor(Device.DESKTOP, Optional.empty(),
                 //                        "["
                 //                                + "[['flex', 'select:property=this'],       ['flex', 'select:property=desc'],        ['flex', 'select:property=integerProp'], ['flex', 'select:property=bigDecimalProp']],"
@@ -1546,9 +1570,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         if (withQueryEnhancer) {
             afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().withComputation(entity -> 5).build());
         } else {
-            afterQueryEnhancerConf = beforeEnhancerConfiguration;
+            afterQueryEnhancerConf = beforeEnhancerConfiguration;//.setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build());
         }
-        // .setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build())
+        
 
         final ISummaryCardLayout<TgPersistentEntityWithProperties> scl = afterQueryEnhancerConf.setFetchProvider(EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("status"))
                 .setSummaryCardLayoutFor(Device.DESKTOP, Optional.empty(), "['width:350px', [['flex', 'select:property=kount'], ['flex', 'select:property=sum_of_int']],[['flex', 'select:property=max_of_dec'],['flex', 'select:property=min_of_dec']], [['flex', 'select:property=sum_of_dec']]]")

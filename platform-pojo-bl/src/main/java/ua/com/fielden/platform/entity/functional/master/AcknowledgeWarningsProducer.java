@@ -35,7 +35,6 @@ public class AcknowledgeWarningsProducer extends DefaultEntityProducerWithContex
                     })
                     .collect(Collectors.toCollection(() -> new TreeSet<PropertyWarning>()));
             entity.setWarnings(propertyWarnings);
-            entity.getProperty("warnings").resetState();
         }
         
         return entity;

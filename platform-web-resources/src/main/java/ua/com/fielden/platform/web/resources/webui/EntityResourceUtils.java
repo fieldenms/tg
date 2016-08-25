@@ -27,7 +27,6 @@ import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
-import ua.com.fielden.platform.basic.IValueMatcher;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -60,6 +59,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.MiscUtilities;
@@ -223,6 +223,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 final Map<String, Object> valAndOrigVal = (Map<String, Object>) nameAndVal.getValue();
                 // The 'modified' properties are marked using the existence of "val" sub-property.
                 if (valAndOrigVal.containsKey("val")) { // this is a modified property
+                    logger.debug(String.format("Apply untouched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                     applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
                     appliedProps.add(name);
                 } else { // this is unmodified property
@@ -247,6 +248,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Map<String, Object> valAndOrigVal = (Map<String, Object>) modifiedPropertiesHolder.get(name);
             // The 'modified' properties are marked using the existence of "val" sub-property.
             if (valAndOrigVal.containsKey("val")) { // this is a modified property
+                logger.debug(String.format("Apply touched modified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                 applyModifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             } else { // this is unmodified property
                 // IMPORTANT:
@@ -254,6 +256,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 //  even unmodified ones.
                 // This is necessary in order to mimic the user interaction with the entity (like was in Swing client)
                 //  to have the ACE handlers executed for all touched properties.
+                logger.debug(String.format("Apply touched unmodified: type [%s] name [%s] isEntityStale [%s] valAndOrigVal [%s]", type.getSimpleName(), name, isEntityStale, valAndOrigVal));
                 applyUnmodifiedPropertyValue(type, name, valAndOrigVal, entity, companionFinder, isEntityStale);
             }
             appliedProps.add(name);
@@ -492,12 +495,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 final Class<AbstractEntity<?>> enclosingEntityType = (Class<AbstractEntity<?>>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, type, propertyName).value();
                 return extractPropertyDescriptor((String) reflectedValue, enclosingEntityType).orElse(null);
             } else if (reflectedValueId.isPresent()) {
-                // logger.debug(String.format("\t\tID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
+                logger.debug(String.format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
                 // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
                 final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.find(entityPropertyType).uninstrumented();
                 return propertyCompanion.findById(reflectedValueId.get(), fetchForProperty(companionFinder, type, propertyName).fetchModel());
             } else if (EntityUtils.isCompositeEntity(entityPropertyType)) {
-                // logger.debug(String.format("\t\tKEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
+                logger.debug(String.format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
                 final String compositeKeyAsString = buildSearchByValue(propertyType, entityPropertyType, (String) reflectedValue);
                 final EntityResultQueryModel<AbstractEntity<?>> model = select(entityPropertyType).where().//
                 /*      */prop(AbstractEntity.KEY).iLike().anyOfValues((Object[]) MiscUtilities.prepare(Arrays.asList(compositeKeyAsString))).//
@@ -510,7 +513,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                     return null;
                 }
             } else {
-                // logger.debug(String.format("\t\tKEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
+                logger.debug(String.format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
                 final String[] keys = MiscUtilities.prepare(Arrays.asList((String) reflectedValue));
                 final String key;
                 if (keys.length > 1) {
@@ -584,9 +587,12 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
 
         } else if (Colour.class.isAssignableFrom(propertyType)) {
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
-
             final String hashlessUppercasedColourValue = (String) map.get("hashlessUppercasedColourValue");
             return hashlessUppercasedColourValue == null ? null : new Colour(hashlessUppercasedColourValue);
+        } else if (Hyperlink.class.isAssignableFrom(propertyType)) {
+            final Map<String, Object> map = (Map<String, Object>) reflectedValue;
+            final String linkValue = (String) map.get("value");
+            return linkValue == null ? null : new Hyperlink(linkValue);
         } else if (PropertyTypeDeterminator.isCollectional(type, propertyName) && Set.class.isAssignableFrom(Finder.findFieldByName(type, propertyName).getType()) && Long.class.isAssignableFrom(propertyType)) {
             final List<Object> list = (ArrayList<Object>) reflectedValue;
             final Set<Long> resultSet = new LinkedHashSet<>();
@@ -601,7 +607,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
         } else {
-            throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s].", type.getSimpleName(), propertyName, reflectedValue));
+            throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s@%s] from reflected value [%s] of type [%s].", propertyName, type.getSimpleName(), reflectedValue, propertyType.getSimpleName()));
         }
     }
 

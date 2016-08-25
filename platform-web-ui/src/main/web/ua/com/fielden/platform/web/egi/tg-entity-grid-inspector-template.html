@@ -279,8 +279,11 @@
                                 <template is="dom-if" if="[[_isBooleanProp(totals, item)]]">
                                     <iron-icon class="card-icon" icon="[[_getBooleanIcon(totals, item.property)]]"></iron-icon>
                                 </template>
-                                <template is="dom-if" if="[[_isNotBooleanProp(totals, item)]]">
-                                    <div class="truncate">[[_getValue(totals, item.property, item.type)]]</div>
+                                <template is="dom-if" if="[[_isHyperlinkProp(totals, item)]]">
+                                    <a class="truncate" href$="[[_getValue(totals, item.property, item.type)]]">[[_getValue(totals, item.property, item.type)]]</a>
+                                </template>
+                                <template is="dom-if" if="[[_isNotBooleanOrHyperlinkProp(totals, item)]]">
+                                    <div class="truncate relative">[[_getValue(totals, item.property, item.type)]]</div>
                                 </template>
                             </div>
                         </div>
@@ -342,14 +345,17 @@
                                         </div>
                                     </template>
                                     <template is="dom-repeat" items="[[columns]]" as="column">
-                                        <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[column.customAction]]">
+                                        <div class="table-data-cell relative layout horizontal center" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
                                             <template is="dom-if" if="[[!_isColumnFixed(index, numOfFixedCols)]]">
                                                 <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]">
                                                 </div>
                                                 <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
                                                     <iron-icon class="table-icon" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
                                                 </template>
-                                                <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
+                                                <template is="dom-if" if="[[_isHyperlinkProp(egiEntity.entity, column)]]">
+                                                    <a class="truncate" href$="[[_getValue(egiEntity.entity, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</a>
+                                                </template>
+                                                <template is="dom-if" if="[[_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]">
                                                     <div class="truncate relative" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
                                                 </template>
                                             </template>
@@ -388,7 +394,10 @@
                                                         <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
                                                             <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
                                                         </template>
-                                                        <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                                        <template is="dom-if" if="[[_isHyperlinkProp(totals, summary)]]">
+                                                            <a class="truncate" href$="[[_getValue(totals, summary.property, summary.type)]]">[[_getValue(totals, summary.property, summary.type)]]</a>
+                                                        </template>
+                                                        <template is="dom-if" if="[[_isNotBooleanOrHyperlinkProp(totals, summary)]]">
                                                             <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
                                                         </template>
                                                     </template>
@@ -440,13 +449,16 @@
                                                 </div>
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                                <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[column.customAction]]">
+                                                <div class="table-data-cell relative layout horizontal center" hidden$="[[!_isColumnFixed(index, numOfFixedCols)]]" style$="[[_calcColumnStyle(column, index, numOfFixedCols)]]" on-tap="_tapAction" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action$="[[_hasAction(egiEntity.entity, column)]]">
                                                     <div class="fit" style$="[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, column.property)]]"></div>
                                                     <template is="dom-if" if="[[_isBooleanProp(egiEntity.entity, column)]]">
-                                                        <iron-icon class="table-icon" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, true)]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
+                                                        <iron-icon class="table-icon" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'true')]]" icon="[[_getBooleanIcon(egiEntity.entity, column.property)]]"></iron-icon>
                                                     </template>
-                                                    <template is="dom-if" if="[[_isNotBooleanProp(egiEntity.entity, column)]]">
-                                                        <div class="truncate relative" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, false)]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
+                                                    <template is="dom-if" if="[[_isHyperlinkProp(egiEntity.entity, column)]]">
+                                                        <a class="truncate" href$="[[_getValue(egiEntity.entity, column.property, column.type)]]" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</a>
+                                                    </template>
+                                                    <template is="dom-if" if="[[_isNotBooleanOrHyperlinkProp(egiEntity.entity, column)]]">
+                                                        <div class="truncate relative" style$="[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, column.property, 'false')]]">[[_getValue(egiEntity.entity, column.property, column.type)]]</div>
                                                     </template>
                                                 </div>
                                             </template>
@@ -471,7 +483,10 @@
                                                                 <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
                                                                     <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
                                                                 </template>
-                                                                <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                                                <template is="dom-if" if="[[_isHyperlinkProp(totals, summary)]]">
+                                                                    <a class="truncate" href$="[[_getValue(totals, summary.property, summary.type)]]">[[_getValue(totals, summary.property, summary.type)]]</a>
+                                                                </template>
+                                                                <template is="dom-if" if="[[_isNotBooleanOrHyperlinkProp(totals, summary)]]">
                                                                     <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
                                                                 </template>
                                                             </div>
@@ -564,7 +579,10 @@
                                                                 <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
                                                                     <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
                                                                 </template>
-                                                                <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                                                <template is="dom-if" if="[[_isHyperlinkProp(totals, summary)]]">
+                                                                    <a class="truncate" href$="[[_getValue(totals, summary.property, summary.type)]]">[[_getValue(totals, summary.property, summary.type)]]</a>
+                                                                </template>
+                                                                <template is="dom-if" if="[[_isNotBooleanOrHyperlinkProp(totals, summary)]]">
                                                                     <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
                                                                 </template>
                                                             </div>
@@ -626,7 +644,10 @@
                                                             <template is="dom-if" if="[[_isBooleanProp(totals, summary)]]">
                                                                 <iron-icon class="table-icon" icon="[[_getBooleanIcon(totals, summary.property)]]"></iron-icon>
                                                             </template>
-                                                            <template is="dom-if" if="[[_isNotBooleanProp(totals, summary)]]">
+                                                            <template is="dom-if" if="[[_isHyperlinkProp(totals, summary)]]">
+                                                                <a class="truncate" href$="[[_getValue(totals, summary.property, summary.type)]]">[[_getValue(totals, summary.property, summary.type)]]</a>
+                                                            </template>
+                                                            <template is="dom-if" if="[[_isNotBooleanOrHyperlinkProp(totals, summary)]]">
                                                                 <div class="truncate relative" style="width:100%">[[_getValue(totals, summary.property, summary.type)]]</div>
                                                             </template>
                                                         </div>
@@ -852,7 +873,7 @@
                 },
                 _lastSelectedIndex: Number
             },
-            
+
             observers: [
                         '_desktopShortLayoutChanged(shortLayout.desktop)',
                         '_tabletShortLayoutChanged(shortLayout.tablet)',
@@ -973,7 +994,7 @@
                     self.keyEventTarget = self._getKeyEventTarget();
                 }, 1)
             },
-            
+
             _getKeyEventTarget: function () {
                 var parent = this;
                 while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
@@ -1639,12 +1660,14 @@
                     } else {
                         return this.$.reflector.formatNumber(entity.get(property), this.$.appConfig.locale);
                     }
+                } else if (type === 'Money') {
+                    return this.$.reflector.formatMoney(entity.get(property), this.$.appConfig.locale);
+                } else if (type === 'Colour') {
+                    return '#' + entity.get(property)['hashlessUppercasedColourValue'];
+                } else if (type === 'Hyperlink') {
+                    return entity.get(property)['value'];
                 } else {
-                    if (type === 'Money') {
-                        return this.$.reflector.formatMoney(entity.get(property), this.$.appConfig.locale);;
-                    } else {
-                        return entity.get(property);
-                    }
+                    return entity.get(property);
                 }
             },
 
@@ -1668,10 +1691,16 @@
                 return column.type === 'Boolean' && this._get(entity, column.property) !== null
             },
             /**
+             * Determines whether property is Hypelink or not.
+             */
+            _isHyperlinkProp: function (entity, column) {
+                return column.type === 'Hyperlink' && this._get(entity, column.property) !== null
+            },
+            /**
              * Determines whether property is not boolean property or is.
              */
-            _isNotBooleanProp: function (entity, column) {
-                return column.type !== 'Boolean';
+            _isNotBooleanOrHyperlinkProp: function (entity, column) {
+                return column.type !== 'Boolean' && column.type !== 'Hyperlink';
             },
             /**
              * determines whether secondary actions is only one or not.
@@ -1685,6 +1714,12 @@
             _getBooleanIcon: function (entity, property) {
                 return "icons:" + (this._get(entity, property) ? "check" : "clear");
             },
+
+            /** Identifies if there is a column action for the specified entity and column. */
+            _hasAction: function (entity, column) {
+                return column.customAction || this._isHyperlinkProp(entity, column) === true;
+            },
+
             /**
              * Tap action on data column. TODO: implement this.
              */
@@ -1693,7 +1728,15 @@
             },
 
             tap: function (entity, property, column) {
-                column.runAction(entity);
+                if (column.runAction(entity) === false) {
+                    // if the property is a hyperlink and there was no custom action associted with it
+                    // then let's open the linked resources
+                    if (this._isHyperlinkProp(entity, column) === true) {
+                        var url = this._getValue(entity, column.property, column.type);
+                        var win = window.open(url, '_blank');
+                        win.focus();
+                    }
+                }
             },
             /**
              * Shows the summary dialog if the EGI is in card layout and there were totals defined.

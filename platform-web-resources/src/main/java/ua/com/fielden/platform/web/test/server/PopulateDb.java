@@ -39,6 +39,7 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.ui.config.MainMenu;
 import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
@@ -136,7 +137,8 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
                 // .setProducerInitProp(ent1)
                 .setIntegerProp(7).setMoneyProp(new Money("7.0", Currency.getInstance("USD"))).setBigDecimalProp(new BigDecimal(7.7))
-                .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30);
+                .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30)
+                .setColourProp(Colour.RED).setHyperlinkProp(new Hyperlink("https://www.fielden.com.au"));
         de.setDesc("Default entity description");
         final TgPersistentEntityWithProperties defaultEnt = save(de);
         System.out.println("defaultEnt.getId() == " + defaultEnt.getId());

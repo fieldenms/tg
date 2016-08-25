@@ -452,6 +452,7 @@
                     // console.debug("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
                     this._updateMessagesForEntity(newValue);
                 }
+                this._tryFireErrorMsg(this._error);
             },
             
             _updateMessagesForEntity: function (newEntity) {
@@ -602,6 +603,13 @@
             _editorValidationMsgChanged: function (newValue, oldValue) {
                 if (this._validationComponentsDefined === true) {
                     this._bindMessages(this.entity, this.propertyName, newValue);
+                    this._tryFireErrorMsg(newValue);
+                }
+            },
+            
+            _tryFireErrorMsg: function (error) {
+                if (error) {
+                    this.fire('editor-error-appeared', this);
                 }
             },
 
