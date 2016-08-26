@@ -101,7 +101,7 @@ public class ContainerConfig implements ILayoutCell {
 
     @Override
     public ILayoutCell repeat(final int times) {
-        if (!cells.isEmpty()) {
+        if (cells.isEmpty()) {
             throw new UnsupportedOperationException("There are no cell to copy");
         }
         final CellConfig lastCell = cells.get(cells.size() - 1);
@@ -112,14 +112,24 @@ public class ContainerConfig implements ILayoutCell {
     }
 
     @Override
-    public IGap forEach(final IFlexLayout layout) {
+    public IGap layoutForEach(final IFlexLayout layout) {
         cells.forEach(config -> config.setLayoutIfNotPresent(layout));
         return this;
     }
 
     @Override
-    public IFlexContainerLayout withGap(final int pixels) {
+    public IFlexContainerLayout withGapBetweenCells(final int pixels) {
         gap = pixels;
         return this;
+    }
+
+    @Override
+    public String render(final boolean vertical, final boolean isVerticalDefault) {
+        String cellsLayout = "";
+        for (int cellIndex = 0; cellIndex < cells.size() - 1; cellIndex++) {
+            cellsLayout = cellsLayout + cells.get(cellIndex).render(vertical, isVerticalDefault, gap) + ", ";
+        }
+        cellsLayout += cells.get(cells.size() - 1).render(vertical, isVerticalDefault, 0);
+        return cellsLayout;
     }
 }

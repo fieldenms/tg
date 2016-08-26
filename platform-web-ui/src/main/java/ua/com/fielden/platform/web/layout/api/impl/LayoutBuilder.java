@@ -87,7 +87,6 @@ public class LayoutBuilder {
 
     @Override
     public String toString() {
-        //TODO call container.build()
-        return "";
+        return layoutContainer.render(false, false);
     }
 }

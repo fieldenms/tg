@@ -2,7 +2,10 @@ package ua.com.fielden.platform.web.layout.api.impl;
 
 import java.util.Optional;
 
+import org.apache.commons.lang.StringUtils;
+
 import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.layout.api.IFlexContainerLayout;
 import ua.com.fielden.platform.web.layout.api.IFlexLayout;
 
@@ -49,6 +52,29 @@ public class CellConfig {
         if (!optionalLayout.isPresent()) {
             this.optionalLayout = Optional.ofNullable(layout);
         }
+    }
+
+    public String render(final boolean vertical, final boolean isVerticalDefault, final int gap) {
+        final boolean shouldIncludeGap = gap != 0;
+        final Pair<String, String> tempStyle = new Pair<>(vertical ? "margin-bottom" : "margin-right", gap + "px");
+        final String gapStyleString = shouldIncludeGap ? "\"" + tempStyle.getKey() + ":" + tempStyle.getValue() + "\"" : "";
+        final String widgetString = layoutWidget.isPresent() ? "\"" + layoutWidget.get() + "\"" : "";
+        final String layoutString = optionalLayout.isPresent() ? optionalLayout.get().render(vertical, gap) : gapStyleString;
+        final Optional<Boolean> optionalVertical = optionalLayout.isPresent() ? optionalLayout.get().isVerticalLayout() : Optional.empty();
+        final String containerString = optionalContainer.isPresent() ?
+                optionalContainer.get().render(optionalVertical.isPresent() ? optionalVertical.get() : !isVerticalDefault, !isVerticalDefault)
+                : "";
+
+        String layout = widgetString;
+        if (!StringUtils.isEmpty(layout) && !StringUtils.isEmpty(layoutString)) {
+            layout += ", ";
+        }
+        layout += layoutString;
+        if (!StringUtils.isEmpty(layout) && !StringUtils.isEmpty(containerString)) {
+            layout += ", ";
+        }
+        layout += containerString;
+        return "[" + layout + "]";
     }
 
     private CellConfig(final IFlexContainerLayout container, final IFlexLayout flexLayout, final String layoutWidget) {
