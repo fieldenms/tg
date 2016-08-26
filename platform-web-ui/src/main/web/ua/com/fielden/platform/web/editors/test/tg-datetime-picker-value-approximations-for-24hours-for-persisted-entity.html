@@ -108,6 +108,43 @@
                 master.retrieve();
             };
             
+            test('value in UTC to value in UTC', function (done) {
+                var edProperty = master.$.editor_4_dateProp;
+                edProperty.timeZone = 'UTC';
+                
+/*                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    assert.strictEqual(edProperty._editingValue, approximatedEditingValue, "_editingValue should be correct.");
+                    assert.strictEqual(edProperty._commValue, approximatedEditingValue, "_commValue should be correct.");
+                    var acceptedValue = edProperty._acceptedValue;
+                    assert.isNotNull(acceptedValue, "_acceptedValue should be non-empty.");
+                    if (concreteAcceptedMillis) {
+                        assert.strictEqual(acceptedValue, concreteAcceptedMillis, "_acceptedValue should correspond to 23:59:59.999 millis of the day.");
+                    }
+
+                    assert.strictEqual(validatedEntity.get("dateProp"), acceptedValue, "'dateProp' value should be the same as acceptedValue.");
+                    assert.strictEqual(bindingEntity.get("dateProp"), acceptedValue, "Binding 'dateProp' value should be the same as acceptedValue.");
+
+                    done();
+                };
+*/
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
+                    var initialMillis = 1395496800000; // 22/03/2014 14:00 in UTC and 22/03/2014 16:00 in local timezone
+                    assert.strictEqual(reflector.millisDateRepresentation(initialMillis), '22/03/2014 16:00', 'The value in local timezone is not correctly formatted.');
+                    assert.strictEqual(reflector.millisDateRepresentation(initialMillis, 'UTC'), '22/03/2014 14:00', 'The value in UTC timezone is not correctly formatted.');
+                    
+                    var momentInLocal = moment('22/03/2014 16:00', 'L LT', true);
+                    assert.strictEqual(momentInLocal.isValid(), true, 'The moment parsed from 22/03/2014 16:00 in local timezone should be valid.');
+                    assert.strictEqual(momentInLocal.valueOf(), initialMillis, 'The moment millis parsed from 22/03/2014 16:00 in local timezone is not equal to original.');
+                    var momentInUTC = moment.tz('22/03/2014 14:00', 'L LT', true, 'UTC');
+                    assert.strictEqual(momentInUTC.isValid(), true, 'The moment parsed from 22/03/2014 14:00 in UTC should be valid.');
+                    assert.strictEqual(momentInUTC.valueOf(), initialMillis, 'The moment millis parsed from 22/03/2014 14:00 in UTC is not equal to original.');
+                    
+                    done();
+                };
+
+                master.retrieve();
+            });
+            
             test('[09/09/2002 11:03] to [09/09/2002 11:03]', function (done) {
                 correctlyApproximates(done, '09/09/2002 11:03', '09/09/2002 11:03');
             });

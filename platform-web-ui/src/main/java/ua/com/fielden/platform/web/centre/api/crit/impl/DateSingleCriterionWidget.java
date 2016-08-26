@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.crit.impl;
 
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 
 /**
@@ -21,7 +22,8 @@ public class DateSingleCriterionWidget extends AbstractSingleCriterionWidget {
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),
-                        false
+                        false,
+                        DefaultValueContract.getTimeZone(managedType, propertyName)
                 ));
     }
 }

@@ -110,6 +110,15 @@
 
             properties: {
                 /**
+                 * If 'null', then default timezone should be used for toString and fromString conversions (do not specify anything), 
+                 * otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment(..., timeZone)' methods.
+                 */
+                timeZone: {
+                    type: String,
+                    value: null
+                },
+                
+                /**
                  * If true -- the empty time portion should be approximated to '23:59:59.999', otherwise -- to '00:00:00.000'.
                  */
                 timePortionToBecomeEndOfDay: {
@@ -200,7 +209,7 @@
                 if (value === null) {
                     return "";
                 } else {
-                    return this.reflector().millisDateRepresentation(value);
+                    return this.reflector().millisDateRepresentation(value, this.timeZone);
                 }
             },
 
@@ -241,7 +250,10 @@
                         .minute(this.$.datePicker.selectedMinute)
                         .seconds(this.$.datePicker.seconds)
                         .milliseconds(this.$.datePicker.milis);
-                    self._editingValue = self.reflector().millisDateRepresentation(acceptedMoment.valueOf());
+                    if (self.timeZone) {
+                        acceptedMoment = acceptedMoment.tz(self.timeZone);
+                    }
+                    self._editingValue = self.reflector().millisDateRepresentation(acceptedMoment.valueOf(), self.timeZone);
                     //self.decoratedInput().focus();
            		}.bind(domBind);
                 
@@ -338,11 +350,11 @@
                         if (value) {
                             this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
                             if (this._validMoment !== null) {
-                                return this.reflector().millisDateRepresentation(this._validMoment.valueOf());
+                                return this.reflector().millisDateRepresentation(this._validMoment.valueOf(), this.timeZone);
                             }
                         }
                     }
-                } 
+                }
                 return dateEditingValue;
             },
             
@@ -356,10 +368,10 @@
                 } else {
                     console.debug('formats', formats);
                     var firstFormat = formats[0];
-                    var tryingMoment = moment(stringValue, firstFormat, true);
+                    var tryingMoment = this.timeZone ? moment.tz(stringValue, firstFormat, true, this.timeZone) : moment(stringValue, firstFormat, true);
                     if (tryingMoment.isValid()) {
                         if (['D/M/Y H:m:ss.SSS', 'D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y Hmm', 'D/M/Y h:ma', 'D/M/Y H:m', 'D/M/Y ha', 'D/M/Y H', 'D/M/Y'].indexOf(firstFormat) !== -1) {
-                            tryingMoment = moment(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true);
+                            tryingMoment = this.timeZone ? moment.tz(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true, this.timeZone) : moment(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true);
                         }
                         
                         if (['D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {

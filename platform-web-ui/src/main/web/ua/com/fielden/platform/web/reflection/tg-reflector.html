@@ -31,6 +31,15 @@
         };
         EntityTypeProp.prototype = Object.create(Object.prototype);
         EntityTypeProp.prototype.constructor = EntityTypeProp;
+        
+        /**
+         * Returns specific time-zone for the property of type date.
+         *
+         * IMPORTANT: do not use '_timeZone' field directly!
+         */
+        EntityTypeProp.prototype.timeZone = function () {
+            return typeof this._timeZone === 'undefined' ? null : this._timeZone;
+        }
 
         /**
          * Returns 'true' when the type property is secrete, false otherwise.
@@ -586,7 +595,18 @@
          * Returns entity type property with the specified name.
          */
         EntityType.prototype.prop = function (name) {
+            /* if (name === '') {
+                throw 'Cannot return the type property with empty name.';
+            }
+            var dotIndex = name.indexOf(".");
+            if (dotIndex > -1) {
+                var first = name.slice(0, dotIndex);
+                var rest = name.slice(dotIndex + 1);
+                var firstVal = this.get(first);
+                return firstVal === null ? null : firstVal.get(rest);
+            } else { */
             return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
+            /* } */
         }
 
         /** 
@@ -1321,17 +1341,26 @@
             return moment(fullDateString, 'DD/MM/YYYY HH:mm:ss.SSS', true).valueOf();
         },
         
-        millisDateRepresentation: function (dateMillis) {
+        millisDateRepresentation: function (dateMillis, timeZone) {
             var millisecondsRemainder = dateMillis % 1000;
             var millisecondsExist = (millisecondsRemainder !== 0);
             if (millisecondsExist) {
+                if (timeZone) {
+                    return moment(dateMillis).tz(timeZone).format('L LTS');
+                }
                 return moment(dateMillis).format('L LTS');
             } else {
                 var secondsRemainder = (dateMillis - millisecondsRemainder) % 60;
                 var secondsExist = (secondsRemainder !== 0);
                 if (secondsExist) {
+                    if (timeZone) {
+                        return moment(dateMillis).tz(timeZone).format('L LTS');
+                    }
                     return moment(dateMillis).format('L LTS');
                 }
+            }
+            if (timeZone) {
+                return moment(dateMillis).tz(timeZone).format('L LT');
             }
             return moment(dateMillis).format('L LT');
         }
