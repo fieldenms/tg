@@ -75,7 +75,7 @@
             </div>
             <div class="col relative">
                 <neon-animated-pages class="fit" id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-iron-select="_onPageChange">
-                    <tg-month-selector id="defaultPage" page-name="defaultPage" selected-date="{{selectedDate}}"></tg-month-selector>
+                    <tg-month-selector id="defaultPage" page-name="defaultPage" selected-date="{{selectedDate}}" time-zone="[[timeZone]]"></tg-month-selector>
                     <tg-number-selector page-name="yearSelector" selected-number="{{selectedYear}}" on-number-selected="_showDefaultPage"></tg-number-selector>
                     <tg-number-selector page-name="monthSelector" selected-number="{{selectedMonth}}" lower-bound="0" upper-bound="11" formatter="[[formatMonth]]" on-number-selected="_showDefaultPage"></tg-number-selector>
                     <tg-number-selector page-name="hourSelector" selected-number="{{selectedHour}}" lower-bound="[[_getHourLowerBound(showMeridian)]]" upper-bound="[[_getHourUpperBound(showMeridian)]]" on-number-selected="_timeSelected"></tg-number-selector>
@@ -97,6 +97,14 @@
             is: "tg-calendar",
 
             properties: {
+                /**
+                 * If 'null', then default timezone should be used for toString and fromString conversions (do not specify anything), 
+                 * otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment(..., timeZone)' methods.
+                 */
+                timeZone: {
+                    type: String
+                },
+                
                 selectedDate: {
                     type: Number,
                     notify: true,
@@ -160,8 +168,8 @@
              * Updates the calendar information according to specified date.
              */
             _adjustDate: function (date) {
-                this.selectedDayName = moment(date).format("dddd");
-                this.selectedMonthName = moment(date).format("MMM").toUpperCase();
+                this.selectedDayName = (this.timeZone ? moment.tz(date, this.timeZone) : moment(date)).format("dddd");
+                this.selectedMonthName = (this.timeZone ? moment.tz(date, this.timeZone) : moment(date)).format("MMM").toUpperCase();
                 this.selectedDay = date.getDate();
                 this.selectedMonth = date.getMonth();
                 this.selectedYear = date.getFullYear();

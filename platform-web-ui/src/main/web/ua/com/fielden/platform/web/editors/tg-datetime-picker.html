@@ -245,14 +245,11 @@
             	
             	domBind._acceptDateBind = function() {
                     self._isAcceptingDateFromPicker = true;
-                    var acceptedMoment = moment(this.$.datePicker.selectedDate)
+                    var acceptedMoment = (self.timeZone ? moment.tz(this.$.datePicker.selectedDate, self.timeZone) : moment(this.$.datePicker.selectedDate))
                         .hour(this.$.datePicker.selectedHour)
                         .minute(this.$.datePicker.selectedMinute)
                         .seconds(this.$.datePicker.seconds)
                         .milliseconds(this.$.datePicker.milis);
-                    if (self.timeZone) {
-                        acceptedMoment = acceptedMoment.tz(self.timeZone);
-                    }
                     self._editingValue = self.reflector().millisDateRepresentation(acceptedMoment.valueOf(), self.timeZone);
                     //self.decoratedInput().focus();
            		}.bind(domBind);
@@ -297,11 +294,13 @@
                 domBind._dialogOpened = function () {
                     document.addEventListener('keydown', this._onCaptureKeyDown, true);
                 }.bind(domBind);
+                
+                domBind.timeZone = self.timeZone;
            		
             	var div = domBind.content.ownerDocument.createElement('div');
             	div.innerHTML = 
             	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_dialogOpened">' +
-                    '<tg-calendar id="datePicker" pick-time></tg-calendar>' +
+                    '<tg-calendar id="datePicker" pick-time time-zone="[[timeZone]]"></tg-calendar>' +
                     '<div class="buttons">' +
                         '<paper-button dialog-dismiss affirmative>Cancel</paper-button>' +
                         '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +

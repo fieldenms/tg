@@ -132,6 +132,14 @@
             is: "tg-month-selector",
 
             properties: {
+                /**
+                 * If 'null', then default timezone should be used for toString and fromString conversions (do not specify anything), 
+                 * otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment(..., timeZone)' methods.
+                 */
+                timeZone: {
+                    type: String
+                },
+                
                 selectedDate: {
                     type: Number,
                     notify: true,
@@ -200,7 +208,7 @@
              */
             _adjustMonth: function (dateToShow) {
                 if (!isNaN(dateToShow.getTime()) && (this.month !== dateToShow.getMonth() || this.year !== dateToShow.getFullYear())) {
-                    this.monthName = moment(dateToShow).format("MMMM");
+                    this.monthName = (this.timeZone ? moment.tz(dateToShow, this.timeZone) : moment(dateToShow)).format("MMMM");
                     this.month = dateToShow.getMonth();
                     this.year = dateToShow.getFullYear();
                     this.weeks = createMonth(this.year, this.month);
@@ -211,7 +219,11 @@
              * Selects the date.
              */
             _selectDay: function (event, detail, el) {
-                this.selectedDate = new Date(this.year, this.month, event.model.day).getTime();
+                this.selectedDate = new Date(this.year, this.month, event.model.day).getTime(); 
+                    /* This code should be timezone avare (this.timeZone ? moment.tz(self.timeZone) : moment())
+                    .year(this.year)
+                    .month(this.month)
+                    .day(event.model.day).valueOf(); */
             },
 
             /**
