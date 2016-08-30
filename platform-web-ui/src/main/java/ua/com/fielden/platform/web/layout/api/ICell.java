@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.layout.api;
 
 /**
- * A contract with two methods for specifying style and css class for cell to layout.
+ * A contract with two methods for specifying style and css class for cell.
  *
  * @author TG Team
  *
@@ -9,7 +9,7 @@ package ua.com.fielden.platform.web.layout.api;
 public interface ICell extends IDirection {
 
     /**
-     * Specify style for layout cell.
+     * Specify style for cell.
      *
      * @param style
      *            - the style name (e.g. margin, padding, overflow etc.)
@@ -20,7 +20,7 @@ public interface ICell extends IDirection {
     ICell withStyle(String style, String value);
 
     /**
-     * Specify the css class for layout cell.
+     * Specify the css class for cell.
      *
      * @param clazz
      * @return

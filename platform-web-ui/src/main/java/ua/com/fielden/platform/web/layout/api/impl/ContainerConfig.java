@@ -9,6 +9,12 @@ import ua.com.fielden.platform.web.layout.api.IFlexLayout;
 import ua.com.fielden.platform.web.layout.api.IGap;
 import ua.com.fielden.platform.web.layout.api.ILayoutCell;
 
+/**
+ * Represents the flex container.
+ *
+ * @author TG Team
+ *
+ */
 public class ContainerConfig implements ILayoutCell {
 
     private final List<CellConfig> cells = new ArrayList<>();

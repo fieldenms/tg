@@ -117,12 +117,6 @@ public class LayoutCellBuilder implements ICell {
     }
 
     @Override
-    public ILayoutCellCompleted flexAuto() {
-        classes.add("flex-auto");
-        return this;
-    }
-
-    @Override
     public IFlexLayout end() {
         return new IFlexLayout() {
 

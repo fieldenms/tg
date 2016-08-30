@@ -5,6 +5,12 @@ import ua.com.fielden.platform.web.layout.api.IFlexContainerLayout;
 import ua.com.fielden.platform.web.layout.api.IFlexLayout;
 import ua.com.fielden.platform.web.layout.api.ILayoutCell;
 
+/**
+ * The builder for flex layout configuration.
+ *
+ * @author TG Team
+ *
+ */
 public class LayoutBuilder {
 
     private final IFlexContainerLayout layoutContainer;
@@ -13,18 +19,42 @@ public class LayoutBuilder {
         layoutContainer = cell(containerConfig, flexLayout);
     }
 
+    /**
+     * Creates empty layout builder.
+     *
+     * @return
+     */
     public static LayoutBuilder layoutContainer() {
         return new LayoutBuilder(null, null);
     }
 
+    /**
+     * Creates layout builder with container configuration.
+     *
+     * @param containerConfig
+     * @return
+     */
     public static LayoutBuilder layoutContainer(final IFlexContainerLayout containerConfig) {
         return new LayoutBuilder(containerConfig, null);
     }
 
+    /**
+     * Creates layout builder with container configuration and layout configuration.
+     *
+     * @param containerConfig
+     * @param flexLayout
+     * @return
+     */
     public static LayoutBuilder layoutContainer(final IFlexContainerLayout containerConfig, final IFlexLayout flexLayout) {
         return new LayoutBuilder(containerConfig, flexLayout);
     }
 
+    /**
+     * Creates layout builder with container configuration with flex layout.
+     *
+     * @param flexLayout
+     * @return
+     */
     public static LayoutBuilder layoutContainer(final IFlexLayout flexLayout) {
         return new LayoutBuilder(null, flexLayout);
     }
