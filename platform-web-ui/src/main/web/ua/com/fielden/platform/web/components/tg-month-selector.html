@@ -90,7 +90,8 @@
 <script>
     (function () {
         var getDaysInMonth = function (year, month) {
-                return new Date(year, month + 1, 0).getDate();
+                var yearMonth = { year: year, month: month, day: 1 };
+                return (this.timeZone ? moment.tz(yearMonth, this.timeZone) : moment(yearMonth)).daysInMonth();
             },
             createMonth = function (year, month) {
                 var weeks = [],
@@ -105,8 +106,9 @@
                 return weeks;
             },
             createWeek = function (year, month, day) {
+                var yearMonthDay = { year: year, month: month, day: day };
                 var week = [],
-                    firstDay = new Date(year, month, day).getDay(),
+                    firstDay = (this.timeZone ? moment.tz(yearMonthDay, this.timeZone) : moment(yearMonthDay)).day(),
                     days = getDaysInMonth(year, month),
                     previousMonthDays = getDaysInMonth(year, month - 1),
                     nextMonthDay = -1,
@@ -157,10 +159,10 @@
             },
 
             ready: function () {
-                var today = new Date();
-                this.todayDay = today.getDate();
-                this.todayMonth = today.getMonth();
-                this.todayYear = today.getFullYear();
+                var today = (this.timeZone ? moment.tz(this.timeZone) : moment()).startOf('day');
+                this.todayDay = today.day();
+                this.todayMonth = today.month();
+                this.todayYear = today.year();
                 this.selectedDay = null;
                 this.selectedMonth = null;
                 this.selectedYear = null;
@@ -169,8 +171,10 @@
             },
 
             attached: function () {
-                var dateToShow = (this.selectedDate && new Date(this.selectedDate)) || new Date();
-                this._adjustMonth(dateToShow);
+                var momentToShow = this.selectedDate ? 
+                        (this.timeZone ? moment.tz(this.selectedDate, this.timeZone) : moment(this.selectedDate)) :
+                        (this.timeZone ? moment.tz(this.timeZone) : moment());
+                this._adjustMonth(momentToShow);
             },
 
             /**
@@ -191,26 +195,28 @@
              * Selectes the year on the displayed calendar
              */
             _selectYear: function (year) {
-                var dateToShow = new Date(year, this.month, 1);
-                this._adjustMonth(dateToShow);
+                var yearMonth = { year: year, month: this.month, day: 1 };
+                var momentToShow = (this.timeZone ? moment.tz(yearMonth, this.timeZone) : moment(yearMonth));
+                this._adjustMonth(momentToShow);
             },
 
             /**
              * Selects month depending on increment (the increment might be positive or negetive).
              */
             _selectMonth: function (month) {
-                var dateToShow = new Date(this.year, month, 1);
-                this._adjustMonth(dateToShow);
+                var yearMonth = { year: this.year, month: month, day: 1 };
+                var momentToShow = (this.timeZone ? moment.tz(yearMonth, this.timeZone) : moment(yearMonth));
+                this._adjustMonth(momentToShow);
             },
 
             /**
              * Updates the calendar information depending on which month was choosen.
              */
-            _adjustMonth: function (dateToShow) {
-                if (!isNaN(dateToShow.getTime()) && (this.month !== dateToShow.getMonth() || this.year !== dateToShow.getFullYear())) {
-                    this.monthName = (this.timeZone ? moment.tz(dateToShow, this.timeZone) : moment(dateToShow)).format("MMMM");
-                    this.month = dateToShow.getMonth();
-                    this.year = dateToShow.getFullYear();
+            _adjustMonth: function (momentToShow) {
+                if ( /* FIXME why do we need this? !isNaN(momentToShow.valueOf()) && */ (this.month !== momentToShow.month() || this.year !== momentToShow.year())) {
+                    this.monthName = momentToShow.format("MMMM");
+                    this.month = momentToShow.month();
+                    this.year = momentToShow.year();
                     this.weeks = createMonth(this.year, this.month);
                 }
             },
@@ -219,11 +225,8 @@
              * Selects the date.
              */
             _selectDay: function (event, detail, el) {
-                this.selectedDate = new Date(this.year, this.month, event.model.day).getTime(); 
-                    /* This code should be timezone avare (this.timeZone ? moment.tz(self.timeZone) : moment())
-                    .year(this.year)
-                    .month(this.month)
-                    .day(event.model.day).valueOf(); */
+                var yearMonthDay = { year: this.year, month: this.month, day: event.model.day };
+                this.selectedDate = (this.timeZone ? moment.tz(yearMonthDay, this.timeZone) : moment(yearMonthDay)).valueOf();
             },
 
             /**
@@ -231,13 +234,13 @@
              */
             _selectedDateChanged: function (newValue, oldValue) {
                 if (newValue !== null) {
-                    var newDate = new Date(newValue);
-                    if (!isNaN(newDate.getTime())) {
-                        this.selectedYear = newDate.getFullYear();
-                        this.selectedMonth = newDate.getMonth();
-                        this._adjustMonth(newDate);
-                        this.selectedDay = newDate.getDate();
-                    }
+                    var newMoment = this.timeZone ? moment.tz(newValue, this.timeZone) : moment(newValue);
+                    // if (!isNaN(newDate.getTime())) { FIXME why do we need this?
+                    this.selectedYear = newMoment.year();
+                    this.selectedMonth = newMoment.month();
+                    this._adjustMonth(newMoment);
+                    this.selectedDay = newMoment.day();
+                    // }
                 }
             },
 

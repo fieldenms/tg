@@ -155,11 +155,12 @@
 
 
             attached: function () {
-                var todayDate = new Date();
-                todayDate.setSeconds(0, 0);
-                this.selectedDate = this.selectedDate || todayDate.getTime();
-                this.selectedHour = (typeof this.selectedHour !== undefined && this.selectedHour !== null) ? this.selectedHour : todayDate.getHours();
-                this.selectedMinute = (typeof this.selectedMinute !== undefined && this.selectedMinute !== null) ? this.selectedMinute : todayDate.getMinutes();
+                var todayDate = (this.timeZone ? moment.tz(this.timeZone) : moment()).startOf('day');
+                this.selectedDate = this.selectedDate || todayDate.valueOf();
+                // TODO is this correct: typeof this.selectedHour !== undefined. Maybe it should be like this: typeof this.selectedHour !== 'undefined'?
+                this.selectedHour = (typeof this.selectedHour !== undefined && this.selectedHour !== null) ? this.selectedHour : todayDate.hour();
+                // TODO is this correct: typeof this.selectedMinute !== undefined. Maybe it should be like this: typeof this.selectedMinute !== 'undefined'?
+                this.selectedMinute = (typeof this.selectedMinute !== undefined && this.selectedMinute !== null) ? this.selectedMinute : todayDate.minutes();
                 this.seconds = this.seconds || 0;
                 this.milis = this.milis || 0;
             },
@@ -167,20 +168,24 @@
             /**
              * Updates the calendar information according to specified date.
              */
-            _adjustDate: function (date) {
-                this.selectedDayName = (this.timeZone ? moment.tz(date, this.timeZone) : moment(date)).format("dddd");
-                this.selectedMonthName = (this.timeZone ? moment.tz(date, this.timeZone) : moment(date)).format("MMM").toUpperCase();
-                this.selectedDay = date.getDate();
-                this.selectedMonth = date.getMonth();
-                this.selectedYear = date.getFullYear();
+            _adjustDate: function (newMoment) {
+                this.selectedDayName = newMoment.format("dddd");
+                this.selectedMonthName = newMoment.format("MMM").toUpperCase();
+                this.selectedDay = newMoment.day();
+                this.selectedMonth = newMoment.month();
+                this.selectedYear = newMoment.year();
             },
             
             /**
              * Changes selected date according to changed year and month. 
              */
             _selectYearMonthDay: function (newYear, newMonth, newDay) {
-                var lastDayOfTheMonth = new Date(newYear, newMonth + 1, 0).getDate();
-                this.selectedDate = new Date(newYear, newMonth, newDay > lastDayOfTheMonth ? lastDayOfTheMonth : newDay);
+                var yearMonth = { year: newYear, month: newMonth, day: 1 };
+                var lastDayOfTheMonth = (this.timeZone ? moment.tz(yearMonth, this.timeZone) : moment(yearMonth)).daysInMonth();
+                
+                var computedDay = newDay > lastDayOfTheMonth ? lastDayOfTheMonth : newDay;
+                var yearMonthDay = { year: newYear, month: newMonth, day: computedDay };
+                this.selectedDate = (this.timeZone ? moment.tz(yearMonthDay, this.timeZone) : moment(yearMonthDay)).valueOf();
             },
 
             /**
@@ -188,8 +193,8 @@
              */
             _selectedDateChanged: function (newValue, oldValue) {
                 if (newValue !== null) {
-                    var newDate = new Date(newValue);
-                    this._adjustDate(newDate);
+                    var newMoment = this.timeZone ? moment.tz(newValue, this.timeZone) : moment(newValue);
+                    this._adjustDate(newMoment);
                 }
             },
 
