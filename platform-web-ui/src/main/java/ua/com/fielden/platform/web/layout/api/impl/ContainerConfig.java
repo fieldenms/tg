@@ -52,6 +52,18 @@ public class ContainerConfig implements ILayoutCell {
     }
 
     @Override
+    public ILayoutCell select(final String attribute, final String value, final IFlexLayout layout) {
+        cells.add(new CellConfig(layout, "select:" + attribute + "=" + value));
+        return this;
+    }
+
+    @Override
+    public ILayoutCell select(final String attribute, final String value) {
+        cells.add(new CellConfig("select:" + attribute + "=" + value));
+        return this;
+    }
+
+    @Override
     public ILayoutCell html(final DomElement dom, final IFlexLayout layout) {
         cells.add(new CellConfig(dom, layout));
         return null;

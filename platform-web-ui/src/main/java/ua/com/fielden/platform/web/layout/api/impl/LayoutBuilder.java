@@ -53,6 +53,14 @@ public class LayoutBuilder {
         return new ContainerConfig().skip();
     }
 
+    public static ILayoutCell select(final String attribute, final String value, final IFlexLayout layout) {
+        return new ContainerConfig().select(attribute, value, layout);
+    }
+
+    public static ILayoutCell select(final String attribute, final String value) {
+        return new ContainerConfig().select(attribute, value);
+    }
+
     public static ILayoutCell html(final DomElement dom, final IFlexLayout layout) {
         return new ContainerConfig().html(dom, layout);
     }

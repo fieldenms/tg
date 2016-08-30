@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.layout.api.impl;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -16,26 +16,14 @@ import ua.com.fielden.platform.web.layout.api.IFlex;
 import ua.com.fielden.platform.web.layout.api.IFlexLayout;
 import ua.com.fielden.platform.web.layout.api.IJustification;
 import ua.com.fielden.platform.web.layout.api.ILayoutCellCompleted;
-import ua.com.fielden.platform.web.layout.api.ISelect;
 
 public class LayoutCellBuilder implements ICell {
 
-    private final Optional<ContainerConfig> optionalContainer;
-    private final Map<String, String> styles = new HashMap<>();
-    private final Set<String> classes = new HashSet<>();
-
-    private Optional<Pair<String, String>> optionalSelect = Optional.empty();
+    private final Map<String, String> styles = new LinkedHashMap<>();
+    private final Set<String> classes = new LinkedHashSet<>();
 
     public static ICell layout() {
-        return new LayoutCellBuilder(null);
-    }
-
-    public static ICell layout(final ContainerConfig containerConfig) {
-        return new LayoutCellBuilder(containerConfig);
-    }
-
-    private LayoutCellBuilder(final ContainerConfig containerConfig) {
-        optionalContainer = Optional.ofNullable(containerConfig);
+        return new LayoutCellBuilder();
     }
 
     @Override
@@ -111,32 +99,26 @@ public class LayoutCellBuilder implements ICell {
     }
 
     @Override
-    public ISelect flex() {
+    public ILayoutCellCompleted flex() {
         classes.add("flex");
         return this;
     }
 
     @Override
-    public ISelect flex(final int ratio) {
+    public ILayoutCellCompleted flex(final int ratio) {
         classes.add("flex-" + ratio);
         return this;
     }
 
     @Override
-    public ISelect flexNone() {
+    public ILayoutCellCompleted flexNone() {
         classes.add("flex-none");
         return this;
     }
 
     @Override
-    public ISelect flexAuto() {
+    public ILayoutCellCompleted flexAuto() {
         classes.add("flex-auto");
-        return this;
-    }
-
-    @Override
-    public ILayoutCellCompleted select(final String property, final String value) {
-        optionalSelect = Optional.of(new Pair<>(property, value));
         return this;
     }
 
@@ -153,7 +135,6 @@ public class LayoutCellBuilder implements ICell {
                         .filter(entry -> !(shouldIncludeGap && entry.getKey().equals(tempStyle.getKey())))
                         .map(entry -> "\"" + entry.getKey() + ":" + entry.getValue() + "\"").collect(Collectors.joining(", "));
                 final String gapStyleString = shouldIncludeGap ? "\"" + tempStyle.getKey() + ":" + tempStyle.getValue() + "\"" : "";
-                final String selectString = optionalSelect.isPresent() ? "\"select:" + optionalSelect.get().getKey() + "=" + optionalSelect.get().getValue() + "\"" : "";
 
                 String layout = classesString;
                 if (!StringUtils.isEmpty(layout) && !StringUtils.isEmpty(styleString)) {
@@ -164,10 +145,6 @@ public class LayoutCellBuilder implements ICell {
                     layout += ", ";
                 }
                 layout += gapStyleString;
-                if (!StringUtils.isEmpty(layout) && !StringUtils.isEmpty(selectString)) {
-                    layout += ", ";
-                }
-                layout += selectString;
                 return layout;
             }
 

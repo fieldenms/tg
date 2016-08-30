@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.web.layout.api;
 
-public interface IFlex extends ISelect {
+public interface IFlex extends ILayoutCellCompleted {
 
-    ISelect flex();
+    ILayoutCellCompleted flex();
 
-    ISelect flex(int ratio);
+    ILayoutCellCompleted flex(int ratio);
 
-    ISelect flexNone();
+    ILayoutCellCompleted flexNone();
 
-    ISelect flexAuto();
+    ILayoutCellCompleted flexAuto();
 }

@@ -18,6 +18,10 @@ public interface ILayoutCell extends IQuantifier {
 
     ILayoutCell cell();
 
+    ILayoutCell select(final String attribute, final String value, final IFlexLayout layout);
+
+    ILayoutCell select(final String attribute, final String value);
+
     ILayoutCell skip(final IFlexLayout layout);
 
     ILayoutCell skip();

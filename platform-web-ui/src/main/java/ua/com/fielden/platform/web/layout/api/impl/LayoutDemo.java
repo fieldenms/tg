@@ -66,6 +66,28 @@ public class LayoutDemo {
                 cell().withGapBetweenCells(20));
 
         System.out.println("layout 4: " + layout4.toString());
+
+        final LayoutBuilder layout5 = layoutContainer(cell(cell().repeat(2)).repeat(2));
+
+        System.out.println("layout 5: " + layout5.toString());
+
+        final LayoutBuilder layout6 = layoutContainer(cell(cell().repeat(2)).repeat(2).layoutForEach(verticalCell), layout().horizontal().end());
+
+        System.out.println("layout 6: " + layout6.toString());
+
+        final IFlexLayout anotherContainerLayout = layout()
+                .vertical()
+                .justified()
+                .end();
+        final IFlexLayout anotherRowLayout = layout().withClass("element-class").horizontal().end();
+        final IFlexLayout anotherCellLayout = layout().withStyle("border", "1px solid blue").end();
+
+        final LayoutBuilder layout7 = layoutContainer(
+                cell(cell().repeat(3).layoutForEach(anotherCellLayout).withGapBetweenCells(20)).
+                cell(cell(anotherCellLayout).repeat(2).skip().withGapBetweenCells(20)).layoutForEach(anotherRowLayout).withGapBetweenCells(10),
+                anotherContainerLayout);
+
+        System.out.println("layout 7: " + layout7.toString());
     }
 
 }
