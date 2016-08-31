@@ -5,6 +5,8 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutDirection.HORIZO
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutDirection.UNSPECIFIED;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutDirection.VERTICAL;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -18,12 +20,13 @@ import java.util.stream.Collectors;
  */
 public class FlexLayoutConfig {
 
-    private final Map<String, String> styles;
-    private final Set<String> classes;
+    private final Map<String, String> styles = new LinkedHashMap<>();
+    private final Set<String> classes = new LinkedHashSet<>();
+
 
     FlexLayoutConfig(final Map<String, String> styles, final Set<String> classes) {
-        this.styles = styles;
-        this.classes = classes;
+        this.styles.putAll(styles);
+        this.classes.addAll(classes);
     }
 
     /**
