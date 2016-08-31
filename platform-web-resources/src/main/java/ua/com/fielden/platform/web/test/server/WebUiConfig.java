@@ -18,6 +18,8 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
@@ -78,6 +80,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiEntityCentreNotGenerated;
 import ua.com.fielden.platform.ui.menu.sample.MiTgCollectionalSerialisationParent;
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDependency;
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1;
@@ -116,6 +119,7 @@ import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfi
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
+import ua.com.fielden.platform.web.test.server.config.TgEntityWithTimeZoneDatesWebUiConfig;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityActionWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -125,8 +129,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
-
-import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -239,6 +241,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         configApp().addMaster(new EntityMaster<TgDeletionTestEntity>(TgDeletionTestEntity.class, TgDeletionTestEntityProducer.class, deletionMaster, injector()));
 
         AcknowledgeWarningsWebUiConfig.register(injector(), configApp());
+        TgEntityWithTimeZoneDatesWebUiConfig.register(injector(), configApp());
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
@@ -847,6 +850,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addMenuItem("Deletion Centre").description("Deletion centre description").centre(deletionTestCentre).done()
                 .addMenuItem("Property Dependency Example").description("Property Dependency Example description").centre(propDependencyCentre).done()
                 .addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()
+                .addMenuItem("TimeZones Example").description("TimeZone properties handling example").centre(configApp().getCentre(MiTgEntityWithTimeZoneDates.class).get()).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")

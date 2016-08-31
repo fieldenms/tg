@@ -37,31 +37,31 @@
 
             setup(function() {
                 master = fixture('MasterFixture');
-                master.entityId = '14';
+                master.entityId = '79';
                 reflector = document.querySelector('#reflector');
             });
             
-            var correctlyApproximates = function (done, targetEditingValueInUTC, approximatedEditingValueInUTC, approximatedEditingValueInLocal, concreteAcceptedMillis) {
+            var correctlyApproximates = function (done, targetEditingValueInUtc, approximatedEditingValueInUtc, approximatedEditingValueInLocal, concreteAcceptedMillis) {
                 var ed = master.$.editor_4_dateProp;
-                var edUTC = master.$.editor_4_datePropUTC;
+                var edUtc = master.$.editor_4_datePropUtc;
 
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
-                    assert.strictEqual(edUTC._editingValue, approximatedEditingValueInUTC, "_editingValue should be correct.");
-                    assert.strictEqual(edUTC._commValue, approximatedEditingValueInUTC, "_commValue should be correct.");
+                    assert.strictEqual(edUtc._editingValue, approximatedEditingValueInUtc, "_editingValue should be correct.");
+                    assert.strictEqual(edUtc._commValue, approximatedEditingValueInUtc, "_commValue should be correct.");
                     assert.strictEqual(ed._editingValue, approximatedEditingValueInLocal, "_editingValue should be correct.");
                     assert.strictEqual(ed._commValue, approximatedEditingValueInLocal, "_commValue should be correct.");
                     
-                    var acceptedValue = edUTC._acceptedValue;
+                    var acceptedValue = edUtc._acceptedValue;
                     assert.isNotNull(acceptedValue, "_acceptedValue should be non-empty.");
                     if (concreteAcceptedMillis) {
                         assert.strictEqual(acceptedValue, concreteAcceptedMillis, "_acceptedValue should be correct.");
                     }
-                    assert.strictEqual(edUTC._acceptedValue, ed._acceptedValue, "_acceptedValue should be the same for UTC and local date mirrors.");
+                    assert.strictEqual(edUtc._acceptedValue, ed._acceptedValue, "_acceptedValue should be the same for UTC and local date mirrors.");
 
                     assert.strictEqual(validatedEntity.get("dateProp"), acceptedValue, "'dateProp' value should be the same as acceptedValue.");
                     assert.strictEqual(bindingEntity.get("dateProp"), acceptedValue, "Binding 'dateProp' value should be the same as acceptedValue.");
-                    assert.strictEqual(validatedEntity.get("datePropUTC"), acceptedValue, "'datePropUTC' value should be the same as acceptedValue.");
-                    assert.strictEqual(bindingEntity.get("datePropUTC"), acceptedValue, "Binding 'datePropUTC' value should be the same as acceptedValue.");
+                    assert.strictEqual(validatedEntity.get("datePropUtc"), acceptedValue, "'datePropUtc' value should be the same as acceptedValue.");
+                    assert.strictEqual(bindingEntity.get("datePropUtc"), acceptedValue, "Binding 'datePropUtc' value should be the same as acceptedValue.");
 
                     done();
                 };
@@ -72,20 +72,20 @@
                     assert.strictEqual(ed._commValue, localisedMomentOf9999, "_commValue should be non-empty on start.");
                     // assert.strictEqual(ed._acceptedValue, 9999, "_acceptedValue should be non-empty on start.");
                     var utcMomentOf9999 = _millisDateRepresentation(9999, 'UTC'); /* 01/01/1970 00:00:09.999 in UTC (UTC+00:00) */
-                    assert.strictEqual(edUTC._editingValue, utcMomentOf9999, "_editingValue should be non-empty on start.");
-                    assert.strictEqual(edUTC._commValue, utcMomentOf9999, "_commValue should be non-empty on start.");
-                    // assert.strictEqual(edUTC._acceptedValue, 9999, "_acceptedValue should be non-empty on start.");
+                    assert.strictEqual(edUtc._editingValue, utcMomentOf9999, "_editingValue should be non-empty on start.");
+                    assert.strictEqual(edUtc._commValue, utcMomentOf9999, "_commValue should be non-empty on start.");
+                    // assert.strictEqual(edUtc._acceptedValue, 9999, "_acceptedValue should be non-empty on start.");
 
                     assert.strictEqual(entity.get('dateProp'), 9999, "'property' value should be non-empty on start.");
                     assert.strictEqual(bindingEntity.get('dateProp'), 9999, "Binding 'property' value should be non-empty on start.");
-                    assert.strictEqual(entity.get('datePropUTC'), 9999, "'property' value should be non-empty on start.");
-                    assert.strictEqual(bindingEntity.get('datePropUTC'), 9999, "Binding 'property' value should be non-empty on start.");
+                    assert.strictEqual(entity.get('datePropUtc'), 9999, "'property' value should be non-empty on start.");
+                    assert.strictEqual(bindingEntity.get('datePropUtc'), 9999, "Binding 'property' value should be non-empty on start.");
 
-                    edUTC._editingValue = targetEditingValueInUTC;
-                    edUTC.commit();
-                    assert.strictEqual(edUTC._editingValue, approximatedEditingValueInUTC, "_editingValue should be already approximated.");
+                    edUtc._editingValue = targetEditingValueInUtc;
+                    edUtc.commit();
+                    assert.strictEqual(edUtc._editingValue, approximatedEditingValueInUtc, "_editingValue should be already approximated.");
                     
-                    assert.strictEqual(edUTC._editorValidationMsg, null, 'Editor should not have error.');
+                    assert.strictEqual(edUtc._editorValidationMsg, null, 'Editor should not have error.');
                 };
 
                 master.retrieve();

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.test.server;
 import java.io.FileInputStream;
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.SortedSet;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
@@ -220,6 +222,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY6").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "stringProp")));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY7").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "booleanProp")));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY8").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "dateProp")));
+        
+        final TgEntityWithTimeZoneDates timeZone1 = save(new_(TgEntityWithTimeZoneDates.class, "KEY1").setDatePropUtc(new Date(9999)));
+        System.out.println("timeZone1.getId() == " + timeZone1.getId());
 
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
         mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));
