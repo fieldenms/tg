@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.layout.api.impl;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutDirection.UNSPECIFIED;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutDirection.VERTICAL;
 
 import java.util.Optional;
 
@@ -16,14 +18,13 @@ public class CellConfig {
 
     private final Optional<ContainerConfig> container;
     private final Optional<String> layoutWidget;
-
-    private Optional<FlexLayoutConfig> layout = Optional.empty();
+    private final Optional<FlexLayoutConfig> layout;
 
     /**
      * Creates empty cell.
      */
     public CellConfig() {
-        this(null, null, (String) null);
+        this(Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     /**
@@ -32,7 +33,7 @@ public class CellConfig {
      * @param container
      */
     public CellConfig(final ContainerConfig container) {
-        this(container, null, (String) null);
+        this(Optional.of(container), Optional.empty(), Optional.empty());
     }
 
     /**
@@ -41,7 +42,7 @@ public class CellConfig {
      * @param layout
      */
     public CellConfig(final FlexLayoutConfig layout) {
-        this(null, layout, (String) null);
+        this(Optional.empty(), Optional.of(layout), Optional.empty());
     }
 
     /**
@@ -51,7 +52,7 @@ public class CellConfig {
      * @param layout
      */
     public CellConfig(final ContainerConfig container, final FlexLayoutConfig layout) {
-        this(container, layout, (String) null);
+        this(Optional.of(container), Optional.of(layout), Optional.empty());
     }
 
     /**
@@ -60,7 +61,7 @@ public class CellConfig {
      * @param dom
      */
     public CellConfig(final DomElement dom) {
-        this(null, null, "html:" + dom.toString());
+        this(Optional.empty(), Optional.empty(), Optional.of("html:" + dom.toString()));
     }
 
     /**
@@ -70,7 +71,7 @@ public class CellConfig {
      * @param layout
      */
     public CellConfig(final DomElement dom, final FlexLayoutConfig layout) {
-        this(null, layout, "html:" + dom.toString());
+        this(Optional.empty(), Optional.of(layout), Optional.of("html:" + dom.toString()));
     }
 
     /**
@@ -79,7 +80,7 @@ public class CellConfig {
      * @param layoutWidget
      */
     public CellConfig(final String layoutWidget) {
-        this(null, null, layoutWidget);
+        this(Optional.empty(), Optional.empty(), Optional.of(layoutWidget));
     }
 
     /**
@@ -89,7 +90,7 @@ public class CellConfig {
      * @param layoutWidget
      */
     public CellConfig(final FlexLayoutConfig layout, final String layoutWidget) {
-        this(null, layout, layoutWidget);
+        this(Optional.empty(), Optional.of(layout), Optional.of(layoutWidget));
     }
 
     /**
@@ -97,10 +98,8 @@ public class CellConfig {
      *
      * @param layout
      */
-    public void setLayoutIfNotPresent(final FlexLayoutConfig layout) {
-        if (!this.layout.isPresent()) {
-            this.layout = Optional.ofNullable(layout);
-        }
+    final CellConfig setLayoutIfNotPresent(final FlexLayoutConfig layout) {
+        return this.layout.map(l -> this).orElse(new CellConfig(container, Optional.of(layout), layoutWidget));
     }
 
     /**
@@ -116,8 +115,10 @@ public class CellConfig {
     public String render(final boolean vertical, final boolean isVerticalDefault, final int gap) {
         final String gapStyleString = gap == 0 ? "" : "\"" + (vertical ? "margin-bottom" : "margin-right") + ":" + gap + "px\"";
         final String layoutString = layout.map(layout -> layout.render(vertical, gap)).orElse(gapStyleString);
-        final Optional<Boolean> optionalVertical = layout.flatMap(l -> l.isVerticalLayout());
-        final String containerString = container.map(c -> c.render(optionalVertical.orElse(!isVerticalDefault), !isVerticalDefault)).orElse("");
+        final LayoutDirection layoutDirection = layout.map(l -> l.layoutDirection()).orElse(UNSPECIFIED);
+        final String containerString = container.
+                map(c -> c.render(UNSPECIFIED.equals(layoutDirection) ? !isVerticalDefault : VERTICAL.equals(layoutDirection), !isVerticalDefault)).
+                orElse("");
 
         return Optional.of(layoutWidget.map(lw -> "\"" + lw + "\"").orElse(""))
         .map(l -> !isEmpty(l) && !isEmpty(layoutString) ? l + ", " : l)
@@ -127,9 +128,9 @@ public class CellConfig {
         .map(l -> "[" + l + "]").get();
     }
 
-    private CellConfig(final ContainerConfig container, final FlexLayoutConfig flexLayout, final String layoutWidget) {
-        this.container = Optional.ofNullable(container);
-        this.layout = Optional.ofNullable(flexLayout);
-        this.layoutWidget = Optional.ofNullable(layoutWidget);
+    private CellConfig(final Optional<ContainerConfig> container, final Optional<FlexLayoutConfig> flexLayout, final Optional<String> layoutWidget) {
+        this.container = container;
+        this.layout = flexLayout;
+        this.layoutWidget = layoutWidget;
     }
 }

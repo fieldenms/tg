@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.layout.api.impl;
 
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.layout.api.ILayoutCell;
@@ -122,7 +123,7 @@ public class ContainerCellConfig extends ContainerConfig implements ILayoutCell 
     @Override
     public ContainerCellConfig repeat(final int times) {
         if (cells.isEmpty()) {
-            throw new UnsupportedOperationException("There are no cell to copy");
+            throw new LayoutException("There are no cell to copy");
         }
         final CellConfig lastCell = cells.get(cells.size() - 1);
         for (int time = 0; time < times - 1; time++) {
@@ -133,8 +134,7 @@ public class ContainerCellConfig extends ContainerConfig implements ILayoutCell 
 
     @Override
     public ContainerCellLayoutConfig layoutForEach(final FlexLayoutConfig layout) {
-        cells.forEach(config -> config.setLayoutIfNotPresent(layout));
-        return new ContainerCellLayoutConfig(cells);
+        return new ContainerCellLayoutConfig(cells.stream().map(config -> config.setLayoutIfNotPresent(layout)).collect(Collectors.toList()));
     }
 
     @Override

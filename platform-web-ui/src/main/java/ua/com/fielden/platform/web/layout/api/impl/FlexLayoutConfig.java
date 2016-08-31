@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.web.layout.api.impl;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutDirection.HORIZONTAL;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutDirection.UNSPECIFIED;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutDirection.VERTICAL;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang.StringUtils;
-
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Represents the layout configuration (i.e. flex layout configuration with classes and styles)
@@ -33,24 +34,17 @@ public class FlexLayoutConfig {
      * @return
      */
     String render(final boolean vertical, final int gap) {
-        final boolean shouldIncludeGap = gap != 0;
-        final Pair<String, String> tempStyle = new Pair<>(vertical ? "margin-bottom" : "margin-right", gap + "px");
         final String classesString = classes.stream().map(clazz -> "\"" + clazz + "\"").collect(Collectors.joining(", "));
         final String styleString = styles.entrySet().stream()
-                .filter(entry -> !(shouldIncludeGap && entry.getKey().equals(tempStyle.getKey())))
+                .filter(entry -> !(gap != 0 && entry.getKey().equals(vertical ? "margin-bottom" : "margin-right")))
                 .map(entry -> "\"" + entry.getKey() + ":" + entry.getValue() + "\"").collect(Collectors.joining(", "));
-        final String gapStyleString = shouldIncludeGap ? "\"" + tempStyle.getKey() + ":" + tempStyle.getValue() + "\"" : "";
+        final String gapStyleString = gap == 0 ? "" : "\"" + (vertical ? "margin-bottom" : "margin-right") + ":" + gap + "px\"";
 
-        String layout = classesString;
-        if (!StringUtils.isEmpty(layout) && !StringUtils.isEmpty(styleString)) {
-            layout += ", ";
-        }
-        layout += styleString;
-        if (!StringUtils.isEmpty(layout) && !StringUtils.isEmpty(gapStyleString)) {
-            layout += ", ";
-        }
-        layout += gapStyleString;
-        return layout;
+        return Optional.of(classesString)
+        .map(l -> !isEmpty(l) && !isEmpty(styleString) ? l + ", " : l)
+        .map(l -> l + styleString)
+        .map(l -> !isEmpty(l) && !isEmpty(gapStyleString) ? l + ", " : l)
+        .map(l -> l + gapStyleString).get();
     }
 
     /**
@@ -59,10 +53,12 @@ public class FlexLayoutConfig {
      *
      * @return
      */
-    Optional<Boolean> isVerticalLayout() {
-        if (classes.contains("vertical") || classes.contains("horizontal")) {
-            return Optional.of(classes.contains("vertical"));
+    LayoutDirection layoutDirection() {
+        if (classes.contains("vertical")) {
+            return VERTICAL;
+        } else if (classes.contains("horizontal")) {
+            return HORIZONTAL;
         }
-        return Optional.empty();
+        return UNSPECIFIED;
     }
 }
