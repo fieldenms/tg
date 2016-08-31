@@ -17,10 +17,10 @@ import ua.com.fielden.platform.web.layout.api.IFlexLayout;
  */
 public class CellConfig {
 
-    private final Optional<IFlexContainerLayout> optionalContainer;
+    private final Optional<IFlexContainerLayout> container;
     private final Optional<String> layoutWidget;
 
-    private Optional<IFlexLayout> optionalLayout = Optional.empty();
+    private Optional<IFlexLayout> layout = Optional.empty();
 
     /**
      * Creates empty cell.
@@ -101,8 +101,8 @@ public class CellConfig {
      * @param layout
      */
     public void setLayoutIfNotPresent(final IFlexLayout layout) {
-        if (!optionalLayout.isPresent()) {
-            this.optionalLayout = Optional.ofNullable(layout);
+        if (!this.layout.isPresent()) {
+            this.layout = Optional.ofNullable(layout);
         }
     }
 
@@ -119,25 +119,25 @@ public class CellConfig {
     public String render(final boolean vertical, final boolean isVerticalDefault, final int gap) {
         final String widgetString = layoutWidget.map(lw -> "\"" + lw + "\"").orElse("");
         final String gapStyleString = gap == 0 ? "" : "\"" + (vertical ? "margin-bottom" : "margin-right") + ":" + gap + "px\"";
-        final String layoutString = optionalLayout.map(layout -> layout.render(vertical, gap)).orElse(gapStyleString);
-        final Optional<Boolean> optionalVertical = optionalLayout.flatMap(l -> l.isVerticalLayout());
-        final String containerString = optionalContainer.map(c -> c.render(optionalVertical.orElse(!isVerticalDefault), !isVerticalDefault)).orElse("");
+        final String layoutString = layout.map(layout -> layout.render(vertical, gap)).orElse(gapStyleString);
+        final Optional<Boolean> optionalVertical = layout.flatMap(l -> l.isVerticalLayout());
+        final String containerString = container.map(c -> c.render(optionalVertical.orElse(!isVerticalDefault), !isVerticalDefault)).orElse("");
 
-        String layout = widgetString;
-        if (!StringUtils.isEmpty(layout) && !StringUtils.isEmpty(layoutString)) {
-            layout += ", ";
+        String completeLayout = widgetString;
+        if (!StringUtils.isEmpty(completeLayout) && !StringUtils.isEmpty(layoutString)) {
+            completeLayout += ", ";
         }
-        layout += layoutString;
-        if (!StringUtils.isEmpty(layout) && !StringUtils.isEmpty(containerString)) {
-            layout += ", ";
+        completeLayout += layoutString;
+        if (!StringUtils.isEmpty(completeLayout) && !StringUtils.isEmpty(containerString)) {
+            completeLayout += ", ";
         }
-        layout += containerString;
-        return "[" + layout + "]";
+        completeLayout += containerString;
+        return "[" + completeLayout + "]";
     }
 
     private CellConfig(final IFlexContainerLayout container, final IFlexLayout flexLayout, final String layoutWidget) {
-        this.optionalContainer = Optional.ofNullable(container);
-        this.optionalLayout = Optional.ofNullable(flexLayout);
+        this.container = Optional.ofNullable(container);
+        this.layout = Optional.ofNullable(flexLayout);
         this.layoutWidget = Optional.ofNullable(layoutWidget);
     }
 }
