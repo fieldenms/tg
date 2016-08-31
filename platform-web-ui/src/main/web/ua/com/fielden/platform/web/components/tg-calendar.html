@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/reflection/tg-date-utils.html">
 <link rel="import" href="/resources/components/moment-component.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
@@ -155,7 +156,7 @@
 
 
             attached: function () {
-                var todayDate = (this.timeZone ? moment.tz(this.timeZone) : moment()).startOf('minute');
+                var todayDate = _momentTz(this.timeZone).startOf('minute');
                 this.selectedDate = this.selectedDate || todayDate.valueOf();
                 // TODO is this correct: typeof this.selectedHour !== undefined. Maybe it should be like this: typeof this.selectedHour !== 'undefined'?
                 this.selectedHour = (typeof this.selectedHour !== 'undefined' && this.selectedHour !== null) ? this.selectedHour : todayDate.hour();
@@ -181,11 +182,11 @@
              */
             _selectYearMonthDay: function (newYear, newMonth, newDay) {
                 var yearMonth = { year: newYear, month: newMonth, day: 1 };
-                var lastDayOfTheMonth = (this.timeZone ? moment.tz(yearMonth, this.timeZone) : moment(yearMonth)).daysInMonth();
+                var lastDayOfTheMonth = _momentTz(yearMonth, this.timeZone).daysInMonth();
                 
                 var computedDay = newDay > lastDayOfTheMonth ? lastDayOfTheMonth : newDay;
                 var yearMonthDay = { year: newYear, month: newMonth, day: computedDay };
-                this.selectedDate = (this.timeZone ? moment.tz(yearMonthDay, this.timeZone) : moment(yearMonthDay)).valueOf();
+                this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
             },
 
             /**
@@ -193,7 +194,7 @@
              */
             _selectedDateChanged: function (newValue, oldValue) {
                 if (newValue !== null) {
-                    var newMoment = this.timeZone ? moment.tz(newValue, this.timeZone) : moment(newValue);
+                    var newMoment = _momentTz(newValue, this.timeZone);
                     this._adjustDate(newMoment);
                 }
             },

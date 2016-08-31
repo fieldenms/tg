@@ -247,7 +247,7 @@
             	
             	domBind._acceptDateBind = function() {
                     self._isAcceptingDateFromPicker = true;
-                    var acceptedMoment = (self.timeZone ? moment.tz(this.$.datePicker.selectedDate, self.timeZone) : moment(this.$.datePicker.selectedDate))
+                    var acceptedMoment = _momentTz(this.$.datePicker.selectedDate, self.timeZone)
                         .hour(this.$.datePicker.selectedHour)
                         .minute(this.$.datePicker.selectedMinute)
                         .seconds(this.$.datePicker.seconds)
@@ -369,10 +369,10 @@
                 } else {
                     console.debug('formats', formats);
                     var firstFormat = formats[0];
-                    var tryingMoment = this.timeZone ? moment.tz(stringValue, firstFormat, true, this.timeZone) : moment(stringValue, firstFormat, true);
+                    var tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
                     if (tryingMoment.isValid()) {
                         if (['D/M/Y H:m:ss.SSS', 'D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y Hmm', 'D/M/Y h:ma', 'D/M/Y H:m', 'D/M/Y ha', 'D/M/Y H', 'D/M/Y'].indexOf(firstFormat) !== -1) {
-                            tryingMoment = this.timeZone ? moment.tz(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true, this.timeZone) : moment(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true);
+                            tryingMoment = _momentTz(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true, this.timeZone);
                         }
                         
                         if (['D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {

@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/components/moment-component.html">
+<link rel="import" href="/resources/reflection/tg-date-utils.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 
 <dom-module id="tg-month-selector">
@@ -91,7 +92,7 @@
     (function () {
         var getDaysInMonth = function (year, month) {
                 var yearMonth = { year: year, month: month, day: 1 };
-                return (this.timeZone ? moment.tz(yearMonth, this.timeZone) : moment(yearMonth)).daysInMonth();
+                return _momentTz(yearMonth, this.timeZone).daysInMonth();
             },
             createMonth = function (year, month) {
                 var weeks = [],
@@ -108,7 +109,7 @@
             createWeek = function (year, month, day) {
                 var yearMonthDay = { year: year, month: month, day: day };
                 var week = [],
-                    firstDay = (this.timeZone ? moment.tz(yearMonthDay, this.timeZone) : moment(yearMonthDay)).day(),
+                    firstDay = _momentTz(yearMonthDay, this.timeZone).day(),
                     days = getDaysInMonth(year, month),
                     previousMonthDays = getDaysInMonth(year, month - 1),
                     nextMonthDay = -1,
@@ -159,7 +160,7 @@
             },
 
             ready: function () {
-                var today = (this.timeZone ? moment.tz(this.timeZone) : moment());
+                var today = _momentTz(this.timeZone);
                 this.todayDay = today.date();
                 this.todayMonth = today.month();
                 this.todayYear = today.year();
@@ -172,8 +173,8 @@
 
             attached: function () {
                 var momentToShow = this.selectedDate ? 
-                        (this.timeZone ? moment.tz(this.selectedDate, this.timeZone) : moment(this.selectedDate)) :
-                        (this.timeZone ? moment.tz(this.timeZone) : moment());
+                        _momentTz(this.selectedDate, this.timeZone) :
+                        _momentTz(this.timeZone);
                 this._adjustMonth(momentToShow);
             },
 
@@ -196,7 +197,7 @@
              */
             _selectYear: function (year) {
                 var yearMonth = { year: year, month: this.month, day: 1 };
-                var momentToShow = (this.timeZone ? moment.tz(yearMonth, this.timeZone) : moment(yearMonth));
+                var momentToShow = _momentTz(yearMonth, this.timeZone);
                 this._adjustMonth(momentToShow);
             },
 
@@ -205,7 +206,7 @@
              */
             _selectMonth: function (month) {
                 var yearMonth = { year: this.year, month: month, day: 1 };
-                var momentToShow = (this.timeZone ? moment.tz(yearMonth, this.timeZone) : moment(yearMonth));
+                var momentToShow = _momentTz(yearMonth, this.timeZone);
                 this._adjustMonth(momentToShow);
             },
 
@@ -213,7 +214,7 @@
              * Updates the calendar information depending on which month was choosen.
              */
             _adjustMonth: function (momentToShow) {
-                if ( /* FIXME why do we need this? !isNaN(momentToShow.valueOf()) && */ momentToShow.isValid() && (this.month !== momentToShow.month() || this.year !== momentToShow.year())) {
+                if (momentToShow.isValid() && (this.month !== momentToShow.month() || this.year !== momentToShow.year())) {
                     this.monthName = momentToShow.format("MMMM");
                     this.month = momentToShow.month();
                     this.year = momentToShow.year();
@@ -226,7 +227,7 @@
              */
             _selectDay: function (event, detail, el) {
                 var yearMonthDay = { year: this.year, month: this.month, day: event.model.day };
-                this.selectedDate = (this.timeZone ? moment.tz(yearMonthDay, this.timeZone) : moment(yearMonthDay)).valueOf();
+                this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
             },
 
             /**
@@ -234,8 +235,8 @@
              */
             _selectedDateChanged: function (newValue, oldValue) {
                 if (newValue !== null) {
-                    var newMoment = this.timeZone ? moment.tz(newValue, this.timeZone) : moment(newValue);
-                    if (/* !isNaN(newDate.getTime())*/ newMoment.isValid() ) { // FIXME why do we need this?
+                    var newMoment = _momentTz(newValue, this.timeZone);
+                    if (newMoment.isValid()) {
                         this.selectedYear = newMoment.year();
                         this.selectedMonth = newMoment.month();
                         this._adjustMonth(newMoment);

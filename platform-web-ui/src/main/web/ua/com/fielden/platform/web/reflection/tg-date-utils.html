@@ -7,7 +7,8 @@
      * Please, use this function only in environment with moment(...) function defined.
      * Currently it is used in date-specific unit testing.
      */
-    var _millis = function (fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.SSS' format 
+    var _millis = function (fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.SSS' format
+        // TODO consider the usage timeZone-aware conversion!
         return moment(fullDateString, 'DD/MM/YYYY HH:mm:ss.SSS', true).valueOf();
     };
     
@@ -15,14 +16,26 @@
         var millisecondsRemainder = dateMillis % 1000;
         var millisecondsExist = (millisecondsRemainder !== 0);
         if (millisecondsExist) {
-            return (timeZone ? moment.tz(dateMillis, timeZone) : moment(dateMillis)).format('L LTS');
+            return _momentTz(dateMillis, timeZone).format('L LTS');
         } else {
             var secondsRemainder = (dateMillis - millisecondsRemainder) % 60;
             var secondsExist = (secondsRemainder !== 0);
             if (secondsExist) {
-                return (timeZone ? moment.tz(dateMillis, timeZone) : moment(dateMillis)).format('L LTS');
+                return _momentTz(dateMillis, timeZone).format('L LTS');
             }
         }
-        return (timeZone ? moment.tz(dateMillis, timeZone) : moment(dateMillis)).format('L LT');
+        return _momentTz(dateMillis, timeZone).format('L LT');
+    };
+    
+    /**
+     * Performs timeZone-aware momentjs computation.
+     *
+     * @params -- first parameters need to be specified as for standard moment(...) function
+     * @param timeZone -- last parameter is a timeZone, in which momentjs computation will be done (in case of empty timeZone, local timeZone will be used, i.e. simple moment(...) function invoked)
+     */
+    var _momentTz = function (input) {
+		var args = Array.prototype.slice.call(arguments, 0, -1);
+		var timeZone = arguments[arguments.length - 1];
+        return timeZone ? moment.tz.apply(null, arguments) : moment.apply(null, args);
     };
 </script>
