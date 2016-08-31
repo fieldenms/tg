@@ -108,7 +108,7 @@
             createWeek = function (year, month, day) {
                 var yearMonthDay = { year: year, month: month, day: day };
                 var week = [],
-                    firstDay = (this.timeZone ? moment.tz(yearMonthDay, this.timeZone) : moment(yearMonthDay)).weekday(),
+                    firstDay = (this.timeZone ? moment.tz(yearMonthDay, this.timeZone) : moment(yearMonthDay)).day(),
                     days = getDaysInMonth(year, month),
                     previousMonthDays = getDaysInMonth(year, month - 1),
                     nextMonthDay = -1,
@@ -160,7 +160,7 @@
 
             ready: function () {
                 var today = (this.timeZone ? moment.tz(this.timeZone) : moment());
-                this.todayDay = today.day();
+                this.todayDay = today.date();
                 this.todayMonth = today.month();
                 this.todayYear = today.year();
                 this.selectedDay = null;
@@ -239,7 +239,7 @@
                         this.selectedYear = newMoment.year();
                         this.selectedMonth = newMoment.month();
                         this._adjustMonth(newMoment);
-                        this.selectedDay = newMoment.day();
+                        this.selectedDay = newMoment.date();
                     }
                 }
             },
