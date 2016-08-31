@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.layout.api;
 
+import ua.com.fielden.platform.web.layout.api.impl.ContainerCellConfig;
+
 /**
  * A contract for copying the layout configuration.
  *
@@ -14,6 +16,6 @@ public interface IQuantifier extends IForEachLayoutSetter {
      * @param times
      * @return
      */
-    ILayoutCell repeat(int times);
+    ContainerCellConfig repeat(int times);
 
 }

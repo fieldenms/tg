@@ -1,9 +1,6 @@
 package ua.com.fielden.platform.web.layout.api.impl;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.web.layout.api.IFlexContainerLayout;
-import ua.com.fielden.platform.web.layout.api.IFlexLayout;
-import ua.com.fielden.platform.web.layout.api.ILayoutCell;
 
 /**
  * The builder for flex layout configuration.
@@ -13,118 +10,75 @@ import ua.com.fielden.platform.web.layout.api.ILayoutCell;
  */
 public class LayoutBuilder {
 
-    private final IFlexContainerLayout layoutContainer;
-
-    private LayoutBuilder(final IFlexContainerLayout containerConfig, final IFlexLayout flexLayout) {
-        layoutContainer = cell(containerConfig, flexLayout);
+    public static ContainerCellConfig cell(final ContainerConfig container, final FlexLayoutConfig layout) {
+        return new ContainerCellConfig().cell(container, layout);
     }
 
-    /**
-     * Creates empty layout builder.
-     *
-     * @return
-     */
-    public static LayoutBuilder layoutContainer() {
-        return new LayoutBuilder(null, null);
+    public static ContainerCellConfig cell(final ContainerConfig container) {
+        return new ContainerCellConfig().cell(container);
     }
 
-    /**
-     * Creates layout builder with container configuration.
-     *
-     * @param containerConfig
-     * @return
-     */
-    public static LayoutBuilder layoutContainer(final IFlexContainerLayout containerConfig) {
-        return new LayoutBuilder(containerConfig, null);
+    public static ContainerCellConfig cell(final FlexLayoutConfig layout) {
+        return new ContainerCellConfig().cell(layout);
     }
 
-    /**
-     * Creates layout builder with container configuration and layout configuration.
-     *
-     * @param containerConfig
-     * @param flexLayout
-     * @return
-     */
-    public static LayoutBuilder layoutContainer(final IFlexContainerLayout containerConfig, final IFlexLayout flexLayout) {
-        return new LayoutBuilder(containerConfig, flexLayout);
+    public static ContainerCellConfig cell() {
+        return new ContainerCellConfig().cell();
     }
 
-    /**
-     * Creates layout builder with container configuration with flex layout.
-     *
-     * @param flexLayout
-     * @return
-     */
-    public static LayoutBuilder layoutContainer(final IFlexLayout flexLayout) {
-        return new LayoutBuilder(null, flexLayout);
+    public static ContainerCellConfig skip(final FlexLayoutConfig layout) {
+        return new ContainerCellConfig().skip(layout);
     }
 
-    public static ILayoutCell cell(final IFlexContainerLayout container, final IFlexLayout layout) {
-        return new ContainerConfig().cell(container, layout);
+    public static ContainerCellConfig skip() {
+        return new ContainerCellConfig().skip();
     }
 
-    public static ILayoutCell cell(final IFlexContainerLayout container) {
-        return new ContainerConfig().cell(container);
+    public static ContainerCellConfig select(final String attribute, final String value, final FlexLayoutConfig layout) {
+        return new ContainerCellConfig().select(attribute, value, layout);
     }
 
-    public static ILayoutCell cell(final IFlexLayout layout) {
-        return new ContainerConfig().cell(layout);
+    public static ContainerCellConfig select(final String attribute, final String value) {
+        return new ContainerCellConfig().select(attribute, value);
     }
 
-    public static ILayoutCell cell() {
-        return new ContainerConfig().cell();
+    public static ContainerCellConfig html(final DomElement dom, final FlexLayoutConfig layout) {
+        return new ContainerCellConfig().html(dom, layout);
     }
 
-    public static ILayoutCell skip(final IFlexLayout layout) {
-        return new ContainerConfig().skip(layout);
+    public static ContainerCellConfig html(final DomElement dom) {
+        return new ContainerCellConfig().html(dom);
     }
 
-    public static ILayoutCell skip() {
-        return new ContainerConfig().skip();
+    public static ContainerCellConfig html(final String html, final FlexLayoutConfig layout) {
+        return new ContainerCellConfig().html(html, layout);
     }
 
-    public static ILayoutCell select(final String attribute, final String value, final IFlexLayout layout) {
-        return new ContainerConfig().select(attribute, value, layout);
+    public static ContainerCellConfig html(final String html) {
+        return new ContainerCellConfig().html(html);
     }
 
-    public static ILayoutCell select(final String attribute, final String value) {
-        return new ContainerConfig().select(attribute, value);
+    public static ContainerCellConfig subheader(final String title, final FlexLayoutConfig layout) {
+        return new ContainerCellConfig().subheader(title, layout);
     }
 
-    public static ILayoutCell html(final DomElement dom, final IFlexLayout layout) {
-        return new ContainerConfig().html(dom, layout);
+    public static ContainerCellConfig subheader(final String title) {
+        return new ContainerCellConfig().subheader(title);
     }
 
-    public static ILayoutCell html(final DomElement dom) {
-        return new ContainerConfig().html(dom);
+    public static ContainerCellConfig subheaderOpen(final String title, final FlexLayoutConfig layout) {
+        return new ContainerCellConfig().subheaderOpen(title, layout);
     }
 
-    public static ILayoutCell subheader(final String title, final IFlexLayout layout) {
-        return new ContainerConfig().subheader(title, layout);
+    public static ContainerCellConfig subheaderOpen(final String title) {
+        return new ContainerCellConfig().subheaderOpen(title);
     }
 
-    public static ILayoutCell subheader(final String title) {
-        return new ContainerConfig().subheader(title);
+    public static ContainerCellConfig subheaderClosed(final String title, final FlexLayoutConfig layout) {
+        return new ContainerCellConfig().subheaderClosed(title, layout);
     }
 
-    public static ILayoutCell subheaderOpen(final String title, final IFlexLayout layout) {
-        return new ContainerConfig().subheaderOpen(title, layout);
-    }
-
-    public static ILayoutCell subheaderOpen(final String title) {
-        return new ContainerConfig().subheaderOpen(title);
-    }
-
-    public static ILayoutCell subheaderClosed(final String title, final IFlexLayout layout) {
-        return new ContainerConfig().subheaderClosed(title, layout);
-    }
-
-    public static ILayoutCell subheaderClosed(final String title) {
-        return new ContainerConfig().subheaderClosed(title);
-    }
-
-    @Override
-    public String toString() {
-        return layoutContainer.render(false, false);
+    public static ContainerCellConfig subheaderClosed(final String title) {
+        return new ContainerCellConfig().subheaderClosed(title);
     }
 }

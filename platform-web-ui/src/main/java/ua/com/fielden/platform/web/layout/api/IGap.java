@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.layout.api;
 
+import ua.com.fielden.platform.web.layout.api.impl.ContainerConfig;
+
 
 /**
  * A contract for specifying gap between elements in the same container.
@@ -7,7 +9,7 @@ package ua.com.fielden.platform.web.layout.api;
  * @author TG Team
  *
  */
-public interface IGap extends IFlexContainerLayout {
+public interface IGap {
 
     /**
      * Set the gap between elements in the same container. Please note that gap between elements is set using the 'margin-right' or 'margin-bottom' style attributes. If a container
@@ -16,5 +18,5 @@ public interface IGap extends IFlexContainerLayout {
      * @param pixels
      * @return
      */
-    IFlexContainerLayout withGapBetweenCells(int pixels);
+    ContainerConfig withGapBetweenCells(int pixels);
 }

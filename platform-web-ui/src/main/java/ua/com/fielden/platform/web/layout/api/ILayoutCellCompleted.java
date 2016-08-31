@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.layout.api;
 
+import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
+
 /**
  * Indicates the end of layout configuration.
  *
@@ -13,5 +15,5 @@ public interface ILayoutCellCompleted {
      *
      * @return
      */
-    IFlexLayout end();
+    FlexLayoutConfig end();
 }

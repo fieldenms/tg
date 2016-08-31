@@ -5,8 +5,6 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import java.util.Optional;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.web.layout.api.IFlexContainerLayout;
-import ua.com.fielden.platform.web.layout.api.IFlexLayout;
 
 /**
  * Represents layout cell.
@@ -16,10 +14,10 @@ import ua.com.fielden.platform.web.layout.api.IFlexLayout;
  */
 public class CellConfig {
 
-    private final Optional<IFlexContainerLayout> container;
+    private final Optional<ContainerConfig> container;
     private final Optional<String> layoutWidget;
 
-    private Optional<IFlexLayout> layout = Optional.empty();
+    private Optional<FlexLayoutConfig> layout = Optional.empty();
 
     /**
      * Creates empty cell.
@@ -33,7 +31,7 @@ public class CellConfig {
      *
      * @param container
      */
-    public CellConfig(final IFlexContainerLayout container) {
+    public CellConfig(final ContainerConfig container) {
         this(container, null, (String) null);
     }
 
@@ -42,7 +40,7 @@ public class CellConfig {
      *
      * @param layout
      */
-    public CellConfig(final IFlexLayout layout) {
+    public CellConfig(final FlexLayoutConfig layout) {
         this(null, layout, (String) null);
     }
 
@@ -52,7 +50,7 @@ public class CellConfig {
      * @param container
      * @param layout
      */
-    public CellConfig(final IFlexContainerLayout container, final IFlexLayout layout) {
+    public CellConfig(final ContainerConfig container, final FlexLayoutConfig layout) {
         this(container, layout, (String) null);
     }
 
@@ -71,7 +69,7 @@ public class CellConfig {
      * @param dom
      * @param layout
      */
-    public CellConfig(final DomElement dom, final IFlexLayout layout) {
+    public CellConfig(final DomElement dom, final FlexLayoutConfig layout) {
         this(null, layout, "html:" + dom.toString());
     }
 
@@ -90,7 +88,7 @@ public class CellConfig {
      * @param layout
      * @param layoutWidget
      */
-    public CellConfig(final IFlexLayout layout, final String layoutWidget) {
+    public CellConfig(final FlexLayoutConfig layout, final String layoutWidget) {
         this(null, layout, layoutWidget);
     }
 
@@ -99,7 +97,7 @@ public class CellConfig {
      *
      * @param layout
      */
-    public void setLayoutIfNotPresent(final IFlexLayout layout) {
+    public void setLayoutIfNotPresent(final FlexLayoutConfig layout) {
         if (!this.layout.isPresent()) {
             this.layout = Optional.ofNullable(layout);
         }
@@ -120,7 +118,7 @@ public class CellConfig {
         final String layoutString = layout.map(layout -> layout.render(vertical, gap)).orElse(gapStyleString);
         final Optional<Boolean> optionalVertical = layout.flatMap(l -> l.isVerticalLayout());
         final String containerString = container.map(c -> c.render(optionalVertical.orElse(!isVerticalDefault), !isVerticalDefault)).orElse("");
-        
+
         return Optional.of(layoutWidget.map(lw -> "\"" + lw + "\"").orElse(""))
         .map(l -> !isEmpty(l) && !isEmpty(layoutString) ? l + ", " : l)
         .map(l -> l + layoutString)
@@ -129,7 +127,7 @@ public class CellConfig {
         .map(l -> "[" + l + "]").get();
     }
 
-    private CellConfig(final IFlexContainerLayout container, final IFlexLayout flexLayout, final String layoutWidget) {
+    private CellConfig(final ContainerConfig container, final FlexLayoutConfig flexLayout, final String layoutWidget) {
         this.container = Optional.ofNullable(container);
         this.layout = Optional.ofNullable(flexLayout);
         this.layoutWidget = Optional.ofNullable(layoutWidget);

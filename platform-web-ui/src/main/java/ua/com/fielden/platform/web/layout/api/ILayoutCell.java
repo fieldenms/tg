@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.layout.api;
 
 import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.web.layout.api.impl.ContainerCellConfig;
+import ua.com.fielden.platform.web.layout.api.impl.ContainerConfig;
+import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 
 /**
  * A contract for container layout.
@@ -17,7 +20,7 @@ public interface ILayoutCell extends IQuantifier {
      * @param layout
      * @return
      */
-    ILayoutCell cell(final IFlexContainerLayout container, final IFlexLayout layout);
+    ContainerCellConfig cell(final ContainerConfig container, final FlexLayoutConfig layout);
 
     /**
      * Adds the container element to this container.
@@ -25,7 +28,7 @@ public interface ILayoutCell extends IQuantifier {
      * @param container
      * @return
      */
-    ILayoutCell cell(final IFlexContainerLayout container);
+    ContainerCellConfig cell(final ContainerConfig container);
 
     /**
      * Adds the element to this container with specified layout.
@@ -33,14 +36,14 @@ public interface ILayoutCell extends IQuantifier {
      * @param layout
      * @return
      */
-    ILayoutCell cell(final IFlexLayout layout);
+    ContainerCellConfig cell(final FlexLayoutConfig layout);
 
     /**
      * Adds the element to this container.
      *
      * @return
      */
-    ILayoutCell cell();
+    ContainerCellConfig cell();
 
     /**
      * Adds the selected element to this container with specified layout.
@@ -52,7 +55,7 @@ public interface ILayoutCell extends IQuantifier {
      * @param layout
      * @return
      */
-    ILayoutCell select(final String attribute, final String value, final IFlexLayout layout);
+    ContainerCellConfig select(final String attribute, final String value, final FlexLayoutConfig layout);
 
     /**
      * Adds the selected element to this container with specified layout.
@@ -61,7 +64,7 @@ public interface ILayoutCell extends IQuantifier {
      * @param value
      * @return
      */
-    ILayoutCell select(final String attribute, final String value);
+    ContainerCellConfig select(final String attribute, final String value);
 
     /**
      * Adds skip cell to the container configuration with specified layout.
@@ -69,14 +72,14 @@ public interface ILayoutCell extends IQuantifier {
      * @param layout
      * @return
      */
-    ILayoutCell skip(final IFlexLayout layout);
+    ContainerCellConfig skip(final FlexLayoutConfig layout);
 
     /**
      * Adds skip cell to the container configuration.
      *
      * @return
      */
-    ILayoutCell skip();
+    ContainerCellConfig skip();
 
     /**
      * Adds the snippet of html to the container configuration with specified layout.
@@ -85,7 +88,7 @@ public interface ILayoutCell extends IQuantifier {
      * @param layout
      * @return
      */
-    ILayoutCell html(final DomElement dom, final IFlexLayout layout);
+    ContainerCellConfig html(final DomElement dom, final FlexLayoutConfig layout);
 
     /**
      * Adds the snippet of html to the container configuration.
@@ -93,7 +96,24 @@ public interface ILayoutCell extends IQuantifier {
      * @param dom
      * @return
      */
-    ILayoutCell html(final DomElement dom);
+    ContainerCellConfig html(final DomElement dom);
+
+    /**
+     * Adds the snippet of html to the container configuration with specified layout.
+     *
+     * @param dom
+     * @param layout
+     * @return
+     */
+    ContainerCellConfig html(final String html, final FlexLayoutConfig layout);
+
+    /**
+     * Adds the snippet of html to the container configuration.
+     *
+     * @param dom
+     * @return
+     */
+    ContainerCellConfig html(final String html);
 
     /**
      * Adds the default subheader without ability to close or open it.
@@ -104,7 +124,7 @@ public interface ILayoutCell extends IQuantifier {
      *            - the layout configuration for subheader.
      * @return
      */
-    ILayoutCell subheader(final String title, final IFlexLayout layout);
+    ContainerCellConfig subheader(final String title, final FlexLayoutConfig layout);
 
     /**
      * Adds the default subheader without ability to close or open it.
@@ -113,7 +133,7 @@ public interface ILayoutCell extends IQuantifier {
      *            - subheader title.
      * @return
      */
-    ILayoutCell subheader(final String title);
+    ContainerCellConfig subheader(final String title);
 
     /**
      * Adds the subheader opened by default.
@@ -124,7 +144,7 @@ public interface ILayoutCell extends IQuantifier {
      *            - the layout configuration for subheader.
      * @return
      */
-    ILayoutCell subheaderOpen(final String title, final IFlexLayout layout);
+    ContainerCellConfig subheaderOpen(final String title, final FlexLayoutConfig layout);
 
     /**
      * Adds the subheader opened by default.
@@ -133,7 +153,7 @@ public interface ILayoutCell extends IQuantifier {
      *            - subheader title.
      * @return
      */
-    ILayoutCell subheaderOpen(final String title);
+    ContainerCellConfig subheaderOpen(final String title);
 
     /**
      * Adds the subheader closed by default.
@@ -144,7 +164,7 @@ public interface ILayoutCell extends IQuantifier {
      *            - the layout configuration for subheader.
      * @return
      */
-    ILayoutCell subheaderClosed(final String title, final IFlexLayout layout);
+    ContainerCellConfig subheaderClosed(final String title, final FlexLayoutConfig layout);
 
     /**
      * Adds the subheader closed by default.
@@ -153,5 +173,5 @@ public interface ILayoutCell extends IQuantifier {
      *            - subheader title.
      * @return
      */
-    ILayoutCell subheaderClosed(final String title);
+    ContainerCellConfig subheaderClosed(final String title);
 }

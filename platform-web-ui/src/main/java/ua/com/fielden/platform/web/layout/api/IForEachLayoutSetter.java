@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.layout.api;
 
+import ua.com.fielden.platform.web.layout.api.impl.ContainerCellLayoutConfig;
+import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
+
 /**
  * A contract for specifying layout configuration for each element in the container that has no specified layout configuration directly.
  *
@@ -14,5 +17,5 @@ public interface IForEachLayoutSetter extends IGap {
      * @param layout
      * @return
      */
-    IGap layoutForEach(final IFlexLayout layout);
+    ContainerCellLayoutConfig layoutForEach(final FlexLayoutConfig layout);
 }

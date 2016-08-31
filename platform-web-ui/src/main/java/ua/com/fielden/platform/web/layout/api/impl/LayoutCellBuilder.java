@@ -3,17 +3,11 @@ package ua.com.fielden.platform.web.layout.api.impl;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.apache.commons.lang.StringUtils;
-
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.layout.api.IAlignment;
 import ua.com.fielden.platform.web.layout.api.ICell;
 import ua.com.fielden.platform.web.layout.api.IFlex;
-import ua.com.fielden.platform.web.layout.api.IFlexLayout;
 import ua.com.fielden.platform.web.layout.api.IJustification;
 import ua.com.fielden.platform.web.layout.api.ILayoutCellCompleted;
 
@@ -117,38 +111,7 @@ public class LayoutCellBuilder implements ICell {
     }
 
     @Override
-    public IFlexLayout end() {
-        return new IFlexLayout() {
-
-            @Override
-            public String render(final boolean vertical, final int gap) {
-                final boolean shouldIncludeGap = gap != 0;
-                final Pair<String, String> tempStyle = new Pair<>(vertical ? "margin-bottom" : "margin-right", gap + "px");
-                final String classesString = classes.stream().map(clazz -> "\"" + clazz + "\"").collect(Collectors.joining(", "));
-                final String styleString = styles.entrySet().stream()
-                        .filter(entry -> !(shouldIncludeGap && entry.getKey().equals(tempStyle.getKey())))
-                        .map(entry -> "\"" + entry.getKey() + ":" + entry.getValue() + "\"").collect(Collectors.joining(", "));
-                final String gapStyleString = shouldIncludeGap ? "\"" + tempStyle.getKey() + ":" + tempStyle.getValue() + "\"" : "";
-
-                String layout = classesString;
-                if (!StringUtils.isEmpty(layout) && !StringUtils.isEmpty(styleString)) {
-                    layout += ", ";
-                }
-                layout += styleString;
-                if (!StringUtils.isEmpty(layout) && !StringUtils.isEmpty(gapStyleString)) {
-                    layout += ", ";
-                }
-                layout += gapStyleString;
-                return layout;
-            }
-
-            @Override
-            public Optional<Boolean> isVerticalLayout() {
-                if (classes.contains("vertical") || classes.contains("horizontal")) {
-                    return Optional.of(classes.contains("vertical"));
-                }
-                return Optional.empty();
-            }
-        };
+    public FlexLayoutConfig end() {
+        return new FlexLayoutConfig(styles, classes);
     }
 }

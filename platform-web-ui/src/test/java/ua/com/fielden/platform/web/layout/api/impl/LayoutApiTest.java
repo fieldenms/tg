@@ -3,20 +3,18 @@ package ua.com.fielden.platform.web.layout.api.impl;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.html;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.layoutContainer;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 
 import org.junit.Test;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
-import ua.com.fielden.platform.web.layout.api.IFlexLayout;
 
 public class LayoutApiTest {
 
     @Test
     public void test_whether_default_layout_direction_works() {
-        final LayoutBuilder layout = layoutContainer(
+        final ContainerConfig layout = cell(
                 cell(cell(cell().repeat(2).withGapBetweenCells(30)).repeat(2).withGapBetweenCells(20)).repeat(2).withGapBetweenCells(10));
 
         final String expectedLayout = "["
@@ -29,10 +27,10 @@ public class LayoutApiTest {
 
     @Test
     public void test_whether_specified_layout_direction_works() {
-        final IFlexLayout vertical = layout().vertical().end();
-        final IFlexLayout horizontal = layout().horizontal().end();
+        final FlexLayoutConfig vertical = layout().vertical().end();
+        final FlexLayoutConfig horizontal = layout().horizontal().end();
 
-        final LayoutBuilder layout = layoutContainer(
+        final ContainerConfig layout = cell(
                 cell(cell(cell().repeat(2).withGapBetweenCells(30), horizontal).repeat(2).withGapBetweenCells(20), vertical).repeat(2).withGapBetweenCells(10), horizontal);
 
         final String expectedLayout = "[\"horizontal\", "
@@ -45,9 +43,9 @@ public class LayoutApiTest {
 
     @Test
     public void test_whether_semi_specified_layout_direction_works() {
-        final IFlexLayout horizontal = layout().horizontal().end();
+        final FlexLayoutConfig horizontal = layout().horizontal().end();
 
-        final LayoutBuilder layout = layoutContainer(
+        final ContainerConfig layout = cell(
                 cell(cell(cell().repeat(2).withGapBetweenCells(30), horizontal).repeat(2).withGapBetweenCells(20)).repeat(2).withGapBetweenCells(10), horizontal);
 
         final String expectedLayout = "[\"horizontal\", "
@@ -60,7 +58,7 @@ public class LayoutApiTest {
 
     @Test
     public void test_whether_all_inline_widgets_works() {
-        final LayoutBuilder layout = layoutContainer(
+        final ContainerConfig layout = cell(
                 html(new DomElement("span").attr("src", "test_src").add(new InnerTextElement("This is test text"))).
                 skip().
                 select("prop", "name1").
@@ -82,13 +80,13 @@ public class LayoutApiTest {
 
     @Test
     public void test_whether_styling_for_each_cell_works() {
-        final IFlexLayout empty = layout().end();
-        final IFlexLayout cell = layout().withClass("spec-class").withStyle("opacity", "0.3").withStyle("margin-bottom", "40px").
+        final FlexLayoutConfig empty = layout().end();
+        final FlexLayoutConfig cell = layout().withClass("spec-class").withStyle("opacity", "0.3").withStyle("margin-bottom", "40px").
                 horizontal().
                 aroundJustified().
                 centerAligned().
                 flex(2).end();
-        final LayoutBuilder layout = layoutContainer(cell().cell(empty).layoutForEach(cell).withGapBetweenCells(20));
+        final ContainerConfig layout = cell(cell().cell(empty).layoutForEach(cell).withGapBetweenCells(20));
 
         final String expectedLayout = "[[\"spec-class\", \"horizontal\", \"around-justified\", \"center\", \"flex-2\", \"opacity:0.3\", \"margin-bottom:20px\"], []]";
 
