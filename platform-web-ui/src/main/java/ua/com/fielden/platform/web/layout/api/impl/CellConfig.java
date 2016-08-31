@@ -120,12 +120,10 @@ public class CellConfig {
         final boolean shouldIncludeGap = gap != 0;
         final Pair<String, String> tempStyle = new Pair<>(vertical ? "margin-bottom" : "margin-right", gap + "px");
         final String gapStyleString = shouldIncludeGap ? "\"" + tempStyle.getKey() + ":" + tempStyle.getValue() + "\"" : "";
-        final String widgetString = layoutWidget.isPresent() ? "\"" + layoutWidget.get() + "\"" : "";
-        final String layoutString = optionalLayout.isPresent() ? optionalLayout.get().render(vertical, gap) : gapStyleString;
-        final Optional<Boolean> optionalVertical = optionalLayout.isPresent() ? optionalLayout.get().isVerticalLayout() : Optional.empty();
-        final String containerString = optionalContainer.isPresent() ?
-                optionalContainer.get().render(optionalVertical.isPresent() ? optionalVertical.get() : !isVerticalDefault, !isVerticalDefault)
-                : "";
+        final String widgetString = layoutWidget.map(lw -> "\"" + lw + "\"").orElse("");
+        final String layoutString = optionalLayout.map(layout -> layout.render(vertical, gap)).orElse(gapStyleString);
+        final Optional<Boolean> optionalVertical = optionalLayout.flatMap(l -> l.isVerticalLayout());
+        final String containerString = optionalContainer.map(c -> c.render(optionalVertical.orElse(!isVerticalDefault), !isVerticalDefault)).orElse("");
 
         String layout = widgetString;
         if (!StringUtils.isEmpty(layout) && !StringUtils.isEmpty(layoutString)) {
