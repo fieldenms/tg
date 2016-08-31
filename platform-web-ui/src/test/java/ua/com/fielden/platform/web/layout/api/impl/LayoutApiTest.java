@@ -60,6 +60,7 @@ public class LayoutApiTest {
     public void layout_can_have_inline_widgets() {
         final ContainerConfig layout = cell(
                 html(new DomElement("span").attr("src", "test_src").add(new InnerTextElement("This is test text"))).
+                html("<span src='raw_src'>This is raw html</span>").
                 skip().
                 select("prop", "name1").
                 subheader("Subheader").
@@ -68,6 +69,7 @@ public class LayoutApiTest {
 
         final String expectedLayout = "["
                 + "[\"html:<span src='test_src'>\nThis is test text\n</span>\", \"margin-bottom:20px\"], "
+                + "[\"html:<span src='raw_src'>This is raw html</span>\", \"margin-bottom:20px\"], "
                 + "[\"skip\", \"margin-bottom:20px\"], "
                 + "[\"select:prop=name1\", \"margin-bottom:20px\"], "
                 + "[\"subheader:Subheader\", \"margin-bottom:20px\"], "
