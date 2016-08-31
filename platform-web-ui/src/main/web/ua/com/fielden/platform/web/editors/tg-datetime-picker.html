@@ -1,5 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/reflection/tg-date-utils.html">
+
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/moment-component.html">
 <link rel="import" href="/resources/components/tg-calendar.html">
@@ -209,7 +211,7 @@
                 if (value === null) {
                     return "";
                 } else {
-                    return this.reflector().millisDateRepresentation(value, this.timeZone);
+                    return _millisDateRepresentation(value, this.timeZone);
                 }
             },
 
@@ -250,7 +252,7 @@
                         .minute(this.$.datePicker.selectedMinute)
                         .seconds(this.$.datePicker.seconds)
                         .milliseconds(this.$.datePicker.milis);
-                    self._editingValue = self.reflector().millisDateRepresentation(acceptedMoment.valueOf(), self.timeZone);
+                    self._editingValue = _millisDateRepresentation(acceptedMoment.valueOf(), self.timeZone);
                     //self.decoratedInput().focus();
            		}.bind(domBind);
                 
@@ -349,7 +351,7 @@
                         if (value) {
                             this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
                             if (this._validMoment !== null) {
-                                return this.reflector().millisDateRepresentation(this._validMoment.valueOf(), this.timeZone);
+                                return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone);
                             }
                         }
                     }

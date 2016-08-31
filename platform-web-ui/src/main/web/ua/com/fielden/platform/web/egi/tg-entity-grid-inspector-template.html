@@ -2,6 +2,7 @@
 
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/reflection/tg-date-utils.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
 <link rel="import" href="/resources/layout/tg-flex-layout.html">
@@ -1653,7 +1654,7 @@
                 } else if (this.$.reflector.findTypeByName(type)) {
                     return this.$.reflector.convert(this._get(entity, property));
                 } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC' or 'Date:Europe/London'
-                    return this.$.reflector.millisDateRepresentation(entity.get(property), type === 'Date' ? null : type.substring(5));
+                    return _millisDateRepresentation(entity.get(property), type === 'Date' ? null : type.substring(5));
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
                         return this.$.reflector.formatDecimal(entity.get(property), this.$.appConfig.locale);
