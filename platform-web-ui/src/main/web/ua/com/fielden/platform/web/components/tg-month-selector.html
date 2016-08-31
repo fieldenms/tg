@@ -108,7 +108,7 @@
             createWeek = function (year, month, day) {
                 var yearMonthDay = { year: year, month: month, day: day };
                 var week = [],
-                    firstDay = (this.timeZone ? moment.tz(yearMonthDay, this.timeZone) : moment(yearMonthDay)).day(),
+                    firstDay = (this.timeZone ? moment.tz(yearMonthDay, this.timeZone) : moment(yearMonthDay)).weekday(),
                     days = getDaysInMonth(year, month),
                     previousMonthDays = getDaysInMonth(year, month - 1),
                     nextMonthDay = -1,
@@ -159,7 +159,7 @@
             },
 
             ready: function () {
-                var today = (this.timeZone ? moment.tz(this.timeZone) : moment()).startOf('day');
+                var today = (this.timeZone ? moment.tz(this.timeZone) : moment());
                 this.todayDay = today.day();
                 this.todayMonth = today.month();
                 this.todayYear = today.year();
@@ -213,7 +213,7 @@
              * Updates the calendar information depending on which month was choosen.
              */
             _adjustMonth: function (momentToShow) {
-                if ( /* FIXME why do we need this? !isNaN(momentToShow.valueOf()) && */ (this.month !== momentToShow.month() || this.year !== momentToShow.year())) {
+                if ( /* FIXME why do we need this? !isNaN(momentToShow.valueOf()) && */ momentToShow.isValid() && (this.month !== momentToShow.month() || this.year !== momentToShow.year())) {
                     this.monthName = momentToShow.format("MMMM");
                     this.month = momentToShow.month();
                     this.year = momentToShow.year();
@@ -235,12 +235,12 @@
             _selectedDateChanged: function (newValue, oldValue) {
                 if (newValue !== null) {
                     var newMoment = this.timeZone ? moment.tz(newValue, this.timeZone) : moment(newValue);
-                    // if (!isNaN(newDate.getTime())) { FIXME why do we need this?
-                    this.selectedYear = newMoment.year();
-                    this.selectedMonth = newMoment.month();
-                    this._adjustMonth(newMoment);
-                    this.selectedDay = newMoment.day();
-                    // }
+                    if (/* !isNaN(newDate.getTime())*/ newMoment.isValid() ) { // FIXME why do we need this?
+                        this.selectedYear = newMoment.year();
+                        this.selectedMonth = newMoment.month();
+                        this._adjustMonth(newMoment);
+                        this.selectedDay = newMoment.day();
+                    }
                 }
             },
 
