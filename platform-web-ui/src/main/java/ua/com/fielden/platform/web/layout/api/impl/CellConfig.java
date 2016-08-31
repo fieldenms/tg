@@ -117,10 +117,8 @@ public class CellConfig {
      * @return
      */
     public String render(final boolean vertical, final boolean isVerticalDefault, final int gap) {
-        final boolean shouldIncludeGap = gap != 0;
-        final Pair<String, String> tempStyle = new Pair<>(vertical ? "margin-bottom" : "margin-right", gap + "px");
-        final String gapStyleString = shouldIncludeGap ? "\"" + tempStyle.getKey() + ":" + tempStyle.getValue() + "\"" : "";
         final String widgetString = layoutWidget.map(lw -> "\"" + lw + "\"").orElse("");
+        final String gapStyleString = gap == 0 ? "" : "\"" + (vertical ? "margin-bottom" : "margin-right") + ":" + gap + "px\"";
         final String layoutString = optionalLayout.map(layout -> layout.render(vertical, gap)).orElse(gapStyleString);
         final Optional<Boolean> optionalVertical = optionalLayout.flatMap(l -> l.isVerticalLayout());
         final String containerString = optionalContainer.map(c -> c.render(optionalVertical.orElse(!isVerticalDefault), !isVerticalDefault)).orElse("");
