@@ -1345,24 +1345,15 @@
             var millisecondsRemainder = dateMillis % 1000;
             var millisecondsExist = (millisecondsRemainder !== 0);
             if (millisecondsExist) {
-                if (timeZone) {
-                    return moment(dateMillis).tz(timeZone).format('L LTS');
-                }
-                return moment(dateMillis).format('L LTS');
+                return (timeZone ? moment.tz(dateMillis, timeZone) : moment(dateMillis)).format('L LTS');
             } else {
                 var secondsRemainder = (dateMillis - millisecondsRemainder) % 60;
                 var secondsExist = (secondsRemainder !== 0);
                 if (secondsExist) {
-                    if (timeZone) {
-                        return moment(dateMillis).tz(timeZone).format('L LTS');
-                    }
-                    return moment(dateMillis).format('L LTS');
+                    return (timeZone ? moment.tz(dateMillis, timeZone) : moment(dateMillis)).format('L LTS');
                 }
             }
-            if (timeZone) {
-                return moment(dateMillis).tz(timeZone).format('L LT');
-            }
-            return moment(dateMillis).format('L LT');
+            return (timeZone ? moment.tz(dateMillis, timeZone) : moment(dateMillis)).format('L LT');
         }
     });
 })();    
