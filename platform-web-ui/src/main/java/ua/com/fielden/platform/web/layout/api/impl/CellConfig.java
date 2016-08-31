@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.web.layout.api.impl;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
-
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.layout.api.IFlexContainerLayout;
 import ua.com.fielden.platform.web.layout.api.IFlexLayout;
 
@@ -117,22 +116,17 @@ public class CellConfig {
      * @return
      */
     public String render(final boolean vertical, final boolean isVerticalDefault, final int gap) {
-        final String widgetString = layoutWidget.map(lw -> "\"" + lw + "\"").orElse("");
         final String gapStyleString = gap == 0 ? "" : "\"" + (vertical ? "margin-bottom" : "margin-right") + ":" + gap + "px\"";
         final String layoutString = layout.map(layout -> layout.render(vertical, gap)).orElse(gapStyleString);
         final Optional<Boolean> optionalVertical = layout.flatMap(l -> l.isVerticalLayout());
         final String containerString = container.map(c -> c.render(optionalVertical.orElse(!isVerticalDefault), !isVerticalDefault)).orElse("");
-
-        String completeLayout = widgetString;
-        if (!StringUtils.isEmpty(completeLayout) && !StringUtils.isEmpty(layoutString)) {
-            completeLayout += ", ";
-        }
-        completeLayout += layoutString;
-        if (!StringUtils.isEmpty(completeLayout) && !StringUtils.isEmpty(containerString)) {
-            completeLayout += ", ";
-        }
-        completeLayout += containerString;
-        return "[" + completeLayout + "]";
+        
+        return Optional.of(layoutWidget.map(lw -> "\"" + lw + "\"").orElse(""))
+        .map(l -> !isEmpty(l) && !isEmpty(layoutString) ? l + ", " : l)
+        .map(l -> l + layoutString)
+        .map(l -> !isEmpty(l) && !isEmpty(containerString) ? l + ", " : l)
+        .map(l -> l + containerString)
+        .map(l -> "[" + l + "]").get();
     }
 
     private CellConfig(final IFlexContainerLayout container, final IFlexLayout flexLayout, final String layoutWidget) {
