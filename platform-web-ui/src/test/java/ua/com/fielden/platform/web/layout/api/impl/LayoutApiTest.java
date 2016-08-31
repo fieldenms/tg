@@ -13,7 +13,7 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 public class LayoutApiTest {
 
     @Test
-    public void test_whether_default_layout_direction_works() {
+    public void layout_direction_can_be_default() {
         final ContainerConfig layout = cell(
                 cell(cell(cell().repeat(2).withGapBetweenCells(30)).repeat(2).withGapBetweenCells(20)).repeat(2).withGapBetweenCells(10));
 
@@ -26,7 +26,7 @@ public class LayoutApiTest {
     }
 
     @Test
-    public void test_whether_specified_layout_direction_works() {
+    public void layout_direction_can_be_specified() {
         final FlexLayoutConfig vertical = layout().vertical().end();
         final FlexLayoutConfig horizontal = layout().horizontal().end();
 
@@ -42,7 +42,7 @@ public class LayoutApiTest {
     }
 
     @Test
-    public void test_whether_semi_specified_layout_direction_works() {
+    public void layout_direction_can_be_semi_specified() {
         final FlexLayoutConfig horizontal = layout().horizontal().end();
 
         final ContainerConfig layout = cell(
@@ -57,7 +57,7 @@ public class LayoutApiTest {
     }
 
     @Test
-    public void test_whether_all_inline_widgets_works() {
+    public void layout_can_have_inline_widgets() {
         final ContainerConfig layout = cell(
                 html(new DomElement("span").attr("src", "test_src").add(new InnerTextElement("This is test text"))).
                 skip().
@@ -79,7 +79,7 @@ public class LayoutApiTest {
     }
 
     @Test
-    public void test_whether_styling_for_each_cell_works() {
+    public void layout_can_be_styled() {
         final FlexLayoutConfig empty = layout().end();
         final FlexLayoutConfig cell = layout().withClass("spec-class").withStyle("opacity", "0.3").withStyle("margin-bottom", "40px").
                 horizontal().
@@ -89,6 +89,27 @@ public class LayoutApiTest {
         final ContainerConfig layout = cell(cell().cell(empty).layoutForEach(cell).withGapBetweenCells(20));
 
         final String expectedLayout = "[[\"spec-class\", \"horizontal\", \"around-justified\", \"center\", \"flex-2\", \"opacity:0.3\", \"margin-bottom:20px\"], []]";
+
+        assertEquals(expectedLayout, layout.toString());
+    }
+
+    @Test
+    public void layout_can_be_composed_with_predefined_parts() {
+        final FlexLayoutConfig centerCenter = layout().centerJustified().centerAligned().end();
+        final FlexLayoutConfig flex = layout().flex().end();
+        final ContainerConfig rowWithSkip = cell().repeat(2).skip().cell().layoutForEach(flex);
+        final ContainerConfig cell3 = cell(flex).repeat(3);
+
+        final ContainerConfig layout = cell(
+                cell(cell3).
+                cell(rowWithSkip).
+                cell(cell3).repeat(2).layoutForEach(centerCenter).withGapBetweenCells(20));
+
+        final String expectedLayout = "["
+                + "[\"center-justified\", \"center\", \"margin-bottom:20px\", [\"flex\"], [\"flex\"], [\"flex\"]], "
+                + "[\"center-justified\", \"center\", \"margin-bottom:20px\", [\"flex\"], [\"flex\"], [\"skip\", \"flex\"], [\"flex\"]], "
+                + "[\"center-justified\", \"center\", \"margin-bottom:20px\", [\"flex\"], [\"flex\"], [\"flex\"]], "
+                + "[\"center-justified\", \"center\", [\"flex\"], [\"flex\"], [\"flex\"]]]";
 
         assertEquals(expectedLayout, layout.toString());
     }
