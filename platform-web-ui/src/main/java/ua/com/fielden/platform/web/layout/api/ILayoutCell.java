@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.web.layout.api;
 
 import ua.com.fielden.platform.dom.DomElement;
-import ua.com.fielden.platform.web.layout.api.impl.ContainerCellConfig;
 import ua.com.fielden.platform.web.layout.api.impl.ContainerConfig;
+import ua.com.fielden.platform.web.layout.api.impl.ContainerRepeatConfig;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 
 /**
@@ -11,7 +11,7 @@ import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
  * @author TG Team
  *
  */
-public interface ILayoutCell extends IForEachLayoutSetter {
+public interface ILayoutCell {
 
     /**
      * Adds the container element to this container with specified layout configuration.
@@ -20,7 +20,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      * @param layout
      * @return
      */
-    ContainerCellConfig cell(final ContainerConfig container, final FlexLayoutConfig layout);
+    ContainerRepeatConfig cell(final ContainerConfig container, final FlexLayoutConfig layout);
 
     /**
      * Adds the container element to this container.
@@ -28,7 +28,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      * @param container
      * @return
      */
-    ContainerCellConfig cell(final ContainerConfig container);
+    ContainerRepeatConfig cell(final ContainerConfig container);
 
     /**
      * Adds the element to this container with specified layout.
@@ -36,14 +36,14 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      * @param layout
      * @return
      */
-    ContainerCellConfig cell(final FlexLayoutConfig layout);
+    ContainerRepeatConfig cell(final FlexLayoutConfig layout);
 
     /**
      * Adds the element to this container.
      *
      * @return
      */
-    ContainerCellConfig cell();
+    ContainerRepeatConfig cell();
 
     /**
      * Adds the selected element to this container with specified layout.
@@ -55,7 +55,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      * @param layout
      * @return
      */
-    ContainerCellConfig select(final String attribute, final String value, final FlexLayoutConfig layout);
+    ContainerRepeatConfig select(final String attribute, final String value, final FlexLayoutConfig layout);
 
     /**
      * Adds the selected element to this container with specified layout.
@@ -64,7 +64,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      * @param value
      * @return
      */
-    ContainerCellConfig select(final String attribute, final String value);
+    ContainerRepeatConfig select(final String attribute, final String value);
 
     /**
      * Adds skip cell to the container configuration with specified layout.
@@ -72,14 +72,14 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      * @param layout
      * @return
      */
-    ContainerCellConfig skip(final FlexLayoutConfig layout);
+    ContainerRepeatConfig skip(final FlexLayoutConfig layout);
 
     /**
      * Adds skip cell to the container configuration.
      *
      * @return
      */
-    ContainerCellConfig skip();
+    ContainerRepeatConfig skip();
 
     /**
      * Adds the snippet of html to the container configuration with specified layout.
@@ -88,7 +88,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      * @param layout
      * @return
      */
-    ContainerCellConfig html(final DomElement dom, final FlexLayoutConfig layout);
+    ContainerRepeatConfig html(final DomElement dom, final FlexLayoutConfig layout);
 
     /**
      * Adds the snippet of html to the container configuration.
@@ -96,7 +96,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      * @param dom
      * @return
      */
-    ContainerCellConfig html(final DomElement dom);
+    ContainerRepeatConfig html(final DomElement dom);
 
     /**
      * Adds the snippet of html to the container configuration with specified layout.
@@ -105,7 +105,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      * @param layout
      * @return
      */
-    ContainerCellConfig html(final String html, final FlexLayoutConfig layout);
+    ContainerRepeatConfig html(final String html, final FlexLayoutConfig layout);
 
     /**
      * Adds the snippet of html to the container configuration.
@@ -113,7 +113,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      * @param dom
      * @return
      */
-    ContainerCellConfig html(final String html);
+    ContainerRepeatConfig html(final String html);
 
     /**
      * Adds the default subheader without ability to close or open it.
@@ -124,7 +124,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      *            - the layout configuration for subheader.
      * @return
      */
-    ContainerCellConfig subheader(final String title, final FlexLayoutConfig layout);
+    ContainerRepeatConfig subheader(final String title, final FlexLayoutConfig layout);
 
     /**
      * Adds the default subheader without ability to close or open it.
@@ -133,7 +133,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      *            - subheader title.
      * @return
      */
-    ContainerCellConfig subheader(final String title);
+    ContainerRepeatConfig subheader(final String title);
 
     /**
      * Adds the subheader opened by default.
@@ -144,7 +144,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      *            - the layout configuration for subheader.
      * @return
      */
-    ContainerCellConfig subheaderOpen(final String title, final FlexLayoutConfig layout);
+    ContainerRepeatConfig subheaderOpen(final String title, final FlexLayoutConfig layout);
 
     /**
      * Adds the subheader opened by default.
@@ -153,7 +153,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      *            - subheader title.
      * @return
      */
-    ContainerCellConfig subheaderOpen(final String title);
+    ContainerRepeatConfig subheaderOpen(final String title);
 
     /**
      * Adds the subheader closed by default.
@@ -164,7 +164,7 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      *            - the layout configuration for subheader.
      * @return
      */
-    ContainerCellConfig subheaderClosed(final String title, final FlexLayoutConfig layout);
+    ContainerRepeatConfig subheaderClosed(final String title, final FlexLayoutConfig layout);
 
     /**
      * Adds the subheader closed by default.
@@ -173,5 +173,5 @@ public interface ILayoutCell extends IForEachLayoutSetter {
      *            - subheader title.
      * @return
      */
-    ContainerCellConfig subheaderClosed(final String title);
+    ContainerRepeatConfig subheaderClosed(final String title);
 }

@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.layout.api;
 
-import ua.com.fielden.platform.web.layout.api.impl.ContainerCellConfig;
+import ua.com.fielden.platform.web.layout.api.impl.ContainerRepeatConfig;
 
 /**
  * A contract for copying the layout configuration.
@@ -16,6 +16,6 @@ public interface IRepeater extends IForEachLayoutSetter {
      * @param times
      * @return
      */
-    ContainerCellConfig repeat(int times);
+    ContainerRepeatConfig repeat(int times);
 
 }
