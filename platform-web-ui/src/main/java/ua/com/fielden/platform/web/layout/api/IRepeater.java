@@ -8,7 +8,7 @@ import ua.com.fielden.platform.web.layout.api.impl.ContainerCellConfig;
  * @author TG Team
  *
  */
-public interface IQuantifier extends IForEachLayoutSetter {
+public interface IRepeater extends IForEachLayoutSetter {
 
     /**
      * Repeats the previous container layout configuration the specified number of items.

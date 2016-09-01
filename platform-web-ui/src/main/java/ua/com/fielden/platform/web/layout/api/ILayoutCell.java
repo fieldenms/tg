@@ -11,7 +11,7 @@ import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
  * @author TG Team
  *
  */
-public interface ILayoutCell extends IQuantifier {
+public interface ILayoutCell extends IRepeater {
 
     /**
      * Adds the container element to this container with specified layout configuration.

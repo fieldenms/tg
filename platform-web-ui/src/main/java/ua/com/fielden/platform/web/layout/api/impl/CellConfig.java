@@ -114,7 +114,7 @@ public class CellConfig {
      */
     public String render(final boolean vertical, final boolean isVerticalDefault, final int gap) {
         final String gapStyleString = gap == 0 ? "" : "\"" + (vertical ? "margin-bottom" : "margin-right") + ":" + gap + "px\"";
-        final String layoutString = layout.map(layout -> layout.render(vertical, gap)).orElse(gapStyleString);
+        final String layoutString = layout.map(l -> l.render(vertical, gap)).orElse(gapStyleString);
         final LayoutDirection layoutDirection = layout.map(l -> l.layoutDirection()).orElse(UNSPECIFIED);
         final String containerString = container.
                 map(c -> c.render(UNSPECIFIED.equals(layoutDirection) ? !isVerticalDefault : VERTICAL.equals(layoutDirection), !isVerticalDefault)).
