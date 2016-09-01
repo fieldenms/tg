@@ -6,9 +6,10 @@
      * 
      * Please, use this function only in environment with moment(...) function defined.
      * Currently it is used in date-specific unit testing.
+     * 
+     * This should strictly be used for date properties, which has local time-zone.
      */
     var _millis = function (fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.SSS' format
-        // TODO consider the usage timeZone-aware conversion!
         return moment(fullDateString, 'DD/MM/YYYY HH:mm:ss.SSS', true).valueOf();
     };
     

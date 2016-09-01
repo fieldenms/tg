@@ -154,13 +154,10 @@
                 this._months = moment.monthsShort();
             },
 
-
             attached: function () {
                 var todayDate = _momentTz(this.timeZone).startOf('minute');
                 this.selectedDate = this.selectedDate || todayDate.valueOf();
-                // TODO is this correct: typeof this.selectedHour !== undefined. Maybe it should be like this: typeof this.selectedHour !== 'undefined'?
                 this.selectedHour = (typeof this.selectedHour !== 'undefined' && this.selectedHour !== null) ? this.selectedHour : todayDate.hour();
-                // TODO is this correct: typeof this.selectedMinute !== undefined. Maybe it should be like this: typeof this.selectedMinute !== 'undefined'?
                 this.selectedMinute = (typeof this.selectedMinute !== 'undefined' && this.selectedMinute !== null) ? this.selectedMinute : todayDate.minutes();
                 this.seconds = this.seconds || 0;
                 this.milis = this.milis || 0;

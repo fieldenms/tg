@@ -595,18 +595,7 @@
          * Returns entity type property with the specified name.
          */
         EntityType.prototype.prop = function (name) {
-            /* if (name === '') {
-                throw 'Cannot return the type property with empty name.';
-            }
-            var dotIndex = name.indexOf(".");
-            if (dotIndex > -1) {
-                var first = name.slice(0, dotIndex);
-                var rest = name.slice(dotIndex + 1);
-                var firstVal = this.get(first);
-                return firstVal === null ? null : firstVal.get(rest);
-            } else { */
             return typeof this._props !== 'undefined' && this._props && this._props[name] ? this._props[name] : null;
-            /* } */
         }
 
         /** 
