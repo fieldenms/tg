@@ -123,9 +123,6 @@ public class ContainerCellConfig extends ContainerConfig implements ILayoutCell,
 
     @Override
     public ContainerCellConfig repeat(final int times) {
-        if (cells.isEmpty()) {
-            throw new LayoutException("There are no cells to copy.");
-        }
         final CellConfig lastCell = cells.get(cells.size() - 1);
         for (int time = 0; time < times - 1; time++) {
             cells.add(lastCell);
