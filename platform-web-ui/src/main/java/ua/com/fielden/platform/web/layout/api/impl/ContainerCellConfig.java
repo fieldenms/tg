@@ -5,8 +5,9 @@ import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.layout.api.ILayoutCell;
+import ua.com.fielden.platform.web.layout.api.IRepeater;
 
-public class ContainerCellConfig extends ContainerConfig implements ILayoutCell {
+public class ContainerCellConfig extends ContainerConfig implements ILayoutCell, IRepeater {
 
     ContainerCellConfig() {
         super(new ArrayList<>(), 0);
