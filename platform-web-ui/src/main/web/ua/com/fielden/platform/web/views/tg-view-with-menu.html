@@ -124,10 +124,13 @@
             return "_";
         };
         var decodeSubmodule = function (uri) {
-            return uri.replace(/(\?.*$)/,'');
+            return uri.split("?")[0];
         };
         var decodeQuery = function (uri) {
-            return uri.replace(/(^.*\?)/,'').split("&").reduce(function(queryParams, n){return n = n.split("="), queryParams[n[0]] = n[1], queryParams}, {});
+            var uriParts = uri.split("?");
+            if (uriParts[1]) {
+                return uriParts[1].split("&").reduce(function(queryParams, n){return n = n.split("="), queryParams[n[0]] = n[1], queryParams}, {});
+            }
         };
         Polymer({
 

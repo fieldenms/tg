@@ -133,7 +133,7 @@
                 },
                 
                 _setQueryIfPossible: function (queryPart) {
-                    if (this.menuItem.view.type === "centre") {
+                    if (this.menuItem.view.type === "centre" && queryPart) {
                         this.menuItem.view.attrs.queryPart = queryPart;
                     }
                 },
