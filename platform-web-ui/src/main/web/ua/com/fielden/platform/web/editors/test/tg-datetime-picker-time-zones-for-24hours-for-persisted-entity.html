@@ -42,6 +42,27 @@
             });
             
             var correctlyApproximates = function (done, targetEditingValueInUtc, approximatedEditingValueInUtc, approximatedEditingValueInLocal, concreteAcceptedMillis, laterDuplicatedDaylightSavingHour) {
+                /* var allZones = moment.tz.names();
+                console.debug('zones =', allZones);
+                var auZones = [];
+                for (var i = 0; i < allZones.length; i++) {
+                    if (allZones[i].length > 9 && allZones[i].substring(0, 9) === 'Australia') {
+                        auZones.push(allZones[i]);
+                    }
+                }
+                console.debug('auZones =', auZones);
+                console.debug('guessed zone', moment.tz.guess()); */
+                // ["Australia/ACT", "Australia/Adelaide", "Australia/Brisbane", "Australia/Broken_Hill", "Australia/Canberra", 
+                //  "Australia/Currie", "Australia/Darwin", "Australia/Eucla", "Australia/Hobart", "Australia/LHI", "Australia/Lindeman", 
+                //  "Australia/Lord_Howe", "Australia/Melbourne", "Australia/NSW", "Australia/North", "Australia/Perth", 
+                //  "Australia/Queensland", "Australia/South", "Australia/Sydney", "Australia/Tasmania", "Australia/Victoria", "Australia/West", "Australia/Yancowinna"]
+                
+                var neededTimeZones = ['Australia/Brisbane', 'Australia/Canberra', 'Australia/Hobart', 'Australia/Melbourne', 'Australia/Sydney'];
+                var guessedTimeZone = moment.tz.guess();
+                if (neededTimeZones.indexOf(guessedTimeZone) === -1) {
+                    throw new Error('This test should be invoked in following timezones: ' + neededTimeZones + '; your timezone is ' + guessedTimeZone + '.');
+                }
+                
                 var ed = master.$.editor_4_dateProp;
                 var edUtc = master.$.editor_4_datePropUtc;
 
@@ -145,6 +166,12 @@
             });
 
             var correctlyApproximatesFromLocal = function (done, targetEditingValueInLocal, approximatedEditingValueInLocal, approximatedEditingValueInUtc, concreteAcceptedMillis) {
+                var neededTimeZones = ['Australia/Brisbane', 'Australia/Canberra', 'Australia/Hobart', 'Australia/Melbourne', 'Australia/Sydney'];
+                var guessedTimeZone = moment.tz.guess();
+                if (neededTimeZones.indexOf(guessedTimeZone) === -1) {
+                    throw new Error('This test should be invoked in following timezones: ' + neededTimeZones + '; your timezone is ' + guessedTimeZone + '.');
+                }
+                
                 var ed = master.$.editor_4_dateProp;
                 var edUtc = master.$.editor_4_datePropUtc;
 
