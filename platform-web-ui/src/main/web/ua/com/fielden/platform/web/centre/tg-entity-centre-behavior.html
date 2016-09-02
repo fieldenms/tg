@@ -103,6 +103,11 @@
                     type: Boolean,
                     value: false
                 },
+                
+                /**
+                 * Parameters for running query.
+                 */
+                queryPart: Object,
 
                 /**
                  * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
@@ -251,12 +256,14 @@
                 var self = this;
                 if (oldValue === undefined) {
                     self.retrieve().then(function () {
-                        if (self.autoRun) {
+                        self._setQueryParams();
+                        if (self.autoRun || self.queryPart) {
                             self.run();
                         }
                     });
                 } else {
-                    if (self.autoRun) {
+                    self._setQueryParams();
+                    if (self.autoRun || self.queryPart) {
                         self.run();
                     }
                 }
@@ -489,7 +496,22 @@
                 var ind = this.entityType.lastIndexOf(".") + 1;
                 return this.entityType.substring(ind);
             },
-
+            
+            /**
+             * Set the query params to selection criteria if they exists.
+             */
+            _setQueryParams: function () {
+                var editor;
+                for (var property in this.queryPart) {
+                    if (this.queryPart.hasOwnProperty(property)) {
+                        editor = this.$.selection_criteria.$.masterDom.querySelector('[id=editor_4_' + property + ']');
+                        if (editor) {
+                            editor._editingValue = this.queryPart[property];
+                            editor.commit();
+                        }
+                    }
+                }
+            },
 
             /**
              * Activate the view with selection criteria.

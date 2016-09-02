@@ -96,7 +96,8 @@
                     if (e.target === this.$$("#elementToLoad")) {
                         if (this.menuItem.view.type === 'centre') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                                if (detail.autoRun) {
+                                detail._setQueryParams();
+                                if (detail.autoRun || detail.queryPart) {
                                     detail.run();
                                 }
                                 self.fire("menu-item-view-loaded", self.menuItem);
@@ -130,19 +131,27 @@
                         }
                     }
                 },
+                
+                _setQueryIfPossible: function (queryPart) {
+                    if (this.menuItem.view.type === "centre") {
+                        this.menuItem.view.attrs.queryPart = queryPart;
+                    }
+                },
 
                 /**
                  * This function lets one to indicate whether this view should be loaded after the dom will be initialised. It is not the same as auto = true
                  */
-                loadAfterInit: function () {
+                loadAfterInit: function (queryPart) {
                     var elementToLoad;
                     if (!this.auto && this.menuItem.view) {
                         elementToLoad = this.$$("#elementToLoad");
                         if (elementToLoad) {
                             if (!elementToLoad.wasLoaded) {
+                                this._setQueryIfPossible(queryPart);
                                 elementToLoad.load();
                             }
                         } else {
+                            this._setQueryIfPossible(queryPart);
                             this._afterInitLoading = true;
                         }
                     }

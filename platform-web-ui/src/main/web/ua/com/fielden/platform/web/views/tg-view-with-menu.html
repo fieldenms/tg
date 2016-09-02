@@ -123,6 +123,12 @@
             }
             return "_";
         };
+        var decodeSubmodule = function (uri) {
+            return uri.replace(/(\?.*$)/,'');
+        };
+        var decodeQuery = function (uri) {
+            return uri.replace(/(^.*\?)/,'').split("&").reduce(function(queryParams, n){return n = n.split("="), queryParams[n[0]] = n[1], queryParams}, {});
+        };
         Polymer({
 
             is: "tg-view-with-menu",
@@ -221,15 +227,18 @@
 
             _updatePage(menuItem, submodule, _menuItemsLoaded) {
                 var pageName;
+                var decodedSubmodule = decodeURIComponent(submodule.path.substring(1));
+                var submodulePart = decodeSubmodule(decodedSubmodule);
+                var queryPart = decodeQuery(decodedSubmodule);
                 if (menuItem.title === decodeURIComponent(this.selectedModule)) {
-                    pageName = findSubmodule(decodeURIComponent(submodule.path.substring(1)), menuItem);
+                    pageName = findSubmodule(submodulePart, menuItem);
                     this.set("_selectedPage", pageName);
                     this.async(function () {
                         var viewToLoad;
                         if (pageName !== '_') {
                             viewToLoad = this.$$("[page-name='" + pageName + "']");
                             if (viewToLoad) {
-                                viewToLoad.loadAfterInit();
+                                viewToLoad.loadAfterInit(queryPart);
                             }
                         }
                     });
