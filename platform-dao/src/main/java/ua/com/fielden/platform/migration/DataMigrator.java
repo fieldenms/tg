@@ -24,9 +24,9 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.DynamicEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.migration.RetrieverPropsValidator.RetrievedPropValidationError;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 
@@ -59,7 +59,7 @@ public class DataMigrator {
         this.retrievers.addAll(instantiateRetrievers(injector, retrieversClasses));
         this.includeDetails = includeDetails;
         final Connection conn = injector.getInstance(Connection.class);
-        this.cache = new IdCache(injector.getInstance(DynamicEntityDao.class), dma);
+        this.cache = new IdCache(injector.getInstance(ICompanionObjectFinder.class), dma);
 
         for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
             if (!ret.isUpdater()) {
