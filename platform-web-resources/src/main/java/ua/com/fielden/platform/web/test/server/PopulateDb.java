@@ -132,7 +132,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties booleanEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7.").setRequiredValidatedProp(30));
         System.out.println("booleanEnt1.getId() == " + booleanEnt1.getId());
 
-        final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(9999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
+        final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(3609999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
         System.out.println("dateEnt1.getId() == " + dateEnt1.getId());
 
         final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
@@ -223,7 +223,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY7").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "booleanProp")));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY8").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "dateProp")));
         
-        final TgEntityWithTimeZoneDates timeZone1 = save(new_(TgEntityWithTimeZoneDates.class, "KEY1").setDatePropUtc(new Date(9999)));
+        final TgEntityWithTimeZoneDates timeZone1 = save(new_(TgEntityWithTimeZoneDates.class, "KEY1").setDatePropUtc(new Date(3609999)));
         System.out.println("timeZone1.getId() == " + timeZone1.getId());
 
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");

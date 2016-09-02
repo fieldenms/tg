@@ -63,18 +63,13 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var localisedMomentOf9999 = _millisDateRepresentation(9999); /* 01/01/1970 2:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 4:00:09.999 AM in Tbilisi locale (UTC+04:00) */
-                    assert.strictEqual(edProperty._editingValue, localisedMomentOf9999, "_editingValue should be non-empty on start.");
-                    assert.strictEqual(edProperty._commValue, localisedMomentOf9999, "_commValue should be non-empty on start.");
-                    // FIXME at this stage there is no clear indication of why this check fails under some conditions, - please investigate.
-                    //   The case if following:
-                    //    a) Error: _acceptedValue should be non-empty on start.: expected -3590001 to equal 9999
-                    //    b) Australia / Melbourne locale in developer OS which affects both server and client applications.
-                    //    c) Mac OS, Chrome browser.
-                    // assert.strictEqual(edProperty._acceptedValue, 9999, "_acceptedValue should be non-empty on start.");
+                    var localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 3:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 5:00:09.999 AM in Tbilisi locale (UTC+04:00) */
+                    assert.strictEqual(edProperty._editingValue, localisedMomentOf3609999, "_editingValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._commValue, localisedMomentOf3609999, "_commValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._acceptedValue, 3609999, "_acceptedValue should be non-empty on start.");
 
-                    assert.strictEqual(entity.get("dateProp"), 9999, "'property' value should be non-empty on start.");
-                    assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding 'property' value should be non-empty on start.");
+                    assert.strictEqual(entity.get("dateProp"), 3609999, "'property' value should be non-empty on start.");
+                    assert.strictEqual(bindingEntity.get("dateProp"), 3609999, "Binding 'property' value should be non-empty on start.");
 
                     edProperty._editingValue = targetEditingValue;
                     edProperty.commit();
@@ -94,18 +89,13 @@
                 };
 
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
-                    var localisedMomentOf9999 = _millisDateRepresentation(9999); /* 01/01/1970 2:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 4:00:09.999 AM in Tbilisi locale (UTC+04:00) */
-                    assert.strictEqual(edProperty._editingValue, localisedMomentOf9999, "_editingValue should be non-empty on start.");
-                    assert.strictEqual(edProperty._commValue, localisedMomentOf9999, "_commValue should be non-empty on start.");
-                    // FIXME at this stage there is no clear indication of why this check fails under some conditions, - please investigate.
-                    //   The case if following:
-                    //    a) Error: _acceptedValue should be non-empty on start.: expected -3590001 to equal 9999
-                    //    b) Australia / Melbourne locale in developer OS which affects both server and client applications.
-                    //    c) Mac OS, Chrome browser.
-                    // assert.strictEqual(edProperty._acceptedValue, 9999, "_acceptedValue should be non-empty on start.");
+                    var localisedMomentOf3609999 = _millisDateRepresentation(3609999); /* 01/01/1970 3:00:09.999 AM in Kyiv locale (UTC+02:00), 01/01/1970 5:00:09.999 AM in Tbilisi locale (UTC+04:00) */
+                    assert.strictEqual(edProperty._editingValue, localisedMomentOf3609999, "_editingValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._commValue, localisedMomentOf3609999, "_commValue should be non-empty on start.");
+                    assert.strictEqual(edProperty._acceptedValue, 3609999, "_acceptedValue should be non-empty on start.");
 
-                    assert.strictEqual(entity.get("dateProp"), 9999, "'property' value should be non-empty on start.");
-                    assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding 'property' value should be non-empty on start.");
+                    assert.strictEqual(entity.get("dateProp"), 3609999, "'property' value should be non-empty on start.");
+                    assert.strictEqual(bindingEntity.get("dateProp"), 3609999, "Binding 'property' value should be non-empty on start.");
 
                     edProperty._editingValue = targetEditingValue;
                     edProperty.commit();
