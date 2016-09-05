@@ -123,15 +123,6 @@
             }
             return "_";
         };
-        var decodeSubmodule = function (uri) {
-            return uri.split("?")[0];
-        };
-        var decodeQuery = function (uri) {
-            var uriParts = uri.split("?");
-            if (uriParts[1]) {
-                return uriParts[1].split("&").reduce(function(queryParams, n){return n = n.split("="), queryParams[n[0]] = n[1], queryParams}, {});
-            }
-        };
         Polymer({
 
             is: "tg-view-with-menu",
@@ -231,8 +222,9 @@
             _updatePage(menuItem, submodule, _menuItemsLoaded) {
                 var pageName;
                 var decodedSubmodule = decodeURIComponent(submodule.path.substring(1));
-                var submodulePart = decodeSubmodule(decodedSubmodule);
-                var queryPart = decodeQuery(decodedSubmodule);
+                var uriParts = decodedSubmodule.split("?");
+                var submodulePart = uriParts[0];
+                var queryPart = uriParts[1];
                 if (menuItem.title === decodeURIComponent(this.selectedModule)) {
                     pageName = findSubmodule(submodulePart, menuItem);
                     this.set("_selectedPage", pageName);

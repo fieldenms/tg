@@ -7,6 +7,35 @@
 
 <script>
     (function () {
+        var generateCriteriaName = function (root, property, suffix) {
+            var rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
+            return rootName + (property === "this" ? "" : property.replace(/\./g, "_")) + (suffix ? "_" + suffix : "");  
+        };
+        var isNot = function (value) {
+            return /^\!/.test(value);
+        };
+        var isRange = function (value) {
+            return /(\{|\[|\().*,\s*.*(\}|\]|\))/.test(value);
+        };
+        var isBoolean = function (value) {
+            return /(true|false)+/.test(value);
+        };
+        var getFirstValue = function (queryParam) {
+            var value;
+            if (isRange(queryParam)) {
+                value = /(\{|\[|\()(.*),\s*.*(\}|\]|\))/.exec(queryParam)[2];
+            } else {
+                value = /(\!?)(.*)/.exec(queryParam)[2];
+            }
+            return value || "";
+        };
+        var getSecondValue = function (queryParam) {
+            var value;
+            if (isRange(queryParam)) {
+                value = /(\{|\[|\().*,\s*(.*)(\}|\]|\))/.exec(queryParam)[2];
+            } 
+            return value || "";
+        };
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgEntityCentreBehaviorImpl = {
             properties: {
@@ -103,11 +132,11 @@
                     type: Boolean,
                     value: false
                 },
-                
+
                 /**
                  * Parameters for running query.
                  */
-                queryPart: Object,
+                queryPart: String,
 
                 /**
                  * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
@@ -496,18 +525,39 @@
                 var ind = this.entityType.lastIndexOf(".") + 1;
                 return this.entityType.substring(ind);
             },
-            
+
             /**
              * Set the query params to selection criteria if they exists.
              */
             _setQueryParams: function () {
-                var editor;
-                for (var property in this.queryPart) {
-                    if (this.queryPart.hasOwnProperty(property)) {
-                        editor = this.$.selection_criteria.$.masterDom.querySelector('[id=editor_4_' + property + ']');
+                var root = this._simpleEntityType();
+                var editor, queryObject, criteriaName, firstPropertyName, secondPropertyName, isBool;
+                if (this.queryPart) {
+                    queryObject = this.queryPart.split("&").reduce(function (queryParams, n) {
+                         return n = n.split("="), queryParams[n[0]] = n[1], queryParams;
+                    }, {});
+                }
+                for (var property in queryObject) {
+                    if (queryObject.hasOwnProperty(property)) {
+                        isBool = isBoolean(queryObject[property]);
+                        if (isRange(queryObject[property])) {
+                            firstPropertyName = generateCriteriaName(root, property, isBool ? "is" : "from");
+                            secondPropertyName = generateCriteriaName(root, property, isBool ? "not" : "to");
+                        } else {
+                            firstPropertyName = generateCriteriaName(root, property, isBool ? "is" : "");
+                            secondPropertyName = null;
+                        }
+                        editor = this.$.selection_criteria.$.masterDom.querySelector('[id=editor_4_' + firstPropertyName + ']');
                         if (editor) {
-                            editor._editingValue = this.queryPart[property];
+                            editor._editingValue = getFirstValue(queryObject[property]);
                             editor.commit();
+                        }
+                        if (secondPropertyName) {
+                            editor = this.$.selection_criteria.$.masterDom.querySelector('[id=editor_4_' + secondPropertyName + ']');
+                            if (editor) {
+                                editor._editingValue = getSecondValue(queryObject[property]);
+                                editor.commit();
+                            }
                         }
                     }
                 }
@@ -554,7 +604,7 @@
             firstPage: function () {
                 var self = this;
                 self.persistActiveElement();
-                return this.$.selection_criteria.firstPage().then(function() {
+                return this.$.selection_criteria.firstPage().then(function () {
                     self.restoreActiveElement();
                 });
             },
@@ -565,7 +615,7 @@
             lastPage: function () {
                 var self = this;
                 self.persistActiveElement();
-                return this.$.selection_criteria.lastPage().then(function() {
+                return this.$.selection_criteria.lastPage().then(function () {
                     self.restoreActiveElement();
                 });
             },
@@ -576,7 +626,7 @@
             nextPage: function () {
                 var self = this;
                 self.persistActiveElement();
-                return this.$.selection_criteria.nextPage().then(function() {
+                return this.$.selection_criteria.nextPage().then(function () {
                     self.restoreActiveElement();
                 });
             },
@@ -587,7 +637,7 @@
             prevPage: function () {
                 var self = this;
                 self.persistActiveElement();
-                return this.$.selection_criteria.prevPage().then(function() {
+                return this.$.selection_criteria.prevPage().then(function () {
                     self.restoreActiveElement();
                 });
             },
