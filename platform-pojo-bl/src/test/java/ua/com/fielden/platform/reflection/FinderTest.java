@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -11,6 +12,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
 
@@ -26,6 +28,7 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder.IPropertyPathFilteringCondition;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.reflection.test_entities.CollectionalEntity;
 import ua.com.fielden.platform.reflection.test_entities.ComplexEntity;
 import ua.com.fielden.platform.reflection.test_entities.ComplexKeyEntity;
@@ -323,20 +326,43 @@ public class FinderTest {
     }
 
     @Test
-    public void testThatGetFieldByNameWorks() throws Exception {
+    public void existing_properties_can_be_found_with_getFieldByName() throws Exception {
         final Field field = Finder.getFieldByName(SecondLevelEntity.class, "property");
         assertNotNull("Failed to located a filed.", field);
         assertEquals("Incorrect type.", String.class, field.getType());
+    }
+
+    @Test
+    public void common_properties_for_uniton_entity_can_be_found_with_getFieldByName() throws Exception {
         final Field unionEntityField = Finder.getFieldByName(UnionEntityForReflector.class, "commonProperty");
         assertNotNull("Failed to locate field in the UnionEntity class", unionEntityField);
         assertEquals("Incorrect commonProperty type.", String.class, unionEntityField.getType());
+    }
 
+    @Test
+    public void trying_to_locate_non_existing_properties_with_getFieldByName_throws_exception() throws Exception {
+        final String name = "nonExistingProperty";
+        final Class<SecondLevelEntity> type = SecondLevelEntity.class;
         try {
-            Finder.getFieldByName(SecondLevelEntity.class, "nonExistingProperty");
+            Finder.getFieldByName(type, name);
             fail("Should have thrown an exception.");
-        } catch (final Exception ex) {
-            System.out.println(ex.getMessage());
+        } catch (final ReflectionException ex) {
+            assertEquals(format("Failed to locate field [%s] in type [%s]", name, type.getName()), ex.getMessage());
         }
+    }
+
+    @Test
+    public void existing_properties_can_be_found_with_getFieldByNameOptionally() throws Exception {
+        final Optional<Field> field = Finder.getFieldByNameOptionally(SecondLevelEntity.class, "property");
+        assertTrue("Failed to located a filed.", field.isPresent());
+        assertTrue("Incorrect type.", field.filter(f -> f.getType() == String.class).isPresent());
+    }
+
+    @Test
+    public void common_properties_for_union_entity_can_be_found_with_getFieldByNameOptionally() throws Exception {
+        final Optional<Field> unionEntityField = Finder.getFieldByNameOptionally(UnionEntityForReflector.class, "commonProperty");
+        assertTrue("Failed to locate field in the UnionEntity class", unionEntityField.isPresent());
+        assertTrue("Incorrect commonProperty type.", unionEntityField.filter(f -> f.getType() == String.class).isPresent());
     }
 
     @Test
@@ -370,7 +396,7 @@ public class FinderTest {
             fail("Field should not be found for method [" + methodName + "] definition.");
         } catch (final Finder.MethodFoundException e) {
             System.out.println("All is ok: " + e.getMessage());
-        } catch (final IllegalArgumentException e) {
+        } catch (final Exception e) {
             fail("Method [" + methodName + "] should be found.");
         }
 
@@ -380,7 +406,7 @@ public class FinderTest {
             fail("Field should not be found for inherited method [" + methodName + "] definition.");
         } catch (final Finder.MethodFoundException e) {
             System.out.println("All is ok: " + e.getMessage());
-        } catch (final IllegalArgumentException e) {
+        } catch (final Exception e) {
             fail("Inherited method [" + methodName + "] should be found.");
         }
 
