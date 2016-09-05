@@ -225,6 +225,14 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         
         final TgEntityWithTimeZoneDates timeZone1 = save(new_(TgEntityWithTimeZoneDates.class, "KEY1").setDatePropUtc(new Date(3609999)));
         System.out.println("timeZone1.getId() == " + timeZone1.getId());
+        final TgEntityWithTimeZoneDates timeZone2 = save(new_(TgEntityWithTimeZoneDates.class, "KEY2").setDatePropUtc(new Date(1473057180015L)));
+        System.out.println("timeZone2.getId() == " + timeZone2.getId());
+        final TgEntityWithTimeZoneDates timeZone3 = save(new_(TgEntityWithTimeZoneDates.class, "KEY3").setDatePropUtc(new Date(1473057204015L)));
+        System.out.println("timeZone3.getId() == " + timeZone3.getId());
+        final TgEntityWithTimeZoneDates timeZone4 = save(new_(TgEntityWithTimeZoneDates.class, "KEY4").setDatePropUtc(new Date(1473057204000L)));
+        System.out.println("timeZone4.getId() == " + timeZone4.getId());
+        final TgEntityWithTimeZoneDates timeZone5 = save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
+        System.out.println("timeZone5.getId() == " + timeZone5.getId());
 
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
         mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));

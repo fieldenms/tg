@@ -32,6 +32,50 @@
     </test-fixture>
 
     <script>
+	    suite('millis converts from ', function() {
+	        var master, reflector;
+	
+	        setup(function() {
+	            master = fixture('MasterFixture');
+	            reflector = document.querySelector('#reflector');
+	        });
+	        
+	        var correctlyApproximates = function (done, expectedMillis, expectedText, entityId) {
+	            master.entityId = entityId;
+	            var edUtc = master.$.editor_4_datePropUtc;
+
+	            master.postRetrieved = function (entity, bindingEntity, customObject) {
+	                var utcMoment = _millisDateRepresentation(expectedMillis, 'UTC'); /* 05/09/2016 06:33:24.000 in UTC (UTC+00:00) */
+	                assert.strictEqual(utcMoment, expectedText, "Date representation should not have millis but should have seconds.");
+	                assert.strictEqual(edUtc._editingValue, expectedText, "_editingValue should not have millis but should have seconds.");
+	                assert.strictEqual(edUtc._commValue, expectedText, "_commValue should not have millis but should have seconds.");
+	                assert.strictEqual(edUtc._acceptedValue, expectedMillis, "_acceptedValue should be non-empty on start.");
+	
+	                assert.strictEqual(entity.get('datePropUtc'), expectedMillis, "'property' value should be non-empty on start.");
+	                assert.strictEqual(bindingEntity.get('datePropUtc'), expectedMillis, "Binding 'property' value should be non-empty on start.");
+	                done();
+	            };
+	
+	            master.retrieve();
+	        };
+	        
+	        test('[1473057180015] to UTC [05/09/2016 06:33:00.015]', function (done) {
+	            correctlyApproximates(done, 1473057180015, '05/09/2016 06:33:00.015', 80);
+	        });
+	        
+	        test('[1473057204015] to UTC [05/09/2016 06:33:24.015]', function (done) {
+	            correctlyApproximates(done, 1473057204015, '05/09/2016 06:33:24.015', 81);
+	        });
+	        
+	        test('[1473057204000] to UTC [05/09/2016 06:33:24.000]', function (done) {
+	            correctlyApproximates(done, 1473057204000, '05/09/2016 06:33:24.000', 82);
+	        });
+	        
+	        test('[1473057180000] to UTC [05/09/2016 06:33]', function (done) {
+	            correctlyApproximates(done, 1473057180000, '05/09/2016 06:33', 83);
+	        });
+	    });
+        
         suite('UTC property value approximates from', function() {
             var master, reflector;
 
