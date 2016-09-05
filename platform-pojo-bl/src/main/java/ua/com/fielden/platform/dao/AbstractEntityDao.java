@@ -6,17 +6,11 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.order
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.dynamic.DynamicType.Builder;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.implementation.FixedValue;
-import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -37,7 +31,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements IEntityDao<T> {
 
-    private final Class<? extends Comparable> keyType;
+    private final Class<? extends Comparable<?>> keyType;
     private final Class<T> entityType;
     private IFetchProvider<T> fetchProvider;
 
@@ -46,9 +40,8 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     }
 
     /**
-     * A principle constructor, which requires entity type that should be managed by this DAO instance. Entity's key type is determined automatically.
-     *
-     * @param entityType
+     * The default constructor, which looks for annotation {@link EntityType} to identify the entity type automatically.
+     * An exception is thrown if the annotation is missing. 
      */
     protected AbstractEntityDao() {
         final EntityType annotation = AnnotationReflector.getAnnotation(getClass(), EntityType.class);
@@ -76,7 +69,7 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     }
 
     @Override
-    public Class<? extends Comparable> getKeyType() {
+    public Class<? extends Comparable<?>> getKeyType() {
         return keyType;
     }
 
