@@ -30,6 +30,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser0ForDomainTreesTestingPurposes;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -111,7 +112,7 @@ public class DomainTreeEnhancer0Test extends AbstractDomainTreeTest {
         try {
             final Field field = Finder.findFieldByName(type, prop);
             assertNull("The property [" + prop + "] should not exist in type [" + type + "].", field);
-        } catch (final IllegalArgumentException e) {
+        } catch (final ReflectionException e) {
         }
     }
 

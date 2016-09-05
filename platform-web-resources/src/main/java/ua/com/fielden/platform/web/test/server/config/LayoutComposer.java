@@ -131,6 +131,20 @@ public class LayoutComposer {
         return layout.toString();
     }
 
+    public static String mkVarGridForMasterFitWidth(final int numColsInFirstRow, final int... colsPerSecondRowOnwards) {
+        final StringBuilder layout = new StringBuilder();
+        layout.append("['padding:20px',");
+        //processing the first row
+        appendRow(layout, MASTER_LAYOUT_SPECIFICATION, numColsInFirstRow);
+        //processing the array
+        for (final int colsInRow : colsPerSecondRowOnwards) {
+            appendRow(layout, MASTER_LAYOUT_SPECIFICATION, colsInRow);
+        }
+        layout.deleteCharAt(layout.length() - 1);
+        layout.append("]");
+        return layout.toString();
+    }
+
     /**
      * Produces a consistent rectangular layout for embedded master with rowNumber by columnNum dimension.
      *

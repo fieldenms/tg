@@ -5,6 +5,7 @@ import org.apache.commons.lang.StringUtils;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.web.view.master.api.helpers.IWidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.widgets.IAutocompleterConfig;
@@ -118,7 +119,12 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IDateTimePickerConfig<T> asDateTimePicker() {
-        widget = new DateTimePickerWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName, false);
+        widget = new DateTimePickerWidget(
+                TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), 
+                propertyName, 
+                false, 
+                DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName)
+        );
         return new DateTimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
     }
 

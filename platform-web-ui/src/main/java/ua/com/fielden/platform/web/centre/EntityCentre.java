@@ -36,6 +36,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -687,7 +688,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                                 .replace("@column-title", columnTitileAndDesc.getKey())
                                 .replace("@column-desc", columnTitileAndDesc.getValue())
                                 .replaceAll("@column-index", Integer.toString(columnIndex))
-                                .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType).toString()))));
+                                .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType, EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null).toString()))));
             }
         }
 
@@ -734,9 +735,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
     }
 
-    private Object egiRepresentationFor(final Class<?> propertyType) {
+    private Object egiRepresentationFor(final Class<?> propertyType, final String timeZone) {
         final Class<?> type = DynamicEntityClassLoader.getOriginalType(propertyType);
-        return EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : type.getSimpleName());
+        return EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : timeZone != null ? type.getSimpleName() + ":" + timeZone : type.getSimpleName());
     }
 
     /**
@@ -802,7 +803,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, null, centre.getSecondTick().getWidth(root, resultPropName), resultProp.isFlexible, tooltipProp, egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, null, centre.getSecondTick().getWidth(root, resultPropName), resultProp.isFlexible, tooltipProp, egiRepresentationFor(propertyType, EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
                     final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));

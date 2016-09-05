@@ -14,6 +14,7 @@
     <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
     
     <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/resources/reflection/tg-date-utils.html">
     <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties">
 </head>
 
@@ -118,7 +119,7 @@
             });
             
             test('[09/09/2002] to [09/09/2002 11:59:59.999 PM] in case of editor with timePortionToBecomeEndOfDay as true', function (done) {
-                correctlyApproximates(done, '09/09/2002', '09/09/2002 11:59:59.999 PM', reflector._millis('09/09/2002 23:59:59.999'));
+                correctlyApproximates(done, '09/09/2002', '09/09/2002 11:59:59.999 PM', _millis('09/09/2002 23:59:59.999'));
             });
             
             test('[9/09/2002] to [09/09/2002 12:00 AM]', function (done) {

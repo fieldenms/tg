@@ -1,5 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/components/moment-component.html">
+<link rel="import" href="/resources/reflection/tg-date-utils.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 
 <dom-module id="tg-month-selector">
@@ -90,7 +91,8 @@
 <script>
     (function () {
         var getDaysInMonth = function (year, month) {
-                return new Date(year, month + 1, 0).getDate();
+                var yearMonth = { year: year, month: month, day: 1 };
+                return _momentTz(yearMonth, this.timeZone).daysInMonth();
             },
             createMonth = function (year, month) {
                 var weeks = [],
@@ -105,8 +107,9 @@
                 return weeks;
             },
             createWeek = function (year, month, day) {
+                var yearMonthDay = { year: year, month: month, day: day };
                 var week = [],
-                    firstDay = new Date(year, month, day).getDay(),
+                    firstDay = _momentTz(yearMonthDay, this.timeZone).day(),
                     days = getDaysInMonth(year, month),
                     previousMonthDays = getDaysInMonth(year, month - 1),
                     nextMonthDay = -1,
@@ -132,6 +135,14 @@
             is: "tg-month-selector",
 
             properties: {
+                /**
+                 * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods. 
+                 * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
+                 */
+                timeZone: {
+                    type: String
+                },
+                
                 selectedDate: {
                     type: Number,
                     notify: true,
@@ -149,10 +160,10 @@
             },
 
             ready: function () {
-                var today = new Date();
-                this.todayDay = today.getDate();
-                this.todayMonth = today.getMonth();
-                this.todayYear = today.getFullYear();
+                var today = _momentTz(this.timeZone);
+                this.todayDay = today.date();
+                this.todayMonth = today.month();
+                this.todayYear = today.year();
                 this.selectedDay = null;
                 this.selectedMonth = null;
                 this.selectedYear = null;
@@ -161,8 +172,10 @@
             },
 
             attached: function () {
-                var dateToShow = (this.selectedDate && new Date(this.selectedDate)) || new Date();
-                this._adjustMonth(dateToShow);
+                var momentToShow = this.selectedDate ? 
+                        _momentTz(this.selectedDate, this.timeZone) :
+                        _momentTz(this.timeZone);
+                this._adjustMonth(momentToShow);
             },
 
             /**
@@ -183,26 +196,28 @@
              * Selectes the year on the displayed calendar
              */
             _selectYear: function (year) {
-                var dateToShow = new Date(year, this.month, 1);
-                this._adjustMonth(dateToShow);
+                var yearMonth = { year: year, month: this.month, day: 1 };
+                var momentToShow = _momentTz(yearMonth, this.timeZone);
+                this._adjustMonth(momentToShow);
             },
 
             /**
              * Selects month depending on increment (the increment might be positive or negetive).
              */
             _selectMonth: function (month) {
-                var dateToShow = new Date(this.year, month, 1);
-                this._adjustMonth(dateToShow);
+                var yearMonth = { year: this.year, month: month, day: 1 };
+                var momentToShow = _momentTz(yearMonth, this.timeZone);
+                this._adjustMonth(momentToShow);
             },
 
             /**
              * Updates the calendar information depending on which month was choosen.
              */
-            _adjustMonth: function (dateToShow) {
-                if (!isNaN(dateToShow.getTime()) && (this.month !== dateToShow.getMonth() || this.year !== dateToShow.getFullYear())) {
-                    this.monthName = moment(dateToShow).format("MMMM");
-                    this.month = dateToShow.getMonth();
-                    this.year = dateToShow.getFullYear();
+            _adjustMonth: function (momentToShow) {
+                if (momentToShow.isValid() && (this.month !== momentToShow.month() || this.year !== momentToShow.year())) {
+                    this.monthName = momentToShow.format("MMMM");
+                    this.month = momentToShow.month();
+                    this.year = momentToShow.year();
                     this.weeks = createMonth(this.year, this.month);
                 }
             },
@@ -211,7 +226,8 @@
              * Selects the date.
              */
             _selectDay: function (event, detail, el) {
-                this.selectedDate = new Date(this.year, this.month, event.model.day).getTime();
+                var yearMonthDay = { year: this.year, month: this.month, day: event.model.day };
+                this.selectedDate = _momentTz(yearMonthDay, this.timeZone).valueOf();
             },
 
             /**
@@ -219,12 +235,12 @@
              */
             _selectedDateChanged: function (newValue, oldValue) {
                 if (newValue !== null) {
-                    var newDate = new Date(newValue);
-                    if (!isNaN(newDate.getTime())) {
-                        this.selectedYear = newDate.getFullYear();
-                        this.selectedMonth = newDate.getMonth();
-                        this._adjustMonth(newDate);
-                        this.selectedDay = newDate.getDate();
+                    var newMoment = _momentTz(newValue, this.timeZone);
+                    if (newMoment.isValid()) {
+                        this.selectedYear = newMoment.year();
+                        this.selectedMonth = newMoment.month();
+                        this._adjustMonth(newMoment);
+                        this.selectedDay = newMoment.date();
                     }
                 }
             },

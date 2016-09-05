@@ -20,6 +20,7 @@ import ua.com.fielden.platform.domaintree.IDomainTreeManager.IDomainTreeManagerA
 import ua.com.fielden.platform.domaintree.testing.DomainTreeManagerAndEnhancer1;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
  * A test for {@link AbstractDomainTreeManager}.
@@ -171,22 +172,22 @@ public class AbstractDomainTreeManagerAndEnhancerTest extends AbstractDomainTree
         try {
             dtm().getRepresentation().isExcludedImmutably(MasterEntity.class, "calcProp1");
             fail("At this moment property 'calcProp1' should not exist and should cause exception.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final ReflectionException e) {
         }
         try {
             dtm().getRepresentation().getSecondTick().isDisabledImmutably(MasterEntity.class, calcProp2);
             fail("At this moment property 'calcProp2' should not exist and should cause exception.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final ReflectionException e) {
         }
         try {
             dtm().getRepresentation().getSecondTick().isCheckedImmutably(MasterEntity.class, "calcProp3");
             fail("At this moment property 'calcProp3' should not exist and should cause exception.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final ReflectionException e) {
         }
         try {
             dtm().getSecondTick().isChecked(MasterEntity.class, "calcProp5");
             fail("At this moment property 'calcProp5' should not exist and should cause exception.");
-        } catch (final IllegalArgumentException e) {
+        } catch (final ReflectionException e) {
         }
 
         dtm().getEnhancer().addCalculatedProperty(calc1);

@@ -14,6 +14,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.analyses.IPivotDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
  * A test for {@link AbstractAnalysisDomainTreeManager}.
@@ -80,12 +81,12 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
                 try {
                     dtm().getFirstTick().getWidth(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final IllegalArgumentException | ReflectionException e) {
                 }
                 try {
                     dtm().getFirstTick().setWidth(MasterEntity.class, name, 85);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final IllegalArgumentException | ReflectionException e) {
                 }
             }
         }, "excludedManuallyProp", "dateProp", "integerProp", "booleanProp", "intAggExprProp");
@@ -96,12 +97,12 @@ public class PivotDomainTreeManagerTest extends AbstractAnalysisDomainTreeManage
                 try {
                     dtm().getSecondTick().getWidth(MasterEntity.class, name);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final IllegalArgumentException | ReflectionException e) {
                 }
                 try {
                     dtm().getSecondTick().setWidth(MasterEntity.class, name, 85);
                     fail(message);
-                } catch (final IllegalArgumentException e) {
+                } catch (final IllegalArgumentException | ReflectionException e) {
                 }
             }
         }, "excludedManuallyProp", "dateProp", "integerProp", "booleanProp", "intAggExprProp");

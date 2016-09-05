@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.centre.api.crit.impl;
 
 import java.util.Map;
 
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.web.view.master.api.widgets.datetimepicker.impl.DateTimePickerWidget;
 
 /**
@@ -23,12 +24,14 @@ public class DateCriterionWidget extends AbstractRangeCriterionWidget {
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getKey(),
-                        false
+                        false,
+                        DefaultValueContract.getTimeZone(managedType, propertyName)
                 ),
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getValue(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getValue(),
-                        true
+                        true,
+                        DefaultValueContract.getTimeZone(managedType, propertyName)
                 ));
     }
 

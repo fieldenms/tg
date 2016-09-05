@@ -8,7 +8,9 @@ import java.sql.Types;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -18,38 +20,38 @@ import org.hibernate.type.LiteralType;
 import org.hibernate.type.MutableType;
 import org.joda.time.DateTime;
 
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
+
 /**
- * Custom Hibernate type for persisting {@link Date} instances with time portion excluding nanos.
- * <p>
- * The default Hibernate type <code>date</code> is not suitable as it does not store time, the <code>timestamp</code> stores millisecond fractions (nanos), which does not play well
- * with Date time.
- * <p>
- * For example, if a property is bound to a date picker component then nanos are lost, which is recognised as change.
- * 
+ * This is a user type that should be used to store properties of type {@link Date} in UTC.
+ * For this to take effect, a corresponding property needs to be annotated with <code>@PersistentType(userType = IUtcDateTimeType.class)</code>
+ *  
  * @author TG Team
- * 
+ *
  */
-public class DateTimeType extends MutableType implements IdentifierType<Date>, LiteralType<Date> {
+public class UtcDateTimeType extends MutableType implements IdentifierType<Date>, LiteralType<Date>, IUtcDateTimeType {
     private static final long serialVersionUID = 1L;
 
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 
     @Override
     public Object get(final ResultSet rs, final String name) throws SQLException {
-        final Timestamp value = rs.getTimestamp(name);
+        final Timestamp value = rs.getTimestamp(name, Calendar.getInstance(UTC));
         return value != null ? new Date(value.getTime()) : null;
-    }
-
-    public Class<?> getReturnedClass() {
-        return Date.class;
     }
 
     @Override
     public void set(final PreparedStatement st, final Object value, final int index) throws SQLException {
         final long millis = value instanceof Timestamp ? ((Timestamp) value).getTime() : ((java.util.Date) value).getTime();
-        st.setTimestamp(index, new Timestamp(millis));
+        st.setTimestamp(index, new Timestamp(millis), Calendar.getInstance(UTC));
     }
 
+    public Class<?> getReturnedClass() {
+        return Date.class;
+    }
+    
     @Override
     public int sqlType() {
         return Types.TIMESTAMP;
@@ -57,7 +59,6 @@ public class DateTimeType extends MutableType implements IdentifierType<Date>, L
 
     @Override
     public boolean isEqual(final Object x, final Object y) {
-
         if (x == y) {
             return true;
         }
@@ -75,7 +76,7 @@ public class DateTimeType extends MutableType implements IdentifierType<Date>, L
 
     @Override
     public int getHashCode(final Object x, final EntityMode entityMode) {
-        return new Long(((java.util.Date) x).getTime()).hashCode();
+        return ((java.util.Date) x).hashCode() * 31;
     }
 
     public String getName() {
@@ -84,7 +85,9 @@ public class DateTimeType extends MutableType implements IdentifierType<Date>, L
 
     @Override
     public String toString(final Object val) {
-        return new SimpleDateFormat(DATE_FORMAT).format((java.util.Date) val);
+        final DateFormat utcFormat = new SimpleDateFormat(DATE_FORMAT);
+        utcFormat.setTimeZone(UTC);
+        return utcFormat.format((java.util.Date) val);
     }
 
     @Override
@@ -93,7 +96,9 @@ public class DateTimeType extends MutableType implements IdentifierType<Date>, L
     }
 
     public Date stringToObject(final String xml) throws Exception {
-        return DateFormat.getDateInstance().parse(xml);
+        final DateFormat utcFormat = new SimpleDateFormat(DATE_FORMAT);
+        utcFormat.setTimeZone(UTC);
+        return utcFormat.parse(xml);
     }
 
     public String objectToSQLString(final Date value, final Dialect dialect) throws Exception {
@@ -103,10 +108,16 @@ public class DateTimeType extends MutableType implements IdentifierType<Date>, L
     @Override
     public Object fromStringValue(final String xml) throws HibernateException {
         try {
-            return new SimpleDateFormat(DATE_FORMAT).parse(xml);
+            final DateFormat utcFormat = new SimpleDateFormat(DATE_FORMAT);
+            utcFormat.setTimeZone(UTC);
+            return utcFormat.parse(xml);
         } catch (final ParseException pe) {
             throw new HibernateException("could not parse XML", pe);
         }
     }
-
+    
+    @Override
+    public Object instantiate(final Object argument, final EntityFactory factory) {
+        return argument;
+    }
 }
