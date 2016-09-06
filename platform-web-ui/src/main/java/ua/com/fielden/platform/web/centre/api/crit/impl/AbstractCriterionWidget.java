@@ -36,6 +36,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     private static final String sufixYes = " (Yes)";
     private static final String sufixNo = " (No)";
 
+    private final Class<?> root;
     private final String propertyName;
     private final String widgetName;
     private final String widgetPath;
@@ -48,7 +49,8 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
      * @param criteriaType
      * @param propertyName
      */
-    public AbstractCriterionWidget(final String widgetPath, final String propertyName, final AbstractWidget... editors) {
+    public AbstractCriterionWidget(final Class<?> root, final String widgetPath, final String propertyName, final AbstractWidget... editors) {
+        this.root = root;
         this.widgetName = extractNameFrom(widgetPath);
         this.widgetPath = widgetPath;
         this.propertyName = propertyName;
@@ -101,6 +103,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         if (isDebug()) {
             attrs.put("debug", "true");
         }
+        attrs.put("id", "criterion_4_" + CriteriaReflector.generateCriteriaPropertyName(root, this.propertyName));
         attrs.put("validation-callback", "[[validate]]");
         return attrs;
     }

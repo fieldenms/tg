@@ -24,11 +24,11 @@ public class EntitySingleCriterionWidget extends AbstractSingleCriterionWidget {
      * @param propertyName
      */
     public EntitySingleCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName, final List<Pair<String, Boolean>> additionalProps, final CentreContextConfig centreContextConfig) {
-        super(propertyName,
+        super(root, propertyName,
                 new EntitySingleCritAutocompletionWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),
-                        StringUtils.isEmpty(propertyName) ? (Class<? extends AbstractEntity<?>>) root : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType((Class<? extends AbstractEntity<?>>) root, propertyName),
+                        StringUtils.isEmpty(propertyName) ? (Class<? extends AbstractEntity<?>>) root : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(root, propertyName),
                         centreContextConfig
                 ).setAdditionalProps(additionalProps));
     }

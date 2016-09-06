@@ -9,33 +9,69 @@
     (function () {
         var generateCriteriaName = function (root, property, suffix) {
             var rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
-            return rootName + (property === "this" ? "" : property.replace(/\./g, "_")) + (suffix ? "_" + suffix : "");  
+            return rootName + (property === "this" ? "" : property.replace(/\./g, "_")) + (suffix ? "_" + suffix : "");
         };
-        var isNot = function (value) {
-            return /^\!/.test(value);
+        var isNot = function (query) {
+            return /.+\!=.*/.test(query);
         };
+        var isMissing = function (value) {
+            return /^\{.*\}$/.test(value);
+        };
+        var getValueFromMissing = function (value) {
+            return /^\{(.*)\}$/.exec(value)[1];
+        }
         var isRange = function (value) {
-            return /(\{|\[|\().*,\s*.*(\}|\]|\))/.test(value);
+            return /^(\[|\().*,\s*.*(\]|\))$/.test(value);
         };
         var isBoolean = function (value) {
-            return /(true|false)+/.test(value);
+            return /(true|false)/.test(value);
+        };
+        var shouldExcludeFirstParam = function (value) {
+            return /^\(/.test(value);
+        };
+        var shouldExcludeSecondParam = function (value) {
+            return /\)$/.test(value);
         };
         var getFirstValue = function (queryParam) {
-            var value;
-            if (isRange(queryParam)) {
-                value = /(\{|\[|\()(.*),\s*.*(\}|\]|\))/.exec(queryParam)[2];
-            } else {
-                value = /(\!?)(.*)/.exec(queryParam)[2];
-            }
-            return value || "";
+            return /^(\[|\()(.*),\s*.*(\]|\))$/.exec(queryParam)[2];
         };
         var getSecondValue = function (queryParam) {
-            var value;
-            if (isRange(queryParam)) {
-                value = /(\{|\[|\().*,\s*(.*)(\}|\]|\))/.exec(queryParam)[2];
-            } 
-            return value || "";
+            return /^(\[|\().*,\s*(.*)(\]|\))$/.exec(queryParam)[2];
         };
+        var generateQueryParam = function (root, query) {
+            var queryParam = {
+                not: isNot(query)
+            };
+            var queryParts, isBool;
+            if (queryParam.not) {
+                queryParts = query.split("!=");
+            } else {
+                queryParts = query.split("=");
+            }
+            queryParam.criteriaId = "criterion_4_" + generateCriteriaName(root, queryParts[0]);
+            queryParam.isMissing = isMissing(queryParts[1]);
+            if (queryParam.isMissing) {
+                queryParts[1] = getValueFromMissing(queryParts[1]);
+            }
+            isBool = isBoolean(queryParts[1]);
+            if (isRange(queryParts[1])) {
+                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "is" : "from");
+                queryParam.firstEditorValue = getFirstValue(queryParts[1]);
+                queryParam.secondEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "not" : "to");
+                queryParam.secondEditorValue = getSecondValue(queryParts[1]);
+                if (!isBool) {
+                    queryParam.exclude1 = shouldExcludeFirstParam(queryParts[1]);
+                    queryParam.exclude2 = shouldExcludeSecondParam(queryParts[1]);
+                }
+            } else {
+                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "is" : "");
+                queryParam.firstEditorValue = queryParts[1];
+            }
+            return queryParam;
+        };
+
+
+
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgEntityCentreBehaviorImpl = {
             properties: {
@@ -530,37 +566,36 @@
              * Set the query params to selection criteria if they exists.
              */
             _setQueryParams: function () {
-                var root = this._simpleEntityType();
-                var editor, queryObject, criteriaName, firstPropertyName, secondPropertyName, isBool;
-                if (this.queryPart) {
-                    queryObject = this.queryPart.split("&").reduce(function (queryParams, n) {
-                         return n = n.split("="), queryParams[n[0]] = n[1], queryParams;
-                    }, {});
+                var self = this;
+                var root = self._simpleEntityType();
+                var queries = [];
+                var paramObject = [];
+                if (self.queryPart) {
+                    queries = self.queryPart.split("&");
                 }
-                for (var property in queryObject) {
-                    if (queryObject.hasOwnProperty(property)) {
-                        isBool = isBoolean(queryObject[property]);
-                        if (isRange(queryObject[property])) {
-                            firstPropertyName = generateCriteriaName(root, property, isBool ? "is" : "from");
-                            secondPropertyName = generateCriteriaName(root, property, isBool ? "not" : "to");
-                        } else {
-                            firstPropertyName = generateCriteriaName(root, property, isBool ? "is" : "");
-                            secondPropertyName = null;
-                        }
-                        editor = this.$.selection_criteria.$.masterDom.querySelector('[id=editor_4_' + firstPropertyName + ']');
-                        if (editor) {
-                            editor._editingValue = getFirstValue(queryObject[property]);
-                            editor.commit();
-                        }
-                        if (secondPropertyName) {
-                            editor = this.$.selection_criteria.$.masterDom.querySelector('[id=editor_4_' + secondPropertyName + ']');
-                            if (editor) {
-                                editor._editingValue = getSecondValue(queryObject[property]);
-                                editor.commit();
-                            }
-                        }
+                paramObject = queries.map(function (query) {
+                    return generateQueryParam(root, query)
+                });
+                paramObject.forEach(function (queryParam) {
+                    var criterion = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.criteriaId + ']');
+                    var firstEditor = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.firstEditorName + ']');
+                    var secondEditor = queryParam.secondEditorName && self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.secondEditorName + ']');
+                    if (criterion && criterion._iconButtonVisible()) {
+                        criterion._orNull = queryParam.isMissing;
+                        criterion._not = queryParam.not;
+                        criterion._exclusive = queryParam.exclude1;
+                        criterion._exclusive2 = queryParam.exclude2;
+                        criterion._acceptMetaValues();
                     }
-                }
+                    if (firstEditor) {
+                        firstEditor._editingValue = queryParam.firstEditorValue;
+                        firstEditor.commit();
+                    }
+                    if (secondEditor) {
+                        secondEditor._editingValue = queryParam.secondEditorValue;
+                        secondEditor.commit();
+                    }
+                });
             },
 
             /**
