@@ -19,6 +19,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
@@ -330,7 +331,47 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
             return Optional.ofNullable(valueMatcherForProps.get(propName));
         }
+        
+        /**
+         * Returns action configuration for concrete action kind and its number in that kind's space.
+         *
+         * @param actionKind
+         * @param actionNumber
+         * @return
+         */
+        @Override
+        public  ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+            if (FunctionalActionKind.PRIMARY_RESULT_SET == actionKind) {
+                System.out.println("HOORAY. GETTING ACTION CONFIG. PRIMARY_RESULT_SET");
 
+                int funcActionSeq = 0; // used for both entity and property level functional actions
+                for (final WidgetSelector<T> widget : widgets) {
+                    if (widget.widget().action().isPresent()) {
+                        final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = widget.widget().action().get();
+                        if (!config.isNoAction()) {
+                            if (actionNumber == funcActionSeq) {
+                                return config;
+                            }
+                            funcActionSeq++;
+                        }
+                    }
+                }
+                // entity actions should be type matched for rendering due to inclusion of both "standard" actions such as SAVE or CANCLE as well as the functional actions
+                for (final Object action: entityActions) {
+                    if (!(action instanceof ua.com.fielden.platform.web.view.master.api.actions.entity.impl.EntityActionConfig)) {
+                        final ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig config = (ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig) action;
+                        if (!config.isNoAction()) {
+                            if (actionNumber == funcActionSeq) {
+                                return config;
+                            }
+                            funcActionSeq++;
+                        }
+                    }
+                }
+                throw new IllegalStateException("No master action has been found.");
+            } // TODO implement other types
+            throw new UnsupportedOperationException(actionKind + " is not supported yet.");
+        }
     }
 
     @Override
