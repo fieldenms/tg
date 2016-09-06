@@ -44,7 +44,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.entity.ContinuationData;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.Required;
@@ -126,6 +126,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
     private final boolean hasSaveOverridden;
 
+    @Override
     public <E extends IEntityDao<T>> E uninstrumented() {
         final Class<?> coType = PropertyTypeDeterminator.stripIfNeeded(getClass());
         
@@ -1283,7 +1284,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return (C) co;
     }
     
-    private final Map<String, ContinuationData<?>> moreData = new HashMap<>();
+    private final Map<String, IContinuationData> moreData = new HashMap<>();
     
     /**
      * Replaces any previously provided "more data" with new "more data".
@@ -1291,7 +1292,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * 
      * @param moreData
      */
-    public CommonEntityDao<?> setMoreData(final Map<String, ContinuationData<?>> moreData) {
+    public CommonEntityDao<?> setMoreData(final Map<String, IContinuationData> moreData) {
         clearMoreData();
         this.moreData.putAll(moreData);
         return this;
@@ -1305,7 +1306,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @param moreData
      * @return
      */
-    public CommonEntityDao<T> setMoreData(final String key, final ContinuationData<?> moreData) {
+    public CommonEntityDao<T> setMoreData(final String key, final IContinuationData moreData) {
         this.moreData.put(key, moreData);
         return this;
     }
@@ -1324,7 +1325,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      * @return
      */
     @SuppressWarnings("unchecked")
-    public <E extends ContinuationData<?>> Optional<E> moreData(final String key) {
+    public <E extends IContinuationData> Optional<E> moreData(final String key) {
         return Optional.ofNullable((E) this.moreData.get(key));
     }
 }

@@ -30,7 +30,7 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.ContinuationData;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -219,7 +219,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
-        final Optional<Map<String, ContinuationData<?>>> continuations = savingInfoHolder.getContinuations() != null && !savingInfoHolder.getContinuations().isEmpty() ?
+        final Optional<Map<String, IContinuationData>> continuations = savingInfoHolder.getContinuations() != null && !savingInfoHolder.getContinuations().isEmpty() ?
                 Optional.of(createContinuationsMap(savingInfoHolder.getContinuations(), savingInfoHolder.getContinuationProperties())) : Optional.empty();
         final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
@@ -227,8 +227,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(potentiallySavedWithException.getKey()), potentiallySavedWithException.getValue());
     }
 
-    private Map<String, ContinuationData<?>> createContinuationsMap(final List<ContinuationData<?>> continuations, final List<String> continuationProperties) {
-        final Map<String, ContinuationData<?>> map = new LinkedHashMap<>();
+    private Map<String, IContinuationData> createContinuationsMap(final List<IContinuationData> continuations, final List<String> continuationProperties) {
+        final Map<String, IContinuationData> map = new LinkedHashMap<>();
         for (int index = 0; index < continuations.size(); index++) {
             map.put(continuationProperties.get(index), continuations.get(index));
         }
@@ -464,7 +464,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return if saving was successful -- returns saved entity with no exception if saving was unsuccessful with exception -- returns <code>validatedEntity</code> (to be bound to
      *         appropriate entity master) and thrown exception (to be shown in toast message)
      */
-    private Pair<T, Optional<Exception>> save(final T validatedEntity, final Optional<Map<String, ContinuationData<?>>> continuations) {
+    private Pair<T, Optional<Exception>> save(final T validatedEntity, final Optional<Map<String, IContinuationData>> continuations) {
         T savedEntity;
         try {
             // try to save the entity with its companion 'save' method
