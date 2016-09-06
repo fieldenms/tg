@@ -71,9 +71,9 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
         if (masterEntityFromContext == null) {
             throw Result.failure("The master entity for collection modification is not provided in the context.");
         }
-//        if (masterEntityFromContext.isDirty()) {
-//            throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
-//        }
+        if (masterEntityFromContext.isDirty()) {
+            throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
+        }
         final MASTER_TYPE refetchedMasterEntity = refetchMasterEntity(masterEntityFromContext);
         if (refetchedMasterEntity == null) {
             throw Result.failure("The master entity has been deleted. " + TRY_AGAIN_MSG);

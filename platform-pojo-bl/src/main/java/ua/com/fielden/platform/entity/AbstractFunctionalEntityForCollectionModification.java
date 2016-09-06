@@ -64,7 +64,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     }
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setAddedIds(final Set<ID_TYPE> addedIds) {
+    protected AbstractFunctionalEntityForCollectionModification<ID_TYPE> setAddedIds(final Set<ID_TYPE> addedIds) {
         this.addedIds.clear();
         this.addedIds.addAll(addedIds);
         return this;
@@ -75,7 +75,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
     }
 
     @Observable
-    public AbstractFunctionalEntityForCollectionModification<ID_TYPE> setRemovedIds(final Set<ID_TYPE> removedIds) {
+    protected AbstractFunctionalEntityForCollectionModification<ID_TYPE> setRemovedIds(final Set<ID_TYPE> removedIds) {
         this.removedIds.clear();
         this.removedIds.addAll(removedIds);
         return this;
