@@ -334,6 +334,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         
         /**
          * Returns action configuration for concrete action kind and its number in that kind's space.
+         * <p>
+         * This method implementation is tightly coupled with SimpleMasterBuilder.done() method, where the numbering of actions during their generation appears.
          *
          * @param actionKind
          * @param actionNumber
@@ -342,8 +344,6 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         @Override
         public  ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
             if (FunctionalActionKind.PRIMARY_RESULT_SET == actionKind) {
-                System.out.println("HOORAY. GETTING ACTION CONFIG. PRIMARY_RESULT_SET");
-
                 int funcActionSeq = 0; // used for both entity and property level functional actions
                 for (final WidgetSelector<T> widget : widgets) {
                     if (widget.widget().action().isPresent()) {

@@ -446,7 +446,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                                 Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")
                             )));
         } else if (centreContextHolder.getCustomObject().get("@@masterEntityType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
-            System.out.println("Custom object = " + centreContextHolder.getCustomObject());
             final Class<?> entityType;
             try {
                 entityType = Class.forName((String) centreContextHolder.getCustomObject().get("@@masterEntityType"));
@@ -458,7 +457,6 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                                 FunctionalActionKind.valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
                                 Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")
                             )));
-            System.out.println("actionConfig = " + actionConfig);
         } else {
             actionConfig = Optional.empty();
         }
