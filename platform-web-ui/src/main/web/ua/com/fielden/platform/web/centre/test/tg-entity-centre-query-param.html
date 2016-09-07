@@ -263,8 +263,8 @@
                     centre._setQueryParams();
                     //Check equality
                     assert.strictEqual(editor._commValue, "true", "The critonly boolean prop value should be: true");
-                    assert.strictEqual(criterion.not, undefined, "The not mnemonic for THIS prop should be: true");
-                    assert.strictEqual(criterion.orNull, undefined, "The orNull mnemonic for THIS prop should be: true");
+                    assert.strictEqual(criterion.not, undefined, "The not mnemonic for critonly boolean prop should be: undefined");
+                    assert.strictEqual(criterion.orNull, undefined, "The orNull mnemonic for critonly boolean prop should be: undefined");
                     //Restoring
                     editor._editingValue = oldValue;
                     editor.commit();
