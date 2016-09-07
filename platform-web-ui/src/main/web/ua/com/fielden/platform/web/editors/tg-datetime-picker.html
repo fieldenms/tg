@@ -1,5 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/reflection/tg-date-utils.html">
+
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/moment-component.html">
 <link rel="import" href="/resources/components/tg-calendar.html">
@@ -110,6 +112,15 @@
 
             properties: {
                 /**
+                 * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods. 
+                 * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
+                 */
+                timeZone: {
+                    type: String,
+                    value: null
+                },
+                
+                /**
                  * If true -- the empty time portion should be approximated to '23:59:59.999', otherwise -- to '00:00:00.000'.
                  */
                 timePortionToBecomeEndOfDay: {
@@ -200,7 +211,7 @@
                 if (value === null) {
                     return "";
                 } else {
-                    return this.reflector().millisDateRepresentation(value);
+                    return _millisDateRepresentation(value, this.timeZone);
                 }
             },
 
@@ -236,12 +247,12 @@
             	
             	domBind._acceptDateBind = function() {
                     self._isAcceptingDateFromPicker = true;
-                    var acceptedMoment = moment(this.$.datePicker.selectedDate)
+                    var acceptedMoment = _momentTz(this.$.datePicker.selectedDate, self.timeZone)
                         .hour(this.$.datePicker.selectedHour)
                         .minute(this.$.datePicker.selectedMinute)
                         .seconds(this.$.datePicker.seconds)
                         .milliseconds(this.$.datePicker.milis);
-                    self._editingValue = self.reflector().millisDateRepresentation(acceptedMoment.valueOf());
+                    self._editingValue = _millisDateRepresentation(acceptedMoment.valueOf(), self.timeZone);
                     //self.decoratedInput().focus();
            		}.bind(domBind);
                 
@@ -285,11 +296,13 @@
                 domBind._dialogOpened = function () {
                     document.addEventListener('keydown', this._onCaptureKeyDown, true);
                 }.bind(domBind);
+                
+                domBind.timeZone = self.timeZone;
            		
             	var div = domBind.content.ownerDocument.createElement('div');
             	div.innerHTML = 
             	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_dialogOpened">' +
-                    '<tg-calendar id="datePicker" pick-time></tg-calendar>' +
+                    '<tg-calendar id="datePicker" pick-time time-zone="[[timeZone]]"></tg-calendar>' +
                     '<div class="buttons">' +
                         '<paper-button dialog-dismiss affirmative>Cancel</paper-button>' +
                         '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +
@@ -338,11 +351,11 @@
                         if (value) {
                             this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
                             if (this._validMoment !== null) {
-                                return this.reflector().millisDateRepresentation(this._validMoment.valueOf());
+                                return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone);
                             }
                         }
                     }
-                } 
+                }
                 return dateEditingValue;
             },
             
@@ -356,10 +369,10 @@
                 } else {
                     console.debug('formats', formats);
                     var firstFormat = formats[0];
-                    var tryingMoment = moment(stringValue, firstFormat, true);
+                    var tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
                     if (tryingMoment.isValid()) {
                         if (['D/M/Y H:m:ss.SSS', 'D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y Hmm', 'D/M/Y h:ma', 'D/M/Y H:m', 'D/M/Y ha', 'D/M/Y H', 'D/M/Y'].indexOf(firstFormat) !== -1) {
-                            tryingMoment = moment(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true);
+                            tryingMoment = _momentTz(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true, this.timeZone);
                         }
                         
                         if (['D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {

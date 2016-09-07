@@ -35,6 +35,7 @@ import ua.com.fielden.platform.entity.annotation.factory.EntityTypeAnnotation;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -121,7 +122,7 @@ public class DomainTreeEnhancerTest extends AbstractDomainTreeTest {
         try {
             final Field field = Finder.findFieldByName(type, prop);
             assertNull("The property [" + prop + "] should not exist in type [" + type + "].", field);
-        } catch (final IllegalArgumentException e) {
+        } catch (final ReflectionException e) {
         }
     }
 

@@ -136,4 +136,9 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
         return Optional.empty();
     }
 
+    
+    @Override
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+    }
 }

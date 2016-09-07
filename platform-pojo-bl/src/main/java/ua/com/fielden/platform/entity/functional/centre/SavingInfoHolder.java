@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.ContinuationData;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -35,9 +35,9 @@ public class SavingInfoHolder extends AbstractEntity<String> {
     @Title(value = "Centre context holder", desc = "Centre context holder")
     private CentreContextHolder centreContextHolder;
     
-    @IsProperty(ContinuationData.class)
+    @IsProperty(IContinuationData.class)
     @Title("Continuations")
-    private final ArrayList<ContinuationData<?>> continuations = new ArrayList<>();
+    private final ArrayList<IContinuationData> continuations = new ArrayList<>();
     
     @IsProperty(String.class)
     @Title("Continuation Properties")
@@ -55,13 +55,13 @@ public class SavingInfoHolder extends AbstractEntity<String> {
     }
     
     @Observable
-    protected SavingInfoHolder setContinuations(final List<ContinuationData<?>> continuations) {
+    protected SavingInfoHolder setContinuations(final List<IContinuationData> continuations) {
         this.continuations.clear();
         this.continuations.addAll(continuations);
         return this;
     }
 
-    public ArrayList<ContinuationData<?>> getContinuations() {
+    public ArrayList<IContinuationData> getContinuations() {
         return /* Collections.unmodifiableList( */ continuations /* ) */;
     }
 

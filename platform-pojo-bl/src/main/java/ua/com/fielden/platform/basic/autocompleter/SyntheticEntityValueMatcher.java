@@ -66,7 +66,7 @@ public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregat
 
     private fetch createJoinModel(final Class<? extends AbstractEntity> clazz) {
         if (AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(clazz))) {
-            return fetch(clazz).with("key", createJoinModel((Class<AbstractEntity>) AnnotationReflector.getKeyType(clazz)));
+            return fetch(clazz).with("key", createJoinModel((Class<AbstractEntity<?>>) AnnotationReflector.getKeyType(clazz)));
         } else {
             return fetch(clazz);
         }

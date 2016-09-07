@@ -31,6 +31,15 @@
         };
         EntityTypeProp.prototype = Object.create(Object.prototype);
         EntityTypeProp.prototype.constructor = EntityTypeProp;
+        
+        /**
+         * Returns specific time-zone for the property of type date.
+         *
+         * IMPORTANT: do not use '_timeZone' field directly!
+         */
+        EntityTypeProp.prototype.timeZone = function () {
+            return typeof this._timeZone === 'undefined' ? null : this._timeZone;
+        }
 
         /**
          * Returns 'true' when the type property is secrete, false otherwise.
@@ -1309,31 +1318,6 @@
         		}
         	}
         	return number;
-        },
-        
-    	/**
-    	 * Returns milliseconds from 1-st Jan 1970 in current locale, defined in momentjs.
-    	 * 
-    	 * Please, use this function only in environment with moment(...) function defined.
-    	 * Currently it is used in date-specific unit testing.
-    	 */
-        _millis: function (fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.SSS' format 
-            return moment(fullDateString, 'DD/MM/YYYY HH:mm:ss.SSS', true).valueOf();
-        },
-        
-        millisDateRepresentation: function (dateMillis) {
-            var millisecondsRemainder = dateMillis % 1000;
-            var millisecondsExist = (millisecondsRemainder !== 0);
-            if (millisecondsExist) {
-                return moment(dateMillis).format('L LTS');
-            } else {
-                var secondsRemainder = (dateMillis - millisecondsRemainder) % 60;
-                var secondsExist = (secondsRemainder !== 0);
-                if (secondsExist) {
-                    return moment(dateMillis).format('L LTS');
-                }
-            }
-            return moment(dateMillis).format('L LT');
         }
     });
 })();    

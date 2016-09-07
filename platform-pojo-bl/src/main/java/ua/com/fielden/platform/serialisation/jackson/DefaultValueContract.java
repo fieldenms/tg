@@ -1,8 +1,12 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
@@ -47,7 +51,22 @@ public class DefaultValueContract {
     public static boolean isEditableDefault(final MetaProperty<Object> metaProperty) {
         return EntityUtils.equalsEx(getEditable(metaProperty), getEditableDefault());
     }
-
+    
+    /**
+     * Returns the value of <code>timeZone</code> for date-typed property or <code>null</code> in case of default one.
+     * <p>
+     * If default timeZone is active for this property (<code>null</code> has been returned from this method), 
+     * then it was specified on JVM level rather explicitly (through -Duser.timezone=Europe/Sofia) or through OS-dependent timeZone setting.
+     *
+     * @param entityType
+     * @param propertyName
+     * 
+     * @return
+     */
+    public static String getTimeZone(final Class<?> entityType, final String propertyName) {
+        final PersistentType persistentType = AnnotationReflector.getPropertyAnnotation(PersistentType.class, entityType, propertyName);
+        return persistentType != null && persistentType.userType().equals(IUtcDateTimeType.class) ? "UTC" : null;
+    }
     ///////////////////////////////////////////////// DIRTY /////////////////////////////////////////////////
     /**
      * Returns the default value of <code>changedFromOriginal</code> property.

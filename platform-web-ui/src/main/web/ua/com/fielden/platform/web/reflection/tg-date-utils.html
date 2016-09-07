@@ -1,0 +1,42 @@
+<link rel="import" href="/resources/components/moment-component.html">
+
+<script>
+    /**
+     * Returns milliseconds from 1-st Jan 1970 in current locale, defined in momentjs.
+     * 
+     * Please, use this function only in environment with moment(...) function defined.
+     * Currently it is used in date-specific unit testing.
+     * 
+     * This should strictly be used for date properties, which has local time-zone.
+     */
+    var _millis = function (fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.SSS' format
+        return moment(fullDateString, 'DD/MM/YYYY HH:mm:ss.SSS', true).valueOf();
+    };
+    
+    var _millisDateRepresentation = function (dateMillis, timeZone) {
+        var millisecondsRemainder = dateMillis % 1000;
+        var millisecondsExist = (millisecondsRemainder !== 0);
+        if (millisecondsExist) {
+            return _momentTz(dateMillis, timeZone).format('L LTS');
+        } else {
+            var secondsRemainder = (dateMillis / 1000) % 60;
+            var secondsExist = (secondsRemainder !== 0);
+            if (secondsExist) {
+                return _momentTz(dateMillis, timeZone).format('L LTS');
+            }
+        }
+        return _momentTz(dateMillis, timeZone).format('L LT');
+    };
+    
+    /**
+     * Performs timeZone-aware momentjs computation.
+     *
+     * @params -- first parameters need to be specified as for standard moment(...) function
+     * @param timeZone -- last parameter is a timeZone, in which momentjs computation will be done (in case of empty timeZone, local timeZone will be used, i.e. simple moment(...) function invoked)
+     */
+    var _momentTz = function (input) {
+		var args = Array.prototype.slice.call(arguments, 0, -1);
+		var timeZone = arguments[arguments.length - 1];
+        return timeZone ? moment.tz.apply(null, arguments) : moment.apply(null, args);
+    };
+</script>

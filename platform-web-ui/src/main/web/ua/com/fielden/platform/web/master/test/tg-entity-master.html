@@ -14,6 +14,7 @@
 	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
   
     <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/resources/reflection/tg-date-utils.html">
     <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties"> <!-- Test_TgPersistentEntityWithProperties -->
 </head>
 
@@ -404,7 +405,7 @@
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
 	                // value ok?
 	                assert.ok(entity.get("dateProp"), "Property value should be initialised.");
-	                assert.strictEqual(entity.get("dateProp"), 9999, "Property value should be correct.");
+	                assert.strictEqual(entity.get("dateProp"), 3609999, "Property value should be correct.");
 
 	                // value is changed?
 	                assert.strictEqual(entity.prop("dateProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
@@ -414,7 +415,7 @@
 
 	                // binding value ok?
 	                assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
-	                assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding property should be string entity representation.");
+	                assert.strictEqual(bindingEntity.get("dateProp"), 3609999, "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE
 	                bindingEntity.setAndRegisterPropertyTouch("dateProp", 10000);
@@ -675,7 +676,7 @@
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
 	                // value ok?
 	                assert.ok(entity.get("dateProp"), "Property value should be initialised.");
-	                assert.strictEqual(entity.get("dateProp"), 9999, "Property value should be correct.");
+	                assert.strictEqual(entity.get("dateProp"), 3609999, "Property value should be correct.");
 
 	                // value is changed?
 	                assert.strictEqual(entity.prop("dateProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
@@ -685,7 +686,7 @@
 
 	                // binding value ok?
 	                assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
-	                assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding property should be string entity representation.");
+	                assert.strictEqual(bindingEntity.get("dateProp"), 3609999, "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE
 	                bindingEntity.setAndRegisterPropertyTouch("dateProp", null);
@@ -881,7 +882,7 @@
                     assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 06:19', 'Editing value should correspond to invalid value [01/02/2003 06:19].');
                     // binding value ok?
                     assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
-                    var invalidDateValue = reflector._millis('01/02/2003 06:19:00.000');
+                    var invalidDateValue = _millis('01/02/2003 06:19:00.000');
                     assert.strictEqual(bindingEntity.get("dateProp"), invalidDateValue, "Binding property should contain the invalid value that represents [1/2/3 6:19] date.");
                     
                     done();
@@ -909,7 +910,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Entity "DEMO00" of type Tg Persistent Entity With Properties already exists.', "Entity's exceptionOccured should exist.");
                     
-                    var arrivedValue = reflector._millis('01/02/2003 06:21:00.000');
+                    var arrivedValue = _millis('01/02/2003 06:21:00.000');
                     
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get("dateProp"), "Property value should be initialised.");
@@ -956,7 +957,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Creation failed: [1/2/3 6:20] date is not permitted.', "Entity's exceptionOccured should exist.");
                     
-                    var arrivedValue = reflector._millis('01/02/2003 06:20:00.000');
+                    var arrivedValue = _millis('01/02/2003 06:20:00.000');
                     
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get("dateProp"), "Property value should be initialised.");
@@ -1167,7 +1168,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Modification failed: [1/2/3 6:22] is not acceptable for persisted entity.', "Entity's exceptionOccured should exist.");
                     
-                    var arrivedValue = reflector._millis('01/02/2003 00:00:00.000');
+                    var arrivedValue = _millis('01/02/2003 00:00:00.000');
                     
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get("dateProp"), "Property value should be initialised.");
@@ -1187,7 +1188,7 @@
                     assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 06:22', 'Editing value should correspond to invalid value [01/02/2003 06:22].');
                     // binding value ok?
                     assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
-                    var invalidDateValue = reflector._millis('01/02/2003 06:22:00.000');
+                    var invalidDateValue = _millis('01/02/2003 06:22:00.000');
                     assert.strictEqual(bindingEntity.get("dateProp"), invalidDateValue, "Binding property should contain the invalid value that represents [1/2/3 6:22] date.");
                     
                     done();
