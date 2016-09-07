@@ -17,7 +17,7 @@ import ua.com.fielden.platform.error.Result;
 public class NeedMoreData extends Result {
     private static final long serialVersionUID = 1L;
 
-    public NeedMoreData(final String customMessage, final Class<? extends IContinuationData> dataType, final String dataKey) {
+    public <T extends AbstractFunctionalEntityWithCentreContext<?> & IContinuationData> NeedMoreData(final String customMessage, final Class<T> dataType, final String dataKey) {
         super(new NeedMoreDataException(customMessage, dataType, dataKey));
     }
     
