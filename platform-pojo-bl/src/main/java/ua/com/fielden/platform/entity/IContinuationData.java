@@ -1,15 +1,12 @@
 package ua.com.fielden.platform.entity;
 
-
 /**
  * This is more of a marker type to clearly separate action-like functional entities that are used specifically in some continuation scenario.
  * More specifically, only instances of this type can be used as part of <code>NeedMoreData</code> exception.
  * 
  * @author TG Team
  *
- * @param <K>
  */
-public abstract class ContinuationData<K extends Comparable<?>> extends AbstractFunctionalEntityWithCentreContext<K>{
-    private static final long serialVersionUID = 1L;
+public interface IContinuationData {
 
 }

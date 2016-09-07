@@ -38,7 +38,7 @@ import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.ContinuationData;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -746,7 +746,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * 
      * @return
      */
-    public T save(final T entity, final Optional<Map<String, ContinuationData<?>>> continuations) {
+    public T save(final T entity, final Optional<Map<String, IContinuationData>> continuations) {
         final boolean continuationsPresent = continuations.isPresent();
         final CommonEntityDao<T> co = (CommonEntityDao<T>) this.co;
         
