@@ -7,6 +7,71 @@
 
 <script>
     (function () {
+        var generateCriteriaName = function (root, property, suffix) {
+            var rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
+            return rootName + (property === "this" ? "" : property.replace(/\./g, "_")) + (suffix ? "_" + suffix : "");
+        };
+        var isNot = function (query) {
+            return /.+\!=.*/.test(query);
+        };
+        var isMissing = function (value) {
+            return /^\{.*\}$/.test(value);
+        };
+        var getValueFromMissing = function (value) {
+            return /^\{(.*)\}$/.exec(value)[1];
+        }
+        var isRange = function (value) {
+            return /^(\[|\().*,\s*.*(\]|\))$/.test(value);
+        };
+        var isBoolean = function (value) {
+            return /(true|false)/.test(value);
+        };
+        var shouldExcludeFirstParam = function (value) {
+            return /^\(/.test(value);
+        };
+        var shouldExcludeSecondParam = function (value) {
+            return /\)$/.test(value);
+        };
+        var getFirstValue = function (queryParam) {
+            return /^(\[|\()(.*),\s*.*(\]|\))$/.exec(queryParam)[2];
+        };
+        var getSecondValue = function (queryParam) {
+            return /^(\[|\().*,\s*(.*)(\]|\))$/.exec(queryParam)[2];
+        };
+        var generateQueryParam = function (root, query) {
+            var queryParam = {
+                not: isNot(query)
+            };
+            var queryParts, isBool;
+            if (queryParam.not) {
+                queryParts = query.split("!=");
+            } else {
+                queryParts = query.split("=");
+            }
+            queryParam.criteriaId = "criterion_4_" + generateCriteriaName(root, queryParts[0]);
+            queryParam.isMissing = isMissing(queryParts[1]);
+            if (queryParam.isMissing) {
+                queryParts[1] = getValueFromMissing(queryParts[1]);
+            }
+            isBool = isBoolean(queryParts[1]);
+            if (isRange(queryParts[1])) {
+                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "is" : "from");
+                queryParam.firstEditorValue = getFirstValue(queryParts[1]);
+                queryParam.secondEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "not" : "to");
+                queryParam.secondEditorValue = getSecondValue(queryParts[1]);
+                if (!isBool) {
+                    queryParam.exclude1 = shouldExcludeFirstParam(queryParts[1]);
+                    queryParam.exclude2 = shouldExcludeSecondParam(queryParts[1]);
+                }
+            } else {
+                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "is" : "");
+                queryParam.firstEditorValue = queryParts[1];
+            }
+            return queryParam;
+        };
+
+
+
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgEntityCentreBehaviorImpl = {
             properties: {
@@ -103,6 +168,11 @@
                     type: Boolean,
                     value: false
                 },
+
+                /**
+                 * Parameters for running query.
+                 */
+                queryPart: String,
 
                 /**
                  * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
@@ -251,12 +321,14 @@
                 var self = this;
                 if (oldValue === undefined) {
                     self.retrieve().then(function () {
-                        if (self.autoRun) {
+                        self._setQueryParams();
+                        if (self.autoRun || self.queryPart) {
                             self.run();
                         }
                     });
                 } else {
-                    if (self.autoRun) {
+                    self._setQueryParams();
+                    if (self.autoRun || self.queryPart) {
                         self.run();
                     }
                 }
@@ -473,7 +545,7 @@
                 });
 
                 //Select the result view if autoRun is true
-                if (self.autoRun) {
+                if (self.autoRun || self.queryPart) {
                     self._selectedView = 1;
                 }
             },
@@ -490,6 +562,41 @@
                 return this.entityType.substring(ind);
             },
 
+            /**
+             * Set the query params to selection criteria if they exists.
+             */
+            _setQueryParams: function () {
+                var self = this;
+                var root = self._simpleEntityType();
+                var queries = [];
+                var paramObject = [];
+                if (self.queryPart) {
+                    queries = self.queryPart.split("&");
+                }
+                paramObject = queries.map(function (query) {
+                    return generateQueryParam(root, query)
+                });
+                paramObject.forEach(function (queryParam) {
+                    var criterion = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.criteriaId + ']');
+                    var firstEditor = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.firstEditorName + ']');
+                    var secondEditor = queryParam.secondEditorName && self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.secondEditorName + ']');
+                    if (criterion && criterion._iconButtonVisible()) {
+                        criterion._orNull = queryParam.isMissing;
+                        criterion._not = queryParam.not;
+                        criterion._exclusive = queryParam.exclude1;
+                        criterion._exclusive2 = queryParam.exclude2;
+                        criterion._acceptMetaValues();
+                    }
+                    if (firstEditor) {
+                        firstEditor._editingValue = queryParam.firstEditorValue;
+                        firstEditor.commit();
+                    }
+                    if (secondEditor) {
+                        secondEditor._editingValue = queryParam.secondEditorValue;
+                        secondEditor.commit();
+                    }
+                });
+            },
 
             /**
              * Activate the view with selection criteria.
@@ -532,7 +639,7 @@
             firstPage: function () {
                 var self = this;
                 self.persistActiveElement();
-                return this.$.selection_criteria.firstPage().then(function() {
+                return this.$.selection_criteria.firstPage().then(function () {
                     self.restoreActiveElement();
                 });
             },
@@ -543,7 +650,7 @@
             lastPage: function () {
                 var self = this;
                 self.persistActiveElement();
-                return this.$.selection_criteria.lastPage().then(function() {
+                return this.$.selection_criteria.lastPage().then(function () {
                     self.restoreActiveElement();
                 });
             },
@@ -554,7 +661,7 @@
             nextPage: function () {
                 var self = this;
                 self.persistActiveElement();
-                return this.$.selection_criteria.nextPage().then(function() {
+                return this.$.selection_criteria.nextPage().then(function () {
                     self.restoreActiveElement();
                 });
             },
@@ -565,7 +672,7 @@
             prevPage: function () {
                 var self = this;
                 self.persistActiveElement();
-                return this.$.selection_criteria.prevPage().then(function() {
+                return this.$.selection_criteria.prevPage().then(function () {
                     self.restoreActiveElement();
                 });
             },

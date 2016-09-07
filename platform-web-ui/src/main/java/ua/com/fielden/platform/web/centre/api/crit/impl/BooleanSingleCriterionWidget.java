@@ -17,7 +17,7 @@ public class BooleanSingleCriterionWidget extends AbstractSingleCriterionWidget 
      * @param propertyName
      */
     public BooleanSingleCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
-        super(propertyName,
+        super(root, propertyName,
                 new CheckboxWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName)
