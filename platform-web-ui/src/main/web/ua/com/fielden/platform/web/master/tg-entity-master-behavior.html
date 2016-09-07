@@ -277,7 +277,7 @@
 
                 self._createActions();
 
-                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
+                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
                     var getThisMasterEntity = function () {
                         var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
 
@@ -287,7 +287,6 @@
                             null, null, null
                         );
                         this._reflector().setCustomProperty(masterTypeCarrier, "@@funcEntityType", this.entityType);
-
                         return this._reflector().createSavingInfoHolder(this._reset(holder), masterTypeCarrier, this._continuations);
                     }.bind(self);
 
@@ -295,6 +294,11 @@
                         null, null, requireMasterEntity,
                         null, null, getThisMasterEntity
                     );
+                    
+                    this._reflector().setCustomProperty(contextHolder, "@@masterEntityType", this.entityType);
+                    this._reflector().setCustomProperty(contextHolder, "@@actionKind", actionKind);
+                    this._reflector().setCustomProperty(contextHolder, "@@actionNumber", actionNumber);
+                    
                     return contextHolder;
                 }).bind(self);
 

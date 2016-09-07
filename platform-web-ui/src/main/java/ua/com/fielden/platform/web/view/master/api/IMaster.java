@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.web.view.master.api;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 
 /**
@@ -32,4 +35,13 @@ public interface IMaster<T extends AbstractEntity<?>> {
      */
     IRenderable render();
 
+    
+    /**
+     * Returns action configuration for concrete action kind and its number in that kind's space.
+     *
+     * @param actionKind
+     * @param actionNumber
+     * @return
+     */
+    EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber);
 }
