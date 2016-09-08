@@ -57,6 +57,10 @@ public class EntityType extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Should Display Description?", desc = "Indicates whether editors for values of this type should display values descriptions")
     private Boolean _displayDesc;
+    
+    @IsProperty
+    @Title(value = "Is Continuation?", desc = "Indicated whether the associated entity type represents a continuation entity.")
+    private boolean _continuation;
 
     @Observable
     public EntityType set_displayDesc(final Boolean _displayDesc) {
@@ -76,6 +80,16 @@ public class EntityType extends AbstractEntity<String> {
 
     public boolean is_persistent() {
         return _persistent;
+    }
+    
+    @Observable
+    public EntityType set_continuation(final boolean _continuation) {
+        this._continuation = _continuation;
+        return this;
+    }
+
+    public boolean is_continuation() {
+        return _continuation;
     }
 
     @Observable
