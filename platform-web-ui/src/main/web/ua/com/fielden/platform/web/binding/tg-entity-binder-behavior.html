@@ -340,6 +340,7 @@
                     		    if (typeof deserialisedInstance.id !== 'undefined') {
                     		    	e.detail.entityId = deserialisedInstance.id;
                     		    	e.detail.entityPersistent = deserialisedInstance.type().isPersistent();
+                    		    	e.detail.entityContinuation = deserialisedInstance.type().isContinuation();
                     		    }
                     		}
                     	}

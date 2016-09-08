@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.Ignore;
@@ -98,6 +99,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
         // let's inform the client of the type's persistence nature
         entityTypeInfo.set_persistent(EntityUtils.isPersistedEntityType(type));
+        
+        if (IContinuationData.class.isAssignableFrom(type)) {
+            entityTypeInfo.set_continuation(true);
+        }
         
         // let's inform the client of whether value descriptions should be displayed in editors of this type
         final boolean shouldDisplayDescription = AnnotationReflector.isAnnotationPresentForClass(DisplayDescription.class, type);
