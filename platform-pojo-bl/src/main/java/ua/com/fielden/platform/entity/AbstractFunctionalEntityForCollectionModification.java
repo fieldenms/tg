@@ -117,7 +117,7 @@ public abstract class AbstractFunctionalEntityForCollectionModification<ID_TYPE>
         }
     }
     
-    public void setRefetchedMasterEntity(final AbstractEntity<?> refetchedMasterEntity) {
+    void setRefetchedMasterEntity(final AbstractEntity<?> refetchedMasterEntity) {
         // to be initialised early in base producer of functional entity (AbstractFunctionalEntityForCollectionModificationProducer)
         this.refetchedMasterEntity = refetchedMasterEntity;
     }

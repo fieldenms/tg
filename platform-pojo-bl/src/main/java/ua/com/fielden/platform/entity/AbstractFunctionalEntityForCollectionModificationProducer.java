@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -13,8 +13,9 @@ import java.util.function.Function;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
+import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
+import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -71,8 +72,8 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
         if (masterEntityFromContext == null) {
             throw Result.failure("The master entity for collection modification is not provided in the context.");
         }
-        if (masterEntityFromContext.isDirty()) {
-            throw Result.failure("This action is applicable only to a saved entity! Please save entity and try again!");
+        if (!skipDirtyChecking(entity) && masterEntityFromContext.isDirty()) {
+            throw Result.failure("This action is applicable only to a saved entity. Please save entity and try again.");
         }
         final MASTER_TYPE refetchedMasterEntity = refetchMasterEntity(masterEntityFromContext);
         if (refetchedMasterEntity == null) {
@@ -83,12 +84,32 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
         // IMPORTANT: it is necessary to reset state for "key" property after its change.
         //   This is necessary to make the property marked as 'not changed from original' (origVal == val == 'DEMO') to be able not to re-apply afterwards
         //   the initial value against "key" property. Resetting will be done in DefaultEntityProducerWithContext.
-        entity.setKey(refetchedMasterEntity.getId());
+        if (refetchedMasterEntity.getId() != null) {
+            entity.setKey(refetchedMasterEntity.getId());
+        } else {
+            // Key property, which represents id of master entity, will be null in case where master entity is new.
+            // There is a need to relax key requiredness to be able to continue with action saving.
+            entity.getProperty(AbstractEntity.KEY).setRequired(false);
+        }
         
         final T previouslyPersistedAction = retrieveActionFor(refetchedMasterEntity, companion, entityType, entity.isPersistent());
         entity.setSurrogateVersion(surrogateVersion(previouslyPersistedAction));
 
         return provideCurrentlyAssociatedValues(entity, refetchedMasterEntity);
+    }
+    
+    /**
+     * By default, collection modification is prohibited in case of dirty (persisted and changed, new) entity.
+     * However, there are edge-cases where collection modification is a part of master entity saving process through the use of continuation.
+     * In those cases the master entity will be dirty and the check on dirtiness should be relaxed.
+     * <p>
+     * This method provides such point of customization.
+     * 
+     * @param action -- collection modification functional entity with its context (which contain in general case computation part to be able to differentiate functional action origin, for example a) master property action b) continuation etc.)
+     * @return
+     */
+    protected boolean skipDirtyChecking(final T action) {
+        return false;
     }
     
     /**
@@ -123,7 +144,7 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
     }
     
     private static <MASTER_TYPE extends AbstractEntity<?>, T extends AbstractFunctionalEntityForCollectionModification<?>> T retrieveActionFor(final MASTER_TYPE masterEntity, final IEntityDao<T> companion, final Class<T> actionType, final boolean isActionEntityPersistent) {
-        return !isActionEntityPersistent ? null : companion.getEntity(
+        return !isActionEntityPersistent || masterEntity.getId() == null ? null : companion.getEntity(
                 from(select(actionType).where().prop(AbstractEntity.KEY).eq().val(masterEntity.getId()).model())
                 .with(fetchAndInstrument(actionType).with(AbstractEntity.KEY)).model()
         );
@@ -172,12 +193,21 @@ public abstract class AbstractFunctionalEntityForCollectionModificationProducer<
         // the next block of code is intended to mark entityToSave as 'dirty' to be properly saved and to increase its db-related version. New entity (persistedEntity == null) is always dirty - no need to do anything.
         if (persistedEntity != null) {
             entityToSave = persistedEntity;
+            action.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
             entityToSave.setSurrogateVersion(persistedEntity.getVersion() + 1L);
         } else {
             entityToSave = factory.newEntity(actionType, null);
-            entityToSave.setRefetchedMasterEntity(masterEntityBeingUpdated);
+            action.copyTo(entityToSave); // the main purpose of this copying is to promote addedIds, removedIds, chosenIds and 'availableEntities' property values further to entityToSave
+            if (!action.getProperty(AbstractEntity.KEY).isRequired()) {
+                // Key property, which represents id of master entity, will be null in case where master entity is new.
+                // There is a need to relax key requiredness to be able to continue with action saving.
+                entityToSave.getProperty(AbstractEntity.KEY).setRequired(false);
+            }
             entityToSave.setKey(masterEntityBeingUpdated.getId());
+            entityToSave.setSurrogateVersion(null);
         }
+        entityToSave.setRefetchedMasterEntity(masterEntityBeingUpdated);
+        
         return entityToSave;
     }
     
