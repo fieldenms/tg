@@ -319,18 +319,19 @@
             },
             
             _closeChildren: function () {
-                var dialog;
-                while(this._childDialogs.length > 0) {
-                    dialog = this._childDialogs[this._childDialogs.length - 1];
+                var canClose = true;
+                
+                this._childDialogs.slice().forEach(function (dialog) {
                     dialog.closeDialog();
                     if (dialog.opened) {
+                        canClose = false
                         if (dialog._childDialogs.length === 0) {
                             dialog._focusDialogWithInput();
                         }
-                        return false;
                     }
-                }
-                return true;
+                });
+                
+                return canClose;
             },
 
             _dialogMinimised: function () {
