@@ -222,7 +222,7 @@
                 this._onCaptureFocus = this._onCaptureFocus.bind(this);
                 this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
 
-                this._focusWhenOpenedthis = this._focusWhenOpened.bind(this);
+                this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
                 this._fitWhenFirstTimeOpened = this._fitWhenFirstTimeOpened.bind(this);
 
                 this._setIsRunning(false);
@@ -295,7 +295,9 @@
 
             closeDialog: function () {
                 var canClose = true;
-                if (this._lastElement.classList.contains('canLeave')) {
+                //Try to close children first.
+                canClose = this._closeChildren();
+                if (canClose && this._lastElement.classList.contains('canLeave')) {
                     var reason = this._lastElement.canLeave();
                     if (reason !== undefined) {
                         canClose = false;
@@ -314,6 +316,21 @@
                 if (canClose === true) {
                     this._closeDialogAndIndicateActionCompletion(this._lastAction);
                 }
+            },
+            
+            _closeChildren: function () {
+                var dialog;
+                while(this._childDialogs.length > 0) {
+                    dialog = this._childDialogs[this._childDialogs.length - 1];
+                    dialog.closeDialog();
+                    if (dialog.opened) {
+                        if (dialog._childDialogs.length === 0) {
+                            dialog._focusDialogWithInput();
+                        }
+                        return false;
+                    }
+                }
+                return true;
             },
 
             _dialogMinimised: function () {
@@ -368,6 +385,13 @@
                 }
                 if (this._minimised) {
                     this.restoreActiveElement();
+                }
+                if (this._parentDialog) {
+                    var childIndex = this._parentDialog._childDialogs.indexOf(this);
+                    if (childIndex > -1) {
+                        this._parentDialog._childDialogs.splice(childIndex, 1);
+                    }
+                    this._parentDialog = null;
                 }
                 this.close();
             },
@@ -499,7 +523,7 @@
                             actionsDialog._childDialogs.push(this);
                             this._parentDialog = actionsDialog;
                         }
-                        this.addEventListener('binding-entity-appeared', this._focusWhenOpened);
+                        this.addEventListener('binding-entity-appeared', this._focusDialogWithInput);
                         this.addEventListener('binding-entity-appeared', this._fitWhenFirstTimeOpened);
                         this._focusAndRefit(); // this is a legacy support
                         this.open();
@@ -510,7 +534,7 @@
             /**
              * Listener that listens binding entity appeared event and focuses first input.
              */
-            _focusWhenOpened: function (e) {
+            _focusDialogWithInput: function (e) {
                 if (this._lastElement.focusFirstInput) {
                     this._lastElement.focusFirstInput();
                 }
