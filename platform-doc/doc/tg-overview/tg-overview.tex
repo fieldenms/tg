@@ -116,7 +116,7 @@
 	These include information systems for a variety of industries such as Air Traffic and Navigation Services, Rolling Stock, Chemical Industry, Fleet and Ambulance Services.
 	There is an inherent complexity\footnote{As opposed to accidental.} in such systems due to the real world complexity of the equipment, assets and other physical or virtual artifacts that are used in those industries as well as complex interdependent business rules that govern them, such as safety and competency regulations, preventive maintenance cycles, inventory reordering, financial rules, plant shutdowns, temporal availability profiles etc.
 	
-	Effective communication between all stakeholders is a key in achieving the necessary goals in any undertaking. 
+	Effective communication between all stakeholders is a key in achieving the necessary goals in any undertaking.
 	That is why we view an information system as a communication tool that should facilitate cooperation between all participants. 
 	Property constructed system should facilitate cooperation between users, their cooperation with the developers of the system and the cooperation within the development team itself.
 	In order to achieve this, a technology for constructing information systems should have an appropriate representation or abstraction that would support communication and a ubiquitous language~\cite{evans2003} that shared by all stakeholders\footnote{This should be thought of as a well established terminology in a specific business domain.}.
@@ -143,6 +143,132 @@
 	This includes the discussion of the developed architectural pattern and the influence of the REST architectural style on the modelling at the level of objects; how is it used to ensure a uniform model of an information system and how does it satisfy the SOLID principles; why controlled mutation it important and how immutability helps prevent accidental mistakes; how unit testing becomes domain-driven and why business processes could benefit from becoming persistent.
 	We also discuss the Entity Query Language for simple and non-trivial data querying and how the direct manipulation principle is employed for building consistent and intuitive user interfaces.
 	This overview is concluded with a brief discussion of a fairly sophisticated information systems that is utilised in mission critical operations by one of our customers in the domain of Air Traffic and Navigation Services.
+
+
+\section*{Fractal Objects -- the architectural pattern of TG}
+	The most common understanding of object orientation is that ``it is useful for modelling the real world'', where there are objects with their behaviour.
+	Taken literally, this perspective leads to many issues, including violation of SOLID principles~\cite{SOLID} that have, effectively, come to existence because them.
+	One of those issues, which is important for the purpose of our discussion, is the lack of adequate means for representing verbs -- actions and processes\footnote{This issue is humorously  described by Steve Yegge in his ``Execution in the Kingdom of Nouns''~\cite{yegge2006}.}.
+	The essence of this issue is that verbs do not exists in their own right and must be a part of some object (noun), represented as its behaviour in a form of a method\footnote{This is why it is so easy to violate the single responsibility or the open/closed principles.}.
+	The same issue got translated into and plagued some of the distributed computational models such as Remote Method Invocation (RMI) and Simple Object Access Protocol (SOAP).
+	The same issue makes it difficult to reason about objects' behaviour (too many methods, what is the state of the object they are invoked on, etc) and the same issue obstructs building semantically transparent user interfaces.
+	
+	The Naked Objects pattern uses the direct manipulation principle to transparently represent objects in UI.
+	However, it ignores the described issue and instead exposes some of the methods as UI actuators (e.g. buttons, menu items) that can be invoked on an individual object.
+	This approach, in addition to the original issue, introduces new ones and opens up many questions.
+	Now there is a needs to differentiate between the behaviour (i.e. methods) that can and cannot be exposed via UI; why are there methods that are not exposed to UI as this goes against the semantic transparency; if the exposed methods have arguments then how should their values be provided; and what to do if something needs to be done with a subset of objects -- not just a single one.
+	
+	
+	
+	The
+	However, the very original idea being object-orientation
+	 
+
+	At a conceptual level, the key purpose of the developed architectural pattern in TG, which is called \emph{Fractal Objects}, is to ensure the \emph{semantic transparency} of the domain model at different levels of an information level being modelled~-- from the source code at the bottom and up to the user interface at the top.
+  	The main objective of the semantic transparency is to facilitate the communication between different stakeholders that are involved in developing and using an information system.
+
+  	For example, this means that having some domain object such as \texttt{Person}, \texttt{Wagon} or \texttt{Vehicle}, which represented to the end-user as part of the user interface should directly lead to representation of the same object at the code level.
+  	This in turn would allow users, analysts and developers of the system to better understand each other when it comes to fixing some defect or implementing a necessary enhancement.
+  	It is important not to limit semantic transparency just to the domain objects that model the structure of world, but also facilitate it for the functional aspects of the domain that are usually associated with processes and actions.
+  
+	We argue that this can be achieved by using \emph{invariant representation} for implementing \texttt{Memory}, \texttt{Informative} and \texttt{Active} functions of an information system.
+  
+\subsection*{Computing Platform}
+
+	In theory of data modelling, a conceptual data model is defined as a pair of languages~-- a data definition language and a data manipulation language~\cite{kal1983}.
+  	This definition was effectively used in relational data modelling whereby both languages have been implemented as Structured Query Language that supports data definition and manipulation.
+  	Having a data model described in terms of SQL allows one to easily move this model and associated data instances between different RDBMS system with very little if any changes.
+  	At the same time concrete RDBMS implementations are very specific, have their own algorithms and optimisations techniques to effectively manage the data described by such generic models.
+  	This demonstrates the power of the conceptual data model that is desirable for any information system.
+  
+  Our research hypothesis is that a similar conceptual model can be effectively applied for modelling information systems using general-purpose object-oriented languages.
+  Such model should have a language to describe a business domain (both structural and functional aspects) and a language for manipulation of the artefacts that are resulted from such description.
+  There should also be a computing platform that could run any concrete domain model similarly to an RDBMS system that can run any concrete data model described with SQL.
+  
+  One could compare this to a generative or automatic programming approach, but there is a very clear distinction -- generative programming relies on code generation that in many cases requires to be modified manually in order to achieve the required behaviour.
+  This manual modification often leads to breaking of the original model that was used for code generation.
+  That is why the analogy with SQL is better -- SQL code gets interpreted, and even some optimised code could be generated from it, but never do we change any SQL code representation that is actually executed by RDBMS.
+    
+  The main purpose of a computing platform is to abstract out the technologies required to run the resulting software system.
+  For the purpose of our research we had very specific requirements to the computing platform that would ensure the robustness of our hypothesis testing.
+  The most important of them are:
+  \begin{itemize}
+    \item The dependency between the platform and the model should only exist in the sense that the platform ``understands'' both the definition and manipulation languages used for modelling a business domain.
+    \item The platform should segregate the details of persistence and communication mechanism allowing it to be executed on a single machine, across the LAN or the Internet.
+    \item The platform should provide an automatic generation of UI from the model that would follow the direct manipulation human-computer interaction style~\cite{shneiderman1982, shneiderman1983}.
+  \end{itemize}
+
+  The first requirement indicated the need for loose coupling between domain models and the actual computing platform that can execute them.
+  It should ensure that changes in the internal (not the interfacing) parts of the computing platform would not require to change the domain model.
+  The goal of the second requirement is to take away low technical details away from software system developers, so that they could concentrate on the immediate business value -- modelling of the domain.
+  The last item emphasises the fact that the computing platform should specifically address the way users interact with the system in order to facilitate semantic transparency from user experience perspective.
+
+  Therefore, the means to describes the domain model and the computing platform that can execute such models are the two essential parts of Fractal Objects.
+  The developed prototype of the Fractal Object approach has been done in the Java programming language, but any other object-oriented language could be used.
+  Java is still one of the most widely used programming languages and proved to be well suited for the implementation of transactional business systems.
+  However, our decision to use Java was also influenced by its rich reflection capabilities that allow runtime introspection in order to gather metadata, and its use of interfaces to support polymorphism that could be effectively used by the platform for inversion of control to enable loose coupling with domain models.
+
+  \subsection*{Entity and Companion Objects}
+
+  A Fractal Object is a pair of an \emph{entity object} and a \emph{companion object}.
+  The role of an \emph{entity object} is to capture the structure of some entity that is being modelled.
+  At the code level it is implemented as a class that has state (properties), but has no behaviour.
+  The role of a \emph{companion object} if to provide operations that can be performed with a corresponding \emph{entity object}.
+  At the code level it is implemented as an interface that has methods, but has no state.
+  Together, the entity and companion objects form an elementary building block to provide an invariant representation of any structural or functional business domain aspects.
+
+  The state that is captured by entity objects can either primitive (date, integer, etc.) or reference other entity objects.
+  This provides a way to represent relationships between entity objects (one-to-one, many-to-one or one-to-many).
+  It is important to note that from the perspective of class hierarchy, the hierarchy of entity objects is flat~-- the complexity of the behaviour and structure is captured by means of composition rather than inheritance.  
+  Changing relationship between entity objects at runtime can be achieved by simply changing values of their respective properties~-- something that cannot be done where association is captured through the mechanism of inheritance.
+  
+  \emph{Companion objects} provide four operations that can be performed with respect to a corresponding entity object~--  \emph{create}, \emph{save}, \emph{delete}, and \emph{request}.
+  These operations conceptually describe what can be done with an entity object.
+  It can either be create, saved, deleted or requested (i.e. searched for).
+  Each of this operation can be represented by one or more actual methods at the code level.
+    
+  The power of having a limited number of operations has been demonstrated by the REST style~\cite{Fielding2000} of architecture for web applications.
+  We argue that similar benefits are gained at the level of domain modelling.
+  There is a lot of semantic similarities between REST style of web resources (macro level) and objects modelling the domain (micro level).
+  For example, the use of URI paths to navigate between web resources is analogous to paths in object graphs for association traversal.
+  To us this resonates with the original view of object-oriented systems by Alan Key, who emphasised similarity between objects and networked computers.
+  And although web is just a delivery mechanism, and a software system may or may not run on the web, its intrinsic nature of interconnected resources with uniform interaction mechanism seems to be very appropriate for an object-oriented modelling.
+  It was one of our design goals to capture this approach of modelling complex structures and behaviour as part of the Fractal Objects approach.
+
+  Similarly to entity objects, companion objects can be composed in order to achieve a more complex behaviour.
+  Companion objects provide a clean separation of concern by fully encapsulating the behaviour, making sure that entity objects represent a pure structure of relationships between entities in a business domain or some more abstract entities.
+  
+  Due to the fact that companion objects are interfaces, a natural question arises as to who and when fulfils the actual implementation.
+  In our work, the computing platform provides the generic implementation for companion objects that can be inherited from and enhanced as part of a specific software system.
+  The inherited implementation gets injected at runtime.
+  Thus, all references to an interface representing a companion object are assigned with an instances of the injected implementation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \section*{The problem statement}
 
@@ -413,8 +539,11 @@ Shneiderman, B. The future of interactive systems and the emergence of direct ma
 \bibitem{shneiderman1983}
 Shneiderman, B. Direct manipulation: A step beyond programming languages. Computer, 16(8):57–69, 1983.
 
-\bibitem{fowler2006} DslBoundary, http://martinfowler.com/bliki/DslBoundary.html
+\bibitem{fowler2006} Fowler, M. DslBoundary, http://martinfowler.com/bliki/DslBoundary.html
 
+\bibitem{yegge2006} Yegge, S. Execution in the Kingdom of Nouns,  http://steve-yegge.blogspot.com.au/2006/03/execution-in-kingdom-of-nouns.html
+
+\bibitem{SOLID} SOLID (object-oriented design), https://en.wikipedia.org/wiki/SOLID\_(object-oriented\_design)
 
 \end{thebibliography}
 %
