@@ -1,6 +1,7 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
+<link rel="import" href="/resources/polymer/paper-menu/paper-submenu.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
@@ -81,9 +82,18 @@
                     <div class="flex">[[menuItem.title]]</div>
                 </div>
 
-                <paper-menu id="menu" class="flex" selected="{{_selectedPage}}" on-iron-activate="_itemActivated" attr-for-selected="name">
-                    <template is="dom-repeat" items="[[menuItem.menu]]">
-                        <paper-item name$="[[item.title]]" tooltip-text$="[[item.description]]">[[item.title]]</paper-item>
+                <paper-menu id="menu" class="flex" attr-for-item-title="name" selected="{{_selectedPage}}" on-iron-activate="_itemActivated" attr-for-selected="name">
+                    <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
+                        <paper-submenu name$="[[firstLevelItem.title]]">
+                            <paper-item class="menu-trigger" name$="[[firstLevelItem.title]]" tooltip-text$="[[firstLevelItem.description]]">[[firstLevelItem.title]]</paper-item>
+                            <template is="dom-if" if="[[firstLevelItem.submenu]]">
+                                <paper-menu class="menu-content">
+                                    <template is="dom-repeat" items="[[firstLevelItem.submenu]]">
+                                        <paper-item name$="[[item.title]]" tooltip-text$="[[item.description]]">[[item.title]]</paper-item>
+                                    </template>
+                                </paper-menu>
+                            </template>
+                        </paper-submenu>
                     </template>
                 </paper-menu>
 
@@ -201,7 +211,7 @@
             getSelectedPage: function () {
                 return this._selectedPage;
             },
-            
+
             canLeave: function () {
                 var items = this.querySelectorAll("tg-menu-item-view");
                 var changedViews = [];
