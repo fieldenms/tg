@@ -255,8 +255,11 @@
             this._originalChosenIds = [];
             
             for (var index = 0; index < chosenIds.length; index++) {
-                selEntities.push(this._find(this._entities, chosenIds[index]) );
-                this._originalChosenIds.push(chosenIds[index]);
+                var foundEntity = this._find(this._entities, chosenIds[index]);
+                if (foundEntity !== null) {
+                    selEntities.push(foundEntity);
+                    this._originalChosenIds.push(chosenIds[index]);
+                }
             }
 
             this._disableSelectionListeners = true;
@@ -287,7 +290,7 @@
                     return entities[i];
                 }
             }
-            throw 'The entity with idOrKey ' + idOrKey + ' does not exist in entities list ' + entities;
+            return null;
         },
 
         /**
