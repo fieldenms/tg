@@ -140,27 +140,41 @@
 	
 	
 	The following sections delve more into details about TG.
-	This includes the discussion of the developed architectural pattern and the influence of the REST architectural style on the modelling at the level of objects; how is it used to ensure a uniform model of an information system and how does it satisfy the SOLID principles; why controlled mutation it important and how immutability helps prevent accidental mistakes; how unit testing becomes domain-driven and why business processes could benefit from becoming persistent.
+	This includes the discussion of the developed architectural pattern and the influence of the REST architectural style on the modelling at the level of objects; how is it used to ensure a uniform model of an information system and how does it satisfy the SOLID principles~\cite{SOLID}; why controlled mutation it important and how immutability helps prevent accidental mistakes; how unit testing becomes domain-driven and why business processes could benefit from becoming persistent.
 	We also discuss the Entity Query Language for simple and non-trivial data querying and how the direct manipulation principle is employed for building consistent and intuitive user interfaces.
 	This overview is concluded with a brief discussion of a fairly sophisticated information systems that is utilised in mission critical operations by one of our customers in the domain of Air Traffic and Navigation Services.
 
 
-\section*{Fractal Objects -- the architectural pattern of TG}
+\section*{The architectural pattern of TG}
 	The most common understanding of object orientation is that ``it is useful for modelling the real world'', where there are objects with their behaviour.
-	Taken literally, this perspective leads to many issues, including violation of SOLID principles~\cite{SOLID} that have, effectively, come to existence because them.
+	Taken literally, this perspective leads to many issues, including violation of SOLID principles that have, effectively, come to existence because them.
 	One of those issues, which is important for the purpose of our discussion, is the lack of adequate means for representing verbs -- actions and processes\footnote{This issue is humorously  described by Steve Yegge in his ``Execution in the Kingdom of Nouns''~\cite{yegge2006}.}.
 	The essence of this issue is that verbs do not exists in their own right and must be a part of some object (noun), represented as its behaviour in a form of a method\footnote{This is why it is so easy to violate the single responsibility or the open/closed principles.}.
 	The same issue got translated into and plagued some of the distributed computational models such as Remote Method Invocation (RMI) and Simple Object Access Protocol (SOAP).
 	The same issue makes it difficult to reason about objects' behaviour (too many methods, what is the state of the object they are invoked on, etc) and the same issue obstructs building semantically transparent user interfaces.
 	
-	The Naked Objects pattern uses the direct manipulation principle to transparently represent objects in UI.
-	However, it ignores the described issue and instead exposes some of the methods as UI actuators (e.g. buttons, menu items) that can be invoked on an individual object.
-	This approach, in addition to the original issue, introduces new ones and opens up many questions.
-	Now there is a needs to differentiate between the behaviour (i.e. methods) that can and cannot be exposed via UI; why are there methods that are not exposed to UI as this goes against the semantic transparency; if the exposed methods have arguments then how should their values be provided; and what to do if something needs to be done with a subset of objects -- not just a single one.
+	The Naked Objects pattern attempts to follow the idea of the direct manipulation principle to transparently represent objects in UI.
+	Naturally, it exposes object properties for users to change them directly via UI, but in order to provide some behaviour, it exposes some of the methods as UI actuators (e.g. buttons, menu items) that can be invoked on an individual object.
+	The approach of exposing object methods, introduces new issues and opens up many questions.
+	For example:
+  	\begin{itemize}
+    	\item There is now need to differentiate between methods (i.e. behaviour) that can and cannot be exposed via UI;
+		\item Why are there methods that are not exposed to UI -- doesn't this go against the idea of semantic transparency?
+		\item If the exposed methods have arguments then how should their values be provided when invoking them from UI?
+		\item What to do if some computation needs to be applied to a subset of objects, not just a single one?
+	\end{itemize}
 	
+	This suggests that the described problem of having no first-class support for verbs, significantly complicates, if not makes it impossible, to construct semantically transparent information systems by following the currently most prevalent understanding of object orientation.
+
+\subsection*{Verbs == Nouns}	
 	
+	In our research we came across some original work by Alan Kay where he explains object orientation from a very different that currently taken perspective.
+	According to Alan Kay, the complexity of behaviour in object-oriented systems comes from interconnectedness between objects rather than from methods, which they have.
+	He compared an object-oriented systems with a systems of networked computers, or computing nodes, that have simple communication interface for interaction.
+	This and the rise of RESTful concepts resonated 
 	
-	The
+	The lack of seemingly no first-class support for verbs in OOP languages
+	In our
 	However, the very original idea being object-orientation
 	 
 
