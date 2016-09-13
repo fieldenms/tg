@@ -147,14 +147,14 @@
 
 \section*{The architectural pattern of TG}
 	The most common understanding of object orientation is that ``it is useful for modelling the real world'', where there are objects with their behaviour.
-	Taken literally, this perspective leads to many issues, including violation of SOLID principles that have, effectively, come to existence because them.
-	One of those issues, which is important for the purpose of our discussion, is the lack of adequate means for representing verbs -- actions and processes\footnote{This issue is humorously  described by Steve Yegge in his ``Execution in the Kingdom of Nouns''~\cite{yegge2006}.}.
+	Taken literally, this perspective leads to many issues, including violation of SOLID principles that have, effectively, came to existence because of those issues.
+	One such issue, which is important for the purpose of our discussion, is the lack of adequate means for representing verbs -- actions and processes\footnote{This issue is humorously  described by Steve Yegge in his ``Execution in the Kingdom of Nouns''~\cite{yegge2006}.}.
 	The essence of this issue is that verbs do not exists in their own right and must be a part of some object (noun), represented as its behaviour in a form of a method\footnote{This is why it is so easy to violate the single responsibility or the open/closed principles.}.
 	The same issue got translated into and plagued some of the distributed computational models such as Remote Method Invocation (RMI) and Simple Object Access Protocol (SOAP).
-	The same issue makes it difficult to reason about objects' behaviour (too many methods, what is the state of the object they are invoked on, etc) and the same issue obstructs building semantically transparent user interfaces.
+	The same issue makes it difficult to reason about objects' behaviour (too many methods, what is the state of the object they are invoked on, etc) and the same issue obstructs building \emph{semantically transparent}\footnote{The term \emph{semantically transparent} means a system where its underlying model is exposed for a direct manipulation by users.} information systems.
 	
 	The Naked Objects pattern attempts to follow the idea of the direct manipulation principle to transparently represent objects in UI.
-	Naturally, it exposes object properties for users to change them directly via UI, but in order to provide some behaviour, it exposes some of the methods as UI actuators (e.g. buttons, menu items) that can be invoked on an individual object.
+	Naturally, it exposes the state as object properties for users to change them directly via UI, but in order to provide the behaviour, it exposes some of the methods as UI actuators (e.g. buttons, menu items) that can be invoked on an individual object.
 	The approach of exposing object methods, introduces new issues and opens up many questions.
 	For example:
   	\begin{itemize}
@@ -164,18 +164,57 @@
 		\item What to do if some computation needs to be applied to a subset of objects, not just a single one?
 	\end{itemize}
 	
-	This suggests that the described problem of having no first-class support for verbs, significantly complicates, if not makes it impossible, to construct semantically transparent information systems by following the currently most prevalent understanding of object orientation.
+	This suggests that the described problem of having no first-class support for verbs, significantly complicates, if not making it impossible, to construct semantically transparent information systems by following the currently most prevalent understanding of object orientation.
 
-\subsection*{Verbs == Nouns}	
+\subsection*{The REST of Object Orientation}	
 	
-	In our research we came across some original work by Alan Kay where he explains object orientation from a very different that currently taken perspective.
-	According to Alan Kay, the complexity of behaviour in object-oriented systems comes from interconnectedness between objects rather than from methods, which they have.
-	He compared an object-oriented systems with a systems of networked computers, or computing nodes, that have simple communication interface for interaction.
-	This and the rise of RESTful concepts resonated 
+	In our research we came across some original work by Alan Kay where he explains object orientation from a very different perspective than the one currently in common use.
+	This view is tersely summarised by Alan Kay in his clarification of  the term ``object-oriented'' in~\cite{Kay2003}.
+	According to Alan Kay, the complexity of behaviour in object-oriented systems should come from interconnectedness between objects rather than from their methods.
+	He compared an object-oriented system with a system of networked computers, or computing nodes, that have simple and uniform communication interface for interaction.
 	
-	The lack of seemingly no first-class support for verbs in OOP languages
-	In our
-	However, the very original idea being object-orientation
+	For us, this treatment of object-orientation resonated with the representational state transfer (REST) architectural style~\cite{Fielding2000}, where there is a well defined and uniform way for interacting with web resources.
+	Typically, web resources in RESTful systems react to requests that are expressed only in terms of HTTP verbs such as GET, POST, PUT and DELETE.
+	Therefore, if the complexity of the Internet could be uniformly expressed as a multitude of web resources that have only four or so verbs for interaction, wouldn't the same or similar constraint at the level of objects result in a functionally rich and uniform object-oriented system design?
+	This is the hypothesis that underpins the approach to object orientation that is taken in TG.
+	Essentially, the application of the REST style to an object-oriented design of an information system in terms of its \texttt{Memory}, \texttt{Informative} and \texttt{Active} functions, resulted in the development of an architectural pattern that became the foundation of TG.
+	This pattern is titled \emph{Fractal Objects} as it explicitly articulates that complex system behaviour is achieved by combining structurally identical building blocks -- the fractal object.
+	
+	
+ 	A \emph{fractal object} is a pair of objects -- an \emph{entity} and its \emph{companion}.
+  	The role of an \emph{entity object} is to capture the structure of some business entity that is being modelled.
+  	At the code level it is implemented as a class that has state (properties), but has no behaviour.
+  	The role of a \emph{companion object} if to provide operations that can be performed with a corresponding \emph{entity object}.
+  	At the code level it is implemented as an interface that has methods, but has no state.
+  	Together, the entity and companion objects form an elementary building block to provide an invariant representation of any structural or functional business domain aspects.
+
+  The state that is captured by entity objects can either primitive (date, integer, etc.) or reference other entity objects.
+  This provides a way to represent relationships between entity objects (one-to-one, many-to-one or one-to-many).
+  It is important to note that from the perspective of class hierarchy, the hierarchy of entity objects is flat~-- the complexity of the behaviour and structure is captured by means of composition rather than inheritance.  
+  Changing relationship between entity objects at runtime can be achieved by simply changing values of their respective properties~-- something that cannot be done where association is captured through the mechanism of inheritance.
+  
+  \emph{Companion objects} provide four operations that can be performed with respect to a corresponding entity object~--  \emph{create}, \emph{save}, \emph{delete}, and \emph{request}.
+  These operations conceptually describe what can be done with an entity object.
+  It can either be create, saved, deleted or requested (i.e. searched for).
+  Each of this operation can be represented by one or more actual methods at the code level.
+    
+  The power of having a limited number of operations has been demonstrated by the REST style~\cite{Fielding2000} of architecture for web applications.
+  We argue that similar benefits are gained at the level of domain modelling.
+  There is a lot of semantic similarities between REST style of web resources (macro level) and objects modelling the domain (micro level).
+  For example, the use of URI paths to navigate between web resources is analogous to paths in object graphs for association traversal.
+  To us this resonates with the original view of object-oriented systems by Alan Key, who emphasised similarity between objects and networked computers.
+  And although web is just a delivery mechanism, and a software system may or may not run on the web, its intrinsic nature of interconnected resources with uniform interaction mechanism seems to be very appropriate for an object-oriented modelling.
+  It was one of our design goals to capture this approach of modelling complex structures and behaviour as part of the Fractal Objects approach.
+
+  Similarly to entity objects, companion objects can be composed in order to achieve a more complex behaviour.
+  Companion objects provide a clean separation of concern by fully encapsulating the behaviour, making sure that entity objects represent a pure structure of relationships between entities in a business domain or some more abstract entities.
+  
+  Due to the fact that companion objects are interfaces, a natural question arises as to who and when fulfils the actual implementation.
+  In our work, the computing platform provides the generic implementation for companion objects that can be inherited from and enhanced as part of a specific software system.
+  The inherited implementation gets injected at runtime.
+  Thus, all references to an interface representing a companion object are assigned with an instances of the injected implementation.
+
+	
 	 
 
 	At a conceptual level, the key purpose of the developed architectural pattern in TG, which is called \emph{Fractal Objects}, is to ensure the \emph{semantic transparency} of the domain model at different levels of an information level being modelled~-- from the source code at the bottom and up to the user interface at the top.
@@ -222,41 +261,7 @@
   Java is still one of the most widely used programming languages and proved to be well suited for the implementation of transactional business systems.
   However, our decision to use Java was also influenced by its rich reflection capabilities that allow runtime introspection in order to gather metadata, and its use of interfaces to support polymorphism that could be effectively used by the platform for inversion of control to enable loose coupling with domain models.
 
-  \subsection*{Entity and Companion Objects}
-
-  A Fractal Object is a pair of an \emph{entity object} and a \emph{companion object}.
-  The role of an \emph{entity object} is to capture the structure of some entity that is being modelled.
-  At the code level it is implemented as a class that has state (properties), but has no behaviour.
-  The role of a \emph{companion object} if to provide operations that can be performed with a corresponding \emph{entity object}.
-  At the code level it is implemented as an interface that has methods, but has no state.
-  Together, the entity and companion objects form an elementary building block to provide an invariant representation of any structural or functional business domain aspects.
-
-  The state that is captured by entity objects can either primitive (date, integer, etc.) or reference other entity objects.
-  This provides a way to represent relationships between entity objects (one-to-one, many-to-one or one-to-many).
-  It is important to note that from the perspective of class hierarchy, the hierarchy of entity objects is flat~-- the complexity of the behaviour and structure is captured by means of composition rather than inheritance.  
-  Changing relationship between entity objects at runtime can be achieved by simply changing values of their respective properties~-- something that cannot be done where association is captured through the mechanism of inheritance.
   
-  \emph{Companion objects} provide four operations that can be performed with respect to a corresponding entity object~--  \emph{create}, \emph{save}, \emph{delete}, and \emph{request}.
-  These operations conceptually describe what can be done with an entity object.
-  It can either be create, saved, deleted or requested (i.e. searched for).
-  Each of this operation can be represented by one or more actual methods at the code level.
-    
-  The power of having a limited number of operations has been demonstrated by the REST style~\cite{Fielding2000} of architecture for web applications.
-  We argue that similar benefits are gained at the level of domain modelling.
-  There is a lot of semantic similarities between REST style of web resources (macro level) and objects modelling the domain (micro level).
-  For example, the use of URI paths to navigate between web resources is analogous to paths in object graphs for association traversal.
-  To us this resonates with the original view of object-oriented systems by Alan Key, who emphasised similarity between objects and networked computers.
-  And although web is just a delivery mechanism, and a software system may or may not run on the web, its intrinsic nature of interconnected resources with uniform interaction mechanism seems to be very appropriate for an object-oriented modelling.
-  It was one of our design goals to capture this approach of modelling complex structures and behaviour as part of the Fractal Objects approach.
-
-  Similarly to entity objects, companion objects can be composed in order to achieve a more complex behaviour.
-  Companion objects provide a clean separation of concern by fully encapsulating the behaviour, making sure that entity objects represent a pure structure of relationships between entities in a business domain or some more abstract entities.
-  
-  Due to the fact that companion objects are interfaces, a natural question arises as to who and when fulfils the actual implementation.
-  In our work, the computing platform provides the generic implementation for companion objects that can be inherited from and enhanced as part of a specific software system.
-  The inherited implementation gets injected at runtime.
-  Thus, all references to an interface representing a companion object are assigned with an instances of the injected implementation.
-
 
 
 
@@ -485,6 +490,10 @@
 %
 \begin{thebibliography}{5}
 
+\bibitem{Kay2003}
+Kay, A. On the Meaning of ``Object-Oriented Programming''
+\href{http://www.purl.org/stefan_ram/pub/doc_kay_oop_en}{Online}
+
 \bibitem{Barnes:2007:ORM}
 Bar\-nes, J.~M. Object-Relational Mapping as a Persistence Mechanism for Object-Oriented Applications, 2007,
 \href{http://digitalcommons.macalester.edu/mathcs_honors/6/}{Online}
@@ -553,11 +562,14 @@ Shneiderman, B. The future of interactive systems and the emergence of direct ma
 \bibitem{shneiderman1983}
 Shneiderman, B. Direct manipulation: A step beyond programming languages. Computer, 16(8):57–69, 1983.
 
-\bibitem{fowler2006} Fowler, M. DslBoundary, http://martinfowler.com/bliki/DslBoundary.html
+\bibitem{fowler2006} Fowler, M. DslBoundary, 
+\href{http://martinfowler.com/bliki/DslBoundary.html}{Online}
 
-\bibitem{yegge2006} Yegge, S. Execution in the Kingdom of Nouns,  http://steve-yegge.blogspot.com.au/2006/03/execution-in-kingdom-of-nouns.html
+\bibitem{yegge2006} Yegge, S. Execution in the Kingdom of Nouns,  
+\href{http://steve-yegge.blogspot.com.au/2006/03/execution-in-kingdom-of-nouns.html}{Online}
 
-\bibitem{SOLID} SOLID (object-oriented design), https://en.wikipedia.org/wiki/SOLID\_(object-oriented\_design)
+\bibitem{SOLID} SOLID (object-oriented design), 
+\href{https://en.wikipedia.org/wiki/SOLID_(object-oriented_design)}{Online}
 
 \end{thebibliography}
 %
