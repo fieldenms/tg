@@ -28,6 +28,10 @@ public class WebMenuItem implements IExecutable {
         this.view = view;
     }
 
+    public void submenu() {
+        this.view = null;
+    }
+
     public WebSubMenuItem addSubMenuItem(final String title) {
         final WebSubMenuItem subMenuItem = new WebSubMenuItem(title);
         subItems.add(subMenuItem);
