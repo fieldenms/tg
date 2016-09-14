@@ -56,9 +56,9 @@ public class DomainMetadataAnalyser {
                 default:
                     newOne = domainMetadata.generatePureEntityMetadata(entityType, baseInfoForDomainMetadata);
                 }
- 
-                entityMetadataMap.put(entityType, newOne);    
-                
+
+                entityMetadataMap.put(entityType, newOne);
+
                 return newOne;
             } catch (final Exception e) {
                 e.printStackTrace();
@@ -69,7 +69,7 @@ public class DomainMetadataAnalyser {
 
     /**
      * Retrieves persistence info for entity property, which is explicitly persisted within this entity type.
-     * 
+     *
      * @param entityType
      * @param propName
      * @return
@@ -81,7 +81,7 @@ public class DomainMetadataAnalyser {
 
     /**
      * Retrieves persistence info for entity property or its nested subproperty.
-     * 
+     *
      * @param entityType
      * @param propName
      * @return
@@ -131,11 +131,11 @@ public class DomainMetadataAnalyser {
     public Map<Class<?>, Object> getHibTypesDefaults() {
         return domainMetadata.getHibTypesDefaults();
     }
-    
+
     public Object getBooleanValue(final boolean value) {
         return domainMetadata.getBooleanValue(value);
     }
-    
+
     public Set<String> getLeafPropsFromFirstLevelProps(final String parentProp, final Class<? extends AbstractEntity<?>> entityType, final Set<String> firstLevelProps) {
         final Set<String> result = new HashSet<String>();
 
@@ -143,7 +143,7 @@ public class DomainMetadataAnalyser {
             final PropertyMetadata propMetadata = getPropPersistenceInfoExplicitly(entityType, prop);
             if (propMetadata.isEntityOfPersistedType()) {
                 final Set<String> keyProps = new HashSet<String>(Finder.getFieldNames(Finder.getKeyMembers(propMetadata.getJavaType())));
-                if (keyProps.size() > 1) {
+                if (EntityUtils.isCompositeEntity(propMetadata.getJavaType())) {
                     result.addAll(getLeafPropsFromFirstLevelProps(prop, propMetadata.getJavaType(), keyProps));
                 } else {
                     result.add((parentProp != null ? (parentProp + ".") : "") + prop);
