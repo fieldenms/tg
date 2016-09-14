@@ -58,14 +58,20 @@
 
                 properties: {
                     menuItem: Object,
+                    selectedModule: String,
+                    submodule: Object,
                     autoLoad: {
                         type: Boolean,
                         value: false,
                         reflectToAttribute: true
                     },
-                    uuid: String,
-                    moduleId: String
+                    moduleId: String,
+                    submoduleId: String
                 },
+
+                observers: [
+                    '_loadView(moduleId, selectedModule, submoduleId, submodule)'
+                ],
 
                 behaviors: [Polymer.IronResizableBehavior],
 
@@ -77,10 +83,20 @@
                     var self = this;
                     self.async(function () {
                         if (isPropertyDefined(self, "menuItem.view.attrs")) {
-                            self.menuItem.view.attrs.uuid = self.uuid;
+                            self.menuItem.view.attrs.uuid = self.moduleId + '/' + self.submoduleId;
                             self.menuItem.view.attrs.moduleId = self.moduleId;
                         }
                     }, 1);
+                },
+
+                _loadView: function (moduleId, selectedModule, submoduleId, submodule) {
+                    var decodedSubmodule = decodeURIComponent(submodule.path.substring(1));
+                    var uriParts = decodedSubmodule.split("?");
+                    var submodulePart = uriParts[0];
+                    var queryPart = uriParts[1];
+                    if (moduleId === decodeURIComponent(selectedModule) && submoduleId === submodulePart) {
+                        this._loadAfterInit(queryPart);
+                    }
                 },
 
                 _getMenuItemAttributes: function () {
@@ -131,7 +147,7 @@
                         }
                     }
                 },
-                
+
                 _setQueryIfPossible: function (queryPart) {
                     if (this.menuItem.view.type === "centre" && queryPart) {
                         this.menuItem.view.attrs.queryPart = queryPart;
@@ -141,7 +157,7 @@
                 /**
                  * This function lets one to indicate whether this view should be loaded after the dom will be initialised. It is not the same as auto = true
                  */
-                loadAfterInit: function (queryPart) {
+                _loadAfterInit: function (queryPart) {
                     var elementToLoad;
                     if (!this.auto && this.menuItem.view) {
                         elementToLoad = this.$$("#elementToLoad");
@@ -171,8 +187,8 @@
                     }
                     return true;
                 },
-                
-                canLeave: function() {
+
+                canLeave: function () {
                     var elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.canLeave === 'function') {
                         return elementToLoad.loadedElement.canLeave();

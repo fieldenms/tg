@@ -87,11 +87,11 @@
 
                 <paper-menu id="menu" class="flex" attr-for-selected="name" selected="{{_selectedPage}}" on-iron-activate="_itemActivated">
                     <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
-                        <paper-submenu name$="[[firstLevelItem.title]]">
+                        <paper-submenu name$="[[_calcItemPath(firstLevelItem.title)]]">
                             <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.description]]">[[firstLevelItem.title]]</paper-item>
-                            <template is="dom-if" if="[[firstLevelItem.submenu]]">
+                            <template is="dom-if" if="[[firstLevelItem.menu]]">
                                 <paper-menu class="menu-content" attr-for-selected="name">
-                                    <template is="dom-repeat" items="[[firstLevelItem.submenu]]">
+                                    <template is="dom-repeat" items="[[firstLevelItem.menu]]">
                                         <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem.title, item.title)]]" tooltip-text$="[[item.description]]">[[item.title]]</paper-item>
                                     </template>
                                 </paper-menu>
@@ -113,13 +113,13 @@
 
                 <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
                     <div class="menu-item-view" page-name="_"></div>
-                    <template is="dom-repeat" items="[[menuItem.menu]]" on-dom-change="_menuItemsRendered" as="firstLevelItem">
-                        <template is="dom-if" if="[[!firstLevelItem.submenu]]">
-                            <tg-menu-item-view class="menu-item-view" page-name$="[[firstLevelItem.title]]" menu-item="[[firstLevelItem]]" uuid="[[_calcUuid(firstLevelItem)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
+                    <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
+                        <template is="dom-if" if="[[!firstLevelItem.menu]]">
+                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem.title)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.title]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
                         </template>
-                        <template is="dom-if" if="[[firstLevelItem.submenu]]">
-                            <template is="dom-repeat" items="[[firstLevelItem.submenu]]" on-dom-change="_submenuItemsRendered">
-                                <tg-menu-item-view page-name$="[[_calcItemPath(firstLevelItem.title, item.title)]]" tooltip-text$="[[item.description]]">[[item.title]]</tg-menu-item-view>
+                        <template is="dom-if" if="[[firstLevelItem.menu]]">
+                            <template is="dom-repeat" items="[[firstLevelItem.menu]]">
+                                <tg-menu-item-view page-name$="[[_calcItemPath(firstLevelItem.title, item.title)]]" tooltip-text$="[[item.description]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.title]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
                             </template>
                         </template>
                     </template>
@@ -189,7 +189,6 @@
                 },
 
                 //Private members those starts with underscore
-                _menuItemsLoaded: Boolean,
                 _selectedPage: {
                     type: String,
                     observer: '_selectedPageChanged'
@@ -236,36 +235,17 @@
             },
 
             _calcItemPath: function (groupItem, item) {
-                return groupItem + "/" + item;
+                return encodeURIComponent(groupItem) + (item ? "/" + encodeURIComponent(item) : '');
             },
 
-            _menuItemsRendered: function () {
-                console.log("menu items rendered for " + this.menuItem.title);
-                this._menuItemsLoaded = true;
-            },
-            
-            _submenuItemsRendered: function () {
-                console.log("submenu items rendered for " + this.menuItem.title);
-            },
-
-            _updatePage(menuItem, submodule, _menuItemsLoaded) {
+            _updatePage(menuItem, submodule) {
                 var pageName;
                 var decodedSubmodule = decodeURIComponent(submodule.path.substring(1));
-                var uriParts = decodedSubmodule.split("?");
-                var submodulePart = uriParts[0];
-                var queryPart = uriParts[1];
+                var submodulePart = decodedSubmodule.split("?")[0];
                 if (menuItem.title === decodeURIComponent(this.selectedModule)) {
                     pageName = findSubmodule(submodulePart, menuItem);
                     this.set("_selectedPage", pageName);
-                    this.async(function () {
-                        var viewToLoad;
-                        if (pageName !== '_') {
-                            viewToLoad = this.$$("[page-name='" + pageName + "']");
-                            if (viewToLoad) {
-                                viewToLoad.loadAfterInit(queryPart);
-                            }
-                        }
-                    });
+                    
                 }
             },
 
@@ -289,15 +269,15 @@
                 return page === '_' ? '' : page;
             },
 
-            _calcUuid: function (item) {
-                return this.menuItem.title + '/' + item.title;
+            _calcSubmoduleId: function (firtsLevelItem, secondLevelItem) {
+                return firtsLevelItem.title + (secondLevelItem ? '/' + secondLevelItem.title : '');
             },
 
             /**
              * The listener that listens the menu item activation on tap.
              */
             _itemActivated: function (e, detail) {
-                this.set("submodule.path", "/" + encodeURIComponent(detail.selected));
+                this.set("submodule.path", "/" + detail.selected);
             },
 
             _selectedPageChanged: function (newValue, oldValue) {

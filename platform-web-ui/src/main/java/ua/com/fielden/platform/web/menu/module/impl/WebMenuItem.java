@@ -42,7 +42,7 @@ public class WebMenuItem implements IExecutable {
     public JsCode code() {
         final String code = "{ title: \"" + this.title + "\", " +
                 "description: \"" + this.description + "\"" +
-                (this.subItems.size() > 0 ? ", submenu: [" + StringUtils.join(subItems, ",") + "]" : "") +
+                (this.subItems.size() > 0 ? ", menu: [" + StringUtils.join(subItems, ",") + "]" : "") +
                 (this.view != null ? ", view: " + view.code() : "") +
                 "}";
         return new JsCode(code);
