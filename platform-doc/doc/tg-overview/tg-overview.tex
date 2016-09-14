@@ -182,8 +182,13 @@
 	
 	
  	A \emph{fractal object} is a pair of objects -- an \emph{entity} and its \emph{companion}.
-  	The role of an \emph{entity object} is to capture the structure of some business entity that is being modelled.
-  	At the code level it is implemented as a class that has state (properties), but has no behaviour.
+  	An \emph{entity object} models the structure of a business entity, including associations with other entities.
+	It is a critical responsibility of this role to ensure the validity of the structure that an \emph{entity object} represents.
+  	At the code level it is implemented as a class that has properties together with a meta-data such as the validation business rules, post-change rules and dependencies between properties.
+	
+	
+	
+	
   	The role of a \emph{companion object} if to provide operations that can be performed with a corresponding \emph{entity object}.
   	At the code level it is implemented as an interface that has methods, but has no state.
   	Together, the entity and companion objects form an elementary building block to provide an invariant representation of any structural or functional business domain aspects.
