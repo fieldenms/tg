@@ -144,7 +144,8 @@
             var path = itemPath.split('/');
             var currentItem = menuItem;
 
-            for (pathIndex = 0; (pathIndex < path.length) && !!currentItem; pathIndex++) {
+            for (pathIndex = 0;
+                (pathIndex < path.length) && !!currentItem; pathIndex++) {
                 currentItem = findMenuItem(path[pathIndex], currentItem);
             }
             return {
@@ -262,25 +263,27 @@
                     this.set("_selectedPage", menuPath.path);
                 }
             },
-            
-            _selectMenu: function(pagePath) {
+
+            _selectMenu: function (pagePath) {
                 var path = findNestedMenuItem(pagePath, this.menuItem).path;
                 var pathParts = findNestedMenuItem(pagePath, this.menuItem).path.split('/');
                 var topMenu = this.$$("paper-submenu[name='" + pathParts[0] + "']");
                 var submenu = this.$$("paper-menu[name='" + pathParts[0] + "']");
                 var submenuItem = this.$$("paper-item[name='" + path + "']");
                 var wasSelected;
-                if (!topMenu || !submenu || !submenuItem) {
+                if (!topMenu || pathParts[1] && (!submenu || !submenuItem)) {
                     this._menuToSelectAfterLoad = pagePath;
                     wasSelected = false;
                 } else {
                     topMenu.open();
-                    submenu.select(path);
+                    if (submenu) {
+                        submenu.select(path);
+                    }
                     wasSelected = true;
                 }
                 return wasSelected;
             },
-            
+
             _menuTemplateRendered: function () {
                 if (this._menuToSelectAfterLoad && this._selectMenu(this._menuToSelectAfterLoad)) {
                     delete this._menuToSelectAfterLoad;
@@ -304,7 +307,9 @@
             },
 
             _calcSelectedPageTitle: function (page) {
-                return page === '_' ? '' : page.split('/').map(function(item) {return decodeURIComponent(item)}).join(' \u2192 ');
+                return page === '_' ? '' : page.split('/').map(function (item) {
+                    return decodeURIComponent(item)
+                }).join(' \u2192 ');
             },
 
             _calcSubmoduleId: function (firtsLevelItem, secondLevelItem) {
@@ -318,7 +323,7 @@
                 this.set("submodule.path", "/" + detail.selected);
                 this._selectPage(detail.selected);
             },
-            
+
             _selectedPageChanged: function (newValue, oldValue) {
                 this._initDrawerPanel();
             },
