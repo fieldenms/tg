@@ -13,7 +13,6 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.IUserRoleDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -62,18 +61,6 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
             roles.add(association.getRole());
         }
         return roles;
-    }
-
-    @Override
-    @SessionRequired
-    public void saveSecurityToken(final Map<Class<? extends ISecurityToken>, Set<UserRole>> tokenToRoleAssociations) {
-        for (final Class<? extends ISecurityToken> token : tokenToRoleAssociations.keySet()) {
-            securityAssociationDao.removeAssociationsFor(token);
-            final Set<UserRole> roles = tokenToRoleAssociations.get(token);
-            for (final UserRole role : roles) {
-                securityAssociationDao.save(role.getEntityFactory().newByKey(SecurityRoleAssociation.class, token, role));
-            }
-        }
     }
 
     public IUserRoleDao getRoleDao() {
