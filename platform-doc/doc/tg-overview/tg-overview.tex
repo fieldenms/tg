@@ -1,4 +1,4 @@
-\documentclass[a4paper,10pt,oneside,openright,final]{memoir} %twocolumn,
+\documentclass[a4paper,12pt,oneside,openright,final]{memoir} %twocolumn,
 \usepackage[utf8]{inputenc}
 \usepackage[russian, ukrainian, english]{babel}
 \usepackage{etex}
@@ -16,6 +16,16 @@
 \usepackage{eso-pic}
 \usepackage{transparent}
 \setlength{\columnsep}{3em}
+
+\usepackage{tcolorbox}
+\usepackage{listings}
+\definecolor{codebgcolor}{HTML}{6E84D6}  
+\definecolor{codefgcolor}{HTML}{000000}% 071D70
+\definecolor{basiccolor}{HTML}{000000}%1435AD
+\definecolor{stringcolor}{HTML}{050505}% 2C3E82
+\definecolor{highlight}{HTML}{FFB100}
+\definecolor{annotationbgcolor}{HTML}{FFD473}
+
 
 \usepackage{wrapfig}
 \usepackage{subfig}
@@ -158,7 +168,7 @@
 	The approach of exposing object methods, introduces new issues and opens up many questions.
 	For example:
   	\begin{itemize}
-    	\item There is now need to differentiate between methods (i.e. behaviour) that can and cannot be exposed via UI;
+    	\item There is now the need to differentiate between methods (i.e. behaviour) that can and cannot be exposed via UI;
 		\item Why are there methods that are not exposed to UI -- doesn't this go against the idea of semantic transparency?
 		\item If the exposed methods have arguments then how should their values be provided when invoking them from UI?
 		\item What to do if some computation needs to be applied to a subset of objects, not just a single one?
@@ -179,10 +189,77 @@
 	This is the hypothesis that underpins the approach to object orientation that is taken in TG.
 	Essentially, the application of the REST style to an object-oriented design of an information system in terms of its \texttt{Memory}, \texttt{Informative} and \texttt{Active} functions, resulted in the development of an architectural pattern that became the foundation of TG.
 	This pattern is titled \emph{Fractal Objects} as it explicitly articulates that complex system behaviour is achieved by combining structurally identical building blocks -- the fractal object.
+	A \emph{fractal object} is a construct consisting of two objects -- an \emph{entity} and its \emph{companion}.
+	Is the basic conceptual building block for both designing and constructing information systems based on TG.
 	
+	\paragraph{Entity Object.} 	
+  	An \emph{entity object} models the structure of a business entity, including its associations with other entities.
+	Unlike the anemic domain model~\cite{fowler2003}, an entity has the responsibility to ensure the correctness of its state.
+	Any value that is being assigned to its properties is validated in accordance with a specified business rule.
+	This includes a mechanism of inter property dependency with automatic revalidation of invalid dependent properties.
 	
- 	A \emph{fractal object} is a pair of objects -- an \emph{entity} and its \emph{companion}.
-  	An \emph{entity object} models the structure of a business entity, including associations with other entities.
+	\begin{tcolorbox}[title=Example: dependent properties]
+	\footnotesize
+		There could be two mutually dependent properties \texttt{dateFrom} and \texttt{dateTo} that represent a date period, which should not be inverted.
+		If property \texttt{dateFrom} has value \texttt{'2016-03-01'} and an attempt is made to assign property \texttt{dateTo} to value \texttt{'2016-02-01'} then the latter would be marked as invalid without any actual change to its value (i.e. an entity cannot be mutated with invalid values).
+		Value \texttt{'2016-02-01'} for property \texttt{dateTo} gets captured as \emph{an attempted value}.
+		A subsequent attempt to change property \texttt{dateFrom} by setting its value to \texttt{'2016-01-01'} would be successful.
+		Due to inter property dependency mechanism, successful assignment to property \texttt{dateFrom} automatically tries to repeat the previous attempt to assign value \texttt{'2016-02-01'} to invalid property \texttt{dateTo}.
+		This time it is a success, because \texttt{'2016-01-01' < '2016-02-01'} -- property \texttt{dateTo} becomes valid and attains new value \texttt{'2016-02-01'}.
+ 	\end{tcolorbox}
+	
+	The validation rules are declared as part of property definitions in a form of a specifically designed annotation.
+	Any particular property may have no, one or several validators declared.
+	In case of several validators, their execution is sequenced in the order to declaration.
+	The validation process stops at the first failed validator or if all validators succeed.
+	A value gets assigned only if all validators succeed.
+	The ability to declare multiple sequential validators fosters good separation between different validation rules and provides a convenient way for reusing the same validation rules in application to properties of the same type, even if they belong to different entities.
+	Without going any further into details, it is important to emphasise that in real world systems, the validation process rarely operates only on the in-memory state and often requires an access to a database.
+	The developed entity validation mechanism is specifically designed with this requirement in mind and does not follow an approach that is frequently used in simpler problem domains where property setters are used to place the validation logic.
+	Instead, validators are represented by separate classes that are implement as a property \emph{before change} contract and are executed by the \texttt{TG} runtime before setter invocations.
+
+	Attempts to assign invalid values do not raise any exceptions.
+	Validation errors are treated as an entity meta-data and TG provides an API to work with that meta-data.
+	The meta-data is not limited only to identifying erroneous entity properties and their causes, but also captures and maintains in-memory mutations such as the aforementioned attempted values.
+	This information is very useful when implementing intricate business logic, including the validation logic, which may require the knowledge of the original\footnote{A property value becomes \emph{original} if it gets persisted into the database. It is used to differentiate between in-memory mutations and persistent state of an entity.} or previous property values.
+	The same information is used by TG itself, for example, to automate UI creation and to facilitate user interaction with the system by automatically validating their input and reporting errors.
+	The example below illustrates how a property declaration can incorporate the knowledge about its validators, persistent nature and the dependent properties at the Java code level.
+	
+	\lstset{language=Java,
+	  escapechar=\%,
+	  numbers=left, numberstyle=\tiny, basicstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
+
+	  
+	\begin{tcolorbox}[sidebyside, righthand width=0.3\textwidth, title=Example: property declaration with multiple validators]
+    \begin{lstlisting}[numbersep=2pt]
+@IsProperty
+@Persistent
+@Dependent("locationSubsystem")
+@BeforeChange({
+   @Handler(WaTypeValidator.class),
+   @Handler(ServiceLocationSubsystemValidator.class)})
+private Service service;
+    \end{lstlisting}
+	
+	\tcblower
+	\tiny
+	Property \texttt{service} in entity \texttt{WorkActivity}.
+	It is declared as persistent, which means it gets saved into a database.
+	Its values have to satisfy validators that are specified as part of \texttt{@BeforeChange} in that order.
+	And it has a dependent property \texttt{locationSubsystem}, which needs to be revalidated if the value of this property gets changed.	
+ 	\end{tcolorbox}
+	
+	It is also important
+	
+	In addition to a proper validation mechanism 
+	
+
+	\paragraph{Companion Object.}	
+	The \emph{entity} of a \emph{fractal object}
+	
+	However, unlike the rich domain model
+	
+		
 	It is a critical responsibility of this role to ensure the validity of the structure that an \emph{entity object} represents.
   	At the code level it is implemented as a class that has properties together with a meta-data such as the validation business rules, post-change rules and dependencies between properties.
 	
@@ -567,8 +644,17 @@ Shneiderman, B. The future of interactive systems and the emergence of direct ma
 \bibitem{shneiderman1983}
 Shneiderman, B. Direct manipulation: A step beyond programming languages. Computer, 16(8):57–69, 1983.
 
+\bibitem{fowler2003} Fowler, M. AnemicDomainModel, 
+\href{http://www.martinfowler.com/bliki/AnemicDomainModel.html}{Online}
+
 \bibitem{fowler2006} Fowler, M. DslBoundary, 
 \href{http://martinfowler.com/bliki/DslBoundary.html}{Online}
+
+\bibitem{bozhanov2010} Bozhanov, B. On Domain-Driven Design, Anemic Domain Model, Code Generation, Dependency Injection and More…
+\href{http://techblog.bozho.net/on-domain-driven-design-anemic-domain-models-code-generation-dependency-injection-and-more/}{Online}
+
+\bibitem{sapm2014}  The Anaemic Domain Model is no Anti-Pattern, it’s a SOLID design, The School of Informatics, University of Edinburgh,
+\href{https://blog.inf.ed.ac.uk/sapm/2014/02/04/the-anaemic-domain-model-is-no-anti-pattern-its-a-solid-design/}{Online}
 
 \bibitem{yegge2006} Yegge, S. Execution in the Kingdom of Nouns,  
 \href{http://steve-yegge.blogspot.com.au/2006/03/execution-in-kingdom-of-nouns.html}{Online}
