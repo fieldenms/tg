@@ -6,6 +6,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.order
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,7 +16,7 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
-import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IPlainJoin;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -144,35 +146,76 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
         if (keyValues == null || keyValues.length == 0) {
             throw new IllegalArgumentException("No key values provided.");
         }
+        final EntityResultQueryModel<T> query = attachKeyConditions(select(getEntityType()).where(), keyValues).model();
+        query.setFilterable(getFilterable());
+        return query;
+    }
+    
+    /**
+     * Creates a query for entities by their keys (simple or composite). If <code>entitiesWithKeys</code> are empty -- returns empty optional. 
+     * 
+     * @param entityType -- the entity type
+     * @param entitiesWithKeys -- the entities with <b>all</b> key values correctly fetched / assigned
+     * @return
+     */
+    public Optional<EntityResultQueryModel<T>> createQueryByKeyFor(final Collection<T> entitiesWithKeys) {
+        IWhere0<T> partQ = select(getEntityType()).where();
+        final List<Field> keyMembers = Finder.getKeyMembers(getEntityType());
+        
+        for (final Iterator<T> iter = entitiesWithKeys.iterator(); iter.hasNext();) {
+            final T entityWithKey = iter.next();
+            final ICompoundCondition0<T> or = attachKeyConditions(partQ, keyMembers, keyMembers.stream().map(keyMember -> entityWithKey.get(keyMember.getName())).toArray());
+            if (iter.hasNext()) {
+                partQ = or.or();
+            } else {
+                return Optional.of(or.model());
+            }
+        }
 
-        final IPlainJoin<T> qry = select(getEntityType());
+        return Optional.empty();
+    }
+    
+    /**
+     * Attaches key member conditions to the partially constructed query <code>entryPoint</code> based on its values. 
+     * 
+     * @param entryPoint
+     * @param keyValues
+     * @return
+     */
+    protected ICompoundCondition0<T> attachKeyConditions(final IWhere0<T> entryPoint, final Object... keyValues) {
+        return attachKeyConditions(entryPoint, Finder.getKeyMembers(getEntityType()), keyValues);
+    }
 
+    /**
+     * Attaches key member conditions to the partially constructed query <code>entryPoint</code> based on its values. 
+     * 
+     * @param entryPoint
+     * @param keyMembers
+     * @param keyValues
+     * @return
+     */
+    protected ICompoundCondition0<T> attachKeyConditions(final IWhere0<T> entryPoint, final List<Field> keyMembers, final Object... keyValues) {
         if (getKeyType() == DynamicEntityKey.class) {
-            final List<Field> list = Finder.getKeyMembers(getEntityType());
             // let's be smart about the key values and support the case where an instance of DynamicEntityKey is passed.
             final Object[] realKeyValues = (keyValues.length == 1 && keyValues[0].getClass() == DynamicEntityKey.class) ? //
             ((DynamicEntityKey) keyValues[0]).getKeyValues()
                     : keyValues;
 
-            if (list.size() != realKeyValues.length) {
+            if (keyMembers.size() != realKeyValues.length) {
                 throw new IllegalArgumentException("The number of provided values (" + realKeyValues.length
-                        + ") does not match the number of properties in the entity composite key (" + list.size() + ").");
+                        + ") does not match the number of properties in the entity composite key (" + keyMembers.size() + ").");
             }
 
-            ICompoundCondition0<T> cc = qry.where().condition(buildConditionForKeyMember(list.get(0).getName(), list.get(0).getType(), realKeyValues[0]));
+            ICompoundCondition0<T> cc = entryPoint.condition(buildConditionForKeyMember(keyMembers.get(0).getName(), keyMembers.get(0).getType(), realKeyValues[0]));
 
-            for (int index = 1; index < list.size(); index++) {
-                cc = cc.and().condition(buildConditionForKeyMember(list.get(index).getName(), list.get(index).getType(), realKeyValues[index]));
+            for (int index = 1; index < keyMembers.size(); index++) {
+                cc = cc.and().condition(buildConditionForKeyMember(keyMembers.get(index).getName(), keyMembers.get(index).getType(), realKeyValues[index]));
             }
-            final EntityResultQueryModel<T> query = cc.model();
-            query.setFilterable(getFilterable());
-            return query;
+            return cc;
         } else if (keyValues.length != 1) {
             throw new IllegalArgumentException("Only one key value is expected instead of " + keyValues.length + " when looking for an entity by a non-composite key.");
         } else {
-            final EntityResultQueryModel<T> query = qry.where().condition(buildConditionForKeyMember(AbstractEntity.KEY, getKeyType(), keyValues[0])).model();
-            query.setFilterable(getFilterable());
-            return query;
+            return entryPoint.condition(buildConditionForKeyMember(AbstractEntity.KEY, getKeyType(), keyValues[0]));
         }
     }
 
@@ -181,6 +224,8 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
             return cond().prop(propName).isNull().model();
         } else if (String.class.equals(propType)) {
             return cond().lowerCase().prop(propName).eq().lowerCase().val(propValue).model();
+        } else if (Class.class.equals(propType)) {
+            return cond().prop(propName).eq().val(((Class<?>) propValue).getName()).model();
         } else {
             return cond().prop(propName).eq().val(propValue).model();
         }
