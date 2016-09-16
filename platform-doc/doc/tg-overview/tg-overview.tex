@@ -84,9 +84,9 @@
 
 %\BgThispage
 
-\section*{The background}
+\section*{Background}
 
-	It is a well known fact that a significant number of enterprise software systems fail while still at the development stage or fail to deliver on their promise from the business perspective.  
+	It is a well known fact that a significant number of enterprise software systems fail while still in development or fail to deliver on their promise from the business perspective.  
   	Recognising the fact that this problem has multiple causes (e.g. organisational, requirement management, skills), we would like to specifically emphasise the aspect of \emph{software construction}, which we believe has a significant influence on both the initial system development as well as the change support of the deployed systems.  
   
   	Robert Martin, who is one of the strongest proponents of the importance of software construction, stated in his speech at the NDC~2012 conference that there were no significant improvements to the processes of software construction comparing to the results in object-oriented analysis of the 1990th. 
@@ -95,8 +95,8 @@
   	
 	In fact, in talking about a software architecture, the emphasis is often placed at the level of some technology stack rather than at the level of an information system in question.
 	For example, in the not so distant past we could hear a lot about a ``client-server architecture'', ``LAMP architecture'' or ``Java EE architecture''.
-	Nova days, it is the ``microservices architecture'' that is at the centre of everyones' attention.
-	Every decade or so brings a new ``solution'' in a form of a new technology stack, but constructing reliable enterprise software systems remains one of the most difficult problems in Software Engineering.	
+	Nowadays, it is the ``microservices architecture'' that is at the centre of everyones' attention.
+	Every decade or so brings a new ``solution'' in a form of a new technology stack, but constructing reliable enterprise software systems remains one of the most difficult problems in the software engineering.	
 	This problem is important and there is a good understanding that approaching it by trying to fix the architecture at the level of a technology stack is insufficient.
 
     An influential work by Ivar~Jacobson~\cite{jacobson1992} describes an approach (aka OOSE) for designing software and implementing the core business functionality as a set of use cases that are independent from any specific technology such as a web framework or some communication protocol.
@@ -107,9 +107,9 @@
    		\item The use case approach limits capabilities of the application by enforcing a rigid behaviour.
   	\end{enumerate}
   
-	The first limitation forces developers to keep changing implementation of boundaries whenever either the supporting technology or the core business functionality changes.
-	The second limitation hides the domain model from end-users by restricting interaction between the system and end-users to the scope of predefined use cases.
-	This corresponds to the \emph{conversational metaphor} as defined in~\cite{HHN1986}, which is natural for process-oriented software systems\footnote{A popularity of process orientation seems to be related to a wide spread adoption of the imperative programming paradigm that heavily influences the overall design of software systems, including UI.}.
+	The first limitation forces developers to keep changing the implementation of boundaries whenever either the supporting technology or the core business functionality changes.
+	The second limitation hides the domain model from the end-users by restricting interaction between the system and the end-users to the scope of predefined use cases.
+	This corresponds to the \emph{conversational metaphor} as defined in~\cite{HHN1986}, which is natural for process-oriented software systems\footnote{The popularity of the process-oriented approach seems to be related to a widespread adoption of the imperative programming paradigm that heavily influences the overall design of software systems, including UI.}.
 
 	Hiding the underlying business model complicates reasoning about a software system for both the users and the developers.
 	This impedes communication between different stakeholders.  
@@ -118,9 +118,9 @@
   	The application of the world model metaphor to the system design has been researched by Richard Pawson~\cite{pawson2001, pawson2004}.
   	His research resulted in creation of architectural pattern \emph{Naked Objects} and a framework of the same name.
   	The Naked Objects pattern reinforces the MVC pattern by promoting domain-oriented style for capturing the business model (M) and supporting an automatic generation of UI (VC) from that model.
-  	By employing domain-orientation for modelling, Naked Objects falls into the category of domain-driven design~\cite{haywood2009} that provides an alternative to Jacobson's approach for system design~\cite{evans2003, vernon2013}.
+  	By employing domain-orientated modelling, Naked Objects falls into the category of domain-driven design~\cite{haywood2009} that provides an alternative to Jacobson's approach for system design~\cite{evans2003, vernon2013}.
     
-    This pattern has its many shortcomings, but the core ideas behind it, such as \emph{world model metaphor} and the \emph{direct manipulation principle}, resonated with our understanding of how to approach the problem of designing and constructing reliable enterprise software.
+    This pattern has many shortcomings, but the core ideas behind it, such as \emph{world model metaphor} and the \emph{direct manipulation principle}, resonated with our understanding of how to approach the problem of designing and constructing reliable enterprise software.
         
     
 \section*{Introduction}
@@ -131,13 +131,13 @@
 	There is an inherent complexity\footnote{As opposed to accidental.} in such systems due to the real world complexity of the equipment, assets and other physical or virtual artifacts that are used in those industries as well as complex interdependent business rules that govern them, such as safety and competency regulations, preventive maintenance cycles, inventory reordering, financial rules, plant shutdowns, temporal availability profiles etc.
 	
 	Effective communication between all stakeholders is a key in achieving the necessary goals in any undertaking.
-	That is why we view an information system as a communication tool that should facilitate cooperation between all participants. 
+	That is why we view any information system as a communication tool that should facilitate cooperation between all participants. 
 	Property constructed system should facilitate cooperation between users, their cooperation with the developers of the system and the cooperation within the development team itself.
-	In order to achieve this, a technology for constructing information systems should have an appropriate representation or abstraction that would support communication and a ubiquitous language~\cite{evans2003} that shared by all stakeholders\footnote{This should be thought of as a well established terminology in a specific business domain.}.
+	In order to achieve this, a technology for constructing information systems should have an appropriate representation or abstraction that would support communication and a ubiquitous language~\cite{evans2003} that is shared by all stakeholders\footnote{This should be thought of as a well established terminology in a specific business domain.}.
 	\texttt{TG} establishes such an abstraction in a form of an architectural pattern to model the business domain and to construct the User Interface that follows a \emph{direct manipulation} principle~\cite{shneiderman1982, shneiderman1983}.
 	The latter represents the underlying domain model transparently, providing a way for users to directly interact with it.
 
-	The developed architectural pattern is unique in approaching the design of information systems from the perspective of the their three essential functions~\cite{oli2007}:
+	The developed architectural pattern is unique in approaching the design of information systems from the perspective of their three essential functions~\cite{oli2007}:
 	\begin{enumerate}
     	\item \emph{Memory}: to maintain a representation of the state of a domain.
     	\item \emph{Informative}: to provide information about the state of a domain.
@@ -153,14 +153,14 @@
 	Once foreign, the practice of domain-driven unit testing to validate the business model and rules became a part of normal day-to-day software construction routine.
 	
 	
-	The following sections delve more into details about TG.
+	The following sections delve into more details about TG.
 	This includes the discussion of the developed architectural pattern and the influence of the REST architectural style on the modelling at the level of objects; how is it used to ensure a uniform model of an information system and how does it satisfy the SOLID principles~\cite{SOLID}; why controlled mutation it important and how immutability helps prevent accidental mistakes; how unit testing becomes domain-driven and why business processes could benefit from becoming persistent.
-	We also discuss the Entity Query Language for simple and non-trivial data querying and how the direct manipulation principle is employed for building consistent and intuitive user interfaces.
+	We also discuss the Entity Query Language (EQL) for simple and non-trivial data querying and how the direct manipulation principle is employed for building consistent and intuitive user interfaces.
 	This overview is concluded with a brief discussion of a fairly sophisticated information systems that is utilised in mission critical operations by one of our customers in the domain of Air Traffic and Navigation Services.
 
 
 \section*{The architectural pattern of TG}
-	The most common understanding of object orientation is that ``it is useful for modelling the real world'', where there are objects with their behaviour.
+	The most common understanding of object-oriented programming is that ``it is useful for modelling the real world'', where there are objects with their behaviour.
 	Taken literally, this perspective leads to many issues, including violation of SOLID principles that have, effectively, came to existence because of those issues.
 	One such issue, which is important for the purpose of our discussion, is the lack of adequate means for representing verbs -- actions and processes\footnote{This issue is humorously  described by Steve Yegge in his ``Execution in the Kingdom of Nouns''~\cite{yegge2006}.}.
 	The essence of this issue is that verbs do not exists in their own right and must be a part of some object (noun), represented as its behaviour in a form of a method\footnote{This is why it is so easy to violate the single responsibility or the open/closed principles.}.
@@ -172,7 +172,7 @@
 	The approach of exposing object methods, introduces new issues and opens up many questions.
 	For example:
   	\begin{itemize}
-    	\item There is now the need to differentiate between methods (i.e. behaviour) that can and cannot be exposed via UI;
+    	\item There is a need to differentiate between methods (i.e. behaviour) that can and cannot be exposed via UI;
 		\item Why are there methods that are not exposed to UI -- doesn't this go against the idea of semantic transparency?
 		\item If the exposed methods have arguments then how should their values be provided when invoking them from UI?
 		\item What to do if some computation needs to be applied to a subset of objects, not just a single one?
@@ -180,10 +180,10 @@
 	
 	This suggests that the described problem of having no first-class support for verbs, significantly complicates, if not making it impossible, to construct semantically transparent information systems by following the currently most prevalent understanding of object orientation.
 
-\subsection*{The REST of Object Orientation}	
+\subsection*{The REST of Object-Oriented Programming}	
 	
-	In our research we came across some original work by Alan Kay where he explains object orientation from a very different perspective than the one currently in common use.
-	This view is tersely summarised by Alan Kay in his clarification of  the term ``object-oriented'' in~\cite{Kay2003}.
+	In our research we came across some original work by Alan Kay where he explains object-oriented programming from a very different perspective than the one currently in common use.
+	This view is tersely summarised by Alan Kay in his clarification of the term ``object-oriented'' in~\cite{Kay2003}.
 	According to Alan Kay, the complexity of behaviour in object-oriented systems should come from interconnectedness between objects rather than from their methods.
 	He compared an object-oriented system with a system of networked computers, or computing nodes, that have simple and uniform communication interface for interaction.
 	
@@ -214,7 +214,7 @@
 	
 	The validation rules are declared as part of property definitions in a form of a specifically designed annotation.
 	Any particular property may have no, one or several validators declared.
-	In case of several validators, their execution is sequenced in the order to declaration.
+	In case of several validators, their execution is sequenced in the order of declaration.
 	The validation process stops at the first failed validator or if all validators succeed.
 	A value gets assigned only if all validators succeed.
 	The ability to declare multiple sequential validators fosters good separation between different validation rules and provides a convenient way for reusing the same validation rules in application to properties of the same type, even if they belong to different entities.
@@ -293,8 +293,8 @@ private Service service;
    		\label{fig:dependent-validation}
   	\end{figure}
 
-	The discussed example above is a very trivial and ubiquitous use case.
-	That it important here is that all of the UI interaction gets automatically derived from the entity declaration without any ``intervention'' from the application developers.
+	The example above is a very trivial and ubiquitous use case.
+	It it important that all of the UI interaction gets automatically derived from the entity declaration without any ``intervention'' from the application developers.
 	If a user reports a bug, for example, stating that some value should have been excepted, but wouldn't due to some validation error, the developers know exactly where to look for a potential error.
 	It is very straightforward to setup a unit test that would try to reproduce the problem, and this is possible specifically because changing an entity state via UI and programmatically is equivalent.
 	
@@ -345,13 +345,15 @@ private Technician technician;
 	
 	
 	So far, we've discussed only the in-memory state modification and how the \emph{entity} part of a \emph{fractal object} is used to model and ensure correctness of a business entity.
-	The provided examples illustrate that in-memory changes require the ability to executed potentially complex validation rules, including communication with an application database.
-	Changes to some properties may result it changes to some other properties.
-	This shows that changing entity properties encompasses rich behaviour, which is captured at the entity model level declaratively and are transparently integrated with an application UI.
-	However, we did not discuss how entities are persisted or retrieved, and the provided examples covered only the modelling of a Noun -- not a Verb.
-	The answer to these concerns lies with the other half of the \emph{Fractal Objects} pattern, the \emph{companion object}.
+	The examples above illustrate that in-memory changes require the ability to executed potentially complex validation rules, including communication with the application database.
+	Changes to some properties may result in changes to some other properties.
+	This shows that changing entity properties encompasses rich behaviour, which is captured at the entity model level declaratively and is transparently integrated with an application UI.
+	However, we did not discuss how entities are persisted or retrieved, and the examples covered only the modelling of a Noun -- not Verbs.
+	The answer to these concerns lies with the other half of the \emph{Fractal Objects} pattern, the \emph{companion object}, which is introduced next.
 
 
+	\iffalse
+	
 
 	\paragraph{Companion Object.}	
 	A \emph{companion object} models the four basic operations that can be performed on a corresponding \emph{entity object}.
@@ -665,6 +667,7 @@ private Technician technician;
 	Thus, the development of software systems with TG covers all that is required for end-to-end software construction.
 	This includes orthogonal aspects such as unit and functional testing, build and installation, business model design and database integration, UI definitions, secure HTTP communication, scalability and more.
 
+\fi
 
 %
 % ---- Bibliography ----
