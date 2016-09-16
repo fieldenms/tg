@@ -8,7 +8,6 @@
 \usepackage{amssymb}
 \usepackage{amsfonts}
 \usepackage[pdftex]{graphicx}
-%\usepackage{subfigure}
 \usepackage{alltt}
 \usepackage{moreverb}
 %for more info on hyperref package see http://en.wikibooks.org/wiki/LaTeX/Packages/Hyperref
@@ -28,13 +27,13 @@
 
 
 \usepackage{wrapfig}
-\usepackage{subfig}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{alltt}
 \usepackage{moreverb}
 % tikz related packages to provide scalable graphics 
 \usepackage{tikz}
 \usetikzlibrary{calc,mindmap,backgrounds,positioning,arrows,shapes,shapes.arrows,shapes.misc,automata,petri,patterns,scopes,chains,matrix,decorations.pathmorphing,shadows,calc}
-
 
 \usepackage{geometry}
 \geometry{hmargin={15mm,15mm},vmargin={15mm,20mm}}
@@ -75,10 +74,15 @@
 
 \begin{document}
 \maketitle
+\counterwithout{figure}{chapter}
+
+\lstset{language=Java,
+	  escapechar=\%,
+	  numbers=left, numberstyle=\tiny, basicstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
 
 \onehalfspacing
 
-\BgThispage
+%\BgThispage
 
 \section*{The background}
 
@@ -222,14 +226,9 @@
 	Validation errors are treated as an entity meta-data and TG provides an API to work with that meta-data.
 	The meta-data is not limited only to identifying erroneous entity properties and their causes, but also captures and maintains in-memory mutations such as the aforementioned attempted values.
 	This information is very useful when implementing intricate business logic, including the validation logic, which may require the knowledge of the original\footnote{A property value becomes \emph{original} if it gets persisted into the database. It is used to differentiate between in-memory mutations and persistent state of an entity.} or previous property values.
-	The same information is used by TG itself, for example, to automate UI creation and to facilitate user interaction with the system by automatically validating their input and reporting errors.
+	The same information is used by TG itself, for example, to automate UI creation and to facilitate user interaction with the system by automatically validating their input and reporting errors.	
 	The example below illustrates how a property declaration can incorporate the knowledge about its validators, persistent nature and the dependent properties at the Java code level.
 	
-	\lstset{language=Java,
-	  escapechar=\%,
-	  numbers=left, numberstyle=\tiny, basicstyle=\tiny, basicstyle=\scriptsize\color{basiccolor}, stepnumber=1, numbersep=5pt, keywordstyle=\bfseries\color{codefgcolor}, stringstyle=\color{stringcolor}}
-
-	  
 	\begin{tcolorbox}[sidebyside, righthand width=0.3\textwidth, title=Example: property declaration with multiple validators]
     \begin{lstlisting}[numbersep=2pt]
 @IsProperty
@@ -242,17 +241,115 @@ private Service service;
     \end{lstlisting}
 	
 	\tcblower
-	\tiny
-	Property \texttt{service} in entity \texttt{WorkActivity}.
-	It is declared as persistent, which means it gets saved into a database.
-	Its values have to satisfy validators that are specified as part of \texttt{@BeforeChange} in that order.
-	And it has a dependent property \texttt{locationSubsystem}, which needs to be revalidated if the value of this property gets changed.	
+		\tiny
+		Property \texttt{service} of type \texttt{Service} in entity \texttt{WorkActivity} is declared as persistent, which means it gets saved into a database.
+		Its values have to satisfy validators that are specified as part of \texttt{@BeforeChange} in that order.
+		And it has a dependent property \texttt{locationSubsystem}, which needs to be revalidated if the value of this property gets changed.	
  	\end{tcolorbox}
+
+	Figure~\ref{fig:wa} depicts a master view for entry and modification of \texttt{WorkActivity} entities.
+	It represents a subset of \texttt{WorkActivity} properties that are needed for this specific view, which in this case includes property \texttt{service} from the example above.
+	The UI subsystem in TG automatically derives representation for properties from the meta-data information that is provided by the entity definition and its state at runtime.
+	This includes completely transparent reuse of the validation logic, handling of dependent properties etc.
+	Therefore, interaction with an entity instance programmatically and via UI leads to the same result.
 	
-	It is also important
+	\begin{figure}[!h]
+  		\centering
+        \includegraphics[width=1.0\textwidth]{images/01-wa-master.png}  
+        \caption{Work Activity}
+        \label{fig:wa}
+		%\vspace{-30pt} 
+  	\end{figure}
+
+	One of the basic inherent property validations, is a check that properties that have an entity type, can only accept values that are already persisted.
+	In our example, property \texttt{service} is of entity type \texttt{Service}.
+	This entails that any value of this type must that is being set to \texttt{WorkActivity} property \texttt{service} must already exists in the application database.
 	
-	In addition to a proper validation mechanism 
+	Figure~\ref{fig:non-existing-service} illustrates an attempt to assign a non-existing service \texttt{AA05IL}, which results in a validation error.
+	There are several things that happen here.
+	First, the user enters a textual value.
+	Then, the system automatically recognises the intent by analysing the type of property \texttt{service} and tries to find an instance of type \texttt{Service} in the application database by using the entered textual value as a key search criteria.
+	Having found no matching value, the system concludes that the basic validation failed, no subsequent validators are triggered and the error return to the client to be displayed to the user.
+
+	\begin{figure}[!h]
+  		\centering
+     	\includegraphics[width=1.0\textwidth]{images/02-wa-non-existing-service.png}  
+  	  	\caption{Manifestation of validation in UI: invalid value.}
+   		\label{fig:non-existing-service}
+  	\end{figure}
+
+	Figure~\ref{fig:dependent-validation} illustrates the situation where invalid value \texttt{AA05IL} is corrected by entering service \texttt{AA05ILS}.
+	In this case, a single instance of type \texttt{Service} with key \texttt{AA05ILS} was successfully found in the database.
+	That instance was passed to all subsequent property validators and eventually got assigned to property \texttt{service}.
+	Due to this successful assignment and the declared dependency, property \texttt{locationSubsystem} in the same entity had to be revalidated as it could be have become invalid.
+	However, the revalidation process did not fail~-- it resulted in a warning.
+	This shows that the validation result does not have to be binary~-- success or failure -- there are many situation where value is acceptable, but users need to be informed of some consequential information.
+	In this particular example, the user is informed that there are already open work activities for this location/subsystem.	
 	
+	\begin{figure}[!h]
+  		\centering
+      	\includegraphics[width=1.0\textwidth]{images/03-wa-dependent-props.png}  
+   	  	\caption{Manifestation of validation in UI: dependent property validation with warning.}
+   		\label{fig:dependent-validation}
+  	\end{figure}
+
+	The discussed example above is a very trivial and ubiquitous use case.
+	That it important here is that all of the UI interaction gets automatically derived from the entity declaration without any ``intervention'' from the application developers.
+	If a user reports a bug, for example, stating that some value should have been excepted, but wouldn't due to some validation error, the developers know exactly where to look for a potential error.
+	It is very straightforward to setup a unit test that would try to reproduce the problem, and this is possible specifically because changing an entity state via UI and programmatically is equivalent.
+	
+	\vspace{8pt}
+	In addition to property \emph{validators}, there is also support for, what we call, property \emph{definers}.
+	Property definers get executed immediately after a successful property value assignment.
+	This mechanism is very useful for complex business domains were a successful assignment of a property value should result in the assignment of the derived values to some other properties in the same entity or in a change to their meta-data such as their requiredness.
+	Please consider the following example in application to an entry of \texttt{WorkActivity} where property \texttt{techinician} is assigned a new value.
+	
+	\begin{tcolorbox}[sidebyside, righthand width=0.38\textwidth, title=Example: property with a definer]
+    \begin{lstlisting}[numbersep=2pt]
+@IsProperty
+@Persistent
+@Required
+@AfterChange(WorkActivityTechnicianDefiner.class)
+private Technician technician;
+    \end{lstlisting}
+	
+	\tcblower
+		\tiny
+		Property \texttt{technician} of type \texttt{Technician} in entity \texttt{WorkActivity} is declared as persistent and requried, which means it cannot be empty and gets saved into a database.
+		There is only one intrinsic validator for checking value existence and does not require explicit declaration.
+		This property has a definer, which is declared by using annotation \texttt{@AfterChange} and is executed upon each successful value change.
+ 	\end{tcolorbox}
+
+	
+	Figure~\ref{fig:tech} illustrates an entry of value \texttt{CRS} into property \texttt{technician}.
+	This value is present in the application database as can be seen from the screenshot -- editors for properties of an entity type have the capability to autocomplete matching values\footnote{TG provides the default autocompletion logic, which can be enhanced at the application level, for example, to be context sensitive.}.
+	
+	\begin{figure}[!h]
+  		\centering
+      	\includegraphics[width=1.0\textwidth]{images/04-wa-technician-entry.png}  
+   	  	\caption{Selection of a value for property \texttt{technician}.}
+   		\label{fig:tech}
+  	\end{figure}
+	
+	Once the value is assigned, definer \texttt{WorkActivityTechnicianDefiner} is executed.
+	This definer identifies if the entered technician has a manager.
+	The manager of the entered technician gets assigned to property \texttt{manager} of the same work activity.
+	Figure~\ref{fig:derived-manager} depicts the result of a successful assignment of value \texttt{CRS} to property \texttt{technician}, which resulted in an auto-assignment of a derived value \texttt{POM} to property \texttt{manager}.  
+
+	\begin{figure}[!h]
+  		\centering
+      	\includegraphics[width=1.0\textwidth]{images/05-wa-technician-entered.png}  
+   	  	\caption{Auto-assignment of the derived value for property \texttt{manager}.}
+   		\label{fig:derived-manager}
+  	\end{figure}
+	
+	
+	So far, we've discussed only the in-memory state modification and how the \emph{entity} part of a \emph{fractal object} is used to model and ensure correctness of a business entity.
+	The provided examples illustrate that in-memory changes require the ability to executed potentially complex validation rules, including communication with an application database.
+	Changes to some properties may result it changes to some other properties.
+	This shows that changing entity properties encompasses rich behaviour, which is captured at the entity model level declaratively and are transparently integrated with an application UI.
+	However, we did not discuss how entities are persisted or retrieved, and the provided examples covered only the modelling of a Noun -- not a Verb.
+	The answer to these concerns lies with the other half of the \emph{Fractal Objects} pattern, the \emph{companion object}.
 
 	\paragraph{Companion Object.}	
 	The \emph{entity} of a \emph{fractal object}
