@@ -194,7 +194,7 @@
 	Essentially, the application of the REST style to an object-oriented design of an information system in terms of its \texttt{Memory}, \texttt{Informative} and \texttt{Active} functions, resulted in the development of an architectural pattern that became the foundation of TG.
 	This pattern is titled \emph{Fractal Objects} as it explicitly articulates that complex system behaviour is achieved by combining structurally identical building blocks -- the fractal object.
 	A \emph{fractal object} is a construct consisting of two objects -- an \emph{entity} and its \emph{companion}.
-	Is the basic conceptual building block for both designing and constructing information systems based on TG.
+	It is the basic conceptual building block for both designing and constructing information systems based on TG.
 	
 	\paragraph{Entity Object.} 	
   	An \emph{entity object} models the structure of a business entity, including its associations with other entities.
@@ -351,26 +351,28 @@ private Technician technician;
 	However, we did not discuss how entities are persisted or retrieved, and the provided examples covered only the modelling of a Noun -- not a Verb.
 	The answer to these concerns lies with the other half of the \emph{Fractal Objects} pattern, the \emph{companion object}.
 
+
+
 	\paragraph{Companion Object.}	
-	The \emph{entity} of a \emph{fractal object}
+	A \emph{companion object} models the four basic operations that can be performed on a corresponding \emph{entity object}.
+	It represents a RESTful interface to its counterpart entity object.
+	Only by means of a companion object could an entity be \emph{created}, \emph{saved}, \emph{deleted}, and \emph{retrieved} from a database.
+	One could think of these operations as simple CRUD, but this analogy could be misleading for reasons that will become evident further into the discussion.
+	
+
+	Unlike the rich domain model approach~\cite{evans2003},
+
+
+	Unlike the anemic domain model~\cite{fowler2003}, an entity has the responsibility to ensure the correctness of its state.
 	
 	However, unlike the rich domain model
 	
 		
-	It is a critical responsibility of this role to ensure the validity of the structure that an \emph{entity object} represents.
-  	At the code level it is implemented as a class that has properties together with a meta-data such as the validation business rules, post-change rules and dependencies between properties.
-	
-	
-	
 	
   	The role of a \emph{companion object} if to provide operations that can be performed with a corresponding \emph{entity object}.
-  	At the code level it is implemented as an interface that has methods, but has no state.
+
   	Together, the entity and companion objects form an elementary building block to provide an invariant representation of any structural or functional business domain aspects.
 
-  The state that is captured by entity objects can either primitive (date, integer, etc.) or reference other entity objects.
-  This provides a way to represent relationships between entity objects (one-to-one, many-to-one or one-to-many).
-  It is important to note that from the perspective of class hierarchy, the hierarchy of entity objects is flat~-- the complexity of the behaviour and structure is captured by means of composition rather than inheritance.  
-  Changing relationship between entity objects at runtime can be achieved by simply changing values of their respective properties~-- something that cannot be done where association is captured through the mechanism of inheritance.
   
   \emph{Companion objects} provide four operations that can be performed with respect to a corresponding entity object~--  \emph{create}, \emph{save}, \emph{delete}, and \emph{request}.
   These operations conceptually describe what can be done with an entity object.
