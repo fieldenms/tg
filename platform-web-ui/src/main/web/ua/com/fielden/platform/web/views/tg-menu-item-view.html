@@ -70,7 +70,7 @@
                 },
 
                 observers: [
-                    '_loadView(moduleId, selectedModule, submoduleId, submodule)'
+                    '_loadView(moduleId, selectedModule, submoduleId, submodule, menuItem)'
                 ],
 
                 behaviors: [Polymer.IronResizableBehavior],
@@ -83,7 +83,7 @@
                     var self = this;
                     self.async(function () {
                         if (isPropertyDefined(self, "menuItem.view.attrs")) {
-                            self.menuItem.view.attrs.uuid = self.moduleId + '/' + self.submoduleId;
+                            self.menuItem.view.attrs.uuid = self.moduleId + (self.submoduleId ? '/' + self.submoduleId : '');
                             self.menuItem.view.attrs.moduleId = self.moduleId;
                         }
                     }, 1);

@@ -87,7 +87,7 @@
 
                 <paper-menu id="menu" class="flex" attr-for-selected="name" on-iron-activate="_itemActivated">
                     <template is="dom-repeat" on-dom-change="_menuTemplateRendered" items="[[menuItem.menu]]" as="firstLevelItem">
-                        <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]">
+                        <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" on-focus="_focusSubmenu">
                             <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.description]]">[[firstLevelItem.title]]</paper-item>
                             <template is="dom-if" if="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
                                 <paper-menu class="menu-content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
@@ -265,16 +265,18 @@
             },
 
             _selectMenu: function (pagePath) {
-                var path = findNestedMenuItem(pagePath, this.menuItem).path;
+                var menuPath = findNestedMenuItem(pagePath, this.menuItem);
+                var path = menuPath.path;
                 var pathParts = findNestedMenuItem(pagePath, this.menuItem).path.split('/');
                 var topMenu = this.$$("paper-submenu[name='" + pathParts[0] + "']");
                 var submenu = this.$$("paper-menu[name='" + pathParts[0] + "']");
                 var submenuItem = this.$$("paper-item[name='" + path + "']");
                 var wasSelected;
-                if (!topMenu || pathParts[1] && (!submenu || !submenuItem)) {
+                if (!topMenu || pathParts[1] && menuPath.menuItem && (!submenu || !submenuItem)) {
                     this._menuToSelectAfterLoad = pagePath;
                     wasSelected = false;
                 } else {
+                    this.$.menu.select(pathParts[0]);
                     topMenu.open();
                     if (submenu) {
                         submenu.select(path);
@@ -325,6 +327,14 @@
             },
 
             _selectedPageChanged: function (newValue, oldValue) {
+                var newFirstLevelItem = newValue && newValue.split('/')[0];
+                var oldFirstLevelItem = oldValue && oldValue.split('/')[0];
+                var shouldUnselect = oldValue && oldValue.split('/')[1];
+                var submenu;
+                if (shouldUnselect && oldFirstLevelItem && newFirstLevelItem !== oldFirstLevelItem) {
+                    submenu = this.$$("paper-menu[name='" + oldFirstLevelItem + "']");
+                    submenu.select();
+                }
                 this._initDrawerPanel();
             },
 
@@ -334,6 +344,15 @@
                     viewToLoad = detail.toPage;
                     if (viewToLoad && !viewToLoad.wasLoaded()) {
                         viewToLoad.load();
+                    }
+                }
+            },
+            
+            _focusSubmenu: function(e) {
+                var target = e.target || e.srcElement;
+                if (e.relatedTarget === this.$.menu) {
+                    if (target.opened && target.__content && target.__content.selected) {
+                        target.__content.focus();
                     }
                 }
             }
