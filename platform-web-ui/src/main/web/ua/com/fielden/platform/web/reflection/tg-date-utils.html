@@ -19,7 +19,7 @@
         if (millisecondsExist) {
             return _momentTz(dateMillis, timeZone).format('L LTS');
         } else {
-            var secondsRemainder = (dateMillis - millisecondsRemainder) % 60;
+            var secondsRemainder = (dateMillis / 1000) % 60;
             var secondsExist = (secondsRemainder !== 0);
             if (secondsExist) {
                 return _momentTz(dateMillis, timeZone).format('L LTS');

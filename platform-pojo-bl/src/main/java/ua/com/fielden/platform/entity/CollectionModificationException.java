@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.entity;
 
 /**
  * Runtime exception that should be thrown from within {@link AbstractFunctionalEntityForCollectionModificationProducer} implementation (and also in other logic pertaining collection

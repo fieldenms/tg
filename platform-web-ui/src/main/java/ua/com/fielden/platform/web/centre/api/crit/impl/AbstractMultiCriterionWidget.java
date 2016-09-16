@@ -18,8 +18,8 @@ public abstract class AbstractMultiCriterionWidget extends AbstractCriterionWidg
      * @param criteriaType
      * @param propertyName
      */
-    public AbstractMultiCriterionWidget(final String widgetPath, final String propertyName, final AbstractWidget... editors) {
-        super(widgetPath, propertyName, editors);
+    public AbstractMultiCriterionWidget(final Class<?> root, final String widgetPath, final String propertyName, final AbstractWidget... editors) {
+        super(root, widgetPath, propertyName, editors);
     }
 
     @Override

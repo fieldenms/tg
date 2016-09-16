@@ -17,6 +17,8 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
@@ -201,7 +203,21 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
             return Optional.empty();
         }
-
+        
+        @Override
+        public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+            throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+        }
     }
-
+    
+    /**
+     * Returns action configuration for concrete action kind and its number in that kind's space.
+     * 
+     * @param actionKind
+     * @param actionNumber
+     * @return
+     */
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        return masterConfig.actionConfig(actionKind, actionNumber);
+    }
 }

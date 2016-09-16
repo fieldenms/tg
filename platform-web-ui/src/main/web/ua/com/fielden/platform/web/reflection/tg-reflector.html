@@ -577,6 +577,14 @@
         }
         
         /**
+         * Returns 'true' if the entity type represents a continuation entity.
+         *
+         */
+        EntityType.prototype.isContinuation = function () {
+            return typeof this['_continuation'] === 'undefined' ? false : this['_continuation'];
+        }
+        
+        /**
          * Returns 'true' if editors for this entity type should display description of its values when not focused, 'false' otherwise.
          *
          */

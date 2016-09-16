@@ -221,15 +221,19 @@
 
             _updatePage(menuItem, submodule, _menuItemsLoaded) {
                 var pageName;
+                var decodedSubmodule = decodeURIComponent(submodule.path.substring(1));
+                var uriParts = decodedSubmodule.split("?");
+                var submodulePart = uriParts[0];
+                var queryPart = uriParts[1];
                 if (menuItem.title === decodeURIComponent(this.selectedModule)) {
-                    pageName = findSubmodule(decodeURIComponent(submodule.path.substring(1)), menuItem);
+                    pageName = findSubmodule(submodulePart, menuItem);
                     this.set("_selectedPage", pageName);
                     this.async(function () {
                         var viewToLoad;
                         if (pageName !== '_') {
                             viewToLoad = this.$$("[page-name='" + pageName + "']");
                             if (viewToLoad) {
-                                viewToLoad.loadAfterInit();
+                                viewToLoad.loadAfterInit(queryPart);
                             }
                         }
                     });

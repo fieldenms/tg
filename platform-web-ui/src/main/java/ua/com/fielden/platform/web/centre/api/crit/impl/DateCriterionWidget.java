@@ -20,7 +20,7 @@ public class DateCriterionWidget extends AbstractRangeCriterionWidget {
      * @param propertyName
      */
     public DateCriterionWidget(final Class<?> root, final Class<?> managedType, final String propertyName) {
-        super("centre/criterion/multi/range/tg-date-range-criterion", propertyName,
+        super(root, "centre/criterion/multi/range/tg-date-range-criterion", propertyName,
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getKey(),

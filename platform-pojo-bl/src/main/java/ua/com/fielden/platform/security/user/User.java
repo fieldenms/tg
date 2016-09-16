@@ -123,7 +123,7 @@ public class User extends ActivatableAbstractEntity<String> {
     private String salt;
 
     @IsProperty
-    @MapTo("ACTIVE_FLAG_")
+    @MapTo
     @Title(value = "Active?", desc = "Designates whether an entity instance is active or not.")
     @BeforeChange(@Handler(ActivePropertyValidator.class))
     @AfterChange(UserActivationDefiner.class)

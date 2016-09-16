@@ -25,7 +25,8 @@
                         // (https://github.com/fieldenms/tg/issues/285)
                         if (role === 'save' && 
                             ironRequest.entityPersistent === true &&
-                            !ironRequest.entityId) {
+                            !ironRequest.entityId &&
+                            ironRequest.entityContinuation === false) {
                             dataValue.canClose = false;
                         }
                         

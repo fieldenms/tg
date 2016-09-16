@@ -5,14 +5,11 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
 
 import com.google.inject.Inject;
 
@@ -77,12 +74,6 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
 
     @Override
     @SessionRequired
-    public void removeAssociationsFor(final Class<? extends ISecurityToken> securityToken) {
-        getSession().createQuery("delete from " + SecurityRoleAssociation.class.getName() + " where securityToken = '" + securityToken.getName() + "'").executeUpdate();
-    }
-
-    @Override
-    @SessionRequired
     public int countActiveAssociations(final User user, final Class<? extends ISecurityToken> token) {
         final EntityResultQueryModel<UserAndRoleAssociation> slaveModel = select(UserAndRoleAssociation.class)
                 .where()
@@ -99,16 +90,12 @@ public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAsso
     @Override
     @SessionRequired
     public void removeAssociations(final Set<SecurityRoleAssociation> associations) {
-        if (associations.size() == 0) {
-            return;
-        }
-        String query = "delete from " + SecurityRoleAssociation.class.getName() + " where ";
-        final List<String> querySubstr = new ArrayList<>();
-        for (final SecurityRoleAssociation assoc : associations) {
-            querySubstr.add("(securityToken='" + assoc.getSecurityToken().getName() + "' and role.id=" + //
-                    assoc.getRole().getId() + ")");
-        }
-        query += StringUtils.join(querySubstr, " or ");
-        getSession().createQuery(query).executeUpdate();
+        createQueryByKeyFor(associations).map(query -> batchDelete(query));
+    }
+    
+    @Override
+    @SessionRequired
+    public int batchDelete(final EntityResultQueryModel<SecurityRoleAssociation> model) {
+        return defaultBatchDelete(model);
     }
 }

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.devdb_support;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -75,7 +76,9 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
     }
 
     public final void createAndPopulate() throws Exception {
-        createAndPopulate(true);
+        // generateSchemaScript is only supported for H2 - it uses H2-specific query "SCRIPT"
+        final boolean generateSchemaScript = config.getDomainMetadata().dbVersion == H2;
+        createAndPopulate(generateSchemaScript);
     }
     /**
      * The entry point to trigger creation of the database and its population.
