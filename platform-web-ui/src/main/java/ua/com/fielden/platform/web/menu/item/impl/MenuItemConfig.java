@@ -47,14 +47,8 @@ public class MenuItemConfig implements IModuleMenuConfig0, IModuleMenuConfig1, I
     }
 
     @Override
-    public IModuleMenuConfig3 addSubMenuItem(final String title) {
-        return new SubMenuItemConfig(menuItem.addSubMenuItem(title), this);
+    public IModuleMenuConfig3 addMenuItem(final String title) {
+        return new SubMenuItemConfig(menuItem.addMenuItem(title), this);
     }
 
-
-    @Override
-    public IModuleMenuConfig2 submenu() {
-        menuItem.submenu();
-        return this;
-    }
 }

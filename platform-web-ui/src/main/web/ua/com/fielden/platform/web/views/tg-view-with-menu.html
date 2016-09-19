@@ -1,5 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
+<link rel="import" href="/resources/polymer/paper-styles/default-theme.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
 <link rel="import" href="/resources/polymer/paper-menu/paper-submenu.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
@@ -38,7 +41,6 @@
             }
             ;
             --paper-item: {
-                padding-left: 22px;
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
@@ -52,8 +54,23 @@
             right: 0;
             top: 44px;
         }
+        iron-icon {
+            --iron-icon-width: 16px;
+            --iron-icon-height: 16px;
+        }
+        iron-icon[without-menu] {
+            visibility: hidden;
+        }
+        iron-icon[opened] {
+            fill: none;
+            stroke: var(--paper-menu-color, --primary-text-color);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transform: rotate(90deg);
+        }
         .submenu-item {
-            padding-left: 30px;
+            padding-left: 42px;
         }
         .menu-item-view {
             overflow: auto;
@@ -87,8 +104,11 @@
 
                 <paper-menu id="menu" class="flex" attr-for-selected="name" on-iron-activate="_itemActivated">
                     <template is="dom-repeat" on-dom-change="_menuTemplateRendered" items="[[menuItem.menu]]" as="firstLevelItem">
-                        <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" on-focus="_focusSubmenu">
-                            <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.description]]">[[firstLevelItem.title]]</paper-item>
+                        <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
+                            <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.description]]">
+                                <iron-icon icon="av:play-arrow" opened$="[[firstLevelItem.opened]]" without-menu$="[[!firstLevelItem.menu]]"></iron-icon>
+                                <span>[[firstLevelItem.title]]</span>
+                            </paper-item>
                             <template is="dom-if" if="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
                                 <paper-menu class="menu-content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
                                     <template is="dom-repeat" items="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
@@ -309,9 +329,7 @@
             },
 
             _calcSelectedPageTitle: function (page) {
-                return page === '_' ? '' : page.split('/').map(function (item) {
-                    return decodeURIComponent(item)
-                }).join(' \u2192 ');
+                return page === '_' ? '' : decodeURIComponent(page.split('/').pop());
             },
 
             _calcSubmoduleId: function (firtsLevelItem, secondLevelItem) {
@@ -347,8 +365,8 @@
                     }
                 }
             },
-            
-            _focusSubmenu: function(e) {
+
+            _focusSubmenu: function (e) {
                 var target = e.target || e.srcElement;
                 if (e.relatedTarget === this.$.menu) {
                     if (target.opened && target.__content && target.__content.selected) {

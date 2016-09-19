@@ -9,5 +9,5 @@ public interface IModuleMenuConfig1 {
 
     IModuleMenuConfigWithView view(final AbstractCustomView view);
 
-    IModuleMenuConfig2 submenu();
+    IModuleMenuConfig3 addMenuItem(String title);
 }
