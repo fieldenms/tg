@@ -720,6 +720,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                     .map(resultSetProp -> resultSetProp.propAction.get())
                     .collect(Collectors.toList())
                     .get(actionNumber);
+        }  else if (FunctionalActionKind.INSERTION_POINT == actionKind) {
+            if (!getInsertionPointActions().isPresent()) {
+                throw new IllegalArgumentException("No insertion point exists.");
+            }
+            return getInsertionPointActions().get().get(actionNumber);
         } // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }
