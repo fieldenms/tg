@@ -8,6 +8,8 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.sample.domain.TgMessageMap;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
@@ -72,5 +74,9 @@ public class TgMessageMapMaster implements IMaster<TgMessageMap> {
     public Optional<Class<? extends IValueMatcherWithContext<TgMessageMap, ?>>> matcherTypeFor(final String propName) {
         return Optional.empty();
     }
-
+    
+    @Override
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+    }
 }
