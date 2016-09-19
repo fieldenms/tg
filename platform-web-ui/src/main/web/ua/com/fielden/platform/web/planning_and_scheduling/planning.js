@@ -1,4 +1,8 @@
 (function () {
+    SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function(elem) {
+        return elem.getScreenCTM().inverse().multiply(this.getScreenCTM());
+    };
+    
 
     d3.planning = function (barWidth, stretchWidth, now, selectColor, leftBound, rightBound, isOverCompleted, completedClass, overCompletedClass) {
         //Most common configuration properties.

@@ -257,7 +257,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         final User currUser = up.getUser();
         assertNotNull(currUser);
         assertTrue(currUser.isPersisted());
-        assertEquals(5L, currUser.getVersion().longValue());
+        assertEquals(1L, currUser.getVersion().longValue());
         
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2016-05-16 16:36:57"));
@@ -265,14 +265,14 @@ public class UserTestCase extends AbstractDaoTestCase {
         // modify and save
         final String email = "new_email@company.com";
         final User savedUser = save(currUser.setEmail(email));
-        assertEquals(6L, savedUser.getVersion().longValue());
+        assertEquals(2L, savedUser.getVersion().longValue());
         
         // refresh the user instance in the provider
         up.setUsername(currUser.getKey(), co(User.class));
         
         final User user = up.getUser();
         assertTrue(user.isPersisted());
-        assertEquals(6L, savedUser.getVersion().longValue());
+        assertEquals(2L, savedUser.getVersion().longValue());
         assertEquals(email, user.getEmail());
         
         assertNotNull(user.getLastUpdatedBy());

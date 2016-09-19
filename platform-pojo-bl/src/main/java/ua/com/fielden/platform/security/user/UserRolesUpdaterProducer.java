@@ -7,10 +7,10 @@ import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -41,7 +41,6 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollect
         final List<UserRole> allAvailableRoles = coUserRole.findAll();
         final Set<UserRole> roles = new LinkedHashSet<>(allAvailableRoles);
         entity.setRoles(roles);
-        entity.getProperty("roles").resetState();
         
         final Set<Long> chosenRoleIds = new LinkedHashSet<>(masterEntity.getRoles().stream().map(item -> item.getUserRole().getId()).collect(Collectors.toList()));
         entity.setChosenIds(chosenRoleIds);

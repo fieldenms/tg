@@ -1,0 +1,69 @@
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/polymer/iron-test-helpers/mock-interactions.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+
+<dom-module id="tg-selection-view">
+    <style>
+        :host {
+            background-color: white;
+            @apply(--layout-vertical);
+        }
+    </style>
+    <template>
+        <div style="overflow:auto; padding: 24px;">
+            <content select=".custom-selection-criteria"></content>
+        </div>
+        <content select=".selection-criteria-buttons"></content>
+    </template>
+    <script>
+        Polymer({
+            is: 'tg-selection-view',
+            
+            behaviors: [Polymer.IronA11yKeysBehavior],
+
+            hostAttributes: {
+                'tabindex' : '0'
+            },
+            
+            _ownKeyBindings: {
+                'ctrl+s ctrl+e ctrl+r f5': '_processShortcut'  
+            },
+            
+            attached: function () {
+                var self = this;
+                this.async(function () {
+                    self.keyEventTarget = self._getKeyEventTarget();
+                }, 1);
+            },
+            
+            _getKeyEventTarget: function () {
+                var parent = this;
+                while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
+                    parent = parent.parentElement;
+                }
+                return parent || this;
+            },
+            
+            _processShortcut: function (e) {
+                var shortcut = e.detail.combo;
+                console.debug('Master shortcut', shortcut, 'processing...');
+                
+                var button = this.querySelector('paper-button[shortcut="' + shortcut + '"]');
+                if (button) {
+                    // Respect nodes that are disabled in the UI.
+                    if (window.getComputedStyle(button)['pointer-events'] !== 'none') {
+                        button.focus();
+                        MockInteractions.tap(button);
+                    }
+                } 
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
+                console.debug('Master shortcut', shortcut, 'processing... done');
+            }
+        });
+    </script>
+</dom-module>

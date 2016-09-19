@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
@@ -684,6 +686,42 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> getResultSetCustomPropAssignmentHandlerType() {
         return Optional.ofNullable(resultSetCustomPropAssignmentHandlerType);
+    }
+
+    /**
+     * Returns action configuration for concrete action kind and its number in that kind's space.
+     *
+     * @param actionKind
+     * @param actionNumber
+     * @return
+     */
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        if (FunctionalActionKind.TOP_LEVEL == actionKind) {
+            if (!getTopLevelActions().isPresent()) {
+                throw new IllegalArgumentException("No top-level action exists.");
+            }
+            return getTopLevelActions().get().get(actionNumber).getKey();
+        } else if (FunctionalActionKind.PRIMARY_RESULT_SET == actionKind) {
+            if (!getResultSetPrimaryEntityAction().isPresent()) {
+                throw new IllegalArgumentException("No primary result-set action exists.");
+            }
+            return getResultSetPrimaryEntityAction().get();
+        } else if (FunctionalActionKind.SECONDARY_RESULT_SET == actionKind) {
+            if (!getResultSetSecondaryEntityActions().isPresent()) {
+                throw new IllegalArgumentException("No secondary result-set action exists.");
+            }
+            return getResultSetSecondaryEntityActions().get().get(actionNumber);
+        } else if (FunctionalActionKind.PROP == actionKind) {
+            if (!getResultSetProperties().isPresent()) {
+                throw new IllegalArgumentException("No result-set property exists.");
+            }
+            return getResultSetProperties().get().stream()
+                    .filter(resultSetProp -> resultSetProp.propAction.isPresent())
+                    .map(resultSetProp -> resultSetProp.propAction.get())
+                    .collect(Collectors.toList())
+                    .get(actionNumber);
+        } // TODO implement other types
+        throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }
 
     public Optional<List<Pair<EntityActionConfig, Optional<String>>>> getTopLevelActions() {

@@ -33,13 +33,6 @@ public interface ISecurityRoleAssociation extends IEntityDao<SecurityRoleAssocia
      */
     Map<Class<? extends ISecurityToken>, Set<UserRole>> findAllAssociations();
 
-    /**
-     * Removes all role association with the specified token.
-     * 
-     * @param association
-     */
-    void removeAssociationsFor(final Class<? extends ISecurityToken> securityToken);
-
     /** Returns a total number of active user roles associated with the token. */
     int countActiveAssociations(final User user, final Class<? extends ISecurityToken> securityTokenClass);
     

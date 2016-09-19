@@ -1,12 +1,18 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-media-query/iron-media-query.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="/resources/components/tg-subheader.html">
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/reflection/tg-polymer-utils.html">
 
 <dom-module id="tg-flex-layout">
 
     <template>
+        <style>
+            :host::content .hidden-with-subheader {
+                display: none !important;
+            }
+        </style>
         <tg-app-config id="appConfig"></tg-app-config>
         <iron-media-query query="[[_calcMobileQuery()]]" on-query-matches-changed="_mobileChanged"></iron-media-query>
         <iron-media-query query="[[_calcTabletQuery()]]" on-query-matches-changed="_tabletChanged"></iron-media-query>
@@ -19,8 +25,43 @@
 <script>
     (function () {
         'use strict'
-        var setLayout = function (layout) {
-                var contentIndex = 0,
+        var keyWords = {
+                "skip": function (selectedElements, orderedElements, layoutElem) {
+                    return document.createElement('div');
+                },
+                "select": function (selectedElements, orderedElements, layoutElem) {
+                    var selectCondition = layoutElem.split(':')[1].split('=');
+                    var attribute = selectCondition[0].trim();
+                    if (selectedElements.length > 0 && selectedElements[0].hasAttribute(attribute) && selectedElements[0].getAttribute(attribute) === selectCondition[1].trim()) {
+                        return selectedElements.splice(0, 1)[0];
+                    }
+                },
+                "subheader": function (selectedElements, orderedElements, layoutElem) {
+                    return createSubheader.bind(this)(layoutElem, false, false);
+                },
+                "subheader-open": function (selectedElements, orderedElements, layoutElem) {
+                    return createSubheader.bind(this)(layoutElem, true, false);
+                },
+                "subheader-closed": function (selectedElements, orderedElements, layoutElem) {
+                    return createSubheader.bind(this)(layoutElem, true, true);
+                },
+                "html": function (selectedElements, orderedElements, layoutElem) {
+                    var elemToReturn = document.createElement('div');
+                    elemToReturn.innerHTML = layoutElem.split(':').slice(1).join(':').trim();
+                    return elemToReturn;
+                }
+            },
+            createSubheader = function (layoutElem, collapsible, closed) {
+                var elemToReturn = document.createElement('tg-subheader');
+                elemToReturn.subheaderTitle = layoutElem.split(':')[1].trim();
+                if (collapsible) {
+                    elemToReturn.collapsible = true;
+                    elemToReturn.closed = closed;
+                }
+                return elemToReturn;
+            },
+            setLayout = function (layout) {
+                var subheader,
                     selectedElements = [],
                     orderedElements = [];
                 if (!Array.isArray(layout)) {
@@ -32,8 +73,11 @@
                         this.componentsToLayout.push(item);
                     }.bind(this));
                 }
-                // removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
+                // Removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
+                // This method is defined in tg-polymer-utils.
                 _removeAllLightDOMChildrenFrom(this);
+                resetSubheaderComponents.bind(this)();
+
                 Polymer.dom.flush();
                 removeStylesAndClasses.bind(this)(this);
                 this.toggleClass("layout", true);
@@ -46,9 +90,16 @@
                 orderedElements = this.componentsToLayout.slice();
                 splitElements.bind(this)(selectedElements, orderedElements, layout);
                 layout.forEach((function (layoutElem) {
-                    contentIndex = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, true);
+                    subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
                 }).bind(this));
+                Polymer.dom.flush();
                 this.fire('layout-finished', layout);
+            },
+            resetSubheaderComponents = function () {
+                this._subheaders.forEach(function (subheader) {
+                    subheader.removeAllRelatedComponents();
+                });
+                this._subheaders = [];
             },
             splitElements = function (selectedElements, orderedElements, layout) {
                 var selectIndex, selectedElement;
@@ -87,10 +138,14 @@
                 return null;
             },
             setDebugStyle = function (element) {
-                element.style.border = "1px dashed red";
+                if (element.style) {
+                    element.style.border = "1px dashed red";
+                }
             },
             removeDebugStyle = function (element) {
-                element.style.removeProperty("border");
+                if (element.style) {
+                    element.style.removeProperty("border");
+                }
             },
             removeStylesAndClasses = function (element) {
                 if (element.stylesToRemove) {
@@ -105,14 +160,16 @@
                     }.bind(this));
                     delete element.classesToRemove;
                 }
+                this.toggleClass("hidden-with-subheader", false, element);
             },
-            createFlexCell = function (container, layoutElem, selectedElements, orderedElements, horizontal) {
+            createFlexCell = function (container, layoutElem, selectedElements, orderedElements, subheader, horizontal) {
                 var rowElement, styleValues, trimmedLayoutElement;
+                var newSubheader = subheader;
                 if (typeof layoutElem === "string") {
                     trimmedLayoutElement = layoutElem.trim();
                     if (layoutElem.indexOf(':') >= 0) {
                         styleValues = layoutElem.split(":");
-                        if (styleValues[0].trim() !== 'select') {
+                        if (!keyWords[styleValues[0].trim()]) {
                             container.style[styleValues[0].trim()] = styleValues[1].trim();
                             container.stylesToRemove = container.stylesToRemove || [];
                             container.stylesToRemove.push(styleValues[0].trim());
@@ -127,7 +184,7 @@
                     }
                 } else if (Array.isArray(layoutElem)) {
                     if (!hasArray(layoutElem)) {
-                        rowElement = getNextElement(selectedElements, orderedElements, layoutElem);
+                        rowElement = getNextElement.bind(this)(selectedElements, orderedElements, layoutElem);
                         removeStylesAndClasses.bind(this)(rowElement);
                     } else {
                         rowElement = document.createElement("div");
@@ -136,42 +193,46 @@
                             this.toggleClass(horizontal ? "horizontal" : "vertical", true, rowElement);
                         }
                     }
+                    if (rowElement.tagName === 'TG-SUBHEADER') {
+                        newSubheader = rowElement;
+                        this._subheaders.push(newSubheader)
+                    } else if (newSubheader) {
+                        newSubheader.addRelativeElement(rowElement);
+                    }
                     if (this.debug) {
                         setDebugStyle(rowElement);
                     } else {
                         removeDebugStyle(rowElement);
                     }
                     layoutElem.forEach((function (columnLayout) {
-                        createFlexCell.bind(this)(rowElement, columnLayout, selectedElements, orderedElements, !horizontal);
+                        newSubheader = createFlexCell.bind(this)(rowElement, columnLayout, selectedElements, orderedElements, newSubheader, !horizontal);
                     }).bind(this));
                     Polymer.dom(container).appendChild(rowElement);
                 }
+                return newSubheader;
             },
             getNextElement = function (selectedElements, orderedElements, layoutElem) {
-                var notFoundElement, attribute, value, selectCondition, selectElem, selectIndex = getSelectIndex(layoutElem);
-                if (selectIndex >= 0) {
-                    selectElem = layoutElem[selectIndex];
-                    selectCondition = selectElem.split(':')[1].split('=');
-                    attribute = selectCondition[0].trim();
-                    value = selectCondition[1].trim();
-                    if (selectedElements.length > 0 && selectedElements[0].hasAttribute(attribute) && selectedElements[0].getAttribute(attribute) === value) {
-                        return selectedElements.splice(0, 1)[0];
+                var elemToReturn = findKeyWordElement.bind(this)(selectedElements, orderedElements, layoutElem);
+                if (!elemToReturn) {
+                    if (orderedElements.length > 0) {
+                        elemToReturn = orderedElements.splice(0, 1)[0];
+                    } else {
+                        elemToReturn = document.createElement('div');
+                        elemToReturn.innerHTML = "element not found!";
                     }
-                } else if (orderedElements.length > 0) {
-                    return orderedElements.splice(0, 1)[0];
                 }
-                notFoundElement = document.createElement('div');
-                Polymer.dom(notFoundElement).innerHTML = "element not found!"
-                return notFoundElement;
+                return elemToReturn;
             },
-            hasArray = function (layoutElem) {
-                var elemIndex;
+            findKeyWordElement = function (selectedElements, orderedElements, layoutElem) {
+                var elemIndex, keyWord, keyWordFunction;
                 for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
-                    if (Array.isArray(layoutElem[elemIndex])) {
-                        return true;
+                    if (typeof layoutElem[elemIndex] === 'string') {
+                        keyWord = layoutElem[elemIndex].split(':')[0].trim();
+                        if (keyWords[keyWord]) {
+                            return keyWords[keyWord].bind(this)(selectedElements, orderedElements, layoutElem[elemIndex]);
+                        }
                     }
                 }
-                return false;
             },
             getSelectIndex = function (layoutElem) {
                 var elemIndex;
@@ -181,6 +242,18 @@
                     }
                 }
                 return -1;
+            },
+            /**
+             * Determines whether layout has array as one of it's element.
+             */
+            hasArray = function (layoutElem) {
+                var elemIndex;
+                for (elemIndex = 0; elemIndex < layoutElem.length; elemIndex++) {
+                    if (Array.isArray(layoutElem[elemIndex])) {
+                        return true;
+                    }
+                }
+                return false;
             };
         Polymer({
 
@@ -225,13 +298,41 @@
                     readOnly: true,
                     observer: "_handleContentLoading",
                     value: false
+                },
+                _subheaders: {
+                    type: Array
                 }
+            },
+            ready: function () {
+                this._subheaders = [];
+                this._editorErrorHandler = this._editorErrorHandler.bind(this);
+                this.addEventListener('editor-error-appeared', this._editorErrorHandler);
             },
             attached: function () {
                 var self = this;
                 this.async(function () {
                     this._setContentLoaded(true);
                 }, 1);
+            },
+            _editorErrorHandler: function (e) {
+                var subheader = e.detail.$$relativeSubheader$$;
+                var subheaderHierarchy;
+                if (this._subheaders.indexOf(subheader) >= 0) {
+                    subheaderHierarchy = this._findSubheaderHierarchy(subheader);
+                    if (subheaderHierarchy.length > 0 && subheaderHierarchy[subheaderHierarchy.length - 1].offsetParent) {
+                        subheaderHierarchy.forEach(function (subheader) {
+                            subheader.open();
+                        });
+                    }
+                }
+            },
+            _findSubheaderHierarchy: function (subheader) {
+                var subheaderHierarchy = [];
+                while (subheader) {
+                    subheaderHierarchy.push(subheader);
+                    subheader = subheader.parentElement && subheader.parentElement.$$relativeSubheader$$;
+                }
+                return subheaderHierarchy;
             },
             _handleMobileScreen: function (newValue, oldValue) {
                 if (newValue && this.whenMobile && this.contentLoaded) {

@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityI
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
@@ -42,6 +44,8 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -163,6 +167,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
                     final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, utils.entityFactory(), centreContextHolder, 0);
+                    final Optional<EntityActionConfig> actionConfig = EntityResource.restoreActionConfig(webUiConfig, centreContextHolder);
 
                     final T entity = utils.createValidationPrototypeWithContext(
                             null,
@@ -175,7 +180,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                                     utils.entityFactory(),
                                     masterEntity,
                                     centreContextHolder.getSelectedEntities(),
-                                    CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator)//
+                                    CentreResourceUtils.createCriteriaEntityForContext(centreContextHolder, companionFinder, ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider), critGenerator),
+                                    actionConfig
                             ),
                             centreContextHolder.getChosenProperty(),
                             null /* compound master entity id */,
@@ -213,10 +219,20 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      */
     private Representation tryToSave(final Representation envelope) {
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
+        final Optional<Map<String, IContinuationData>> continuations = savingInfoHolder.getContinuations() != null && !savingInfoHolder.getContinuations().isEmpty() ?
+                Optional.of(createContinuationsMap(savingInfoHolder.getContinuations(), savingInfoHolder.getContinuationProperties())) : Optional.empty();
         final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
-        final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied);
+        final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied, continuations);
         return restUtil.singleJSONRepresentation(EntityResourceUtils.resetContextBeforeSendingToClient(potentiallySavedWithException.getKey()), potentiallySavedWithException.getValue());
+    }
+
+    private Map<String, IContinuationData> createContinuationsMap(final List<IContinuationData> continuations, final List<String> continuationProperties) {
+        final Map<String, IContinuationData> map = new LinkedHashMap<>();
+        for (int index = 0; index < continuations.size(); index++) {
+            map.put(continuationProperties.get(index), continuations.get(index));
+        }
+        return map;
     }
 
     /**
@@ -378,6 +394,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
             }
 
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. criteriaEntity.");
+            final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
+
             final CentreContext<T, AbstractEntity<?>> centreContext = CentreResourceUtils.createCentreContext(
                     webUiConfig,
                     companionFinder,
@@ -387,7 +405,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     utils.entityFactory(),
                     masterContext,
                     centreContextHolder.getSelectedEntities(),
-                    criteriaEntity);
+                    criteriaEntity,
+                    actionConfig);
             logger.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
             applied = utils.constructEntity(
                     modifiedPropertiesHolder,
@@ -403,6 +422,48 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
     }
 
     /**
+     * In case where centreContextHolder represents the context of centre's action (top-level, primary, secondary or prop) -- this method determines the action configuration.
+     * Action configuration is necessary to be used for 'computation' part of the context.
+     *
+     * @param webUiConfig
+     * @param centreContextHolder
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> Optional<EntityActionConfig> restoreActionConfig(final IWebUiConfig webUiConfig, final CentreContextHolder centreContextHolder) {
+        final Optional<EntityActionConfig> actionConfig;
+        if (centreContextHolder.getCustomObject().get("@@miType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
+            // System.err.println("===========miType = " + centreContextHolder.getCustomObject().get("@@miType") + "=======ACTION_IDENTIFIER = [" + centreContextHolder.getCustomObject().get("@@actionKind") + "; " + centreContextHolder.getCustomObject().get("@@actionNumber") + "]");
+
+            final Class<? extends MiWithConfigurationSupport<?>> miType;
+            try {
+                miType = (Class<? extends MiWithConfigurationSupport<?>>) Class.forName((String) centreContextHolder.getCustomObject().get("@@miType"));
+            } catch (final ClassNotFoundException e) {
+                throw new IllegalStateException(e);
+            }
+            final EntityCentre<T> centre = (EntityCentre<T>) webUiConfig.getCentres().get(miType);
+            actionConfig = Optional.of(centre.actionConfig(
+                                FunctionalActionKind.valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
+                                Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")
+                            )));
+        } else if (centreContextHolder.getCustomObject().get("@@masterEntityType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
+            final Class<?> entityType;
+            try {
+                entityType = Class.forName((String) centreContextHolder.getCustomObject().get("@@masterEntityType"));
+            } catch (final ClassNotFoundException e) {
+                throw new IllegalStateException(e);
+            }
+            final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(entityType);
+            actionConfig = Optional.of(master.actionConfig(
+                                FunctionalActionKind.valueOf((String) centreContextHolder.getCustomObject().get("@@actionKind")),
+                                Integer.valueOf((Integer) centreContextHolder.getCustomObject().get("@@actionNumber")
+                            )));
+        } else {
+            actionConfig = Optional.empty();
+        }
+        return actionConfig;
+    }
+
+    /**
      * Performs DAO saving of <code>validatedEntity</code>.
      * <p>
      * IMPORTANT: note that if <code>validatedEntity</code> has been mutated during saving in its concrete companion object (for example VehicleStatusChangeDao) or in
@@ -410,15 +471,16 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * toast message, however, will show the message, that was thrown during saving as exceptional (not first validation error of the entity).
      *
      * @param validatedEntity
+     * @param continuations -- continuations of the entity to be used during saving
      *
      * @return if saving was successful -- returns saved entity with no exception if saving was unsuccessful with exception -- returns <code>validatedEntity</code> (to be bound to
      *         appropriate entity master) and thrown exception (to be shown in toast message)
      */
-    private Pair<T, Optional<Exception>> save(final T validatedEntity) {
+    private Pair<T, Optional<Exception>> save(final T validatedEntity, final Optional<Map<String, IContinuationData>> continuations) {
         T savedEntity;
         try {
             // try to save the entity with its companion 'save' method
-            savedEntity = utils.save(validatedEntity);
+            savedEntity = utils.save(validatedEntity, continuations);
         } catch (final Exception exception) {
             // Some exception can be thrown inside 1) its companion 'save' method OR 2) CommonEntityDao 'save' during its internal validation.
             // Return entity back to the client after its unsuccessful save with the exception that was thrown during saving

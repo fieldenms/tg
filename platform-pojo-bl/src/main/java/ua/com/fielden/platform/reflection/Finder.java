@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
@@ -10,6 +11,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,6 +28,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,6 +44,8 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -66,16 +71,26 @@ public class Finder {
     // ======================================================================================================
     ///////////////////////////////////// Finding/getting MetaProperties and PropertyDescriptors ////////////
     /**
-     * Produces a list of property descriptors for a given entity type, including properties inherited from super a super type.
+     * Produces a list of property descriptors for a given entity type, including properties inherited from a super type.
      *
      * @param <T>
      * @param entityType
      * @return
      */
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType) {
+        return getPropertyDescriptors(entityType, f -> false);
+    }
+
+    /**
+     * The same as above, but provides a way to skip some properties. This could be convenient at times when some more system level properties should be avoided.
+     * 
+     */
+    public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final Predicate<Field> shouldSkip) {
         final List<PropertyDescriptor<T>> result = new ArrayList<PropertyDescriptor<T>>();
         for (final Field field : findProperties(entityType)) {
-            result.add(new PropertyDescriptor<T>(entityType, field.getName()));
+            if (!shouldSkip.test(field)) {
+                result.add(new PropertyDescriptor<T>(entityType, field.getName()));
+            }
         }
         return result;
     }
@@ -88,6 +103,7 @@ public class Finder {
      * @param factory
      * @return
      */
+    @Deprecated
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final EntityFactory factory) {
         final List<PropertyDescriptor<T>> result = new ArrayList<PropertyDescriptor<T>>();
         for (final Field field : findProperties(entityType)) {
@@ -408,7 +424,23 @@ public class Finder {
             // fields
             klass = klass.getSuperclass();
         }
-        throw new IllegalArgumentException("Failed to locate field " + name + " in " + type);
+        throw new ReflectionException(format("Failed to locate field [%s] in type [%s]", name, type.getName()));
+    }
+    
+    /**
+     * The same as {@link #getFieldByName(Class, String)}, but side effect free.
+     * 
+     * @param type
+     * @param name
+     * @return
+     */
+    public static Optional<Field> getFieldByNameOptionally(final Class<?> type, final String name) {
+        final Either<Exception, Field> result = Try(() -> getFieldByName(type, name));
+        if (result instanceof Right) {
+            return Optional.of(((Right<Exception, Field>) result).value);
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -434,6 +466,22 @@ public class Finder {
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExp);
         return getFieldByName(transformed.getKey(), transformed.getValue());
+    }
+    
+    /**
+     * The same as {@link Finder#findFieldByName(Class, String)}, but side effect free.
+     * 
+     * @param type
+     * @param dotNotationExp
+     * @return
+     */
+    public static Optional<Field> findFieldByNameOptionally(final Class<?> type, final String dotNotationExp) {
+        final Either<Exception, Field> result = Try(() -> findFieldByName(type, dotNotationExp));
+        if (result instanceof Right) {
+            return Optional.of(((Right<Exception, Field>) result).value);
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -821,7 +869,7 @@ public class Finder {
     public static boolean isPropertyPresent(final Class<?> forType, final String dotNotationExp) {
         try {
             return AnnotationReflector.getPropertyAnnotation(IsProperty.class, forType, dotNotationExp) != null;
-        } catch (final IllegalArgumentException iae) {
+        } catch (final ReflectionException iae) {
             return false;
         } catch (final MethodFoundException mfe) {
             return false;
@@ -867,7 +915,7 @@ public class Finder {
     }
 
     /**
-     * Method to recursively find properties of the specified type in the provided entity type and build dot notated paths.
+     * Method to recursively find properties of the specified type in the provided entity type and build dot-notated paths.
      *
      * TODO Need to provide support for handling union entities, which requires a special treatment -- should return a pair of enclosing union entity property and the enclosed
      * property. For example, in case of WorkOrder while searching for property of type Workshop a pair of <code>workorderable.vehicle</code> and

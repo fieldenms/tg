@@ -17,21 +17,33 @@
     <script>
         (function () {
             var dialogModel = document.createElement('template', 'dom-bind');
-            dialogModel.innerHTML = '<paper-dialog id="confirmDialog" class="confirm-dialog layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation">' +
+            dialogModel.innerHTML = '<paper-dialog id="confirmDialog" class="confirm-dialog layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-canceled="dialogCanceled" on-iron-overlay-opened="dialogOpened" on-iron-overlay-closed="dialogClosed">' +
                 '<div style="padding: 20px;">[[message]]</div>' +
                 '<div class="buttons">' +
                 '<template is="dom-repeat" items="[[buttons]]">' +
-                '<paper-button dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" on-tap="_action">[[item.name]]</paper-button>' +
+                '<paper-button dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>' +
                 '</template>' +
                 '</div>' +
                 '</paper-dialog>';
+
             dialogModel.showDialog = function () {
                 var dialog = dialogModel.$.confirmDialog;
+
+                dialog.noCancelOnEscKey = false;
 
                 this.async(function () {
                     dialog.open();
                 }, 1);
             }
+
+            dialogModel.dialogOpened = function (e) {
+                document.addEventListener('keydown', this._onCaptureKeyDown, true);
+            }
+
+            dialogModel.dialogClosed = function (e) {
+                document.removeEventListener('keydown', this._onCaptureKeyDown, true);
+            }
+
             Polymer.dom(document.body).appendChild(dialogModel);
             Polymer.dom.flush();
 
@@ -43,6 +55,19 @@
                     dialogModel.buttons = buttons;
 
                     return new Promise(function (resolve, reject) {
+
+                        dialogModel._onCaptureKeyDown = function (e) {
+                            var dialog = dialogModel.$.confirmDialog;
+                            if (e.keyCode === 13) {
+                                dialog.close();
+                                resolve("ENTER");
+                            }
+                        }
+
+                        dialogModel.dialogCanceled = function (e) {
+                            reject("ESC");
+                        };
+
                         dialogModel._action = function (e) {
                             var button = e.model.item;
                             if (button.confirm) {
@@ -50,7 +75,8 @@
                             } else {
                                 reject(button.name);
                             }
-                        }
+                        };
+
                         dialogModel.showDialog();
                     });
                 }

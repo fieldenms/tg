@@ -1,11 +1,17 @@
 package ua.com.fielden.platform.dao;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.hibernate.Session;
+
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-
-import com.google.inject.Inject;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A DAO for {@link EntityWithMoney} used for testing.
@@ -14,7 +20,7 @@ import com.google.inject.Inject;
  * 
  */
 @EntityType(EntityWithMoney.class)
-public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> {
+public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> implements IEntityWithMoney {
 
     @Inject
     protected EntityWithMoneyDao(final IFilter filter) {
@@ -32,6 +38,13 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> {
         super.save(one);
         super.save(two);
         throw new RuntimeException("Purposeful exception.");
+    }
+
+    @SessionRequired
+    public Pair<Session, Session> getSessionWithDelay(final long sleep) throws Exception {
+        final Session ses = getSession();
+        Thread.sleep(sleep);
+        return new Pair<Session, Session>(ses, getSession());
     }
 
 }

@@ -25,7 +25,7 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
  * A compound entity master that has a menu, that extends {@link IMaster} contract.
- * 
+ *
  * @author TG Team
  *
  * @param <T> -- a type of the main entity, which drives the logic of the master, such as Vehicle, WorkOrder.
@@ -42,7 +42,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
 
     /**
      * Creates master with menu.
-     * 
+     *
      * @param functionalEntityType
      * @param menuItemActions
      * @param defaultMenuItemIndex
@@ -52,11 +52,11 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
         if (defaultMenuItemIndex < 0 || defaultMenuItemIndex >= menuItemActions.size()) {
             throw new IllegalArgumentException(format("The default menu item index %s is outside of the range for the provided menu items.", defaultMenuItemIndex));
         }
-        
+
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("master/menu/tg-master-menu");
         importPaths.add("master/menu/tg-master-menu-item-section");
-        
+
         this.menuItemActions.addAll(menuItemActions);
 
         final List<FunctionalActionElement> menuItemActionsElements = new ArrayList<>();
@@ -70,7 +70,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
         final DomContainer menuItemActionsDom = new DomContainer();
         final DomContainer menuItemViewsDom = new DomContainer();
         final DomContainer menuItemsDom = new DomContainer();
-        
+
         for (final FunctionalActionElement el : menuItemActionsElements) {
             importPaths.add(el.importPath());
             menuItemActionsDom.add(el.render());
@@ -108,11 +108,12 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                         + menuItemViewsDom + "\n"
                         + "</tg-master-menu>",
                         this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))
-                .replace("//@ready-callback", 
+                .replace("//@ready-callback",
                         format("self.menuItemActions = [%s];\n"
                              + "self.$.menu.parent = self;\n"
-                             + "self.canLeave = self.$.menu.canClose.bind(self.$.menu);\n", 
-                             jsMenuItemActionObjects)) // 
+                             + "self.canLeave = self.$.menu.canClose.bind(self.$.menu);\n",
+                                jsMenuItemActionObjects)) //
+                .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 
@@ -135,4 +136,9 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
         return Optional.empty();
     }
 
+    
+    @Override
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+    }
 }

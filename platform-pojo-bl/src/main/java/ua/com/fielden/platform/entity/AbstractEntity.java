@@ -9,6 +9,7 @@ import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -72,6 +73,7 @@ import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -642,7 +644,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             setter.setAccessible(isAccessible);
             return this;
         } catch (final Exception e) {
-            throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e);
+            // let's be a little more intelligent about handling instances of InvocationTargetException to report errors without the unnecessary nesting
+            if (e instanceof InvocationTargetException && e.getCause() != null) {
+                // the cause of type Result should be reported as is
+                if (e.getCause() instanceof Result) {
+                    throw (Result) e.getCause();
+                } else { // otherwise wrap the cause in EntityException 
+                    throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e.getCause());
+                }
+            } else {
+                throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e);
+            }
         }
     }
 
@@ -1245,21 +1257,43 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         .filter(mp -> !mp.isValidWithRequiredCheck() && mp.getFirstFailure() != null)
         .findFirst().map(mp -> mp.getFirstFailure());
         
-//        Result firstFailure = null;
-//        for (final MetaProperty<?> property : properties.values()) {
-//            // if invalid return first error
-//            if (!property.isProxy() && !property.isValidWithRequiredCheck() && firstFailure == null) { // 1. process isValid() that triggers requiredness checking. 2. saves the first failure
-//                firstFailure = property.getFirstFailure();
-//            }
-//        }
-        
-        
         // returns first failure if exists or successful result if there was no failure.
         return firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
-//        return firstFailure != null ? firstFailure : new Result(this, "Entity " + this + " is valid.");
+    }
+    
+    /**
+     * Returns either empty or a list of warnings associated with entity's non-proxied properties.
+     * 
+     * @return
+     */
+    public final List<Warning> warnings() {
+        if (!isInstrumented()) {
+            throw new EntityException(format("Uninstrumented entity [%s] should not be checked for warnings.", getType().getName()));
+        }
+        // iterate over properties to collect all warnings
+        final List<Warning> warnings = nonProxiedProperties()
+        .filter(mp -> mp.hasWarnings())
+        .map(mp -> mp.getFirstWarning())
+        .collect(Collectors.toList());
+        
+        return warnings;
+    }
+    
+    public final boolean hasWarnings() {
+        if (!isInstrumented()) {
+            throw new EntityException(format("Uninstrumented entity [%s] should not be checked for warnings.", getType().getName()));
+        }
+        // iterate over properties in search of the first with warning
+        final java.util.Optional<Boolean> res = nonProxiedProperties()
+        .filter(mp -> mp.hasWarnings())
+        .findFirst().map(mp -> true);
+        
+        return res.isPresent();
     }
 
     /**
+     * A convenient getter to obtain an entity factory.
+     * 
      * @return {@link EntityFactory} which created this {@link AbstractEntity}
      */
     public final EntityFactory getEntityFactory() {

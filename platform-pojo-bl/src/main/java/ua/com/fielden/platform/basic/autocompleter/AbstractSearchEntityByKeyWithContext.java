@@ -60,7 +60,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
 
     @Override
     public List<T> findMatchesWithModel(final String searchString) {
-        final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().prop(KEY).iLike().val(searchString);
+        final ICompoundCondition0<T> incompleteEql = select(companion.getEntityType()).where().upperCase().prop(KEY).iLike().val(searchString);
         final EntityResultQueryModel<T> queryModel = completeEqlBasedOnContext(getContext(), searchString, incompleteEql);
         final OrderingModel ordering = orderBy().prop(KEY).asc().model();
         return companion.getFirstEntities(from(queryModel).with(ordering).with(getFetch()).lightweight().model(), getPageSize());

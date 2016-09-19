@@ -23,8 +23,7 @@ public @interface KeyType {
      * 
      * @return
      */
-    @SuppressWarnings("rawtypes")
-    Class<? extends Comparable> value();
+    Class<? extends Comparable<?>> value();
 
     /**
      * Used for concatenation of composite key members. Ignored for non-composite keys.

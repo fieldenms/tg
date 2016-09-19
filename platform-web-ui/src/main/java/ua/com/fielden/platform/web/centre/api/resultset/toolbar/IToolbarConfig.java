@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.resultset.toolbar;
 
+import java.util.List;
+
 import ua.com.fielden.platform.dom.CssStyles;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -22,5 +24,12 @@ public interface IToolbarConfig extends IRenderable, IImportable {
      * @return
      */
     CssStyles styles();
+
+    /**
+     * Returns the list of available shortcuts for present actions.
+     *
+     * @return
+     */
+    List<String> getAvailableShortcuts();
 
 }

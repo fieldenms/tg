@@ -10,6 +10,8 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
@@ -41,7 +43,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
         if (entityCentre.eventSourceUri().isPresent()) {
             attrs.append(format("\"uri\": \"%s\", ", entityCentre.eventSourceUri().get()));
         }
-        
+
         // let's make sure that uuid is defined from the embedded centre, which is required
         // for proper communication of the centre with related actions
         attrs.append("\"uuid\": this.uuid, ");
@@ -61,6 +63,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName(), attributes))
                 .replace("//@ready-callback", "self.classList.remove('canLeave');")
                 .replace("//@attached-callback", format("this.$.loader.attrs = %s;\n", attributes))
+                .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", saveOnActivate + "");
 
@@ -82,5 +85,9 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
     public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
         return Optional.empty();
     }
-
+    
+    @Override
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+    }
 }

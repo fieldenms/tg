@@ -36,6 +36,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -164,7 +165,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
         final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
-        
+
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp property : resultSetProps.get()) {
                 if (property.propName.isPresent()) {
@@ -188,7 +189,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             }
         }
         cdtmae.getEnhancer().apply();
-        
+
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp property : resultSetProps.get()) {
                 if (property.propName.isPresent()) {
@@ -582,6 +583,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public String getName() {
         return name;
     }
+    
+    /**
+     * Returns action configuration for concrete action kind and its number in that kind's space.
+     * 
+     * @param actionKind
+     * @param actionNumber
+     * @return
+     */
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        return dslDefaultConfig.actionConfig(actionKind, actionNumber);
+    }
 
     /**
      * Returns the value that indicates whether centre must run automatically or not.
@@ -676,11 +688,32 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                                 .replace("@column-title", columnTitileAndDesc.getKey())
                                 .replace("@column-desc", columnTitileAndDesc.getValue())
                                 .replaceAll("@column-index", Integer.toString(columnIndex))
-                                .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType).toString()))));
+                                .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType, EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null).toString()))));
             }
         }
+
+        logger.debug("Initiating top-level actions' shortcuts...");
+        final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
+        final StringBuilder shortcuts = new StringBuilder();
+
+        for (final String shortcut : dslDefaultConfig.getToolbarConfig().getAvailableShortcuts()) {
+            shortcuts.append(shortcut + " ");
+        }
+
+        if (topLevelActions.isPresent()) {
+
+            for (int i = 0; i < topLevelActions.get().size(); i++) {
+                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
+                final EntityActionConfig config = topLevelAction.getKey();
+                if (config.shortcut.isPresent()) {
+                    shortcuts.append(config.shortcut.get() + " ");
+                }
+            }
+        }
+
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/egi/tg-entity-grid-inspector-template.html");
         final String egiStr = text.
+                replace("@SHORTCUTS", shortcuts).
                 replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
                 replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
                 replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() + "").
@@ -702,9 +735,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
     }
 
-    private Object egiRepresentationFor(final Class<?> propertyType) {
+    private Object egiRepresentationFor(final Class<?> propertyType, final String timeZone) {
         final Class<?> type = DynamicEntityClassLoader.getOriginalType(propertyType);
-        return EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : type.getSimpleName());
+        return EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : timeZone != null ? type.getSimpleName() + ":" + timeZone : type.getSimpleName());
     }
 
     /**
@@ -770,7 +803,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, null, centre.getSecondTick().getWidth(root, resultPropName), resultProp.isFlexible, tooltipProp, egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, null, centre.getSecondTick().getWidth(root, resultPropName), resultProp.isFlexible, tooltipProp, egiRepresentationFor(propertyType, EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
                     final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
@@ -1172,7 +1205,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue() != null
                 && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().isPresent()
                 ? dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().get()
-                : new CentreContextConfig(false, false, false, false);
+                : new CentreContextConfig(false, false, false, false, null);
     }
 
     /**

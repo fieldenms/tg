@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCompositeKeySeparatorDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCritOnlyDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayDescDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityDescDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityTitleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isIgnoreDefault;
@@ -11,7 +13,6 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isScaleDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isSecreteDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUpperCaseDefault;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayDescDefault;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.Ignore;
@@ -33,6 +35,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -43,7 +46,6 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDes
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import com.sun.javafx.property.adapter.PropertyDescriptor;
 
 /**
  * Serialises / deserialises descendants of {@link AbstractEntity}.
@@ -97,6 +99,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
         // let's inform the client of the type's persistence nature
         entityTypeInfo.set_persistent(EntityUtils.isPersistedEntityType(type));
+        
+        if (IContinuationData.class.isAssignableFrom(type)) {
+            entityTypeInfo.set_continuation(true);
+        }
         
         // let's inform the client of whether value descriptions should be displayed in editors of this type
         final boolean shouldDisplayDescription = AnnotationReflector.isAnnotationPresentForClass(DisplayDescription.class, type);
@@ -174,6 +180,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                     if (!isScaleDefault(scale)) {
                         entityTypeProp.set_scale(scale);
                     }
+                }
+                final String timeZone = getTimeZone(type, name);
+                if (timeZone != null) {
+                    entityTypeProp.set_timeZone(timeZone);
                 }
 
                 entityTypeProp.endInitialising();

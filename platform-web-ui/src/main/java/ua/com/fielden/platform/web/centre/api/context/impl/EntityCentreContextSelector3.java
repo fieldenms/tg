@@ -1,10 +1,15 @@
 package ua.com.fielden.platform.web.centre.api.context.impl;
 
+import java.util.function.Function;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector1;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector3;
 import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelector4;
+import ua.com.fielden.platform.web.centre.api.context.IEntityCentreContextSelectorDone;
+import ua.com.fielden.platform.web.centre.api.context.exceptions.CentreContextConfigException;
 
 /**
  * Default implementation for the entity centre context selector API.
@@ -30,25 +35,33 @@ class EntityCentreContextSelector3<T extends AbstractEntity<?>> implements IEnti
                 false,
                 false,
                 withSelectionCrit,
-                withMasterEntity
+                withMasterEntity,
+                null
                );
     }
 
     @Override
     public IEntityCentreContextSelector1<T> withCurrentEntity() {
-        return new EntityCentreContextSelector1_2_4_done<T>(true, false, withSelectionCrit, withMasterEntity);
+        return new EntityCentreContextSelector1_2_4_function_done<T>(true, false, withSelectionCrit, withMasterEntity, null);
     }
 
     @Override
     public IEntityCentreContextSelector1<T> withSelectedEntities() {
-        return new EntityCentreContextSelector1_2_4_done<T>(false, true, withSelectionCrit, withMasterEntity);
+        return new EntityCentreContextSelector1_2_4_function_done<T>(false, true, withSelectionCrit, withMasterEntity, null);
     }
 
     @Override
     public IEntityCentreContextSelector4<T> withMasterEntity() {
-        return new EntityCentreContextSelector1_2_4_done<T>(false, false, withSelectionCrit, true);
+        return new EntityCentreContextSelector1_2_4_function_done<T>(false, false, withSelectionCrit, true, null);
     }
 
+    @Override
+    public IEntityCentreContextSelectorDone<T> withComputation(final Function<AbstractFunctionalEntityWithCentreContext<?>, Object> computation) {
+        if (computation == null) {
+            throw new CentreContextConfigException("The computational component of the context cannot be set as value null.");
+        }
+        return new EntityCentreContextSelector1_2_4_function_done<T>(false, false, withSelectionCrit, withMasterEntity, computation);
+    }
 
 
 }

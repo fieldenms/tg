@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.entity;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.web.centre.CentreContext;
-
-import com.google.inject.Inject;
 
 public class EntityEditActionProducer extends EntityManipulationActionProducer<EntityEditAction> {
 
@@ -19,10 +19,10 @@ public class EntityEditActionProducer extends EntityManipulationActionProducer<E
         if (editedEntity.getContext() != null) {
             final CentreContext<AbstractEntity<?>, AbstractEntity<?>> context = (CentreContext<AbstractEntity<?>, AbstractEntity<?>>) editedEntity.getContext();
             final AbstractEntity<?> currEntity = context.getSelectedEntities().size() == 0 ? null : context.getCurrEntity();
-            if (currEntity != null) {
-                editedEntity.setEntityId(currEntity == null ? null : currEntity.getId().toString());
+            if (currEntity != null && currEntity.getId() != null) {
+                editedEntity.setEntityId(currEntity.getId().toString());
             } else {
-                throw new IllegalStateException("The edit action context must contain current entity!");
+                throw new IllegalStateException("The edit action context must contain current entity with its ID property present!");
             }
         }
         return editedEntity;

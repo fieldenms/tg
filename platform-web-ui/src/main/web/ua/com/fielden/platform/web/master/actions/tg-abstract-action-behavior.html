@@ -1,8 +1,9 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <script>
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-	Polymer.TgBehaviors.TgAbstractActionBehavior = {
+	Polymer.TgBehaviors.TgAbstractActionBehaviorImpl = {
         properties: {
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
@@ -101,9 +102,11 @@
         	var self = this;
         	
         	return (function () {
+                self.persistActiveElement();
+
 	            this._innerEnabled = false;
 	            console.log(this.shortDesc + ": execute");
-	        }).bind(self);       	
+	        }).bind(self);
         },
 
         /**
@@ -120,6 +123,12 @@
         _afterExecution: function () {
             console.log(this.shortDesc + ": after execution");
             this._innerEnabled = true;
+            this.restoreActiveElement();
         }
     };
+	
+	Polymer.TgBehaviors.TgAbstractActionBehavior = [
+		Polymer.TgBehaviors.TgFocusRestorationBehavior,
+		Polymer.TgBehaviors.TgAbstractActionBehaviorImpl
+	];
 </script>

@@ -10,10 +10,10 @@ import java.util.stream.Collectors;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
-import ua.com.fielden.platform.dao.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.IUserRoleDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -50,7 +50,6 @@ public class UserRoleTokensUpdaterProducer extends AbstractFunctionalEntityForCo
         final SortedSet<SecurityTokenNode> topLevelTokens = securityTokenProvider.getTopLevelSecurityTokenNodes();
         final Set<SecurityTokenInfo> linearisedTokens = lineariseTokens(topLevelTokens, factory());
         entity.setTokens(linearisedTokens);
-        entity.getProperty("tokens").resetState();
         
         final Set<String> chosenRoleIds = new LinkedHashSet<>(masterEntity.getTokens().stream().map(item -> item.getSecurityToken().getName()).collect(Collectors.toList()));
         entity.setChosenIds(chosenRoleIds);

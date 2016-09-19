@@ -46,7 +46,7 @@ public class NewUserNotifierByEmail implements INewUserNotifier {
         } 
         
         final String emailBody = makePasswordRestEmail(constants.appName(), appUri, user);
-        final SmtpEmailSender sender = new SmtpEmailSender(constants.smptServer());
+        final SmtpEmailSender sender = new SmtpEmailSender(constants.smtpServer());
         sender.sendPlainMessage(constants.fromEmailAddress(), 
                                 user.getEmail(), 
                                 format("[%s] You have been registered as a new user", constants.appName()), 

@@ -30,7 +30,6 @@ public class DefaultEntityProducerForCompoundMenuItem<T extends AbstractFunction
         entity.beginInitialising();
         entity.setKey(compoundMasterKey);
         entity.endInitialising();
-        entity.resetMetaState();
 
         return entity;
     }

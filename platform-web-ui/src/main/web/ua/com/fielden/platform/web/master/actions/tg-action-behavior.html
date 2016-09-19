@@ -2,6 +2,7 @@
 <link rel="import" href="/resources/components/filesaver-lib.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/master/actions/tg-abstract-action-behavior.html">
+<link rel="import" href="/resources/master/actions/tg-entity-master-closing-behavior.html">
 
 <script>
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
@@ -84,7 +85,16 @@
 	         */
 	        run: {
             	type: Function
-            } 
+            },
+            
+            /**
+             * Custom focusing calback which will be called after action is executed. Please, note that standard focus restoration logic is still
+             * working (see tg-abstract-action-behavior's methods _createRun and _afterExecution).
+             */
+            focusingCallback: {
+                type: Function,
+                value: null
+            }
         },
 
         ready: function () {
@@ -95,10 +105,12 @@
          * Creates the 'Run' function. Overridden (with necessary 'super' call!) in order to invoke 'action' and to handle spinner appropriately.
          */
         _createRun: function () {
-		    var runFunction = Polymer.TgBehaviors.TgAbstractActionBehavior._createRun.call(this);
+		    var runFunction = Polymer.TgBehaviors.TgAbstractActionBehavior[1]._createRun.call(this);
 		    var self = this;
     		return (function () {
     			runFunction.call(this);
+    			
+  			    self.persistActiveElement(self.focusingCallback);
 
                 if (this._startSpinnerTimer) {
                     clearTimeout(this._startSpinnerTimer);
@@ -111,45 +123,14 @@
                 if (promise) {
                     promise
                     .then(  // first a handler for successful promise execution
-                            function(ironRequest) {
-                                if (self.eventChannel && self.role) {
-                                    console.log('AJAX PROMISE THEN', ironRequest.successful);
-                                    if (ironRequest.xhr.status === 200 && ironRequest.successful === true) {
-                                        // the data to be published consists of an entityId
-                                        // and an indication whether an associated view containing this action can be closed
-                                        // how this data is actually used depends purely on the subscriber
-                                        var dataValue = {id: ironRequest.entityId, canClose: true}; 
-                                        
-                                        // action with role 'save' should only encourage closing in cases
-                                        // where the returned after save entity is persistent and isn't new
-                                        // this case pertains to entit editing
-                                        // such approach enables continuous creation of entities as per issue #285
-                                        // (https://github.com/fieldenms/tg/issues/285)
-                                        if (self.role === 'save' && 
-                                            ironRequest.entityPersistent === true &&
-                                            !ironRequest.entityId) {
-                                            dataValue.canClose = false;
-                                        }
-                                        
-                                        postal.publish({
-                                            channel: self.eventChannel,
-                                            topic: self.role + '.post.success',
-                                            data: dataValue
-                                        });
-                                    } else {
-                                        postal.publish({
-                                            channel: self.eventChannel,
-                                            topic: self.role + '.post.error',
-                                            data: {}
-                                        });
-                                        // call the generic button execution logic, which ensures stopping of the spinner and handling of
-                                        // its enabled state
-                                        self._afterExecution();
-                                    }
-                                }
-                            },
+                            Polymer.TgBehaviors.TgEntityMasterClosingBehavior.createEntityActionThenCallback(self.eventChannel, self.role, postal, self._afterExecution.bind(self)),
                             // and in case of some exceptional situation let's provide a trivial catch handler
-                            function (value) { console.log('AJAX PROMISE CATCH', value);});
+                            function (value) { 
+                                console.log('AJAX PROMISE CATCH', value);
+                                if (self.postActionError) {
+                                    self.postActionError();
+                                }                                
+                            });
                 }
             }).bind(this);
         },
@@ -198,10 +179,12 @@
             }
 
             // do the super stuff
-            Polymer.TgBehaviors.TgAbstractActionBehavior._afterExecution.call(this);
+            Polymer.TgBehaviors.TgAbstractActionBehavior[1]._afterExecution.call(this);
 
             // Make spinner invisible
             this.$.spinner.style.visibility = 'hidden';
+            
+            this.restoreActiveElement();
         }
     };
 	

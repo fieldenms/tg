@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.test.server;
 import java.io.FileInputStream;
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.SortedSet;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
@@ -39,6 +41,7 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.ui.config.MainMenu;
 import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
@@ -88,17 +91,17 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
         // It should always be used as the current user for data population activities
-        final IUser coUser = ao(User.class);
+        final IUser coUser = co(User.class);
         final User u = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUser(u);
 
         final User _su = coUser.save(new_(User.class, User.system_users.SU.name()).setBase(true).setEmail("SU@demoapp.com").setActive(true));
         final User su = coUser.resetPasswd(_su, _su.getKey());
-        final User _demo = ao(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su).setEmail("DEMO@demoapp.com").setActive(true));
+        final User _demo = co(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su).setEmail("DEMO@demoapp.com").setActive(true));
         final User demo = coUser.resetPasswd(_demo, _demo.getKey());
 
-        final ITgPerson aoPerson = (ITgPerson) ao(TgPerson.class);
+        final ITgPerson aoPerson = (ITgPerson) co(TgPerson.class);
         aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());
         aoPerson.populateNew("Demo", "User", "Demo User", "DEMO");
 
@@ -129,14 +132,15 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties booleanEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7.").setRequiredValidatedProp(30));
         System.out.println("booleanEnt1.getId() == " + booleanEnt1.getId());
 
-        final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(9999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
+        final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(3609999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
         System.out.println("dateEnt1.getId() == " + dateEnt1.getId());
 
         final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
                 // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
                 // .setProducerInitProp(ent1)
                 .setIntegerProp(7).setMoneyProp(new Money("7.0", Currency.getInstance("USD"))).setBigDecimalProp(new BigDecimal(7.7))
-                .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30);
+                .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30)
+                .setColourProp(Colour.RED).setHyperlinkProp(new Hyperlink("https://www.fielden.com.au"));
         de.setDesc("Default entity description");
         final TgPersistentEntityWithProperties defaultEnt = save(de);
         System.out.println("defaultEnt.getId() == " + defaultEnt.getId());
@@ -209,7 +213,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final TgCollectionalSerialisationParent csp1 = (TgCollectionalSerialisationParent) save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
         save(new_composite(TgCollectionalSerialisationChild.class, csp1, "1").setDesc("desc1"));
-        
+
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY1").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY2"));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY3").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
@@ -218,6 +222,17 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY6").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "stringProp")));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY7").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "booleanProp")));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY8").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "dateProp")));
+        
+        final TgEntityWithTimeZoneDates timeZone1 = save(new_(TgEntityWithTimeZoneDates.class, "KEY1").setDatePropUtc(new Date(3609999)));
+        System.out.println("timeZone1.getId() == " + timeZone1.getId());
+        final TgEntityWithTimeZoneDates timeZone2 = save(new_(TgEntityWithTimeZoneDates.class, "KEY2").setDatePropUtc(new Date(1473057180015L)));
+        System.out.println("timeZone2.getId() == " + timeZone2.getId());
+        final TgEntityWithTimeZoneDates timeZone3 = save(new_(TgEntityWithTimeZoneDates.class, "KEY3").setDatePropUtc(new Date(1473057204015L)));
+        System.out.println("timeZone3.getId() == " + timeZone3.getId());
+        final TgEntityWithTimeZoneDates timeZone4 = save(new_(TgEntityWithTimeZoneDates.class, "KEY4").setDatePropUtc(new Date(1473057204000L)));
+        System.out.println("timeZone4.getId() == " + timeZone4.getId());
+        final TgEntityWithTimeZoneDates timeZone5 = save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
+        System.out.println("timeZone5.getId() == " + timeZone5.getId());
 
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
         mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));
@@ -227,7 +242,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
             final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, ao(SecurityRoleAssociation.class));
+            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));
             final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
             for (final SecurityTokenNode securityNode : topNodes) {
                 alg.search(securityNode, predicate);

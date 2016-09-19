@@ -31,6 +31,7 @@ import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.sample.domain.TgMessage;
+import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgMachine;
 import ua.com.fielden.platform.sample.domain.TgMessageMap;
 
@@ -76,6 +77,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(ExportAction.class);
         add(TgDeletionTestEntity.class);
            add(TgMessage.class);
+        add(TgEntityWithTimeZoneDates.class);
         add(TgMachine.class);
         add(TgMessageMap.class);
     }

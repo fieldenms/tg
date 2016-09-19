@@ -42,7 +42,7 @@ public class DefaultUniversalConstants implements IUniversalConstants {
      * {@inheritDoc}
      */
     @Override
-    public String smptServer() {
+    public String smtpServer() {
         return smtpServer;
     }
 

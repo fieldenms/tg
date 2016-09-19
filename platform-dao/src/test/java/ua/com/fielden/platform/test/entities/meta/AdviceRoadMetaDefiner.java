@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.test.entities.meta;
 
-import ua.com.fielden.platform.entity.meta.AbstractMetaPropertyDefiner;
+import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.test.domain.entities.Advice;
 
@@ -10,7 +10,7 @@ import ua.com.fielden.platform.test.domain.entities.Advice;
  * @author 01es
  * 
  */
-public class AdviceRoadMetaDefiner extends AbstractMetaPropertyDefiner {
+public class AdviceRoadMetaDefiner implements IAfterChangeEventHandler {
 
     /**
      * The ability to modify property <code>carrier</code> is driven by the value of property <code>road</code>.

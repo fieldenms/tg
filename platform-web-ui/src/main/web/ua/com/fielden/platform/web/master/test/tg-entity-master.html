@@ -14,6 +14,7 @@
 	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
   
     <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/resources/reflection/tg-date-utils.html">
     <link rel="import" href="/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties"> <!-- Test_TgPersistentEntityWithProperties -->
 </head>
 
@@ -105,7 +106,7 @@
 				    assert.strictEqual(entity.get("producerInitProp").get("key"), "DEFAULT_KEY", "The entity response property should be entity instance with appropriate key.");
 				
 				    // value is changed?
-				    assert.strictEqual(entity.prop("producerInitProp").isChangedFromOriginal(), true, "Instance meta-prop should be not changedFromOriginal.");
+				    assert.strictEqual(entity.prop("producerInitProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal, because all properties get their state reset in default producer implementation (DefaultEntityProducerWithContext).");
 				
 				    // value validationresult?
 				    assert.strictEqual(entity.prop("producerInitProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
@@ -122,7 +123,7 @@
 				    assert.strictEqual(entity.get("domainInitProp"), "ok", "The entity response property should be correct.");
 				
 				    // value is changed?
-				    assert.strictEqual(entity.prop("domainInitProp").isChangedFromOriginal(), true, "Instance meta-prop should be not changedFromOriginal.");
+				    assert.strictEqual(entity.prop("domainInitProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal, because all properties get their state reset in default producer implementation (DefaultEntityProducerWithContext).");
 				
 				    // value validationresult?
 				    assert.strictEqual(entity.prop("domainInitProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
@@ -239,7 +240,7 @@
 	                assert.strictEqual(bindingEntity.get("integerProp"), 43, "Binding property should be string entity representation.");
 
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("integerProp", 10000);
+	                bindingEntity.setAndRegisterPropertyTouch("integerProp", 10000);
 
 	                master.validate();
 	            };
@@ -284,7 +285,7 @@
 	                assert.strictEqual(bindingEntity.get("integerProp"), 43, "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("integerProp", 98);
+	                bindingEntity.setAndRegisterPropertyTouch("integerProp", 98);
 
 	                master.validate();
 	            };
@@ -329,7 +330,7 @@
 	                assert.strictEqual(bindingEntity.get("bigDecimalProp"), 23.0, "Property value should be correct.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("bigDecimalProp", 46.5);
+	                bindingEntity.setAndRegisterPropertyTouch("bigDecimalProp", 46.5);
 
 	                master.validate();
 	            };
@@ -372,7 +373,7 @@
 	                assert.strictEqual(bindingEntity.get("booleanProp"), true, "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("booleanProp", false);
+	                bindingEntity.setAndRegisterPropertyTouch("booleanProp", false);
 
 	                master.validate();
 	            };
@@ -404,7 +405,7 @@
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
 	                // value ok?
 	                assert.ok(entity.get("dateProp"), "Property value should be initialised.");
-	                assert.strictEqual(entity.get("dateProp"), 9999, "Property value should be correct.");
+	                assert.strictEqual(entity.get("dateProp"), 3609999, "Property value should be correct.");
 
 	                // value is changed?
 	                assert.strictEqual(entity.prop("dateProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
@@ -414,10 +415,10 @@
 
 	                // binding value ok?
 	                assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
-	                assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding property should be string entity representation.");
+	                assert.strictEqual(bindingEntity.get("dateProp"), 3609999, "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("dateProp", 10000);
+	                bindingEntity.setAndRegisterPropertyTouch("dateProp", 10000);
 
 	                master.validate();
 	            };
@@ -432,7 +433,7 @@
 	                // value ok?
 	                assert.ok(validatedEntity.get("entityProp"), "The property should be initialised.");
 	                assert.instanceOf(validatedEntity.get("entityProp"), reflector.getEntityPrototype(), "The property should be of entity type.");
-	                assert.strictEqual(validatedEntity.get("entityProp").get("key"), "KEY1", "The entity response property should be entity instance with appropriate key.");
+	                assert.strictEqual(validatedEntity.get("entityProp").get("key"), "KEY1", "The entity response property should be entity instance with appropriate key (validate).");
 
 	                // value is changed?
 	                assert.strictEqual(validatedEntity.prop("entityProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
@@ -451,7 +452,7 @@
 	                // value ok?
 	                assert.ok(entity.get("entityProp"), "The property should be initialised.");
 	                assert.instanceOf(entity.get("entityProp"), reflector.getEntityPrototype(), "The property should be of entity type.");
-	                assert.strictEqual(entity.get("entityProp").get("key"), "KEY3", "The entity response property should be entity instance with appropriate key.");
+	                assert.strictEqual(entity.get("entityProp").get("key"), "KEY3", "The entity response property should be entity instance with appropriate key (retrieve).");
 
 	                // value is changed?
 	                assert.strictEqual(entity.prop("entityProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
@@ -465,7 +466,7 @@
 
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("entityProp", "KEY1");
+	                bindingEntity.setAndRegisterPropertyTouch("entityProp", "KEY1");
 
 	                master.validate();
 	            };
@@ -522,7 +523,7 @@
 	                assert.strictEqual(bindingEntity.get("moneyProp").taxPercent, null, "Property value taxPercent should be correct.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("moneyProp", { "amount" : 46.0, "taxPercent" : 20 }); // #486 TODO "currency" : expectedCurrency, 
+	                bindingEntity.setAndRegisterPropertyTouch("moneyProp", { "amount" : 46.0, "taxPercent" : 20 }); // #486 TODO "currency" : expectedCurrency, 
 
 	                master.validate();
 	            };
@@ -567,7 +568,7 @@
 	                assert.strictEqual(bindingEntity.get("stringProp"), "ok", "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("stringProp", "okok");
+	                bindingEntity.setAndRegisterPropertyTouch("stringProp", "okok");
 
 	                master.validate();
 	            };
@@ -645,7 +646,7 @@
 	                assert.strictEqual(bindingEntity.get("stringProp"), null, "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("stringProp", "okok");
+	                bindingEntity.setAndRegisterPropertyTouch("stringProp", "okok");
 
 	                master.validate();
 	            };
@@ -675,7 +676,7 @@
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
 	                // value ok?
 	                assert.ok(entity.get("dateProp"), "Property value should be initialised.");
-	                assert.strictEqual(entity.get("dateProp"), 9999, "Property value should be correct.");
+	                assert.strictEqual(entity.get("dateProp"), 3609999, "Property value should be correct.");
 
 	                // value is changed?
 	                assert.strictEqual(entity.prop("dateProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
@@ -685,10 +686,10 @@
 
 	                // binding value ok?
 	                assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
-	                assert.strictEqual(bindingEntity.get("dateProp"), 9999, "Binding property should be string entity representation.");
+	                assert.strictEqual(bindingEntity.get("dateProp"), 3609999, "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("dateProp", null);
+	                bindingEntity.setAndRegisterPropertyTouch("dateProp", null);
 
 	                master.validate();
 	            };
@@ -756,32 +757,32 @@
 	                assert.strictEqual(bindingEntity.get("stringProp"), "ok", "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("stringProp", "1");
+	                bindingEntity.setAndRegisterPropertyTouch("stringProp", "1");
 	                master.validate();
 
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("stringProp", "2");
+	                bindingEntity.setAndRegisterPropertyTouch("stringProp", "2");
 	                master.validate();
 
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("stringProp", "3");
+	                bindingEntity.setAndRegisterPropertyTouch("stringProp", "3");
 	                master.validate();
 
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("stringProp", "4");
+	                bindingEntity.setAndRegisterPropertyTouch("stringProp", "4");
 	                master.validate();
 
 	                master.async(function () {
 		                // ACTUAL PROPERTY CHANGE
 	                	console.log('	change to 5');
-		                master._currBindingEntity.set("stringProp", "5");
+		                master._currBindingEntity.setAndRegisterPropertyTouch("stringProp", "5");
 		                master.validate();
 	                }, 55);
 
 	                //master.async(function () {
 		            // ACTUAL PROPERTY CHANGE
 		            console.log('	change to 6');
-		            bindingEntity.set("stringProp", "6");
+		            bindingEntity.setAndRegisterPropertyTouch("stringProp", "6");
 		            master.validate();
 	                //}, 25);
 	            };
@@ -836,9 +837,9 @@
 	                assert.strictEqual(bindingEntity.get("stringProp"), null, "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE            
-	                bindingEntity.set("requiredValidatedProp", 30);
-	                bindingEntity.set("key", "KEY_TO_PASS_VALIDATION_BEFORE_SAVE_" + (new Date()).getTime());
-	                bindingEntity.set("stringProp", "okok");
+	                bindingEntity.setAndRegisterPropertyTouch("requiredValidatedProp", 30);
+	                bindingEntity.setAndRegisterPropertyTouch("key", "KEY_TO_PASS_VALIDATION_BEFORE_SAVE_" + (new Date()).getTime());
+	                bindingEntity.setAndRegisterPropertyTouch("stringProp", "okok");
 
 	                master.save();
 	            };
@@ -881,7 +882,7 @@
                     assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 06:19', 'Editing value should correspond to invalid value [01/02/2003 06:19].');
                     // binding value ok?
                     assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
-                    var invalidDateValue = reflector._millis('01/02/2003 06:19:00.000');
+                    var invalidDateValue = _millis('01/02/2003 06:19:00.000');
                     assert.strictEqual(bindingEntity.get("dateProp"), invalidDateValue, "Binding property should contain the invalid value that represents [1/2/3 6:19] date.");
                     
                     done();
@@ -909,7 +910,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Entity "DEMO00" of type Tg Persistent Entity With Properties already exists.', "Entity's exceptionOccured should exist.");
                     
-                    var arrivedValue = reflector._millis('01/02/2003 06:21:00.000');
+                    var arrivedValue = _millis('01/02/2003 06:21:00.000');
                     
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get("dateProp"), "Property value should be initialised.");
@@ -956,7 +957,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Creation failed: [1/2/3 6:20] date is not permitted.', "Entity's exceptionOccured should exist.");
                     
-                    var arrivedValue = reflector._millis('01/02/2003 06:20:00.000');
+                    var arrivedValue = _millis('01/02/2003 06:20:00.000');
                     
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get("dateProp"), "Property value should be initialised.");
@@ -1005,7 +1006,7 @@
                     assert.strictEqual(bindingEntity.get("stringProp"), "ok", "Binding property should be correct number.");
 
                     // ACTUAL PROPERTY CHANGE
-                    bindingEntity.set("stringProp", "okok");
+                    bindingEntity.setAndRegisterPropertyTouch("stringProp", "okok");
                     
                     // kick in the second save and thus the second part of this test 
                     this.postSaved = this.postSavedForExisting;
@@ -1035,9 +1036,9 @@
 
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("stringProp", "ok");
-	                bindingEntity.set("requiredValidatedProp", 30);
-	                bindingEntity.set("key", "KEY_" + (new Date()).getTime());
+	                bindingEntity.setAndRegisterPropertyTouch("stringProp", "ok");
+	                bindingEntity.setAndRegisterPropertyTouch("requiredValidatedProp", 30);
+	                bindingEntity.setAndRegisterPropertyTouch("key", "KEY_" + (new Date()).getTime());
 
 	                master.save();
 	            };
@@ -1074,7 +1075,7 @@
                     assert.strictEqual(bindingEntity.get("stringProp"), "ok", "Binding property should be correct number.");
 
                     // ACTUAL PROPERTY CHANGE
-                    bindingEntity.set("stringProp", "okok");
+                    bindingEntity.setAndRegisterPropertyTouch("stringProp", "okok");
                     
                  	// kick in validation and thus the second part of this test
                     this.postSaved = this.postSavedForExisting;
@@ -1125,9 +1126,9 @@
 
 	            master.postRetrieved = function(entity, bindingEntity, customObject) {
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("stringProp", "ok");
-	                bindingEntity.set("requiredValidatedProp", 30);
-	                bindingEntity.set("key", "KEY_" + (new Date()).getTime());
+	                bindingEntity.setAndRegisterPropertyTouch("stringProp", "ok");
+	                bindingEntity.setAndRegisterPropertyTouch("requiredValidatedProp", 30);
+	                bindingEntity.setAndRegisterPropertyTouch("key", "KEY_" + (new Date()).getTime());
 
 	                master.save();
 	            };
@@ -1167,7 +1168,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
                     assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Modification failed: [1/2/3 6:22] is not acceptable for persisted entity.', "Entity's exceptionOccured should exist.");
                     
-                    var arrivedValue = reflector._millis('01/02/2003 00:00:00.000');
+                    var arrivedValue = _millis('01/02/2003 00:00:00.000');
                     
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get("dateProp"), "Property value should be initialised.");
@@ -1187,7 +1188,7 @@
                     assert.strictEqual(master.$.editor_4_dateProp._editingValue, '01/02/2003 06:22', 'Editing value should correspond to invalid value [01/02/2003 06:22].');
                     // binding value ok?
                     assert.ok(bindingEntity.get("dateProp"), "Binding property should be initialised.");
-                    var invalidDateValue = reflector._millis('01/02/2003 06:22:00.000');
+                    var invalidDateValue = _millis('01/02/2003 06:22:00.000');
                     assert.strictEqual(bindingEntity.get("dateProp"), invalidDateValue, "Binding property should contain the invalid value that represents [1/2/3 6:22] date.");
                     
                     done();
@@ -1290,7 +1291,7 @@
 	                assert.strictEqual(bindingEntity.get("conflictingProp"), "initial", "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("nonConflictingProp", "modified");
+	                bindingEntity.setAndRegisterPropertyTouch("nonConflictingProp", "modified");
 
 	                master.validate();
 	            };
@@ -1349,7 +1350,7 @@
 	                assert.strictEqual(bindingEntity.get("conflictingProp"), "initial", "Binding property should be string entity representation.");
 	                
 	                // ACTUAL PROPERTY CHANGE
-	                bindingEntity.set("conflictingProp", "modified");
+	                bindingEntity.setAndRegisterPropertyTouch("conflictingProp", "modified");
 
 	                master.validate();
 	            };

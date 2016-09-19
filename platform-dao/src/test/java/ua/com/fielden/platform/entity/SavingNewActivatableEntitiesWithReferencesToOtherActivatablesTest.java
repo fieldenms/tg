@@ -54,12 +54,12 @@ public class SavingNewActivatableEntitiesWithReferencesToOtherActivatablesTest e
         assertTrue(newCat2.isValid().isSuccessful());
 
         // save newCat1, which should lead to staleness of cat1_2 entity
-        save(newCat1);
-        assertEquals(Integer.valueOf(1), newCat1.getParent().getRefCount());
+        final TgCategory updatedNewCat1 = save(newCat1);
+        assertEquals(Integer.valueOf(1), updatedNewCat1.getParent().getRefCount());
 
         // try saving newCat2, which references already stale cat1_2 entity -- this still should succeed
-        save(newCat2);
-        assertEquals(Integer.valueOf(2), newCat2.getParent().getRefCount());
+        final TgCategory updatedNewCat2 = save(newCat2);
+        assertEquals(Integer.valueOf(2), updatedNewCat2.getParent().getRefCount());
 
     }
 

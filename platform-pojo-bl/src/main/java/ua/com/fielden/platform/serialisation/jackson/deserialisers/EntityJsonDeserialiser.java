@@ -147,9 +147,9 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             for (final CachedProperty prop : properties) {
                 final String propertyName = prop.field().getName();
                 final JsonNode propNode = node.get(propertyName);
-                if (propNode != null) {
+                if (propNode != null) { // TODO need to revisit: what if entity from client arrives without property, but entity definition has default value assigned? Do we need to remain default value there?
                     final Object value = determineValue(propNode, prop.field());
-                    if (value != null) {
+                    if (value != null) { // TODO need to revisit: what if entity from client arrives with property of 'null' value, but entity definition has default value assigned? Do we need to remain default value there?
                         try {
                             // at this stage the field should be already accessible
                             prop.field().set(entity, value);

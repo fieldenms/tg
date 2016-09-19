@@ -20,6 +20,7 @@ import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder4;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder5;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder6;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7;
+import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7a;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder8;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder9;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -36,6 +37,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     private String icon;
     private String shortDesc;
     private String longDesc;
+    private String shortcut;
     private IPreAction preAciton;
     private IPostAction successPostAction;
     private IPostAction errorPostAction;
@@ -71,7 +73,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
      *
      * @return
      */
-    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> IEntityActionBuilder7<T> actionOff() {
+    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> IEntityActionBuilder7a<T> actionOff() {
         return new EntityActionBuilder<T>().noAction();
     }
 
@@ -89,6 +91,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
                     icon,
                     shortDesc,
                     longDesc,
+                    shortcut,
                     preAciton,
                     successPostAction,
                     errorPostAction,
@@ -176,9 +179,19 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
         this.longDesc = longDesc;
         return this;
     }
+    
+    @Override
+    public IEntityActionBuilder7a<T> shortcut(final String shortcut) {
+        if (StringUtils.isEmpty(shortcut)) {
+            throw new IllegalArgumentException("Shortcut should be provided.");
+        }
+
+        this.shortcut = shortcut;
+        return this;
+    }
 
     @Override
-    public IEntityActionBuilder7<T> noAction() {
+    public IEntityActionBuilder7a<T> noAction() {
         this.returnNoAction = true;
         return this;
     }

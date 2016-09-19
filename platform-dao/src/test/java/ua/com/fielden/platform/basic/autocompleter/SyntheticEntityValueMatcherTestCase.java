@@ -2,7 +2,7 @@ package ua.com.fielden.platform.basic.autocompleter;
 
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.entities.ComplexSyntheticEntity;
 import ua.com.fielden.platform.test.entities.SimpleSyntheticEntity;
@@ -12,7 +12,7 @@ public class SyntheticEntityValueMatcherTestCase extends DbDrivenTestCase {
     @Test
     public void testSyntheticValueMatcherWithSimpleEntities() {
         hibernateUtil.getSessionFactory().getCurrentSession().close();
-        final SyntheticEntityValueMatcher valueMatcher = new SyntheticEntityValueMatcher(injector.getInstance(IEntityAggregatesDao.class), SimpleSyntheticEntity.class);
+        final SyntheticEntityValueMatcher valueMatcher = new SyntheticEntityValueMatcher(injector.getInstance(IEntityAggregatesOperations.class), SimpleSyntheticEntity.class);
 
         assertEquals("The number of entities for %entity% param value must be 6", 6, valueMatcher.findMatches("%entity%").size());
         assertEquals("The number of entities for centity% param value must be 3", 3, valueMatcher.findMatches("centity%").size());
@@ -24,7 +24,7 @@ public class SyntheticEntityValueMatcherTestCase extends DbDrivenTestCase {
     @Test
     public void testSyntheticvalueMatcherWithComplexEntity() {
         hibernateUtil.getSessionFactory().getCurrentSession().close();
-        final SyntheticEntityValueMatcher valueMatcher = new SyntheticEntityValueMatcher(injector.getInstance(IEntityAggregatesDao.class), ComplexSyntheticEntity.class);
+        final SyntheticEntityValueMatcher valueMatcher = new SyntheticEntityValueMatcher(injector.getInstance(IEntityAggregatesOperations.class), ComplexSyntheticEntity.class);
 
         assertEquals("The number of entities for %entity% param value must be 6", 6, valueMatcher.findMatches("%entity%").size());
         assertEquals("The number of entities for centity% param value must be 3", 3, valueMatcher.findMatches("centity%").size());

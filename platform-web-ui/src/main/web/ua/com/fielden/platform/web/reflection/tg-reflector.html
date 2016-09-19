@@ -31,6 +31,15 @@
         };
         EntityTypeProp.prototype = Object.create(Object.prototype);
         EntityTypeProp.prototype.constructor = EntityTypeProp;
+        
+        /**
+         * Returns specific time-zone for the property of type date.
+         *
+         * IMPORTANT: do not use '_timeZone' field directly!
+         */
+        EntityTypeProp.prototype.timeZone = function () {
+            return typeof this._timeZone === 'undefined' ? null : this._timeZone;
+        }
 
         /**
          * Returns 'true' when the type property is secrete, false otherwise.
@@ -321,6 +330,47 @@
             this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
             return this[name] = value;
         }
+         
+        /**
+         * Sets the property value for the [binding!]entity and registers property 'touch'.
+         *
+         * In case where user interaction takes place, this method registers such 'property touch' for the purposes 
+         * of collecting the queue of 'touched' properties.
+         *
+         * The property that was touched last will reside last in that queue. Also the count of 'touches' is recorded
+         * for each property (mainly for logging purposes).
+         *
+         * Please, note that 'touched' property does not mean 'modified' from technical perspective.
+         * But, even if it is not modified -- such property will be forced to be mutated on server (with its origVal) 
+         * to have properly invoked its ACE handlers.
+         *
+         * IMPORTANT: this method is applicable only to binding entities (not fully-fledged)!
+         */
+        Entity.prototype.setAndRegisterPropertyTouch = function (propertyName, value) {
+            var result = this.set(propertyName, value);
+            
+            var touched = this["@@touchedProps"];
+            var names = touched.names;
+            var counts = touched.counts;
+            var index = names.indexOf(propertyName);
+            if (index > -1) {
+                var prevCount = counts[index];
+                names.splice(index, 1);
+                counts.splice(index, 1);
+                names.push(propertyName);
+                counts.push(prevCount + 1);
+            } else {
+                names.push(propertyName);
+                counts.push(1);
+            }
+            // need to reset previously cached ID after the property was modified (touched) by the user -- the cached ID becomes stale in that case, and server-side reconstruction of entity-typed property should be KEY-based instead of ID-based. 
+            if (typeof this['@' + propertyName + '_id'] !== 'undefined') {
+                delete this['@' + propertyName + '_id'];
+            }
+            console.log('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
+            
+            return result;
+        }
 
         /**
          * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and '@prop' instance meta-props.
@@ -524,6 +574,14 @@
          */
         EntityType.prototype.isPersistent = function () {
             return this['_persistent'] === true;
+        }
+        
+        /**
+         * Returns 'true' if the entity type represents a continuation entity.
+         *
+         */
+        EntityType.prototype.isContinuation = function () {
+            return typeof this['_continuation'] === 'undefined' ? false : this['_continuation'];
         }
         
         /**
@@ -1012,7 +1070,7 @@
                     convertedArray.push(this.convert(value[index]));
                 }
                 return convertedArray;
-            } else if ( typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 
+            } else if ( typeof value === "object" && (value.hasOwnProperty("hashlessUppercasedColourValue") || value.hasOwnProperty("value")) ){ 
                 return value;
             } else {
                 throw new _UCEPrototype(value);
@@ -1198,14 +1256,27 @@
         /**
          * Creates the holder of modified properties and some savingContext.
          */
-        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext) {
+        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext, continuationsMap) {
         	var reflector = this;
             var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
             savingInfoHolder.id = null;
-            savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
+            savingInfoHolder['modifHolder'] = modifiedPropertiesHolder;
         	
         	if (savingContext) { // if saving context was defined (not 'undefined'):
-                savingInfoHolder["centreContextHolder"] = savingContext;
+                savingInfoHolder['centreContextHolder'] = savingContext;
+        	}
+        	
+        	if (typeof continuationsMap !== 'undefined') {
+        	    var continuations = [];
+        	    var continuationProperties = [];
+        	    for (var continuationProperty in continuationsMap) {
+        	        if (continuationsMap.hasOwnProperty(continuationProperty)) {
+        	            continuations.push(continuationsMap[continuationProperty]);
+        	            continuationProperties.push(continuationProperty);
+        	        }
+        	    }
+        	    savingInfoHolder['continuations'] = continuations;
+        	    savingInfoHolder['continuationProperties'] = continuationProperties;
         	}
             return savingInfoHolder;
         },
@@ -1255,31 +1326,6 @@
         		}
         	}
         	return number;
-        },
-        
-    	/**
-    	 * Returns milliseconds from 1-st Jan 1970 in current locale, defined in momentjs.
-    	 * 
-    	 * Please, use this function only in environment with moment(...) function defined.
-    	 * Currently it is used in date-specific unit testing.
-    	 */
-        _millis: function (fullDateString) { // using strict 'DD/MM/YYYY HH:mm:ss.SSS' format 
-            return moment(fullDateString, 'DD/MM/YYYY HH:mm:ss.SSS', true).valueOf();
-        },
-        
-        millisDateRepresentation: function (dateMillis) {
-            var millisecondsRemainder = dateMillis % 1000;
-            var millisecondsExist = (millisecondsRemainder !== 0);
-            if (millisecondsExist) {
-                return moment(dateMillis).format('L LTS');
-            } else {
-                var secondsRemainder = (dateMillis - millisecondsRemainder) % 60;
-                var secondsExist = (secondsRemainder !== 0);
-                if (secondsExist) {
-                    return moment(dateMillis).format('L LTS');
-                }
-            }
-            return moment(dateMillis).format('L LT');
         }
     });
 })();    

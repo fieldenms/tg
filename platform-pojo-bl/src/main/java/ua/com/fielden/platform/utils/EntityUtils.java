@@ -1052,21 +1052,32 @@ public class EntityUtils {
      * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> with instrumentation.
      *
      * @param entityType
+     * @param instrumented
      * @return
      */
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType, final boolean instumented) {
+        return FetchProviderFactory.createDefaultFetchProvider(entityType, instumented);
+    }
+
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetch(final Class<T> entityType) {
-        return FetchProviderFactory.createDefaultFetchProvider(entityType, true);
+        return FetchProviderFactory.createDefaultFetchProvider(entityType, false);
     }
 
     /**
      * Creates {@link IFetchProvider} for concrete <code>entityType</code> with 'key' and 'desc' (analog of {@link EntityQueryUtils#fetchKeyAndDescOnly(Class)}) with instrumentation.
      *
      * @param entityType
+     * @param instrumented
      * @return
      */
-    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType) {
-        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, true);
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType, final boolean instrumented) {
+        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, instrumented);
     }
+    
+    public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchWithKeyAndDesc(final Class<T> entityType) {
+        return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
+    }
+
     
     /**
      * Creates empty {@link IFetchProvider} for concrete <code>entityType</code> <b>without</b> instrumentation.

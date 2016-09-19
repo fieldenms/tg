@@ -210,16 +210,30 @@
 
                 domBind._acceptColourBind = function () {
                     self._isAcceptingColourFromPicker = true;
-                    self.decoratedInput().focus();
                 }.bind(domBind);
 
                 domBind.open = function () {
                     this.$.dropdown.open();
                 }.bind(domBind);
+                
+                domBind._colorPickerClosed = function () {
+                    self.decoratedInput().focus();
+                }.bind(domBind);
+                
+                domBind._colorPickerOpened = function (event) {
+                    if (event.stopPropagation) event.stopPropagation();
+                    if (event.preventDefault) event.preventDefault();
+                    event.cancelBubble = true;
+                    event.returnValue = false;
+                }.bind(domBind);
+                
+                //domBind._colorPickerOpened = function () {
+                //    this.$.dropdown.focus();
+                //}.bind(domBind);
 
                 var div = domBind.content.ownerDocument.createElement('div');
                 div.innerHTML =
-                    '<iron-dropdown  id="dropdown">' +
+                    '<iron-dropdown id="dropdown" on-iron-overlay-closed="_colorPickerClosed" on-iron-overlay-opened="_colorPickerOpened">' + // tabindex="0" on-iron-overlay-opened="_colorPickerOpened" 
                     '<div class="dropdown-content">' +
                     '<div class="layout vertical" style="margin:10px 10px 10px 10px;">' +
                     '<div class="layout horizontal">' +

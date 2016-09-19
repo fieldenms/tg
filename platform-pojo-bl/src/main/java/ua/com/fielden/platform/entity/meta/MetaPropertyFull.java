@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.Reflector;
 
 /**
@@ -442,16 +444,31 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
-    public synchronized final Result getFirstWarning() {
+    public synchronized final Warning getFirstWarning() {
         for (final ValidationAnnotation va : validators.keySet()) {
             final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
             for (final Result result : annotationHandlers.values()) {
                 if (result != null && result.isWarning()) {
-                    return result;
+                    return (Warning) result;
                 }
             }
         }
         return null;
+    }
+    
+    /**
+     * Removes all validation warnings (not errors) from the propety.
+     */
+    public synchronized final void clearWarnings() {
+        for (final ValidationAnnotation va : validators.keySet()) {
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
+            for (final Iterator<Result> iter = annotationHandlers.values().iterator(); iter.hasNext(); ) {
+                final Result result = iter.next(); 
+                if (result != null && result.isWarning()) {
+                    iter.remove();
+                }
+            }
+        }
     }
 
     /**

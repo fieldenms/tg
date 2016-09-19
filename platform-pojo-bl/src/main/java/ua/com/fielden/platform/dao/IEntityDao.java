@@ -30,11 +30,25 @@ import ua.com.fielden.platform.security.user.User;
 public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMonitor {
     static final int DEFAULT_PAGE_CAPACITY = 25;
 
-    //    /**
-    //     * Username should be provided for every DAO instance in order to support data filtering and auditing.
-    //     */
-    //    void setUsername(final String username);
 
+    /**
+     * This is a mixin method that should indicate whether data retrieval should follow the instrumented or uninstrumented strategy for entity instantiation during retrieval.
+     * 
+     * @return
+     */
+    default boolean instrumented() {
+        return true;
+    }
+    
+    /**
+     * A factory method that creates an instance of the same companion object it is invoked on, but with method {@link #instrumented()} returning <code>false</code>.
+     * 
+     * @return
+     */
+    default <E extends IEntityDao<T>> E uninstrumented() {
+        throw new UnsupportedOperationException("This method should be overriden by descendants.");
+    }
+    
     /**
      * Returns provided name.
      *
@@ -130,16 +144,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     IPage<T> firstPage(final int pageCapacity);
 
     /**
-     * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
-     *
-     * @param Equery
-     * @param pageCapacity
-     * @param pageNo
-     * @return
-     */
-    IPage<T> getPage(final int pageNo, final int pageCapacity);
-
-    /**
      * Should return a reference to the first page of the specified size containing entity instances retrieved using the provided query model (new EntityQuery).
      *
      * @param pageCapacity
@@ -160,6 +164,16 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     default IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
         throw new UnsupportedOperationException("Not supported.");
     }
+
+    /**
+     * Returns a reference to a page with requested number and capacity holding entity instances retrieved sequentially ordered by ID.
+     *
+     * @param Equery
+     * @param pageCapacity
+     * @param pageNo
+     * @return
+     */
+    IPage<T> getPage(final int pageNo, final int pageCapacity);
 
     /**
      * Returns a reference to a page with requested number and capacity holding entity instances matching the provided query model (new EntityQuery).
@@ -183,6 +197,31 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     IPage<T> getPage(final QueryExecutionModel<T, ?> query, final int pageNo, final int pageCount, final int pageCapacity);
 
     /**
+     * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
+     * found then a null value is returned.
+     *
+     * @param model
+     * @return
+     */
+    T getEntity(final QueryExecutionModel<T, ?> model);
+
+    /**
+     * Returns all entities produced by the provided query.
+     *
+     * @param quert
+     * @return
+     */
+    List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
+
+    /**
+     * Returns first entities produced by the provided query.
+     *
+     * @param quert
+     * @return
+     */
+    List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
+
+    /**
      * Returns a non-parallel stream with the data based on the provided query.
      * 
      * @param qem -- EQL model
@@ -190,7 +229,7 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     default Stream<T> stream(final QueryExecutionModel<T, ?> qem, final int pageCapacity) {
-        final Spliterator<T> spliterator = new SequentialPageSpliterator<>(this, qem, pageCapacity);
+        final Spliterator<T> spliterator = new SequentialPageSpliterator<>(this, !instrumented() ? qem.lightweight() : qem, pageCapacity);
         return StreamSupport.stream(spliterator, false);
     }
     
@@ -337,15 +376,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     boolean entityWithKeyExists(final Object... keyValues);
 
     /**
-     * A convenient method for retrieving exactly one entity instance determined by the model. If more than one instance was found an exception is thrown. If there is no entity
-     * found then a null value is returned.
-     *
-     * @param model
-     * @return
-     */
-    T getEntity(final QueryExecutionModel<T, ?> model);
-
-    /**
      * Returns a number of entities retrieved using the provided model.
      *
      * @param model
@@ -354,22 +384,6 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
     int count(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues);
 
     int count(final EntityResultQueryModel<T> model);
-
-    /**
-     * Returns all entities produced by the provided query.
-     *
-     * @param quert
-     * @return
-     */
-    List<T> getAllEntities(final QueryExecutionModel<T, ?> query);
-
-    /**
-     * Returns first entities produced by the provided query.
-     *
-     * @param quert
-     * @return
-     */
-    List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities);
 
     /**
      * Should return a byte array representation the exported data in a format envisaged by the specific implementation.

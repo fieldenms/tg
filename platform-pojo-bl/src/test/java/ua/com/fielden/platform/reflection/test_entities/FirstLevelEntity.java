@@ -28,6 +28,7 @@ public class FirstLevelEntity extends AbstractEntity<DynamicEntityKey> implement
     @CompositeKeyMember(2)
     @CritOnly
     @MapTo
+    @Title("Two")
     private String propertyTwo;
 
     @IsProperty
@@ -37,6 +38,7 @@ public class FirstLevelEntity extends AbstractEntity<DynamicEntityKey> implement
 
     @IsProperty
     @CritOnly
+    @Title("AE")
     private SimpleEntity critOnlyAEProperty;
 
     protected FirstLevelEntity(final Long id, final DynamicEntityKey key, final String desc) {
