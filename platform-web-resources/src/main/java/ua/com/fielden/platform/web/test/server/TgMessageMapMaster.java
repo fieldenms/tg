@@ -54,6 +54,7 @@ public class TgMessageMapMaster implements IMaster<TgMessageMap> {
                 // use: L.GIS.GisComponent, L.GIS.MessageGisComponent, L.GIS.PolygonGisComponent, L.GIS.RealtimeMonitorGisComponent, L.GIS.StopGisComponent
                 .replace("//@ready-callback", "self.classList.remove('canLeave'); "
                         + "new L.GIS.StopGisComponent(self.querySelector('.map'), self.querySelector('.progress'), self.querySelector('.progress-bar'));")
+                .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 
