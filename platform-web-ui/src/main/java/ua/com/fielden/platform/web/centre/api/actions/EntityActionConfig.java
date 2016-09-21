@@ -20,6 +20,7 @@ public final class EntityActionConfig {
     public final Optional<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> functionalEntity;
     public final Optional<CentreContextConfig> context;
     public final Optional<String> icon;
+    public final Optional<String> iconStyle;
     public final Optional<String> shortDesc;
     public final Optional<String> longDesc;
     public final Optional<String> shortcut;
@@ -40,6 +41,7 @@ public final class EntityActionConfig {
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
             final CentreContextConfig context,
             final String icon,
+            final String iconStyle,
             final String shortDesc,
             final String longDesc,
             final String shortcut,
@@ -64,6 +66,7 @@ public final class EntityActionConfig {
         this.functionalEntity = Optional.ofNullable(functionalEntity);
         this.context = Optional.ofNullable(context);
         this.icon = Optional.ofNullable(icon);
+        this.iconStyle = Optional.ofNullable(iconStyle);
         this.shortDesc = Optional.ofNullable(shortDesc);
         //Setting the long desc. If it's null then long desc should be equal to functional entity description.
         String enhancedLongDesc = longDesc;
@@ -86,6 +89,7 @@ public final class EntityActionConfig {
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
             final CentreContextConfig context,
             final String icon,
+            final String iconStyle,
             final String shortDesc,
             final String longDesc,
             final String shortcut,
@@ -95,7 +99,7 @@ public final class EntityActionConfig {
             final PrefDim prefDimForView,
             final boolean noAction,
             final boolean shouldRefreshParentCentreAfterSave) {
-        this(functionalEntity, context, icon, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON);
+        this(functionalEntity, context, icon, iconStyle, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON);
     }
 
 
@@ -107,6 +111,7 @@ public final class EntityActionConfig {
                 ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
                 ac.context.isPresent() ? ac.context.get() : null,
                 ac.icon.isPresent() ? ac.icon.get() : null,
+                ac.iconStyle.orElse(null),
                 ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
                 ac.longDesc.isPresent() ? ac.longDesc.get() : null,
                 ac.shortcut.isPresent() ? ac.shortcut.get() : null,
@@ -132,6 +137,7 @@ public final class EntityActionConfig {
                 ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
                 ac.context.isPresent() ? ac.context.get() : null,
                 ac.icon.isPresent() ? ac.icon.get() : null,
+                ac.iconStyle.orElse(null),
                 ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
                 ac.longDesc.isPresent() ? ac.longDesc.get() : null,
                 ac.shortcut.isPresent() ? ac.shortcut.get() : null,
@@ -151,7 +157,7 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createNoActionConfig() {
-        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, null, true, true);
+        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, null, null, true, true);
     }
 
     /**
@@ -171,6 +177,7 @@ public final class EntityActionConfig {
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
             final CentreContextConfig context,
             final String icon,
+            final String iconStyle,
             final String shortDesc,
             final String longDesc,
             final String shortcut,
@@ -184,6 +191,7 @@ public final class EntityActionConfig {
                 functionalEntity,
                 context,
                 icon,
+                iconStyle,
                 shortDesc,
                 longDesc,
                 shortcut,

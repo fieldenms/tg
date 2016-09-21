@@ -389,6 +389,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
                                 ))
                         .icon("accessibility")
+                        .withStyle("fill: none; stroke: red; stroke-linejoin: round; stroke-linecap: round;")
                         .shortDesc("Dummy")
                         .longDesc("Dummy action, simply prints its result into console.")
                         .build())
@@ -430,6 +431,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
                                 ))
                         .icon("accessibility")
+                        .withStyle("color: green")
                         .shortDesc("Dummy")
                         .longDesc("Dummy action, simply prints its result into console.")
                         .build())
