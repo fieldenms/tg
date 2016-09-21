@@ -113,6 +113,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("shortcut", conf().shortcut.get());
         }
         attrs.put("icon", getIcon());
+        attrs.put("icon-style", getIconStyle());
         attrs.put("should-refresh-parent-centre-after-save", conf().shouldRefreshParentCentreAfterSave);
         attrs.put("component-uri", "/master_ui/" + conf().functionalEntity.get().getName());
         final String elementName = "tg-" + conf().functionalEntity.get().getSimpleName() + "-master";
@@ -164,6 +165,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     public String getIcon() {
         return conf().icon.isPresent() ? conf().icon.get() : "editor:mode-edit";
+    }
+
+    public String getIconStyle() {
+        return conf().iconStyle.orElse("");
     }
 
     public String getShortDesc() {
