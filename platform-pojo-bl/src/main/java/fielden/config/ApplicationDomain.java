@@ -33,6 +33,9 @@ import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.menu.ModuleMenu;
 import ua.com.fielden.platform.menu.ModuleMenuItem;
+import ua.com.fielden.platform.menu.EntityCentreView;
+import ua.com.fielden.platform.menu.View;
+import ua.com.fielden.platform.menu.CustomView;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -78,6 +81,9 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityWithTimeZoneDates.class);
         add(ModuleMenu.class);
         add(ModuleMenuItem.class);
+        add(EntityCentreView.class);
+        add(View.class);
+        add(CustomView.class);
     }
 
     @Override
