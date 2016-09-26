@@ -43,18 +43,17 @@ public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     @CompositeKeyMember(2)
-    @Title(value = "Menu item", desc = "Menu item visible to the owning base user.")
-    @MapTo("ID_MAIN_MENU")
-    private MainMenuItem menuItem;
+    @Title(value = "Menu item URI", desc = "Menu item URI invisible to the user that is based on owning user.")
+    @MapTo("MENU_ITEM_URI")
+    private String menuItemUri;
 
-    public MainMenuItem getMenuItem() {
-        return menuItem;
+    public String getMenuItemUri() {
+        return menuItemUri;
     }
 
     @Observable
-    @EntityExists(MainMenuItem.class)
-    public void setMenuItem(final MainMenuItem menuItem) {
-        this.menuItem = menuItem;
+    public void setMenuItemUri(final String menuItemUri) {
+        this.menuItemUri = menuItemUri;
     }
 
     public User getOwner() {
