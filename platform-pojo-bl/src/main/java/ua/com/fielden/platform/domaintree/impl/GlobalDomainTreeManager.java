@@ -837,7 +837,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 } else {
                     if (!isEntityCentreManagerOwner(menuItemType, null)) {
                         error("Unable to save a NON-PRINCIPLE entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
-                                + currentUser() + "] -- the base user [" + baseOfTheCurrentUser() + "] owns this entity centre.");
+                                + currentUser() + "] -- the base user [id = " + baseOfTheCurrentUser().getId() + "] owns this entity centre.");
                     } else {
                         error("Unable to save non-existent entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + title + "] for current user ["
                                 + currentUser() + "].");
@@ -929,7 +929,7 @@ public class GlobalDomainTreeManager extends AbstractDomainTree implements IGlob
                 init(menuItemType, newName, copyMgr, true);
             } else { // > 1
                 error("There are at least one entity-centre instance for type [" + menuItemType.getSimpleName() + "] with title [" + newTitle + "] for current user [" + currentUser()
-                        + "] or its base [" + baseOfTheCurrentUser() + "].");
+                        + "] or its base [id = " + baseOfTheCurrentUser().getId() + "].");
             }
             return this;
         }
