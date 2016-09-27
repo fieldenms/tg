@@ -26,6 +26,8 @@ import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
+import ua.com.fielden.platform.sample.domain.TgMachine;
+import ua.com.fielden.platform.sample.domain.TgMessage;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
@@ -233,6 +235,33 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         System.out.println("timeZone4.getId() == " + timeZone4.getId());
         final TgEntityWithTimeZoneDates timeZone5 = save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
         System.out.println("timeZone5.getId() == " + timeZone5.getId());
+        
+        final TgMachine machine = save(new_(TgMachine.class, "BC4567AC"));
+        System.out.println(machine.isValid());
+        System.out.println("machine.getId() == " + machine.getId());
+        final TgMessage message = (TgMessage) save(new_composite(TgMessage.class, machine, date("2010-01-01 00:00:00"))
+                .setX(BigDecimal.valueOf(24.029385))
+                .setY(BigDecimal.valueOf(49.842102))
+                .setVectorAngle(90)
+                .setVectorSpeed(55)
+                .setAltitude(223)
+                .setVisibleSattelites(2)
+                .setDin1(true)
+                .setGpsPower(true)
+                .setTravelledDistance(BigDecimal.valueOf(24.6))
+                );
+        System.out.println("message.getId() == " + message.getId());
+        save(new_composite(TgMessage.class, machine, date("2010-01-01 00:00:15"))
+                .setX(BigDecimal.valueOf(24.023591))
+                .setY(BigDecimal.valueOf(49.841757))
+                .setVectorAngle(70)
+                .setVectorSpeed(35)
+                .setAltitude(229)
+                .setVisibleSattelites(2)
+                .setDin1(true)
+                .setGpsPower(true)
+                .setTravelledDistance(BigDecimal.valueOf(14.6))
+                );
 
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
         mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));
