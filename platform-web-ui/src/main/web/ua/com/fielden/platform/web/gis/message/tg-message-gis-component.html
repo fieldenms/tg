@@ -41,43 +41,43 @@
 		return new L.GIS.MessageMarkerFactory();
 	};
 
-	MessageGisComponent.prototype.createGeometry = function(entity) {
+	MessageGisComponent.prototype.createGeometry = function (feature) {
 		var self = this;
-		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'Message' || entity.properties._entityType === 'Summary_Message') {
-				return L.GIS.GisComponent.prototype.createGeometry.call(self, entity);
+		if (feature) {
+		    var featureType = featureType(feature);
+			if (featureType === 'Message' || featureType === 'Summary_Message') {
+				return L.GIS.GisComponent.prototype.createGeometry.call(self, feature);
 			} else {
-				throw "MessageGisComponent.prototype.createGeometry: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Message' or 'Summary_Message'."; // generates an exception
+				throw "MessageGisComponent.prototype.createGeometry: [" + featureType + "] has unknown type == [" + featureType + "]. Should be 'Message' or 'Summary_Message'.";
 			}
 		} else {
-			throw "MessageGisComponent.prototype.createGeometry: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "MessageGisComponent.prototype.createGeometry: [" + feature + "] is empty.";
 		}
 	}
 
-	MessageGisComponent.prototype.createSummaryEntity = function(entities) {
-		if (entities.length > 0 && entities[0].properties._entityType) {
-			var entityType = entities[0].properties._entityType;
-			if (entityType === 'Message') {
-				return L.GIS.GisComponent.prototype.createSummaryEntity.call(this, entities);
+	MessageGisComponent.prototype.createSummaryFeature = function (features) {
+		if (features.length > 0) {
+			var featureType = featureType(features[0]);
+			if (featureType === 'Message') {
+				return L.GIS.GisComponent.prototype.createSummaryFeature.call(this, features);
 			}
 		}
 		return null;
 	}
 
-	MessageGisComponent.prototype.createPopupContent = function(entity) {
+	MessageGisComponent.prototype.createPopupContent = function (feature) {
 		var self = this;
-		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'Message') {
-				return L.GIS.GisComponent.prototype.createPopupContent.call(this, entity);
-			} else if (entity.properties._entityType === 'Summary_Message') {
-				var popupText = '' +
-					'Машина' + ': ' + this.valueToString(entity.properties["" + '_machine' + ""]);
-				return popupText;
+		if (feature) {
+		    var featureType = featureType(feature);
+			if (featureType === 'Message') {
+				return L.GIS.GisComponent.prototype.createPopupContent.call(this, feature);
+			} else if (featureType === 'Summary_Message') {
+				return 'Машина: ' + this.valueToString(feature.properties._machine);
 			} else {
-				throw "MessageGisComponent.prototype.createPopupContent: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Message' or 'Summary_Message'."; // generates an exception
+				throw "MessageGisComponent.prototype.createPopupContent: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'Message' or 'Summary_Message'.";
 			}
 		} else {
-			throw "MessageGisComponent.prototype.createPopupContent: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "MessageGisComponent.prototype.createPopupContent: [" + feature + "] is empty.";
 		}
 	}
 

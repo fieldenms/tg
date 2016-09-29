@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/polymer/leaflet/leaflet-lib.html">
+<link rel="import" href="/resources/gis/tg-gis-utils.html">
 <link rel="import" href="/resources/gis/tg-base-layers.html">
 <link rel="import" href="/resources/gis/tg-entity-styling.html">
 <link rel="import" href="/resources/gis/tg-marker-factory.html">
@@ -195,31 +196,19 @@
 				console.debug("entity with no visual representation: ");
 				console.debug(entity);
 			}				
-		}, function(entities) {
-			return self.createSummaryEntity(entities);
+		}, function (entities) {
+			return self.createSummaryFeature(entities);
 		});
 	};
 	
-	/**
-	 * There are feautures of two types: 
-	 * 1) features derived from real entities (Message etc.)
-	 * 2) virtual features (Summary_Message etc.)
-	 * 
-	 * This method returns the feature type as a string to be able to differentiate different types of features.
-	 */
-	GisComponent.prototype.featureType = function (feature) {
-	    return typeof feature.properties._featureType !== 'undefined' ? feature.properties._featureType : feature.type()._notEnhancedSimpleClassName();
-	}
-
 	/** 
 	 * The method for creating 'summary' feature for an array of features of different types (designed for overriding).
 	 * Query the type of entity with 'featureType(feature)' method.
 	 *
-	 * TODO rename to createSummaryFeature!
 	 */
-	GisComponent.prototype.createSummaryEntity = function (features) {
+	GisComponent.prototype.createSummaryFeature = function (features) {
 		if (features.length > 0) {
-			var featureType = features[0].type()._notEnhancedSimpleClassName();
+			var featureType = featureType(features[0]);
 			if (featureType === 'Message') {
 				var coords = [];
 				var machine = features[0].machine;
@@ -235,10 +224,10 @@
 				};
 				return summaryFeature;
 			} else {
-				throw "GisComponent.prototype.createSummaryEntity: [" + features + "] have unknown type == [" + featureType + "]. Should be 'Message' only.";
+				throw "GisComponent.prototype.createSummaryFeature: [" + features + "] have unknown type == [" + featureType + "]. Should be 'Message' only.";
 			}
 		} else {
-			throw "GisComponent.prototype.createSummaryEntity: [" + features + "] is empty.";
+			throw "GisComponent.prototype.createSummaryFeature: [" + features + "] is empty.";
 		}
 	}
 
@@ -249,7 +238,7 @@
 	GisComponent.prototype.createGeometry = function (feature) {
 		var self = this;
 		if (feature) {
-		    var featureType = self.featureType(feature);
+		    var featureType = featureType(feature);
 			if (featureType === 'Message') {
 				return {
 					type: 'Point',
@@ -268,14 +257,14 @@
 		}
 	}
 
-	GisComponent.prototype.traverseEntities = function (entities, parentFeature, entityAction, createSummaryEntityAction) {
+	GisComponent.prototype.traverseEntities = function (entities, parentFeature, entityAction, createSummaryFeatureAction) {
 		for (var i = 0; i < entities.length; i++) {
 			var entity = entities[i];
-			this.traverseEntity(entity, entityAction, createSummaryEntityAction); // entityAction converts entity to a feature form
+			this.traverseEntity(entity, entityAction, createSummaryFeatureAction); // entityAction converts entity to a feature form
 
 			entity.properties._parentFeature = parentFeature;
 		}
-		var summaryEntity = createSummaryEntityAction(entities);
+		var summaryEntity = createSummaryFeatureAction(entities);
 		if (summaryEntity) {
 			entities.push(summaryEntity); // the last sibling item to the entities will be summaryEntity (if any)
 			entityAction(summaryEntity); // entityAction converts entity to a feature form
@@ -284,7 +273,7 @@
 		}
 	}
 
-	GisComponent.prototype.traverseEntity = function (entity, entityAction, createSummaryEntityAction) {
+	GisComponent.prototype.traverseEntity = function (entity, entityAction, createSummaryFeatureAction) {
 	    var self = this;
 		entityAction(entity); // entityAction converts entity to a feature form
 
@@ -293,7 +282,7 @@
 				if (entity.properties.hasOwnProperty(prop)) { // check that the property belongs to the object and not a prototype
 					var value = entity.properties[prop];
 					if (value && (value instanceof Array)) { // assume that array contains only other entities
-						this.traverseEntities(value, entity, entityAction, createSummaryEntityAction);
+						this.traverseEntities(value, entity, entityAction, createSummaryFeatureAction);
 					}
 				}
 			}
@@ -302,7 +291,7 @@
 		entity.traverseProperties(function (propName) {
 		    var value = entity.get(propName);
 			if (value && (value instanceof Array)) { // assume that array contains only other entities
-				self.traverseEntities(value, entity, entityAction, createSummaryEntityAction);
+				self.traverseEntities(value, entity, entityAction, createSummaryFeatureAction);
 			}
 		});
 	}

@@ -1,0 +1,12 @@
+<script>
+    /**
+     * There are feautures of two types: 
+     * 1) features derived from real entities (Message etc.)
+     * 2) virtual features (Summary_Message etc.)
+     * 
+     * This method returns the feature type as a string to be able to differentiate different types of features.
+     */
+    var featureType = function (feature) {
+        return typeof feature.properties._featureType !== 'undefined' ? feature.properties._featureType : feature.type()._notEnhancedSimpleClassName();
+    };
+</script>

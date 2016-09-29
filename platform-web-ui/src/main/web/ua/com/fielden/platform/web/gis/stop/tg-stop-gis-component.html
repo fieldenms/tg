@@ -79,11 +79,11 @@
 		return [coordinates];
 	}
 
-	StopGisComponent.prototype.createSummaryEntity = function(entities) {
+	StopGisComponent.prototype.createSummaryFeature = function(entities) {
 		if (entities.length > 0 && entities[0].properties._entityType) {
 			var entityType = entities[0].properties._entityType;
 			if (entityType === 'Message') {
-				return L.GIS.GisComponent.prototype.createSummaryEntity.call(this, entities);
+				return L.GIS.GisComponent.prototype.createSummaryFeature.call(this, entities);
 			}
 		}
 		return null;
