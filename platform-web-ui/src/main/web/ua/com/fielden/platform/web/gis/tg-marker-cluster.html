@@ -15,15 +15,15 @@
 		self._gisMarkerClusterGroup = new L.MarkerClusterGroup({ // .extend
 			chunkedLoading: true,
 			// chunkProgress: _progressBarUpdater.updateProgressBar, // does not work due to calling a function on window object!
-			chunkProgress: function(processed, total, elapsed, layersArray) {
+			chunkProgress: function (processed, total, elapsed, layersArray) {
 				self._progressBarUpdater.updateProgressBar(processed, total, elapsed, layersArray);
 			},
 
 			disableClusteringAtZoom: self.disableClusteringAtZoom(),
-			maxClusterRadius: function(zoom) {
+			maxClusterRadius: function (zoom) {
 				return 60;
 			},
-			iconCreateFunction: function(cluster) {
+			iconCreateFunction: function (cluster) {
 				var markers = cluster.getAllChildMarkers();
 				var chosenMarker; // = markers[0];
 				var count = markers.length;
@@ -53,26 +53,26 @@
 		});
 	};
 
-	MarkerCluster.prototype.setShouldFitToBounds = function(shouldFitToBounds) {
+	MarkerCluster.prototype.setShouldFitToBounds = function (shouldFitToBounds) {
 		return this._progressBarUpdater.setShouldFitToBounds(shouldFitToBounds);
 	}
 
-	MarkerCluster.prototype.disableClusteringAtZoom = function() {
+	MarkerCluster.prototype.disableClusteringAtZoom = function () {
 		return 17;
 	}
 
-	MarkerCluster.prototype.getCircleClusterIconLocation = function() {
+	MarkerCluster.prototype.getCircleClusterIconLocation = function () {
 		// TODO !!!!!!!!!!!!!!! resources/gis/images/circle-red.png resources/gis/images/circle-purple.png resources/gis/images/circle-orange.png
 		return 'resources/gis/images/circle-red.png';
 	}
 
-	MarkerCluster.prototype._createCircleClusterIcon = function() {
+	MarkerCluster.prototype._createCircleClusterIcon = function () {
 		return this._markerFactory.createClusterIcon(
 			'<div class="img-overlay"><img src="' + this.getCircleClusterIconLocation() + '" /><div class="overlay" >&#x2194</div></div>'
 		);
 	}
 
-	MarkerCluster.prototype.getGisMarkerClusterGroup = function() {
+	MarkerCluster.prototype.getGisMarkerClusterGroup = function () {
 		return this._gisMarkerClusterGroup;
 	}
 

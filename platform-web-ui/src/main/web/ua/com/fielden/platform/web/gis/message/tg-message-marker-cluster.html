@@ -4,8 +4,6 @@
 (function() {
 	var MessageMarkerCluster = function(_map, _markerFactory, progressDiv, progressBarDiv) {
 		L.GIS.MarkerCluster.call(this, _map, _markerFactory, progressDiv, progressBarDiv);
-
-		var self = this;
 	};
 
 	MessageMarkerCluster.prototype = Object.create(L.GIS.MarkerCluster.prototype);
