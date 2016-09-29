@@ -6,6 +6,12 @@ import java.util.List;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.menu.CustomView;
+import ua.com.fielden.platform.menu.EntityCentreView;
+import ua.com.fielden.platform.menu.Menu;
+import ua.com.fielden.platform.menu.Module;
+import ua.com.fielden.platform.menu.ModuleMenuItem;
+import ua.com.fielden.platform.menu.View;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
@@ -16,6 +22,7 @@ import ua.com.fielden.platform.sample.domain.TgDummyAction;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
@@ -30,12 +37,6 @@ import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntit
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
-import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
-import ua.com.fielden.platform.menu.ModuleMenu;
-import ua.com.fielden.platform.menu.ModuleMenuItem;
-import ua.com.fielden.platform.menu.EntityCentreView;
-import ua.com.fielden.platform.menu.View;
-import ua.com.fielden.platform.menu.CustomView;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -79,11 +80,12 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(ExportAction.class);
         add(TgDeletionTestEntity.class);
         add(TgEntityWithTimeZoneDates.class);
-        add(ModuleMenu.class);
         add(ModuleMenuItem.class);
         add(EntityCentreView.class);
         add(View.class);
         add(CustomView.class);
+        add(Module.class);
+        add(Menu.class);
     }
 
     @Override

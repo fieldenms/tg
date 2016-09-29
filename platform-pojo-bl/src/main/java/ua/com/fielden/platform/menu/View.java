@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
@@ -26,17 +25,14 @@ public class View extends AbstractEntity<String> {
     private String htmlImport;
 
     @IsProperty
-    @MapTo
     @Title(value = "Element Name", desc = "Element name")
     private String elementName;
 
     @IsProperty
-    @MapTo
     @Title(value = "View Type", desc = "View type")
     private String viewType;
 
     @IsProperty
-    @MapTo
     @Title(value = "Attributes", desc = "Attriutes")
     private AbstractView attrs;
 

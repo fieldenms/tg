@@ -3,7 +3,6 @@ package ua.com.fielden.platform.menu;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
@@ -19,23 +18,18 @@ public class EntityCentreView extends AbstractView {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @MapTo
     @Title(value = "UUID", desc = "UUID")
     private String uuid;
 
     @IsProperty
-    @MapTo
     @Title(value = "Autorun", desc = "Should run automaticaly")
     private boolean autoRun;
 
     @IsProperty
-    @MapTo
     @Title(value = "Enforce post save refresh", desc = "Should run centre after save")
     private boolean enforcePostSaveRefresh;
 
     @IsProperty
-    @MapTo
-    @Title(value = "URI", desc = "URI")
     private String uri;
 
     @Observable

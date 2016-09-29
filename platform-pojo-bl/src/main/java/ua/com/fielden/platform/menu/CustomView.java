@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.menu;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 
@@ -12,6 +11,6 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
  */
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(ICustomView.class)
-public class CustomView extends AbstractEntity<String> {
+public class CustomView extends AbstractView {
     private static final long serialVersionUID = 1L;
 }

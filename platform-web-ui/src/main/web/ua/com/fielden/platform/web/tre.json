@@ -1,0 +1,100 @@
+{
+        title: "Division daily management",
+        description: "Division daily management",
+        bgColor: "#CFD8DC",
+        captionBgColor: "#78909C",
+        icon: "menu:divisional-daily-management",
+        detailIcon: "menu-detailed:divisional-daily-management",
+        menu: [{
+            title: "Custom group",
+            description: "Custom group",
+            menu: [{
+                title: "Entity Centre",
+                description: "Entity centre description",
+                view: {
+                    import: "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties",
+                    elementName: "tg-MiTgPersistentEntityWithProperties-centre",
+                    type: "centre",
+                    attrs: {
+                        uuid: "TgPersistentEntityWithProperties",
+                        autoRun: true,
+                        enforcePostSaveRefresh: true,
+                        uri: "/entity-centre-events",
+                    }
+                }
+            }, {
+                title: "Not Generated Centre",
+                description: "Entity centre without calculated / custom properties, which type is strictly TgPersistentEntityWithProperties.class",
+                view: {
+                    import: "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiEntityCentreNotGenerated",
+                    elementName: "tg-MiEntityCentreNotGenerated-centre",
+                    type: "centre",
+                    attrs: {
+                        uuid: "MiEntityCentreNotGenerated",
+                        autoRun: true,
+                        enforcePostSaveRefresh: true,
+                        uri: "/entity-centre-events",
+                    }
+                }
+            }]
+        }, {
+            title: "Custom View",
+            description: "Custom view description",
+            view: {
+                import: "/custom_view/CustomView",
+                elementName: "tg-CustomView",
+                type: "view",
+                attrs: {}
+            }
+        }, {
+            title: "Deletion Centre",
+            description: "Deletion centre description",
+            view: {
+                import: "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiDeletionTestEntity",
+                elementName: "tg-MiDeletionTestEntity-centre",
+                type: "centre",
+                attrs: {
+                    uuid: "TgDeletionTestEntity",
+                }
+            }
+        }, {
+            title: "Last group",
+            description: "Last group",
+            menu: [{
+                title: "Property Dependency Example",
+                description: "Property Dependency Example description",
+                view: {
+                    import: "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDependency",
+                    elementName: "tg-MiTgEntityWithPropertyDependency-centre",
+                    type: "centre",
+                    attrs: {
+                        uuid: "Property Dependency Example",
+                        autoRun: true,
+                    }
+                }
+            }, {
+                title: "Property Descriptor Example",
+                description: "Property Descriptor Example description",
+                view: {
+                    import: "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptor",
+                    elementName: "tg-MiTgEntityWithPropertyDescriptor-centre",
+                    type: "centre",
+                    attrs: {
+                        uuid: "Property Descriptor Example",
+                        autoRun: true,
+                    }
+                }
+            }, {
+                title: "TimeZones Example",
+                description: "TimeZone properties handling example",
+                view: {
+                    import: "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates",
+                    elementName: "tg-MiTgEntityWithTimeZoneDates-centre",
+                    type: "centre",
+                    attrs: {
+                        uuid: "MiTgEntityWithTimeZoneDates",
+                    }
+                }
+            }]
+        }]
+    }

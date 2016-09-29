@@ -19,22 +19,22 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
-@CompanionObject(IModuleMenu.class)
-public class ModuleMenu extends AbstractEntity<String> {
+@CompanionObject(IMenu.class)
+public class Menu extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    @IsProperty(ModuleMenuItem.class)
-    @Title(value = "Module menu", desc = "Module menu")
-    private List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
+    @IsProperty(Module.class)
+    @Title(value = "Menu", desc = "Menu")
+    private List<Module> menu = new ArrayList<Module>();
 
     @Observable
-    protected ModuleMenu setMenu(final List<ModuleMenuItem> menu) {
+    protected Menu setMenu(final List<Module> menu) {
         this.menu.clear();
         this.menu.addAll(menu);
         return this;
     }
 
-    public List<ModuleMenuItem> getMenu() {
+    public List<Module> getMenu() {
         return Collections.unmodifiableList(menu);
     }
 

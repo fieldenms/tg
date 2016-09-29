@@ -115,6 +115,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.AcknowledgeWarningsWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig.CentreConfigActions;
+import ua.com.fielden.platform.web.resources.webui.MenuWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -349,6 +350,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(false, false, false, true));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(false, false, false, true));
 
+        final MenuWebUiConfig menuWebUiConfig = new MenuWebUiConfig(injector());
         final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector());
         final UserRoleWebUiConfig userRoleWebUiConfig = new UserRoleWebUiConfig(injector());
 
@@ -738,6 +740,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgCollectionalSerialisationParentProducer.class,
                     masterConfigForCollSerialisationTest,
                     injector())).
+            addMaster(menuWebUiConfig.master).
             addMaster(userWebUiConfig.master).
             addMaster(userWebUiConfig.rolesUpdater).
             addMaster(userRoleWebUiConfig.master).
