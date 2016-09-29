@@ -3,6 +3,7 @@
 <script>
 (function() {
 	var EntityStyling = function() {};
+	EntityStyling.prototype.featureType = _featureType;
 
 	/**
 	 * The method for getting weight for features of different types (designed for overriding). 
@@ -26,13 +27,13 @@
 	 */
 	EntityStyling.prototype.getColor = function (feature) {
 		if (feature) {
-		    var featureType = featureType(feature);
-			if (featureType === 'Message') {
+		    var featureType = this.featureType(feature);
+			if (featureType === 'TgMessage') {
 				return (feature.get('vectorSpeed') > 0) ? "blue" : "red"; // TODO this is irrelevant because Message is represented with markers
-			} else if (featureType === 'Summary_Message') {
+			} else if (featureType === 'Summary_TgMessage') {
 				return "blue";
 			} else {
-				throw "EntityStyling.prototype.getColor: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'Message' or 'Summary_Message'.";
+				throw "EntityStyling.prototype.getColor: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' or 'Summary_TgMessage'.";
 			}
 		} else {
 			throw "EntityStyling.prototype.getColor: [" + feature + "] is empty.";

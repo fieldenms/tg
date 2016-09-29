@@ -93,7 +93,24 @@
 <script>
     (function () {
         Polymer({
-            is: 'tg-map'
+            is: 'tg-map',
+            
+            properties: {
+                /**
+                 * The entities retrieved when running parent centre of this map embedded into insertion point.
+                 */
+                retrievedEntities: {
+                    type: Array,
+                    observer: '_retrievedEntitiesChanged'
+                }
+            },
+            
+            _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
+                this.retrivedEntitiesHandler(retrievedEntities);
+            },
+            
+            retrivedEntitiesHandler: function (newRetrievedEntities) {
+            }
         });
     })();
 </script>

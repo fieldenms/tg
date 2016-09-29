@@ -11,11 +11,11 @@
 
 	MessageEntityStyling.prototype.getColor = function (feature) {
 		if (feature) {
-		    var featureType = featureType(feature);
-			if (featureType === 'Message' || featureType === 'Summary_Message') {
+		    var featureType = this.featureType(feature);
+			if (featureType === 'TgMessage' || featureType === 'Summary_TgMessage') {
 				return L.GIS.EntityStyling.prototype.getColor.call(this, feature);
 			} else {
-				throw "MessageEntityStyling.prototype.getColor: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'Message' or 'Summary_Message'.";
+				throw "MessageEntityStyling.prototype.getColor: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' or 'Summary_TgMessage'.";
 			}
 		} else {
 			throw "MessageEntityStyling.prototype.getColor: [" + feature + "] is empty.";

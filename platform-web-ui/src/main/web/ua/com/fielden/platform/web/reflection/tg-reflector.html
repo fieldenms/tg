@@ -293,7 +293,7 @@
                 return firstVal === null ? null : firstVal.get(rest);
             } else {
                 if (this._isObjectUndefined(name)) {
-                    throw new StrictProxyException(name, this.type()._simpleClassName());
+                    throw new StrictProxyException(name, (this.constructor.prototype.type.call(this))._simpleClassName());
                 }
                 return this[name];
             }

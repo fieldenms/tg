@@ -7,11 +7,11 @@
 <script src="/resources/gis/message/init/messageEntityCentre.js"></script>
 <script>
 (function() {
-	var MessageGisComponent = function(mapDiv, progressDiv, progressBarDiv) {
+	var MessageGisComponent = function(mapDiv, progressDiv, progressBarDiv, tgMap) {
 	    this._entitiesString = L.GIS.messageEntitiesString;
 	    this._entityCentreString = L.GIS.messageEntityCentreString;
 
-		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
+		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
 	};
 
 	MessageGisComponent.prototype = Object.create(L.GIS.GisComponent.prototype);
@@ -28,8 +28,8 @@
 
 		L.GIS.GisComponent.prototype.initialise.call(this);
 
-		this.promoteEntitiesString(this._entitiesString);
-		console.debug(this._entities);
+		// this.promoteEntitiesString(this._entitiesString);
+		// console.debug(this._entities);
 	};
 
 	MessageGisComponent.prototype.createEntityStyling = function() {
@@ -42,11 +42,11 @@
 
 	MessageGisComponent.prototype.createGeometry = function (feature) {
 		if (feature) {
-		    var featureType = featureType(feature);
-			if (featureType === 'Message' || featureType === 'Summary_Message') {
+		    var featureType = this.featureType(feature);
+			if (featureType === 'TgMessage' || featureType === 'Summary_TgMessage') {
 				return L.GIS.GisComponent.prototype.createGeometry.call(this, feature);
 			} else {
-				throw "MessageGisComponent.prototype.createGeometry: [" + featureType + "] has unknown type == [" + featureType + "]. Should be 'Message' or 'Summary_Message'.";
+				throw "MessageGisComponent.prototype.createGeometry: [" + featureType + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' or 'Summary_TgMessage'.";
 			}
 		} else {
 			throw "MessageGisComponent.prototype.createGeometry: [" + feature + "] is empty.";
@@ -55,8 +55,8 @@
 
 	MessageGisComponent.prototype.createSummaryFeature = function (features) {
 		if (features.length > 0) {
-			var featureType = featureType(features[0]);
-			if (featureType === 'Message') {
+			var featureType = this.featureType(features[0]);
+			if (featureType === 'TgMessage') {
 				return L.GIS.GisComponent.prototype.createSummaryFeature.call(this, features);
 			}
 		}
@@ -65,13 +65,13 @@
 
 	MessageGisComponent.prototype.createPopupContent = function (feature) {
 		if (feature) {
-		    var featureType = featureType(feature);
-			if (featureType === 'Message') {
+		    var featureType = this.featureType(feature);
+			if (featureType === 'TgMessage') {
 				return L.GIS.GisComponent.prototype.createPopupContent.call(this, feature);
-			} else if (featureType === 'Summary_Message') {
+			} else if (featureType === 'Summary_TgMessage') {
 				return 'Машина: ' + this.valueToString(feature.properties._machine);
 			} else {
-				throw "MessageGisComponent.prototype.createPopupContent: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'Message' or 'Summary_Message'.";
+				throw "MessageGisComponent.prototype.createPopupContent: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' or 'Summary_TgMessage'.";
 			}
 		} else {
 			throw "MessageGisComponent.prototype.createPopupContent: [" + feature + "] is empty.";

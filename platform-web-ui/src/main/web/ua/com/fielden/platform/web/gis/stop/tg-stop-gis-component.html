@@ -7,12 +7,12 @@
 <script src="/resources/gis/stop/init/stopEntityCentre.js"></script>
 <script>
 (function() {
-	var StopGisComponent = function(mapDiv, progressDiv, progressBarDiv) {
+	var StopGisComponent = function(mapDiv, progressDiv, progressBarDiv, tgMap) {
 		var self = this;
 		self._entitiesString = L.GIS.stopEntitiesString;
 		self._entityCentreString = L.GIS.stopEntityCentreString;
 
-		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
+		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
 	};
 
 	StopGisComponent.prototype = Object.create(L.GIS.GisComponent.prototype);
@@ -49,10 +49,10 @@
 					type: 'Polygon', // 'Point',
 					coordinates: self.createCoordinatesFromStop(entity)
 				};
-			} else if (entity.properties._entityType === 'Message' || entity.properties._entityType === 'Summary_Message') {
+			} else if (entity.properties._entityType === 'TgMessage' || entity.properties._entityType === 'Summary_TgMessage') {
 				return L.GIS.GisComponent.prototype.createGeometry.call(self, entity);
 			} else {
-				throw "StopGisComponent.prototype.createGeometry: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Stop', 'Message' or 'Summary_Message'."; // generates an exception
+				throw "StopGisComponent.prototype.createGeometry: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Stop', 'TgMessage' or 'Summary_TgMessage'."; // generates an exception
 			}
 		} else {
 			throw "StopGisComponent.prototype.createGeometry: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
@@ -82,7 +82,7 @@
 	StopGisComponent.prototype.createSummaryFeature = function(entities) {
 		if (entities.length > 0 && entities[0].properties._entityType) {
 			var entityType = entities[0].properties._entityType;
-			if (entityType === 'Message') {
+			if (entityType === 'TgMessage') {
 				return L.GIS.GisComponent.prototype.createSummaryFeature.call(this, entities);
 			}
 		}
@@ -94,7 +94,7 @@
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Stop') {
 				return L.GIS.GisComponent.prototype.createPopupContent.call(this, entity);
-			} else if (entity.properties._entityType === 'Message') {
+			} else if (entity.properties._entityType === 'TgMessage') {
 				var popupText = '' +
 					'Машина' + ': ' + this.valueToString(entity.properties["" + 'machine' + ""]) + "<br>" +
 					'GPS час' + ': ' + this.valueToString(entity.properties["" + 'gpsTime' + ""]) + "<br>" +
@@ -102,12 +102,12 @@
 					'Відстань' + ': ' + this.valueToString(entity.properties["" + 'travelledDistance' + ""]) + "<br>" +
 					'Запалення?' + ': ' + this.valueToString(entity.properties["" + 'din1' + ""]);
 				return popupText;
-			} else if (entity.properties._entityType === 'Summary_Message') {
+			} else if (entity.properties._entityType === 'Summary_TgMessage') {
 				var popupText = '' +
 					'Машина' + ': ' + this.valueToString(entity.properties["" + '_machine' + ""]);
 				return popupText;
 			} else {
-				throw "StopGisComponent.prototype.createPopupContent: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Stop', 'Message' or 'Summary_Message'."; // generates an exception
+				throw "StopGisComponent.prototype.createPopupContent: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Stop', 'TgMessage' or 'Summary_TgMessage'."; // generates an exception
 			}
 		} else {
 			throw "StopGisComponent.prototype.createPopupContent: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception

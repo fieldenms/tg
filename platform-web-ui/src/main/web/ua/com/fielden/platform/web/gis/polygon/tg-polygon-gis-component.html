@@ -7,12 +7,12 @@
 <script src="/resources/gis/polygon/init/polygonEntityCentre.js"></script>
 <script>
 (function() {
-	var PolygonGisComponent = function(mapDiv, progressDiv, progressBarDiv) {
+	var PolygonGisComponent = function(mapDiv, progressDiv, progressBarDiv, tgMap) {
 		var self = this;
 		self._entitiesString = L.GIS.polygonEntitiesString;
 		self._entityCentreString = L.GIS.polygonEntityCentreString;
 
-		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
+		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
 	};
 
 	PolygonGisComponent.prototype = Object.create(L.GIS.GisComponent.prototype);

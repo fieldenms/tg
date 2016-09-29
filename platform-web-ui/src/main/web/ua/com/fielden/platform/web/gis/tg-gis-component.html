@@ -9,11 +9,15 @@
 
 <script>
 (function() {
-	var GisComponent = function(mapDiv, progressDiv, progressBarDiv) {
+	var GisComponent = function(mapDiv, progressDiv, progressBarDiv, tgMap) {
 		// IMPORTANT: use the following reference in cases when you need some properties of the 
 		// GisComponent inside the functions or nested classes
 		var self = this;
 		self._leafletIdToEntity = {};
+		
+		tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
+		    self.promoteEntities(newRetrievedEntities);
+		};
 
 		// creating and configuring all layers
 		self._baseLayers = new L.GIS.BaseLayers();
@@ -101,6 +105,8 @@
 
 		self._map.fire('dataload');
 	};
+	
+	GisComponent.prototype.featureType = _featureType;
 
 	GisComponent.prototype.setEntityFor = function(layerId, entity) {
 		this._leafletIdToEntity["" + layerId + ""] = entity;
@@ -160,15 +166,21 @@
 		console.debug("Entity centre JSON string parsing ended.");
 	};
 
-	GisComponent.prototype.promoteEntitiesString = function(entitiesString) {
-		var self = this;
+	GisComponent.prototype.promoteEntitiesString = function (entitiesString) {
 		console.debug("Entities JSON string parsing...");
-		this._entities = JSON.parse(entitiesString);
+		var _entities = JSON.parse(entitiesString);
 		console.debug("Entities JSON string parsing ended.");
+		
+		self.promoteEntities(_entities);
+	};
+	
+	GisComponent.prototype.promoteEntities = function (newEntities) {
+		var self = this;
+		this._entities = newEntities;
 
 		this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function(entity) {
 			if (entity.type) {
-			    throw 'Entity already has "type" object. Cannot continue with conversion into feature.';
+			    console.warn('Entity already has "type" object. Cannot continue with conversion into feature.');
 			}
 			entity.type = "Feature";
 			
@@ -208,8 +220,8 @@
 	 */
 	GisComponent.prototype.createSummaryFeature = function (features) {
 		if (features.length > 0) {
-			var featureType = featureType(features[0]);
-			if (featureType === 'Message') {
+			var featureType = this.featureType(features[0]);
+			if (featureType === 'TgMessage') {
 				var coords = [];
 				var machine = features[0].machine;
 				for (var i = 0; i < features.length; i++) {
@@ -224,7 +236,7 @@
 				};
 				return summaryFeature;
 			} else {
-				throw "GisComponent.prototype.createSummaryFeature: [" + features + "] have unknown type == [" + featureType + "]. Should be 'Message' only.";
+				throw "GisComponent.prototype.createSummaryFeature: [" + features + "] have unknown type == [" + featureType + "]. Should be 'TgMessage' only.";
 			}
 		} else {
 			throw "GisComponent.prototype.createSummaryFeature: [" + features + "] is empty.";
@@ -238,19 +250,19 @@
 	GisComponent.prototype.createGeometry = function (feature) {
 		var self = this;
 		if (feature) {
-		    var featureType = featureType(feature);
-			if (featureType === 'Message') {
+		    var featureType = this.featureType(feature);
+			if (featureType === 'TgMessage') {
 				return {
 					type: 'Point',
 					coordinates: self.createCoordinatesFromMessage(feature)
 				};
-			} else if (featureType === 'Summary_Message') {
+			} else if (featureType === 'Summary_TgMessage') {
 				return {
 					type: 'LineString',
 					coordinates: feature.properties._coordinates
 				};
 			} else {
-				throw "GisComponent.prototype.createGeometry: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'Message' or 'Summary_Message'.";
+				throw "GisComponent.prototype.createGeometry: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' or 'Summary_TgMessage'.";
 			}
 		} else {
 			throw "GisComponent.prototype.createGeometry: [" + feature + "] is empty.";

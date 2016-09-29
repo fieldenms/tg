@@ -1,12 +1,12 @@
 <link rel="import" href="/resources/polymer/leaflet/leaflet-lib.html">
 <link rel="import" href="/resources/gis/leaflet/markerrotation/leaflet-markerrotation.html">
 <link rel="import" href="/resources/gis/tg-icon-factory.html">
+<link rel="import" href="/resources/gis/tg-gis-utils.html">
 
 <script>
 (function() {
 	var MarkerFactory = function() {
 		var self = this;
-
 		self._iconFactory = new L.GIS.IconFactory();
 
 		self.CircleMarker = L.Marker.extend({
@@ -46,6 +46,8 @@
 			}
 		});
 	};
+	
+	MarkerFactory.prototype.featureType = _featureType;
 
 	MarkerFactory.prototype.createClusterIcon = function (htmlString) {
 		return this._iconFactory.createClusterIcon(htmlString);
@@ -53,9 +55,9 @@
 
 	MarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
 		if (feature) {
-			var featureType = featureType(feature);
-			if (featureType === 'Message') {
-				if (featureType.get('vectorSpeed')) { // TODO featureType.get('vectorSpeed') !== 0?
+			var featureType = this.featureType(feature);
+			if (featureType === 'TgMessage') {
+				if (feature.get('vectorSpeed')) { // TODO featureType.get('vectorSpeed') !== 0?
 					return new this.ArrowMarker(latlng, {
 						angle: (feature.get('vectorAngle') ? (feature.get('vectorAngle') - 180) : 0)
 					});
@@ -63,7 +65,7 @@
 					return new this.CircleMarker(latlng);
 				}
 			} else {
-				throw "MarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'Message' only.";
+				throw "MarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' only.";
 			}
 		} else {
 			throw "MarkerFactory.prototype.createFeatureMarker: [" + feature + "] is empty.";

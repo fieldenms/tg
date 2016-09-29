@@ -7,12 +7,12 @@
 <script src="/resources/gis/realtimemonitor/init/realtimeMonitorEntityCentre.js"></script>
 <script>
 (function() {
-	var RealtimeMonitorGisComponent = function(mapDiv, progressDiv, progressBarDiv) {
+	var RealtimeMonitorGisComponent = function(mapDiv, progressDiv, progressBarDiv, tgMap) {
 		var self = this;
 		self._entitiesString = L.GIS.realtimeMonitorEntitiesString;
 		self._entityCentreString = L.GIS.realtimeMonitorEntityCentreString;
 
-		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
+		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
 	};
 
 	RealtimeMonitorGisComponent.prototype = Object.create(L.GIS.GisComponent.prototype);

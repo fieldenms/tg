@@ -39,6 +39,7 @@ public class TgMessageMapMaster implements IMaster<TgMessageMap> {
         final int prefixLength = prefix.length();
         final StringBuilder primaryActionObjects = new StringBuilder();
         final DomElement tgMessageMap = new DomElement("tg-map")
+                .clazz("tg-map")
                 .attr("entity", "[[_currBindingEntity]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
                 .attr("retrieved-totals", "{{retrievedTotals}}");
@@ -53,7 +54,7 @@ public class TgMessageMapMaster implements IMaster<TgMessageMap> {
                         : primaryActionObjectsString)
                 // use: L.GIS.GisComponent, L.GIS.MessageGisComponent, L.GIS.PolygonGisComponent, L.GIS.RealtimeMonitorGisComponent, L.GIS.StopGisComponent
                 .replace("//@attached-callback", "self.classList.remove('canLeave'); "
-                        + "new L.GIS.MessageGisComponent(self.querySelector('.map'), self.querySelector('.progress'), self.querySelector('.progress-bar'));")
+                        + "new L.GIS.MessageGisComponent(self.querySelector('.map'), self.querySelector('.progress'), self.querySelector('.progress-bar'), self.querySelector('.tg-map'));")
                 .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");

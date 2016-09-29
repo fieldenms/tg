@@ -14,10 +14,10 @@
 	StopMarkerFactory.prototype.createFeatureMarker = function(entity, latlng) {
 		var self = this;
 		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'Message') {
+			if (entity.properties._entityType === 'TgMessage') {
 				return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(self, entity, latlng);
 			} else {
-				throw "StopMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Message' only."; // generates an exception
+				throw "StopMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'TgMessage' only."; // generates an exception
 			}
 		} else {
 			throw "StopMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
