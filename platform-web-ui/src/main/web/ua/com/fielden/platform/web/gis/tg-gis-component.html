@@ -16,7 +16,19 @@
 		self._leafletIdToEntity = {};
 		
 		tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
-		    self.promoteEntities(newRetrievedEntities);
+            self.initReload();
+            self.clearAll();
+
+            // Shallow copy of this array is needed to be done: not to alter original array, that is bound to EGI.
+            // Any added features to the shallow copy of the array will not be added to EGI's array of entities.
+            // However, if the entity object in copied array will be modified, the same (literally) entity object will be modified also in original array.
+            var newRetrievedEntitiesCopy = newRetrievedEntities.slice();
+            
+		    self.promoteEntities(newRetrievedEntitiesCopy);
+
+            self._markerCluster.setShouldFitToBounds(true); // TODO needs to be customised? " + shouldFitToBounds() + "
+            self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
+            self.finishReload();
 		};
 
 		// creating and configuring all layers
@@ -185,11 +197,10 @@
 			entity.type = "Feature";
 			
 			if (entity.properties) {
-			    throw 'Entity already has "properties" object. Cannot continue with conversion into feature.';
+			    console.warn('Entity already has "properties" object. Cannot continue with conversion into feature.');
 			}
-			entity.properties = {
-			    _parentFeature: null
-			};
+			entity.properties = entity.properties || {};
+			entity.properties._parentFeature = null;
 
 			if (entity.geometry) {
 			    throw 'Entity already has "geometry" object. Cannot continue with conversion into feature.';
@@ -229,7 +240,7 @@
 				}
 				var summaryFeature = {
 					properties: {
-						_entityType: ("Summary_" + featureType),
+						_featureType: ("Summary_" + featureType),
 						_coordinates: coords,
 						_machine: machine
 					}
@@ -276,12 +287,12 @@
 
 			entity.properties._parentFeature = parentFeature;
 		}
-		var summaryEntity = createSummaryFeatureAction(entities);
-		if (summaryEntity) {
-			entities.push(summaryEntity); // the last sibling item to the entities will be summaryEntity (if any)
-			entityAction(summaryEntity); // entityAction converts entity to a feature form
+		var summaryFeature = createSummaryFeatureAction(entities);
+		if (summaryFeature) {
+			entities.push(summaryFeature); // the last sibling item to the entities will be summaryFeature (if any)
+			entityAction(summaryFeature); // entityAction converts entity to a feature form if it is not feature already
 
-			summaryEntity.properties._parentFeature = parentFeature;
+			summaryFeature.properties._parentFeature = parentFeature;
 		}
 	}
 
@@ -313,15 +324,24 @@
 	}
 
 	GisComponent.prototype.createPopupContent = function (feature) {
+	    var self = this;
 		var popupText = '';
 
-		var resultProps = this._entityCentre.centreConfig.resultProperties;
+		feature.traverseProperties(function (propName) {
+		    var propertyName = !propName ? 'key' : propName;
+		    if (propertyName !== 'properties' && propertyName !== 'type' && propertyName !== 'geometry' && propertyName !== 'id') {
+		        popupText = popupText + "" + property.title + ": " + self.valueToString(feature.get(propertyName)) + "<br>";
+		    }
+		});
+		
+		/* var resultProps = this._entityCentre.centreConfig.resultProperties;
+		console.debug('resultProps ==== ', resultProps);
 		for (var i = 0; i < resultProps.length; i++) {
 			var property = resultProps[i];
 			var propertyName = (!resultProps[i].propertyName) ? 'key' : resultProps[i].propertyName;
 
 			popupText = popupText + "" + property.title + ": " + this.valueToString(feature.get(propertyName)) + "<br>";
-		}
+		}*/
 		return popupText;
 	}
 
