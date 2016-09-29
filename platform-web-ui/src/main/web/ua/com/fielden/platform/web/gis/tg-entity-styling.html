@@ -28,7 +28,7 @@
 		if (feature) {
 		    var featureType = featureType(feature);
 			if (featureType === 'Message') {
-				return (feature.vectorSpeed > 0) ? "blue" : "red"; // TODO this is irrelevant because Message is represented with markers
+				return (feature.get('vectorSpeed') > 0) ? "blue" : "red"; // TODO this is irrelevant because Message is represented with markers
 			} else if (featureType === 'Summary_Message') {
 				return "blue";
 			} else {

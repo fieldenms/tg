@@ -4,23 +4,21 @@
 (function() {
 	var MessageMarkerFactory= function() {
 		L.GIS.MarkerFactory.call(this);
-
-		var self = this;
 	};
 
 	MessageMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
 	MessageMarkerFactory.prototype.constructor = MessageMarkerFactory;
 
-	MessageMarkerFactory.prototype.createEntityMarker = function(entity, latlng) {
-		var self = this;
-		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'Message') {
-				return L.GIS.MarkerFactory.prototype.createEntityMarker.call(self, entity, latlng);
+	MessageMarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
+		if (feature) {
+			var featureType = featureType(feature);
+			if (featureType === 'Message') {
+				return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(this, feature, latlng);
 			} else {
-				throw "MessageMarkerFactory.prototype.createEntityMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Message' only."; // generates an exception
+				throw "MessageMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'Message' only.";
 			}
 		} else {
-			throw "MessageMarkerFactory.prototype.createEntityMarker: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "MessageMarkerFactory.prototype.createFeatureMarker: [" + feature + "] is empty.";
 		}
 	}
 

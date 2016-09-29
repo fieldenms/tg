@@ -11,20 +11,20 @@
 	RealtimeMonitorMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
 	RealtimeMonitorMarkerFactory.prototype.constructor = RealtimeMonitorMarkerFactory;
 
-	RealtimeMonitorMarkerFactory.prototype.createEntityMarker = function(entity, latlng) {
+	RealtimeMonitorMarkerFactory.prototype.createFeatureMarker = function(entity, latlng) {
 		var self = this;
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Machine') {
 				if (entity.properties.lastMessage) {
-					return L.GIS.MarkerFactory.prototype.createEntityMarker.call(self, entity.properties.lastMessage, latlng);
+					return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(self, entity.properties.lastMessage, latlng);
 				} else {
-					throw "RealtimeMonitorMarkerFactory.prototype.createEntityMarker: [" + entity + "] has no 'properties.lastMessage'. At this stage it should be strictly defined."; // generates an exception
+					throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has no 'properties.lastMessage'. At this stage it should be strictly defined."; // generates an exception
 				}	
 			} else {
-				throw "RealtimeMonitorMarkerFactory.prototype.createEntityMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Machine' only."; // generates an exception
+				throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Machine' only."; // generates an exception
 			}
 		} else {
-			throw "RealtimeMonitorMarkerFactory.prototype.createEntityMarker: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
 		}
 	}
 

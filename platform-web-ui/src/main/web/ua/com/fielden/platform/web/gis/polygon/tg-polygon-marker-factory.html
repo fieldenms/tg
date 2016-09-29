@@ -23,7 +23,7 @@
 	PolygonMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
 	PolygonMarkerFactory.prototype.constructor = PolygonMarkerFactory;
 
-	PolygonMarkerFactory.prototype.createEntityMarker = function(entity, latlng) {
+	PolygonMarkerFactory.prototype.createFeatureMarker = function(entity, latlng) {
 		var self = this;
 		if (entity && entity.properties && entity.properties._entityType) {
 			if (entity.properties._entityType === 'Coordinate') {
@@ -33,10 +33,10 @@
 					// coordMarker.setZIndexOffset(-1000);
 				return coordMarker;
 			} else {
-				throw "PolygonMarkerFactory.prototype.createEntityMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Coordinate' only."; // generates an exception
+				throw "PolygonMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Coordinate' only."; // generates an exception
 			}
 		} else {
-			throw "PolygonMarkerFactory.prototype.createEntityMarker: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "PolygonMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
 		}
 	}
 

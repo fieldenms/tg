@@ -36,7 +36,7 @@
 			},
 
 			pointToLayer: function(feature, latlng) {
-				return self._markerFactory.createEntityMarker(feature, latlng);
+				return self._markerFactory.createFeatureMarker(feature, latlng);
 			},
 
 			onEachFeature: function(feature, layer) {
