@@ -3,46 +3,46 @@
 	var EntityStyling = function() {};
 
 	/**
-	* The method for getting weight for entities of different types (designed for overriding). 
-	* Query the type of entity with 'entity.properties._entityType'.
-	*/
-	EntityStyling.prototype.getWeight = function (entity) {
+	 * The method for getting weight for features of different types (designed for overriding). 
+	 * Query the type of entity with 'featureType(feature)' method.
+	 */
+	EntityStyling.prototype.getWeight = function (feature) {
 		return 5;
 	}
 
 	/**
-	* The method for getting opacity for entities of different types (designed for overriding). 
-	* Query the type of entity with 'entity.properties._entityType'.
-	*/
-	EntityStyling.prototype.getOpacity = function (entity) {
+	 * The method for getting opacity for features of different types (designed for overriding). 
+	 * Query the type of entity with 'featureType(feature)' method.
+	 */
+	EntityStyling.prototype.getOpacity = function (feature) {
 		return 0.65;
 	}
 
 	/**
-	* The method for getting color for entities of different types (designed for overriding). 
-	* Query the type of entity with 'entity.properties._entityType'.
-	*/
-	EntityStyling.prototype.getColor = function (entity) {
-		var self = this;
-		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'Message') {
-				return (entity.properties.vectorSpeed > 0) ? "blue" : "red"; // TODO this is irrelevant because Message is represented with markers
-			} else if (entity.properties._entityType === 'Summary_Message') {
+	 * The method for getting color for features of different types (designed for overriding). 
+	 * Query the type of entity with 'featureType(feature)' method.
+	 */
+	EntityStyling.prototype.getColor = function (feature) {
+		if (feature) {
+		    var featureType = featureType(feature);
+			if (featureType === 'Message') {
+				return (feature.vectorSpeed > 0) ? "blue" : "red"; // TODO this is irrelevant because Message is represented with markers
+			} else if (featureType === 'Summary_Message') {
 				return "blue";
 			} else {
-				throw "EntityStyling.prototype.getColor: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Message' or 'Summary_Message'."; // generates an exception
+				throw "EntityStyling.prototype.getColor: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'Message' or 'Summary_Message'.";
 			}
 		} else {
-			throw "EntityStyling.prototype.getColor: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "EntityStyling.prototype.getColor: [" + feature + "] is empty.";
 		}
 	}
 
-	EntityStyling.prototype.getStyle = function (entity) {
+	EntityStyling.prototype.getStyle = function (feature) {
 		return {
-			// fillColor: getColor(entity),
-			weight: this.getWeight(entity),
-			opacity: this.getOpacity(entity),
-			color: this.getColor(entity)
+			// fillColor: getColor(feature),
+			weight: this.getWeight(feature),
+			opacity: this.getOpacity(feature),
+			color: this.getColor(feature)
 			// dashArray: '3',
 			// fillOpacity: 0.7
 		};

@@ -2,25 +2,23 @@
 
 <script>
 (function() {
-	var MessageEntityStyling = function() {
+	var MessageEntityStyling = function () {
 		L.GIS.EntityStyling.call(this);
-
-		var self = this;
 	};
 
 	MessageEntityStyling.prototype = Object.create(L.GIS.EntityStyling.prototype);
 	MessageEntityStyling.prototype.constructor = MessageEntityStyling;
 
-	MessageEntityStyling.prototype.getColor = function(entity) {
-		var self = this;
-		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'Message' || entity.properties._entityType === 'Summary_Message') {
-				return L.GIS.EntityStyling.prototype.getColor.call(self, entity);
+	MessageEntityStyling.prototype.getColor = function (feature) {
+		if (feature) {
+		    var featureType = featureType(feature);
+			if (featureType === 'Message' || featureType === 'Summary_Message') {
+				return L.GIS.EntityStyling.prototype.getColor.call(this, feature);
 			} else {
-				throw "MessageEntityStyling.prototype.getColor: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Message' or 'Summary_Message'."; // generates an exception
+				throw "MessageEntityStyling.prototype.getColor: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'Message' or 'Summary_Message'.";
 			}
 		} else {
-			throw "MessageEntityStyling.prototype.getColor: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "MessageEntityStyling.prototype.getColor: [" + feature + "] is empty.";
 		}
 	}
 

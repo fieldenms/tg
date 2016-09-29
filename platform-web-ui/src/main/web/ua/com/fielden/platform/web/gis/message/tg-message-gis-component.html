@@ -8,9 +8,8 @@
 <script>
 (function() {
 	var MessageGisComponent = function(mapDiv, progressDiv, progressBarDiv) {
-		var self = this;
-		self._entitiesString = L.GIS.messageEntitiesString;
-		self._entityCentreString = L.GIS.messageEntityCentreString;
+	    this._entitiesString = L.GIS.messageEntitiesString;
+	    this._entityCentreString = L.GIS.messageEntityCentreString;
 
 		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv);
 	};
@@ -42,11 +41,10 @@
 	};
 
 	MessageGisComponent.prototype.createGeometry = function (feature) {
-		var self = this;
 		if (feature) {
 		    var featureType = featureType(feature);
 			if (featureType === 'Message' || featureType === 'Summary_Message') {
-				return L.GIS.GisComponent.prototype.createGeometry.call(self, feature);
+				return L.GIS.GisComponent.prototype.createGeometry.call(this, feature);
 			} else {
 				throw "MessageGisComponent.prototype.createGeometry: [" + featureType + "] has unknown type == [" + featureType + "]. Should be 'Message' or 'Summary_Message'.";
 			}
@@ -66,7 +64,6 @@
 	}
 
 	MessageGisComponent.prototype.createPopupContent = function (feature) {
-		var self = this;
 		if (feature) {
 		    var featureType = featureType(feature);
 			if (featureType === 'Message') {
