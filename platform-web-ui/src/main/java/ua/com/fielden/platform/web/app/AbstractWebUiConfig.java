@@ -11,11 +11,8 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
-import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -116,7 +113,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             return indexSource.replace("@desktopStartupResources", "desktop-startup-resources-vulcanized");
         }
     }
-    
+
     private static boolean isDevelopmentWorkflow(final Workflows workflow) {
         return Workflows.development.equals(workflow) || Workflows.vulcanizing.equals(workflow);
     }
@@ -169,12 +166,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public List<String> resourcePaths() {
         return this.resourcePaths;
     }
-    
+
     @Override
     public Workflows workflow() {
         return workflow;
     }
-    
+
     @Override
     public final void clearConfiguration(final IGlobalDomainTreeManager gdtm) {
         logger.error("Clearing configurations...");
@@ -182,9 +179,14 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
         logger.error("Clearing configurations...done");
-        
+
         logger.error(String.format("Clearing centres for user [%s]...", gdtm.getUserProvider().getUser()));
         CentreUpdater.clearAllCentres(gdtm);
         logger.error(String.format("Clearing centres for user [%s]...done", gdtm.getUserProvider().getUser()));
+    }
+
+    @Override
+    public Menu getMenuEntity() {
+        return new Menu().setMenu(desktopMainMenuConfig.getModules());
     }
 }

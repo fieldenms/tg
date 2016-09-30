@@ -80,7 +80,7 @@ public class WebUiBuilder implements IWebUiBuilder {
         this.timeFormat = timeFormat;
         return this;
     }
-    
+
     @Override
     public IWebUiBuilder setTimeWithMillisFormat(final String timeWithMillisFormat) {
         this.timeWithMillisFormat = timeWithMillisFormat;
@@ -113,19 +113,19 @@ public class WebUiBuilder implements IWebUiBuilder {
             return this;
         }
     }
-    
+
     @Override
     public <ENTITY_TYPE extends AbstractEntity<?>> EntityMaster<ENTITY_TYPE> register(final EntityMaster<ENTITY_TYPE> master) {
         addMaster(master);
         return master;
     }
-    
+
     @Override
     public <T extends AbstractEntity<?>> Optional<EntityMaster<T>> getMaster(final Class<T> entityType) {
         final EntityMaster<T> master = (EntityMaster<T>) mastersMap.get(entityType); // could be 'null', and type casting will not throw any exception in that case
         return Optional.ofNullable(master);
     }
-    
+
     @Override
     public <M extends MiWithConfigurationSupport<?>> IWebUiBuilder addCentre(final EntityCentre<?> centre) {
         final Optional<EntityCentre<?>> centreOptional = getCentre(centre.getMenuItemType());
@@ -141,13 +141,13 @@ public class WebUiBuilder implements IWebUiBuilder {
             return this;
         }
     }
-    
+
     @Override
     public <ENTITY_TYPE extends AbstractEntity<?>> EntityCentre<ENTITY_TYPE> register(final EntityCentre<ENTITY_TYPE> centre) {
         addCentre(centre);
         return centre;
     }
-    
+
     @Override
     public <M extends MiWithConfigurationSupport<?>> Optional<EntityCentre<?>> getCentre(final Class<M> menuType) {
         return Optional.ofNullable(centreMap.get(menuType));

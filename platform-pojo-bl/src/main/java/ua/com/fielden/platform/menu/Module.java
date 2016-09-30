@@ -46,7 +46,7 @@ public class Module extends AbstractEntity<String> {
     private List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
 
     @Observable
-    protected Module setMenu(final List<ModuleMenuItem> menu) {
+    public Module setMenu(final List<ModuleMenuItem> menu) {
         this.menu.clear();
         this.menu.addAll(menu);
         return this;

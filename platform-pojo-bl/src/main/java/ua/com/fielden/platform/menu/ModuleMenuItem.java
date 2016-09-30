@@ -30,8 +30,22 @@ public class ModuleMenuItem extends AbstractEntity<String> {
     @Title(value = "Submenu", desc = "Submenu")
     private List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
 
+    @IsProperty
+    @Title(value = "View", desc = "Menu item view")
+    private View view;
+
     @Observable
-    protected ModuleMenuItem setMenu(final List<ModuleMenuItem> menu) {
+    public ModuleMenuItem setView(final View view) {
+        this.view = view;
+        return this;
+    }
+
+    public View getView() {
+        return view;
+    }
+
+    @Observable
+    public ModuleMenuItem setMenu(final List<ModuleMenuItem> menu) {
         this.menu.clear();
         this.menu.addAll(menu);
         return this;

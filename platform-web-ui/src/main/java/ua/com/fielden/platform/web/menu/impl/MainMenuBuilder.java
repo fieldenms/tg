@@ -2,8 +2,11 @@ package ua.com.fielden.platform.web.menu.impl;
 
 import static java.lang.String.format;
 
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.menu.Module;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -65,5 +68,9 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout, IExecutable 
         menuConfig.append(format("items: %s", mainMenu.code()));
 
         return new JsCode(format("{%s}", menuConfig));
+    }
+
+    public List<Module> getModules() {
+        return mainMenu.getModules();
     }
 }

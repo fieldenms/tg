@@ -1,13 +1,9 @@
 package ua.com.fielden.platform.web.ioc;
 
-import com.google.inject.Binder;
-import com.google.inject.Injector;
-import com.google.inject.Scopes;
-import com.google.inject.binder.AnnotatedBindingBuilder;
-
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.impl.ServerGlobalDomainTreeManager;
+import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.web.app.AbstractWebUiConfig;
@@ -16,6 +12,11 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
 import ua.com.fielden.platform.web.test.server.WebGlobalDomainTreeManager;
+
+import com.google.inject.Binder;
+import com.google.inject.Injector;
+import com.google.inject.Scopes;
+import com.google.inject.binder.AnnotatedBindingBuilder;
 
 /**
  * This interface defines <code>Web UI</code> specific IoC binding contract,
@@ -43,10 +44,11 @@ public interface IBasicWebApplicationServerModule {
 
         // bind IWebApp instance with defined masters / centres and other DSL-defined configuration
         bindType(IWebUiConfig.class).toInstance(webApp);
+        bindType(IMenuRetriever.class).toInstance(webApp);
 
         // bind ISourceController to its implementation as singleton
         bindType(ISourceController.class).to(SourceControllerImpl.class).in(Scopes.SINGLETON);
-        
+
         // bind ISerialisationTypeEncoder to its implementation as singleton -- it is dependent on IServerGlobalDomainTreeManager and IUserProvider
         bindType(ISerialisationTypeEncoder.class).to(SerialisationTypeEncoder.class).in(Scopes.SINGLETON); //
     }
@@ -60,7 +62,7 @@ public interface IBasicWebApplicationServerModule {
     default public void initWebApp(final Injector injector) {
         final AbstractWebUiConfig webApp = (AbstractWebUiConfig) injector.getInstance(IWebUiConfig.class);
         webApp.setInjector(injector);
-        
+
         final ISerialisationTypeEncoder serialisationTypeEncoder = injector.getInstance(ISerialisationTypeEncoder.class);
         final ISerialiser serialiser = injector.getInstance(ISerialiser.class);
         serialiser.initJacksonEngine(serialisationTypeEncoder);

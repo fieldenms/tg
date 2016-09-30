@@ -37,6 +37,7 @@ import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntit
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
+import ua.com.fielden.platform.menu.EntityMasterView;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -86,6 +87,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(CustomView.class);
         add(Module.class);
         add(Menu.class);
+        add(EntityMasterView.class);
     }
 
     @Override

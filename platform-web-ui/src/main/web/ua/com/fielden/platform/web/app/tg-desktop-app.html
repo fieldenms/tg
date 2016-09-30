@@ -5,6 +5,9 @@
 <link rel="import" href="/resources/views/tg-app-menu.html">
 <link rel="import" href="/resources/views/tg-app-view.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/master/tg-entity-master.html">
+<link rel="import" href="/resources/master/tg-entity-master-behavior.html">
+<link rel="import" href="/resources/actions/tg-ui-action.html">
 
 <dom-module id="tg-desktop-app">
     <template>
@@ -25,6 +28,7 @@
             id="masterDom"
             entity-type="ua.com.fielden.platform.menu.Menu"
             entity-id="new"
+            hidden
             _post-validated-default="[[_postValidatedDefault]]"
             _post-validated-default-error="[[_postValidatedDefaultError]]"
             _process-response="[[_processResponse]]"
@@ -241,6 +245,12 @@
                     this.$.location.$$("iron-location").dwellTime = 0;
                     //Binding to 'this' functions those are used outside the scope of this component.
                     this._checkWeatherCanLeave = this._checkWeatherCanLeave.bind(this);
+                    
+                    this.postRetrieved = function (entity, bindingEntity, customObject) {
+                        console.log(entity);
+                    };
+                    this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
+                    this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
                 },
 
                 attached: function () {
@@ -251,6 +261,7 @@
                         if (!this._route.path) {
                             this.set("_route.path", "/menu");
                         }
+                        this.retrieve();
                     });
 
                     window.addEventListener("beforeunload", this._checkWeatherCanLeave);

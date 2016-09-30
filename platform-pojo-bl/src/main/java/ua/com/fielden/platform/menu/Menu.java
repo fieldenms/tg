@@ -28,7 +28,7 @@ public class Menu extends AbstractEntity<String> {
     private List<Module> menu = new ArrayList<Module>();
 
     @Observable
-    protected Menu setMenu(final List<Module> menu) {
+    public Menu setMenu(final List<Module> menu) {
         this.menu.clear();
         this.menu.addAll(menu);
         return this;

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
+import ua.com.fielden.platform.menu.ModuleMenuItem;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
@@ -33,5 +34,15 @@ public class WebSubMenuItem implements IExecutable {
     @Override
     public String toString() {
         return code().toString();
+    }
+
+    public ModuleMenuItem getMenuItem() {
+        final ModuleMenuItem menuItem = new ModuleMenuItem();
+        menuItem.setKey(title);
+        menuItem.setDesc(description);
+        if (view != null) {
+            menuItem.setView(view.getView());
+        }
+        return menuItem;
     }
 }

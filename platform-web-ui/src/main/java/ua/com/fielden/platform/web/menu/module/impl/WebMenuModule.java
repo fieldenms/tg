@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.menu.module.impl;
 
+import ua.com.fielden.platform.menu.Module;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
@@ -70,5 +71,20 @@ public class WebMenuModule implements IExecutable {
     @Override
     public String toString() {
         return code().toString();
+    }
+
+    public Module getModule() {
+        final Module module = (Module) new Module().
+                setBgColor(bgColor).
+                setCaptionBgColor(captionBgColor).
+                setIcon(icon).
+                setDetailIcon(detailIcon).
+                setKey(title).
+                setDesc(description);
+        //TODO Menu should not be null as there shouldn't be modules without menu.
+        if (this.menu != null) {
+            module.setMenu(menu.getMenu());
+        }
+        return module;
     }
 }
