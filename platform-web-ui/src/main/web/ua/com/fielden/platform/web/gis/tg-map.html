@@ -102,7 +102,20 @@
                 retrievedEntities: {
                     type: Array,
                     observer: '_retrievedEntitiesChanged'
+                },
+                
+                /**
+                 * Last updated entity selection in centre that has this insertion point's element.
+                 */
+                retrievedEntitySelection: {
+                    type: Object,
+                    observer: '_retrievedEntitySelectionChanged',
+                    notify: true
                 }
+            },
+            
+            _retrievedEntitySelectionChanged: function (retrievedEntitySelection, oldValue) {
+                console.debug('tg-map: retrievedEntitySelection = ', retrievedEntitySelection);
             },
             
             _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {

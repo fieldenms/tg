@@ -103,6 +103,13 @@
                     observer: '_retrievedTotalsChanged'
                 },
                 /**
+                 * Last updated entity selection in this centre.
+                 */
+                retrievedEntitySelection: {
+                    type: Object,
+                    observer: '_retrievedEntitySelectionChanged'
+                },
+                /**
                  * The menu item type, that identifies this entity centre.
                  */
                 miType: {
@@ -357,6 +364,10 @@
 
             _retrievedTotalsChanged: function (retrievedTotals, oldValue) {
                 this.$.egi.totals = retrievedTotals;
+            },
+            
+            _retrievedEntitySelectionChanged: function (retrievedEntitySelection, oldValue) {
+                this.$.egi.retrievedEntitySelection = retrievedEntitySelection;
             },
 
             /**

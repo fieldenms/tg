@@ -757,15 +757,21 @@
                 }
                 return -1;
             },
-            _processEntitySelection = function (selectedEntities, entity, select) {
+            _processEntitySelection = function (selectedEntities, entity, select, egi) {
                 var selectedIndex = selectedEntities.indexOf(entity);
                 if (select) {
                     if (selectedIndex < 0) {
                         selectedEntities.push(entity);
+                        if (egi) {
+                            egi.retrievedEntitySelection = {entity: entity, selected: true};
+                        }
                     }
                 } else {
                     if (selectedIndex >= 0) {
                         selectedEntities.splice(selectedIndex, 1);
+                        if (egi) {
+                            egi.retrievedEntitySelection = {entity: entity, selected: false};
+                        }
                     }
                 }
             };
@@ -778,6 +784,14 @@
                     observer: "_entitiesChanged"
                 },
                 totals: Object,
+                /**
+                 * Last updated entity selection.
+                 */
+                retrievedEntitySelection: {
+                    type: Object,
+                    observer: '_retrievedEntitySelectionChanged',
+                    notify: true
+                },
                 lock: {
                     type: Boolean,
                     value: false
@@ -1454,7 +1468,7 @@
                         this._selectRange(this._lastSelectedIndex, index);
                     } else {
                         this.set("egiModel." + index + ".selected", target.checked);
-                        _processEntitySelection(this.selectedEntities, this.entities[index], target.checked);
+                        _processEntitySelection(this.selectedEntities, this.entities[index], target.checked, this);
                     }
                     //Set up the last selection index (it will be used for range selection.)
                     if (target.checked) {

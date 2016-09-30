@@ -50,6 +50,14 @@
                     observer: '_updateElementWithRetrievedTotals',
                     notify: true
                 },
+                /**
+                 * Last updated entity selection in centre that has this insertion point's element.
+                 */
+                retrievedEntitySelection: {
+                    type: Object,
+                    observer: '_updateElementWithRetrievedEntitySelection',
+                    notify: true
+                },
                 _element: {
                     type: Object,
                     value: null
@@ -79,6 +87,12 @@
                     this._element.retrievedTotals = newValue;
                 }
             },
+            
+            _updateElementWithRetrievedEntitySelection: function (newValue, oldValue) {
+                if (this._element) {
+                    this._element.retrievedEntitySelection = newValue;
+                }
+            },
 
             /**
              * customAction -- an action that was actioned by user and may require showing a diglog (e.g. with master)
@@ -105,6 +119,10 @@
                                 self.retrievedTotals = this.retrievedTotals;
                             });
                             self._element.retrievedTotals = self.retrievedTotals;
+                            self._element.addEventListener("retrieved-entity-selection-changed", function (ev) {
+                                self.retrievedEntitySelection = this.retrievedEntitySelection;
+                            });
+                            self._element.retrievedEntitySelection = self.retrievedEntitySelection;
 
                             var promise = customAction._onExecuted(null, element, null);
                             if (promise) {
