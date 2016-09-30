@@ -2,7 +2,7 @@
 
 <script>
 (function() {
-	var Select = function(_map, _getLayerById, _markerFactory) {
+	var Select = function(_map, _getLayerById, _markerFactory, tgMap) {
 		var self = this;
 
 		self._map = _map;
@@ -11,6 +11,16 @@
 
 		self._featureToLeafletIds = {};
 		self._prevId;
+		self._tgMap = tgMap;
+		
+		self._retrievedEntitySelectionHandler = function (newRetrievedEntitySelection) {
+		    if (newRetrievedEntitySelection.selected) {
+		        self.selectById(newRetrievedEntitySelection.entity.properties.layerId, true);
+		    } else {
+		        self.deselectById(newRetrievedEntitySelection.entity.properties.layerId, true);
+		    }
+		};
+		self._tgMap.retrievedEntitySelectionHandler = self._retrievedEntitySelectionHandler;
 	};
 
 	Select.prototype._deselectVisuallyWithoutEventFiring = function (layerId) {
@@ -35,7 +45,12 @@
 
 	Select.prototype._selectTabularlyWithoutEventFiring = function (layerId) {
 		console.debug('_selectTabularlyWithoutEventFiring: layerId =', layerId);
-		// TODO !!! java._selectTabularlyWithoutEventFiring(featureId);
+		var layer = this._getLayerById(layerId);
+		var feature = layer.feature;
+		
+		this._tgMap.retrievedEntitySelectionHandler = function () {};
+		this._tgMap.retrievedEntitySelection = {entity: feature, selected: true};
+		this._tgMap.retrievedEntitySelectionHandler = this._retrievedEntitySelectionHandler;
 	}
 	
 	Select.prototype._deselectTabularlyWithoutEventFiring = function (layerId) {

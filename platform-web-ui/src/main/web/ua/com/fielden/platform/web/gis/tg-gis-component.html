@@ -30,14 +30,6 @@
             self.finishReload();
 		};
 		
-		tgMap.retrievedEntitySelectionHandler = function (newRetrievedEntitySelection) {
-		    if (newRetrievedEntitySelection.selected) {
-		        self._select.selectById(newRetrievedEntitySelection.entity.properties.layerId, true);
-		    } else {
-		        self._select.deselectById(newRetrievedEntitySelection.entity.properties.layerId, true);
-		    }
-		};
-
 		// creating and configuring all layers
 		self._baseLayers = new L.GIS.BaseLayers();
 
@@ -95,7 +87,7 @@
 			return self._geoJsonOverlay.getLayer(layerId);
 		}
 
-		self._select = new L.GIS.Select(self._map, getLayerById, self._markerFactory);
+		self._select = new L.GIS.Select(self._map, getLayerById, self._markerFactory, tgMap);
 
 		self._map.fire('dataloading');
 

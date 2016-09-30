@@ -1398,6 +1398,11 @@
                     this.style.removeProperty("width");
                 }
             },
+            _retrievedEntitySelectionChanged: function (newValue, oldValue) {
+                var entityIndex = _findEntity(newValue.entity, this.entities);
+                this.set("egiModel." + entityIndex + ".selected", newValue.selected);
+                _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected)
+            },
             /**
              * Observs the changes to entities property.
              */
