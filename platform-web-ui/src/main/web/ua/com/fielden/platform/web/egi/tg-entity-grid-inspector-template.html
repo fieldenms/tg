@@ -1399,6 +1399,7 @@
                 }
             },
             _retrievedEntitySelectionChanged: function (newValue, oldValue) {
+        		console.warn('EGI _retrievedEntitySelectionChanged: prev [', oldValue.entity.properties.layerId, oldValue.selected, '] new [', newValue.entity.properties.layerId, newValue.selected, ']');
                 var entityIndex = _findEntity(newValue.entity, this.entities);
                 this.set("egiModel." + entityIndex + ".selected", newValue.selected);
                 _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected)

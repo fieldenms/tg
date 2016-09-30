@@ -15,9 +15,9 @@
 		
 		self._retrievedEntitySelectionHandler = function (newRetrievedEntitySelection) {
 		    if (newRetrievedEntitySelection.selected) {
-		        self.selectById(newRetrievedEntitySelection.entity.properties.layerId, true);
+		        self.selectByIdTabularly(newRetrievedEntitySelection.entity.properties.layerId);
 		    } else {
-		        self.deselectById(newRetrievedEntitySelection.entity.properties.layerId, true);
+		        self.deselectByIdTabularly(newRetrievedEntitySelection.entity.properties.layerId);
 		    }
 		};
 		self._tgMap.retrievedEntitySelectionHandler = self._retrievedEntitySelectionHandler;
@@ -55,20 +55,44 @@
 	
 	Select.prototype._deselectTabularlyWithoutEventFiring = function (layerId) {
 		console.debug('_deselectTabularlyWithoutEventFiring: layerId =', layerId);
-		// TODO !!! java._deselectTabularlyWithoutEventFiring(featureId);
+		var layer = this._getLayerById(layerId);
+		var feature = layer.feature;
+		
+		// if (! (this._tgMap.retrievedEntitySelection.entity === feature && this._tgMap.retrievedEntitySelection.selected === false) ) {
+		this._tgMap.retrievedEntitySelectionHandler = function () {};
+		this._tgMap.retrievedEntitySelection = {entity: feature, selected: false};
+		this._tgMap.retrievedEntitySelectionHandler = this._retrievedEntitySelectionHandler;
+		// }
 	}
 
-	Select.prototype.selectById = function (layerId, withoutTabularSelectionDeselection) {
-	    console.debug("selectById(" + layerId + ");");
+	Select.prototype.selectByIdVisually = function (layerId) {
+	    console.debug("selectByIdVisually(" + layerId + ");");
 		if (this._prevId) { // at the moment of selecting the feature - there has been other previously selected feature (or, perhaps, the same) 
 			this._deselectVisuallyWithoutEventFiring(this._prevId);
 			this._deselectTabularlyWithoutEventFiring(this._prevId);
 		}
 		this._selectVisuallyWithoutEventFiring(layerId);
-		if (!withoutTabularSelectionDeselection) {
-		    this._selectTabularlyWithoutEventFiring(layerId);
-		}
+		this._selectTabularlyWithoutEventFiring(layerId);
 		this._prevId = layerId;
+	}
+	
+	Select.prototype.selectByIdTabularly = function (layerId) {
+	    var self = this;
+	    console.debug("selectByIdTabularly(" + layerId + ");");
+		if (this._prevId) { // at the moment of selecting the feature - there has been other previously selected feature (or, perhaps, the same) 
+			this._deselectVisuallyWithoutEventFiring(this._prevId);
+			var _prevId = this._prevId;
+			window.setTimeout(function () { // TODO can this be done more elegantly?
+				self._deselectTabularlyWithoutEventFiring(_prevId);
+			}, 1);
+		}
+		this._selectVisuallyWithoutEventFiring(layerId);
+		this._prevId = layerId;
+	}
+	
+	Select.prototype.deselectByIdTabularly = function (layerId) {
+	    console.debug("deselectByIdTabularly(" + layerId + ");");
+		this._deselectVisuallyWithoutEventFiring(layerId);
 	}
 	
 	L.GIS = L.GIS || {};
