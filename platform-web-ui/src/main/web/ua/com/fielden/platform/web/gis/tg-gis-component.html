@@ -13,7 +13,6 @@
 		// IMPORTANT: use the following reference in cases when you need some properties of the 
 		// GisComponent inside the functions or nested classes
 		var self = this;
-		self._leafletIdToEntity = {};
 		
 		tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
             self.initReload();
@@ -58,18 +57,7 @@
 			onEachFeature: function(feature, layer) {
 				var layerId = self._geoJsonOverlay.getLayerId(layer);
 				// provide leafletId of the layer directly inside corresponding entity
-
-				// TODO !!! does feature id contradict with id of the entity?
-				// TODO !!! does feature id contradict with id of the entity?
-				// TODO !!! does feature id contradict with id of the entity?
-				feature.id = layerId; 
-				self.setEntityFor(layerId, feature);
-
-				// var featureId = feature.id;
-				// self._select.setLeafletIdFor(featureId, self._geoJsonOverlay.getLayerId(layer));
-
-				// console.debug("onEachFeature featureId = " + featureId + " ");	            
-				// console.debug(layer);	            
+				feature.properties.layerId = layerId; 
 
 				layer.on('mouseover', function() {
 					// console.debug("mouseover (entered):");
@@ -84,29 +72,22 @@
 				layer.on('click', function() { // dblclick
 					// console.debug("clicked:");
 					// console.debug(layer);
-
-					// TODO !!! do we need to use feature.id here?
-					// TODO !!! do we need to use feature.id here?
-					// TODO !!! do we need to use feature.id here?
-					self._select.selectById(featureId);
+					self._select.selectById(layerId);
 				});
 				// if (layer instanceof CoordMarker) {
 				// 	layer.setOpacity(0.0);
 				// }
 
-				// does this feature have a property named popupContent?
-				if (feature.properties) {
-					feature.properties.popupContent = self.createPopupContent(feature);
-					layer.bindPopup(feature.properties.popupContent);
-				}
+				feature.properties.popupContent = self.createPopupContent(feature);
+				layer.bindPopup(feature.properties.popupContent);
 			}
 		});
 
-		var getLayerByLeafletId = function(leafletId) {
-			return self._geoJsonOverlay.getLayer(leafletId);
+		var getLayerById = function (layerId) {
+			return self._geoJsonOverlay.getLayer(layerId);
 		}
 
-		self._select = new L.GIS.Select(self._map, getLayerByLeafletId, self._markerFactory);
+		self._select = new L.GIS.Select(self._map, getLayerById, self._markerFactory);
 
 		self._map.fire('dataloading');
 
@@ -119,14 +100,6 @@
 	};
 	
 	GisComponent.prototype.featureType = _featureType;
-
-	GisComponent.prototype.setEntityFor = function(layerId, entity) {
-		this._leafletIdToEntity["" + layerId + ""] = entity;
-	}
-
-	GisComponent.prototype.getEntityFor = function(layerId) {
-		return this._leafletIdToEntity["" + layerId + ""];
-	}
 
 	GisComponent.prototype.getTopEntityFor = function (feature) {
 		if (feature) {
@@ -329,19 +302,11 @@
 
 		feature.traverseProperties(function (propName) {
 		    var propertyName = !propName ? 'key' : propName;
-		    if (propertyName !== 'properties' && propertyName !== 'type' && propertyName !== 'geometry' && propertyName !== 'id') {
+		    if (propertyName !== 'properties' && propertyName !== 'type' && propertyName !== 'geometry') {
+		        // TODO property.title -- retrieve the title from reflector!
 		        popupText = popupText + "" + property.title + ": " + self.valueToString(feature.get(propertyName)) + "<br>";
 		    }
 		});
-		
-		/* var resultProps = this._entityCentre.centreConfig.resultProperties;
-		console.debug('resultProps ==== ', resultProps);
-		for (var i = 0; i < resultProps.length; i++) {
-			var property = resultProps[i];
-			var propertyName = (!resultProps[i].propertyName) ? 'key' : resultProps[i].propertyName;
-
-			popupText = popupText + "" + property.title + ": " + this.valueToString(feature.get(propertyName)) + "<br>";
-		}*/
 		return popupText;
 	}
 
@@ -387,10 +352,10 @@
 		return value;
 	}
 
-	GisComponent.prototype.getLayer = function (feature) {
-		var layerId = feature.id;
+	/* GisComponent.prototype.getLayer = function (feature) {
+		var layerId = feature.properties.layerId;
 		return this._geoJsonOverlay.getLayer(layerId); 
-	}
+	} */
 	
 	L.GIS = L.GIS || {};
 	L.GIS.GisComponent = GisComponent;
