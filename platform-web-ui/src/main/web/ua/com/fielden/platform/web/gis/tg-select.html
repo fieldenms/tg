@@ -43,14 +43,16 @@
 		// TODO !!! java._deselectTabularlyWithoutEventFiring(featureId);
 	}
 
-	Select.prototype.selectById = function (layerId) {
+	Select.prototype.selectById = function (layerId, withoutTabularSelectionDeselection) {
 	    console.debug("selectById(" + layerId + ");");
 		if (this._prevId) { // at the moment of selecting the feature - there has been other previously selected feature (or, perhaps, the same) 
 			this._deselectVisuallyWithoutEventFiring(this._prevId);
 			this._deselectTabularlyWithoutEventFiring(this._prevId);
 		}
 		this._selectVisuallyWithoutEventFiring(layerId);
-		this._selectTabularlyWithoutEventFiring(layerId);
+		if (!withoutTabularSelectionDeselection) {
+		    this._selectTabularlyWithoutEventFiring(layerId);
+		}
 		this._prevId = layerId;
 	}
 	

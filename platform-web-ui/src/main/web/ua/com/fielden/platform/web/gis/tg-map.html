@@ -116,6 +116,7 @@
             
             _retrievedEntitySelectionChanged: function (retrievedEntitySelection, oldValue) {
                 console.debug('tg-map: retrievedEntitySelection = ', retrievedEntitySelection);
+                this.retrievedEntitySelectionHandler(retrievedEntitySelection);
             },
             
             _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
@@ -123,6 +124,9 @@
             },
             
             retrivedEntitiesHandler: function (newRetrievedEntities) {
+            },
+            
+            retrievedEntitySelectionHandler: function (newRetrievedEntitySelection) {
             }
         });
     })();
