@@ -30,6 +30,10 @@
             self.finishReload();
 		};
 		
+		tgMap.columnPropertiesMapperHandler = function (newColumnPropertiesMapper) {
+		    self.columnPropertiesMapper = newColumnPropertiesMapper;
+		};
+		
 		// creating and configuring all layers
 		self._baseLayers = new L.GIS.BaseLayers();
 
@@ -62,6 +66,10 @@
 				layer.on('mouseover', function() {
 					// console.debug("mouseover (entered):");
 					// console.debug(layer);
+				    if (typeof feature.properties.popupContent === 'undefined') {
+						feature.properties.popupContent = self.createPopupContent(feature);
+						layer.bindPopup(feature.properties.popupContent);
+				    }
 				});
 
 				layer.on('mouseout', function() {
@@ -77,9 +85,6 @@
 				// if (layer instanceof CoordMarker) {
 				// 	layer.setOpacity(0.0);
 				// }
-
-				feature.properties.popupContent = self.createPopupContent(feature);
-				layer.bindPopup(feature.properties.popupContent);
 			}
 		});
 
@@ -298,40 +303,15 @@
 
 	GisComponent.prototype.createPopupContent = function (feature) {
 	    var self = this;
+	    var columnPropertiesMapped = self.columnPropertiesMapper(feature);
 		var popupText = '';
-
-		feature.traverseProperties(function (propName) {
-		    var propertyName = !propName ? 'key' : propName;
-		    if (propertyName !== 'properties' && propertyName !== 'type' && propertyName !== 'geometry') {
-		        // TODO property.title -- retrieve the title from reflector!
-		        popupText = popupText + "" + property.title + ": " + self.valueToString(feature.get(propertyName)) + "<br>";
-		    }
-		});
+		for (var index = 0; index < columnPropertiesMapped.length; index++) {
+		    var entry = columnPropertiesMapped[index];
+		    var value = entry.value === true ? "&#x2714" : (entry.value === false ? "&#x2718" : entry.value);
+		    popupText = popupText + "" + (feature.constructor.prototype.type.call(feature)).prop(entry.dotNotation).title() + ": " + value + "<br>";
+		}
 		return popupText;
 	}
-
-/* 	GisComponent.prototype.getValue = function(entity, dotNotation) {
-		if (dotNotation.indexOf(".") > -1) {
-			// console.debug(entity.properties["" + "lastMessage.properties.gpsTime" + ""]);
-
-
-			// throw "[" + dotNotation + "] contains dot. Value = [" + (entity.properties["" + "lastMessage.properties.gpsTime" + ""]) + "].";
-			var firstPart = this.firstPart(dotNotation);
-			var lastPartWithoutProps = this.lastPart(dotNotation);
-			return this.getValue(entity.properties["" + firstPart + ""], lastPartWithoutProps);
-		} else {
-			return entity.properties["" + dotNotation + ""];
-		}
-	}
-
-	GisComponent.prototype.firstPart = function(dotNotation) {
-		return dotNotation.substring(0, dotNotation.indexOf("."));
-	}
-
-	GisComponent.prototype.lastPart = function(dotNotation) {
-		var withProperties = dotNotation.substring((dotNotation.indexOf(".") + 1), dotNotation.length);
-		return withProperties.substring((withProperties.indexOf(".") + 1), withProperties.length);
-	} */
 
 	GisComponent.prototype.valueToString = function(value) {
 		if (value === null) {
@@ -351,11 +331,6 @@
 		}
 		return value;
 	}
-
-	/* GisComponent.prototype.getLayer = function (feature) {
-		var layerId = feature.properties.layerId;
-		return this._geoJsonOverlay.getLayer(layerId); 
-	} */
 	
 	L.GIS = L.GIS || {};
 	L.GIS.GisComponent = GisComponent;

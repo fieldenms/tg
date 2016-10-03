@@ -41,6 +41,7 @@ public class TgMessageMapMaster implements IMaster<TgMessageMap> {
         final DomElement tgMessageMap = new DomElement("tg-map")
                 .clazz("tg-map")
                 .attr("entity", "[[_currBindingEntity]]")
+                .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
                 .attr("retrieved-entity-selection", "{{retrievedEntitySelection}}")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
                 .attr("retrieved-totals", "{{retrievedTotals}}");

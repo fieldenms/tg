@@ -111,12 +111,29 @@
                     type: Object,
                     observer: '_retrievedEntitySelectionChanged',
                     notify: true
+                },
+                
+                /**
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
+                 * consistent with the order of columns.
+                 *
+                 * @param entity -- the entity to be processed with the mapper function
+                 */
+                columnPropertiesMapper: {
+                    type: Function,
+                    observer: '_columnPropertiesMapperChanged',
+                    notify: true
                 }
             },
             
             _retrievedEntitySelectionChanged: function (retrievedEntitySelection, oldValue) {
                 console.debug('tg-map: retrievedEntitySelection = ', retrievedEntitySelection);
                 this.retrievedEntitySelectionHandler(retrievedEntitySelection);
+            },
+            
+            _columnPropertiesMapperChanged: function (columnPropertiesMapper, oldValue) {
+                console.debug('tg-map: columnPropertiesMapper = ', columnPropertiesMapper);
+                this.columnPropertiesMapperHandler(columnPropertiesMapper);
             },
             
             _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
@@ -127,6 +144,9 @@
             },
             
             retrievedEntitySelectionHandler: function (newRetrievedEntitySelection) {
+            },
+            
+            columnPropertiesMapperHandler: function (newColumnPropertiesMapper) {
             }
         });
     })();
