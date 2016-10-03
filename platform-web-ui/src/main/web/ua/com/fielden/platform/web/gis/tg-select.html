@@ -93,6 +93,7 @@
 	Select.prototype.deselectByIdTabularly = function (layerId) {
 	    console.debug("deselectByIdTabularly(" + layerId + ");");
 		this._deselectVisuallyWithoutEventFiring(layerId);
+		this._prevId = null;
 	}
 	
 	L.GIS = L.GIS || {};
