@@ -103,6 +103,16 @@
                     observer: '_retrievedTotalsChanged'
                 },
                 /**
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
+                 * consistent with the order of columns.
+                 *
+                 * @param entity -- the entity to be processed with the mapper function
+                 */
+                columnPropertiesMapper: {
+                    type: Function,
+                    observer: '_columnPropertiesMapperChanged'
+                },
+                /**
                  * Last updated entity selection in this centre.
                  */
                 retrievedEntitySelection: {
@@ -368,6 +378,10 @@
             
             _retrievedEntitySelectionChanged: function (retrievedEntitySelection, oldValue) {
                 this.$.egi.retrievedEntitySelection = retrievedEntitySelection;
+            },
+            
+            _columnPropertiesMapperChanged: function (columnPropertiesMapper, oldValue) {
+                this.$.egi.columnPropertiesMapper = columnPropertiesMapper;
             },
 
             /**

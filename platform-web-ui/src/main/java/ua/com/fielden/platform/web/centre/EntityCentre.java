@@ -920,11 +920,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer bottomInsertionPointsDom = new DomContainer();
         for (final FunctionalActionElement el : insertionPointActionsElements) {
             if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.LEFT) {
-                leftInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "{{retrievedEntities}}").attr("retrieved-totals", "{{retrievedTotals}}").attr("retrieved-entity-selection", "{{retrievedEntitySelection}}"));
+                leftInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "{{retrievedEntities}}").attr("retrieved-totals", "{{retrievedTotals}}").attr("retrieved-entity-selection", "{{retrievedEntitySelection}}").attr("column-properties-mapper", "{{columnPropertiesMapper}}"));
             } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.RIGHT) {
-                rightInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "{{retrievedEntities}}").attr("retrieved-totals", "{{retrievedTotals}}").attr("retrieved-entity-selection", "{{retrievedEntitySelection}}"));
+                rightInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "{{retrievedEntities}}").attr("retrieved-totals", "{{retrievedTotals}}").attr("retrieved-entity-selection", "{{retrievedEntitySelection}}").attr("column-properties-mapper", "{{columnPropertiesMapper}}"));
             } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.BOTTOM) {
-                bottomInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "{{retrievedEntities}}").attr("retrieved-totals", "{{retrievedTotals}}").attr("retrieved-entity-selection", "{{retrievedEntitySelection}}"));
+                bottomInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "{{retrievedEntities}}").attr("retrieved-totals", "{{retrievedTotals}}").attr("retrieved-entity-selection", "{{retrievedEntitySelection}}").attr("column-properties-mapper", "{{columnPropertiesMapper}}"));
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }

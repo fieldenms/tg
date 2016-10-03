@@ -792,6 +792,16 @@
                     observer: '_retrievedEntitySelectionChanged',
                     notify: true
                 },
+                /**
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
+                 * consistent with the order of columns.
+                 *
+                 * @param entity -- the entity to be processed with the mapper function
+                 */
+                columnPropertiesMapper: {
+                    type: Function,
+                    notify: true
+                },
                 lock: {
                     type: Boolean,
                     value: false
@@ -987,6 +997,16 @@
                     tempColumns.push(item);
                 });
                 this.columns = tempColumns;
+                
+                this.columnPropertiesMapper = (function (entity) {
+                    var result = [];
+                    for (var index = 0; index < this.columns.length; index++) {
+                        var column = this.columns[index];
+                        var entry = { dotNotation: column.property, value: this._getValue(entity, column.property, column.type) };
+                        result.push(entry);
+                    }
+                    return result;
+                }).bind(this);
 
                 //Initialising the primary action.
                 this.primaryAction = null;

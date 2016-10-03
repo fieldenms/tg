@@ -234,6 +234,17 @@
                     type: Object,
                     notify: true
                 },
+                
+                /**
+                 * The function to map column properties of the entity to the form [{ dotNotation: 'prop1.prop2', value: '56.67'}, ...]. The order is 
+                 * consistent with the order of columns.
+                 *
+                 * @param entity -- the entity to be processed with the mapper function
+                 */
+                columnPropertiesMapper: {
+                    type: Function,
+                    notify: true
+                },
 
                 shouldRefreshParentCentreAfterSave: {
                     type: Boolean,
