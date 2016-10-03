@@ -1205,6 +1205,7 @@
             },
 
             _getTooltip: function (entity, column, action) {
+                try {
                 var property = entity.prop(column.property);
                 var validationResult = property.validationResult();
                 var value;
@@ -1227,6 +1228,9 @@
                     tooltip += (tooltip && "<br><br>") + this._generateActionTooltip(action);
                 }
                 return tooltip;
+                } catch (e) {
+                    return '';
+                }
             },
 
             _generateEntityTooltip: function (entity, column) {

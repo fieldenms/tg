@@ -290,7 +290,19 @@
                 var first = name.slice(0, dotIndex);
                 var rest = name.slice(dotIndex + 1);
                 var firstVal = this.get(first);
-                return firstVal === null ? null : firstVal.get(rest);
+                if (firstVal === null) {
+                    return null;
+                } else if (_isEntity(firstVal)) {
+                    return firstVal.get(rest);
+                } else if (firstVal instanceof Array) {
+                    var internalList = [];
+                    for (var index = 0; index < firstVal.length; index++) {
+                        internalList.push(firstVal[index].get(rest));
+                    }
+                    return internalList;
+                } else {
+                    throw 'Unsupported dot-notation.';
+                }
             } else {
                 if (this._isObjectUndefined(name)) {
                     throw new StrictProxyException(name, this.type()._simpleClassName());
