@@ -11,6 +11,7 @@ import ua.com.fielden.platform.sample.domain.TgMachine;
 import ua.com.fielden.platform.sample.domain.TgMessage;
 import ua.com.fielden.platform.sample.domain.TgMessageMap;
 import ua.com.fielden.platform.ui.menu.sample.MiTgMessage;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
@@ -71,18 +72,7 @@ public class TgMessageWebUiConfig {
                 .also()
                 .addProp("din1")
                     .width(90)
-                .also()
-                .addProp("x")
-                    .width(90)
-                .also()
-                .addProp("altitude")
-                    .width(90)
-                .also()
-                .addProp("y")
-                    .width(90)
-                .also()
-                .addProp("vectorAngle")
-                    .width(90)
+                .setFetchProvider(EntityUtils.fetch(TgMessage.class).with("x", "y", "altitude", "vectorAngle"))
                 .addInsertionPoint(
                     action(TgMessageMap.class)
                             .withContext(context().withSelectionCrit().build())
