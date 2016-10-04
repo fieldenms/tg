@@ -205,6 +205,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> createFetchModelFrom(final Class<V> managedType, final Set<String> properties, final Optional<IFetchProvider<T>> additionalFetchProvider) {
         final IFetchProvider<V> rootProvider = properties.contains("") ? EntityUtils.fetchNotInstrumentedWithKeyAndDesc(managedType)
                 : EntityUtils.fetchNotInstrumented(managedType);
+        // TODO Analyse 'properties' and get all 'short collectional' properties if any. Then extend 'properties' set with a set of keys, which correspond to linkProperties in collectional properties.
+        // TODO This should be done in order to be able to correctly retrieve centre results with short collections (EQL retrieval sorts collection elements by keys and thus such enhancement is required).
         final IFetchProvider<V> rootProviderWithResultSetProperties = rootProvider.with(properties);
         if (additionalFetchProvider.isPresent()) {
             return rootProviderWithResultSetProperties.with(additionalFetchProvider.get().copy(managedType));
