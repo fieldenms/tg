@@ -20,8 +20,8 @@
         <carbon-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></carbon-route>
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
-            <template is="dom-repeat" items="[[menuConfig.items]]" on-dom-change="_modulesRendered">
-                <tg-app-view class="fit hero-animatable" name$="[[item.title]]" menu-item="[[item]]" selected-module="[[_routeData.moduleName]]" submodule="{{_subroute}}"></tg-app-view>
+            <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
+                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu-item="[[item]]" selected-module="[[_routeData.moduleName]]" submodule="{{_subroute}}"></tg-app-view>
             </template>
         </neon-animated-pages>
         <tg-entity-master 
@@ -57,8 +57,8 @@
         (function () {
             var findModule = function (moduleName, menuConfig) {
                 var itemIndex;
-                for (itemIndex = 0; itemIndex < menuConfig.items.length; itemIndex++) {
-                    if (menuConfig.items[itemIndex].title === moduleName) {
+                for (itemIndex = 0; itemIndex < menuConfig.menu.length; itemIndex++) {
+                    if (menuConfig.menu[itemIndex].key === moduleName) {
                         return moduleName;
                     }
                 }
@@ -247,7 +247,7 @@
                     this._checkWeatherCanLeave = this._checkWeatherCanLeave.bind(this);
                     
                     this.postRetrieved = function (entity, bindingEntity, customObject) {
-                        console.log(entity);
+                        this.menuConfig = entity;
                     };
                     this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
                     this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
@@ -255,8 +255,6 @@
 
                 attached: function () {
                     var self = this;
-                    this.menuConfig = @menuConfig;
-
                     this.async(function () {
                         if (!this._route.path) {
                             this.set("_route.path", "/menu");

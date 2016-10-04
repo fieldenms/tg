@@ -100,20 +100,20 @@
             <div class="layout vertical" drawer>
 
                 <div id="menuToolBar" class="tool-bar layout horizontal center">
-                    <div class="flex">[[menuItem.title]]</div>
+                    <div class="flex">[[menuItem.key]]</div>
                 </div>
 
                 <paper-menu id="menu" class="flex" attr-for-selected="name" on-iron-activate="_itemActivated">
                     <template is="dom-repeat" on-dom-change="_menuTemplateRendered" items="[[menuItem.menu]]" as="firstLevelItem">
                         <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
-                            <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.description]]">
+                            <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.desc]]">
                                 <iron-icon icon="av:play-arrow" opened$="[[firstLevelItem.opened]]" without-menu$="[[!firstLevelItem.menu]]"></iron-icon>
-                                <span>[[firstLevelItem.title]]</span>
+                                <span>[[firstLevelItem.key]]</span>
                             </paper-item>
                             <template is="dom-if" if="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
                                 <paper-menu class="menu-content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
                                     <template is="dom-repeat" items="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
-                                        <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.description]]">[[item.title]]</paper-item>
+                                        <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]">[[item.key]]</paper-item>
                                     </template>
                                 </paper-menu>
                             </template>
@@ -136,11 +136,11 @@
                     <div class="menu-item-view" page-name="_"></div>
                     <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
                         <template is="dom-if" if="[[!firstLevelItem.menu]]">
-                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.title]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
                         </template>
                         <template is="dom-if" if="[[firstLevelItem.menu]]">
                             <template is="dom-repeat" items="[[firstLevelItem.menu]]">
-                                <tg-menu-item-view page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.description]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.title]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                                <tg-menu-item-view page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
                             </template>
                         </template>
                     </template>
@@ -157,7 +157,7 @@
     (function () {
         var findMenuItem = function (itemName, menuItem) {
             return menuItem.menu && menuItem.menu.find(function (item) {
-                return item.title === decodeURIComponent(itemName);
+                return item.key === decodeURIComponent(itemName);
             });
         };
         var findNestedMenuItem = function (itemPath, menuItem) {
@@ -266,13 +266,13 @@
             },
 
             _calcItemPath: function (groupItem, item) {
-                return encodeURIComponent(groupItem.title) + (item ? "/" + encodeURIComponent(item.title) : '');
+                return encodeURIComponent(groupItem.key) + (item ? "/" + encodeURIComponent(item.key) : '');
             },
 
             _updatePage(menuItem, submodule) {
                 var pageName;
                 var submodulePart = submodule.path.substring(1).split("?")[0];
-                if (menuItem.title === decodeURIComponent(this.selectedModule)) {
+                if (menuItem.key === decodeURIComponent(this.selectedModule)) {
                     this._selectPage(submodulePart);
                     this._selectMenu(submodulePart);
                 }
@@ -334,7 +334,7 @@
             },
 
             _calcSubmoduleId: function (firtsLevelItem, secondLevelItem) {
-                return firtsLevelItem.title + (secondLevelItem ? '/' + secondLevelItem.title : '');
+                return firtsLevelItem.key + (secondLevelItem ? '/' + secondLevelItem.key : '');
             },
 
             /**

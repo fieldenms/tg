@@ -921,8 +921,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .captionBgColor("#D35F5F")
                 .view(null)
                 .done()
-                .setLayoutFor(Device.DESKTOP, null, "[[[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],[[{rowspan: 2,colspan: 2}], [], []],[[], [], [{colspan: 2}]]]")
-                .setLayoutFor(Device.TABLET, null, "[[[{rowspan: 2,colspan: 2}], [], []],[[{rowspan: 2,colspan: 2}]],[[], []],[[{rowspan: 2,colspan: 2}], [], []],[[{colspan: 2}]]]")
+                .setLayoutFor(Device.DESKTOP, null, "[[[{\"rowspan\": 2,\"colspan\": 2}], [], [], [{\"colspan\": 2}]],[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[], [], [{\"colspan\": 2}]]]")
+                .setLayoutFor(Device.TABLET, null, "[[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[{\"rowspan\": 2,\"colspan\": 2}]],[[], []],[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[{\"colspan\": 2}]]]")
                 .setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []]]").minCellWidth(100).minCellHeight(148).done();
 
     }

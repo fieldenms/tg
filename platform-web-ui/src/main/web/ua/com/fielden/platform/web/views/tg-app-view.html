@@ -139,7 +139,7 @@
                 var viewsDesc = [];
                 if (Array.isArray(viewThatWasChanged)) {
                     viewThatWasChanged.forEach(function (element) {
-                        viewsDesc.push(this.menuItem.title + " \u2192 " +  element);
+                        viewsDesc.push(this.menuItem.key + " \u2192 " +  element);
                     }.bind(this));
                     return viewsDesc;
                 }

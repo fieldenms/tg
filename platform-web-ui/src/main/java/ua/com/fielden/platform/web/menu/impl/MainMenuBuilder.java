@@ -2,11 +2,9 @@ package ua.com.fielden.platform.web.menu.impl;
 
 import static java.lang.String.format;
 
-import java.util.List;
-
 import org.apache.commons.lang.StringUtils;
 
-import ua.com.fielden.platform.menu.Module;
+import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -70,7 +68,13 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout, IExecutable 
         return new JsCode(format("{%s}", menuConfig));
     }
 
-    public List<Module> getModules() {
-        return mainMenu.getModules();
+    public Menu getMenu() {
+        return new Menu().
+                setMenu(mainMenu.getModules()).
+                setMinCellWidth(tileLayout.getMinCellWidth() + "px").
+                setMincellHeight(tileLayout.getMinCellHeight() + "px").
+                setWhenDesktop(tileLayout.getLayout(Device.DESKTOP, null).get()).
+                setWhenTablet(tileLayout.getLayout(Device.TABLET, null).get()).
+                setWhenMobile(tileLayout.getLayout(Device.MOBILE, null).get());
     }
 }

@@ -187,6 +187,6 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public Menu getMenuEntity() {
-        return new Menu().setMenu(desktopMainMenuConfig.getModules());
+        return desktopMainMenuConfig.getMenu();
     }
 }
