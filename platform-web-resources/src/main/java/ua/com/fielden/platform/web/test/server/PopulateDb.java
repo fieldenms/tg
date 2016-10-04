@@ -1,14 +1,23 @@
 package ua.com.fielden.platform.web.test.server;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Currency;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
@@ -236,32 +245,40 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgEntityWithTimeZoneDates timeZone5 = save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
         System.out.println("timeZone5.getId() == " + timeZone5.getId());
         
-        final TgMachine machine = save(new_(TgMachine.class, "BC4567AC"));
-        System.out.println(machine.isValid());
-        System.out.println("machine.getId() == " + machine.getId());
-        final TgMessage message = (TgMessage) save(new_composite(TgMessage.class, machine, date("2010-01-01 00:00:00"))
-                .setX(BigDecimal.valueOf(24.029385))
-                .setY(BigDecimal.valueOf(49.842102))
-                .setVectorAngle(90)
-                .setVectorSpeed(55)
-                .setAltitude(223)
-                .setVisibleSattelites(2)
-                .setDin1(true)
-                .setGpsPower(true)
-                .setTravelledDistance(BigDecimal.valueOf(24.6))
-                );
-        System.out.println("message.getId() == " + message.getId());
-        save(new_composite(TgMessage.class, machine, date("2010-01-01 00:00:15"))
-                .setX(BigDecimal.valueOf(24.023591))
-                .setY(BigDecimal.valueOf(49.841757))
-                .setVectorAngle(70)
-                .setVectorSpeed(35)
-                .setAltitude(229)
-                .setVisibleSattelites(2)
-                .setDin1(true)
-                .setGpsPower(true)
-                .setTravelledDistance(BigDecimal.valueOf(14.6))
-                );
+        
+        try {
+            final ClassLoader classLoader = getClass().getClassLoader();
+            final File file = new File(classLoader.getResource("gis/messageEntities.js").getFile());
+            final InputStream stream = new FileInputStream(file);
+            final ObjectMapper objectMapper = new ObjectMapper();
+            final ArrayList oldMessageEntities = objectMapper.readValue(stream, ArrayList.class);
+
+            final Map<String, TgMachine> machines = new HashMap<>();
+            for (final Object oldMessageEntity: oldMessageEntities) {
+                final Map<String, Object> map = (Map<String, Object>) oldMessageEntity;
+                final Map<String, Object> messageProps = ((Map<String, Object>) map.get("properties"));
+                final String machineKey = (String) ((Map<String, Object>) ((Map<String, Object>) messageProps.get("machine")).get("properties")).get("key"); 
+                TgMachine found = machines.get(machineKey);
+                if (found == null) {
+                    found = save(new_(TgMachine.class, machineKey));
+                    machines.put(machineKey, found);
+                }
+                final TgMessage message = (TgMessage) save(new_composite(TgMessage.class, found, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").parseDateTime(((String) messageProps.get("gpsTime"))).toDate())
+                        .setX(BigDecimal.valueOf((double) messageProps.get("x")))
+                        .setY(BigDecimal.valueOf((double) messageProps.get("y")))
+                        .setVectorAngle((int) messageProps.get("vectorAngle"))
+                        .setVectorSpeed((int) messageProps.get("vectorSpeed"))
+                        // .setAltitude(223)
+                        // .setVisibleSattelites(2)
+                        .setDin1((boolean) messageProps.get("din1"))
+                        .setGpsPower((boolean) messageProps.get("gpsPower"))
+                        .setTravelledDistance(BigDecimal.valueOf((double) messageProps.get("travelledDistance")))
+                        );
+            }
+        } catch (final IOException e1) {
+            e1.printStackTrace();
+            throw new RuntimeException(e1);
+        }
 
         final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
         mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));

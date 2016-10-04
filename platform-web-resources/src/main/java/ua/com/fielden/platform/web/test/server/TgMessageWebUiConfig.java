@@ -53,6 +53,8 @@ public class TgMessageWebUiConfig {
                 .addCrit("machine").asMulti().autocompleter(TgMachine.class).also()
                 .addCrit("gpsTime").asRange().date()
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
+                .setPageCapacity(10000)
+                .setVisibleRowsCount(10)
 
                 .addProp("machine")
                     .order(1).asc()
