@@ -3,14 +3,9 @@
 <link rel="import" href="/resources/gis/message/tg-message-entity-styling.html">
 <link rel="import" href="/resources/gis/message/tg-message-marker-factory.html">
 
-<script src="/resources/gis/message/init/messageEntities.js"></script>
-<script src="/resources/gis/message/init/messageEntityCentre.js"></script>
 <script>
 (function() {
-	var MessageGisComponent = function(mapDiv, progressDiv, progressBarDiv, tgMap) {
-	    this._entitiesString = L.GIS.messageEntitiesString;
-	    this._entityCentreString = L.GIS.messageEntityCentreString;
-
+	var MessageGisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap) {
 		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
 	};
 
@@ -19,17 +14,6 @@
 
 	MessageGisComponent.prototype.createMarkerCluster = function(map, markerFactory, progressDiv, progressBarDiv) {
 		return new L.GIS.MessageMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
-	};
-
-	MessageGisComponent.prototype.initialise = function() {
-		// this._geoJsonOverlay.addData(new MessageInitialiser().geoJsonFeatures());
-		this.promoteEntityCentreString(this._entityCentreString);
-		console.debug(this._entityCentre);
-
-		L.GIS.GisComponent.prototype.initialise.call(this);
-
-		// this.promoteEntitiesString(this._entitiesString);
-		// console.debug(this._entities);
 	};
 
 	MessageGisComponent.prototype.createEntityStyling = function() {

@@ -148,21 +148,6 @@
 		this._geoJsonOverlay.clearLayers();
 		this._markerCluster.getGisMarkerClusterGroup().clearLayers();
 	};
-
-	GisComponent.prototype.promoteEntityCentreString = function(entityCentreString) {
-		var self = this;
-		console.debug("Entity centre JSON string parsing...");
-		this._entityCentre = JSON.parse(entityCentreString);
-		console.debug("Entity centre JSON string parsing ended.");
-	};
-
-	GisComponent.prototype.promoteEntitiesString = function (entitiesString) {
-		console.debug("Entities JSON string parsing...");
-		var _entities = JSON.parse(entitiesString);
-		console.debug("Entities JSON string parsing ended.");
-		
-		self.promoteEntities(_entities);
-	};
 	
 	GisComponent.prototype.promoteEntities = function (newEntities) {
 		var self = this;
