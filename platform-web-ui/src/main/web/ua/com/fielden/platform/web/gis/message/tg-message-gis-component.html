@@ -30,7 +30,7 @@
 			if (featureType === 'TgMessage' || featureType === 'Summary_TgMessage') {
 				return L.GIS.GisComponent.prototype.createGeometry.call(this, feature);
 			} else {
-				throw "MessageGisComponent.prototype.createGeometry: [" + featureType + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' or 'Summary_TgMessage'.";
+				throw "MessageGisComponent.prototype.createGeometry: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' or 'Summary_TgMessage'.";
 			}
 		} else {
 			throw "MessageGisComponent.prototype.createGeometry: [" + feature + "] is empty.";
