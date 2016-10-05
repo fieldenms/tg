@@ -10,6 +10,7 @@
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
 <link rel="import" href="/resources/polymer/paper-drawer-panel/paper-drawer-panel.html">
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
@@ -32,20 +33,33 @@
                 z-index: 1;
                 width: 50px;
                 height: 50px;
-            }
-            ;
+            };
             --paper-menu: {
                 padding: 0;
                 margin: 0;
                 overflow: auto;
-            }
-            ;
+            };
             --paper-item: {
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
-            }
-            ;
+            };
+        }
+        paper-menu.menu-content {
+            --paper-menu: {
+                overflow: hidden;
+            };
+        }
+        paper-checkbox::shadow #checkboxLabel {
+            display: none;
+        }
+        paper-checkbox.blue {
+            margin: 0 4px 0 2px;
+            --paper-checkbox-size: 16px;
+            --paper-checkbox-checked-color: var(--paper-menu-color, --primary-text-color);
+            --paper-checkbox-checked-ink-color: var(--paper-menu-color, --primary-text-color);
+            --paper-checkbox-unchecked-color: var(--paper-menu-color, --primary-text-color);
+            --paper-checkbox-unchecked-ink-color: var(--paper-menu-color, --primary-text-color);
         }
         neon-animated-pages {
             position: absolute;
@@ -75,6 +89,11 @@
         }
         .menu-item-view {
             overflow: auto;
+        }
+        .menu-item-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .tool-bar {
             padding: 0 16px;
@@ -108,12 +127,16 @@
                         <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
                             <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.desc]]">
                                 <iron-icon icon="av:play-arrow" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
+                                <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[firstLevelItem.isVisible]]" on-change="_changeVisiblity" on-tap="_tapCheckbox"></paper-checkbox>
                                 <span>[[firstLevelItem.key]]</span>
                             </paper-item>
                             <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]" on-dom-change="_menuTemplateRendered">
                                 <paper-menu class="menu-content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
                                     <template is="dom-repeat" items="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
-                                        <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]">[[item.key]]</paper-item>
+                                        <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]">
+                                            <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.isVisible]]" on-change="_changeVisiblity" on-tap="_tapCheckbox"></paper-checkbox>
+                                            <span class="menu-item-title">[[item.key]]</span>
+                                        </paper-item>
                                     </template>
                                 </paper-menu>
                             </template>
@@ -185,6 +208,7 @@
                     type: Object,
                     notify: true
                 },
+                canEdit: Boolean,
                 animationConfig: {
                     value: function () {
                         return {
@@ -378,6 +402,13 @@
                         target.__content.focus();
                     }
                 }
+            },
+            
+            _tapCheckbox: function (event) {
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
             }
         });
     })();

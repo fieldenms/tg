@@ -34,6 +34,20 @@ public class ModuleMenuItem extends AbstractEntity<String> {
     @Title(value = "View", desc = "Menu item view")
     private View view;
 
+    @IsProperty
+    @Title(value = "Is Visible", desc = "Is menu item visible")
+    private boolean isVisible = false;
+
+    @Observable
+    public ModuleMenuItem setIsVisible(final boolean isVisible) {
+        this.isVisible = isVisible;
+        return this;
+    }
+
+    public boolean getIsVisible() {
+        return isVisible;
+    }
+
     @Observable
     public ModuleMenuItem setView(final View view) {
         this.view = view;

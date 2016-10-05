@@ -21,7 +21,7 @@
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
-                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu-item="[[item]]" selected-module="[[_routeData.moduleName]]" submodule="{{_subroute}}"></tg-app-view>
+                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" selected-module="[[_routeData.moduleName]]" submodule="{{_subroute}}"></tg-app-view>
             </template>
         </neon-animated-pages>
         <tg-entity-master 
