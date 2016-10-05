@@ -347,23 +347,18 @@ private Technician technician;
 	So far, we've discussed only the in-memory state modification and how the \emph{entity} part of a \emph{fractal object} is used to model and ensure correctness of a business entity.
 	The examples above illustrate that in-memory changes require the ability to executed potentially complex validation rules, including communication with the application database.
 	Changes to some properties may result in changes to some other properties.
-	This shows that changing entity properties encompasses rich behaviour, which is captured at the entity model level declaratively and is transparently integrated with an application UI.
-	However, we did not discuss how entities are persisted or retrieved, and the examples covered only the modelling of a Noun -- not Verbs.
-	The answer to these concerns lies with the other half of the \emph{Fractal Objects} pattern, the \emph{companion object}, which is introduced next.
-
-
-	\iffalse
+	This shows that changing entity properties encompasses rich domain behaviour, which is captured at the entity model level declaratively and is transparently integrated with an application UI.
+	The main \emph{takeaway} from this, is that the same business rules to verify an entity state validity are applied consistently regardless of where in the business logic or UI any particular entity instance is modified.
+	This is a lot stronger guarantee than offered by other frequently used approaches where different ``services'' can change the same properties of the same entity, but with different and potentially inconsistent/contradicting validation business rules.
 	
-
 	\paragraph{Companion Object.}	
 	A \emph{companion object} models the four basic operations that can be performed on a corresponding \emph{entity object}.
 	It represents a RESTful interface to its counterpart entity object.
 	Only by means of a companion object could an entity be \emph{created}, \emph{saved}, \emph{deleted}, and \emph{retrieved} from a database.
 	One could think of these operations as simple CRUD, but this analogy could be misleading for reasons that will become evident further into the discussion.
 	
-
-	Unlike the rich domain model approach~\cite{evans2003},
-
+	
+\iffalse
 
 	Unlike the anemic domain model~\cite{fowler2003}, an entity has the responsibility to ensure the correctness of its state.
 	
@@ -763,6 +758,9 @@ Shneiderman, B. Direct manipulation: A step beyond programming languages. Comput
 
 \bibitem{SOLID} SOLID (object-oriented design), 
 \href{https://en.wikipedia.org/wiki/SOLID_(object-oriented_design)}{Online}
+
+\bibitem{CQRS} CQRS design pattern, 
+\href{https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf}{Online}
 
 \end{thebibliography}
 %
