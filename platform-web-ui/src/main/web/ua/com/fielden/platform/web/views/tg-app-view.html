@@ -26,10 +26,10 @@
         </div>
         <div class="flex layout vertical">
             <!--cross-fade animation here-->
-            <template is="dom-if" if="[[!menuItem.menu]]">
+            <template is="dom-if" if="[[!_isMenuPresent(menuItem.menu)]]">
                 <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[menuItem]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view>
             </template>
-            <template is="dom-if" if="[[menuItem.menu]]">
+            <template is="dom-if" if="[[_isMenuPresent(menuItem.menu)]]">
                 <tg-view-with-menu class="fit" id="view" menu-item="[[menuItem]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view-with-menu>
             </template>
         </div>
@@ -146,9 +146,14 @@
                 return viewThatWasChanged; 
             },
             
+            _isMenuPresent: function (menu) {
+                return menu && menu.length > 0;
+            },
+            
             _calcStyleForItem: function (menuItem) {
                 return "background-color: " + menuItem.bgColor + ";";
             },
+            
             _calcSvgStyleForItem: function (menuItem) {
                 return "color: " + menuItem.bgColor + "; opacity:0.5;";
             }

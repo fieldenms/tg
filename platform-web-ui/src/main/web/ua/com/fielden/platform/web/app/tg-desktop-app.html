@@ -248,7 +248,7 @@
                     
                     this.postRetrieved = function (entity, bindingEntity, customObject) {
                         this.menuConfig = entity;
-                    };
+                    }.bind(this);
                     this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
                     this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
                 },
