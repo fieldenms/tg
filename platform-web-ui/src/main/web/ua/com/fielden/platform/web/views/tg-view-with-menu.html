@@ -127,14 +127,14 @@
                         <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
                             <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.desc]]">
                                 <iron-icon icon="av:play-arrow" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
-                                <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[firstLevelItem.isVisible]]" on-change="_changeVisiblity" on-tap="_tapCheckbox"></paper-checkbox>
+                                <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="{{firstLevelItem.isVisible}}" on-change="_changeVisibility" on-tap="_tapCheckbox"></paper-checkbox>
                                 <span>[[firstLevelItem.key]]</span>
                             </paper-item>
                             <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]" on-dom-change="_menuTemplateRendered">
                                 <paper-menu class="menu-content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
                                     <template is="dom-repeat" items="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
                                         <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]">
-                                            <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.isVisible]]" on-change="_changeVisiblity" on-tap="_tapCheckbox"></paper-checkbox>
+                                            <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="{{item.isVisible}}" on-change="_changeVisibility" on-tap="_tapCheckbox"></paper-checkbox>
                                             <span class="menu-item-title">[[item.key]]</span>
                                         </paper-item>
                                     </template>
@@ -209,6 +209,7 @@
                     notify: true
                 },
                 canEdit: Boolean,
+                menuSaveCallback: Function,
                 animationConfig: {
                     value: function () {
                         return {
@@ -287,6 +288,14 @@
                     }
                 }
                 return changedViews.length > 0 ? changedViews : undefined;
+            },
+            
+            _changeVisibility: function (e) {
+                var menuItem = encodeURIComponent(this.menuItem.key);
+                var group = encodeURIComponent(e.model.firstLevelItem.key);
+                var subItem = e.model.item && encodeURIComponent(e.model.item.key);
+                var menuItemUri = menuItem + "/" + group + (subItem ? "/" + subItem : "");
+                this.menuSaveCallback(menuItemUri, e.model.item && e.model.item.isVisible || e.model.firstLevelItem.isVisible);
             },
             
             _isMenuPresent: function (menu) {

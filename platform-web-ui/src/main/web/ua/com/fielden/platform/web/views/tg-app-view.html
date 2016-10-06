@@ -30,7 +30,7 @@
                 <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[menuItem]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view>
             </template>
             <template is="dom-if" if="[[_isMenuPresent(menuItem.menu)]]">
-                <tg-view-with-menu class="fit" id="view" menu-item="[[menuItem]]" can-edit="[[canEdit]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view-with-menu>
+                <tg-view-with-menu class="fit" id="view" menu-item="[[menuItem]]" can-edit="[[canEdit]]" menu-save-callback="[[menuSaveCallback]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view-with-menu>
             </template>
         </div>
 
@@ -60,7 +60,8 @@
                         return {};
                     }
                 },
-                canEdit: Boolean
+                canEdit: Boolean,
+                menuSaveCallback: Function
             },
 
             behaviors: [

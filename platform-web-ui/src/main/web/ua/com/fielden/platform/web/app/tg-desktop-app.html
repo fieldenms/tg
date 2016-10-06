@@ -5,6 +5,7 @@
 <link rel="import" href="/resources/views/tg-app-menu.html">
 <link rel="import" href="/resources/views/tg-app-view.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
@@ -21,10 +22,10 @@
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
-                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" selected-module="[[_routeData.moduleName]]" submodule="{{_subroute}}"></tg-app-view>
+                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_routeData.moduleName]]" submodule="{{_subroute}}"></tg-app-view>
             </template>
         </neon-animated-pages>
-        <tg-entity-master 
+        <tg-entity-master
             id="masterDom"
             entity-type="ua.com.fielden.platform.menu.Menu"
             entity-id="new"
@@ -39,12 +40,13 @@
             _process-saver-error="[[_processSaverError]]"
             _saver-loading="{{_saverLoading}}">
             <tg-ui-action
+                id="menuSaveAction"
                 ui-role='ICON'
-                component-uri='/master_ui/ua.com.fielden.platform.sample.domain.TgDummyAction'
-                element-name='tg-TgDummyAction-master'
+                component-uri='/master_ui/ua.com.fielden.platform.menu.MenuSaveAction'
+                element-name='tg-MenuSaveAction-master'
                 show-dialog='[[_showDialog]]'
                 create-context-holder='[[_createContextHolder]]'
-                attrs='[[attrs]]'
+                attrs='[[_attrs]]'
                 require-selection-criteria='false'
                 require-selected-entities='NONE'
                 require-master-entity='false'>
@@ -84,21 +86,20 @@
                     saveOnActivation: {
                         type: Boolean,
                         value: true
-                   },
+                    },
                     _route: {
                         type: Object,
                         observer: "_routeChanged"
                     },
                     _routeData: Object,
                     _subroute: Object,
-                    
+
                     //action related properties.
-                    attrs: {
-                        type: Object,
-                        value: function () { return {}; }
-                    }
-                    
-                    
+                    _attrs: Object,
+                    _saveIdentifier: Number,
+                    _visibleMenuItems: Array,
+                    _invisibleMenuItems: Array,
+                    _saveMenuVisibilityChanges: Function
                 },
 
                 behaviors: [Polymer.TgBehaviors.TgEntityMasterBehavior],
@@ -188,69 +189,96 @@
                         }
                     }
                 },
-                
+
                 //Entity master related functions
-                
+
                 _masterDom: function () {
-            	   return this.$.masterDom;
+                    return this.$.masterDom;
                 },
-            
+
                 /**
                  * The core-ajax component for entity retrieval.
                  */
                 _ajaxRetriever: function () {
                     return this._masterDom()._ajaxRetriever();
                 },
-            
+
                 /**
                  * The core-ajax component for entity saving.
                  */
                 _ajaxSaver: function () {
                     return this._masterDom()._ajaxSaver();
                 },
-            
+
                 /**
                  * The validator component.
                  */
                 _validator: function () {
                     return this._masterDom()._validator();
                 },
-            
+
                 /**
                  * The component for entity serialisation.
                  */
                 _serialiser: function () {
-            	   return this._masterDom()._serialiser();
+                    return this._masterDom()._serialiser();
                 },
-            
+
                 /**
                  * The reflector component.
                  */
                 _reflector: function () {
-            	   return this._masterDom()._reflector();
+                    return this._masterDom()._reflector();
                 },
-            
+
                 /**
                  * The toast component.
                  */
                 _toastGreeting: function () {
-            	   return this._masterDom()._toastGreeting();
+                    return this._masterDom()._toastGreeting();
                 },
-                
 
                 ready: function () {
                     //setting the uuid for this master.
-                    this.uuid = this.is + '/'+ this._reflector().generateUUID();
+                    this.uuid = this.is + '/' + this._reflector().generateUUID();
+                    this._attrs = {entityType: "ua.com.fielden.platform.menu.MenuSaveAction", currentState: "EDIT", centreUuid: this.uuid};
                     //Setting dwellTime to 0 for iron-location that is in the shadow-dom of carbon-location component. This fixes the problem of delayong the history changes.
                     this.$.location.$$("iron-location").dwellTime = 0;
                     //Binding to 'this' functions those are used outside the scope of this component.
                     this._checkWeatherCanLeave = this._checkWeatherCanLeave.bind(this);
-                    
+                    this._saveMenuVisibilityChanges = function (menuItem, isVisible) {
+                        if (this._saveIdentifier) {
+                            this.cancelAsync(this._saveIdentifier);
+                            this._saveIdentifier = null;
+                        }
+                        if (isVisible) {
+                            this._visibleMenuItems = this._visibleMenuItems || [];
+                            this._visibleMenuItems.push(menuItem);
+                        } else {
+                            this._invisibleMenuItems = this._invisibleMenuItems || [];
+                            this._invisibleMenuItems.push(menuItem);
+                        }
+                        this.saveIdentifier = this.async(function () {
+                            this.$.menuSaveAction._run();
+                        }, 200);
+                    }.bind(this);
+                    //Init master related functions.
                     this.postRetrieved = function (entity, bindingEntity, customObject) {
                         this.menuConfig = entity;
                     }.bind(this);
                     this.postValidated = function (validatedEntity, bindingEntity, customObject) {};
                     this.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
+                    //Init action related functions
+                    this.$.menuSaveAction.modifyFunctionalEntity = function (bindingEntity, master) {
+                        if (this._visibleMenuItems && this._visibleMenuItems.length > 0) {
+                            this.$.menuSaveAction.modifyValu4Property("visibleMenuItems", bindingEntity, this._visibleMenuItems);
+                            this._visibleMenuItems = null;
+                        }
+                        if (this._invisibleMenuItems && this._invisibleMenuItems.length > 0) {
+                            this.$.menuSaveAction.modifyValu4Property("invisibleMenuItems", bindingEntity, this._invisibleMenuItems);
+                            this._invisibleMenuItems = null;
+                        }
+                    }
                 },
 
                 attached: function () {
