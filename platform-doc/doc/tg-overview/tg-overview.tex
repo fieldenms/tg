@@ -354,11 +354,60 @@ private Technician technician;
 	\paragraph{Companion Object.}	
 	A \emph{companion object} models the four basic operations that can be performed on a corresponding \emph{entity object}.
 	It represents a RESTful interface to its counterpart entity object.
-	Only by means of a companion object could an entity be \emph{created}, \emph{saved}, \emph{deleted}, and \emph{retrieved} from a database.
-	One could think of these operations as simple CRUD, but this analogy could be misleading for reasons that will become evident further into the discussion.
+	Only by means of a companion object could an entity be \emph{created}, \emph{saved}, \emph{deleted}, and \emph{retrieved}\footnote{One could think of these operations as simple CRUD, but this analogy is misleading for reasons that will become evident further into the discussion.}.
+	
+	The power of having a limited number of operations has been demonstrated by the REST style~\cite{Fielding2000} of architecture for web applications.
+	We argue that similar benefits are gained at the level of domain modelling.
+  	There is a lot of semantic similarities between REST style of web resources (macro level) and objects modelling of a business domain (micro level).
+  	For example, the use of URI paths to navigate between web resources is analogous to paths in object graphs for association traversal.
+  	This resonates with the original view of object-oriented systems by Alan Key, who emphasised similarity between objects and networked computers.
+  	Although, web is a delivery mechanism and a software system may or may not run on the web, its intrinsic nature of interconnected resources with uniform interaction mechanism seems to be very appropriate for an object-oriented modelling.
+
+	The operations that are defined for companion objects are reminiscent of the \texttt{HTTP} verbs \texttt{PUT}, \texttt{POST}, \texttt{DELETE} and \texttt{GET}.
+	As is the case with REST web resources, the they may or may not be applicable to a specific entity object in question.
+	
+	For example, not all persistent entity objects that can be \texttt{saved} and \texttt{retrieved} from a database should necessarily support \texttt{deletion}.
+	An entity can model a business process, such as purchase order authorisation.
+	\texttt{Saving} such entity triggers the execution of a rich transactional business logic that affects multiple related entities, including changes to their persistent state.
+	However, in itself, that entity could be transient and its properties serve only as parameters of the business process in question.
+	
+	As mentioned before, the conventional OOP thinking views a class as a basic building block or a module when applied to the modelling of a business domain.
+	This leads to an ``understanding'' that an object should encapsulate and express its behaviour as methods of a class when modelling a business entity. 
+	Thus, any object may have many, often unrelated, methods that try to capture different behavioural aspects of some business entity.
+	For example, with such approach entity purchase order could be modelled as class \texttt{PurchaseOrder} with separate methods to print purchase order, export purchase order, add purchase order line, authorise purchase order etc.
+	This clearly violates at least the single responsibility principle~\cite{SOLID} and raises the question of adequate separation of concerns as class \texttt{PurchaseOrder} would need to be modified for multiple unrelated reasons such as changes in the export format requirements or the structure of a purchase order line object.
+	In order to resolve these problems many software architectural styles introduce the notion of \emph{services} (e.g. domain services in Domain-Drive Design).
+	Such approach does not solve the problem per se as it only represents an \emph{escape route} to move some ``unfitting'' (whatever the criteria for that is) behaviour from a class that represent a domain entity to another class, which is thought of as a ``service''.
+	Also, this introduces an additional design concept that has the same set of problems -- what behaviour should it encapsulate, what methods should it expose etc.
 	
 	
+	
+	
+
 \iffalse
+
+
+	Surprisingly, I don't see in the other answers what i consider the real difference between REST and CRUD: what does each one manages.
+
+	CRUD means the basic operations to be done in a data repository. You directly handle records or data objects; apart from these operations, the records are passive entities. Typically it's just database tables and records.
+
+	REST, on the other hand, operates on resource representations, each one identified by an URL. These are typically not data objects, but complex objects abstractions.
+
+
+	
+	A service encapsulates entities and it protects consistency through the business logic. 
+	If the original business request affects multiple entities, a service can only provide complete service if it gets enough information about the original request.
+	Then it can execute the business logic, apply that business logic even across multiple entities, and maintain both information consistency and transactional consistency.
+	
+	%CRUD does not offer this.
+	
+
+	Unlike the rich domain model approach~\cite{evans2003},
+	
+	
+	Design pattern \emph{Command} is a very good analogy for understanding \emph{Functional Entities}.
+	The added value of using FO for modelling functional entities has to do with the behaviour that is provided by an entity object such as property validation, dependency handling etc.
+
 
 	Unlike the anemic domain model~\cite{fowler2003}, an entity has the responsibility to ensure the correctness of its state.
 	
@@ -376,17 +425,7 @@ private Technician technician;
   It can either be create, saved, deleted or requested (i.e. searched for).
   Each of this operation can be represented by one or more actual methods at the code level.
     
-  The power of having a limited number of operations has been demonstrated by the REST style~\cite{Fielding2000} of architecture for web applications.
-  We argue that similar benefits are gained at the level of domain modelling.
-  There is a lot of semantic similarities between REST style of web resources (macro level) and objects modelling the domain (micro level).
-  For example, the use of URI paths to navigate between web resources is analogous to paths in object graphs for association traversal.
-  To us this resonates with the original view of object-oriented systems by Alan Key, who emphasised similarity between objects and networked computers.
-  And although web is just a delivery mechanism, and a software system may or may not run on the web, its intrinsic nature of interconnected resources with uniform interaction mechanism seems to be very appropriate for an object-oriented modelling.
-  It was one of our design goals to capture this approach of modelling complex structures and behaviour as part of the Fractal Objects approach.
-
-  Similarly to entity objects, companion objects can be composed in order to achieve a more complex behaviour.
-  Companion objects provide a clean separation of concern by fully encapsulating the behaviour, making sure that entity objects represent a pure structure of relationships between entities in a business domain or some more abstract entities.
-  
+    
   Due to the fact that companion objects are interfaces, a natural question arises as to who and when fulfils the actual implementation.
   In our work, the computing platform provides the generic implementation for companion objects that can be inherited from and enhanced as part of a specific software system.
   The inherited implementation gets injected at runtime.
