@@ -101,7 +101,7 @@ public class TgStopDao extends CommonEntityDao<TgStop> implements ITgStop {
 
         final QueryExecutionModel<TgMessage, EntityResultQueryModel<TgMessage>> resultQuery = from(DynamicQueryBuilder.createQuery(TgMessage.class, qProperties).model()) //
         .with(DynamicOrderingBuilder.createOrderingModel(TgMessage.class, orderingProps))//
-        .with(DynamicFetchBuilder.createFetchOnlyModel(TgMessage.class, new LinkedHashSet<String>(Arrays.asList(TgMessage.MACHINE_PROP_ALIAS, TgMessage.MACHINE_PROP_ALIAS + ".orgUnit", "gpsTime", "x", "y", "vectorSpeed", "vectorAngle", "altitude"))))//
+        .with(DynamicFetchBuilder.createFetchOnlyModel(TgMessage.class, new LinkedHashSet<String>(Arrays.asList(TgMessage.MACHINE_PROP_ALIAS, TgMessage.MACHINE_PROP_ALIAS + ".orgUnit", "gpsTime", "x", "y", "vectorSpeed", "vectorAngle", "altitude", "travelledDistance", "din1"))))//
         .lightweight()
         // TODO .with(DynamicParamBuilder.buildParametersMap(enhancedType(), paramMap)).model();
         .model();
