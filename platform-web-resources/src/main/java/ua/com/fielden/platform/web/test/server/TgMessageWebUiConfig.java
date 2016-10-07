@@ -76,6 +76,7 @@ public class TgMessageWebUiConfig {
                 .also()
                 .addProp("din1")
                     .width(90)
+                .setRenderingCustomiser(TgMessageRenderingCustomiser.class)
                 .setFetchProvider(EntityUtils.fetch(TgMessage.class).with("x", "y", "altitude", "vectorAngle"))
                 .addInsertionPoint(
                     action(TgMessageMap.class)
