@@ -19,6 +19,8 @@ import java.util.Optional;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.basic.config.Workflows;
@@ -87,6 +89,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4;
+import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
 import ua.com.fielden.platform.web.action.pre.ExportPreAction;
@@ -129,8 +132,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentreBuilder;
-
-import com.google.inject.Inject;
 
 /**
  * App-specific {@link IWebUiConfig} implementation.
@@ -198,6 +199,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         // Add entity centres.
         
         TgMessageWebUiConfig.register(injector(), configApp());
+        TgStopWebUiConfig.register(injector(), configApp());
 
         //Centre configuration for deletion test case entity.
         final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
@@ -867,6 +869,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         "Також дозволяє переглядати обчислений кілометраж у вигляді графіка і / або таблиці." + //
                         "</html>"
                 ).centre(configApp().getCentre(MiTgMessage.class).get()).done()
+                .addMenuItem("Зупинки (Web)").description(
+                        "Забезпечує можливість перегляду, моніторингу й аналізу зупинок, які були здійснені машинами компанії." + "<br><br>"
+                      + "Зупинка означає, що машина деякий час простоювала або повільно їхала в межах певної невеликої території. Порогові значення "
+                      + "для радіусу території чи швидкості переміщення задає користувач. Також він звісно може задавати "
+                      + "пошук по машинах, організаційних підрозділах та часу здійснення зупинки." + //
+                        "</html>"
+                ).centre(configApp().getCentre(MiTgStop.class).get()).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
