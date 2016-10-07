@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.test.server;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
 import com.google.inject.Injector;
@@ -11,8 +10,8 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.sample.domain.TgMachine;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit;
 import ua.com.fielden.platform.sample.domain.TgStop;
+import ua.com.fielden.platform.sample.domain.TgStopMap;
 import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
-import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
@@ -40,7 +39,7 @@ public class TgStopWebUiConfig {
         centre = createCentre(injector);
         builder.register(centre);
         
-        // builder.register(createTgStopMapMaster(injector));
+        builder.register(createTgStopMapMaster(injector));
     }
 
     /**
@@ -97,27 +96,26 @@ public class TgStopWebUiConfig {
                 .addProp("distance")
                     .width(150)
                 // TODO .setRenderingCustomiser(TgMessageRenderingCustomiser.class)
-                // .setFetchProvider(EntityUtils.fetch(TgStop.class).with("x", "y", "altitude", "vectorAngle"))
-//                .addInsertionPoint(
-//                    action(TgStopMap.class)
-//                            .withContext(context().withSelectionCrit().build())
-//                            .icon("credit-card")
-//                            .shortDesc("TgStop map")
-//                            .withNoParentCentreRefresh()
-//                            .build(),
-//                    InsertionPoints.BOTTOM
-//                )
+                .addInsertionPoint(
+                    action(TgStopMap.class)
+                            .withContext(context().withSelectionCrit().build())
+                            .icon("credit-card")
+                            .shortDesc("TgStop map")
+                            .withNoParentCentreRefresh()
+                            .build(),
+                    InsertionPoints.BOTTOM
+                )
                 .build();
 
         final EntityCentre<TgStop> entityCentre = new EntityCentre<>(MiTgStop.class, "MiTgStop", centre, injector, null);
         return entityCentre;
     }
     
-//    public static EntityMaster<TgStopMap> createTgStopMapMaster(final Injector injector) {
-//        final IMaster<TgStopMap> config = new TgStopMapMaster();
-//        return new EntityMaster<TgStopMap>(
-//                TgStopMap.class,
-//                config,
-//                injector);
-//    }
+    private static EntityMaster<TgStopMap> createTgStopMapMaster(final Injector injector) {
+        final IMaster<TgStopMap> config = new TgStopMapMaster();
+        return new EntityMaster<TgStopMap>(
+                TgStopMap.class,
+                config,
+                injector);
+    }
 }

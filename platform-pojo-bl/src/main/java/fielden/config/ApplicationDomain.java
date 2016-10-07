@@ -34,6 +34,7 @@ import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStop;
+import ua.com.fielden.platform.sample.domain.TgStopMap;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 
@@ -84,6 +85,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgMessageMap.class);
         add(TgStop.class);
         add(TgOrgUnit.class);
+        add(TgStopMap.class);
     }
 
     @Override
