@@ -86,7 +86,7 @@
 			} else if (featureType === 'Summary_TgMessage') {
 				return 'Машина: ' + this.valueToString(feature.properties._machine);
 			} else {
-				throw "StopGisComponent.prototype.createPopupContent: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'Stop', 'TgMessage' or 'Summary_TgMessage'.";
+				throw "StopGisComponent.prototype.createPopupContent: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgStop', 'TgMessage' or 'Summary_TgMessage'.";
 			}
 		} else {
 			throw "StopGisComponent.prototype.createPopupContent: [" + feature + "] is empty.";

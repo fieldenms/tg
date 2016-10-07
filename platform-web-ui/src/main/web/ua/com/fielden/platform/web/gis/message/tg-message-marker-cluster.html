@@ -2,14 +2,14 @@
 
 <script>
 (function() {
-	var MessageMarkerCluster = function(_map, _markerFactory, progressDiv, progressBarDiv) {
+	var MessageMarkerCluster = function (_map, _markerFactory, progressDiv, progressBarDiv) {
 		L.GIS.MarkerCluster.call(this, _map, _markerFactory, progressDiv, progressBarDiv);
 	};
 
 	MessageMarkerCluster.prototype = Object.create(L.GIS.MarkerCluster.prototype);
 	MessageMarkerCluster.prototype.constructor = MessageMarkerCluster;
 
-	// MessageMarkerCluster.prototype.getCircleClusterIconLocation = function() {
+	// MessageMarkerCluster.prototype.getCircleClusterIconLocation = function () {
 	// 	// return L.GIS.MarkerCluster.prototype.getCircleClusterIconLocation.call(this);
 	// 	return 'resources/gis/images/circle-red.png';
 	// }

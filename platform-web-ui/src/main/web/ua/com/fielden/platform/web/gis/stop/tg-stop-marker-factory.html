@@ -2,25 +2,23 @@
 
 <script>
 (function() {
-	var StopMarkerFactory= function() {
+	var StopMarkerFactory= function () {
 		L.GIS.MarkerFactory.call(this);
-
-		var self = this;
 	};
 
 	StopMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
 	StopMarkerFactory.prototype.constructor = StopMarkerFactory;
 
-	StopMarkerFactory.prototype.createFeatureMarker = function(entity, latlng) {
-		var self = this;
-		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'TgMessage') {
-				return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(self, entity, latlng);
+	StopMarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
+		if (feature) {
+			var featureType = this.featureType(feature);
+			if (featureType === 'TgMessage') {
+				return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(this, feature, latlng);
 			} else {
-				throw "StopMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'TgMessage' only."; // generates an exception
+				throw "StopMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' only.";
 			}
 		} else {
-			throw "StopMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "StopMarkerFactory.prototype.createFeatureMarker: [" + feature + "] is empty.";
 		}
 	}
 
