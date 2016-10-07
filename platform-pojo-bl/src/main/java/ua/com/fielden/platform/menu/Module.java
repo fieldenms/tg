@@ -3,6 +3,7 @@ package ua.com.fielden.platform.menu;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -22,7 +23,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Title", desc = "Module title")
 @CompanionObject(IModule.class)
 @DescTitle(value = "Description", desc = "Short explanation of module purpose")
-public class Module extends AbstractEntity<String> {
+public class Module extends AbstractEntity<String> implements IMenuManager {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
@@ -94,6 +95,21 @@ public class Module extends AbstractEntity<String> {
 
     public String getBgColor() {
         return bgColor;
+    }
+
+    @Override
+    public boolean removeMenuItem(final String title) {
+        return menu.removeIf(menuItem -> menuItem.getKey().equals(title));
+    }
+
+    @Override
+    public Optional<? extends IMenuManager> getMenuItem(final String title) {
+        return menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst();
+    }
+
+    @Override
+    public void makeMenuItemInvisible(final String title) {
+        menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setIsVisible(false));
     }
 
 }

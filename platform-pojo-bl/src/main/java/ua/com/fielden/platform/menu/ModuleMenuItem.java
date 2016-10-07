@@ -3,6 +3,7 @@ package ua.com.fielden.platform.menu;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -23,7 +24,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Title", desc = "Menu item title")
 @CompanionObject(IModuleMenuItem.class)
 @DescTitle(value = "Description", desc = "Menu item description")
-public class ModuleMenuItem extends AbstractEntity<String> {
+public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManager {
     private static final long serialVersionUID = 1L;
 
     @IsProperty(ModuleMenuItem.class)
@@ -36,7 +37,7 @@ public class ModuleMenuItem extends AbstractEntity<String> {
 
     @IsProperty
     @Title(value = "Is Visible", desc = "Is menu item visible")
-    private boolean isVisible = false;
+    private boolean isVisible = true;
 
     @Observable
     public ModuleMenuItem setIsVisible(final boolean isVisible) {
@@ -67,6 +68,21 @@ public class ModuleMenuItem extends AbstractEntity<String> {
 
     public List<ModuleMenuItem> getMenu() {
         return Collections.unmodifiableList(menu);
+    }
+
+    @Override
+    public Optional<? extends IMenuManager> getMenuItem(final String title) {
+        return menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst();
+    }
+
+    @Override
+    public boolean removeMenuItem(final String title) {
+        return menu.removeIf(menuItem -> menuItem.getKey().equals(title));
+    }
+
+    @Override
+    public void makeMenuItemInvisible(final String title) {
+        menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setIsVisible(false));
     }
 
 }

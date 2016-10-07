@@ -295,7 +295,7 @@
                 var group = encodeURIComponent(e.model.firstLevelItem.key);
                 var subItem = e.model.item && encodeURIComponent(e.model.item.key);
                 var menuItemUri = menuItem + "/" + group + (subItem ? "/" + subItem : "");
-                this.menuSaveCallback(menuItemUri, e.model.item && e.model.item.isVisible || e.model.firstLevelItem.isVisible);
+                this.menuSaveCallback(menuItemUri, e.model.item ? e.model.item.isVisible : e.model.firstLevelItem.isVisible);
             },
             
             _isMenuPresent: function (menu) {

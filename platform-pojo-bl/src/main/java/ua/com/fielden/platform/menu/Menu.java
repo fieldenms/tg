@@ -3,6 +3,7 @@ package ua.com.fielden.platform.menu;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -20,7 +21,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(IMenu.class)
-public class Menu extends AbstractEntity<String> {
+public class Menu extends AbstractEntity<String> implements IMenuManager {
     private static final long serialVersionUID = 1L;
 
     @IsProperty(Module.class)
@@ -120,6 +121,20 @@ public class Menu extends AbstractEntity<String> {
 
     public List<Module> getMenu() {
         return Collections.unmodifiableList(menu);
+    }
+
+    @Override
+    public Optional<? extends IMenuManager> getMenuItem(final String title) {
+        return menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst();
+    }
+
+    @Override
+    public boolean removeMenuItem(final String title) {
+        return menu.removeIf(menuItem -> menuItem.getKey().equals(title));
+    }
+
+    @Override
+    public void makeMenuItemInvisible(final String title) {
     }
 
 }
