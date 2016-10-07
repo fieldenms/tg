@@ -1421,9 +1421,34 @@
             _retrievedEntitySelectionChanged: function (newValue, oldValue) {
                 // console.warn('EGI _retrievedEntitySelectionChanged: prev [', oldValue ? oldValue.entity.properties.layerId : undefined, oldValue ? oldValue.selected : undefined, '] new [', newValue.entity.properties.layerId, newValue.selected, ']');
                 var entityIndex = _findEntity(newValue.entity, this.entities);
-                this.set("egiModel." + entityIndex + ".selected", newValue.selected);
-                _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected)
+                if (entityIndex >= 0) {
+                    this.set("egiModel." + entityIndex + ".selected", newValue.selected);
+                    _processEntitySelection(this.selectedEntities, newValue.entity, newValue.selected)
+                    
+                    if (newValue.selected) { // bring to view the entity that was checked
+                        var scrollContainer = this.querySelector("#scrollContainer");
+                        if (scrollContainer) {
+                            var scrollContainerHeight = scrollContainer.offsetHeight;
+                            var entityRows = scrollContainer.querySelectorAll('.table-data-row');
+                            var entityRow = entityRows[entityIndex];
+                            var entityRowHeight = entityRow.offsetHeight;
+                            var topLockPanel = this.querySelector('#topLockPanel');
+                            var topLockPanelHeightIfAny = topLockPanel ? topLockPanel.offsetHeight : 0; // defines the height of topLockPanel if it exists or zero otherwise
+                            var bottomLockPanel = this.querySelector('#bottomLockPanel');
+                            var bottomLockPanelHeightIfAny = bottomLockPanel ? bottomLockPanel.offsetHeight : 0; // defines the height of bottomLockPanel if it exists or zero otherwise
+                            var yPos = entityRow.offsetTop - entityRow.scrollTop + entityRow.clientTop;
+                            if (yPos < scrollContainer.scrollTop + topLockPanelHeightIfAny) {
+                                // top y position of checked entity row element is above the top visible position of scroll container (topLockPanel is taken into account if exists).
+                                scrollContainer.scrollTop = yPos - topLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible. 
+                            } else if (yPos + entityRowHeight > scrollContainer.scrollTop + scrollContainerHeight - bottomLockPanelHeightIfAny) {
+                                // bottom y position of checked entity row element is under the bottom visible position of scroll container (bottomLockPanel is taken into account if exists).
+                                scrollContainer.scrollTop = yPos + entityRowHeight - scrollContainerHeight + bottomLockPanelHeightIfAny; // scroll programmatically to make checked row fully visible.
+                            }
+                        }
+                    }
+                }
             },
+            
             /**
              * Observs the changes to entities property.
              */
