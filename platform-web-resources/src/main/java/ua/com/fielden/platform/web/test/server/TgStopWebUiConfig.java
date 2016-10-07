@@ -95,7 +95,7 @@ public class TgStopWebUiConfig {
                 .also()
                 .addProp("distance")
                     .width(150)
-                // TODO .setRenderingCustomiser(TgMessageRenderingCustomiser.class)
+                .setRenderingCustomiser(TgStopRenderingCustomiser.class)
                 .addInsertionPoint(
                     action(TgStopMap.class)
                             .withContext(context().withSelectionCrit().build())
