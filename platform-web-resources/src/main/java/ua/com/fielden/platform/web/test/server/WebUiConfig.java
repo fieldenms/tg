@@ -83,6 +83,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDependency;
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity;
+import ua.com.fielden.platform.ui.menu.sample.MiTgMachineRealtimeMonitor;
 import ua.com.fielden.platform.ui.menu.sample.MiTgMessage;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1;
@@ -200,6 +201,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         
         TgMessageWebUiConfig.register(injector(), configApp());
         TgStopWebUiConfig.register(injector(), configApp());
+        TgMachineRealtimeMonitorWebUiConfig.register(injector(), configApp());
 
         //Centre configuration for deletion test case entity.
         final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
@@ -876,6 +878,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                       + "пошук по машинах, організаційних підрозділах та часу здійснення зупинки." + //
                         "</html>"
                 ).centre(configApp().getCentre(MiTgStop.class).get()).done()
+                .addMenuItem("Моніторинг в реальному часі (web)").description(
+                        "<html><h3>Моніторинг в реальному часі (web)</h3>" + //
+                        "Центр для перегляду машин у реальному часі на карті." + //
+                        "</html>"
+                ).centre(configApp().getCentre(MiTgMachineRealtimeMonitor.class).get()).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")

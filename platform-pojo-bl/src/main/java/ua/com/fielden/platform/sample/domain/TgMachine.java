@@ -5,6 +5,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.gis.gps.AbstractAvlMachine;
 /** 
@@ -24,11 +25,11 @@ public class TgMachine extends AbstractAvlMachine<TgMessage> {
     private TgOrgUnit orgUnit;
 
     
-//    @IsProperty(linkProperty = "machine")
-//    @Readonly
-//    @Calculated
-//    @Title(value = "Останнє GPS повідомлення", desc = "Містить інформацію про останнє GPS повідомлення, отримане від GPS модуля.")
-//    private TgMessage lastMessage;
+    @IsProperty(linkProperty = "machine")
+    @Readonly
+    // @Calculated
+    @Title(value = "Останнє GPS повідомлення", desc = "Містить інформацію про останнє GPS повідомлення, отримане від GPS модуля.")
+    private TgMessage lastMessage;
     
     @Observable
     public TgMachine setOrgUnit(final TgOrgUnit orgUnit) {
@@ -40,16 +41,15 @@ public class TgMachine extends AbstractAvlMachine<TgMessage> {
         return orgUnit;
     }
 
-//
     @Override
     @Observable
     public TgMachine setLastMessage(final TgMessage lastMessage) {
-        // this.lastMessage = lastMessage;
+        this.lastMessage = lastMessage;
         return this;
     }
 
     @Override
     public TgMessage getLastMessage() {
-        return /* lastMessage */ null;
+        return lastMessage;
     }
 }
