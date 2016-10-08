@@ -1465,9 +1465,14 @@
                         self.openedEntities[openedEntInd] = newEntity;
                     }
                 });
+                var selectedEntity = null;
                 newValue.forEach(function (newEntity) {
+                    var isSelected = self.selectedEntities.indexOf(newEntity) > -1;
+                    if (isSelected) {
+                        selectedEntity = newEntity;
+                    }
                     var egiEntity = {
-                        selected: self.selectedEntities.indexOf(newEntity) > -1,
+                        selected: isSelected,
                         opened: self.openedEntities.indexOf(newEntity) > -1,
                         entity: newEntity
                     }
@@ -1481,6 +1486,11 @@
                     this.selectedAll = false;
                 }
                 self.egiModel = tempEgiModel;
+                
+                if (selectedEntity) {
+                    self.retrievedEntitySelection = {entity: selectedEntity, selected: true};
+                }
+                
                 this.fire("egi-selection-changed", this.getSelectedEntities());
                 this._updateTableSizeAsync();
             },

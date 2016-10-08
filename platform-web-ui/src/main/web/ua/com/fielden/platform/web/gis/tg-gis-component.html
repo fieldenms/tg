@@ -147,6 +147,7 @@
 	GisComponent.prototype.clearAll = function() {
 		this._geoJsonOverlay.clearLayers();
 		this._markerCluster.getGisMarkerClusterGroup().clearLayers();
+		this._select._prevId = null;
 	};
 	
 	GisComponent.prototype.promoteEntities = function (newEntities) {
