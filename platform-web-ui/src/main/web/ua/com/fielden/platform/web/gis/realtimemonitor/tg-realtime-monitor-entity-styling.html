@@ -2,25 +2,23 @@
 
 <script>
 (function() {
-	var RealtimeMonitorEntityStyling = function() {
+	var RealtimeMonitorEntityStyling = function () {
 		L.GIS.EntityStyling.call(this);
-
-		var self = this;
 	};
 
 	RealtimeMonitorEntityStyling.prototype = Object.create(L.GIS.EntityStyling.prototype);
 	RealtimeMonitorEntityStyling.prototype.constructor = RealtimeMonitorEntityStyling;
 
-	RealtimeMonitorEntityStyling.prototype.getColor = function(entity) {
-		var self = this;
-		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'Machine') {
-				return L.GIS.EntityStyling.prototype.getColor.call(self, entity.properties.lastMessage);
+	RealtimeMonitorEntityStyling.prototype.getColor = function (feature) {
+		if (feature) {
+		    var featureType = this.featureType(feature);
+			if (featureType === 'TgMachine') {
+				return L.GIS.EntityStyling.prototype.getColor.call(this, entity.get('lastMessage'));
 			} else {
-				throw "RealtimeMonitorEntityStyling.prototype.getColor: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Machine' only."; // generates an exception
+				throw "RealtimeMonitorEntityStyling.prototype.getColor: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMachine' only.";
 			}
 		} else {
-			throw "RealtimeMonitorEntityStyling.prototype.getColor: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "RealtimeMonitorEntityStyling.prototype.getColor: [" + feature + "] is empty.";
 		}
 	}
 

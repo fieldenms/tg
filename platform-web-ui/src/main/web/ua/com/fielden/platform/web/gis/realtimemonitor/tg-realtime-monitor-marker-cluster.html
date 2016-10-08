@@ -4,19 +4,17 @@
 (function() {
 	var RealtimeMonitorMarkerCluster = function(_map, _markerFactory, progressDiv, progressBarDiv) {
 		L.GIS.MarkerCluster.call(this, _map, _markerFactory, progressDiv, progressBarDiv);
-
-		var self = this;
 	};
 
 	RealtimeMonitorMarkerCluster.prototype = Object.create(L.GIS.MarkerCluster.prototype);
 	RealtimeMonitorMarkerCluster.prototype.constructor = RealtimeMonitorMarkerCluster;
 
-	// RealtimeMonitorMarkerCluster.prototype.getCircleClusterIconLocation = function() {
+	// RealtimeMonitorMarkerCluster.prototype.getCircleClusterIconLocation = function () {
 	// 	// return L.GIS.MarkerCluster.prototype.getCircleClusterIconLocation.call(this);
 	// 	return 'resources/gis/images/circle-orange.png';
 	// }
 
-	RealtimeMonitorMarkerCluster.prototype.disableClusteringAtZoom = function() {
+	RealtimeMonitorMarkerCluster.prototype.disableClusteringAtZoom = function () {
 		return 1;
 	}
 	

@@ -4,27 +4,25 @@
 (function() {
 	var RealtimeMonitorMarkerFactory= function() {
 		L.GIS.MarkerFactory.call(this);
-
-		var self = this;
 	};
 
 	RealtimeMonitorMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
 	RealtimeMonitorMarkerFactory.prototype.constructor = RealtimeMonitorMarkerFactory;
 
-	RealtimeMonitorMarkerFactory.prototype.createFeatureMarker = function(entity, latlng) {
-		var self = this;
-		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'Machine') {
-				if (entity.properties.lastMessage) {
-					return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(self, entity.properties.lastMessage, latlng);
+	RealtimeMonitorMarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
+		if (feature) {
+		    var featureType = this.featureType(feature);
+			if (featureType === 'TgMachine') {
+				if (feature.get('lastMessage')) {
+					return L.GIS.MarkerFactory.prototype.createFeatureMarker.call(this, feature.get('lastMessage'), latlng);
 				} else {
-					throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has no 'properties.lastMessage'. At this stage it should be strictly defined."; // generates an exception
+					throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has no 'lastMessage'. At this stage it should be strictly defined.";
 				}	
 			} else {
-				throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Machine' only."; // generates an exception
+				throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMachine' only.";
 			}
 		} else {
-			throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "RealtimeMonitorMarkerFactory.prototype.createFeatureMarker: [" + feature + "] is empty.";
 		}
 	}
 
