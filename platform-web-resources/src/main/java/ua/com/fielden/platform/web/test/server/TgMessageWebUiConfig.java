@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 
@@ -7,9 +8,11 @@ import java.util.Optional;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.sample.domain.TgMachine;
 import ua.com.fielden.platform.sample.domain.TgMessage;
 import ua.com.fielden.platform.sample.domain.TgMessageMap;
+import ua.com.fielden.platform.sample.domain.TgMessageProducer;
 import ua.com.fielden.platform.ui.menu.sample.MiTgMessage;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -21,6 +24,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollCon
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
+import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 /** 
  * {@link Eq} Web UI configuration.
  * 
@@ -30,6 +35,7 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 public class TgMessageWebUiConfig {
 
     public final EntityCentre<TgMessage> centre;
+    final EntityMaster<TgMessage> master; 
 
     public static TgMessageWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
         return new TgMessageWebUiConfig(injector, builder);
@@ -40,6 +46,35 @@ public class TgMessageWebUiConfig {
         builder.register(centre);
         
         builder.register(createTgMessageMapMaster(injector));
+
+        final SimpleMasterBuilder<TgMessage> masterBuilder = new SimpleMasterBuilder<TgMessage>();
+        final String actionStyle = "'margin: 10px', 'width: 110px'";
+        final String outer = "'flex', 'min-width:200px'";
+
+        final String desktopTabletMasterLayout = ("['padding:20px',"
+                + format("['justified', [%s]],", outer)
+                + format("['justified', [%s]],", outer)
+                + format("['justified', [%s]],", outer)
+                + format("['justified', [%s]],", outer)
+                + format("['justified', [%s]],", outer)
+                + format("['justified', [%s]],", outer)
+                + format("['justified', [%s]]", outer)
+                + "]");
+        final String actionBarLayout = format("['horizontal', 'padding: 20px', 'wrap', 'justify-content: center', [%s],   [%s]]", actionStyle, actionStyle);
+        final IMaster<TgMessage> masterConfig = masterBuilder.forEntity(TgMessage.class)
+                .addProp("machine").asAutocompleter().also()
+                .addProp("gpsTime").asDateTimePicker().also()
+                .addProp("travelledDistance").asDecimal().also()
+                .addProp("vectorAngle").asSpinner().also()
+                .addProp("vectorSpeed").asSpinner().also()
+                .addProp("x").asDecimal().also()
+                .addProp("y").asDecimal().also()
+                .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancels current changes if any or refresh the data")
+                .addAction(MasterActions.SAVE)
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), actionBarLayout)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopTabletMasterLayout).done();
+        master = new EntityMaster<TgMessage>(TgMessage.class, TgMessageProducer.class, masterConfig, injector);
+        builder.register(master);
     }
 
     /**
@@ -51,6 +86,14 @@ public class TgMessageWebUiConfig {
     private EntityCentre<TgMessage> createCentre(final Injector injector) {
         final EntityCentreConfig<TgMessage> centre = EntityCentreBuilder.centreFor(TgMessage.class)
                 .runAutomatically()
+                .addTopAction(action(EntityNewAction.class).
+                        withContext(context().withSelectionCrit().build()).
+                        icon("add-circle-outline").
+                        shortDesc("Add new").
+                        longDesc("Start coninuous creatio of entities").
+                        shortcut("alt+n").
+                        withNoParentCentreRefresh().
+                        build())
                 .addCrit("machine").asMulti().autocompleter(TgMachine.class).also()
                 .addCrit("gpsTime").asRange().date()
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")

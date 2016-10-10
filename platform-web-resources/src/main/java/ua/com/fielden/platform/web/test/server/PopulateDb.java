@@ -260,7 +260,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                 final String machineKey = (String) ((Map<String, Object>) ((Map<String, Object>) messageProps.get("machine")).get("properties")).get("key"); 
                 TgMachine found = machines.get(machineKey);
                 if (found == null) {
-                    found = save(new_(TgMachine.class, machineKey));
+                    final TgMachine newMachine = new_(TgMachine.class, machineKey);
+                    newMachine.setDesc(machineKey + " desc");
+                    found = save(newMachine);
                     machines.put(machineKey, found);
                 }
                 final TgMessage message = (TgMessage) save(new_composite(TgMessage.class, found, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").parseDateTime(((String) messageProps.get("gpsTime"))).toDate())

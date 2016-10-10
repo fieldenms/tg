@@ -51,6 +51,7 @@ public class TgMachineRealtimeMonitorWebUiConfig {
     private EntityCentre<TgMachine> createCentre(final Injector injector) {
         final EntityCentreConfig<TgMachine> centre = EntityCentreBuilder.centreFor(TgMachine.class)
                 .runAutomatically()
+                .hasEventSourceAt("/message-update-events")
                 .addCrit("this").asMulti().autocompleter(TgMachine.class).also()
                 .addCrit("orgUnit").asMulti().autocompleter(TgOrgUnit.class)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
