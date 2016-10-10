@@ -8,8 +8,7 @@ import java.util.Optional;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.sample.domain.TgMachine;
-import ua.com.fielden.platform.sample.domain.TgMessage;
-import ua.com.fielden.platform.sample.domain.TgMessageMap;
+import ua.com.fielden.platform.sample.domain.TgMachineRealtimeMonitorMap;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit;
 import ua.com.fielden.platform.ui.menu.sample.MiTgMachineRealtimeMonitor;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -39,7 +38,7 @@ public class TgMachineRealtimeMonitorWebUiConfig {
         centre = createCentre(injector);
         builder.register(centre);
         
-//        builder.register(createTgMachineRealtimeMonitorMapMaster(injector));
+        builder.register(createTgMachineRealtimeMonitorMapMaster(injector));
     }
 
     /**
@@ -76,26 +75,26 @@ public class TgMachineRealtimeMonitorWebUiConfig {
                     .width(110)
                 // TODO .setRenderingCustomiser(TgMessageRenderingCustomiser.class)
                 // TODO .setFetchProvider(EntityUtils.fetch(TgMessage.class).with("x", "y", "altitude", "vectorAngle"))
-//                .addInsertionPoint(
-//                    action(TgMachineRealtimeMonitorMap.class)
-//                            .withContext(context().withSelectionCrit().build())
-//                            .icon("credit-card")
-//                            .shortDesc("TgMachineRealtimeMonitor map")
-//                            .withNoParentCentreRefresh()
-//                            .build(),
-//                    InsertionPoints.BOTTOM
-//                )
+                .addInsertionPoint(
+                    action(TgMachineRealtimeMonitorMap.class)
+                            .withContext(context().withSelectionCrit().build())
+                            .icon("credit-card")
+                            .shortDesc("TgMachineRealtimeMonitor map")
+                            .withNoParentCentreRefresh()
+                            .build(),
+                    InsertionPoints.BOTTOM
+                )
                 .build();
 
         final EntityCentre<TgMachine> entityCentre = new EntityCentre<>(MiTgMachineRealtimeMonitor.class, "MiTgMachineRealtimeMonitor", centre, injector, null);
         return entityCentre;
     }
     
-//    public static EntityMaster<TgMachineRealtimeMonitorMap> createTgMachineRealtimeMonitorMapMaster(final Injector injector) {
-//        final IMaster<TgMachineRealtimeMonitorMap> config = new TgMachineRealtimeMonitorMapMaster();
-//        return new EntityMaster<TgMachineRealtimeMonitorMap>(
-//                TgMachineRealtimeMonitorMap.class,
-//                config,
-//                injector);
-//    }
+    public static EntityMaster<TgMachineRealtimeMonitorMap> createTgMachineRealtimeMonitorMapMaster(final Injector injector) {
+        final IMaster<TgMachineRealtimeMonitorMap> config = new TgMachineRealtimeMonitorMapMaster();
+        return new EntityMaster<TgMachineRealtimeMonitorMap>(
+                TgMachineRealtimeMonitorMap.class,
+                config,
+                injector);
+    }
 }

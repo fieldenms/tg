@@ -23,6 +23,7 @@ import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgMachine;
+import ua.com.fielden.platform.sample.domain.TgMachineRealtimeMonitorMap;
 import ua.com.fielden.platform.sample.domain.TgMessage;
 import ua.com.fielden.platform.sample.domain.TgMessageMap;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
@@ -82,6 +83,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgMessage.class);
         add(TgEntityWithTimeZoneDates.class);
         add(TgMachine.class);
+        add(TgMachineRealtimeMonitorMap.class);
         add(TgMessageMap.class);
         add(TgStop.class);
         add(TgOrgUnit.class);
