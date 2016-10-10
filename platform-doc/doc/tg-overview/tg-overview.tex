@@ -358,31 +358,40 @@ private Technician technician;
 	
 	The power of having a limited number of operations has been demonstrated by the REST style~\cite{Fielding2000} of architecture for web applications.
 	We argue that similar benefits are gained at the level of domain modelling.
-  	There is a lot of semantic similarities between REST style of web resources (macro level) and objects modelling of a business domain (micro level).
+  	There is a lot of semantic similarities between the REST style of web resources (macro level) and the objects modelling of a business domain (micro level).
   	For example, the use of URI paths to navigate between web resources is analogous to paths in object graphs for association traversal.
   	This resonates with the original view of object-oriented systems by Alan Key, who emphasised similarity between objects and networked computers.
   	Although, web is a delivery mechanism and a software system may or may not run on the web, its intrinsic nature of interconnected resources with uniform interaction mechanism seems to be very appropriate for an object-oriented modelling.
 
 	The operations that are defined for companion objects are reminiscent of the \texttt{HTTP} verbs \texttt{PUT}, \texttt{POST}, \texttt{DELETE} and \texttt{GET}.
-	As is the case with REST web resources, the they may or may not be applicable to a specific entity object in question.
-	
+	As is the case with REST web resources, they may or may not be applicable to a specific entity object in question.
 	For example, not all persistent entity objects that can be \texttt{saved} and \texttt{retrieved} from a database should necessarily support \texttt{deletion}.
-	An entity can model a business process, such as purchase order authorisation.
+	Another example could be of an entity that models a business process, such as purchase order authorisation.
 	\texttt{Saving} such entity triggers the execution of a rich transactional business logic that affects multiple related entities, including changes to their persistent state.
 	However, in itself, that entity could be transient and its properties serve only as parameters of the business process in question.
 	
 	As mentioned before, the conventional OOP thinking views a class as a basic building block or a module when applied to the modelling of a business domain.
 	This leads to an ``understanding'' that an object should encapsulate and express its behaviour as methods of a class when modelling a business entity. 
-	Thus, any object may have many, often unrelated, methods that try to capture different behavioural aspects of some business entity.
+	Thus, any object may have many, often unrelated, methods that try to capture different behavioural aspects of the same business entity.
 	For example, with such approach entity purchase order could be modelled as class \texttt{PurchaseOrder} with separate methods to print purchase order, export purchase order, add purchase order line, authorise purchase order etc.
 	This clearly violates at least the single responsibility principle~\cite{SOLID} and raises the question of adequate separation of concerns as class \texttt{PurchaseOrder} would need to be modified for multiple unrelated reasons such as changes in the export format requirements or the structure of a purchase order line object.
 	In order to resolve these problems many software architectural styles introduce the notion of \emph{services} (e.g. domain services in Domain-Drive Design).
 	Such approach does not solve the problem per se as it only represents an \emph{escape route} to move some ``unfitting'' (whatever the criteria for that is) behaviour from a class that represent a domain entity to another class, which is thought of as a ``service''.
 	Also, this introduces an additional design concept that has the same set of problems -- what behaviour should it encapsulate, what methods should it expose etc.
 	
+	The use of a complementary pair of objects -- an entity and its companion -- as the basic system module, provides a well-defined contract to model an information system: entity objects are responsible for ensuring the correctness of their own state and there are only four clearly identified as part of their companion object operations to affect the overall state of an information system (e.g. save or delete data represented by entity objects).
+	If an entity object represents a persistent domain entity then the only way for its instances to be persisted is by executing method \texttt{save} of a corresponding companion object -- the same business logic that is implemented as part of method \texttt{save} gets executed regardless of where in the system the method is invoked.
+	Only valid entity instances can be saved and the only way to change an entity instance is by modifying its properties that enforce the validation rules.
+	There is no way to bypass the validation logic when changing an entity and there is no other way than to use a correponding companion object to save new or modified entity instances.
+	This achieves a uniform approach to the domain modelling where the business entities (e.g. purchase order), processes (e.g. purchase order authorisation) and complex data querying that may involve joining of multiple persistent entities (e.g. reporting the whole-life cost for an asset that encompasses repair, fuel and servicing cost components) is modelled with the same modelling primitives -- pairs of entity and companion objects.
+
+	Such uniformity contributes significantly to the comprehension of an information system by both the original and new developers that just need to follow the established pattern to identify how different parts of the system interact with each other and what are the rules for that interaction.
+	So, unlike in the case of more traditional approaches, there is no need to "think" what various behavioural methods that are defined as part of "domain objects" or "services" mean and what is their effect on the system.
+	One only needs to "think" what does some entity object models -- the ways for it to effect the system are defined uniformly as four operations on a corresponding companion object.
+	Combining this uniform approach with the direct manipulation principle for building UI, yields an a very transparent system where users and developers can clearly identify problem areas that need bug fixes, improvement or enhancements.
 	
-	
-	
+	The next section delves more into the application of the Fractal Objects pattern to model the three essential functions of any information system.
+	It shows that approaching the design of an information system from the perspective of just these three functions leads to a significant reduction of the architectural complexity.
 
 \iffalse
 
