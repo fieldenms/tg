@@ -66,6 +66,21 @@
                 }
                 return "menu";
             };
+            var addAllElements = function (elementsToAdd, addToArray, removeFromArray) {
+                addToArray = addToArray || [];
+                if (elementsToAdd) {
+                    elementsToAdd.forEach(function(element) {
+                        if (addToArray.indexOf(element) < 0) {
+                            var indexInInvisible = removeFromArray ? removeFromArray.indexOf(element) : -1;
+                            if (indexInInvisible >= 0) {
+                                removeFromArray.splice(indexInInvisible, 1);
+                            }
+                            addToArray.push(element);
+                        }
+                    });
+                }
+                return addToArray;
+            };
             Polymer({
 
                 is: "tg-desktop-app",
@@ -246,18 +261,13 @@
                     this.$.location.$$("iron-location").dwellTime = 0;
                     //Binding to 'this' functions those are used outside the scope of this component.
                     this._checkWeatherCanLeave = this._checkWeatherCanLeave.bind(this);
-                    this._saveMenuVisibilityChanges = function (menuItem, isVisible) {
+                    this._saveMenuVisibilityChanges = function (visibleItems, invisibleItems) {
                         if (this._saveIdentifier) {
                             this.cancelAsync(this._saveIdentifier);
                             this._saveIdentifier = null;
                         }
-                        if (isVisible) {
-                            this._visibleMenuItems = this._visibleMenuItems || [];
-                            this._visibleMenuItems.push(menuItem);
-                        } else {
-                            this._invisibleMenuItems = this._invisibleMenuItems || [];
-                            this._invisibleMenuItems.push(menuItem);
-                        }
+                        this._visibleMenuItems = addAllElements(visibleItems, this._visibleMenuItems, this._invisibleMenuItems);
+                        this._invisibleMenuItems = addAllElements(invisibleItems, this._invisibleMenuItems, this._visibleMenuItems);
                         this.saveIdentifier = this.async(function () {
                             this.$.menuSaveAction._run();
                         }, 200);
