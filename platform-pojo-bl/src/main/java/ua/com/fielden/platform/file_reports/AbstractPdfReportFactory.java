@@ -104,5 +104,5 @@ public abstract class AbstractPdfReportFactory implements IReportFactory {
      * 
      * @return
      */
-    protected abstract Map<String, Class> reportProps();
+    protected abstract Map<String, Class<?>> reportProps();
 }

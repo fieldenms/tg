@@ -114,6 +114,30 @@
             return _findSelectedEntitiesIn(centreContextHolder.masterEntity.centreContextHolder);
         }
     };
+    
+    var removeStyles = function (element, styles) {
+        if (styles && styles.length > 0) {
+            styles.split(";").map(function (style) {
+                return style.trim().split(":");
+            }).forEach(function (style) {
+                if (style.length === 2) {
+                    delete element.style[style[0]];
+                }
+            });
+        }
+    };
+    
+    var addStyles =  function (element, styles) {
+        if (styles && styles.length > 0) {
+            styles.split(";").map(function (style) {
+                return style.trim().split(":");
+            }).forEach(function (style) {
+                if (style.length === 2) {
+                    element.style[style[0]] = style[1];
+                }
+            });
+        }
+    };
 
     Polymer({
     	is: 'tg-ui-action',
@@ -243,6 +267,14 @@
              */
             icon: {
             	type: String
+            },
+            
+            /**
+             * Icon styles for icon button.
+             */
+            iconStyle: {
+                type: String,
+                observer: "_iconStyleChanged"
             },
             
             /** 
@@ -509,6 +541,15 @@
                 throw 'modifyValue4Property: no property [' + propNameToBeAssigned + '] exists.';
             }
             bindingEntity[propNameToBeAssigned] = value;
+        },
+
+        /**
+         * Listener that listens the changes for icon style property.
+         */
+        _iconStyleChanged: function (newValue, oldValue) {
+            var icon = this.$.iActionButton.$.icon;
+            removeStyles(icon, oldValue);
+            addStyles(icon, newValue);
         },
         
         _createContextHolderForAction: function () {

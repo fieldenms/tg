@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.migration;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,14 +21,16 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
     private final String insertStmt;
     private final List<Container> containers;
     private final PersistedEntityMetadata<? extends AbstractEntity<?>> emd;
+    public final List<PropertyMetadata> insertFields;
 
     public AbstractRetrieverBatchStmtGenerator(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever) {
         this.dma = dma;
         this.retriever = retriever;
-        this.emd = dma.getPersistedEntityMetadata(retriever.type());
+        emd = dma.getPersistedEntityMetadata(retriever.type());
         final List<PropertyMetadata> fields = extractFields();
-        this.insertStmt = generateInsertStmt(getInsertFields(fields), emd.getTable());
-        this.containers = produceContainers(fields);
+        insertFields = Collections.unmodifiableList(getInsertFields(fields));
+        insertStmt = generateInsertStmt(insertFields, emd.getTable());
+        containers = produceContainers(fields);
     }
 
     protected abstract List<PropertyMetadata> getInsertFields(final List<PropertyMetadata> fields);

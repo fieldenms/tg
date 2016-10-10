@@ -6,13 +6,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TimeZone;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -24,11 +27,13 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
+import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.migration.RetrieverPropsValidator.RetrievedPropValidationError;
 import ua.com.fielden.platform.persistence.HibernateUtil;
+import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
 public class DataMigrator {
     private final Logger logger = Logger.getLogger(this.getClass());
@@ -40,6 +45,9 @@ public class DataMigrator {
     private final DomainMetadataAnalyser dma;
     private final boolean includeDetails;
     private final IdCache cache;
+
+    private final static TimeZone utcTz = TimeZone.getTimeZone("UTC");
+    private final static Calendar utcCal = Calendar.getInstance(utcTz);
 
     private static List<IRetriever<? extends AbstractEntity<?>>> instantiateRetrievers(final Injector injector, final Class... retrieversClasses) {
         final List<IRetriever<? extends AbstractEntity<?>>> result = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
@@ -55,11 +63,11 @@ public class DataMigrator {
         this.injector = injector;
         this.factory = factory;
         this.hiberUtil = hiberUtil;
-        this.dma = new DomainMetadataAnalyser(injector.getInstance(DomainMetadata.class));
-        this.retrievers.addAll(instantiateRetrievers(injector, retrieversClasses));
+        dma = new DomainMetadataAnalyser(injector.getInstance(DomainMetadata.class));
+        retrievers.addAll(instantiateRetrievers(injector, retrieversClasses));
         this.includeDetails = includeDetails;
         final Connection conn = injector.getInstance(Connection.class);
-        this.cache = new IdCache(injector.getInstance(ICompanionObjectFinder.class), dma);
+        cache = new IdCache(injector.getInstance(ICompanionObjectFinder.class), dma);
 
         for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
             if (!ret.isUpdater()) {
@@ -370,7 +378,14 @@ public class DataMigrator {
             final List<Object> currTransformedValues = rbsg.transformValuesForInsert(legacyRs, cache, id);
             batchValues.add(currTransformedValues);
             for (final Object value : currTransformedValues) {
-                insertStmt.setObject(index, value);
+                // UTC transformation
+                final PropertyMetadata field = rbsg.insertFields.get(index - 1);
+                if (field.getHibTypeAsUserType() instanceof IUtcDateTimeType) {
+                    final Timestamp ts = (Timestamp) value;
+                    insertStmt.setTimestamp(index, ts, utcCal);
+                } else {
+                    insertStmt.setObject(index, value);
+                }
                 index = index + 1;
             }
             insertStmt.addBatch();
