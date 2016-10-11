@@ -34,11 +34,23 @@ import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
+import ua.com.fielden.platform.menu.CustomViewDao;
+import ua.com.fielden.platform.menu.EntityCentreViewDao;
+import ua.com.fielden.platform.menu.EntityMasterViewDao;
+import ua.com.fielden.platform.menu.ICustomView;
+import ua.com.fielden.platform.menu.IEntityCentreView;
+import ua.com.fielden.platform.menu.IEntityMasterView;
 import ua.com.fielden.platform.menu.IMenu;
 import ua.com.fielden.platform.menu.IMenuSaveAction;
+import ua.com.fielden.platform.menu.IModule;
+import ua.com.fielden.platform.menu.IModuleMenuItem;
+import ua.com.fielden.platform.menu.IView;
 import ua.com.fielden.platform.menu.IWebMenuItemInvisibility;
 import ua.com.fielden.platform.menu.MenuDao;
 import ua.com.fielden.platform.menu.MenuSaveActionDao;
+import ua.com.fielden.platform.menu.ModuleDao;
+import ua.com.fielden.platform.menu.ModuleMenuItemDao;
+import ua.com.fielden.platform.menu.ViewDao;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibilityDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
@@ -176,13 +188,21 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IAttachment.class).to(AttachmentDao.class);
         bind(IEntityAttachmentAssociationController.class).to(EntityAttachmentAssociationDao.class);
 
-        // configuration related binding
+        // configuration menu related binding
+        bind(IModuleMenuItem.class).to(ModuleMenuItemDao.class);
+        bind(IEntityCentreView.class).to(EntityCentreViewDao.class);
+        bind(IView.class).to(ViewDao.class);
+        bind(ICustomView.class).to(CustomViewDao.class);
+        bind(IModule.class).to(ModuleDao.class);
         bind(IMenu.class).to(MenuDao.class);
+        bind(IEntityMasterView.class).to(EntityMasterViewDao.class);
+        bind(IMenuSaveAction.class).to(MenuSaveActionDao.class);
+        bind(IWebMenuItemInvisibility.class).to(WebMenuItemInvisibilityDao.class);
+
+        // configuration related binding
         bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
         bind(IMainMenuItemInvisibility.class).to(MainMenuItemInvisibilityDao.class);
-        bind(IWebMenuItemInvisibility.class).to(WebMenuItemInvisibilityDao.class);
         bind(IMainMenu.class).to(MainMenuDao.class);
-        bind(IMenuSaveAction.class).to(MenuSaveActionDao.class);
         bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
         bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);
         bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
