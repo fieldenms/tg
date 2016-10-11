@@ -1054,7 +1054,7 @@
             if (value === null) { // 'null' is the missing value representation for TG web editors
                 return null;
             } else if (value instanceof this.getEntityPrototype()) {
-                return (value.type().isCompositeEntity()) ? this.convertCompositeEntity(value) : this.convertSimpleEntity(value);
+                return ((value.constructor.prototype.type.call(value)).isCompositeEntity()) ? this.convertCompositeEntity(value) : this.convertSimpleEntity(value);
             } else if (typeof value === "number") { // for number value -- return the same value for editors (includes date, integer, decimal number editors)
                 return value;
             } else if (typeof value === "boolean") { // for boolean value -- return the same value for editors

@@ -294,9 +294,26 @@
 		for (var index = 0; index < columnPropertiesMapped.length; index++) {
 		    var entry = columnPropertiesMapped[index];
 		    var value = entry.value === true ? "&#x2714" : (entry.value === false ? "&#x2718" : entry.value);
-		    popupText = popupText + "" + (feature.constructor.prototype.type.call(feature)).prop(entry.dotNotation).title() + ": " + value + "<br>";
+		    var type = feature.constructor.prototype.type.call(feature);
+		    popupText = popupText + "" + self.titleFor(feature, entry.dotNotation) + ": " + value + "<br>";
 		}
 		return popupText;
+	}
+	
+	GisComponent.prototype.titleFor = function (feature, dotNotation) {
+	    var root = feature.constructor.prototype.type.call(feature);
+        if (dotNotation === '') { // empty property name means 'entity itself'
+            return root.prop('key').title();
+        }
+        var lastDotIndex = dotNotation.lastIndexOf(".");
+        if (lastDotIndex > -1) {
+            var first = dotNotation.slice(0, lastDotIndex);
+            var rest = dotNotation.slice(lastDotIndex + 1);
+            var firstVal = feature.get(first);
+            return firstVal === null ? 'UNDEFINED' : (firstVal.constructor.prototype.type.call(firstVal)).prop(rest).title();
+        } else {
+            return root.prop(dotNotation).title();
+        }
 	}
 
 	GisComponent.prototype.valueToString = function(value) {

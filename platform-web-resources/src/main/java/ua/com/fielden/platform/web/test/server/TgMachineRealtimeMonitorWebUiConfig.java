@@ -11,6 +11,7 @@ import ua.com.fielden.platform.sample.domain.TgMachine;
 import ua.com.fielden.platform.sample.domain.TgMachineRealtimeMonitorMap;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit;
 import ua.com.fielden.platform.ui.menu.sample.MiTgMachineRealtimeMonitor;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
@@ -74,7 +75,7 @@ public class TgMachineRealtimeMonitorWebUiConfig {
                 .addProp("lastMessage.vectorSpeed")
                     .width(110)
                 // TODO .setRenderingCustomiser(TgMessageRenderingCustomiser.class)
-                // TODO .setFetchProvider(EntityUtils.fetch(TgMessage.class).with("x", "y", "altitude", "vectorAngle"))
+                .setFetchProvider(EntityUtils.fetch(TgMachine.class).with("lastMessage.x", "lastMessage.y", "lastMessage.altitude", "lastMessage.vectorAngle"))
                 .addInsertionPoint(
                     action(TgMachineRealtimeMonitorMap.class)
                             .withContext(context().withSelectionCrit().build())
