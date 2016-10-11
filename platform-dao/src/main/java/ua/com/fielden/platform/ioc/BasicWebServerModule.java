@@ -35,8 +35,10 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
 import ua.com.fielden.platform.menu.IMenu;
+import ua.com.fielden.platform.menu.IMenuSaveAction;
 import ua.com.fielden.platform.menu.IWebMenuItemInvisibility;
 import ua.com.fielden.platform.menu.MenuDao;
+import ua.com.fielden.platform.menu.MenuSaveActionDao;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibilityDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
@@ -180,6 +182,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IMainMenuItemInvisibility.class).to(MainMenuItemInvisibilityDao.class);
         bind(IWebMenuItemInvisibility.class).to(WebMenuItemInvisibilityDao.class);
         bind(IMainMenu.class).to(MainMenuDao.class);
+        bind(IMenuSaveAction.class).to(MenuSaveActionDao.class);
         bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
         bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);
         bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
