@@ -70,7 +70,6 @@
                 <template is="dom-repeat" items="[[menuConfig.menu]]">
                     <div class="tile layout vertical">
                         <div class="hero-animatable item fit" name$="[[item.key]]" style$="[[_calcStyleForItem(item)]]" on-tap="_itemSelected"></div>
-                        <div class="item fit" style="background-color:grey" hidden$="[[_isMenuPresent(item.menu)]]"></div>
                         <div class="item relative layout vertical flex-auto" name$="[[item.key]]" on-tap="_itemSelected" style$="[[_calcStyleForModule(item)]]">
                             <div class="flex-auto relative">
                                 <div class="fit layout vertical center-center">
@@ -87,6 +86,7 @@
                                 <iron-icon icon="av:play-arrow"></iron-icon>
                             </div>
                         </div>
+                        <div class="item fit" style="background-color:grey; opacity:0.7" hidden$="[[_isMenuPresent(item.menu)]]"></div>
                     </div>
                 </template>
             </tg-tile-layout>
@@ -174,16 +174,9 @@
             _isMenuPresent: function (menu) {
                 return menu && menu.length > 0;
             },
-            _calcStyleForModule: function (item) {
-                if (!this._isMenuPresent(item.menu)) {
-                    return "opacity: 0.5";
-                }
-            },
             _itemSelected: function (e, detail) {
                 var model = e.model;
-                if (this._isMenuPresent(model.item.menu)) {
-                    this.fire("menu-item-selected", model.item.key);
-                }
+                this.fire("menu-item-selected", model.item.key);
             },
             _calcStyleForItem: function (item) {
                 return "background-color: " + item.bgColor + ";";
@@ -192,7 +185,7 @@
                 return "color: " + item.bgColor + ";";
             },
             _calcCaptionStyleForItem: function (item) {
-                return "background-color: " + item.captionBgColor + ";" + (!this._isMenuPresent(item.menu) ? "cursor: default;" : "");
+                return "background-color: " + item.captionBgColor + ";";
             }
         });
     })();
