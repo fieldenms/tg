@@ -21,6 +21,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollCon
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+
 /** 
  * {@link TgMachine} Web UI configuration.
  * 
@@ -55,6 +56,7 @@ public class TgMachineRealtimeMonitorWebUiConfig {
                 .addCrit("this").asMulti().autocompleter(TgMachine.class).also()
                 .addCrit("orgUnit").asMulti().autocompleter(TgOrgUnit.class)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
+                .setToolbar(new TgMachineRealtimeMonitorCentreToolbar())
                 .withScrollingConfig(ScrollConfig.configScroll().withFixedHeader().withFixedSummary().done())
                 .setPageCapacity(10000)
                 .setVisibleRowsCount(10)

@@ -13,6 +13,7 @@
 		// IMPORTANT: use the following reference in cases when you need some properties of the 
 		// GisComponent inside the functions or nested classes
 		var self = this;
+		tgMap._gisComponent = self;
 		
 		tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
             self.initReload();
@@ -25,9 +26,13 @@
             
 		    self.promoteEntities(newRetrievedEntitiesCopy);
 
-            self._markerCluster.setShouldFitToBounds(true); // TODO needs to be customised? " + shouldFitToBounds() + "
             self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
             self.finishReload();
+            
+            // In standard cases ShouldFitToBounds is always true. However, sse (event sourcing) dataHandlers could change ShouldFitToBounds to false.
+            // In such cases, the map will not be fitted to bounds (after newRetrievedEntities appear), but ShouldFitToBounds after that should become true again.
+            // Please note that, centre running, refreshing, navigating between pages provides automatic fittingToBounds.
+            self._markerCluster.setShouldFitToBounds(true);
 		};
 		
 		tgMap.columnPropertiesMapperHandler = function (newColumnPropertiesMapper) {
