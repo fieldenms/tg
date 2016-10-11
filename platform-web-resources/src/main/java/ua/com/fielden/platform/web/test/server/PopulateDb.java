@@ -17,7 +17,6 @@ import java.util.SortedSet;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
@@ -37,6 +36,7 @@ import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgMachine;
 import ua.com.fielden.platform.sample.domain.TgMessage;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
@@ -245,7 +245,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgEntityWithTimeZoneDates timeZone5 = save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
         System.out.println("timeZone5.getId() == " + timeZone5.getId());
         
-        
+        final Map<String, TgMachine> machines = new HashMap<>();
         try {
             final ClassLoader classLoader = getClass().getClassLoader();
             final File file = new File(classLoader.getResource("gis/messageEntities.js").getFile());
@@ -253,7 +253,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             final ObjectMapper objectMapper = new ObjectMapper();
             final ArrayList oldMessageEntities = objectMapper.readValue(stream, ArrayList.class);
 
-            final Map<String, TgMachine> machines = new HashMap<>();
             for (final Object oldMessageEntity: oldMessageEntities) {
                 final Map<String, Object> map = (Map<String, Object>) oldMessageEntity;
                 final Map<String, Object> messageProps = ((Map<String, Object>) map.get("properties"));
@@ -276,6 +275,59 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                         .setGpsPower((boolean) messageProps.get("gpsPower"))
                         .setTravelledDistance(BigDecimal.valueOf((double) messageProps.get("travelledDistance")))
                         );
+            }
+        } catch (final IOException e1) {
+            e1.printStackTrace();
+            throw new RuntimeException(e1);
+        }
+        
+        try {
+            final ClassLoader classLoader = getClass().getClassLoader();
+            final File file = new File(classLoader.getResource("gis/realtimeMonitorEntities.js").getFile());
+            final InputStream stream = new FileInputStream(file);
+            final ObjectMapper objectMapper = new ObjectMapper();
+            final ArrayList oldMachineEntities = objectMapper.readValue(stream, ArrayList.class);
+
+            final Map<String, TgOrgUnit> orgUnits = new HashMap<>();
+            for (final Object oldMachineEntity: oldMachineEntities) {
+                final Map<String, Object> map = (Map<String, Object>) oldMachineEntity;
+                final Map<String, Object> machineProps = ((Map<String, Object>) map.get("properties"));
+                final String machineKey = (String) machineProps.get("key"); 
+                TgMachine found = machines.get(machineKey);
+                if (found == null) {
+                    final TgMachine newMachine = new_(TgMachine.class, machineKey);
+                    newMachine.setDesc((String) machineProps.get("desc"));
+                    final Object orgUnitObject = machineProps.get("orgUnit");
+                    if (orgUnitObject != null) {
+                        final String orgUnitKey = (String) ((Map<String, Object>) ((Map<String, Object>) orgUnitObject).get("properties")).get("key");
+                        TgOrgUnit foundOrgUnit = orgUnits.get(orgUnitKey);
+                        if (foundOrgUnit == null) {
+                            final TgOrgUnit newOrgUnit = new_(TgOrgUnit.class, orgUnitKey);
+                            newOrgUnit.setDesc((String) ((Map<String, Object>) ((Map<String, Object>) machineProps.get("orgUnit")).get("properties")).get("desc"));
+                            foundOrgUnit = save(newOrgUnit);
+                            orgUnits.put(orgUnitKey, foundOrgUnit);
+                        }
+                        newMachine.setOrgUnit(foundOrgUnit);
+                    }
+                    found = save(newMachine);
+                    machines.put(machineKey, found);
+                }
+                final Object lastMessageObject = machineProps.get("lastMessage");
+                if (lastMessageObject != null) {
+                    final Map<String, Object> lastMessageProps = (Map<String, Object>) ((Map<String, Object>) lastMessageObject).get("properties");
+                    
+                    final TgMessage message = (TgMessage) save(new_composite(TgMessage.class, found, DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").parseDateTime(((String) lastMessageProps.get("gpsTime"))).toDate())
+                            .setX(BigDecimal.valueOf((double) lastMessageProps.get("x")))
+                            .setY(BigDecimal.valueOf((double) lastMessageProps.get("y")))
+                            .setVectorAngle((int) lastMessageProps.get("vectorAngle"))
+                            .setVectorSpeed((int) lastMessageProps.get("vectorSpeed"))
+                            // .setAltitude(223)
+                            // .setVisibleSattelites(2)
+                            .setDin1((boolean) lastMessageProps.get("din1"))
+                            .setGpsPower((boolean) lastMessageProps.get("gpsPower"))
+                            .setTravelledDistance(BigDecimal.valueOf(15.5)) // lastMessageProps.get("travelledDistance")
+                            );
+                }
             }
         } catch (final IOException e1) {
             e1.printStackTrace();
