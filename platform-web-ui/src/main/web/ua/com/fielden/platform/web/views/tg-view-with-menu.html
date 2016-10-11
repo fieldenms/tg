@@ -64,7 +64,7 @@
             --paper-checkbox-checked-color: var(--paper-menu-color);
             --paper-checkbox-checked-ink-color: var(--paper-menu-color);
         }
-        paper-checkbox.blue-undone {
+        paper-checkbox.blue.undone {
             --paper-checkbox-checked-color: #acdbfe;
             --paper-checkbox-checked-ink-color: var(--paper-menu-color);
         }
@@ -134,7 +134,7 @@
                         <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
                             <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.desc]]">
                                 <iron-icon icon="av:play-arrow" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
-                                <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="{{firstLevelItem.isVisible}}" on-change="_changeGroupVisibility" on-tap="_tapCheckbox"></paper-checkbox>
+                                <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.isVisible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox"></paper-checkbox>
                                 <span>[[firstLevelItem.key]]</span>
                             </paper-item>
                             <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]" on-dom-change="_menuTemplateRendered">
@@ -142,7 +142,7 @@
                                     <template is="dom-repeat" items="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
                                         <!--TODO remove groupIndex-->
                                         <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
-                                            <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="{{item.isVisible}}" on-change="_changeVisibility" on-tap="_tapCheckbox"></paper-checkbox>
+                                            <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.isVisible]]" on-change="_changeVisibility" on-tap="_tapCheckbox"></paper-checkbox>
                                             <span class="menu-item-title">[[item.key]]</span>
                                         </paper-item>
                                     </template>
@@ -298,18 +298,20 @@
             },
             
             _calcGroupStyle: function (firstLevelItem) {
+                var clazz = "blue";
                 if (firstLevelItem.isVisible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {return element.isVisible === true}) && !firstLevelItem.menu.every(function (element) {return element.isVisible === false})) {
-                    return "blue-undone";
+                    clazz + " undone";
                 }
-                return "blue";
+                return clazz;
             },
             
             _changeGroupVisibility: function (e) {
                 var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
-                var modelVisibility = e.model.firstLevelItem.isVisible;
+                var modelVisibility = e.target.checked;
                 var visisbleItems = [];
                 var invisibleItems = [];
                 var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
+                this.set("menuItem.menu." + e.model.groupIndex + ".isVisible", modelVisibility);
                 arrayToBeUsed.push(groupUri);
                 if (e.model.firstLevelItem.menu) {
                     e.model.firstLevelItem.menu.forEach (function (menuItem, menuItemIndex) {
@@ -319,17 +321,23 @@
                         }
                     }.bind(this));
                 }
+                var checkbox = Polymer.dom(this.$.menu).querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
+                checkbox.classList.toggle("undone", false);
+                Polymer.updateStyles();
                 this.menuSaveCallback(visisbleItems, invisibleItems);
             },
             
             _changeVisibility: function (e) {
                 var menuItemUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, e.model.item.key);
                 var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
-                var modelVisibility = e.model.item.isVisible;
-                var shouldChangeGroupVisibility = e.model.firstLevelItem.menu.every(function (element) {return element.isVisible === modelVisibility}) ||
-                    (modelVisibility && e.model.firstLevelItem.isVisible === false);
+                var modelVisibility = e.target.checked;
                 var visisbleItems = [];
                 var invisibleItems = [];
+                // Changing model in order to find out whether group item should be changed or not.
+                this.set("menuItem.menu." + e.model.groupIndex + ".menu." + e.model.index + ".isVisible", modelVisibility);
+                var shouldChangeGroupVisibility = e.model.firstLevelItem.menu.every(function (element) {return element.isVisible === modelVisibility}) ||
+                    (modelVisibility && e.model.firstLevelItem.isVisible === false);
+                // Find out what action should be performed hiding menu items or to make them visible.
                 var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
                 arrayToBeUsed.push(menuItemUri);
                 if (shouldChangeGroupVisibility) {
@@ -338,11 +346,9 @@
                 }
                 var checkbox = Polymer.dom(this.$.menu).querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
                 if (this.menuItem.menu[e.model.groupIndex].isVisible && !e.model.firstLevelItem.menu.every(function (element) {return element.isVisible === true}) && !e.model.firstLevelItem.menu.every(function (element) {return element.isVisible === false})) {
-                    checkbox.classList.toggle("blue-undone", true);
-                    checkbox.classList.toggle("blue", false);
+                    checkbox.classList.toggle("undone", true);
                 } else {
-                    checkbox.classList.toggle("blue-undone", false);
-                    checkbox.classList.toggle("blue", true);
+                    checkbox.classList.toggle("undone", false);
                 }
                 Polymer.updateStyles();
                 this.menuSaveCallback(visisbleItems, invisibleItems);
