@@ -300,7 +300,7 @@
             _calcGroupStyle: function (firstLevelItem) {
                 var clazz = "blue";
                 if (firstLevelItem.isVisible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {return element.isVisible === true}) && !firstLevelItem.menu.every(function (element) {return element.isVisible === false})) {
-                    clazz + " undone";
+                    clazz += " undone";
                 }
                 return clazz;
             },
