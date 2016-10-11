@@ -76,7 +76,7 @@ public class TgMachineRealtimeMonitorWebUiConfig {
                 .also()
                 .addProp("lastMessage.vectorSpeed")
                     .width(110)
-                // TODO .setRenderingCustomiser(TgMessageRenderingCustomiser.class)
+                .setRenderingCustomiser(TgMachineRealtimeMonitorRenderingCustomiser.class)
                 .setFetchProvider(EntityUtils.fetch(TgMachine.class).with("lastMessage.x", "lastMessage.y", "lastMessage.altitude", "lastMessage.vectorAngle"))
                 .addInsertionPoint(
                     action(TgMachineRealtimeMonitorMap.class)
