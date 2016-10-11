@@ -1,8 +1,12 @@
 package ua.com.fielden.platform.menu;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -12,6 +16,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 
 import com.google.inject.Inject;
 
+
 /**
  * DAO implementation for companion object {@link IMenuSaveAction}.
  *
@@ -20,6 +25,8 @@ import com.google.inject.Inject;
  */
 @EntityType(MenuSaveAction.class)
 public class MenuSaveActionDao extends CommonEntityDao<MenuSaveAction> implements IMenuSaveAction {
+
+    private final Logger logger = Logger.getLogger(this.getClass());
 
     private final IUserProvider userProvider;
 
@@ -36,7 +43,11 @@ public class MenuSaveActionDao extends CommonEntityDao<MenuSaveAction> implement
             final IMainMenuItemInvisibility coMenuInvisibility = co(MainMenuItemInvisibility.class);
             if (!entity.getInvisibleMenuItems().isEmpty()) {
                 entity.getInvisibleMenuItems().forEach(menuItem -> {
-                    coMenuInvisibility.save(getEntityFactory().newByKey(MainMenuItemInvisibility.class, userProvider.getUser(), menuItem));
+                    try {
+                        coMenuInvisibility.save(getEntityFactory().newByKey(MainMenuItemInvisibility.class, userProvider.getUser(), menuItem));
+                    } catch (final EntityCompanionException e) {
+                        logger.error(e.getMessage());
+                    }
                 });
             }
             if (!entity.getVisibleMenuItems().isEmpty()) {
