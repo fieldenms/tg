@@ -13,8 +13,6 @@ import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 import com.google.inject.Inject;
@@ -23,31 +21,32 @@ public class MenuProducer implements IEntityProducer<Menu> {
 
     private final IMenuRetriever menuRetirever;
     private final IUserProvider userProvider;
-    private final IMainMenuItemInvisibility miInvisible;
+    private final IWebMenuItemInvisibility miInvisible;
 
     @Inject
-    public MenuProducer(final IMenuRetriever menuRetirever, final IMainMenuItemInvisibility miInvisible, final IUserProvider userProvider) {
+    public MenuProducer(final IMenuRetriever menuRetirever, final IWebMenuItemInvisibility miInvisible, final IUserProvider userProvider) {
         this.menuRetirever = menuRetirever;
         this.miInvisible = miInvisible;
         this.userProvider = userProvider;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Menu newEntity() {
         final Menu menu = menuRetirever.getMenuEntity().setCanEdit(userProvider.getUser().isBase());
         //Get all invisible menu items
-        final QueryExecutionModel<MainMenuItemInvisibility, EntityResultQueryModel<MainMenuItemInvisibility>> queryModel =
-                from(select(MainMenuItemInvisibility.class).where().prop("owner").eq().val(userProvider.getUser().isBase() ? userProvider.getUser()
+        final QueryExecutionModel<WebMenuItemInvisibility, EntityResultQueryModel<WebMenuItemInvisibility>> queryModel =
+                from(select(WebMenuItemInvisibility.class).where().prop("owner").eq().val(userProvider.getUser().isBase() ? userProvider.getUser()
                         : userProvider.getUser().getBasedOnUser()).model()).
-                with(EntityUtils.fetchNotInstrumentedWithKeyAndDesc(MainMenuItemInvisibility.class).fetchModel()).model();
-        final List<MainMenuItemInvisibility> invisibleItems = miInvisible.getAllEntities(queryModel);
+                        with(EntityUtils.fetchNotInstrumentedWithKeyAndDesc(WebMenuItemInvisibility.class).fetchModel()).model();
+        final List<WebMenuItemInvisibility> invisibleItems = miInvisible.getAllEntities(queryModel);
         //Remove all retrieved menu items from the menu entity.
-        for (final MainMenuItemInvisibility menuItem : invisibleItems) {
+        for (final WebMenuItemInvisibility menuItem : invisibleItems) {
             final List<String> menuParts = decodeParts(menuItem.getMenuItemUri().split("/"));
             final String lastMenuPart = menuParts.remove(menuParts.size() - 1);
-            Optional<? extends IMenuManager> menuManager = Optional.of(menu);
+            Optional<IMenuManager> menuManager = Optional.of(menu);
             menuManager = menuParts.stream().reduce(menuManager,
-                    (menuItemManager, menuPart) -> menuItemManager.flatMap(value -> value.getMenuItem(menuPart)),
+                    (menuItemManager, menuPart) -> (Optional<IMenuManager>) menuItemManager.flatMap(value -> value.getMenuItem(menuPart)),
                     (menuManager1, menuManager2) -> menuManager2);
             menuManager.ifPresent(value -> {
                 if (userProvider.getUser().isBase()) {

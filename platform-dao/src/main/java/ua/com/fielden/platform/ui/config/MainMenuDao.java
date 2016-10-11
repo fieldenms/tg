@@ -5,15 +5,19 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeVersionMaintainer;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -27,6 +31,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
+import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
@@ -63,84 +68,84 @@ public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu 
         this.versionMaintainer = new DomainTreeVersionMaintainer(serialiser, serialiser0, elcController, eccController, emcController);
     }
 
-    //    @Override
-    //    @SessionRequired
-    //    public MainMenu save(final MainMenu entity) {
-//        Pair<String, DateTime> newMessageAndNewSt = new Pair<String, DateTime>(null, new DateTime());
-//
-//        newMessageAndNewSt = info(newMessageAndNewSt, "BUILD DEVELOPMENT ITEMS");
-//        final List<MainMenuItem> developmentMainMenuItems = new ArrayList<MainMenuItem>(new MainMenuStructureFactory(factory).pushAll(entity.getMenuItems()).build());
-//        final List<MainMenuItem> updatedMainMenuItems = new ArrayList<MainMenuItem>();
-//
-//        // newMessageAndNewSt = info(newMessageAndNewSt, "MAINTAIN VERSIONS for all ECC, ELC, EMC");
-//        // maintainConfigurationVersions();
-//
-//        newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all ECC, ECAC");
-//        final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac = select(EntityCentreAnalysisConfig.class).model();
-//        final EntityResultQueryModel<EntityCentreConfig> modelEcc = select(EntityCentreConfig.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
-//        // retrieve all EntityCentreConfig's, locally keep meta-info, and then purge them all
-//        final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = retrieveCentresKeysAndBodies(modelEcac, modelEcc);
-//
-//        newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all ECC, ECAC");
-//        purgeCentres(modelEcac, modelEcc);
-//
-//        newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all MMII");
-//        // retrieve all MainMenuItemInvisibility's, locally keep meta-info, and then purge them all
-//        final EntityResultQueryModel<MainMenuItemInvisibility> modelMmii = select(MainMenuItemInvisibility.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
-//        final List<MainMenuItemInvisibility> mmiis = mmiiController.getAllEntities(from(modelMmii).model());
-//        final Set<MainMenuItemInvisibilityKey> invisibilitiesKeys = new HashSet<MainMenuItemInvisibilityKey>();
-//        for (final MainMenuItemInvisibility mmii : mmiis) {
-//            invisibilitiesKeys.add(new MainMenuItemInvisibilityKey(mmii.getOwner(), mmii.getMenuItem().getKey()));
-//        }
-//
-//        newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all MMII");
-//        mmiiController.delete(modelMmii);
-//
-//        newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all MMI");
-//        purgeAllMMI();
-//
-//        newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all MMI");
-//        // persist new menu items
-//        for (final MainMenuItem rootDevelopmentMainMenuItem : developmentMainMenuItems) {
-//            updatedMainMenuItems.add(saveMenuItem(rootDevelopmentMainMenuItem));
-//        }
-//
-//        newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all ECC, ECAC");
-//        // persist old EntityCentreConfig's
-//        for (final Entry<EntityCentreConfigKey, EntityCentreConfigBody> centresKeyAndBody : centresKeysAndBodies.entrySet()) {
-//            final MainMenuItem mmi = mmiController.findByKey(centresKeyAndBody.getKey().getMainMenuItemKey());
-//            if (mmi != null) {
-//                final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, centresKeyAndBody.getKey().getOwner(), centresKeyAndBody.getKey().getTitle(), mmi);
-//                ecc.setPrincipal(centresKeyAndBody.getValue().isPrincipal());
-//                ecc.setConfigBody(centresKeyAndBody.getValue().getConfigBody());
-//                final EntityCentreConfig newECC = eccController.save(ecc);
-//                for (final String analysisName : centresKeyAndBody.getKey().getAnalysesNames()) {
-//                    final EntityCentreAnalysisConfig ecac = factory.newByKey(EntityCentreAnalysisConfig.class, newECC, analysisName);
-//                    ecacController.save(ecac);
-//                }
-//            } else {
-//                logger.warn("The Entity Centre Config for owner [" + centresKeyAndBody.getKey().getOwner() + "] and title " + centresKeyAndBody.getKey().getTitle() + " and item ["
-//                        + centresKeyAndBody.getKey().getMainMenuItemKey() + "] has been purged due to non-existence of item [" + centresKeyAndBody.getKey().getMainMenuItemKey()
-//                        + "] after update procedure.");
-//            }
-//        }
-//
-//        newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all MMII");
-//        // persist old MainMenuItemInvisibility's
-//        for (final MainMenuItemInvisibilityKey invisibilityKey : invisibilitiesKeys) {
-//            final MainMenuItem mmi = mmiController.findByKey(invisibilityKey.getMainMenuItemKey());
-//            if (mmi != null) {
-//                final MainMenuItemInvisibility mmii = factory.newByKey(MainMenuItemInvisibility.class, invisibilityKey.getOwner(), mmi);
-//                mmiiController.save(mmii);
-//            } else {
-//                logger.warn("The Main Menu Item Invisibility for owner [" + invisibilityKey.getOwner() + "] and item [" + invisibilityKey.getMainMenuItemKey()
-//                        + "] has been purged due to non-existence of item [" + invisibilityKey.getMainMenuItemKey() + "] after update procedure.");
-//            }
-//        }
-//
-//        newMessageAndNewSt = info(newMessageAndNewSt, "DONE");
-//        return entity;
-    //    }
+    @Override
+    @SessionRequired
+    public MainMenu save(final MainMenu entity) {
+        Pair<String, DateTime> newMessageAndNewSt = new Pair<String, DateTime>(null, new DateTime());
+
+        newMessageAndNewSt = info(newMessageAndNewSt, "BUILD DEVELOPMENT ITEMS");
+        final List<MainMenuItem> developmentMainMenuItems = new ArrayList<MainMenuItem>(new MainMenuStructureFactory(factory).pushAll(entity.getMenuItems()).build());
+        final List<MainMenuItem> updatedMainMenuItems = new ArrayList<MainMenuItem>();
+
+        // newMessageAndNewSt = info(newMessageAndNewSt, "MAINTAIN VERSIONS for all ECC, ELC, EMC");
+        // maintainConfigurationVersions();
+
+        newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all ECC, ECAC");
+        final EntityResultQueryModel<EntityCentreAnalysisConfig> modelEcac = select(EntityCentreAnalysisConfig.class).model();
+        final EntityResultQueryModel<EntityCentreConfig> modelEcc = select(EntityCentreConfig.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
+        // retrieve all EntityCentreConfig's, locally keep meta-info, and then purge them all
+        final Map<EntityCentreConfigKey, EntityCentreConfigBody> centresKeysAndBodies = retrieveCentresKeysAndBodies(modelEcac, modelEcc);
+
+        newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all ECC, ECAC");
+        purgeCentres(modelEcac, modelEcc);
+
+        newMessageAndNewSt = info(newMessageAndNewSt, "RETRIEVE all MMII");
+        // retrieve all MainMenuItemInvisibility's, locally keep meta-info, and then purge them all
+        final EntityResultQueryModel<MainMenuItemInvisibility> modelMmii = select(MainMenuItemInvisibility.class)./*where().prop("owner.key").eq().val(user.getKey()).*/model();
+        final List<MainMenuItemInvisibility> mmiis = mmiiController.getAllEntities(from(modelMmii).model());
+        final Set<MainMenuItemInvisibilityKey> invisibilitiesKeys = new HashSet<MainMenuItemInvisibilityKey>();
+        for (final MainMenuItemInvisibility mmii : mmiis) {
+            invisibilitiesKeys.add(new MainMenuItemInvisibilityKey(mmii.getOwner(), mmii.getMenuItem().getKey()));
+        }
+
+        newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all MMII");
+        mmiiController.delete(modelMmii);
+
+        newMessageAndNewSt = info(newMessageAndNewSt, "PURGE all MMI");
+        purgeAllMMI();
+
+        newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all MMI");
+        // persist new menu items
+        for (final MainMenuItem rootDevelopmentMainMenuItem : developmentMainMenuItems) {
+            updatedMainMenuItems.add(saveMenuItem(rootDevelopmentMainMenuItem));
+        }
+
+        newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all ECC, ECAC");
+        // persist old EntityCentreConfig's
+        for (final Entry<EntityCentreConfigKey, EntityCentreConfigBody> centresKeyAndBody : centresKeysAndBodies.entrySet()) {
+            final MainMenuItem mmi = mmiController.findByKey(centresKeyAndBody.getKey().getMainMenuItemKey());
+            if (mmi != null) {
+                final EntityCentreConfig ecc = factory.newByKey(EntityCentreConfig.class, centresKeyAndBody.getKey().getOwner(), centresKeyAndBody.getKey().getTitle(), mmi);
+                ecc.setPrincipal(centresKeyAndBody.getValue().isPrincipal());
+                ecc.setConfigBody(centresKeyAndBody.getValue().getConfigBody());
+                final EntityCentreConfig newECC = eccController.save(ecc);
+                for (final String analysisName : centresKeyAndBody.getKey().getAnalysesNames()) {
+                    final EntityCentreAnalysisConfig ecac = factory.newByKey(EntityCentreAnalysisConfig.class, newECC, analysisName);
+                    ecacController.save(ecac);
+                }
+            } else {
+                logger.warn("The Entity Centre Config for owner [" + centresKeyAndBody.getKey().getOwner() + "] and title " + centresKeyAndBody.getKey().getTitle() + " and item ["
+                        + centresKeyAndBody.getKey().getMainMenuItemKey() + "] has been purged due to non-existence of item [" + centresKeyAndBody.getKey().getMainMenuItemKey()
+                        + "] after update procedure.");
+            }
+        }
+
+        newMessageAndNewSt = info(newMessageAndNewSt, "SAVE all MMII");
+        // persist old MainMenuItemInvisibility's
+        for (final MainMenuItemInvisibilityKey invisibilityKey : invisibilitiesKeys) {
+            final MainMenuItem mmi = mmiController.findByKey(invisibilityKey.getMainMenuItemKey());
+            if (mmi != null) {
+                final MainMenuItemInvisibility mmii = factory.newByKey(MainMenuItemInvisibility.class, invisibilityKey.getOwner(), mmi);
+                mmiiController.save(mmii);
+            } else {
+                logger.warn("The Main Menu Item Invisibility for owner [" + invisibilityKey.getOwner() + "] and item [" + invisibilityKey.getMainMenuItemKey()
+                        + "] has been purged due to non-existence of item [" + invisibilityKey.getMainMenuItemKey() + "] after update procedure.");
+            }
+        }
+
+        newMessageAndNewSt = info(newMessageAndNewSt, "DONE");
+        return entity;
+    }
 
     private String str(final char c, final int n) {
         return str0(c, n, "");

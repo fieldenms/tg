@@ -39,6 +39,7 @@ import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcess
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 import ua.com.fielden.platform.menu.EntityMasterView;
 import ua.com.fielden.platform.menu.MenuSaveAction;
+import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -90,6 +91,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(Menu.class);
         add(EntityMasterView.class);
         add(MenuSaveAction.class);
+        add(WebMenuItemInvisibility.class);
     }
 
     @Override

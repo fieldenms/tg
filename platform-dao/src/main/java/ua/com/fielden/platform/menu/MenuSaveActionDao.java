@@ -11,8 +11,6 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 
 import com.google.inject.Inject;
 
@@ -40,18 +38,18 @@ public class MenuSaveActionDao extends CommonEntityDao<MenuSaveAction> implement
     @SessionRequired
     public MenuSaveAction save(final MenuSaveAction entity) {
         if (userProvider.getUser().isBase()) {
-            final IMainMenuItemInvisibility coMenuInvisibility = co(MainMenuItemInvisibility.class);
+            final IWebMenuItemInvisibility coMenuInvisibility = co(WebMenuItemInvisibility.class);
             if (!entity.getInvisibleMenuItems().isEmpty()) {
                 entity.getInvisibleMenuItems().forEach(menuItem -> {
                     try {
-                        coMenuInvisibility.save(getEntityFactory().newByKey(MainMenuItemInvisibility.class, userProvider.getUser(), menuItem));
+                        coMenuInvisibility.save(getEntityFactory().newByKey(WebMenuItemInvisibility.class, userProvider.getUser(), menuItem));
                     } catch (final EntityCompanionException e) {
                         logger.error(e.getMessage());
                     }
                 });
             }
             if (!entity.getVisibleMenuItems().isEmpty()) {
-                final EntityResultQueryModel<MainMenuItemInvisibility> model = select(MainMenuItemInvisibility.class).where()//
+                final EntityResultQueryModel<WebMenuItemInvisibility> model = select(WebMenuItemInvisibility.class).where()//
                 .prop("owner").eq().val(userProvider.getUser()).and()//
                 .prop("menuItemUri").in().values(entity.getVisibleMenuItems().toArray(new String[0])).model();
                 coMenuInvisibility.batchDelete(model);

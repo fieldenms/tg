@@ -1,6 +1,6 @@
-package ua.com.fielden.platform.ui.config;
+package ua.com.fielden.platform.menu;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -13,25 +13,20 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
-
 /**
- * This type controls visibility of the main menu items to users based on the specified base user, who is the <code>owner</code> of a {@link MainMenuItemInvisibility} instance. <br>
- * Simple existence of an instance of this type (mainly this means persisted in some way) indicates visibility of a corresponding main menu item to all users based on the specified
- * base user.
- * <p>
- * Instances of this type can be deleted only by base users controlling the main menu configuration for the derived users.
+ * Master entity object.
  *
- * @author TG Team
+ * @author Developers
  *
  */
 @KeyType(DynamicEntityKey.class)
-@CompanionObject(IMainMenuItemInvisibility.class)
-@MapEntityTo("MAIN_MENU_INVISIBLE")
-public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
-    private static final long serialVersionUID = 1L;
+@CompanionObject(IWebMenuItemInvisibility.class)
+@MapEntityTo("WEB_MENU_INVISIBLE")
+public class WebMenuItemInvisibility extends AbstractPersistentEntity<DynamicEntityKey> {
 
-    protected MainMenuItemInvisibility() {
+    private static final long serialVersionUID = 4828116383622030993L;
+
+    protected WebMenuItemInvisibility() {
         setKey(new DynamicEntityKey(this));
     }
 
@@ -43,18 +38,17 @@ public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     @CompositeKeyMember(2)
-    @Title(value = "Menu item", desc = "Menu item visible to the owning base user.")
-    @MapTo("ID_MAIN_MENU")
-    private MainMenuItem menuItem;
+    @Title(value = "Menu item URI", desc = "Menu item URI invisible to the user that is based on owning user.")
+    @MapTo("MENU_ITEM_URI")
+    private String menuItemUri;
 
-    public MainMenuItem getMenuItem() {
-        return menuItem;
+    public String getMenuItemUri() {
+        return menuItemUri;
     }
 
     @Observable
-    @EntityExists(MainMenuItem.class)
-    public void setMenuItem(final MainMenuItem menuItem) {
-        this.menuItem = menuItem;
+    public void setMenuItemUri(final String menuItemUri) {
+        this.menuItemUri = menuItemUri;
     }
 
     public User getOwner() {
@@ -69,5 +63,4 @@ public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
         }
         this.owner = owner;
     }
-
 }
