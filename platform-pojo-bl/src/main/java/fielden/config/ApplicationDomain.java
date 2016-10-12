@@ -34,6 +34,7 @@ import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.sample.domain.TgPolygon;
+import ua.com.fielden.platform.sample.domain.TgPolygonMap;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStop;
@@ -92,6 +93,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgStopMap.class);
         add(TgPolygon.class);
         add(TgCoordinate.class);
+        add(TgPolygonMap.class);
     }
 
     @Override

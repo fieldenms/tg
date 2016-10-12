@@ -1,21 +1,25 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+
 import java.util.Optional;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.sample.domain.TgMessage;
-import ua.com.fielden.platform.sample.domain.TgMessageMap;
 import ua.com.fielden.platform.sample.domain.TgPolygon;
+import ua.com.fielden.platform.sample.domain.TgPolygonMap;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+
 /** 
  * {@link TgPolygon} Web UI configuration.
  * 
@@ -34,7 +38,7 @@ public class TgPolygonWebUiConfig {
         centre = createCentre(injector);
         builder.register(centre);
         
-        // builder.register(createTgPolygonMapMaster(injector));
+        builder.register(createTgPolygonMapMaster(injector));
     }
 
     /**
@@ -63,26 +67,26 @@ public class TgPolygonWebUiConfig {
                     .width(400)
                 // .setRenderingCustomiser(TgMessageRenderingCustomiser.class)
                 // .setFetchProvider(EntityUtils.fetch(TgMessage.class).with("x", "y", "altitude", "vectorAngle"))
-//                .addInsertionPoint(
-//                    action(TgPolygonMap.class)
-//                            .withContext(context().withSelectionCrit().build())
-//                            .icon("credit-card")
-//                            .shortDesc("TgPolygon map")
-//                            .withNoParentCentreRefresh()
-//                            .build(),
-//                    InsertionPoints.BOTTOM
-//                )
+                .addInsertionPoint(
+                    action(TgPolygonMap.class)
+                            .withContext(context().withSelectionCrit().build())
+                            .icon("credit-card")
+                            .shortDesc("TgPolygon map")
+                            .withNoParentCentreRefresh()
+                            .build(),
+                    InsertionPoints.BOTTOM
+                )
                 .build();
 
         final EntityCentre<TgPolygon> entityCentre = new EntityCentre<>(MiTgPolygon.class, "MiTgPolygon", centre, injector, null);
         return entityCentre;
     }
     
-//    public static EntityMaster<TgPolygonMap> createTgPolygonMapMaster(final Injector injector) {
-//        final IMaster<TgPolygonMap> config = new TgPolygonMapMaster();
-//        return new EntityMaster<TgPolygonMap>(
-//                TgPolygonMap.class,
-//                config,
-//                injector);
-//    }
+    public static EntityMaster<TgPolygonMap> createTgPolygonMapMaster(final Injector injector) {
+        final IMaster<TgPolygonMap> config = new TgPolygonMapMaster();
+        return new EntityMaster<TgPolygonMap>(
+                TgPolygonMap.class,
+                config,
+                injector);
+    }
 }
