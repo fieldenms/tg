@@ -2,7 +2,7 @@
 
 <script>
 (function() {
-	var PolygonMarkerFactory= function() {
+	var PolygonMarkerFactory= function () {
 		L.GIS.MarkerFactory.call(this);
 
 		var self = this;
@@ -23,20 +23,20 @@
 	PolygonMarkerFactory.prototype = Object.create(L.GIS.MarkerFactory.prototype);
 	PolygonMarkerFactory.prototype.constructor = PolygonMarkerFactory;
 
-	PolygonMarkerFactory.prototype.createFeatureMarker = function(entity, latlng) {
-		var self = this;
-		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'Coordinate') {
-				var coordMarker = new this.CoordMarker(latlng) // , {
+	PolygonMarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
+		if (feature) {
+			var featureType = this.featureType(feature);
+			if (featureType === 'TgCoordinate') {
+				var coordMarker = new this.CoordMarker(latlng); // , {
 					// 	opacity: 0.0
 					// });
 					// coordMarker.setZIndexOffset(-1000);
 				return coordMarker;
 			} else {
-				throw "PolygonMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Coordinate' only."; // generates an exception
+				throw "PolygonMarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgCoordinate' only.";
 			}
 		} else {
-			throw "PolygonMarkerFactory.prototype.createFeatureMarker: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "PolygonMarkerFactory.prototype.createFeatureMarker: [" + feature + "] is empty.";
 		}
 	}
 

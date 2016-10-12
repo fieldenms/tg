@@ -10,6 +10,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.sample.domain.TgPolygon;
 import ua.com.fielden.platform.sample.domain.TgPolygonMap;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
@@ -60,13 +61,13 @@ public class TgPolygonWebUiConfig {
                 .addProp("this")
                     .order(1).asc()
                     .width(200)
-                    .withSummary("_countOfAll", "COUNT(SELF)", "Кількість:Кількість гео-зон.")
+                    // .withSummary("_countOfAll", "COUNT(SELF)", "Кількість:Кількість гео-зон.")
                 .also()
                 .addProp("desc")
                     .order(2).asc()
                     .width(400)
                 // .setRenderingCustomiser(TgMessageRenderingCustomiser.class)
-                // .setFetchProvider(EntityUtils.fetch(TgMessage.class).with("x", "y", "altitude", "vectorAngle"))
+                .setFetchProvider(EntityUtils.fetch(TgPolygon.class).with("coordinates.longitude", "coordinates.latitude"))
                 .addInsertionPoint(
                     action(TgPolygonMap.class)
                             .withContext(context().withSelectionCrit().build())

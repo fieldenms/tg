@@ -3,75 +3,59 @@
 <link rel="import" href="/resources/gis/polygon/tg-polygon-entity-styling.html">
 <link rel="import" href="/resources/gis/polygon/tg-polygon-marker-factory.html">
 
-<script src="/resources/gis/polygon/init/polygonEntities.js"></script>
-<script src="/resources/gis/polygon/init/polygonEntityCentre.js"></script>
 <script>
 (function() {
-	var PolygonGisComponent = function(mapDiv, progressDiv, progressBarDiv, tgMap) {
-		var self = this;
-		self._entitiesString = L.GIS.polygonEntitiesString;
-		self._entityCentreString = L.GIS.polygonEntityCentreString;
-
+	var PolygonGisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap) {
 		L.GIS.GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
 	};
 
 	PolygonGisComponent.prototype = Object.create(L.GIS.GisComponent.prototype);
 	PolygonGisComponent.prototype.constructor = PolygonGisComponent;
 
-	PolygonGisComponent.prototype.createMarkerCluster = function(map, markerFactory, progressDiv, progressBarDiv) {
+	PolygonGisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv) {
 		return new L.GIS.PolygonMarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 	};
 
-	PolygonGisComponent.prototype.createEntityStyling = function() {
+	PolygonGisComponent.prototype.createEntityStyling = function () {
 		return new L.GIS.PolygonEntityStyling();
 	};
 
-	PolygonGisComponent.prototype.createMarkerFactory = function() {
+	PolygonGisComponent.prototype.createMarkerFactory = function () {
 		return new L.GIS.PolygonMarkerFactory();
 	};
 
-	PolygonGisComponent.prototype.initialise = function() {
-		// TODO this._geoJsonOverlay.addData(new PolygonInitialiser().geoJsonFeatures());
-		this.promoteEntityCentreString(this._entityCentreString);
-		console.debug(this._entityCentre);
-
-		L.GIS.GisComponent.prototype.initialise.call(this);
-
-		this.promoteEntitiesString(this._entitiesString);
-		console.debug(this._entities);
-	};
-
-	PolygonGisComponent.prototype.sortCoords = function(coordinates) {
-		return (coordinates[0].properties.order < coordinates[1].properties.order) ? coordinates : [coordinates[1], coordinates[0]];
+	PolygonGisComponent.prototype.sortCoords = function (coordinates) {
+		return (coordinates[0].get('order') < coordinates[1].get('order')) ? coordinates : [coordinates[1], coordinates[0]];
 	}	
 
-	PolygonGisComponent.prototype.createGeometry = function(entity) {
+	PolygonGisComponent.prototype.createGeometry = function (feature) {
 		var self = this;
-		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'Polygon') {
-				var sortedCoords = this.sortCoords(entity.properties.coordinates);
+		if (feature) {
+		    var featureType = this.featureType(feature);
+			if (featureType === 'TgPolygon') {
+				var sortedCoords = this.sortCoords(feature.get('coordinates'));
 				return {
 					type: 'Polygon',
 					coordinates: self.createCoordinatesFromPairOfCoordinateEntities(sortedCoords[0], sortedCoords[1])
 				};
-			} else if (entity.properties._entityType === 'Coordinate') {
+			} else if (featureType === 'TgCoordinate') {
 				return {
 					type: 'Point', 
-					coordinates: self.createCoordinatesFromCoordinateEntity(entity)
+					coordinates: self.createCoordinatesFromCoordinateEntity(feature)
 				};
 			} else {
-				throw "PolygonGisComponent.prototype.createGeometry: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Polygon' or 'Coordinate'."; // generates an exception
+				throw "PolygonGisComponent.prototype.createGeometry: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgPolygon' or 'TgCoordinate'.";
 			}
 		} else {
-			throw "PolygonGisComponent.prototype.createGeometry: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "PolygonGisComponent.prototype.createGeometry: [" + feature + "] is empty.";
 		}
 	}
 
-	PolygonGisComponent.prototype.createCoordinatesFromPairOfCoordinateEntities = function(start, finish) {
-        var lon1 = this.getValue(start, "longitude");
-        var lat1 = this.getValue(start, "latitude");
-        var lon2 = this.getValue(finish, "longitude");
-        var lat2 = this.getValue(finish, "latitude");
+	PolygonGisComponent.prototype.createCoordinatesFromPairOfCoordinateEntities = function (start, finish) {
+        var lon1 = start.get("longitude");
+        var lat1 = start.get("latitude");
+        var lon2 = finish.get("longitude");
+        var lat2 = finish.get("latitude");
 
         var res = [[]];
 
@@ -83,7 +67,7 @@
         return res;
 	}
 
-	PolygonGisComponent.prototype.orthogonalCoordinates = function(x1, y1, x2, y2, xMiddle, yMiddle) {
+	PolygonGisComponent.prototype.orthogonalCoordinates = function (x1, y1, x2, y2, xMiddle, yMiddle) {
         var length = 0.01 / 20.0; // TODO
         var a = x2 - x1;
         var b = y2 - y1;
@@ -93,30 +77,28 @@
         return [xMiddle + c, yMiddle + d];
 	}
 
-	PolygonGisComponent.prototype.createCoordinatesFromCoordinateEntity = function(coordinate) {
-		return [coordinate.properties.longitude, coordinate.properties.latitude];
+	PolygonGisComponent.prototype.createCoordinatesFromCoordinateEntity = function (coordinate) {
+		return [coordinate.get('longitude'), coordinate.get('latitude')];
 	}
 
-	PolygonGisComponent.prototype.createSummaryFeature = function(entities) {
+	PolygonGisComponent.prototype.createSummaryFeature = function (features) {
 		return null;
 	}
 
-	PolygonGisComponent.prototype.createPopupContent = function(entity) {
-		var self = this;
-		if (entity && entity.properties && entity.properties._entityType) {
-			if (entity.properties._entityType === 'Polygon') {
-				return L.GIS.GisComponent.prototype.createPopupContent.call(this, entity);
-			} else if (entity.properties._entityType === 'Coordinate') {
-				var popupText = '' +
-					'Номер' + ': ' + this.valueToString(this.getValue(entity, 'order')) + "<br>" +
-					'Довгота' + ': ' + this.valueToString(this.getValue(entity, 'longitude')) + "<br>" +
-					'Широта' + ': ' + this.valueToString(this.getValue(entity, 'latitude'));
-				return popupText;
+	PolygonGisComponent.prototype.createPopupContent = function (feature) {
+		if (feature) {
+		    var featureType = this.featureType(feature);
+			if (featureType === 'TgPolygon') {
+				return L.GIS.GisComponent.prototype.createPopupContent.call(this, feature);
+			} else if (featureType === 'TgCoordinate') {
+				return 'Номер' + ': ' + this.valueToString(feature.get('order')) + "<br>" +
+					'Довгота' + ': ' + this.valueToString(feature.get('longitude')) + "<br>" +
+					'Широта' + ': ' + this.valueToString(feature.get('latitude'));
 			} else {
-				throw "PolygonGisComponent.prototype.createPopupContent: [" + entity + "] has unknown 'properties._entityType' == [" + entity.properties._entityType + "]. Should be 'Polygon' or 'Coordinate'."; // generates an exception
+				throw "PolygonGisComponent.prototype.createPopupContent: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgPolygon' or 'TgCoordinate'.";
 			}
 		} else {
-			throw "PolygonGisComponent.prototype.createPopupContent: [" + entity + "] has no 'properties._entityType' or 'properties'."; // generates an exception
+			throw "PolygonGisComponent.prototype.createPopupContent: [" + feature + "] is empty.";
 		}
 	}
 	
