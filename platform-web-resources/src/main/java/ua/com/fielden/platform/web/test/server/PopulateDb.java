@@ -29,6 +29,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
+import ua.com.fielden.platform.sample.domain.TgCoordinate;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
@@ -41,6 +42,7 @@ import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
+import ua.com.fielden.platform.sample.domain.TgPolygon;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
@@ -326,6 +328,40 @@ public class PopulateDb extends DomainDrivenDataPopulation {
                             .setDin1((boolean) lastMessageProps.get("din1"))
                             .setGpsPower((boolean) lastMessageProps.get("gpsPower"))
                             .setTravelledDistance(BigDecimal.valueOf(15.5)) // lastMessageProps.get("travelledDistance")
+                            );
+                }
+            }
+        } catch (final IOException e1) {
+            e1.printStackTrace();
+            throw new RuntimeException(e1);
+        }
+        
+        try {
+            final ClassLoader classLoader = getClass().getClassLoader();
+            final File file = new File(classLoader.getResource("gis/polygonEntities.js").getFile());
+            final InputStream stream = new FileInputStream(file);
+            final ObjectMapper objectMapper = new ObjectMapper();
+            final ArrayList oldPolygonEntities = objectMapper.readValue(stream, ArrayList.class);
+            
+            final Map<String, TgPolygon> polygons = new HashMap<>();
+            for (final Object oldPolygonEntity: oldPolygonEntities) {
+                final Map<String, Object> map = (Map<String, Object>) oldPolygonEntity;
+                final Map<String, Object> polygonProps = ((Map<String, Object>) map.get("properties"));
+                final String polygonKey = (String) polygonProps.get("key"); 
+                TgPolygon found = polygons.get(polygonKey);
+                if (found == null) {
+                    final TgPolygon newPolygon = new_(TgPolygon.class, polygonKey);
+                    newPolygon.setDesc((String) polygonProps.get("desc"));
+                    found = save(newPolygon);
+                    polygons.put(polygonKey, found);
+                }
+                
+                final ArrayList<Object> coordinates = (ArrayList<Object>) polygonProps.get("coordinates");
+                for (final Object coord: coordinates) {
+                    final Map<String, Object> coordProps = ((Map<String, Object>) ((Map<String, Object>) coord).get("properties"));
+                    final TgCoordinate coordinateEntity = save(new_composite(TgCoordinate.class, found, (Integer) coordProps.get("order"))
+                            .setLongitude(BigDecimal.valueOf((double) coordProps.get("longitude")))
+                            .setLatitude(BigDecimal.valueOf((double) coordProps.get("latitude")))
                             );
                 }
             }

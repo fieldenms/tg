@@ -90,6 +90,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4;
+import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
 import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.action.post.FileSaverPostAction;
@@ -202,6 +203,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         TgMessageWebUiConfig.register(injector(), configApp());
         TgStopWebUiConfig.register(injector(), configApp());
         TgMachineRealtimeMonitorWebUiConfig.register(injector(), configApp());
+        TgPolygonWebUiConfig.register(injector(), configApp());
 
         //Centre configuration for deletion test case entity.
         final EntityCentre<TgDeletionTestEntity> deletionTestCentre = new EntityCentre<>(MiDeletionTestEntity.class, "TgDeletionTestEntity",
@@ -883,6 +885,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         "Центр для перегляду машин у реальному часі на карті." + //
                         "</html>"
                 ).centre(configApp().getCentre(MiTgMachineRealtimeMonitor.class).get()).done()
+                .addMenuItem("Гео-зони (Web)").description(
+                        "<html><h3>Гео-зони (Web)</h3>" + //
+                        "Забезпечує можливість перегляду, моніторингу й аналізу гео-зон." + //
+                        "</html>"
+                ).centre(configApp().getCentre(MiTgPolygon.class).get()).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
