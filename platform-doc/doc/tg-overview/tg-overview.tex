@@ -345,7 +345,7 @@ private Technician technician;
 	
 	
 	So far, we've discussed only the in-memory state modification and how the \emph{entity} part of a \emph{fractal object} is used to model and ensure correctness of a business entity.
-	The examples above illustrate that in-memory changes require the ability to executed potentially complex validation rules, including communication with the application database.
+	The examples above illustrate that in-memory changes require the ability to execute potentially complex validation rules, including communication with the application database.
 	Changes to some properties may result in changes to some other properties.
 	This shows that changing entity properties encompasses rich domain behaviour, which is captured at the entity model level declaratively and is transparently integrated with an application UI.
 	The main \emph{takeaway} from this, is that the same business rules to verify an entity state validity are applied consistently regardless of where in the business logic or UI any particular entity instance is modified.
@@ -388,10 +388,112 @@ private Technician technician;
 	Such uniformity contributes significantly to the comprehension of an information system by both the original and new developers that just need to follow the established pattern to identify how different parts of the system interact with each other and what are the rules for that interaction.
 	So, unlike in the case of more traditional approaches, there is no need to "think" what various behavioural methods that are defined as part of "domain objects" or "services" mean and what is their effect on the system.
 	One only needs to "think" what does some entity object models -- the ways for it to effect the system are defined uniformly as four operations on a corresponding companion object.
-	Combining this uniform approach with the direct manipulation principle for building UI, yields an a very transparent system where users and developers can clearly identify problem areas that need bug fixes, improvement or enhancements.
+	Combining this uniform approach with the direct manipulation principle for building UI, yields a very transparent system where users and developers can clearly identify problem areas that need bug fixes, improvement or enhancements.
 	
-	The next section delves more into the application of the Fractal Objects pattern to model the three essential functions of any information system.
-	It shows that approaching the design of an information system from the perspective of just these three functions leads to a significant reduction of the architectural complexity.
+	As an example, figure~\ref{fig:wa-detail} depicts an \emph{entity master} for a persistent entity \texttt{WorkActivityDetail} that models a domain entity for capturing details of some work being performed.
+	There can be multiple entity instance of this type associated with the same work activity and any existing details can be edited under some conditions.
+		
+	\begin{figure}[!h]
+  		\centering
+        \includegraphics[width=.55\textwidth]{images/06-wa-detail-master.png}  
+        \caption{Work Activity Detail}
+        \label{fig:wa-detail}
+		%\vspace{-30pt} 
+  	\end{figure}
+
+	Entity \texttt{WorkActivityDetail} has five properties.
+	Three of those are read-only from UI perspective and can only be changed programmatically, the remaining two are required\footnote{This nature of properties is automatically taken into account in the UI layer by reusing the definitions that are captured at the domain model.}.
+	Buttons \texttt{CANCEL} and \texttt{SAVE} are directly mapped to the two of four companion object operations -- \texttt{retrieve}\footnote{Cancelling changes is equivalent to refreshing an entity from a database by means of re-retrieving it.} and \texttt{save}.
+
+	The code listing below illustrates a part of the implementation for companion object \texttt{IWork\-Activity\-Detail} of entity \texttt{WorkActivityDetail}.
+	It extends a generic base class \texttt{CommonEntityCo} with a type parameter that is specified as the type of a corresponding entity object.
+	This makes every concrete companion specialised to handle a single entity object.
+	The base class is provided by the TG platform and encapsulates all the essential logic of saving persistent entities, which includes the construction of appropriate insert/update statements, optimistic locking mechanism, conflict resolution logic etc.
+
+	Entity retrieval in this example is quite trivial and its only concern is to use an appropriate fetch model to obtain an object subgraph that would be sufficient for editing purposes.
+	The \texttt{save} operation is represented by method of the same name and illustrates some of the important aspects that deserve a more detailed discussion.
+	
+	\medskip
+	
+	\begin{tcolorbox}[sidebyside, righthand width=0.3\textwidth, title=Example: simple \texttt{save} operation]
+    \begin{lstlisting}[numbersep=2pt]
+@EntityType(WorkActivityDetail.class)
+public class WorkActivityDetailCo 
+    extends CommonEntityCo<WorkActivityDetail> 
+    implements IWorkActivityDetail {
+    ...
+    @Override
+    @TransactionRequired
+    public WorkActivityDetail save(
+        final WorkActivityDetail detail) {
+    
+        if (detail.getTimesheet() == null && 
+            detail.getProperty("comment").isDirty()) {
+           detail
+           .setDate(universalConstants().now())
+           .setPerson(co(Person.class).currentPerson());
+        }
+    
+        return super.save(detail);
+    }
+    ...
+}    
+	
+	\end{lstlisting}
+	\tcblower
+		\tiny
+		 Annotation \texttt{@TransactionRequired} represents a declarative transaction demarcation~-- all data changes in method \texttt{save} are wrapped into a single transaction.
+
+		 \medskip
+		 Method \texttt{save} expects a single argument, which is a new or modified entity instance of type \texttt{WorkActivityDetail}.
+
+		 \medskip		 
+		 The entity meta-data can be accessed via API to check what properties of the specified entity instance have been changed and what were their previous values.
+
+		 \medskip		 
+		 The business logic in method \texttt{save} can be very rich, affect other entities and depend on the changed properties.
+		 
+		 \medskip		 
+		 A successfully saved entity is returned as the result of method \texttt{save}.
+		 
+ 	\end{tcolorbox}	
+
+	First of all, method \texttt{save} extends the inherited method \texttt{save}.
+	The call to \texttt{super.save} is the only way to initiate the actual entity saving.
+	This \texttt{super} call can appear anywhere in the body of the overridden method \texttt{save} as all the database changes in this method are atomic (belong to the same transaction).
+	However, often such a decision is governed by the actual business logic that should be executed as part entity saving.
+	In this case, it makes sense to call \texttt{super.save} as the last method instruction (line 18) in order to persist preceding entity changes -- lines 14 and 15.
+	The returned instance represents a re-fetched entity.
+	The re-fetching logic is based on an automatically reconstructed fetch model using an entity instance being saved (\texttt{detail} in this case).
+	This guaranties that the returned instance contains the most fresh data in its object sub-graph.
+	
+	Method \texttt{save} expects a single argument -- a new or modified entity object that needs to be persisted.
+	Lines 11--16 correspond to a business logic, which dictates that under certain condition properties \texttt{date} and \texttt{person} of \texttt{detail} (the entity being saved) should be updated with the current date/time and the currently logged-in person, who actions the change.
+	The condition (lines 11 and 12) to update values for these properties checks if \texttt{detail} has a timesheet associated with it and if its property \texttt{comment} is dirty.
+	The latter is an example of using meta-data API to identify if some property was changed, but not yet persisted.
+
+	Entity properties are updated by invoking property setters (lines 13--15).
+	Definitions of entity objects follow the idea of fluent API, which enables convenient chaining of setter calls.
+	Property \texttt{date} is assigned the value, which is computed by expression \texttt{universalConstants().now()}\footnote{This expression encapsulates the notion of a \emph{model time} that provides a way to control time for testing purposes.}.
+	Property \texttt{person} is assigned the \emph{current person} by obtaining an instance of a companion object for entity \texttt{Person} (i.e. \texttt{co(Person.class)}) and then calling its method \texttt{currentPerson()}.
+	
+	Method \texttt{IPerson.currentPerson()} is an example of operation \texttt{retrieve} that is expressed in more domain specific terms.
+	The TG platform provides a necessary abstraction to identify the currently logged in application user.
+	This abstraction has its implementations for testing and deployment purposes that get injected depending on the execution context.
+	Entity \texttt{User} with its companion \texttt{IUser} are present at the platform level and can be accessed by the application specific domain logic.
+	Entity \texttt{Person} is a domain entity, implemented at an application level.
+	In the domain, which is used for this example, entity \texttt{Person} has many domain specific properties such as payment rates, normal and overtime hours, a supervisor etc.
+	At the same time, each \texttt{Person} instance is in a unique one-to-one association with a corresponding instance of \texttt{User}.
+	That is why it is possible and more natural to express the notion of a currently logged in user in terms of domain entity \texttt{Person}.
+	
+	The above example is very simple, but it should be sufficient to see that a companion operation \texttt{save} is capable of containing rich transactional business logic, which could affect a persistent state of an information system across multiple entity objects of different types.
+	Having both entity properties and the operations of companion objects directly mapped to UI controls, guides the thought process when designing and using the system.
+	It is always clear what changes need to be implemented at the code level whenever an application user refers to some functionality in terms of UI constructs.
+	
+	The next section delves more into the application of the Fractal Objects pattern to model the three essential information system functions (\texttt{Memory}, \texttt{Informative} and \texttt{Active}).
+	It shows how approaching the design of an information system from the perspective of just these three functions by applying the FO pattern leads to a significant reduction of the architectural complexity.
+	We also introduce Entity Query Language (EQL) as an essential part for communicating with an application database and constructing sophisticated queries that capture the information across multiple persistent (memory) entities to produce synthetic entities for reporting (informative) purposes.
+
 
 \iffalse
 
@@ -420,38 +522,10 @@ private Technician technician;
 
 	Unlike the anemic domain model~\cite{fowler2003}, an entity has the responsibility to ensure the correctness of its state.
 	
-	However, unlike the rich domain model
 	
 		
 	
-  	The role of a \emph{companion object} if to provide operations that can be performed with a corresponding \emph{entity object}.
-
-  	Together, the entity and companion objects form an elementary building block to provide an invariant representation of any structural or functional business domain aspects.
-
-  
-  \emph{Companion objects} provide four operations that can be performed with respect to a corresponding entity object~--  \emph{create}, \emph{save}, \emph{delete}, and \emph{request}.
-  These operations conceptually describe what can be done with an entity object.
-  It can either be create, saved, deleted or requested (i.e. searched for).
-  Each of this operation can be represented by one or more actual methods at the code level.
-    
-    
-  Due to the fact that companion objects are interfaces, a natural question arises as to who and when fulfils the actual implementation.
-  In our work, the computing platform provides the generic implementation for companion objects that can be inherited from and enhanced as part of a specific software system.
-  The inherited implementation gets injected at runtime.
-  Thus, all references to an interface representing a companion object are assigned with an instances of the injected implementation.
-
-	
-	 
-
-	At a conceptual level, the key purpose of the developed architectural pattern in TG, which is called \emph{Fractal Objects}, is to ensure the \emph{semantic transparency} of the domain model at different levels of an information level being modelled~-- from the source code at the bottom and up to the user interface at the top.
-  	The main objective of the semantic transparency is to facilitate the communication between different stakeholders that are involved in developing and using an information system.
-
-  	For example, this means that having some domain object such as \texttt{Person}, \texttt{Wagon} or \texttt{Vehicle}, which represented to the end-user as part of the user interface should directly lead to representation of the same object at the code level.
-  	This in turn would allow users, analysts and developers of the system to better understand each other when it comes to fixing some defect or implementing a necessary enhancement.
-  	It is important not to limit semantic transparency just to the domain objects that model the structure of world, but also facilitate it for the functional aspects of the domain that are usually associated with processes and actions.
-  
-	We argue that this can be achieved by using \emph{invariant representation} for implementing \texttt{Memory}, \texttt{Informative} and \texttt{Active} functions of an information system.
-  
+ 
 \subsection*{Computing Platform}
 
 	In theory of data modelling, a conceptual data model is defined as a pair of languages~-- a data definition language and a data manipulation language~\cite{kal1983}.
@@ -486,30 +560,6 @@ private Technician technician;
   The developed prototype of the Fractal Object approach has been done in the Java programming language, but any other object-oriented language could be used.
   Java is still one of the most widely used programming languages and proved to be well suited for the implementation of transactional business systems.
   However, our decision to use Java was also influenced by its rich reflection capabilities that allow runtime introspection in order to gather metadata, and its use of interfaces to support polymorphism that could be effectively used by the platform for inversion of control to enable loose coupling with domain models.
-
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
