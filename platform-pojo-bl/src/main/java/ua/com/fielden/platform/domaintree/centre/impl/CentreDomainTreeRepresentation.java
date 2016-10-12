@@ -279,7 +279,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 
             return (super.isDisabledImmutablyLightweight(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
                     (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())) || // disable crit-only properties (the children should be excluded!)
-                    // (isCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and collections itself
+                    (isNotShortCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and not short collections itself
                     // no need to disable synthetic stuff --> (Reflector.isSynthetic(propertyType)) || // disable synthetic entities itself (and also synthetic properties -- rare case)
                     (!isEntityItself && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION)) || // disable ATTRIBUTED_COLLECTIONAL_EXPRESSION properties for result-set tick
                     isDisabledImmutablyPropertiesOfEntityType(propertyType, keyTypeAnnotation); // disable properties of "entity with AE key" type
