@@ -8,8 +8,8 @@
 		this._shouldFitToBounds = true;
 	};
 
-	ProgressBarUpdater.prototype.updateProgressBar = function(processed, total, elapsed, layersArray) {
-		console.debug("updateProgressBar(processed = " + processed + ", total = " + total + ", elapsed = " + elapsed + ",layersArray);");
+	ProgressBarUpdater.prototype.updateProgressBar = function(processed, total, elapsed) {
+		console.debug("updateProgressBar(processed = " + processed + ", total = " + total + ", elapsed = " + elapsed + ");");
 
 		if (elapsed > 0) { // 1000
 			// if it takes more than a second to load, display the progress bar:
@@ -31,7 +31,10 @@
 			this._progress.style.display = 'none';
 
 			if (this._shouldFitToBounds) {
-				this._map.fitBounds(this._getMarkers().getBounds());
+			    var self = this;
+			    window.setTimeout(function () {
+					self._map.fitBounds(self._getMarkers().getBounds());
+				}, 1);
 			}
 
 			// iteration = 1;

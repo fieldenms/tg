@@ -53,12 +53,14 @@
 		};
 		self._progressBarUpdater = new L.GIS.ProgressBarUpdater(_map, self._getMarkers, progressDiv, progressBarDiv);
 
-		self._gisMarkerClusterGroup = new L.MarkerClusterGroup({ // .extend
+		self._gisMarkerClusterGroup = L.markerClusterGroup({
 			chunkedLoading: true,
 			// chunkProgress: _progressBarUpdater.updateProgressBar, // does not work due to calling a function on window object!
-			chunkProgress: function (processed, total, elapsed, layersArray) {
-				self._progressBarUpdater.updateProgressBar(processed, total, elapsed, layersArray);
+			chunkProgress: function (processed, total, elapsed) {
+				self._progressBarUpdater.updateProgressBar(processed, total, elapsed);
 			},
+			// chunkInterval: 2000,
+			// chunkDelay: 1000,
 
 			disableClusteringAtZoom: self.disableClusteringAtZoom(),
 			maxClusterRadius: function (zoom) {
