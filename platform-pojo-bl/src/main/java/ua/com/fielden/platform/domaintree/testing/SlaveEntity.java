@@ -23,9 +23,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "domain tree representation" testing.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key title", desc = "Key desc")
@@ -85,6 +85,9 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     ///////// Collections /////////
     @IsProperty(value = EvenSlaverEntity.class, linkProperty = "slaveEntityLinkProp")
     private List<EvenSlaverEntity> collection = new ArrayList<EvenSlaverEntity>();
+
+    @IsProperty(ShortEvenSlaverEntity.class)
+    private List<ShortEvenSlaverEntity> shortCollection = new ArrayList<ShortEvenSlaverEntity>();
 
     ////////// Any property to be specifically excluded //////////
     @IsProperty(linkProperty = "slaveEntityLinkProp")
@@ -243,6 +246,16 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     @Observable
     public void setEntityProp(final EvenSlaverEntity entityProp) {
         this.entityProp = entityProp;
+    }
+
+    public List<ShortEvenSlaverEntity> getShortCollection() {
+        return shortCollection;
+    }
+
+    @Observable
+    public void setShortCollection(final List<ShortEvenSlaverEntity> shortCollection) {
+        this.shortCollection.clear();
+        this.shortCollection.addAll(shortCollection);
     }
 
     public List<EvenSlaverEntity> getCollection() {

@@ -20,9 +20,9 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "domain tree representation" testing.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(String.class)
@@ -85,6 +85,9 @@ public class MasterEntity extends AbstractEntity<String> {
     ///////// Collections /////////
     @IsProperty(value = SlaveEntity.class, linkProperty = "masterEntityProp")
     private List<SlaveEntity> collection = new ArrayList<SlaveEntity>();
+
+    @IsProperty(ShortSlaveEntity.class)
+    private List<ShortSlaveEntity> shortCollection = new ArrayList<ShortSlaveEntity>();
 
     ////////// Any property to be specifically excluded //////////
     @IsProperty(linkProperty = "masterEntityProp")
@@ -238,6 +241,16 @@ public class MasterEntity extends AbstractEntity<String> {
     @Observable
     public void setEntityProp(final SlaveEntity entityProp) {
         this.entityProp = entityProp;
+    }
+
+    public List<ShortSlaveEntity> getShortCollection() {
+        return shortCollection;
+    }
+
+    @Observable
+    public void setShortCollection(final List<ShortSlaveEntity> shortCollection) {
+        this.shortCollection.clear();
+        this.shortCollection.addAll(shortCollection);
     }
 
     public List<SlaveEntity> getCollection() {
