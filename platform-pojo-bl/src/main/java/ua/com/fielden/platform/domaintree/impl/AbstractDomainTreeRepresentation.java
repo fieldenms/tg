@@ -251,7 +251,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param property
      * @return
      */
-    protected static boolean isShortCollection(final Class<?> root, final String property) {
+    public static boolean isShortCollection(final Class<?> root, final String property) {
         final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
         if (isEntityItself) {
             return false;

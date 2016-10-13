@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.entity_centre.review.criteria;
 
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -205,9 +208,17 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     private static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> createFetchModelFrom(final Class<V> managedType, final Set<String> properties, final Optional<IFetchProvider<T>> additionalFetchProvider) {
         final IFetchProvider<V> rootProvider = properties.contains("") ? EntityUtils.fetchNotInstrumentedWithKeyAndDesc(managedType)
                 : EntityUtils.fetchNotInstrumented(managedType);
-        // TODO Analyse 'properties' and get all 'short collectional' properties if any. Then extend 'properties' set with a set of keys, which correspond to linkProperties in collectional properties.
-        // TODO This should be done in order to be able to correctly retrieve centre results with short collections (EQL retrieval sorts collection elements by keys and thus such enhancement is required).
-        final IFetchProvider<V> rootProviderWithResultSetProperties = rootProvider.with(properties);
+        // Analyse 'properties' and get all 'short collectional' properties if any. Then extend main fetch provider with key-fetched providers of short collection parents.
+        // This should be done in order to be able to correctly retrieve centre results with short collections (EQL retrieval sorts collection elements by keys and thus such enhancement is required).
+        final IFetchProvider<V> rootProviderWithResultSetProperties = properties.stream()
+                .filter(property -> isShortCollection(managedType, property))
+                .reduce(rootProvider.with(properties), (fetchProvider, shortCollectionProp) -> {
+                    final String shortCollectionParent = isDotNotation(shortCollectionProp) ? penultAndLast(shortCollectionProp).getKey() : "";
+                    final Class<AbstractEntity<?>> shortCollectionParentType = (Class<AbstractEntity<?>>) transform(managedType, shortCollectionProp).getKey();
+                    return "".equals(shortCollectionParent)
+                            ? fetchProvider.with((IFetchProvider<V>) EntityUtils.fetchNotInstrumentedWithKeyAndDesc(shortCollectionParentType))
+                            : fetchProvider.with(shortCollectionParent, EntityUtils.fetchNotInstrumentedWithKeyAndDesc(shortCollectionParentType));
+                }, (fetchProvider1, fetchProvider2) -> fetchProvider1.with(fetchProvider2));
         if (additionalFetchProvider.isPresent()) {
             return rootProviderWithResultSetProperties.with(additionalFetchProvider.get().copy(managedType));
         } else {
