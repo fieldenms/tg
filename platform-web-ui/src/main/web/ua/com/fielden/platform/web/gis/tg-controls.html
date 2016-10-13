@@ -5,11 +5,12 @@
 
 <script>
 (function() {
-	var Controls = function(_map, _markersClusterGroup, _baseLayers) {
+	var Controls = function(_map, _markersClusterGroup, _geoJsonOverlay, _baseLayers) {
 		var self = this;
 
 		self._map = _map;
 		self._markersClusterGroup = _markersClusterGroup;
+		self._geoJsonOverlay = _geoJsonOverlay;
 		self._baseLayers = _baseLayers;
 
 		// firebug control
@@ -58,7 +59,7 @@
 			position: 'bottomleft',
 
 			edit: {
-				featureGroup: self._markersClusterGroup // drawnItems
+				featureGroup: self._geoJsonOverlay // drawnItems
 			},
 
 			draw: {
@@ -81,7 +82,8 @@
 		self._map.on('draw:created', function(e) {
 			var type = e.layerType,
 				layer = e.layer;
-			self._markersClusterGroup.addLayer(layer);
+			self._geoJsonOverlay.addLayer(layer);
+			self._markersClusterGroup.refreshClusters();
 		});
 
 		// GATHER ALL LAYERS AND ADD OVERLAYS CONTROL

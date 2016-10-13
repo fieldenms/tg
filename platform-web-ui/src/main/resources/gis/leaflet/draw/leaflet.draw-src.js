@@ -1138,7 +1138,9 @@ L.Edit.Marker = L.Handler.extend({
 	addHooks: function () {
 		var marker = this._marker;
 
-		marker.dragging.enable();
+        if (marker.dragging) {
+            marker.dragging.enable();
+        }
 		marker.on('dragend', this._onDragEnd, marker);
 		this._toggleMarkerHighlight();
 	},
@@ -1146,7 +1148,9 @@ L.Edit.Marker = L.Handler.extend({
 	removeHooks: function () {
 		var marker = this._marker;
 
-		marker.dragging.disable();
+		if (marker.dragging) {
+		    marker.dragging.disable();
+		}
 		marker.off('dragend', this._onDragEnd, marker);
 		this._toggleMarkerHighlight();
 	},
@@ -3407,7 +3411,9 @@ L.EditToolbar.Edit = L.Handler.extend({
 		}
 
 		if (this.isMarker) {
-			layer.dragging.enable();
+            if (layer.dragging) {
+                layer.dragging.enable();
+            }
 			layer
 				.on('dragend', this._onMarkerDragEnd)
 				// #TODO: remove when leaflet finally fixes their draggable so it's touch friendly again.
@@ -3441,7 +3447,9 @@ L.EditToolbar.Edit = L.Handler.extend({
 		}
 
 		if (layer instanceof L.Marker) {
-			layer.dragging.disable();
+		    if (layer.dragging) {
+		        layer.dragging.disable();
+		    }
 			layer
 				.off('dragend', this._onMarkerDragEnd, this)
 				.off('touchmove', this._onTouchMove, this)
