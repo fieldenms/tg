@@ -109,6 +109,87 @@
                 master.retrieve();
             };
             
+            // ===============================
+            // day+month aproximations into 'current year' date
+            var currYearStr = _momentTz().format('YYYY'); // '2016';
+            
+            test('[9/9] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, '9/9', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[09/9] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, '09/9', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[ 9 / 09  ] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  ', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[ 9 / 09  21:45] to [09/09/' + currYearStr + ' 21:45]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  21:45', '09/09/' + currYearStr + ' 21:45');
+            });
+            
+            test('[ 9 / 09  21 ] to [09/09/' + currYearStr + ' 21:00]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  21 ', '09/09/' + currYearStr + ' 21:00');
+            });
+            
+            test('[9/9 9p] to [09/09/' + currYearStr + ' 21:00]', function(done) {
+                correctlyApproximates(done, '9/9 9p', '09/09/' + currYearStr + ' 21:00');
+            });
+            
+            test('[9/9 9:47:14.567p] to [09/09/' + currYearStr + ' 21:47:14.567]', function(done) {
+                correctlyApproximates(done, '9/9 9:47:14.567p', '09/09/' + currYearStr + ' 21:47:14.567');
+            });
+            
+            // ===============================
+            // time portion aproximations into 'today' date
+            var todayStr = _momentTz().format('L'); // '17/10/2016';
+            
+            test('[11:03] to [' + todayStr + ' 11:03]', function(done) {
+                correctlyApproximates(done, '11:03', todayStr + ' 11:03');
+            });
+            
+            test('[21:45] to [' + todayStr + ' 21:45]', function(done) {
+                correctlyApproximates(done, '21:45', todayStr + ' 21:45');
+            });
+            
+            test('[9:37] to [' + todayStr + ' 09:37]', function(done) {
+                correctlyApproximates(done, '9:37', todayStr + ' 09:37');
+            });
+            
+            test('[9:7] to [' + todayStr + ' 09:07]', function(done) {
+                correctlyApproximates(done, '9:7', todayStr + ' 09:07');
+            });
+            
+            test('[9:7p] to [' + todayStr + ' 21:07]', function(done) {
+                correctlyApproximates(done, '9:7p', todayStr + ' 21:07');
+            });
+            
+            test('[21:7] to [' + todayStr + ' 21:07]', function(done) {
+                correctlyApproximates(done, '21:7', todayStr + ' 21:07');
+            });
+            
+            test('[23:05:34.567] to [' + todayStr + ' 23:05:34.567]', function(done) {
+                correctlyApproximates(done, '23:05:34.567', todayStr + ' 23:05:34.567');
+            });
+            
+            test('[21:5:34.567] to [' + todayStr + ' 21:05:34.567]', function(done) {
+                correctlyApproximates(done, '21:5:34.567', todayStr + ' 21:05:34.567');
+            });
+            
+            test('[9:5:34.567] to [' + todayStr + ' 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9:5:34.567', todayStr + ' 09:05:34.567');
+            });
+            
+            test('[9:5 : 34  .  567  ] to [' + todayStr + ' 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9:5 : 34  .  567  ', todayStr + ' 09:05:34.567');
+            });
+            
+            test('[9:5:34.567  ] to [' + todayStr + ' 09:05:34.567]', function(done) {
+                correctlyApproximates(done, '9:5:34.567  ', todayStr + ' 09:05:34.567');
+            });
+            // ===============================
+            
             test('[09/09/2002 11:03] to [09/09/2002 11:03]', function (done) {
                 correctlyApproximates(done, '09/09/2002 11:03', '09/09/2002 11:03');
             });
