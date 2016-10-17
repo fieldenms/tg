@@ -365,29 +365,21 @@
                         // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one slash)
                         var numberOfDigitsAfterLastSlash = this._calculateNumberOfDigitsAfterLastSlash(dateEditingValue);
                         var numberOfDigits = numberOfDigitsAfterLastSlash.number;
+                        var aproximated = undefined;
                         if (numberOfDigitsAfterLastSlash.secondSlashExists === true) { // exactly two slashes
                             // If numberOfDigitsAfterSecondSlash equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'
                             // But they should not be valid. Only 1, 2 and 4 digits for years should be valid.
                             if (numberOfDigits === 1 || numberOfDigits === 2 || numberOfDigits === 4) {
-                                var value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigits).trim();
-                                if (value) {
-                                    this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
-                                    if (this._validMoment !== null) {
-                                        return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone);
-                                    }
-                                }
+                                aproximated = this._approximateWithNumberOfDigits(dateEditingValue, numberOfDigits);
                             }
                         } else { // exactly one slash
                             // If numberOfDigitsAfterFirstSlash equals 1 or 2 -- it could be represented as valid digits for month.
                             if (numberOfDigits === 1 || numberOfDigits === 2) {
-                                var value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigits).trim();
-                                if (value) {
-                                    this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
-                                    if (this._validMoment !== null) {
-                                        return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone);
-                                    }
-                                }
+                                aproximated = this._approximateWithNumberOfDigits(dateEditingValue, numberOfDigits);
                             }
+                        }
+                        if (aproximated !== undefined) {
+                            return aproximated;
                         }
                     } else {
                         var value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
@@ -400,6 +392,17 @@
                     }
                 }
                 return dateEditingValue;
+            },
+            
+            _approximateWithNumberOfDigits: function (dateEditingValue, numberOfDigits) {
+                var value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigits).trim();
+                if (value) {
+                    this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
+                    if (this._validMoment !== null) {
+                        return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone);
+                    }
+                }
+                return undefined;
             },
             
             /**
@@ -500,6 +503,9 @@
                 return numberOfDigits;
             },
             
+            /**
+             * Inserts one space after year digits (two slashes exist) or '/currYear ' after month digits (one slash exists).
+             */
             _insertOneSpace: function (strWithoutSpaces, numberOfDigitsAfterLastSlash) {
                 if (numberOfDigitsAfterLastSlash === 0) {
                     return strWithoutSpaces;
