@@ -58,6 +58,24 @@
         EntityTypeProp.prototype.isUpperCase = function () {
             return typeof this._upperCase === 'undefined' ? false : this._upperCase;
         }
+        
+        /**
+         * Returns 'true' when the property should be displayed only with date portion, false otherwise.
+         *
+         * IMPORTANT: do not use '_date' field directly!
+         */
+        EntityTypeProp.prototype.isDate = function () {
+            return typeof this._date === 'undefined' ? false : this._date;
+        }
+        
+        /**
+         * Returns 'true' when the property should be displayed only with time portion, false otherwise.
+         *
+         * IMPORTANT: do not use '_time' field directly!
+         */
+        EntityTypeProp.prototype.isTime = function () {
+            return typeof this._time === 'undefined' ? false : this._time;
+        }
 
         /** 
          * Returns entity type prop title.

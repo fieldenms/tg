@@ -1654,7 +1654,8 @@
                 } else if (this.$.reflector.findTypeByName(type)) {
                     return this.$.reflector.convert(this._get(entity, property));
                 } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC' or 'Date:Europe/London'
-                    return _millisDateRepresentation(entity.get(property), type === 'Date' ? null : type.substring(5));
+                    var splitedType = type.split(':');
+                    return _millisDateRepresentation(entity.get(property), splitedType[1], splitedType[2]);
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
                         return this.$.reflector.formatDecimal(entity.get(property), this.$.appConfig.locale);
