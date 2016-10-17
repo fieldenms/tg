@@ -180,6 +180,23 @@
                 },
                 
                 /**
+                 * The formats for approximation. The order of this array is important -- it defines the order in which formats are tried during approximation.
+                 */
+                _timePortionFormats: {
+                    type: Array,
+                    value: function () {
+                        return [
+                            'LTS',
+                            'h:m:ss.SSSa',
+                            'H:m:ss.SSS',
+                            'LT',
+                            'h:ma',
+                            'H:m'
+                        ];
+                    }
+                },
+                
+                /**
                  * The property that holds valid approximated 'moment' value in case if approximation has been successful or 'null' otherwise.
                  */
                 _validMoment: {
@@ -354,6 +371,14 @@
                                 return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone);
                             }
                         }
+                    } else if (dateEditingValue.indexOf('/') === -1) { // the case where date portion is present only
+                        var value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
+                        if (value) {
+                            this._validMoment = this._tryTimePortionFormats(value, this._timePortionFormats.slice() /* the copy is made  */);
+                            if (this._validMoment !== null) {
+                                return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone);
+                            }
+                        }
                     }
                 }
                 return dateEditingValue;
@@ -378,6 +403,26 @@
                         if (['D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {
                             tryingMoment.add(1, 'days').subtract(1, 'milliseconds');
                         }
+                        return tryingMoment;
+                    } else {
+                        formats.shift(); // first element is removed
+                        return this._tryFormats(stringValue, formats);
+                    }
+                }
+            },
+            
+            /**
+             * Tries time portion formats one-by-one and returns the valid 'moment' object in case where some format has been successed.
+             * In case of all formats failure -- returns 'null'.
+             */
+            _tryTimePortionFormats: function (stringValue, formats) {
+                if (formats.length === 0) {
+                    return null;
+                } else {
+                    console.debug('time portion formats', formats);
+                    var firstFormat = formats[0];
+                    var tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
+                    if (tryingMoment.isValid()) {
                         return tryingMoment;
                     } else {
                         formats.shift(); // first element is removed
