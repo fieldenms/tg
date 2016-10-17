@@ -91,7 +91,7 @@
     			disabled$="[[_disabled]]"
                 tooltip-text$="[[_getTooltip(_editingValue)]]"/>
             <content class=".property-action"></content>
-            <paper-icon-button id="openCalendarButton" class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
+            <paper-icon-button id="openCalendarButton" class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
         </tg-editor>
     </template>
 </dom-module>
@@ -116,6 +116,15 @@
                  * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
                  */
                 timeZone: {
+                    type: String,
+                    value: null
+                },
+                
+                /**
+                 * Defines what date portion to show: date, time or date & time. If the value is 'DATE' then only date portion of the date property value will be shown,
+                 * If the value is 'TIME' then only time portion of the date property value will be shown, otherwise date & time wil be shown.
+                 */
+                datePortion: {
                     type: String,
                     value: null
                 },
@@ -228,7 +237,7 @@
                 if (value === null) {
                     return "";
                 } else {
-                    return _millisDateRepresentation(value, this.timeZone);
+                    return _millisDateRepresentation(value, this.timeZone, this.datePortion);
                 }
             },
 
@@ -239,6 +248,10 @@
                 
                 this.$.openCalendarButton.disabled = true;
                 mve.open();
+            },
+            
+            _isCalendarDisabled: function (_disabled, datePortion) {
+                return _disabled || datePortion === "TIME";
             },
             
             /**
@@ -269,7 +282,7 @@
                         .minute(this.$.datePicker.selectedMinute)
                         .seconds(this.$.datePicker.seconds)
                         .milliseconds(this.$.datePicker.milis);
-                    self._editingValue = _millisDateRepresentation(acceptedMoment.valueOf(), self.timeZone);
+                    self._editingValue = _millisDateRepresentation(acceptedMoment.valueOf(), self.timeZone, self.datePortion);
                     //self.decoratedInput().focus();
            		}.bind(domBind);
                 
@@ -386,7 +399,7 @@
                         if (value) {
                             this._validMoment = this._tryTimePortionFormats(value, this._timePortionFormats.slice() /* the copy is made  */);
                             if (this._validMoment !== null) {
-                                return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone);
+                                return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
                             }
                         }
                     }
@@ -399,7 +412,7 @@
                 if (value) {
                     this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
                     if (this._validMoment !== null) {
-                        return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone);
+                        return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
                     }
                 }
                 return undefined;
