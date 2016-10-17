@@ -26,12 +26,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.Date;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
-import ua.com.fielden.platform.entity.annotation.Time;
+import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -170,10 +170,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (!isIgnoreDefault(ignore)) {
                     entityTypeProp.set_ignore(ignore);
                 }
-                if (AnnotationReflector.isPropertyAnnotationPresent(Date.class, type, name)) {
+                if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, type, name)) {
                     entityTypeProp.set_date(Boolean.TRUE);
                 }
-                if (AnnotationReflector.isPropertyAnnotationPresent(Time.class, type, name)) {
+                if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
                     entityTypeProp.set_time(Boolean.TRUE);
                 }
                 final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, name);

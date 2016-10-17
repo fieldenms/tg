@@ -25,6 +25,8 @@
             } else {
                 format = "L " + (millisecondsExist || secondsExist ? "LTS" : "LT");
             }
+        } else {
+            format = "L " + (millisecondsExist || secondsExist ? "LTS" : "LT");
         }
         return _momentTz(dateMillis, timeZone).format(format);
     };

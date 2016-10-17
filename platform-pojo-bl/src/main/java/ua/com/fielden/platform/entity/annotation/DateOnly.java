@@ -6,13 +6,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation that should be used only with {@link java.util.Date} properties and indicates that only time portion should be displayed.
+ * Annotation that should be used only with {@link java.util.Date} properties and indicates that only date portion should be displayed.
  *
  * @author TG Team
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
-public @interface Time {
+public @interface DateOnly {
 
 }

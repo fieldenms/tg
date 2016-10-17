@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -655,18 +656,26 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     private IRenderable createRenderableEgiRepresentaton(final ICentreDomainTreeManagerAndEnhancer centre) {
-        final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
-                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
-                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
+        final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>"
+                +
+                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>"
+                +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>"
+                +
+                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>"
+                +
                 "<div class='truncate relative' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", false)]]'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>"
                 + "</div>" +
                 "</div>";
 
-        final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
-                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
-                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
+        final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>"
+                +
+                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>"
+                +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>"
+                +
+                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>"
+                +
                 "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", true)]]'></iron-icon>"
                 + "</div>" +
                 "</div>";
@@ -744,8 +753,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private String egiRepresentationFor(final Class<?> propertyType, final Optional<String> timeZone, final Optional<String> timePortionToDisplay) {
         final Class<?> type = DynamicEntityClassLoader.getOriginalType(propertyType);
         String typeRes = EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : type.getSimpleName());
-        typeRes += timeZone.map(tz -> ":" + timeZone).orElse("");
-        typeRes += timePortionToDisplay.map(portion -> ":" + portion).orElse("");
+        if (Date.class.isAssignableFrom(type)) {
+            typeRes += ":" + timeZone.orElse("");
+            typeRes += ":" + timePortionToDisplay.orElse("");
+        }
         return typeRes;
     }
 

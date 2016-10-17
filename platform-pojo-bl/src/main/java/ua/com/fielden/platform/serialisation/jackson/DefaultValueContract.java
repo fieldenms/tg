@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
-import ua.com.fielden.platform.entity.annotation.Date;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
-import ua.com.fielden.platform.entity.annotation.Time;
+import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -77,12 +77,12 @@ public class DefaultValueContract {
      * @return
      */
     public static String getTimePortionToDisplay(final Class<?> entityType, final String propertyName) {
-        if (AnnotationReflector.isPropertyAnnotationPresent(Date.class, entityType, propertyName)) {
+        if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, entityType, propertyName)) {
             return "DATE";
-        } else if (AnnotationReflector.isPropertyAnnotationPresent(Time.class, entityType, propertyName)) {
+        } else if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, entityType, propertyName)) {
             return "TIME";
         }
-        return "ALL";
+        return null;
     }
 
     ///////////////////////////////////////////////// DIRTY /////////////////////////////////////////////////
