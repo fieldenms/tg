@@ -110,8 +110,40 @@
             };
             
             // ===============================
+            // day+month aproximations into 'current year' date
+            var currYearStr = _momentTz().format('YYYY'); // '2016';
+            
+            test('[9/9] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, '9/9', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[09/9] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, '09/9', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[ 9 / 09  ] to [09/09/' + currYearStr + ' 00:00]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  ', '09/09/' + currYearStr + ' 00:00');
+            });
+            
+            test('[ 9 / 09  21:45] to [09/09/' + currYearStr + ' 21:45]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  21:45', '09/09/' + currYearStr + ' 21:45');
+            });
+            
+            test('[ 9 / 09  21 ] to [09/09/' + currYearStr + ' 21:00]', function(done) {
+                correctlyApproximates(done, ' 9 / 09  21 ', '09/09/' + currYearStr + ' 21:00');
+            });
+            
+            test('[9/9 9p] to [09/09/' + currYearStr + ' 21:00]', function(done) {
+                correctlyApproximates(done, '9/9 9p', '09/09/' + currYearStr + ' 21:00');
+            });
+            
+            test('[9/9 9:47:14.567p] to [09/09/' + currYearStr + ' 21:47:14.567]', function(done) {
+                correctlyApproximates(done, '9/9 9:47:14.567p', '09/09/' + currYearStr + ' 21:47:14.567');
+            });
+            
+            // ===============================
             // time portion aproximations into 'today' date
-            var todayStr = moment().format('L'); // '17/10/2016';
+            var todayStr = _momentTz().format('L'); // '17/10/2016';
             
             test('[11:03] to [' + todayStr + ' 11:03]', function(done) {
                 correctlyApproximates(done, '11:03', todayStr + ' 11:03');
