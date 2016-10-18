@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.helpers.impl;
 
+import static java.lang.String.format;
+
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -53,6 +55,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.money.impl.MoneyWidge
 import ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl.MultilineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
+import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
 public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelector<T> {
 
@@ -144,7 +147,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     );
             return new DatePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
-        throw new IllegalStateException("The master configuration for " + smBuilder.getEntityType() + " is invalid. Cause: " + propertyName + " is not annotated with @DateOnly");
+        throw new EntityMasterConfigurationException(format("The master configuration for [%s] is invalid. Cause: [%s] is not annotated with @DateOnly", smBuilder.getEntityType(), propertyName));
     }
 
     @Override
@@ -159,7 +162,7 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
                     );
             return new TimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
         }
-        throw new IllegalStateException("The master configuration for " + smBuilder.getEntityType() + " is invalid. Cause: " + propertyName + " is not annotated with @TimeOnly");
+        throw new EntityMasterConfigurationException(format("The master configuration for [%s] is invalid. Cause: [%s] is not annotated with @TimeOnly", smBuilder.getEntityType(), propertyName));
     }
 
     @Override
