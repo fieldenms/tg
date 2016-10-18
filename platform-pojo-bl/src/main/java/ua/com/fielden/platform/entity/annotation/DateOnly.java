@@ -6,8 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation that should be used only with {@link java.util.Date} properties and indicates that only date portion should be displayed.
- *
+ * An annotation for properties of type {@link java.util.Date} to convey their semantics as "containing the date portion only".
+ * The "time" portion is not truncated or zeroed out automatically -- it is up to the domain logic to handle the "time" portion as deemed appropriate.
+ * The UI layer at the platform level, however, does take this annotation into account to display only the date portion.
+
  * @author TG Team
  *
  */
