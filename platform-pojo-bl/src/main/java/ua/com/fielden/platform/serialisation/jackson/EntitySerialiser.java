@@ -22,17 +22,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.esotericsoftware.kryo.Context;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
+import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -46,6 +45,9 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDes
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import com.esotericsoftware.kryo.Context;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Serialises / deserialises descendants of {@link AbstractEntity}.
@@ -66,15 +68,17 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
     /**
      * Creates {@link EntitySerialiser} instance based on the specified <code>type</code>.
-     * 
+     *
      * @param type
      * @param module
      * @param mapper
      * @param factory
      * @param entityTypeInfoGetter
-     * @param excludeNulls -- the special switch that indicate whether <code>null</code> properties should be fully disregarded during serialisation into JSON
+     * @param excludeNulls
+     *            -- the special switch that indicate whether <code>null</code> properties should be fully disregarded during serialisation into JSON
      * @param serialisationTypeEncoder
-     * @param propertyDescriptorType -- <code>true</code> to create {@link EntitySerialiser} for {@link PropertyDescriptor} entity type, <code>false</code> otherwise
+     * @param propertyDescriptorType
+     *            -- <code>true</code> to create {@link EntitySerialiser} for {@link PropertyDescriptor} entity type, <code>false</code> otherwise
      */
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder, final boolean propertyDescriptorType) {
         this.type = type;
@@ -99,17 +103,17 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
         // let's inform the client of the type's persistence nature
         entityTypeInfo.set_persistent(EntityUtils.isPersistedEntityType(type));
-        
+
         if (IContinuationData.class.isAssignableFrom(type)) {
             entityTypeInfo.set_continuation(true);
         }
-        
+
         // let's inform the client of whether value descriptions should be displayed in editors of this type
         final boolean shouldDisplayDescription = AnnotationReflector.isAnnotationPresentForClass(DisplayDescription.class, type);
         if (!isDisplayDescDefault(shouldDisplayDescription)) {
             entityTypeInfo.set_displayDesc(shouldDisplayDescription);
         }
-        
+
         if (EntityUtils.isCompositeEntity(type)) {
             final List<String> compositeKeyNames = new ArrayList<>();
             final List<Field> keyMembers = Finder.getKeyMembers(type);
@@ -165,6 +169,12 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 final Boolean ignore = AnnotationReflector.isAnnotationPresentInHierarchy(Ignore.class, type, name);
                 if (!isIgnoreDefault(ignore)) {
                     entityTypeProp.set_ignore(ignore);
+                }
+                if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, type, name)) {
+                    entityTypeProp.set_date(Boolean.TRUE);
+                }
+                if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
+                    entityTypeProp.set_time(Boolean.TRUE);
                 }
                 final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, name);
                 if (mapTo != null) {
@@ -272,7 +282,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             this.propertyType = type;
             this.entityTyped = EntityUtils.isEntityType(this.propertyType);
         }
-        
+
         public boolean isEntityTyped() {
             return entityTyped;
         }

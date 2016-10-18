@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -583,10 +584,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public String getName() {
         return name;
     }
-    
+
     /**
      * Returns action configuration for concrete action kind and its number in that kind's space.
-     * 
+     *
      * @param actionKind
      * @param actionNumber
      * @return
@@ -655,18 +656,26 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     private IRenderable createRenderableEgiRepresentaton(final ICentreDomainTreeManagerAndEnhancer centre) {
-        final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
-                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
-                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
+        final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>"
+                +
+                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>"
+                +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>"
+                +
+                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>"
+                +
                 "<div class='truncate relative' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", false)]]'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>"
                 + "</div>" +
                 "</div>";
 
-        final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
-                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
-                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
+        final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>"
+                +
+                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>"
+                +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>"
+                +
+                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>"
+                +
                 "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", true)]]'></iron-icon>"
                 + "</div>" +
                 "</div>";
@@ -688,7 +697,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                                 .replace("@column-title", columnTitileAndDesc.getKey())
                                 .replace("@column-desc", columnTitileAndDesc.getValue())
                                 .replaceAll("@column-index", Integer.toString(columnIndex))
-                                .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType, EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null).toString()))));
+                                .replaceAll("@property-type", Matcher.quoteReplacement(
+                                        egiRepresentationFor(
+                                                propertyType,
+                                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null),
+                                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(managedType, resultPropName)
+                                                        : null))
+                                        ))));
             }
         }
 
@@ -735,9 +750,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
     }
 
-    private Object egiRepresentationFor(final Class<?> propertyType, final String timeZone) {
+    private String egiRepresentationFor(final Class<?> propertyType, final Optional<String> timeZone, final Optional<String> timePortionToDisplay) {
         final Class<?> type = DynamicEntityClassLoader.getOriginalType(propertyType);
-        return EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : timeZone != null ? type.getSimpleName() + ":" + timeZone : type.getSimpleName());
+        String typeRes = EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : type.getSimpleName());
+        if (Date.class.isAssignableFrom(type)) {
+            typeRes += ":" + timeZone.orElse("");
+            typeRes += ":" + timePortionToDisplay.orElse("");
+        }
+        return typeRes;
     }
 
     /**
@@ -803,7 +823,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, null, centre.getSecondTick().getWidth(root, resultPropName), resultProp.isFlexible, tooltipProp, egiRepresentationFor(propertyType, EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
+                        null,
+                        centre.getSecondTick().getWidth(root, resultPropName),
+                        resultProp.isFlexible,
+                        tooltipProp,
+                        egiRepresentationFor(
+                                propertyType,
+                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null),
+                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(managedType, resultPropName) : null)),
+                        CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName),
+                        action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
                     final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
