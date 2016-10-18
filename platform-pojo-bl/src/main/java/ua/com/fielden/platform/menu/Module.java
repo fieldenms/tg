@@ -112,4 +112,13 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
         menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setIsVisible(false));
     }
 
+    @Override
+    public Module setKey(final String key) {
+        return (Module) super.setKey(key);
+    }
+
+    @Override
+    public Module setDesc(final String desc) {
+        return (Module) super.setDesc(desc);
+    }
 }
