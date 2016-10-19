@@ -23,7 +23,8 @@ public class DateSingleCriterionWidget extends AbstractSingleCriterionWidget {
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),
                         false,
-                        DefaultValueContract.getTimeZone(managedType, propertyName)
+                        DefaultValueContract.getTimeZone(managedType, propertyName),
+                        DefaultValueContract.getTimePortionToDisplay(managedType, propertyName)
                 ));
     }
 }

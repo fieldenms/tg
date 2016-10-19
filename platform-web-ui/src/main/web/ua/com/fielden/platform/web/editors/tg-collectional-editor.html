@@ -8,6 +8,8 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
 <link rel="import" href="/resources/editors/tg-dom-stamper.html">
 
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+
 <dom-module id="tg-collectional-editor">
     <style>
         iron-list {
@@ -19,6 +21,7 @@
         
         .item {
             @apply(--layout-horizontal);
+            @apply(--layout-center);
             padding: 16px 22px;
             border-bottom: 1px solid #DDD;
         }
@@ -32,8 +35,11 @@
             outline: 0;
         }
         
-        .item.selected .star {
-            color: var(--paper-blue-600);
+        paper-checkbox {
+            --paper-checkbox-checked-color: var(--paper-light-blue-700);
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+            --paper-checkbox-unchecked-color: var(--paper-grey-900:);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900:);
         }
         .item.selected {
             background-color: var(--google-grey-100);
@@ -46,7 +52,7 @@
         
         .pad {
             @apply(--layout-vertical);
-            padding-left: 16px;
+            padding-left: 14px;
             width: calc(100% - 40px);
         }
         .without-pad {
@@ -62,12 +68,6 @@
         }
         .dim {
             color: gray;
-        }
-        .star {
-            min-width: 24px;
-            min-height: 24px;
-            width: 24px;
-            height: 24px;
         }
         .truncate {
             white-space: nowrap;
@@ -99,7 +99,7 @@
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(item.sorting)]]">
-                          <iron-icon icon$="[[iconForItem(selected)]]" hidden$="[[_selectingIconHidden(_forReview, item)]]" class="star"></iron-icon>
+                          <paper-checkbox hidden$="[[_selectingIconHidden(_forReview, item)]]" checked="[[selected]]"></paper-checkbox>
                           <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                               <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                               <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
@@ -324,10 +324,6 @@
               classes += ' without-pad';
             }
             return classes;
-        },
-        
-        iconForItem: function (isSelected) {
-            return isSelected ? 'star' : 'star-border';
         },
         
         _sortingIconForItem: function (sorting) {

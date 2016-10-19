@@ -59,12 +59,20 @@ public class EntityTypeProp extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Scale", desc = "Represents the scale of the underlying db column and can be used for UI editors construction")
     private Long _scale;
-    
+
     @IsProperty
     @Title(value = "TimeZone", desc = "TimeZone of date-typed property")
     private String _timeZone;
 
-    //    @IsProperty
+    @IsProperty
+    @Title(value = "Is Date Only?", desc = "Should display only date portion?")
+    private Boolean _date;
+
+    @IsProperty
+    @Title(value = "Is Time Only?", desc = "Should display only time portion?")
+    private Boolean _time;
+
+    //  @IsProperty
     //    @Title(value = "Type", desc = "The string representation of the property type, which can be pattern-matched to determine for e.g. UI editor type")
     //    private String _type;
     //
@@ -77,7 +85,27 @@ public class EntityTypeProp extends AbstractEntity<String> {
     //    public String get_type() {
     //        return _type;
     //    }
-    
+
+    @Observable
+    public EntityTypeProp set_time(final Boolean _time) {
+        this._time = _time;
+        return this;
+    }
+
+    public Boolean get_time() {
+        return _time;
+    }
+
+    @Observable
+    public EntityTypeProp set_date(final Boolean _date) {
+        this._date = _date;
+        return this;
+    }
+
+    public Boolean get_date() {
+        return _date;
+    }
+
     @Observable
     public EntityTypeProp set_timeZone(final String _timeZone) {
         this._timeZone = _timeZone;
