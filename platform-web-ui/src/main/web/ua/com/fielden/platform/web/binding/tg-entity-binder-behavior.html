@@ -131,6 +131,21 @@
                 _currBindingEntity: {
                 	type: Object
                 },
+                
+                /**
+                 * Returns true in case where binding entity has modified properties, false otherwise.
+                 * 
+                 * Please, note that this property recomputes and caches manually strictly when _currBindingEntity and _originalBindingEntity changes (_postEntityReceived method).
+                 *
+                 * Also, invalid entity value will be 'modified', even though the entities from server arrive with valid value only (+invalid validation result). 
+                 * Client-side logic handles this gracefully in method _extractBindingView(entity, previousModifiedPropertiesHolder, prevCurrBindingEntity).
+                 * 
+                 * This property can not be used in tg-selection-criteria-behavior due to the fact that it will be isModified from previous, not from original version of centre.
+                 * Currently _centreChanged property is used (see tg-entity-centre-behavior and tg-selection-criteria-behavior).
+                 */
+                _bindingEntityModified: {
+                    type: Boolean
+                },
 
                 /**
                  * '_createModifiedPropertiesHolder' function, that is designated for binding.
@@ -283,6 +298,7 @@
             ready: function () {
                 var self = this;
                 
+                self._bindingEntityModified = false;
                 self._resetState();
                 
                 self._createModifiedPropertiesHolder = (function () {
@@ -401,7 +417,7 @@
                 	    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
                     	slf._validator().abortValidationIfAny();
 
-        	            // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
+        	            // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
             	        // (if the entity was not modified -- _validate(holder) will start the error recovery process)
                     	slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
                 	}, 50);
@@ -679,6 +695,15 @@
             _idConvert: function (id) {
                 return id === null ? "new" : ("" + id);
             },
+            
+            /**
+             * Returns 'true' if the entity has been modified from original, 'false' otherwise.
+             *
+             * @param modifiedPropertiesHolder -- the entity with modified properties
+             */
+            _hasModified: function (modifiedPropertiesHolder) {
+                return modifiedPropertiesHolder["@modified"];
+            },
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
             /**
@@ -712,6 +737,9 @@
                     self.fire('binding-entity-appeared', self._currBindingEntity);
                 }
                 self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity);
+                
+                self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
+                console.debug('_bindingEntityModified = ', self._bindingEntityModified);
 
                 console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
                 return self._currBindingEntity;

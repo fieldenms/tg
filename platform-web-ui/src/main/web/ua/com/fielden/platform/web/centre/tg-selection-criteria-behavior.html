@@ -483,8 +483,6 @@
                     // cancel previous validation before starting saving process -- it includes validation process internally!
                     self._validator().abortValidationIfAny();
                     resolve(
-                        // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-                        //            This check will be done on server -- and appropriate _postRunDefault callback will be triggered.
                         self._runModifiedProperties(
                             self._createContextHolderForRunning(function () {
                                     return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
