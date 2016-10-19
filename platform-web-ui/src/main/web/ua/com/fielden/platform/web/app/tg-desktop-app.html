@@ -268,9 +268,9 @@
                         }
                         this._visibleMenuItems = addAllElements(visibleItems, this._visibleMenuItems, this._invisibleMenuItems);
                         this._invisibleMenuItems = addAllElements(invisibleItems, this._invisibleMenuItems, this._visibleMenuItems);
-                        this.saveIdentifier = this.async(function () {
+                        this._saveIdentifier = this.async(function () {
                             this.$.menuSaveAction._run();
-                        }, 200);
+                        }, 500);
                     }.bind(this);
                     //Init master related functions.
                     this.postRetrieved = function (entity, bindingEntity, customObject) {
