@@ -92,7 +92,7 @@
 			}
 		});
 		
-		self._controls = new L.GIS.Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._geoJsonOverlay, self._baseLayers);
+		self._controls = new L.GIS.Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers);
 
 		var getLayerById = function (layerId) {
 			return self._geoJsonOverlay.getLayer(layerId);
