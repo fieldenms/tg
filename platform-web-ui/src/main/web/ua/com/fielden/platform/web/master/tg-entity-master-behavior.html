@@ -542,6 +542,13 @@
                 }
 
             },
+            
+            _bindingEntityModifiedChanged: function (newBindingEntityModified, oldBindingEntityModified) {
+                var saveButton = this.$$('tg-action[role="save"]');
+                if (saveButton) {
+                    saveButton._innerEnabled = newBindingEntityModified;
+                }
+            },
 
             /**
              * A callback that should be bound to on-after-load event in case of this master having an embedded master.

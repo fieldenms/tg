@@ -144,7 +144,8 @@
                  * Currently _centreChanged property is used (see tg-entity-centre-behavior and tg-selection-criteria-behavior).
                  */
                 _bindingEntityModified: {
-                    type: Boolean
+                    type: Boolean,
+                    observer: '_bindingEntityModifiedChanged'
                 },
 
                 /**
@@ -281,6 +282,8 @@
     		},
     		
     		_validationPromiseChanged: function (newValidationPromise, oldValidationPromise) {
+    		},
+    		_bindingEntityModifiedChanged: function (newBindingEntityModified, oldBindingEntityModified) {
     		},
     		
     		/**
