@@ -18,13 +18,11 @@
             --paper-toolbar-color: white;
             --paper-toolbar-height: 44px;
         }
-        
         a paper-icon-button,
-		a:active paper-icon-button,
-		a:visited paper-icon-button {
-    		color: white;
-  		}
-        
+        a:active paper-icon-button,
+        a:visited paper-icon-button {
+            color: white;
+        }
         .item-name {
             height: 48px;
             min-height: 48px;
@@ -56,19 +54,18 @@
     </style>
 
     <template>
-
         <paper-toolbar id="toolbar">
             <!-- TODO: need to get the user information from somewhere (from cookies?) and represent it in application (maybe in 'logout' area?) -->
-        	<span class="title"></span>
+            <span class="title"></span>
             <a href="/logout" tabIndex="-1">
-  				<paper-icon-button icon="icons:exit-to-app"></paper-icon-button>
-  			</a>
+                <paper-icon-button icon="icons:exit-to-app"></paper-icon-button>
+            </a>
         </paper-toolbar>
 
         <div class="items">
             <tg-tile-layout class="fit" when-desktop="[[menuConfig.whenDesktop]]" when-tablet="[[menuConfig.whenTablet]]" when-mobile="[[menuConfig.whenMobile]]" min-cell-height="[[menuConfig.minCellHeight]]" min-cell-width="[[menuConfig.minCellWidth]]">
                 <template is="dom-repeat" items="[[menuConfig.menu]]">
-                    <div class="tile layout vertical">
+                    <div class="tile layout vertical" style$="[[_calcItemFilter(item)]]">
                         <div class="hero-animatable item fit" name$="[[item.key]]" style$="[[_calcStyleForItem(item)]]" on-tap="_itemSelected"></div>
                         <div class="item relative layout vertical flex-auto" name$="[[item.key]]" on-tap="_itemSelected">
                             <div class="flex-auto relative">
@@ -86,7 +83,6 @@
                                 <iron-icon icon="av:play-arrow"></iron-icon>
                             </div>
                         </div>
-                        <div class="item fit" style="background-color:grey; opacity:0.7" hidden$="[[_isMenuPresent(item.menu)]]"></div>
                     </div>
                 </template>
             </tg-tile-layout>
@@ -97,6 +93,9 @@
 
 <script>
     (function () {
+        var isMenuPresent = function (menu) {
+            return menu && menu.length > 0;
+        };
         Polymer({
 
             is: "tg-app-menu",
@@ -120,8 +119,8 @@
                 Polymer.IronResizableBehavior,
                 Polymer.TgBehaviors.TgTooltipBehavior
             ],
-            
-            
+
+
             /**
              * Is called before moving on to page that implements this behavior. Prev - the name of previously selected page.
              */
@@ -171,12 +170,14 @@
                     'hero': Polymer.dom(this.root).querySelector('.hero-animatable[name="' + next + '"]')
                 };
             },
-            _isMenuPresent: function (menu) {
-                return menu && menu.length > 0;
-            },
             _itemSelected: function (e, detail) {
                 var model = e.model;
-                this.fire("menu-item-selected", model.item.key);
+                if (isMenuPresent(model.item.menu)) {
+                    this.fire("menu-item-selected", model.item.key);
+                }
+            },
+            _calcItemFilter: function (item) {
+                return isMenuPresent(item.menu) ? "" : "filter: grayscale(1);"
             },
             _calcStyleForItem: function (item) {
                 return "background-color: " + item.bgColor + ";";
@@ -185,7 +186,7 @@
                 return "color: " + item.bgColor + ";";
             },
             _calcCaptionStyleForItem: function (item) {
-                return "background-color: " + item.captionBgColor + ";";
+                return "background-color: " + item.captionBgColor + ";" + (isMenuPresent(item.menu) ? "": "cursor: default;s");
             }
         });
     })();
