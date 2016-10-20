@@ -8,48 +8,47 @@ import java.util.Optional;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+
 /**
- * Master entity object.
+ * Represents application's menu.
  *
  * @author Developers
  *
  */
 @KeyType(String.class)
-@KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(IMenu.class)
 public class Menu extends AbstractEntity<String> implements IMenuManager {
     private static final long serialVersionUID = 1L;
 
     @IsProperty(Module.class)
-    @Title(value = "Menu", desc = "Menu")
+    @Title("Menu")
     private List<Module> menu = new ArrayList<Module>();
 
     @IsProperty
-    @Title(value = "Edit menu items", desc = "Edit menu items")
+    @Title("Edit menu items")
     private boolean canEdit;
 
     @IsProperty
-    @Title(value = "Desktop layout", desc = "Desktop layout")
+    @Title("Desktop layout")
     private String whenDesktop;
 
     @IsProperty
-    @Title(value = "Tablet layout", desc = "Tablet layout")
+    @Title("Tablet layout")
     private String whenTablet;
 
     @IsProperty
-    @Title(value = "Mobile layout", desc = "Mobile layout")
+    @Title("Mobile layout")
     private String whenMobile;
 
     @IsProperty
-    @Title(value = "Min cell width", desc = "Minimal cell width")
+    @Title("Min cell width")
     private String minCellWidth;
 
     @IsProperty
-    @Title(value = "Min cell height", desc = "Minimal cell height")
+    @Title("Min cell height")
     private String minCellHeight;
 
     @Observable

@@ -74,14 +74,14 @@ public class WebMenuModule implements IExecutable {
     }
 
     public Module getModule() {
-        final Module module = (Module) new Module().
+        final Module module = new Module().
                 setBgColor(bgColor).
                 setCaptionBgColor(captionBgColor).
                 setIcon(icon).
                 setDetailIcon(detailIcon).
                 setKey(title).
                 setDesc(description);
-        //TODO Menu should not be null as there shouldn't be modules without menu.
+        //TODO module menu can not be null. Right now platform supports modules with view. This case should be covered with separate issue.
         if (this.menu != null) {
             module.setMenu(menu.getMenu());
         }

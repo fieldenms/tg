@@ -18,7 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @KeyType(String.class)
-@KeyTitle(value = "Save menu item key")
+@KeyTitle("Save menu item key")
 @CompanionObject(IMenuSaveAction.class)
 public class MenuSaveAction extends AbstractFunctionalEntityWithCentreContext<String> {
     private static final long serialVersionUID = 1L;

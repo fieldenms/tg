@@ -21,7 +21,7 @@ public class MenuSaveActionTest extends AbstractDaoTestCase {
 
 
     @Test
-    public void testSaveActionForBaseUser() {
+    public void only_basse_user_can_save_module_menu_changes() {
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUser(co(User.class).findByKey("USER_1"));
 
@@ -38,7 +38,7 @@ public class MenuSaveActionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void testSaveActionForNonBaseUser() {
+    public void non_base_user_can_not_save_module_menu_changes() {
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUser(co(User.class).findByKey("USER_2"));
 

@@ -49,7 +49,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     };
 
     @Test
-    public void testMenuRestorationForBaseUser() {
+    public void menu_restored_with_base_user_has_all_menu_items_with_appropriate_visible_property() {
         final IUserProvider up = getInstance(IUserProvider.class);
         final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
 
@@ -76,45 +76,45 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         assertEquals("The menu of the module1 has incorrect size", 5, modules.get(0).getMenu().size());
         assertEquals("The menu key in module1 is incorrect", "module1item1", modules.get(0).getMenu().get(0).getKey());
-        assertTrue("The menu item1 in module1 should be visible", modules.get(0).getMenu().get(0).getIsVisible());
+        assertTrue("The menu item1 in module1 should be visible", modules.get(0).getMenu().get(0).isVisible());
         assertEquals("The menu key in module1 is incorrect", "module1item2", modules.get(0).getMenu().get(1).getKey());
-        assertTrue("The menu item2 in module1 should be visible", modules.get(0).getMenu().get(1).getIsVisible());
+        assertTrue("The menu item2 in module1 should be visible", modules.get(0).getMenu().get(1).isVisible());
         assertEquals("The menu key in module1 is incorrect", "module1item3", modules.get(0).getMenu().get(2).getKey());
-        assertFalse("The menu item3 in module1 should be invisible", modules.get(0).getMenu().get(2).getIsVisible());
+        assertFalse("The menu item3 in module1 should be invisible", modules.get(0).getMenu().get(2).isVisible());
         assertEquals("The menu key in module1 is incorrect", "module1item4", modules.get(0).getMenu().get(3).getKey());
-        assertTrue("The menu item4 in module1 should be visible", modules.get(0).getMenu().get(0).getIsVisible());
+        assertTrue("The menu item4 in module1 should be visible", modules.get(0).getMenu().get(0).isVisible());
         assertEquals("The menu key in module1 is incorrect", "module1item5", modules.get(0).getMenu().get(4).getKey());
-        assertTrue("The menu item5 in module1 should be visible", modules.get(0).getMenu().get(0).getIsVisible());
+        assertTrue("The menu item5 in module1 should be visible", modules.get(0).getMenu().get(0).isVisible());
 
         assertEquals("The menu of the module2 has incorrect size", 4, modules.get(1).getMenu().size());
         assertEquals("The menu key in module2 is incorrect", "module2group1", modules.get(1).getMenu().get(0).getKey());
-        assertFalse("The menu group1 in module2 should be invisible", modules.get(1).getMenu().get(0).getIsVisible());
+        assertFalse("The menu group1 in module2 should be invisible", modules.get(1).getMenu().get(0).isVisible());
         assertEquals("The menu group1 in module2 has incorrect number of menu items", 2, modules.get(1).getMenu().get(0).getMenu().size());
         final List<ModuleMenuItem> group1 = modules.get(1).getMenu().get(0).getMenu();
         assertEquals("The menu key in module2group1 is incorrect", "module2group1item1", group1.get(0).getKey());
-        assertFalse("The menu group1item1 in module2 should be invisible", group1.get(0).getIsVisible());
+        assertFalse("The menu group1item1 in module2 should be invisible", group1.get(0).isVisible());
         assertEquals("The menu key in module2group1 is incorrect", "module2group1item2", group1.get(1).getKey());
-        assertFalse("The menu group1item2 in module2 should be invisible", group1.get(1).getIsVisible());
+        assertFalse("The menu group1item2 in module2 should be invisible", group1.get(1).isVisible());
 
         assertEquals("The menu key in module2 is incorrect", "module2item1", modules.get(1).getMenu().get(1).getKey());
-        assertTrue("The menu item1 in module2 should be visible", modules.get(1).getMenu().get(1).getIsVisible());
+        assertTrue("The menu item1 in module2 should be visible", modules.get(1).getMenu().get(1).isVisible());
         assertEquals("The menu key in module2 is incorrect", "module2item2", modules.get(1).getMenu().get(2).getKey());
-        assertFalse("The menu item2 in module2 should be invisible", modules.get(1).getMenu().get(2).getIsVisible());
+        assertFalse("The menu item2 in module2 should be invisible", modules.get(1).getMenu().get(2).isVisible());
 
         assertEquals("The menu key in module2 is incorrect", "module2group2", modules.get(1).getMenu().get(3).getKey());
         assertEquals("The menu group2 in module2 has incorrect number of menu items", 3, modules.get(1).getMenu().get(3).getMenu().size());
-        assertTrue("The menu group1 in module2 should be visible", modules.get(1).getMenu().get(3).getIsVisible());
+        assertTrue("The menu group1 in module2 should be visible", modules.get(1).getMenu().get(3).isVisible());
         final List<ModuleMenuItem> group2 = modules.get(1).getMenu().get(3).getMenu();
         assertEquals("The menu key in module2group2 is incorrect", "module2group2item1", group2.get(0).getKey());
-        assertTrue("The menu group2item1 in module2 should be visible", group2.get(0).getIsVisible());
+        assertTrue("The menu group2item1 in module2 should be visible", group2.get(0).isVisible());
         assertEquals("The menu key in module2group2 is incorrect", "module2group2item2", group2.get(1).getKey());
-        assertFalse("The menu group2item2 in module2 should be invisible", group2.get(1).getIsVisible());
+        assertFalse("The menu group2item2 in module2 should be invisible", group2.get(1).isVisible());
         assertEquals("The menu key in module2group2 is incorrect", "module2group2item3", group2.get(2).getKey());
-        assertFalse("The menu group2item3 in module2 should be invisible", group2.get(2).getIsVisible());
+        assertFalse("The menu group2item3 in module2 should be invisible", group2.get(2).isVisible());
     }
 
     @Test
-    public void testMenuRestorationForNonBaseUser() {
+    public void menu_restored_wtih_non_base_user_has_no_invisible_menu_items() {
         final IUserProvider up = getInstance(IUserProvider.class);
         final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
 

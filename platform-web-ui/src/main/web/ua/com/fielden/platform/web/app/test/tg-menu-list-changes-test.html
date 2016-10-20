@@ -32,21 +32,21 @@
                 app.$.menuSaveAction._run=function(){};
             });
 
-            test('test when chages list is empty', function (done) {
+            test("empty changeset list doesn't affect result lists", function (done) {
                 app._saveMenuVisibilityChanges();
                 assert.sameMembers(app._visibleMenuItems, [], "Visisbility list should be empty.");
                 assert.sameMembers(app._invisibleMenuItems, [], "Invisisbility list should be empty.");
                 done();
             });
             
-            test('test when chages list is have unique elements', function (done) {
+            test("single element list affects appropriate visibility list", function (done) {
                 app._saveMenuVisibilityChanges([],['module1/item3']);
                 assert.sameMembers(app._visibleMenuItems, [], "Visisbility list should be empty.");
                 assert.sameMembers(app._invisibleMenuItems, ['module1/item3'], "Invisisbility list should have one element.");
                 done();
             });
             
-            test('test when chages list is have containig elements', function (done) {
+            test("visisblity lists have always unique elements", function (done) {
                 app._saveMenuVisibilityChanges([],['module1/item3']);
                 app._saveMenuVisibilityChanges([],['module1/item3']);
                 assert.sameMembers(app._visibleMenuItems, [], "Visisbility list should be empty.");
@@ -54,7 +54,7 @@
                 done();
             });
 
-            test('test when chages list is have elements to remove from other list', function (done) {
+            test("element added to list of visisble items was removed from list of invisible", function (done) {
                 app._saveMenuVisibilityChanges([],['module1/item3']);
                 app._saveMenuVisibilityChanges(['module1/item3'],['module2/group1/item1']);
                 
@@ -63,7 +63,7 @@
                 done();
             });
             
-             test('test when chages list are the same', function (done) {
+             test("two identical list affects only invisisble item list", function (done) {
                 app._saveMenuVisibilityChanges(['module1/item3'], ['module1/item3']);
                 assert.sameMembers(app._visibleMenuItems, [], "Visisbility list should be empty.");
                 assert.sameMembers(app._invisibleMenuItems, ['module1/item3'], "Invisisbility list should have one element.");

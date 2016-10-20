@@ -21,7 +21,7 @@ import ua.com.fielden.platform.security.user.User;
  */
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(IWebMenuItemInvisibility.class)
-@MapEntityTo("WEB_MENU_INVISIBLE")
+@MapEntityTo
 public class WebMenuItemInvisibility extends AbstractPersistentEntity<DynamicEntityKey> {
 
     private static final long serialVersionUID = 4828116383622030993L;
@@ -33,13 +33,13 @@ public class WebMenuItemInvisibility extends AbstractPersistentEntity<DynamicEnt
     @IsProperty
     @CompositeKeyMember(1)
     @Title(value = "User", desc = "Application user owning this configuration.")
-    @MapTo("ID_CRAFT")
+    @MapTo
     private User owner;
 
     @IsProperty
     @CompositeKeyMember(2)
     @Title(value = "Menu item URI", desc = "Menu item URI invisible to the user that is based on owning user.")
-    @MapTo("MENU_ITEM_URI")
+    @MapTo
     private String menuItemUri;
 
     public String getMenuItemUri() {

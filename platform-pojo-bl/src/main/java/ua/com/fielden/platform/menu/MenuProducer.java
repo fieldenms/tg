@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -18,6 +20,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import com.google.inject.Inject;
 
 public class MenuProducer implements IEntityProducer<Menu> {
+
+    private final Logger logger = Logger.getLogger(this.getClass());
 
     private final IMenuRetriever menuRetirever;
     private final IUserProvider userProvider;
@@ -44,8 +48,7 @@ public class MenuProducer implements IEntityProducer<Menu> {
         for (final WebMenuItemInvisibility menuItem : invisibleItems) {
             final List<String> menuParts = decodeParts(menuItem.getMenuItemUri().split("/"));
             final String lastMenuPart = menuParts.remove(menuParts.size() - 1);
-            Optional<IMenuManager> menuManager = Optional.of(menu);
-            menuManager = menuParts.stream().reduce(menuManager,
+            final Optional<IMenuManager> menuManager = menuParts.stream().reduce(Optional.of(menu),
                     (menuItemManager, menuPart) -> (Optional<IMenuManager>) menuItemManager.flatMap(value -> value.getMenuItem(menuPart)),
                     (menuManager1, menuManager2) -> menuManager2);
             menuManager.ifPresent(value -> {
@@ -66,7 +69,7 @@ public class MenuProducer implements IEntityProducer<Menu> {
                 decodedParts.add(URLDecoder.decode(menuParts[partIndex], "UTF-8"));
             }
         } catch (final UnsupportedEncodingException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
         }
         return decodedParts;
     }

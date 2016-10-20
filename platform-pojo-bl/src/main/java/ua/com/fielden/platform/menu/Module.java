@@ -13,8 +13,9 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+
 /**
- * Master entity object.
+ * Represents application's module.
  *
  * @author Developers
  *
@@ -27,23 +28,23 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @Title(value = "Background color", desc = "Background color")
+    @Title("Background color")
     private String bgColor;
 
     @IsProperty
-    @Title(value = "Caption background color", desc = "Caption background color")
+    @Title("Caption background color")
     private String captionBgColor;
 
     @IsProperty
-    @Title(value = "Icon", desc = "Icon")
+    @Title("Icon")
     private String icon;
 
     @IsProperty
-    @Title(value = "Detail Icon", desc = "Detail icon")
+    @Title("Detail Icon")
     private String detailIcon;
 
     @IsProperty(ModuleMenuItem.class)
-    @Title(value = "Module menu", desc = "Module menu")
+    @Title("Module menu")
     private List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
 
     @Observable
@@ -109,7 +110,7 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
 
     @Override
     public void makeMenuItemInvisible(final String title) {
-        menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setIsVisible(false));
+        menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setVisible(false));
     }
 
     @Override

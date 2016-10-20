@@ -6,12 +6,6 @@ import java.util.List;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.menu.CustomView;
-import ua.com.fielden.platform.menu.EntityCentreView;
-import ua.com.fielden.platform.menu.Menu;
-import ua.com.fielden.platform.menu.Module;
-import ua.com.fielden.platform.menu.ModuleMenuItem;
-import ua.com.fielden.platform.menu.View;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
@@ -37,9 +31,6 @@ import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntit
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
-import ua.com.fielden.platform.menu.EntityMasterView;
-import ua.com.fielden.platform.menu.MenuSaveAction;
-import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.
@@ -83,15 +74,6 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(ExportAction.class);
         add(TgDeletionTestEntity.class);
         add(TgEntityWithTimeZoneDates.class);
-        add(ModuleMenuItem.class);
-        add(EntityCentreView.class);
-        add(View.class);
-        add(CustomView.class);
-        add(Module.class);
-        add(Menu.class);
-        add(EntityMasterView.class);
-        add(MenuSaveAction.class);
-        add(WebMenuItemInvisibility.class);
     }
 
     @Override

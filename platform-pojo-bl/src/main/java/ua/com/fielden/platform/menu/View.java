@@ -3,37 +3,36 @@ package ua.com.fielden.platform.menu;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+
 /**
- * Master entity object.
+ * Represent's menu item view.
  *
  * @author Developers
  *
  */
 @KeyType(String.class)
-@KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(IView.class)
 public class View extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
     @IsProperty
-    @Title(value = "Import", desc = "Import")
+    @Title("Import")
     private String htmlImport;
 
     @IsProperty
-    @Title(value = "Element Name", desc = "Element name")
+    @Title("Element Name")
     private String elementName;
 
     @IsProperty
-    @Title(value = "View Type", desc = "View type")
+    @Title("View Type")
     private String viewType;
 
     @IsProperty
-    @Title(value = "Attributes", desc = "Attriutes")
+    @Title("Attributes")
     private AbstractView attrs;
 
     @Observable

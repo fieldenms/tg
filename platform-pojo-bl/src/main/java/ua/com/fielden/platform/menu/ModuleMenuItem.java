@@ -28,7 +28,7 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     private static final long serialVersionUID = 1L;
 
     @IsProperty(ModuleMenuItem.class)
-    @Title(value = "Submenu", desc = "Submenu")
+    @Title("Submenu")
     private List<ModuleMenuItem> menu = new ArrayList<ModuleMenuItem>();
 
     @IsProperty
@@ -36,17 +36,17 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     private View view;
 
     @IsProperty
-    @Title(value = "Is Visible", desc = "Is menu item visible")
-    private boolean isVisible = true;
+    @Title(value = "Visible?", desc = "Is menu item visible?")
+    private boolean visible = true;
 
     @Observable
-    public ModuleMenuItem setIsVisible(final boolean isVisible) {
-        this.isVisible = isVisible;
+    public ModuleMenuItem setVisible(final boolean isVisible) {
+        this.visible = isVisible;
         return this;
     }
 
-    public boolean getIsVisible() {
-        return isVisible;
+    public boolean isVisible() {
+        return visible;
     }
 
     @Observable
@@ -82,7 +82,7 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
 
     @Override
     public void makeMenuItemInvisible(final String title) {
-        menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setIsVisible(false));
+        menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setVisible(false));
     }
 
     @Override
