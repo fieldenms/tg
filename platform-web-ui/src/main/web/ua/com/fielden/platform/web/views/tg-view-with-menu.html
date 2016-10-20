@@ -134,7 +134,7 @@
                         <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
                             <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.desc]]">
                                 <iron-icon icon="av:play-arrow" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
-                                <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcGroupCheckboxTooltip(firstLevelItem.visible)]]"></paper-checkbox>
+                                <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
                                 <span>[[firstLevelItem.key]]</span>
                             </paper-item>
                             <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]" on-dom-change="_menuTemplateRendered">
@@ -142,7 +142,7 @@
                                     <template is="dom-repeat" items="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
                                         <!--TODO remove groupIndex-->
                                         <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
-                                            <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.visible)]]"></paper-checkbox>
+                                            <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
                                             <span class="menu-item-title">[[item.key]]</span>
                                         </paper-item>
                                     </template>
@@ -297,12 +297,8 @@
                 return changedViews.length > 0 ? changedViews : undefined;
             },
             
-            _calcGroupCheckboxTooltip: function (visible) {
-                return "Toggle to make this group of menu items " + (visible ? "invisible" : "visible");
-            },
-            
-            _calcCheckboxTooltip: function (visible) {
-                return "Toggle to make this menu item " + (visible ? "invisible" : "visible");
+            _calcCheckboxTooltip: function (menu, visible) {
+                return "Toggle to make this " + (this._isMenuPresent(menu) ? "group of menu items " : "menu item ") + (visible ? "invisible" : "visible");
             },
             
             _calcGroupStyle: function (firstLevelItem) {
