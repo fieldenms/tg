@@ -509,7 +509,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         for (final String propertyName : separatedFetch.getKey()) {
             if (tickManager.getWidth(root, propertyName) > 0) {
                 final DynamicPropertyAnalyser analyser = new DynamicPropertyAnalyser(getManagedType(), propertyName);
-                propertyNames.add(analyser.getCriteriaFullName());
+                propertyNames.add(analyser.getResultSetName());
                 propertyTitles.add(CriteriaReflector.getCriteriaTitleAndDesc(getManagedType(), propertyName).getKey());
             }
         }
