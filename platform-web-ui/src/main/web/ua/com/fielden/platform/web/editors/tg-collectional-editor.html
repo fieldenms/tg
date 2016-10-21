@@ -362,6 +362,7 @@
         },
         
         _toggleOrdering: function (item, index) {
+            var self = this;
             if (item.sorting === true) {
                 this.set("_entities." + index + ".sorting", false);
             } else if (item.sorting === false) {
@@ -372,6 +373,13 @@
                 this._turnOnOrdering(index);
             }
             this.provideSorting(this.entity.sortingVals, this._entities);
+            // this.async(function() {
+                if (self._shouldInvokeValidation()) {
+                    self.validationCallback();
+                } else {
+                    self._skipValidationAction();
+                }
+            // }.bind(this), 50);
         },
         
         _turnOnOrdering: function (index) {
@@ -478,6 +486,11 @@
 	                        } else {
 	                            throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
 	                        }
+	                        if (self._shouldInvokeValidation()) {
+	                            self.validationCallback();
+	                        } else {
+	                            self._skipValidationAction();
+	                        }
 	                    }
 	                });
 	                
@@ -501,6 +514,11 @@
                             if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
                                 addedIds.push(self.idOrKey(added));
                             }
+	                        if (self._shouldInvokeValidation()) {
+	                            self.validationCallback();
+	                        } else {
+	                            self._skipValidationAction();
+	                        }
 	                    }
 	                }
 	            }, self);

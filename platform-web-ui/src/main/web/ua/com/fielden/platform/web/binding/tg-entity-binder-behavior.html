@@ -676,7 +676,9 @@
                                 "val": value,
                                 "origVal": originalValue
                             };
-                            modPropHolder["@modified"] = true;
+                            if (propertyName !== 'surrogateVersion') {
+                                modPropHolder["@modified"] = true;
+                            }
                             if (typeof valId !== 'undefined') {
                                 modPropHolder[propertyName]['valId'] = valId;
                             }

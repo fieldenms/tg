@@ -2,6 +2,9 @@ package ua.com.fielden.platform.web.centre;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.google.inject.Inject;
 
@@ -43,6 +46,16 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
     protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
         final LinkedHashSet<SortingProperty> sortingProperties = createSortingProperties(masterEntity.freshCentreSupplier().get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
         entity.setSortingProperties(sortingProperties);
+        
+        final SortedMap<Integer, String> sortingValsMap = new TreeMap<>();
+        for (final SortingProperty sortingProperty: sortingProperties) {
+            if (sortingProperty.getSortingNumber() >= 0) {
+                sortingValsMap.put(sortingProperty.getSortingNumber(), sortingProperty.getKey() + ':' + (Boolean.TRUE.equals(sortingProperty.getSorting()) ? "asc" : "desc"));
+            }
+        }
+        final Set<String> sortingVals = new LinkedHashSet<>();
+        sortingVals.addAll(sortingValsMap.values());
+        entity.setSortingVals(sortingVals);
         return entity;
     }
 

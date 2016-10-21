@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 
 /** 
  * Master entity object.
@@ -27,6 +28,7 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     
     @IsProperty(value = String.class) 
     @Title(value = "Sorting values", desc = "Values of sorting properties -- 'asc', 'desc' or 'none' (the order is important and should be strictly the same as in 'sortingIds' property)")
+    @AfterChange(CentreConfigUpdaterSortingValsDefiner.class)
     private Set<String> sortingVals = new LinkedHashSet<>();
     
     @Observable
