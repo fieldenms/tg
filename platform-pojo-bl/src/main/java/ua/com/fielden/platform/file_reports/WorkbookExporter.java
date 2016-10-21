@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.Deflater;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
@@ -122,7 +123,7 @@ public class WorkbookExporter {
                 }
                 final AbstractEntity<?> entity = sheetData.getEntities().get(index);
                 final String propertyName = sheetData.getPropNames().get(propIndex);
-                final Object value = entity.get(propertyName); // get the value
+                final Object value = StringUtils.isEmpty(propertyName) ? entity : entity.get(propertyName); // get the value
                 // need to try to do the best job with types
                 if (value instanceof Date) {
                     cell.setCellValue((Date) value);

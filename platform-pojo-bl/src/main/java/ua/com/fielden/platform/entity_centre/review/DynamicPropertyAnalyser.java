@@ -238,24 +238,6 @@ public class DynamicPropertyAnalyser extends DynamicCriteriaPropertyAnalyser {
         return propertyName;
     }
 
-    public String getResultSetName() {
-        Class<?> keyType = getPropertyType();
-        String propertyName = getAnalysingProperty();
-        // properties of type PropertyDescription do not need any prepending of "key"
-        if (PropertyDescriptor.class.isAssignableFrom(keyType) ||  Collection.class.isAssignableFrom(getPropertyField().getType())) {
-            return propertyName;
-        }
-        while (AbstractEntity.class.isAssignableFrom(keyType)) {
-            if (isEmpty(propertyName)) {
-                propertyName += "key";
-            } else {
-                propertyName += ".key";
-            }
-            keyType = AnnotationReflector.getKeyType(keyType);
-        }
-        return propertyName;
-    }
-
     /**
      * Returns the {@link Field} instance that represents analysing property.
      *

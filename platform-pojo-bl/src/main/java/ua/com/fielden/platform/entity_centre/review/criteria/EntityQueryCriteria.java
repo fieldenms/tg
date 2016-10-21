@@ -44,7 +44,6 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicFetchBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicOrderingBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder;
-import ua.com.fielden.platform.entity_centre.review.DynamicPropertyAnalyser;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel;
@@ -508,8 +507,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         final List<String> propertyTitles = new ArrayList<String>();
         for (final String propertyName : separatedFetch.getKey()) {
             if (tickManager.getWidth(root, propertyName) > 0) {
-                final DynamicPropertyAnalyser analyser = new DynamicPropertyAnalyser(getManagedType(), propertyName);
-                propertyNames.add(analyser.getResultSetName());
+                propertyNames.add(propertyName);
                 propertyTitles.add(CriteriaReflector.getCriteriaTitleAndDesc(getManagedType(), propertyName).getKey());
             }
         }
