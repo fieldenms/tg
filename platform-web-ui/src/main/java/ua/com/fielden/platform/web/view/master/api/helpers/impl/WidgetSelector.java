@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master.api.helpers.impl;
 
+import static java.lang.String.format;
+
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -39,6 +41,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.CheckboxConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.CollectionalEditorConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.CollectionalRepresentorConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.ColourConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.DatePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DateTimePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.DecimalConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.EntityAutocompletionConfig;
@@ -47,10 +50,12 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.MoneyConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.MultilineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.SinglelineTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.SpinnerConfig;
+import ua.com.fielden.platform.web.view.master.api.widgets.impl.TimePickerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.money.impl.MoneyWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl.MultilineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.SinglelineTextWidget;
 import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerWidget;
+import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
 public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelector<T> {
 
@@ -78,7 +83,8 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
 
     @Override
     public IAutocompleterConfig<T> asAutocompleter() {
-        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(propertyName) ? smBuilder.getEntityType() : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(smBuilder.getEntityType(), propertyName);
+        final Class<? extends AbstractEntity<?>> propType = StringUtils.isEmpty(propertyName) ? smBuilder.getEntityType()
+                : (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(smBuilder.getEntityType(), propertyName);
         widget = new EntityAutocompletionWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName, propType);
         return new EntityAutocompletionConfig<>((EntityAutocompletionWidget) widget, smBuilder, withMatcherCallbank);
     }
@@ -88,13 +94,13 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
         widget = new SinglelineTextWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new SinglelineTextConfig<>((SinglelineTextWidget) widget, smBuilder);
     }
-    
+
     @Override
     public ICollectionalRepresentorConfig<T> asCollectionalRepresentor() {
         widget = new CollectionalRepresentorWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new CollectionalRepresentorConfig<>((CollectionalRepresentorWidget) widget, smBuilder);
     }
-    
+
     @Override
     public ICollectionalEditorConfig<T> asCollectionalEditor() {
         widget = new CollectionalEditorWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
@@ -120,22 +126,43 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
     @Override
     public IDateTimePickerConfig<T> asDateTimePicker() {
         widget = new DateTimePickerWidget(
-                TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), 
-                propertyName, 
-                false, 
-                DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName)
-        );
+                TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()),
+                propertyName,
+                false,
+                DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName),
+                null
+                );
         return new DateTimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
     }
 
     @Override
     public IDatePickerConfig<T> asDatePicker() {
-        throw new UnsupportedOperationException("DatePicker widget is not yet supported.");
+        if ("DATE".equals(DefaultValueContract.getTimePortionToDisplay(smBuilder.getEntityType(), propertyName))) {
+            widget = new DateTimePickerWidget(
+                    TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()),
+                    propertyName,
+                    false,
+                    DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName),
+                    "DATE"
+                    );
+            return new DatePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
+        }
+        throw new EntityMasterConfigurationException(format("The master configuration for [%s] is invalid. Cause: [%s] is not annotated with @DateOnly", smBuilder.getEntityType(), propertyName));
     }
 
     @Override
     public ITimePickerConfig<T> asTimePicker() {
-        throw new UnsupportedOperationException("TimePicker widget is not yet supported.");
+        if ("TIME".equals(DefaultValueContract.getTimePortionToDisplay(smBuilder.getEntityType(), propertyName))) {
+            widget = new DateTimePickerWidget(
+                    TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()),
+                    propertyName,
+                    false,
+                    DefaultValueContract.getTimeZone(smBuilder.getEntityType(), propertyName),
+                    "TIME"
+                    );
+            return new TimePickerConfig<>((DateTimePickerWidget) widget, smBuilder);
+        }
+        throw new EntityMasterConfigurationException(format("The master configuration for [%s] is invalid. Cause: [%s] is not annotated with @TimeOnly", smBuilder.getEntityType(), propertyName));
     }
 
     @Override
