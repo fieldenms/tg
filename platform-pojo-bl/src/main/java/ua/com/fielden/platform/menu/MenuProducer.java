@@ -8,6 +8,8 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.apache.log4j.Logger;
 
@@ -47,21 +49,29 @@ public class MenuProducer implements IEntityProducer<Menu> {
         for (final WebMenuItemInvisibility menuItem : invisibleItems) {
             final List<String> menuParts = decodeParts(menuItem.getMenuItemUri().split("/"));
             final String lastMenuPart = menuParts.remove(menuParts.size() - 1);
-            final Optional<IMenuManager> menuManager = menuParts.stream()
-                    .reduce(Optional.of(menu),
-                            (menuItemManager, menuPart) -> menuItemManager.flatMap(value -> value.getMenuItem(menuPart)),
-                            (menuManager1, menuManager2) -> menuManager2);
-            menuManager.ifPresent(value -> {
-                if (userProvider.getUser().isBase()) {
-                    value.makeMenuItemInvisible(lastMenuPart);
-                } else {
-                    value.removeMenuItem(lastMenuPart);
-                }
-            });
+            menuParts.stream()
+            .reduce(Optional.of(menu), MenuProducer::accumulator, MenuProducer::combiner)
+            .ifPresent(computeVisibility(userProvider, lastMenuPart));
         }
         return menu;
     }
-
+    
+    private static Optional<IMenuManager> accumulator(final Optional<IMenuManager> menuItemManager, final String menuPart) {
+        return menuItemManager.flatMap(value -> value.getMenuItem(menuPart));
+    }
+    
+    private static Optional<IMenuManager> combiner(final Optional<IMenuManager> menuItemManager1, final Optional<IMenuManager> menuItemManager2) {
+        return menuItemManager2;
+    }
+    
+    private Consumer<IMenuManager> computeVisibility(final IUserProvider up, final String lastMenuPart) {
+        return (menuItem) -> {if (up.getUser().isBase()) {
+            menuItem.makeMenuItemInvisible(lastMenuPart);
+        } else {
+            menuItem.removeMenuItem(lastMenuPart);
+        }};
+    }
+    
     private List<String> decodeParts(final String[] menuParts) {
         final List<String> decodedParts = new ArrayList<>();
         try {
