@@ -4,7 +4,7 @@ import java.util.Optional;
 
 public interface IMenuManager {
 
-    Optional<? extends IMenuManager> getMenuItem(String title);
+    <U extends IMenuManager> Optional<U> getMenuItem(String title);
 
     boolean removeMenuItem(String title);
 

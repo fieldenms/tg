@@ -123,7 +123,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Override
-    public Optional<? extends IMenuManager> getMenuItem(final String title) {
+    public Optional<Module> getMenuItem(final String title) {
         return menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst();
     }
 

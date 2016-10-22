@@ -11,13 +11,13 @@ import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.EntityUtils;
-
-import com.google.inject.Inject;
 
 public class MenuProducer implements IEntityProducer<Menu> {
 
@@ -34,7 +34,6 @@ public class MenuProducer implements IEntityProducer<Menu> {
         this.userProvider = userProvider;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Menu newEntity() {
         final Menu menu = menuRetirever.getMenuEntity().setCanEdit(userProvider.getUser().isBase());
@@ -48,9 +47,10 @@ public class MenuProducer implements IEntityProducer<Menu> {
         for (final WebMenuItemInvisibility menuItem : invisibleItems) {
             final List<String> menuParts = decodeParts(menuItem.getMenuItemUri().split("/"));
             final String lastMenuPart = menuParts.remove(menuParts.size() - 1);
-            final Optional<IMenuManager> menuManager = menuParts.stream().reduce(Optional.of(menu),
-                    (menuItemManager, menuPart) -> (Optional<IMenuManager>) menuItemManager.flatMap(value -> value.getMenuItem(menuPart)),
-                    (menuManager1, menuManager2) -> menuManager2);
+            final Optional<IMenuManager> menuManager = menuParts.stream()
+                    .reduce(Optional.of(menu),
+                            (menuItemManager, menuPart) -> menuItemManager.flatMap(value -> value.getMenuItem(menuPart)),
+                            (menuManager1, menuManager2) -> menuManager2);
             menuManager.ifPresent(value -> {
                 if (userProvider.getUser().isBase()) {
                     value.makeMenuItemInvisible(lastMenuPart);

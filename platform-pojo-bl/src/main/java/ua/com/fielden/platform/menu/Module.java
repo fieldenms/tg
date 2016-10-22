@@ -104,7 +104,7 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Override
-    public Optional<? extends IMenuManager> getMenuItem(final String title) {
+    public Optional<ModuleMenuItem> getMenuItem(final String title) {
         return menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst();
     }
 

@@ -71,7 +71,7 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     }
 
     @Override
-    public Optional<? extends IMenuManager> getMenuItem(final String title) {
+    public Optional<ModuleMenuItem> getMenuItem(final String title) {
         return menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst();
     }
 
