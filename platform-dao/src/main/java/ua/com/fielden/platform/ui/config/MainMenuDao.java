@@ -38,9 +38,9 @@ import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link IMainMenu}.
- * 
+ *
  * @author Developers
- * 
+ *
  */
 @EntityType(MainMenu.class)
 public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu {
@@ -251,7 +251,7 @@ public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu 
 
     /**
      * Retrieves all centres and its analyses.
-     * 
+     *
      * @param modelEcac
      * @param modelEcc
      * @return
@@ -327,7 +327,7 @@ public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu 
 
     /**
      * Logs and throws an {@link IllegalArgumentException} error with specified message.
-     * 
+     *
      * @param message
      */
     private void error(final String message) {
@@ -337,7 +337,7 @@ public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu 
 
     /**
      * Saves hierarchically menu item and its children.
-     * 
+     *
      * @param developmentMainMenuItem
      * @return
      */
@@ -377,7 +377,7 @@ public class MainMenuDao extends CommonEntityDao<MainMenu> implements IMainMenu 
 
     /**
      * Purges all centres and its analyses.
-     * 
+     *
      * @param modelEcac
      * @param modelEcc
      */

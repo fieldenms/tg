@@ -16,6 +16,7 @@ import ua.com.fielden.platform.sample.domain.TgDummyAction;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
@@ -30,7 +31,6 @@ import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntit
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
-import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 
 /**
  * A temporary class to enlist domain entities for Web UI Testing Server.

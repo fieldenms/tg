@@ -15,6 +15,15 @@ import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.keygen.KeyNumber;
+import ua.com.fielden.platform.menu.CustomView;
+import ua.com.fielden.platform.menu.EntityCentreView;
+import ua.com.fielden.platform.menu.EntityMasterView;
+import ua.com.fielden.platform.menu.Menu;
+import ua.com.fielden.platform.menu.MenuSaveAction;
+import ua.com.fielden.platform.menu.Module;
+import ua.com.fielden.platform.menu.ModuleMenuItem;
+import ua.com.fielden.platform.menu.View;
+import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.migration.MigrationError;
 import ua.com.fielden.platform.migration.MigrationHistory;
 import ua.com.fielden.platform.migration.MigrationRun;
@@ -71,5 +80,14 @@ public class PlatformDomainTypes {
         types.add(EntityExportAction.class);
         types.add(AcknowledgeWarnings.class);
         types.add(PropertyWarning.class);
+        types.add(ModuleMenuItem.class);
+        types.add(EntityCentreView.class);
+        types.add(View.class);
+        types.add(CustomView.class);
+        types.add(Module.class);
+        types.add(Menu.class);
+        types.add(EntityMasterView.class);
+        types.add(MenuSaveAction.class);
+        types.add(WebMenuItemInvisibility.class);
     }
 }
