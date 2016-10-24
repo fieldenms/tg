@@ -373,13 +373,12 @@
                 this._turnOnOrdering(index);
             }
             this.provideSorting(this.entity.sortingVals, this._entities);
-            // this.async(function() {
-                if (self._shouldInvokeValidation()) {
-                    self.validationCallback();
-                } else {
-                    self._skipValidationAction();
-                }
-            // }.bind(this), 50);
+            // invoke validation after user has toggled ordering of some property
+            if (self._shouldInvokeValidation()) {
+                self.validationCallback();
+            } else {
+                self._skipValidationAction();
+            }
         },
         
         _turnOnOrdering: function (index) {
@@ -486,6 +485,7 @@
 	                        } else {
 	                            throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
 	                        }
+	                        // invoke validation after user has removed some item from collection
 	                        if (self._shouldInvokeValidation()) {
 	                            self.validationCallback();
 	                        } else {
@@ -514,6 +514,7 @@
                             if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
                                 addedIds.push(self.idOrKey(added));
                             }
+	                        // invoke validation after user has added some item to collection
 	                        if (self._shouldInvokeValidation()) {
 	                            self.validationCallback();
 	                        } else {
