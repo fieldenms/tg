@@ -4,7 +4,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 
@@ -14,15 +13,11 @@ import ua.com.fielden.platform.entity.annotation.Observable;
  * @author TG Team
  *
  */
-@KeyTitle(value = "Key title", desc = "Key desc")
 @KeyType(DynamicEntityKey.class)
 public class ShortEvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    protected ShortEvenSlaverEntity() {
-    }
-
-    ////////// Range types //////////
+    ////////// Key properties //////////
     @IsProperty
     @CompositeKeyMember(1)
     private SlaveEntity key1;

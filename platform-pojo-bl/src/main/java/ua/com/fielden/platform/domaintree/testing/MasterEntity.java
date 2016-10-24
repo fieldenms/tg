@@ -2,6 +2,7 @@ package ua.com.fielden.platform.domaintree.testing;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -87,7 +88,7 @@ public class MasterEntity extends AbstractEntity<String> {
     private List<SlaveEntity> collection = new ArrayList<SlaveEntity>();
 
     @IsProperty(ShortSlaveEntity.class)
-    private List<ShortSlaveEntity> shortCollection = new ArrayList<ShortSlaveEntity>();
+    private List<ShortSlaveEntity> shortCollection = new ArrayList<>();
 
     ////////// Any property to be specifically excluded //////////
     @IsProperty(linkProperty = "masterEntityProp")
@@ -244,13 +245,14 @@ public class MasterEntity extends AbstractEntity<String> {
     }
 
     public List<ShortSlaveEntity> getShortCollection() {
-        return shortCollection;
+        return Collections.unmodifiableList(shortCollection);
     }
 
     @Observable
-    public void setShortCollection(final List<ShortSlaveEntity> shortCollection) {
+    public MasterEntity setShortCollection(final List<ShortSlaveEntity> shortCollection) {
         this.shortCollection.clear();
         this.shortCollection.addAll(shortCollection);
+        return this;
     }
 
     public List<SlaveEntity> getCollection() {

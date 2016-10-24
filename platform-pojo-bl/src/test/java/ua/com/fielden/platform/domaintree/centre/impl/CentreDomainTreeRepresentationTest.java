@@ -165,7 +165,7 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     }
 
     @Test
-    public void test_that_second_tick_for_collectional_properties_itself_are_disabled() {
+    public void second_tick_for_collectional_properties_itself_are_disabled() {
         // (1-level children)
         assertTrue("Collectional property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection"));
         assertTrue("Collectional property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection"));
@@ -176,7 +176,7 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
     }
 
     @Test
-    public void test_that_second_tick_for_short_collectional_properties_itself_are_not_disabled() {
+    public void second_tick_for_short_collectional_properties_itself_are_not_disabled() {
         // (1-level children)
         assertFalse("Short collectional property should not be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "shortCollection"));
         assertFalse("Short collectional property should not be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.shortCollection"));

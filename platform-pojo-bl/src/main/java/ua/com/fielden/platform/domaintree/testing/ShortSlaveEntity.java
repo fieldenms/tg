@@ -1,14 +1,13 @@
 package ua.com.fielden.platform.domaintree.testing;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 
@@ -19,8 +18,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
  *
  */
 @KeyType(DynamicEntityKey.class)
-@KeyTitle(value = "Key title", desc = "Key desc")
-@DescTitle(value = "Desc title", desc = "Desc desc")
 public class ShortSlaveEntity extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
@@ -59,12 +56,13 @@ public class ShortSlaveEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     public List<EvenSlaverEntity> getCollection() {
-        return collection;
+        return Collections.unmodifiableList(collection);
     }
 
     @Observable
-    public void setCollection(final List<EvenSlaverEntity> collection) {
+    public ShortSlaveEntity setCollection(final List<EvenSlaverEntity> collection) {
         this.collection.clear();
         this.collection.addAll(collection);
+        return this;
     }
 }

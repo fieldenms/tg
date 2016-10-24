@@ -2,6 +2,7 @@ package ua.com.fielden.platform.domaintree.testing;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -87,7 +88,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     private List<EvenSlaverEntity> collection = new ArrayList<EvenSlaverEntity>();
 
     @IsProperty(ShortEvenSlaverEntity.class)
-    private List<ShortEvenSlaverEntity> shortCollection = new ArrayList<ShortEvenSlaverEntity>();
+    private List<ShortEvenSlaverEntity> shortCollection = new ArrayList<>();
 
     ////////// Any property to be specifically excluded //////////
     @IsProperty(linkProperty = "slaveEntityLinkProp")
@@ -249,13 +250,14 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     public List<ShortEvenSlaverEntity> getShortCollection() {
-        return shortCollection;
+        return Collections.unmodifiableList(shortCollection);
     }
 
     @Observable
-    public void setShortCollection(final List<ShortEvenSlaverEntity> shortCollection) {
+    public SlaveEntity setShortCollection(final List<ShortEvenSlaverEntity> shortCollection) {
         this.shortCollection.clear();
         this.shortCollection.addAll(shortCollection);
+        return this;
     }
 
     public List<EvenSlaverEntity> getCollection() {

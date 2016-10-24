@@ -164,7 +164,7 @@ public class WorkbookExporter {
     }
 
     /**
-     * Analysis the value of the short collectional property and returns the list of key entities those are not equal to entity that contains the collectional property.
+     * Analyses the value of a short collectional property and returns the list of key entities which are not equal to entity that contains the collectional property.
      *
      * @param entity
      * @param propertyName
