@@ -117,20 +117,6 @@ public class EntityUtils {
     }
 
     /**
-     * Null-safe equals.
-     *
-     * @param o1
-     * @param o2
-     * @return
-     */
-    public static boolean safeEquals(final Object o1, final Object o2) {
-        if (o1 == null && o2 == null || o1 != null && o1.equals(o2)) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * Null-safe equals based on the {@link AbstractEntity}'s id property. If id property is not present in both entities then default equals for entities will be called.
      *
      * @param entity1
@@ -142,7 +128,7 @@ public class EntityUtils {
             if (entity1.getId() == null && entity2.getId() == null) {
                 return entity1.equals(entity2);
             } else {
-                return safeEquals(entity1.getId(), entity2.getId());
+                return equalsEx(entity1.getId(), entity2.getId());
             }
         }
         return entity1 == entity2;
