@@ -24,11 +24,7 @@ import ua.com.fielden.platform.security.user.User;
 @MapEntityTo
 public class WebMenuItemInvisibility extends AbstractPersistentEntity<DynamicEntityKey> {
 
-    private static final long serialVersionUID = 4828116383622030993L;
-
-    protected WebMenuItemInvisibility() {
-        setKey(new DynamicEntityKey(this));
-    }
+    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @CompositeKeyMember(1)
