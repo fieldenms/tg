@@ -37,10 +37,6 @@ public class EntityAttachmentAssociation extends AbstractEntity<DynamicEntityKey
     @MapTo("ID_ANY_ENTITY")
     private Long entityId;
 
-    protected EntityAttachmentAssociation() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public Attachment getAttachment() {
         return attachment;
     }

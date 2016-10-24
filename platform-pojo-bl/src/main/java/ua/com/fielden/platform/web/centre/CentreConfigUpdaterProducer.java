@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
+
 import java.util.LinkedHashSet;
 import java.util.List;
-
-import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -21,6 +21,8 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.utils.Pair;
+
+import com.google.inject.Inject;
 
 /**
  * A producer for new instances of entity {@link CentreConfigUpdater}.
@@ -51,12 +53,12 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final List<Pair<String, Ordering>> orderedProperties = cdtmae.getSecondTick().orderedProperties(root);
         final LinkedHashSet<SortingProperty> result = new LinkedHashSet<>();
         for (final String checkedProp: checkedProperties) {
-            if ("".equals(checkedProp) || (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) && 
-                    !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp))) {
+            if ("".equals(checkedProp) || (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) &&
+                    !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp) && !isShortCollection(managedType, checkedProp))) {
                 final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
                 final SortingProperty sortingProperty = factory.newEntity(SortingProperty.class, null, "".equals(checkedProp) ? "this" : checkedProp, titleAndDesc.getValue());
                 sortingProperty.setTitle(titleAndDesc.getKey());
-    
+
                 final Pair<Ordering, Integer> orderingAndNumber = getOrderingAndNumber(orderedProperties, checkedProp);
                 if (orderingAndNumber != null) {
                     sortingProperty.setSorting(Ordering.ASCENDING == orderingAndNumber.getKey()); // 'null' is by default, means no sorting exist

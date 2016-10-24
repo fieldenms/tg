@@ -70,13 +70,6 @@ public class MigrationHistory extends AbstractEntity<DynamicEntityKey> {
     @Title("Finished")
     private Date finished;
 
-    /**
-     * Constructor for the entity factory from TG.
-     */
-    protected MigrationHistory() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public Integer getRetrievedCount() {
         return retrievedCount;
     }

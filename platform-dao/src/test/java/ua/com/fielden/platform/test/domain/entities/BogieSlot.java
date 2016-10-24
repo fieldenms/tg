@@ -34,10 +34,6 @@ public class BogieSlot extends RotableLocation<DynamicEntityKey> {
         this.wheelset = wheelset;
     }
 
-    public BogieSlot() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public Bogie getBogie() {
         return bogie;
     }

@@ -736,39 +736,52 @@
 <script>
     (function () {
         var _checkCollapsiblePanelVisibility = function (layout) {
-                this.collapsePanelVisible = !!(this.cardLayout && layout);
-            },
-            _areEqual = function (a, b) {
-                return a.id === b.id;
-            },
-            _hasEntity = function (entity, entities) {
-                for (var i = 0; i < entities.length; i += 1) {
-                    if (_areEqual(entity, entities[i])) {
-                        return true;
-                    }
+            this.collapsePanelVisible = !!(this.cardLayout && layout);
+        };
+        var _areEqual = function (a, b) {
+            return a.id === b.id;
+        };
+        var _hasEntity = function (entity, entities) {
+            for (var i = 0; i < entities.length; i += 1) {
+                if (_areEqual(entity, entities[i])) {
+                    return true;
                 }
-                return false;
-            },
-            _findEntity = function (entity, entities) {
-                for (var i = 0; i < entities.length; i += 1) {
-                    if (_areEqual(entity, entities[i])) {
-                        return i;
-                    }
+            }
+            return false;
+        };
+        var _findEntity = function (entity, entities) {
+            for (var i = 0; i < entities.length; i += 1) {
+                if (_areEqual(entity, entities[i])) {
+                    return i;
                 }
-                return -1;
-            },
-            _processEntitySelection = function (selectedEntities, entity, select) {
-                var selectedIndex = selectedEntities.indexOf(entity);
-                if (select) {
-                    if (selectedIndex < 0) {
-                        selectedEntities.push(entity);
-                    }
-                } else {
-                    if (selectedIndex >= 0) {
-                        selectedEntities.splice(selectedIndex, 1);
-                    }
+            }
+            return -1;
+        };
+        var _processEntitySelection = function (selectedEntities, entity, select) {
+            var selectedIndex = selectedEntities.indexOf(entity);
+            if (select) {
+                if (selectedIndex < 0) {
+                    selectedEntities.push(entity);
                 }
-            };
+            } else {
+                if (selectedIndex >= 0) {
+                    selectedEntities.splice(selectedIndex, 1);
+                }
+            }
+        };
+        var generateShortCollection = function (entity, property, typeObject) {
+            var collectionValue = entity.get(property);
+            var containerPropertyValue = entity.get(property.substr(0, property.lastIndexOf('.')));
+            var keys = typeObject.compositeKeyNames();
+            return collectionValue.map(function (subEntity) {
+                var key = keys.find(function (key) {
+                    if (subEntity.get(key) !== containerPropertyValue) {
+                        return key;
+                    }
+                });
+                return subEntity.get(key);
+            });
+        };
         Polymer({
             is: "tg-@miType-grid-inspector",
 
@@ -1205,35 +1218,46 @@
             },
 
             _getTooltip: function (entity, column, action) {
-                var property = entity.prop(column.property);
-                var validationResult = property.validationResult();
-                var value;
-                var tooltip = "";
-                if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
-                    tooltip = validationResult.message && ("<b>" + validationResult.message + "</b>");
-                } else if (column.tooltipProperty) {
-                    value = this._getValue(entity, column.tooltipProperty, "String").toString();
-                    tooltip = value && ("<b>" + value + "</b>");
-                } else if (this.$.reflector.findTypeByName(column.type)) {
-                    tooltip = this._generateEntityTooltip(entity, column);
-                } else {
-                    value = this._getValue(entity, column.property, column.type).toString();
-                    tooltip = value && ("<b>" + value + "</b>");
+                try {
+                    var property = entity.prop(column.property);
+                    var validationResult = property.validationResult();
+                    var value;
+                    var tooltip = "";
+                    if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
+                        tooltip = validationResult.message && ("<b>" + validationResult.message + "</b>");
+                    } else if (column.tooltipProperty) {
+                        value = this._getValue(entity, column.tooltipProperty, "String").toString();
+                        tooltip = value && ("<b>" + value + "</b>");
+                    } else if (this.$.reflector.findTypeByName(column.type)) {
+                        tooltip = this._generateEntityTooltip(entity, column);
+                    } else {
+                        value = this._getValue(entity, column.property, column.type).toString();
+                        tooltip = value && ("<b>" + value + "</b>");
+                    }
+                    if (column.columnDesc) {
+                        tooltip += (tooltip && "<br><br>") + column.columnDesc;
+                    }
+                    if (action && (action.shortDesc || action.longDesc)) {
+                        tooltip += (tooltip && "<br><br>") + this._generateActionTooltip(action);
+                    }
+                    return tooltip;
+                } catch (e) {
+                    return '';
                 }
-                if (column.columnDesc) {
-                    tooltip += (tooltip && "<br><br>") + column.columnDesc;
-                }
-                if (action && (action.shortDesc || action.longDesc)) {
-                    tooltip += (tooltip && "<br><br>") + this._generateActionTooltip(action);
-                }
-                return tooltip;
             },
 
             _generateEntityTooltip: function (entity, column) {
                 var key = this._getValue(entity, column.property, column.type);
                 var desc;
                 try {
-                    desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                    if (Array.isArray(this._get(entity, column.property))) {
+                        desc = generateShortCollection(entity, column.property, this.$.reflector.findTypeByName(column.type))
+                            .map(function (subEntity) {
+                                return subEntity.get("desc");
+                            }).join(", ");
+                    } else {
+                        desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                    }
                 } catch (e) {
                     desc = "";
                 }
@@ -1652,7 +1676,11 @@
                 if (entity === null || property === null || type === null || this._get(entity, property) === null) {
                     return "";
                 } else if (this.$.reflector.findTypeByName(type)) {
-                    return this.$.reflector.convert(this._get(entity, property));
+                    var propertyValue = this._get(entity, property);
+                    if (Array.isArray(propertyValue)) {
+                        propertyValue = generateShortCollection(entity, property, this.$.reflector.findTypeByName(type));
+                    }
+                    return Array.isArray(propertyValue) ? this.$.reflector.convert(propertyValue).join(", ") : this.$.reflector.convert(propertyValue);
                 } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
                     var splitedType = type.split(':');
                     return _millisDateRepresentation(entity.get(property), splitedType[1] || null, splitedType[2] || null);

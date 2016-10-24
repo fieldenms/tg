@@ -22,10 +22,6 @@ public class MultiLevelEntity extends SecondLevelEntity {
     @IsProperty
     private AnotherSimplePartEntity anotherSimplePartType;
 
-    public MultiLevelEntity() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public MultiLevelEntity getPropertyOfSelfType() {
         return propertyOfSelfType;
     }

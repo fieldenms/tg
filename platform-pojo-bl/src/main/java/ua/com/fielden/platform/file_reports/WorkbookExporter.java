@@ -1,12 +1,24 @@
 package ua.com.fielden.platform.file_reports;
 
+import static org.apache.commons.lang.StringUtils.join;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
+import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.Deflater;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
@@ -23,7 +35,7 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A set of utility methods for exporting data into MS Excel.
- * 
+ *
  * @author TG Team
  *
  */
@@ -62,7 +74,7 @@ public class WorkbookExporter {
 
     public static HSSFWorkbook export(final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData) {
         final HSSFWorkbook wb = new HSSFWorkbook();
-        for (DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
+        for (final DataForWorkbookSheet<? extends AbstractEntity<?>> sheetData : sheetsData) {
             addSheetWithData(wb, sheetData);
         }
         return wb;
@@ -94,8 +106,8 @@ public class WorkbookExporter {
             cell.setCellStyle(index < sheetData.getPropTitles().size() - 1 ? headerInnerCellStyle : headerCellStyle);
         }
 
-        CellStyle dateCellStyle = wb.createCellStyle();
-        CreationHelper createHelper = wb.getCreationHelper();
+        final CellStyle dateCellStyle = wb.createCellStyle();
+        final CreationHelper createHelper = wb.getCreationHelper();
         dateCellStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
 
         // let's make cell style to handle borders
@@ -109,7 +121,9 @@ public class WorkbookExporter {
                 if (propIndex < sheetData.getPropNames().size() - 1) { // the last column should not have right border
                     cell.setCellStyle(dataCellStyle);
                 }
-                final Object value = sheetData.getEntities().get(index).get(sheetData.getPropNames().get(propIndex)); // get the value
+                final AbstractEntity<?> entity = sheetData.getEntities().get(index);
+                final String propertyName = sheetData.getPropNames().get(propIndex);
+                final Object value = StringUtils.isEmpty(propertyName) ? entity : entity.get(propertyName); // get the value
                 // need to try to do the best job with types
                 if (value instanceof Date) {
                     cell.setCellValue((Date) value);
@@ -127,7 +141,11 @@ public class WorkbookExporter {
                     cell.setCellType(HSSFCell.CELL_TYPE_BLANK);
                 } else { // otherwise treat value as String
                     cell.setCellType(HSSFCell.CELL_TYPE_STRING);
-                    cell.setCellValue(value.toString());
+                    if (isShortCollection(entity.getType(), propertyName)) {
+                        cell.setCellValue(join(createShortColection(entity, propertyName), ", "));
+                    } else {
+                        cell.setCellValue(value.toString());
+                    }
                 }
             }
         }
@@ -143,5 +161,22 @@ public class WorkbookExporter {
 
         // freezing first row
         sheet.createFreezePane(0, 1);
+    }
+
+    /**
+     * Analyses the value of a short collectional property and returns the list of key entities which are not equal to entity that contains the collectional property.
+     *
+     * @param entity
+     * @param propertyName
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private static List<AbstractEntity<?>> createShortColection(final AbstractEntity<?> entity, final String propertyName) {
+        final Collection<AbstractEntity<?>> value = (Collection<AbstractEntity<?>>) entity.get(propertyName);
+        final AbstractEntity<?> containerEntity = isDotNotation(propertyName) ? (AbstractEntity<?>) entity.get(penultAndLast(propertyName).getKey()) : entity;
+        final List<Field> keyMemebers = getKeyMembers(determinePropertyType(entity.getType(), propertyName));
+        final String keyElement = keyMemebers.stream().filter(field -> !field.getType().equals(getOriginalType(containerEntity.getType())))
+                .findFirst().map(findField -> findField.getName()).get();
+        return value.stream().map(entityElement -> (AbstractEntity<?>) entityElement.get(keyElement)).collect(Collectors.toList());
     }
 }

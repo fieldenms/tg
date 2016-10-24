@@ -26,12 +26,7 @@ public class TgWoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
     @CompositeKeyMember(2)
     private PropertyDescriptor<TgWorkOrder> requiredProperty;
 
-    /**
-     * Default constructor for instantiation by Hibernate.
-     */
     protected TgWoStatusRequiredField() {
-        super(null, null, "");
-        setKey(new DynamicEntityKey(this));
     }
 
     /**
@@ -40,8 +35,6 @@ public class TgWoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
      * @param
      */
     public TgWoStatusRequiredField(final TgWorkOrderStatus woStatus, final PropertyDescriptor<TgWorkOrder> requiredField) {
-        this();
-        setKey(new DynamicEntityKey(this));
         setWoStatus(woStatus);
         setRequiredProperty(requiredField);
     }

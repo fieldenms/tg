@@ -29,9 +29,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A test for entity centres tree representation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepresentationTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -162,6 +162,28 @@ public class CentreDomainTreeRepresentationTest extends AbstractDomainTreeRepres
         assertTrue("Crit-only property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.critOnlyProp"));
         assertTrue("Crit-only property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.critOnlyProp"));
         assertTrue("Crit-only property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyProp"));
+    }
+
+    @Test
+    public void second_tick_for_collectional_properties_itself_are_disabled() {
+        // (1-level children)
+        assertTrue("Collectional property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection"));
+        assertTrue("Collectional property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection"));
+        assertTrue("Collectional property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.collection"));
+        assertTrue("Collectional property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.collection"));
+        assertTrue("Collectional property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.collection"));
+        assertTrue("Collectional property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.collection"));
+    }
+
+    @Test
+    public void second_tick_for_short_collectional_properties_itself_are_not_disabled() {
+        // (1-level children)
+        assertFalse("Short collectional property should not be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "shortCollection"));
+        assertFalse("Short collectional property should not be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.shortCollection"));
+        assertFalse("Short collectional property should not be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.entityProp.shortCollection"));
+        assertTrue("Short collectional property should be disabled if under other collection.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "collection.shortCollection"));
+        assertTrue("Short collectional property should be disabled if under other collection.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.shortCollection"));
+        assertTrue("Short collectional property should be disabled if under other collection.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.shortCollection"));
     }
 
     @Test
