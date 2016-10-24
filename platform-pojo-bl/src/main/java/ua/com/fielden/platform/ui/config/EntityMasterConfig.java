@@ -44,10 +44,6 @@ public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> 
     @MapTo("MASTER_TYPE")
     private String masterType;
 
-    protected EntityMasterConfig() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     /**
      * A helper setter to convert master UI model to the string value.
      *

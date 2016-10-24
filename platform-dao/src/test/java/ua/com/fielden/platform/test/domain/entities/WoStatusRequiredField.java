@@ -26,12 +26,7 @@ public class WoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
     @CompositeKeyMember(2)
     private PropertyDescriptor<WorkOrder> requiredProperty;
 
-    /**
-     * Default constructor for instantiation by Hibernate.
-     */
     protected WoStatusRequiredField() {
-        super(null, null, "");
-        setKey(new DynamicEntityKey(this));
     }
 
     /**
@@ -40,8 +35,6 @@ public class WoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
      * @param
      */
     public WoStatusRequiredField(final WorkOrderStatus woStatus, final PropertyDescriptor<WorkOrder> requiredField) {
-        this();
-        setKey(new DynamicEntityKey(this));
         setWoStatus(woStatus);
         setRequiredProperty(requiredField);
     }

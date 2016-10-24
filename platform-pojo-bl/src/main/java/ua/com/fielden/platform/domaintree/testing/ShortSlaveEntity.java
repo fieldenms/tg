@@ -21,9 +21,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 public class ShortSlaveEntity extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    protected ShortSlaveEntity() {
-    }
-
     @IsProperty
     @CompositeKeyMember(1)
     private MasterEntity masterEntityProp;
@@ -35,7 +32,7 @@ public class ShortSlaveEntity extends AbstractEntity<DynamicEntityKey> {
 
     ///////// Collections /////////
     @IsProperty(value = EvenSlaverEntity.class, linkProperty = "slaveEntityLinkProp")
-    private List<EvenSlaverEntity> collection = new ArrayList<EvenSlaverEntity>();
+    private List<EvenSlaverEntity> collection = new ArrayList<>();
 
     public MasterEntity getMasterEntityProp() {
         return masterEntityProp;

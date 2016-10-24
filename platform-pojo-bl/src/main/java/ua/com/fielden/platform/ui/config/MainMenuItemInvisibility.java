@@ -31,10 +31,6 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
 public class MainMenuItemInvisibility extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    protected MainMenuItemInvisibility() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     @IsProperty
     @CompositeKeyMember(1)
     @Title(value = "User", desc = "Application user owning this configuration.")

@@ -28,14 +28,11 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  *
  */
-@KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key title", desc = "Key desc")
 @DescTitle(value = "Desc title", desc = "Desc desc")
+@KeyType(DynamicEntityKey.class)
 public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
-
-    protected SlaveEntity() {
-    }
 
     @IsProperty
     @CompositeKeyMember(1)
@@ -85,7 +82,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
 
     ///////// Collections /////////
     @IsProperty(value = EvenSlaverEntity.class, linkProperty = "slaveEntityLinkProp")
-    private List<EvenSlaverEntity> collection = new ArrayList<EvenSlaverEntity>();
+    private List<EvenSlaverEntity> collection = new ArrayList<>();
 
     @IsProperty(ShortEvenSlaverEntity.class)
     private List<ShortEvenSlaverEntity> shortCollection = new ArrayList<>();
@@ -261,7 +258,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     public List<EvenSlaverEntity> getCollection() {
-        return collection;
+        return Collections.unmodifiableList(collection);
     }
 
     @Observable
