@@ -8,7 +8,9 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErr
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
@@ -639,12 +641,24 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     public final MetaPropertyFull<T> setOriginalValue(final T value) {
         if (value != null) {
             if (isCollectional()) {
-                collectionOrigSize = ((Collection<?>) value).size();
+                final Collection<?> collection = (Collection<?>) value;
+                collectionOrigSize = collection.size();
+                try {
+                    // try to obtain empty constructor to perform shallow copying of collection
+                    final Constructor<? extends Collection> constructor = collection.getClass().getConstructor();
+                    final Collection copy = constructor.newInstance();
+                    copy.addAll(collection);
+                    // set the shallow copy of collection into originalValue to be able to perform comparison between actual value and original value of the collection
+                    originalValue = (T) copy;
+                } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    logger.debug(e.getMessage(), e);
+                }
             } else { // The single property (proxied or not!!!)
                 originalValue = value;
             }
         } else if (isCollectional()) {
             collectionOrigSize = 0;
+            originalValue = null;
         } else {
             originalValue = null;
         }
