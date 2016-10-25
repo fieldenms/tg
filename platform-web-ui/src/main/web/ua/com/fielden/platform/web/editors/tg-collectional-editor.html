@@ -256,13 +256,22 @@
                 this._forReview = true;
             }
             
+            // selecting of entities should be done on each request (refresh, validate or save)
+            for (var index = 0; index < chosenIds.length; index++) {
+                var foundEntity = this._find(this._entities, chosenIds[index]);
+                if (foundEntity !== null) {
+                    selEntities.push(foundEntity);
+                }
+            }
+            // _originalChosenIds should be initialised only once for the session of collectional editing.
+            // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
+            // It is believed that resetting of _originalChosenIds can be safely done in attached callback of tg-collectional-editor.
             if (this._originalChosenIds === null) {
                 this._originalChosenIds = [];
                 
                 for (var index = 0; index < chosenIds.length; index++) {
                     var foundEntity = this._find(this._entities, chosenIds[index]);
                     if (foundEntity !== null) {
-                        selEntities.push(foundEntity);
                         this._originalChosenIds.push(chosenIds[index]);
                     }
                 }
