@@ -544,10 +544,14 @@
             },
             
             _bindingEntityNotPersistentOrNotPersistedOrModifiedChanged: function (newValue, oldValue) {
-                var saveButton = this.$$('tg-action[role="save"]');
-                if (saveButton) {
-                    saveButton._innerEnabled = newValue;
-                }
+                var self = this;
+                // need to place this action on top of JS execution stack to ensure that _innerEnabled has already been set to false inside _afterExecution method (tg-abstract-action-behavior)
+                this.async(function () {
+                    var saveButton = self.$$('tg-action[role="save"]');
+                    if (saveButton) {
+                        saveButton._innerEnabled = newValue;
+                    }
+                }, 1);
             },
 
             /**
