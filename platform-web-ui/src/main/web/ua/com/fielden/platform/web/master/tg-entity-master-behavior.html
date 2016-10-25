@@ -543,10 +543,10 @@
 
             },
             
-            _bindingEntityModifiedChanged: function (newBindingEntityModified, oldBindingEntityModified) {
+            _bindingEntityNotPersistentOrNotPersistedOrModifiedChanged: function (newValue, oldValue) {
                 var saveButton = this.$$('tg-action[role="save"]');
                 if (saveButton) {
-                    saveButton._innerEnabled = newBindingEntityModified;
+                    saveButton._innerEnabled = newValue;
                 }
             },
 
@@ -760,17 +760,20 @@
                 }
 
                 if (this.classList.contains('canLeave')) {
-                    // the master can be left in case where there is no modifications and the entity is not new
-                    if (this._currBindingEntity.id === null) {
-                        return {
-                            isNew: true,
-                            msg: "A new entity is being created. Please save your changes."
-                        };
-                    } else if (this._bindingEntityModified === true) {
-                        return {
-                            isNew: false,
-                            msg: "Please save or cancel your changes."
-                        };
+                    // The master can be left in case where there is no modifications and the entity is not new and the entity is not persistent. 
+                    // Refer to _bindingEntityNotPersistentOrNotPersistedOrModified property of tg-entity-binder-behavior for more information.
+                    if (this._bindingEntityNotPersistentOrNotPersistedOrModified === true) {
+                        if (this._currBindingEntity.id === null) {
+                            return {
+                                isNew: true,
+                                msg: "A new entity is being created. Please save your changes."
+                            };
+                        } else {
+                            return {
+                                isNew: undefined, // this could be not persistent entity (new) or persistent persisted entity (not new)
+                                msg: "Please save or cancel your changes."
+                            };
+                        }
                     }
                 }
                 return undefined;
