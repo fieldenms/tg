@@ -10,8 +10,9 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
-import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.menu.validators.MenuItemOwnerValidator;
 import ua.com.fielden.platform.security.user.User;
 /**
  * Master entity object.
@@ -30,6 +31,7 @@ public class WebMenuItemInvisibility extends AbstractPersistentEntity<DynamicEnt
     @CompositeKeyMember(1)
     @Title(value = "User", desc = "Application user owning this configuration.")
     @MapTo
+    @BeforeChange(@Handler(MenuItemOwnerValidator.class))
     private User owner;
 
     @IsProperty
@@ -43,8 +45,9 @@ public class WebMenuItemInvisibility extends AbstractPersistentEntity<DynamicEnt
     }
 
     @Observable
-    public void setMenuItemUri(final String menuItemUri) {
+    public WebMenuItemInvisibility setMenuItemUri(final String menuItemUri) {
         this.menuItemUri = menuItemUri;
+        return this;
     }
 
     public User getOwner() {
@@ -52,11 +55,8 @@ public class WebMenuItemInvisibility extends AbstractPersistentEntity<DynamicEnt
     }
 
     @Observable
-    @EntityExists(User.class)
-    public void setOwner(final User owner) {
-        if (owner != null && !owner.isBase()) {
-            throw new Result(this, new IllegalArgumentException("Only base users are allowed to be used for a base configuration."));
-        }
+    public WebMenuItemInvisibility setOwner(final User owner) {
         this.owner = owner;
+        return this;
     }
 }
