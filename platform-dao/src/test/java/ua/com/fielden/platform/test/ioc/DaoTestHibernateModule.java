@@ -5,11 +5,6 @@ import java.util.List;
 
 import org.hibernate.SessionFactory;
 
-import com.google.common.base.Ticker;
-import com.google.common.cache.Cache;
-import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
-
 import ua.com.fielden.platform.dao.DomainMetadata;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -23,6 +18,8 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
+import ua.com.fielden.platform.menu.IWebMenuItemInvisibility;
+import ua.com.fielden.platform.menu.WebMenuItemInvisibilityDao;
 import ua.com.fielden.platform.migration.controller.IMigrationError;
 import ua.com.fielden.platform.migration.controller.IMigrationHistory;
 import ua.com.fielden.platform.migration.controller.IMigrationRun;
@@ -54,10 +51,8 @@ import ua.com.fielden.platform.security.dao.UserRoleDao;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
-import ua.com.fielden.platform.security.user.INewUserNotifier;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
@@ -76,21 +71,20 @@ import ua.com.fielden.platform.test.domain.entities.daos.WorkshopDao;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule.TestSessionCacheBuilder;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
-import ua.com.fielden.platform.ui.config.IMainMenu;
-import ua.com.fielden.platform.ui.config.MainMenuDao;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
-import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
 import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityDao;
-import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
 import ua.com.fielden.platform.utils.IUniversalConstants;
+
+import com.google.common.base.Ticker;
+import com.google.common.cache.Cache;
+import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 
 /**
  * Guice injector module for Hibernate related injections for testing purposes.
@@ -130,16 +124,14 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IUser.class).to(UserDao.class);
         // bind IUserProvider
         bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
-        
+
         bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
         bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);
         bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
         bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
-        bind(IMainMenu.class).to(MainMenuDao.class);
-        bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
 
-        bind(IMainMenuItemInvisibility.class).to(MainMenuItemInvisibilityDao.class);
+        bind(IWebMenuItemInvisibility.class).to(WebMenuItemInvisibilityDao.class);
 
         bind(ITgTimesheet.class).to(TgTimesheetDao.class);
         bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
@@ -164,7 +156,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         });
         bind(ISerialiser0.class).to(Serialiser0.class).in(Scopes.SINGLETON);
         bind(ISerialiser.class).to(Serialiser.class).in(Scopes.SINGLETON);
-        
+
         bind(IUserSession.class).to(UserSessionDao.class);
         bindConstant().annotatedWith(SessionHashingKey.class).to("This is a hasing key, which is used to hash session data in unit tests.");
         bindConstant().annotatedWith(TrustedDeviceSessionDuration.class).to(60 * 24 * 3); // three days
@@ -182,21 +174,21 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
 
             @Override
             public void start() {
-                
+
             }
 
             @Override
             public void stop() {
-                
+
             }
 
             @Override
             public boolean isStarted() {
                 return false;
             }
-            
+
         });
     }
-    
-    
+
+
 }
