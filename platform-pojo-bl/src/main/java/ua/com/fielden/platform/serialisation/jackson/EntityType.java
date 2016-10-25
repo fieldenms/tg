@@ -59,8 +59,12 @@ public class EntityType extends AbstractEntity<String> {
     private Boolean _displayDesc;
     
     @IsProperty
-    @Title(value = "Is Continuation?", desc = "Indicated whether the associated entity type represents a continuation entity.")
+    @Title(value = "Is Continuation?", desc = "Indicates whether the associated entity type represents a continuation entity.")
     private boolean _continuation;
+    
+    @IsProperty
+    @Title(value = "Is Collectional Functional Entity?", desc = "Indicates whether the associated entity type represents collectional functional entity (collectional editor, centre config updater etc.).")
+    private boolean _collFuncEntity;
 
     @Observable
     public EntityType set_displayDesc(final Boolean _displayDesc) {
@@ -80,6 +84,16 @@ public class EntityType extends AbstractEntity<String> {
 
     public boolean is_persistent() {
         return _persistent;
+    }
+    
+    @Observable
+    public EntityType set_collFuncEntity(final boolean _collFuncEntity) {
+        this._collFuncEntity = _collFuncEntity;
+        return this;
+    }
+
+    public boolean is_collFuncEntity() {
+        return _collFuncEntity;
     }
     
     @Observable
