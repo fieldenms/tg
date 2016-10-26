@@ -9,5 +9,5 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
  * @author TG Team
  * 
  */
-public interface IMainMenuItemController extends IEntityDao<MainMenuItem> {
+public interface IMainMenuItem extends IEntityDao<MainMenuItem> {
 }

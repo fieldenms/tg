@@ -74,11 +74,11 @@ import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
+import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
 import com.google.common.base.Ticker;
@@ -129,7 +129,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
         bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);
         bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
-        bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
+        bind(IMainMenuItem.class).to(MainMenuItemDao.class);
 
         bind(IWebMenuItemInvisibility.class).to(WebMenuItemInvisibilityDao.class);
 

@@ -84,11 +84,11 @@ import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
+import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ISortingProperty;
@@ -194,7 +194,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IWebMenuItemInvisibility.class).to(WebMenuItemInvisibilityDao.class);
 
         // configuration related binding
-        bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
+        bind(IMainMenuItem.class).to(MainMenuItemDao.class);
         bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);
         bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
         bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
