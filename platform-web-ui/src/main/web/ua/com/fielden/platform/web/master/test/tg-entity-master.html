@@ -1141,10 +1141,15 @@
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
+                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
                     if (firstValidation) {
-                        var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
                         MockInteractions.tap(saveButton);
                         firstValidation = false;
+                    } else {
+                        this.async(function () {
+                            // need to place this on top of JS execution stack after save button enablement logic
+                            MockInteractions.tap(saveButton);
+                        }, 1);
                     }
                 };
                 
@@ -1154,12 +1159,6 @@
                     
                     // kick in the second save and thus the second part of this test 
                     this.postSaved = this.postSavedForExisting;
-                    
-                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
-                    this.async(function () {
-                        // need to do this on async because at this stage saveButton is disabled but will be enabled very soon
-                        MockInteractions.tap(saveButton);
-                    }, 100);
                 }.bind(master);
                 
                 master.postSavedForExisting = function (potentiallySavedOrNewEntity, bindingEntity) {
