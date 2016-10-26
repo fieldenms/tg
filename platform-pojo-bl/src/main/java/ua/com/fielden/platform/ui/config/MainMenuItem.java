@@ -15,7 +15,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
@@ -86,7 +85,6 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
     }
 
     @Observable
-    @EntityExists(MainMenuItem.class)
     public MainMenuItem setParent(final MainMenuItem parent) {
         this.parent = parent;
         return this;
