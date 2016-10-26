@@ -39,10 +39,6 @@ public class DynamicKeyPartEntity extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "Uncommon property", desc = "Uncommon property description")
     private String uncommonProperty;
 
-    protected DynamicKeyPartEntity() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public String getName() {
         return name;
     }

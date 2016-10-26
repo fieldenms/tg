@@ -3,9 +3,6 @@ package ua.com.fielden.platform.ioc;
 import java.util.Map;
 import java.util.Properties;
 
-import com.google.inject.Scopes;
-import com.google.inject.name.Names;
-
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.attachment.IEntityAttachmentAssociationController;
 import ua.com.fielden.platform.basic.config.ApplicationSettings;
@@ -37,6 +34,24 @@ import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
+import ua.com.fielden.platform.menu.CustomViewDao;
+import ua.com.fielden.platform.menu.EntityCentreViewDao;
+import ua.com.fielden.platform.menu.EntityMasterViewDao;
+import ua.com.fielden.platform.menu.ICustomView;
+import ua.com.fielden.platform.menu.IEntityCentreView;
+import ua.com.fielden.platform.menu.IEntityMasterView;
+import ua.com.fielden.platform.menu.IMenu;
+import ua.com.fielden.platform.menu.IMenuSaveAction;
+import ua.com.fielden.platform.menu.IModule;
+import ua.com.fielden.platform.menu.IModuleMenuItem;
+import ua.com.fielden.platform.menu.IView;
+import ua.com.fielden.platform.menu.IWebMenuItemInvisibility;
+import ua.com.fielden.platform.menu.MenuDao;
+import ua.com.fielden.platform.menu.MenuSaveActionDao;
+import ua.com.fielden.platform.menu.ModuleDao;
+import ua.com.fielden.platform.menu.ModuleMenuItemDao;
+import ua.com.fielden.platform.menu.ViewDao;
+import ua.com.fielden.platform.menu.WebMenuItemInvisibilityDao;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.IUserAndRoleAssociationBatchAction;
@@ -84,6 +99,9 @@ import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ISortingProperty;
 import ua.com.fielden.platform.web.centre.SortingPropertyDao;
+
+import com.google.inject.Scopes;
+import com.google.inject.name.Names;
 
 /**
  * Basic IoC module for server web applications, which should be enhanced by the application specific IoC module.
@@ -170,6 +188,17 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IAttachment.class).to(AttachmentDao.class);
         bind(IEntityAttachmentAssociationController.class).to(EntityAttachmentAssociationDao.class);
 
+        // configuration menu related binding
+        bind(IModuleMenuItem.class).to(ModuleMenuItemDao.class);
+        bind(IEntityCentreView.class).to(EntityCentreViewDao.class);
+        bind(IView.class).to(ViewDao.class);
+        bind(ICustomView.class).to(CustomViewDao.class);
+        bind(IModule.class).to(ModuleDao.class);
+        bind(IMenu.class).to(MenuDao.class);
+        bind(IEntityMasterView.class).to(EntityMasterViewDao.class);
+        bind(IMenuSaveAction.class).to(MenuSaveActionDao.class);
+        bind(IWebMenuItemInvisibility.class).to(WebMenuItemInvisibilityDao.class);
+
         // configuration related binding
         bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
         bind(IMainMenuItemInvisibility.class).to(MainMenuItemInvisibilityDao.class);
@@ -214,7 +243,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind value matcher factory to support autocompleters
         // TODO is this binding really needed for the server side???
         bind(IValueMatcherFactory.class).to(ValueMatcherFactory.class).in(Scopes.SINGLETON);
-        
+
         // warnings acknowledgement binding
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
         bind(IPropertyWarning.class).to(PropertyWarningDao.class);

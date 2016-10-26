@@ -2,9 +2,11 @@ package ua.com.fielden.platform.web.menu.module.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.menu.ModuleMenuItem;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
@@ -47,5 +49,17 @@ public class WebMenuItem implements IExecutable {
     @Override
     public String toString() {
         return code().toString();
+    }
+
+    public ModuleMenuItem getModuleMenuItem() {
+        final ModuleMenuItem menuItem = new ModuleMenuItem();
+        menuItem.setKey(title);
+        menuItem.setDesc(description);
+        if (view != null) {
+            menuItem.setView(view.getView());
+        } else if (subItems != null) {
+            menuItem.setMenu(subItems.stream().map(subItem -> subItem.getMenuItem()).collect(Collectors.toList()));
+        }
+        return menuItem;
     }
 }

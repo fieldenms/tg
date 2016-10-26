@@ -44,12 +44,7 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
     @IsProperty
     private boolean removeBearing = false;
 
-    /**
-     * Default constructor for instantiation by Hibernate.
-     */
     protected AdvicePosition() {
-        super(null, null, "");
-        setKey(new DynamicEntityKey(this));
     }
 
     /**
@@ -58,8 +53,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
      * @param advice
      */
     public AdvicePosition(final Advice advice, final Integer position) {
-        this();
-        setKey(new DynamicEntityKey(this));
         setAdvice(advice);
         setPosition(position);
     }

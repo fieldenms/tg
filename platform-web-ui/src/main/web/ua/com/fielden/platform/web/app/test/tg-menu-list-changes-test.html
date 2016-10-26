@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>test for list of menu item generation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+
+    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+
+    <link rel="import" href="/resources/app/tg-desktop-app.html">
+</head>
+
+<body>
+    <test-fixture id="AppFixture">
+        <template>
+            <tg-desktop-app></tg-desktop-app>
+        </template>
+    </test-fixture>
+
+    <script>
+        suite('Test menu changes callback', function () {
+            var app;
+
+            setup(function () {
+                app = fixture('AppFixture');
+                app.$.menuSaveAction._run=function(){};
+            });
+
+            test("empty changeset list doesn't affect result lists", function (done) {
+                app._saveMenuVisibilityChanges();
+                assert.sameMembers(app._visibleMenuItems, [], "Visisbility list should be empty.");
+                assert.sameMembers(app._invisibleMenuItems, [], "Invisisbility list should be empty.");
+                done();
+            });
+            
+            test("single element list affects appropriate visibility list", function (done) {
+                app._saveMenuVisibilityChanges([],['module1/item3']);
+                assert.sameMembers(app._visibleMenuItems, [], "Visisbility list should be empty.");
+                assert.sameMembers(app._invisibleMenuItems, ['module1/item3'], "Invisisbility list should have one element.");
+                done();
+            });
+            
+            test("visisblity lists have always unique elements", function (done) {
+                app._saveMenuVisibilityChanges([],['module1/item3']);
+                app._saveMenuVisibilityChanges([],['module1/item3']);
+                assert.sameMembers(app._visibleMenuItems, [], "Visisbility list should be empty.");
+                assert.sameMembers(app._invisibleMenuItems, ['module1/item3'], "Invisisbility list should have one element.");
+                done();
+            });
+
+            test("element added to list of visisble items was removed from list of invisible", function (done) {
+                app._saveMenuVisibilityChanges([],['module1/item3']);
+                app._saveMenuVisibilityChanges(['module1/item3'],['module2/group1/item1']);
+                
+                assert.sameMembers(app._visibleMenuItems, ['module1/item3'], "Visisbility list should have one element.");
+                assert.sameMembers(app._invisibleMenuItems, ['module2/group1/item1'], "Invisisbility list should have one element.");
+                done();
+            });
+            
+             test("two identical list affects only invisisble item list", function (done) {
+                app._saveMenuVisibilityChanges(['module1/item3'], ['module1/item3']);
+                assert.sameMembers(app._visibleMenuItems, [], "Visisbility list should be empty.");
+                assert.sameMembers(app._invisibleMenuItems, ['module1/item3'], "Invisisbility list should have one element.");
+                done();
+            });
+        });
+    </script>
+</body>
+
+</html>

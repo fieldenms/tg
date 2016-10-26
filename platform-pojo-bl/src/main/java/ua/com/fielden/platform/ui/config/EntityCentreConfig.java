@@ -67,10 +67,6 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @MapTo("IS_PRINCIPAL")
     private boolean principal = false;
 
-    protected EntityCentreConfig() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public MainMenuItem getMenuItem() {
         return menuItem;
     }

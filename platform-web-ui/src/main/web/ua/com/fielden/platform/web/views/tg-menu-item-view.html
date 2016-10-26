@@ -23,16 +23,16 @@
         <template is="dom-if" if="[[menuItem.view]]" restamp>
             <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
                 <paper-material>
-                    <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                    <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
                 </paper-material>
             </template>
             <template is="dom-if" if="[[_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
-                <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
             </template>
         </template>
         <template is="dom-if" if="[[!menuItem.view]]" on-dom-change="_viewWasDefined" restamp>
             <div class="view">
-                Please specify view for <span>[[menuItem.title]]</span>.
+                Please specify view for <span>[[menuItem.key]]</span>.
             </div>
         </template>
     </template>
@@ -100,13 +100,13 @@
                 },
 
                 _isCentre: function (menuItem) {
-                    return menuItem.view.type === 'centre';
+                    return menuItem.view.viewType === 'centre';
                 },
 
                 _afterLoadListener: function (e, detail, view) {
                     var self = this;
                     if (e.target === this.$$("#elementToLoad")) {
-                        if (this.menuItem.view.type === 'centre') {
+                        if (this.menuItem.view.viewType === 'centre') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
                                 detail._setQueryParams();
                                 if (detail.autoRun || detail.queryPart) {
@@ -115,7 +115,7 @@
                                 self.fire("menu-item-view-loaded", self.menuItem);
                             };
                             detail.retrieve();
-                        } else if (this.menuItem.view.type === 'master') {
+                        } else if (this.menuItem.view.viewType === 'master') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
                                 self.fire("menu-item-view-loaded", self.menuItem);
                             };
@@ -145,7 +145,7 @@
                 },
 
                 _setQueryIfPossible: function (queryPart) {
-                    if (this.menuItem.view.type === "centre" && queryPart) {
+                    if (this.menuItem.view.viewType === "centre" && queryPart) {
                         this.menuItem.view.attrs.queryPart = queryPart;
                     }
                 },

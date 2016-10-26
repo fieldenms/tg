@@ -26,11 +26,11 @@
         </div>
         <div class="flex layout vertical">
             <!--cross-fade animation here-->
-            <template is="dom-if" if="[[!menuItem.menu]]">
+            <template is="dom-if" if="[[!_isMenuPresent(menuItem.menu)]]">
                 <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[menuItem]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view>
             </template>
-            <template is="dom-if" if="[[menuItem.menu]]">
-                <tg-view-with-menu class="fit" id="view" menu-item="[[menuItem]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view-with-menu>
+            <template is="dom-if" if="[[_isMenuPresent(menuItem.menu)]]">
+                <tg-view-with-menu class="fit" id="view" menu-item="[[menuItem]]" can-edit="[[canEdit]]" menu-save-callback="[[menuSaveCallback]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view-with-menu>
             </template>
         </div>
 
@@ -59,7 +59,9 @@
                     value: function () {
                         return {};
                     }
-                }
+                },
+                canEdit: Boolean,
+                menuSaveCallback: Function
             },
 
             behaviors: [
@@ -139,16 +141,21 @@
                 var viewsDesc = [];
                 if (Array.isArray(viewThatWasChanged)) {
                     viewThatWasChanged.forEach(function (element) {
-                        viewsDesc.push(this.menuItem.title + " \u2192 " +  element);
+                        viewsDesc.push(this.menuItem.key + " \u2192 " +  element);
                     }.bind(this));
                     return viewsDesc;
                 }
                 return viewThatWasChanged; 
             },
             
+            _isMenuPresent: function (menu) {
+                return menu && menu.length > 0;
+            },
+            
             _calcStyleForItem: function (menuItem) {
                 return "background-color: " + menuItem.bgColor + ";";
             },
+            
             _calcSvgStyleForItem: function (menuItem) {
                 return "color: " + menuItem.bgColor + "; opacity:0.5;";
             }

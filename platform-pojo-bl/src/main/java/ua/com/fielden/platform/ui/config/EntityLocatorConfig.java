@@ -44,10 +44,6 @@ public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey>
     @MapTo("LOCATOR_TYPE")
     private String locatorType;
 
-    protected EntityLocatorConfig() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     /**
      * A helper setter to convert entity locator to the string value.
      *

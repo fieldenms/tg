@@ -36,6 +36,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.sample.domain.ExportAction;
@@ -115,6 +116,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.resources.webui.AcknowledgeWarningsWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.CentreConfigurationWebUiConfig.CentreConfigActions;
+import ua.com.fielden.platform.web.resources.webui.MenuWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
@@ -349,6 +351,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre3 = createEntityCentre(MiTgPersistentEntityWithProperties3.class, "TgPersistentEntityWithProperties 3", createEntityCentreConfig(false, false, false, true));
         final EntityCentre<TgPersistentEntityWithProperties> entityCentre4 = createEntityCentre(MiTgPersistentEntityWithProperties4.class, "TgPersistentEntityWithProperties 4", createEntityCentreConfig(false, false, false, true));
 
+        final MenuWebUiConfig menuWebUiConfig = new MenuWebUiConfig(injector());
         final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector());
         final UserRoleWebUiConfig userRoleWebUiConfig = new UserRoleWebUiConfig(injector());
 
@@ -714,6 +717,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final EntityMaster<EntityEditAction> entityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
         final EntityMaster<EntityExportAction> entityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
         final EntityMaster<EntityDeleteAction> entityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, injector());
+        final EntityMaster<MenuSaveAction> genericMenuSaveMaster = EntityMaster.noUiFunctionalMaster(MenuSaveAction.class, injector());
 
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
 
@@ -724,6 +728,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
             addMaster(entityEditActionMaster).
             addMaster(entityDeleteActionMaster).
             addMaster(entityExportActionMaster).
+            addMaster(genericMenuSaveMaster).
             addMaster(new EntityMaster<EntityWithInteger>(EntityWithInteger.class, null, injector())). // efs(EntityWithInteger.class).with("prop")
             addMaster(entityMaster).//
             addMaster(functionalMasterWithEmbeddedPersistentMaster).
@@ -738,6 +743,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgCollectionalSerialisationParentProducer.class,
                     masterConfigForCollSerialisationTest,
                     injector())).
+            addMaster(menuWebUiConfig.master).
             addMaster(userWebUiConfig.master).
             addMaster(userWebUiConfig.rolesUpdater).
             addMaster(userRoleWebUiConfig.master).
@@ -918,8 +924,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .captionBgColor("#D35F5F")
                 .view(null)
                 .done()
-                .setLayoutFor(Device.DESKTOP, null, "[[[{rowspan: 2,colspan: 2}], [], [], [{colspan: 2}]],[[{rowspan: 2,colspan: 2}], [], []],[[], [], [{colspan: 2}]]]")
-                .setLayoutFor(Device.TABLET, null, "[[[{rowspan: 2,colspan: 2}], [], []],[[{rowspan: 2,colspan: 2}]],[[], []],[[{rowspan: 2,colspan: 2}], [], []],[[{colspan: 2}]]]")
+                .setLayoutFor(Device.DESKTOP, null, "[[[{\"rowspan\": 2,\"colspan\": 2}], [], [], [{\"colspan\": 2}]],[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[], [], [{\"colspan\": 2}]]]")
+                .setLayoutFor(Device.TABLET, null, "[[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[{\"rowspan\": 2,\"colspan\": 2}]],[[], []],[[{\"rowspan\": 2,\"colspan\": 2}], [], []],[[{\"colspan\": 2}]]]")
                 .setLayoutFor(Device.MOBILE, null, "[[[], []],[[], []],[[], []],[[], []],[[], []]]").minCellWidth(100).minCellHeight(148).done();
 
     }

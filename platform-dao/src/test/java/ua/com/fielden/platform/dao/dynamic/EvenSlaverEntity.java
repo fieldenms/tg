@@ -24,9 +24,6 @@ import ua.com.fielden.platform.types.Money;
 public class EvenSlaverEntity extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
 
-    protected EvenSlaverEntity() {
-    }
-
     @IsProperty
     @CompositeKeyMember(1)
     @MapTo("SLAVE_ENTITY_PROP")
