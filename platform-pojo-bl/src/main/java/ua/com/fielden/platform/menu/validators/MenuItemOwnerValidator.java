@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.menu.validators;
 
+import static java.lang.String.*;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
@@ -18,13 +19,7 @@ public class MenuItemOwnerValidator implements IBeforeChangeEventHandler<User> {
 
     @Override
     public Result handle(final MetaProperty<User> property, final User newValue, final User oldValue, final Set<Annotation> mutatorAnnotations) {
-        if (newValue == null) {
-            return Result.failure(newValue, "The owner shouldn't be null.");
-        }
-        if (newValue != null && !newValue.isBase()) {
-            return Result.failure(newValue, "Only base users are allowed to be used for a base configuration.");
-        }
-        return Result.successful(newValue);
+        return newValue.isBase() ? Result.successful(newValue) : Result.failure(format("User [%s] is not a base user.", newValue));
     }
 
 }

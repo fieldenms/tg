@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.menu;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -11,19 +10,31 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 public class WebMenuItemTest extends AbstractDaoTestCase {
 
     @Test
-    public void only_base_user_can_be_used_for_web_menu_items() {
+    public void only_base_user_can_be_an_owner_of_web_menu_item_visibility_configuration() {
         final User owner = co(User.class).findByKey("USER_1");
         final User nonBaseOwner = co(User.class).findByKey("USER_2");
 
-        final WebMenuItemInvisibility menuItemInvisibility = new_(WebMenuItemInvisibility.class).setMenuItemUri("item1").setOwner(owner);
-        assertTrue("Menu item should be valid because owner is base user.", menuItemInvisibility.isValid().isSuccessful());
+        final WebMenuItemInvisibility menuItem = new_(WebMenuItemInvisibility.class).setMenuItemUri("item1");
+        menuItem.setOwner(nonBaseOwner);
+        assertFalse(menuItem.isValid().isSuccessful());
+        assertEquals("User [USER_2] is not a base user.", menuItem.isValid().getMessage());
 
-        final WebMenuItemInvisibility menuItemWithNonBaseUser = new_(WebMenuItemInvisibility.class).setMenuItemUri("item1").setOwner(nonBaseOwner);
-        assertFalse("Menu item should be invalid because owner is not base user.", menuItemWithNonBaseUser.isValid().isSuccessful());
+        menuItem.setOwner(owner);
+        assertTrue(menuItem.isValid().isSuccessful());
+        
+        co(WebMenuItemInvisibility.class).save(menuItem);
+    }
+    
+    @Test
+    public void every_developer_needs_to_know_that_required_and_key_member_properties_cannot_be_assigned_to_null_thus_no_need_check_for_nullness_in_BCE_handlers_for_such_properties() {
+        final User owner = co(User.class).findByKey("USER_1");
 
-        final WebMenuItemInvisibility menuItemWithNullOwner = new_(WebMenuItemInvisibility.class).setMenuItemUri("item1").setOwner(null);
-        assertFalse("Menu item should be invalid because owner is null.", menuItemWithNullOwner.isValid().isSuccessful());
-
+        final WebMenuItemInvisibility menuItem = new_(WebMenuItemInvisibility.class).setMenuItemUri("item1").setOwner(owner);
+        assertTrue(menuItem.isValid().isSuccessful());
+        
+        menuItem.setOwner(null);
+        assertFalse(menuItem.isValid().isSuccessful());
+        assertEquals("Required property [User] is not specified for entity [Web Menu Item Invisibility].", menuItem.isValid().getMessage());
     }
 
     @Override
