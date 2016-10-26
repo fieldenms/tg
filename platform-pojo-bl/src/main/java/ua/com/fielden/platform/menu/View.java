@@ -36,7 +36,6 @@ public class View extends AbstractEntity<String> {
     private AbstractView attrs;
 
     @Observable
-    @EntityExists(AbstractView.class)
     public View setAttrs(final AbstractView attrs) {
         this.attrs = attrs;
         return this;
