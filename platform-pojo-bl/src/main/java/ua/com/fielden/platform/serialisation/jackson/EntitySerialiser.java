@@ -22,11 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.esotericsoftware.kryo.Context;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -49,6 +45,9 @@ import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDes
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
+
+import com.esotericsoftware.kryo.Context;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Serialises / deserialises descendants of {@link AbstractEntity}.
@@ -107,9 +106,6 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
 
         if (IContinuationData.class.isAssignableFrom(type)) {
             entityTypeInfo.set_continuation(true);
-        }
-        if (AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(type)) {
-            entityTypeInfo.set_collFuncEntity(true);
         }
 
         // let's inform the client of whether value descriptions should be displayed in editors of this type

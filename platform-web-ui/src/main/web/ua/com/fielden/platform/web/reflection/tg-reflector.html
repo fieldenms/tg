@@ -615,14 +615,6 @@
         }
         
         /**
-         * Returns 'true' if the entity type represents collectional functional entity (collectional editor, centre configuration updater etc.) -- descendant of AbstractFunctionalEntityForCollectionModification.
-         *
-         */
-        EntityType.prototype.isCollectionalFunctionalEntity = function () {
-            return typeof this['_collFuncEntity'] === 'undefined' ? false : this['_collFuncEntity'];
-        }
-        
-        /**
          * Returns 'true' if editors for this entity type should display description of its values when not focused, 'false' otherwise.
          *
          */

@@ -150,14 +150,10 @@
                 
                 /**
                  * Returns indication whether SAVE button should be enabled for the entity (AND canClose should be false). Returns true in following cases:
-                 * 
-                 * not collectional functional entity:
-                 * 1) the entity is not persistent (SAVE is enabled always, could not close, only through SAVE / CANCEL buttons);
-                 * 2) the entity is persistent but is not persisted yet (SAVE is enabled always, could not close, only through SAVE / CANCEL buttons);
-                 * 3) the entity is persistent, is persisted but and it is modified (SAVE is enabled, could not close, only through SAVE / CANCEL buttons);
                  *
-                 * collectional functional entity:
-                 * 4) modified (SAVE is enabled, could not close, only through SAVE / CANCEL buttons);
+                 * 1) the entity is not persistent (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons);
+                 * 2) the entity is persistent but is not persisted yet (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons);
+                 * 3) the entity is persistent, is persisted but and it is modified (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons).
                  *
                  * Please, note that this property (analogously to _bindingEntityModified) recomputes and caches manually strictly when _currBindingEntity and _originalBindingEntity changes (_postEntityReceived method).
                  */
@@ -766,8 +762,7 @@
                 
                 self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
                 console.debug('_bindingEntityModified = ', self._bindingEntityModified);
-                self._bindingEntityNotPersistentOrNotPersistedOrModified = self._currBindingEntity.type().isCollectionalFunctionalEntity() ? self._bindingEntityModified :
-                                                                           !self._currBindingEntity.type().isPersistent() ||
+                self._bindingEntityNotPersistentOrNotPersistedOrModified = !self._currBindingEntity.type().isPersistent() || 
                                                                            !self._currBindingEntity.isPersisted()         ||
                                                                            self._bindingEntityModified;
                 console.debug('_bindingEntityNotPersistentOrNotPersistedOrModified = ', self._bindingEntityNotPersistentOrNotPersistedOrModified);
