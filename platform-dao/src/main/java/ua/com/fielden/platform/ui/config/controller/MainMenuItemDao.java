@@ -18,18 +18,18 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 
 /**
- * DAO implementation of {@link IMainMenuItemController}.
+ * DAO implementation of {@link IMainMenuItem}.
  * 
  * @author TG Team
  * 
  */
 @EntityType(MainMenuItem.class)
-public class MainMenuItemControllerDao extends CommonEntityDao<MainMenuItem> implements IMainMenuItemController {
+public class MainMenuItemDao extends CommonEntityDao<MainMenuItem> implements IMainMenuItem {
     @Inject
-    protected MainMenuItemControllerDao(final IFilter filter) {
+    protected MainMenuItemDao(final IFilter filter) {
         super(filter);
     }
 

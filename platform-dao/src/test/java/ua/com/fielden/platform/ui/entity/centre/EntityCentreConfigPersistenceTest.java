@@ -18,9 +18,9 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
+import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
@@ -30,7 +30,7 @@ import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
  */
 public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
     private final IEntityCentreConfig dao = getInstance(EntityCentreConfigDao.class);
-    private final IMainMenuItemController menuDao = getInstance(MainMenuItemControllerDao.class);
+    private final IMainMenuItem menuDao = getInstance(MainMenuItemDao.class);
     private final IUser userDao = getInstance(UserDao.class);
 
     @Test

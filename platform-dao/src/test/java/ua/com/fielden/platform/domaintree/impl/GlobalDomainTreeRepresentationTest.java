@@ -32,7 +32,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 
 /**
  * This test case ensures correct persistence and retrieval of entities with properties of type byte[].
@@ -59,7 +59,7 @@ public class GlobalDomainTreeRepresentationTest extends AbstractDaoTestCase {
     }
 
     private GlobalDomainTreeManager createGlobalDomainTreeManager(final String userName) {
-        return new GlobalDomainTreeManager(serialiser, serialiser0, entityFactory, createUserProvider(userName), getInstance(IMainMenuItemController.class), getInstance(IEntityCentreConfig.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IEntityMasterConfig.class), getInstance(IEntityLocatorConfig.class)) {
+        return new GlobalDomainTreeManager(serialiser, serialiser0, entityFactory, createUserProvider(userName), getInstance(IMainMenuItem.class), getInstance(IEntityCentreConfig.class), getInstance(IEntityCentreAnalysisConfig.class), getInstance(IEntityMasterConfig.class), getInstance(IEntityLocatorConfig.class)) {
             @Override
             protected void validateMenuItemType(final Class<?> menuItemType) { // no menu item validation due to non-existence of MiWithConfigurationSupport at platform-dao (it exists only on platform-ui level)
             }
