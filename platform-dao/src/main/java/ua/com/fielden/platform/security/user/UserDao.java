@@ -28,7 +28,7 @@ import com.nulabinc.zxcvbn.Zxcvbn;
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -118,7 +118,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public List<? extends UserRole> findAllUserRoles() {
-        return this.<IUserRoleDao, UserRole>co(UserRole.class).findAll();
+        return this.<IUserRole, UserRole>co(UserRole.class).findAll();
     }
 
     @Override

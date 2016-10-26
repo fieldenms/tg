@@ -10,7 +10,7 @@ import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.matcher.IValueMatcherFactory;
 import ua.com.fielden.platform.entity.matcher.ValueMatcherFactory;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
@@ -117,7 +117,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         //	bind(IWorkorderableDao.class).to(WorkorderableDao.class);
         //	bind(IAdviceDao.class).to(AdviceDao.class);
         //	bind(IRotableClassDao.class).to(RotableClassDao.class);
-        bind(IUserRoleDao.class).to(UserRoleDao.class);
+        bind(IUserRole.class).to(UserRoleDao.class);
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);
 
