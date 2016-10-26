@@ -142,7 +142,6 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
             return property;
         }
 
-        @EntityExists(EntityWithMoney.class)
         @Observable
         public void setProperty(final EntityWithMoney property) {
             this.property = property;
@@ -152,7 +151,6 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
             return propertyTwo;
         }
 
-        @EntityExists(EntityWithDynamicCompositeKey.class)
         @Observable
         public void setPropertyTwo(final EntityWithDynamicCompositeKey property) {
             this.propertyTwo = property;

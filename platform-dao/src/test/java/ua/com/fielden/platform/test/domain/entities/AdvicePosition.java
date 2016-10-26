@@ -83,7 +83,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
     }
 
     @Final
-    @EntityExists(Rotable.class)
     @DomainValidation
     @Observable
     public AdvicePosition setRotable(final Rotable rotable) {
@@ -96,7 +95,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
     }
 
     @Final
-    @EntityExists(Workshop.class)
     @Observable
     public AdvicePosition setSendingWorkshop(final Workshop sendingWorkshop) {
         this.sendingWorkshop = sendingWorkshop;
@@ -107,7 +105,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return receivingWorkshop;
     }
 
-    @EntityExists(Workshop.class)
     @Observable
     public AdvicePosition setReceivingWorkshop(final Workshop receivingWorkshop) throws Result {
         // TODO the isReceived() should be moved to a domain validator
