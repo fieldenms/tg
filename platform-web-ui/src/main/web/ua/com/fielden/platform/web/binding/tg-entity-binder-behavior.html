@@ -292,14 +292,33 @@
                 _validationPromise: {
                     type: Object,
                     observer: '_validationPromiseChanged'
+                },
+                
+                /**
+                 * Returns true in case where there exist some properties which were edited (but not yet committed) by tg-editor-behavior.
+                 */
+                _editedPropsExist: {
+                    type: Boolean
                 }
     		},
+    		
+    		observers: [
+    		    '_editedPropsChanged(_currBindingEntity.@editedProps)',
+    		    '_modificationsChanged(_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist)'
+    		],
     		
     		_validationPromiseChanged: function (newValidationPromise, oldValidationPromise) {
     		},
     		_bindingEntityModifiedChanged: function (new_bindingEntityModified, old_bindingEntityModified) {
     		},
     		_bindingEntityNotPersistentOrNotPersistedOrModifiedChanged: function (newValue, oldValue) {
+    		},
+    		_modificationsChanged: function (_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist) {
+    		},
+    		
+    		_editedPropsChanged: function (editedProps) {
+    		    this._editedPropsExist = typeof editedProps === 'undefined' ? false : Object.keys(editedProps).length !== 0;
+    		    console.debug('tg-entity-binder-behavior: _editedPropsChanged: editedProps = ', editedProps, '_editedPropsExist = ', this._editedPropsExist);
     		},
     		
     		/**
@@ -319,6 +338,7 @@
                 
                 self._bindingEntityModified = false;
                 self._bindingEntityNotPersistentOrNotPersistedOrModified = false;
+                self._editedPropsExist = false;
                 self._resetState();
                 
                 self._createModifiedPropertiesHolder = (function () {
@@ -755,6 +775,7 @@
                 // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
                 var oldCurrBindingEntity = self._currBindingEntity;
                 self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
+                this.set('_currBindingEntity.@editedProps', {}); // the set of properties which were edited (aka _editingValue not equal to _commValue) after appearance of new entity
                 if (self._currBindingEntity != null && oldCurrBindingEntity == null) {
                     self.fire('binding-entity-appeared', self._currBindingEntity);
                 }
