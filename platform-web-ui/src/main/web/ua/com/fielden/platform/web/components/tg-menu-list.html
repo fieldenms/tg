@@ -1,0 +1,100 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
+<link rel="import" href="/resources/polymer/iron-selector/iron-selector.html">
+<link rel="import" href="/resources/polymer/iron-fit-behavior/iron-fit-behavior.html">
+
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-item/paper-item.html">
+
+<link rel="import" href="/resources/components/lodash-lib.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
+<link rel="import" href="/resources/editors/tg-dom-stamper.html">
+
+<dom-module id="tg-menu-list">
+
+    <style>
+        .primary {
+            font-size: 10pt;
+            padding-bottom: 3px;
+        }
+        .secondary {
+            font-size: 8pt;
+        }
+        .dim {
+            color: gray;
+        }
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+
+    <template>
+        <iron-selector id="selector">
+            <!-- begin of dom-repeat -->
+            <template is="dom-repeat" items="[[_flatMenu]]" as="menuItem">
+                <div tooltip-text$="[[_calcItemTooltip(menuItem)]]">
+                    <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(menuItem, 'title', _phraseToSearch)]]"></tg-dom-stamper>
+                    <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(menuItem, 'decriptin', _phraseToSearch)]]"></tg-dom-stamper>
+                </div>
+            </template>
+            <!-- end of dom-repeat -->
+        </iron-selector>
+    </template>
+
+</dom-module>
+
+<script>
+    (function () {
+        var flattenMenu = function (menu, parent) {
+            return menu.reduce(function (reduced, menuItem) {
+                return reduced.concat(createMenuEntry(menuItem, parent));
+            }, []);
+        };
+        var createMenuEntry = function(menuItem, parent) {
+            var res = [{
+                title: menuItem.key,
+                description : menuItem.desc,
+                parent: parent
+            }];
+            if (menuItem.menu && menuItem.menu.length > 0) {
+                res = res.concat(flattenMenu(menuItem.menu, menuItem));
+            }
+            return res;
+        };
+        Polymer({
+            is: 'tg-menu-list',
+
+            behaviors: [Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgHighlightingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+
+            properties: {
+                /**
+                 * The menu to flatten. This menu should contain 'key' and 'desc' proprties key for title and desc for description of menu item also
+                 */
+                menu: {
+                    type: Array,
+                    observer: "_menuChanged"
+                },
+                /**
+                 * An array of flattened menu item hierarchical list
+                 */
+                _flatMenu: Array,
+
+
+            },
+
+            ready: function () {
+                this.noAutoFocus = true;
+                this.alwaysOnTop = true;
+            },
+
+            _menuChanged: function (newValue, oldValue) {
+                this._flatMenu = flattenMenu(newValue);
+            }
+        });
+    })();
+</script>
