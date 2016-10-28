@@ -87,6 +87,13 @@
                 },
                 
                 /**
+                 * The entity that contains original binding values. This should be used to identify whether _editingValue is modified from original _editingValue during editing.
+                 */
+                originalEntity: {
+                	type: Object
+                },
+                
+                /**
                  * This published property specifies to what property this editor should be bound.
                  */
                 propertyName: {
@@ -325,7 +332,7 @@
             
             observers: [
             	'_recordDefinition(entity, propertyName, _editorValidationMsg)',
-            	'_identifyModification(_editingValue, _commValue)',
+            	'_identifyModification(_editingValue)',
     		    '_editedPropsChanged(entity.@editedProps)'
 			],
 
@@ -347,8 +354,10 @@
                 }
             },
             
-            _identifyModification: function (_editingValue, _commValue) {
-                console.debug('_identifyModification: editedProps _editingValue = ', _editingValue, ' _commValue = ', _commValue);
+            _identifyModification: function (_editingValue) {
+                var _originalEditingValue = this.originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(this.originalEntity, this.propertyName)) : _editingValue;
+                
+                console.debug('_identifyModification: editedProps _editingValue = ', _editingValue, ' original _editingValue = ', _originalEditingValue);
                 if (this.reflector().isEntity(this.entity)) {
                     var prevEditedProps = this.entity['@editedProps'];
                     var newEditedProps = {};
@@ -357,7 +366,7 @@
                             newEditedProps[prop] = prevEditedProps[prop];
                         }
                     }
-                    if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
+                    if (!this.reflector().equalsEx(this._editingValue, _originalEditingValue)) {
                         newEditedProps[this.propertyName] = true;
                     } else {
                         delete newEditedProps[this.propertyName];
@@ -368,7 +377,7 @@
             },
             
     		_editedPropsChanged: function (editedProps) {
-    		    console.debug('tg-editor-behavior: _editedPropsChanged: editedProps = ', editedProps);
+    		    console.debug('tg-editor-behavior [', this.propertyName, ']: _editedPropsChanged: editedProps = ', editedProps);
     		},
             
             /**

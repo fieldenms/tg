@@ -549,7 +549,7 @@
                 this.async(function () {
                     var saveButton = self.$$('tg-action[role="save"]');
                     if (saveButton) {
-                        saveButton._innerEnabled = _bindingEntityNotPersistentOrNotPersistedOrModified || _editedPropsExist;
+                        saveButton._innerEnabled = _editedPropsExist || _bindingEntityNotPersistentOrNotPersistedOrModified;
                     }
                 }, 1);
             },
@@ -764,23 +764,21 @@
                 }
 
                 if (this.classList.contains('canLeave')) {
-                    this.async((function () {
-                        // The master can be left in case where there is no modifications and the entity is not new and the entity is not persistent. 
-                        // Refer to _bindingEntityNotPersistentOrNotPersistedOrModified property of tg-entity-binder-behavior for more information.
-                        if (this._bindingEntityNotPersistentOrNotPersistedOrModified === true || this._editedPropsExist === true) {
-                            if (this._currBindingEntity.id === null) {
-                                return {
-                                    isNew: true,
-                                    msg: "A new entity is being created. Please save your changes."
-                                };
-                            } else {
-                                return {
-                                    isNew: undefined, // this could be not persistent entity (new) or persistent persisted entity (not new)
-                                    msg: "Please save or cancel your changes."
-                                };
-                            }
+                    // The master can be left in case where there is no modifications and the entity is not new and the entity is not persistent. 
+                    // Refer to _bindingEntityNotPersistentOrNotPersistedOrModified property of tg-entity-binder-behavior for more information.
+                    if (this._editedPropsExist || this._bindingEntityNotPersistentOrNotPersistedOrModified) {
+                        if (this._currBindingEntity.id === null) {
+                            return {
+                                isNew: true,
+                                msg: "A new entity is being created. Please save your changes."
+                            };
+                        } else {
+                            return {
+                                isNew: undefined, // this could be not persistent entity (new) or persistent persisted entity (not new)
+                                msg: "Please save or cancel your changes."
+                            };
                         }
-                    }).bind(this), 1000);
+                    }
                 }
                 return undefined;
             },

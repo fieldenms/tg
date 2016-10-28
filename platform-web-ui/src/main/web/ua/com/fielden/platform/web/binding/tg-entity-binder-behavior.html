@@ -775,7 +775,6 @@
                 // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
                 var oldCurrBindingEntity = self._currBindingEntity;
                 self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
-                this.set('_currBindingEntity.@editedProps', {}); // the set of properties which were edited (aka _editingValue not equal to _commValue) after appearance of new entity
                 if (self._currBindingEntity != null && oldCurrBindingEntity == null) {
                     self.fire('binding-entity-appeared', self._currBindingEntity);
                 }
