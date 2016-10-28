@@ -1,0 +1,78 @@
+<link rel="import" href="/resources/polymer/polymer/polymer.html">
+
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
+
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+
+<link rel="import" href="/resources/components/tg-menu-list.html">
+
+
+<dom-module id="tg-search-menu">
+
+    <style>
+    </style>
+
+    <template>
+        <input id="input" is="iron-input" type="text" bind-value="{{_menuToSearch}}" on-blur="_onBlur" on-focus="_onFocus">
+        <tg-menu-list id="menuList" menu="[[menu]]" phrase-to-highlight="[[_menuToSearch]]" on-iron-overlay-closed="_menuListClosed"></tg-menu-list>
+    </template>
+
+</dom-module>
+
+<script>
+    (function () {
+        Polymer({
+            is: 'tg-search-menu',
+
+            properties: {
+                /**
+                 * The menu to flatten. This menu should contain 'key' and 'desc' proprties key for title and desc for description of menu item also
+                 */
+                menu: Array
+            },
+
+            _onFocus: function () {
+                var self = this;
+                var menuList = self.$.menuList;
+
+                // There is a need to check whether element already exists before appending it to document.body.
+                // Under Microsoft Edge appending the same element more than once blows up with exception HierarchyRequestError.
+                var elementExists = Polymer.dom(document.body).querySelector("#menuList");
+                if (!elementExists) {
+                    Polymer.dom(document.body).appendChild(menuList);
+                    Polymer.dom.flush();
+                }
+                var self = this;
+                this.async(function () {
+                    if (!menuList.opened) {
+                        menuList.open();
+                    }
+                    menuList.notifyResize();
+                }, 100);
+            },
+
+            _onBlur: function (e) {
+                // check whether relatedTarget has anything to do with this.$.result
+                // if it is then there is no need to cancel the overlay, which is this.$.result
+                var parent = e.relatedTarget;
+                var menuList = this.$.menuList;
+                while (parent !== null && parent !== menuList) {
+                    parent = parent.parentElement;
+                }
+                if (menuList.opened && parent !== menuList) {
+                    menuList.close(e);
+                }
+            },
+
+            _menuListClosed: function () {
+                var menuList = this.$.menuList;
+                var elementExists = Polymer.dom(document.body).querySelector("#menuList");
+                if (elementExists) {
+                	Polymer.dom(document.body).removeChild(menuList);
+                	Polymer.dom.flush();
+                }
+            }
+        });
+    })();
+</script>

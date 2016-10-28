@@ -9,13 +9,36 @@
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
 
 <link rel="import" href="/resources/components/lodash-lib.html">
-<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
 <link rel="import" href="/resources/editors/tg-dom-stamper.html">
 
 <dom-module id="tg-menu-list">
 
     <style>
+        :host {
+            display: block;
+            background: white;
+            overflow: auto; /* this is to make host scorable when needed */
+            box-shadow: rgba(0, 0, 0, 0.24) -2.3408942051048403px 5.524510324047423px 12.090680100755666px 0px, rgba(0, 0, 0, 0.12) 0px 0px 12px 0px;
+        }
+        .menu-item {
+        	@apply(--layout-vertical);
+        	@apply(--layout-start);
+            padding: 6px;
+            margin: 0px;
+            border-top: 1px solid #e3e3e3;
+            height: calc(18pt+9px);/*This should be revised and be specified in a more proper way*/
+            min-width: 100px; 
+        }
+        .menu-item:hover {
+            cursor: pointer;
+            background: var(--paper-blue-50);
+            color: var(--paper-blue-500);
+        }
+        .menu-item.iron-selected {
+            background: var(--paper-blue-500);
+            color: var(--paper-blue-50);
+        }
         .primary {
             font-size: 10pt;
             padding-bottom: 3px;
@@ -37,9 +60,9 @@
         <iron-selector id="selector">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_flatMenu]]" as="menuItem">
-                <div tooltip-text$="[[_calcItemTooltip(menuItem)]]">
-                    <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(menuItem, 'title', _phraseToSearch)]]"></tg-dom-stamper>
-                    <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(menuItem, 'decriptin', _phraseToSearch)]]"></tg-dom-stamper>
+                <div class="menu-item layout vertical">
+                    <tg-dom-stamper class="primary truncate" dom-text="[[_highlighteValue(menuItem, 'title', phraseToHighlight)]]"></tg-dom-stamper>
+                    <tg-dom-stamper class="secondary dim truncate" dom-text="[[_highlighteValue(menuItem, 'description', phraseToHighlight)]]"></tg-dom-stamper>
                 </div>
             </template>
             <!-- end of dom-repeat -->
@@ -55,10 +78,10 @@
                 return reduced.concat(createMenuEntry(menuItem, parent));
             }, []);
         };
-        var createMenuEntry = function(menuItem, parent) {
+        var createMenuEntry = function (menuItem, parent) {
             var res = [{
                 title: menuItem.key,
-                description : menuItem.desc,
+                description: menuItem.desc,
                 parent: parent
             }];
             if (menuItem.menu && menuItem.menu.length > 0) {
@@ -69,7 +92,7 @@
         Polymer({
             is: 'tg-menu-list',
 
-            behaviors: [Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgHighlightingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+            behaviors: [Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgHighlightingBehavior],
 
             properties: {
                 /**
@@ -80,11 +103,16 @@
                     observer: "_menuChanged"
                 },
                 /**
+                 * The phrase to search among menu list.
+                 */
+                phraseToHighlight: {
+                    type: String,
+                    value: ""
+                },
+                /**
                  * An array of flattened menu item hierarchical list
                  */
                 _flatMenu: Array,
-
-
             },
 
             ready: function () {
@@ -94,6 +122,17 @@
 
             _menuChanged: function (newValue, oldValue) {
                 this._flatMenu = flattenMenu(newValue);
+            },
+
+            /**
+             * Returns the highlighted text representation of the menu item to be shown in title or description.
+             */
+            _highlighteValue: function (menuItem, propName, phraseToHighlight) {
+                return phraseToHighlight === '' ?
+                    menuItem[propName] :
+                    this._matchedParts(menuItem[propName], phraseToHighlight).reduce(function (html, part) {
+                        return html + (part.matched ? '<span style="background-color: #ffff46;">' + part.part + '</span>' : part.part);
+                    }, "");
             }
         });
     })();
