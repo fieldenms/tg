@@ -103,6 +103,11 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
     public int batchDelete(final Collection<Long> entitiesIds) {
         return defaultBatchDelete(entitiesIds);
     }
+    
+    @Override
+    public int batchDelete(final EntityResultQueryModel<TgPersistentEntityWithProperties> model) {
+        return defaultBatchDelete(model);
+    }
 
     @Override
     @SessionRequired

@@ -44,7 +44,7 @@ public class TestRenderingCustomiser implements IRenderingCustomiser<AbstractEnt
             backgroundStyles.put("background-color", "palegreen");
             if (propName.equals("integerProp")) {
                 valueStyles.put("color", "blue");
-                final int value = ((Integer) entity.get("integerProp")).intValue();
+                final int value = entity.get("integerProp") == null ? 999 : ((Integer) entity.get("integerProp")).intValue();
                 if (value > 60 && value < 100) {
                     valueStyles.put("visibility", "hidden");
                 }

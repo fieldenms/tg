@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,18 +21,25 @@ import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.CalculatedProperty;
-import ua.com.fielden.platform.domaintree.impl.GlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.sample.domain.ITgFetchProviderTestEntity;
+import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
+import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
+import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
+import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
+import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -36,8 +47,8 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
-import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.EntityCentre.ICentreGenerator;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -199,7 +210,48 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
         }
         return null;
     }
+    
+    
+    private static class TgPersistentEntityWithPropertiesCentreGenerator implements ICentreGenerator<TgPersistentEntityWithProperties> {
+        private final ITgPersistentEntityWithProperties co;
+        private final ITgPersistentCompositeEntity coComposite;
+        private final ITgFetchProviderTestEntity coTgFetchProviderTestEntity;
+        
+        @Inject
+        public TgPersistentEntityWithPropertiesCentreGenerator(final ITgPersistentEntityWithProperties co, final ITgPersistentCompositeEntity coComposite, final ITgFetchProviderTestEntity coTgFetchProviderTestEntity) {
+            this.co = co;
+            this.coComposite = coComposite;
+            this.coTgFetchProviderTestEntity = coTgFetchProviderTestEntity;
+        }
+        
+        @Override
+        public void generate(final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> centreContext) {
+            System.out.println("GENERATE " + centreContext);
+            
+            // delete all data:
+            final List<TgPersistentEntityWithProperties> withCompositeProps = co.getAllEntities(from(select(TgPersistentEntityWithProperties.class).where().prop("compositeProp").isNotNull().model()).with(fetchAll(TgPersistentEntityWithProperties.class)).model());
+            for (final TgPersistentEntityWithProperties entity: withCompositeProps) {
+                entity.setCompositeProp(null);
+                final TgPersistentEntityWithProperties saved = co.save(entity);
+                System.out.println("saved.getCompositeProp() = " + (saved.getCompositeProp() == null ? "null" : saved.getCompositeProp().getId()));
+            }
+            coTgFetchProviderTestEntity.batchDelete(select(TgFetchProviderTestEntity.class).model());
+            coComposite.batchDelete(select(TgPersistentCompositeEntity.class).model());
+            co.batchDelete(select(TgPersistentEntityWithProperties.class).model());
+            
+            // persist generated data
+            if (centreContext.isPresent() && centreContext.get().getSelectionCrit() != null) {
+                final String user = centreContext.get().getSelectionCrit() != null ? centreContext.get().getSelectionCrit().get("tgPersistentEntityWithProperties_userParam.key") : "UNKNOWN_USER";
+                final TgPersistentEntityWithProperties newEntity = centreContext.get().getSelectionCrit().getEntityFactory().newByKey(TgPersistentEntityWithProperties.class, user).setRequiredValidatedProp(30);
+                co.save(newEntity);
+//                
+//                final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setRequiredValidatedProp(30)
+//                        .setDesc("Description for entity with key 1. This is a relatively long description to demonstrate how well does is behave during value autocompletion."));
 
+            }
+        }
+    }
+    
     /**
      * Handles PUT request resulting from tg-selection-criteria <code>run()</code> method.
      */
@@ -232,22 +284,29 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
             final M previouslyRunCriteriaEntity = CentreResourceUtils.<T, M> createCriteriaValidationPrototype(miType, previouslyRunCentre, critGenerator, 0L, gdtm);
-
+            
+            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext = createQueryEnhancerAndContext(
+                    webUiConfig,
+                    companionFinder,
+                    serverGdtm,
+                    userProvider,
+                    critGenerator,
+                    entityFactory,
+                    centreContextHolder,
+                    centre.getQueryEnhancerConfig(),
+                    previouslyRunCriteriaEntity);
+            
+            final Optional<ICentreGenerator<T>> centreGenerator = Optional.of(centre.createCentreGeneratorInstance((Class<? extends ICentreGenerator<T>>) TgPersistentEntityWithPropertiesCentreGenerator.class));
+            if (isRunning && centreGenerator.isPresent() && queryEnhancerAndContext.isPresent()) {
+                centreGenerator.get().generate(queryEnhancerAndContext.get().getValue());
+            }
+            
             final Pair<Map<String, Object>, ArrayList<?>> pair =
                     CentreResourceUtils.<T, M> createCriteriaMetaValuesCustomObjectWithResult(
                             customObject,
                             previouslyRunCriteriaEntity,
                             centre.getAdditionalFetchProvider(),
-                            createQueryEnhancerAndContext(
-                                    webUiConfig,
-                                    companionFinder,
-                                    serverGdtm,
-                                    userProvider,
-                                    critGenerator,
-                                    entityFactory,
-                                    centreContextHolder,
-                                    centre.getQueryEnhancerConfig(),
-                                    previouslyRunCriteriaEntity));
+                            queryEnhancerAndContext);
             if (isRunning) {
                 pair.getKey().put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)));
                 pair.getKey().put("metaValues", CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)));

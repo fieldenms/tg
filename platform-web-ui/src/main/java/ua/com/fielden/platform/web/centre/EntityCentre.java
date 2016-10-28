@@ -1301,4 +1301,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             return Optional.empty();
         }
     }
+    
+    public static interface ICentreGenerator<T extends AbstractEntity<?>> {
+        void generate(final Optional<CentreContext<T, ?>> centreContext);
+    }
+    
+    public ICentreGenerator<T> createCentreGeneratorInstance(final Class<? extends ICentreGenerator<T>> centreGeneratorType) {
+        return injector.getInstance(centreGeneratorType);
+    }
 }
