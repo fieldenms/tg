@@ -355,10 +355,8 @@
             },
             
             _identifyModification: function (_editingValue) {
-                var _originalEditingValue = this.originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(this.originalEntity, this.propertyName)) : _editingValue;
-                
-                console.debug('_identifyModification: editedProps _editingValue = ', _editingValue, ' original _editingValue = ', _originalEditingValue);
                 if (this.reflector().isEntity(this.entity)) {
+                    var _originalEditingValue = this.originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(this.originalEntity, this.propertyName)) : _editingValue;
                     var prevEditedProps = this.entity['@editedProps'];
                     var newEditedProps = {};
                     for (var prop in prevEditedProps) {
@@ -372,12 +370,10 @@
                         delete newEditedProps[this.propertyName];
                     }
                     this.set('entity.@editedProps', newEditedProps);
-                    console.debug('_identifyModification: editedProps = ', this.entity['@editedProps']);
                 }
             },
             
     		_editedPropsChanged: function (editedProps) {
-    		    console.debug('tg-editor-behavior [', this.propertyName, ']: _editedPropsChanged: editedProps = ', editedProps);
     		},
             
             /**
