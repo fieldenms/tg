@@ -302,6 +302,24 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
 //                centreGenerator.get().generate(queryEnhancerAndContext.get().getValue());
 //            }
             
+            ///////////////////////////////////////////////
+            // #703 pseudocode:
+            ///////////////////////////////////////////////
+            // if the run() invocation warrants data generation (e.g. it has nothing to do with sorting)
+            // then for an entity centre configuration check if a generator was provided
+            // if yes, create a generator instance using an injector
+            // delete any previously generated for the current user data using a companion for an associated with the generator entity type
+            // run the generator
+            // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
+            // otherwise, proceed with the request handling further to actually query the data
+            // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
+            //-----------------------------------------------
+            // There could be cases where the generated data and the queried data would have different types.
+            // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
+            // In such cases, it is unpossible to enhance the final query with a user related condition automatically.
+            // This should be the responsibility of the application developer to properly construct a subquery that is based on the generated data.
+            ///////////////////////////////////////////////
+            
             final Pair<Map<String, Object>, ArrayList<?>> pair =
                     CentreResourceUtils.<T, M> createCriteriaMetaValuesCustomObjectWithResult(
                             customObject,
