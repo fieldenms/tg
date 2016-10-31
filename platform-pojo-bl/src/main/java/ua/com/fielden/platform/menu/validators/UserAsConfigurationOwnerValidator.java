@@ -10,12 +10,12 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
 
 /**
- * A validator for {@link WebMenuItemInvisibility}'s owner property.
+ * A validator for property <code>owner</owner> in entity {@link WebMenuItemInvisibility} and other that pertain to UI configurations of centres, locators and masters.
  *
  * @author TG Team
  *
  */
-public class MenuItemOwnerValidator implements IBeforeChangeEventHandler<User> {
+public class UserAsConfigurationOwnerValidator implements IBeforeChangeEventHandler<User> {
 
     @Override
     public Result handle(final MetaProperty<User> property, final User newValue, final User oldValue, final Set<Annotation> mutatorAnnotations) {

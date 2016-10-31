@@ -10,7 +10,7 @@ import ua.com.fielden.platform.security.user.UserRole;
  * @author TG Team
  * 
  */
-public interface IUserRoleDao extends IEntityDao<UserRole> {
+public interface IUserRole extends IEntityDao<UserRole> {
 
     /** Returns all available {@link UserRole}s. */
     List<UserRole> findAll();

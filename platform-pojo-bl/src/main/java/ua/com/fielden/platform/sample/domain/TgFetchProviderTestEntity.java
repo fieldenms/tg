@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -38,7 +37,6 @@ public class TgFetchProviderTestEntity extends AbstractEntity<String> {
     private User additionalProperty;
 
     @Observable
-    @EntityExists(User.class)
     public TgFetchProviderTestEntity setAdditionalProperty(final User additionalProperty) {
         this.additionalProperty = additionalProperty;
         return this;
@@ -49,7 +47,6 @@ public class TgFetchProviderTestEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(TgPersistentEntityWithProperties.class)
     public TgFetchProviderTestEntity setProperty(final TgPersistentEntityWithProperties property) {
         this.property = property;
         return this;

@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.ISessionEnabled;
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
@@ -29,7 +29,7 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
 
     private final ISecurityRoleAssociation securityAssociationDao;
 
-    private final IUserRoleDao roleDao;
+    private final IUserRole roleDao;
 
     private Session session;
     private String transactionGuid;
@@ -44,7 +44,7 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
      * Creates new instance of SecurityTokenController with twelve user roles and security tokens
      */
     @Inject
-    public SecurityTokenController(final ISecurityRoleAssociation securityAssociationDao, final IUserRoleDao roleDao) {
+    public SecurityTokenController(final ISecurityRoleAssociation securityAssociationDao, final IUserRole roleDao) {
         this.securityAssociationDao = securityAssociationDao;
         this.roleDao = roleDao;
     }
@@ -63,7 +63,7 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
         return roles;
     }
 
-    public IUserRoleDao getRoleDao() {
+    public IUserRole getRoleDao() {
         return roleDao;
     }
 

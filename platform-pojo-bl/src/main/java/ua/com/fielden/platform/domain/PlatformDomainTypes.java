@@ -39,9 +39,7 @@ import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
-import ua.com.fielden.platform.ui.config.MainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.SortingProperty;
 
@@ -50,8 +48,6 @@ public class PlatformDomainTypes {
 
     static {
         types.add(MainMenuItem.class);
-        types.add(MainMenuItemInvisibility.class);
-        types.add(MainMenu.class);
         types.add(User.class);
         types.add(UserRolesUpdater.class);
         types.add(UserSession.class);

@@ -62,7 +62,7 @@ public class MetaPropertyTest {
     }
 
     @Test
-    public void fact_of_property_assignment_should_be_reflectd_in_meta_property() {
+    public void fact_of_property_assignment_should_be_reflected_in_meta_property() {
         entity.setPropWithBce("some other value");
         assertTrue(entity.getProperty("propWithBce").isAssigned());
     }

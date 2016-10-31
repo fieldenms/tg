@@ -147,7 +147,6 @@ public class Advice extends AbstractEntity<Long> {
     }
 
     @Observable
-    @EntityExists(Wagon.class)
     @DomainValidation
     public Advice setCarrier(final Wagon carrier) {
         this.carrier = carrier;
@@ -198,7 +197,6 @@ public class Advice extends AbstractEntity<Long> {
      * @param initiatedAtWorkshop
      */
     @Final
-    @EntityExists(Workshop.class)
     @Observable
     public void setInitiatedAtWorkshop(final Workshop initiatedAtWorkshop) {
         this.initiatedAtWorkshop = initiatedAtWorkshop;
@@ -213,7 +211,6 @@ public class Advice extends AbstractEntity<Long> {
      *
      * @param dispatchedToWorkshop
      */
-    @EntityExists(Workshop.class)
     @Observable
     public void setDispatchedToWorkshop(final Workshop dispatchedToWorkshop) {
         this.dispatchedToWorkshop = dispatchedToWorkshop;
