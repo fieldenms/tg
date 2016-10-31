@@ -121,6 +121,24 @@
                 this.alwaysOnTop = true;
             },
 
+            selectNext: function () {
+                var selector = this.$.selector;
+                if (isNaN(selector.selected)) {
+                    selector.select(0);
+                } else {
+                    selector.selectNext();
+                }
+            },
+
+            selectPrev: function () {
+                var selector = this.$.selector;
+                if (isNaN(selector.selected)) {
+                    selector.select(this._flatMenu.length - 1);
+                } else {
+                    selector.selectPrevious();
+                }
+            },
+
             _menuChanged: function (newValue, oldValue) {
                 this._flatMenu = flattenMenu(newValue);
             },

@@ -1,6 +1,9 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
+<link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+<link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
 
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
@@ -11,10 +14,27 @@
 <dom-module id="tg-menu-search-input">
 
     <style>
+        iron-icon {
+            cursor: pointer;
+            color: var(--menu-search-icon-color);
+        }
+        paper-input-container.start-transtion {
+            width: 0;
+        }
+        paper-input-container {
+            width: 300px;
+            transition: width 200ms linear;
+            --paper-input-container-color: var(--menu-search-input-color);
+            --paper-input-container-focus-color: var(--menu-search-input-color);
+            --paper-input-container-input-color: var(--menu-search-input-color);
+        }
     </style>
 
     <template>
-        <input id="input" is="iron-input" type="text" bind-value="{{_menuToSearch}}" on-blur="_onBlur" on-focus="_onFocus">
+        <iron-icon id="searchIcon" icon="icons:search" on-tap="_searchMenu"></iron-icon>
+        <paper-input-container id="inputContainer" no-label-float style="display:none;" on-transitionend="_inputShown">
+            <input id="input" is="iron-input" type="text" bind-value="{{_menuToSearch}}" on-blur="_onBlur" on-focus="_onFocus" on-keydown="_inputKeyDown">
+        </paper-input-container>
         <tg-menu-list id="menuList" menu="[[menu]]" phrase-to-highlight="[[_menuToSearch]]" on-iron-overlay-closed="_menuListClosed"></tg-menu-list>
     </template>
 
@@ -29,7 +49,14 @@
                 /**
                  * The menu to flatten. This menu should contain 'key' and 'desc' proprties key for title and desc for description of menu item also
                  */
-                menu: Array
+                menu: Array,
+
+                ////////////////////private members that starts with undescore sign '_' shouldn't be modified from outside of this component////////////////////////
+
+                _inputOpened: {
+                    type: Boolean,
+                    value: false
+                }
             },
 
             _onFocus: function () {
@@ -46,6 +73,7 @@
                 var self = this;
                 this.async(function () {
                     if (!menuList.opened) {
+                        menuList.selected = NaN;
                         menuList.open();
                     }
                     menuList.notifyResize();
@@ -53,15 +81,9 @@
             },
 
             _onBlur: function (e) {
-                // check whether relatedTarget has anything to do with this.$.result
-                // if it is then there is no need to cancel the overlay, which is this.$.result
-                var parent = e.relatedTarget;
-                var menuList = this.$.menuList;
-                while (parent !== null && parent !== menuList) {
-                    parent = parent.parentElement;
-                }
-                if (menuList.opened && parent !== menuList) {
-                    menuList.close(e);
+                this._toggleInputVisibility(false);
+                if (this.$.menuList.opened) {
+                    this.$.menuList.close(e);
                 }
             },
 
@@ -69,8 +91,57 @@
                 var menuList = this.$.menuList;
                 var elementExists = Polymer.dom(document.body).querySelector("#menuList");
                 if (elementExists) {
-                	Polymer.dom(document.body).removeChild(menuList);
-                	Polymer.dom.flush();
+                    Polymer.dom(document.body).removeChild(menuList);
+                    Polymer.dom.flush();
+                }
+            },
+
+            _searchMenu: function () {
+                this._toggleInputVisibility(true);
+            },
+
+            _toggleInputVisibility: function (inputVisible) {
+                if (inputVisible) {
+                    this.$.searchIcon.style.display = 'none';
+                    this.$.inputContainer.classList.toggle('start-transtion', true);
+                    this.$.inputContainer.style.removeProperty('display');
+                    window.getComputedStyle(this.$.input).width;
+                    this.$.inputContainer.classList.toggle('start-transtion', false);
+                } else {
+                    this.$.searchIcon.style.removeProperty('display');
+                    this.$.inputContainer.style.display = 'none';
+                }
+            },
+
+            _inputShown: function (e) {
+                console.log("input was shown");
+                var target = e.target || e.srcElement;
+                if (target === this.$.inputContainer) {
+                    this.$.input.focus();
+                }
+            },
+
+            _inputKeyDown: function (event) {
+                if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
+                    this._done();
+                } else if (event.keyCode === 38 || event.keyCode === 40) { // up/down arrow keys
+                    // By devault up/down arrow keys work like home/end for and input field
+                    // That's why this event should be suppressed.
+                    event.stopPropagation();
+                    if (event.stopPropagation) event.stopPropagation();
+                    if (event.preventDefault) event.preventDefault();
+                    event.cancelBubble = true;
+                    event.returnValue = false;
+
+                    // Let's now handle the up/down logic that should perform search result list navigation
+                    if (event.keyCode === 38) {
+                        this.$.menuList.selectPrev();
+                    } else if (event.keyCode === 40) {
+                        this.$.menuList.selectNext();
+                    }
+
+                    // return false as part of stopping the event from propagation
+                    return false;
                 }
             }
         });

@@ -6,305 +6,331 @@
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <title>Menu list example</title>
     <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
+    <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+    <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
     <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+    <link rel="import" href="/resources/polymer/paper-toolbar/paper-toolbar.html">
     <link rel="import" href="tg-menu-search-input.html">
+    <style is="custom-style">
+        a paper-icon-button,
+        a:active paper-icon-button,
+        a:visited paper-icon-button {
+            color: white;
+        }
+        tg-menu-search-input {
+            --menu-search-icon-color: white;
+            --menu-search-input-color: white;
+        }
+        paper-toolbar {
+            --paper-toolbar-background: var(--paper-light-blue-700);
+            --paper-toolbar-color: white;
+            --paper-toolbar-height: 44px;
+        }
+    </style>
+</head>
 
-    <body unresolved class="fullbleed">
-        <template is="dom-bind" id="app">
+<body unresolved class="fullbleed">
+    <template is="dom-bind" id="app">
+        <paper-toolbar id="toolbar" justify="justified">
             <tg-menu-search-input menu="[[menu]]"></tg-menu-search-input>
-        </template>
-    </body>
-    <script>
-        var app = document.querySelector("#app");
-        app.menu = [{
-            "key": "Fleet",
-            "desc": "Fleet",
-            "menu": []
+            <a href="/logout" tabIndex="-1">
+                <paper-icon-button icon="icons:exit-to-app"></paper-icon-button>
+            </a>
+        </paper-toolbar>
+    </template>
+</body>
+<script>
+    var app = document.querySelector("#app");
+    app.menu = [{
+        "key": "Fleet",
+        "desc": "Fleet",
+        "menu": []
         }, {
-            "key": "Import utilities",
-            "menu": [{
-                "key": "First view",
-                "menu": [],
-                "view": null,
-                "desc": "First view description"
-            }, {
-                "key": "Second view",
-                "menu": [],
-                "view": null,
-                "desc": "Second view description"
-            }, {
-                "key": "Entity Centre 1",
-                "menu": [],
-                "view": {
-                    "key": "view",
-                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1",
-                    "elementName": "tg-MiTgPersistentEntityWithProperties1-centre",
-                    "viewType": "centre",
-                    "attrs": {
-                        "uuid": "TgPersistentEntityWithProperties 1",
-                        "autoRun": false,
-                        "enforcePostSaveRefresh": true,
-                        "uri": "/entity-centre-events"
-                    }
-                },
-                "desc": "Entity centre description"
-            }, {
-                "key": "Entity Centre 2",
-                "menu": [],
-                "view": {
-                    "key": "view",
-                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2",
-                    "elementName": "tg-MiTgPersistentEntityWithProperties2-centre",
-                    "viewType": "centre",
-                    "attrs": {
-                        "uuid": "TgPersistentEntityWithProperties 2",
-                        "autoRun": false,
-                        "enforcePostSaveRefresh": true,
-                        "uri": "/entity-centre-events"
-                    }
-                },
-                "desc": "Entity centre description"
-            }, {
-                "key": "Entity Centre 3",
-                "menu": [],
-                "view": {
-                    "key": "view",
-                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3",
-                    "elementName": "tg-MiTgPersistentEntityWithProperties3-centre",
-                    "viewType": "centre",
-                    "attrs": {
-                        "uuid": "TgPersistentEntityWithProperties 3",
-                        "autoRun": false,
-                        "enforcePostSaveRefresh": true,
-                        "uri": "/entity-centre-events"
-                    }
-                },
-                "desc": "Entity centre description"
-            }, {
-                "key": "Entity Centre 4",
-                "menu": [],
-                "view": {
-                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4",
-                    "elementName": "tg-MiTgPersistentEntityWithProperties4-centre",
-                    "viewType": "centre",
-                    "attrs": {
-                        "uuid": "TgPersistentEntityWithProperties 4",
-                        "autoRun": false,
-                        "enforcePostSaveRefresh": true,
-                        "uri": "/entity-centre-events"
-                    }
-                },
-                "desc": "Entity centre description"
-            }, {
-                "key": "Collectional Serialisation Test",
-                "menu": [],
-                "view": {
-                    "key": "view",
-                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgCollectionalSerialisationParent",
-                    "elementName": "tg-MiTgCollectionalSerialisationParent-centre",
-                    "viewType": "centre",
-                    "attrs": {
-                        "uuid": "TgCollectionalSerialisationParent",
-                        "autoRun": false,
-                        "enforcePostSaveRefresh": false,
-                        "uri": null
-                    }
-                },
-                "desc": "Collectional Serialisation Test description"
-            }, {
-                "key": "Third view",
-                "menu": [],
-                "view": null,
-                "visible": true,
-                "desc": "Third view description"
-            }],
-            "desc": "Import utilities"
-        }, {
-            "key": "Division daily management",
-            "bgColor": "#CFD8DC",
-            "captionBgColor": "#78909C",
-            "icon": "menu:divisional-daily-management",
-            "detailIcon": "menu-detailed:divisional-daily-management",
-            "menu": [{
-                "key": "Custom group",
-                "menu": [{
-                    "key": "Entity Centre",
-                    "menu": [],
-                    "view": {
-                        "key": "view",
-                        "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties",
-                        "elementName": "tg-MiTgPersistentEntityWithProperties-centre",
-                        "viewType": "centre",
-                        "attrs": {
-                            "uuid": "TgPersistentEntityWithProperties",
-                            "autoRun": true,
-                            "enforcePostSaveRefresh": true,
-                            "uri": "/entity-centre-events"
-                        }
-                    },
-                    "desc": "Entity centre description"
-                }, {
-                    "key": "Not Generated Centre",
-                    "menu": [],
-                    "view": {
-                        "key": "view",
-                        "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiEntityCentreNotGenerated",
-                        "elementName": "tg-MiEntityCentreNotGenerated-centre",
-                        "viewType": "centre",
-                        "attrs": {
-                            "uuid": "MiEntityCentreNotGenerated",
-                            "autoRun": true,
-                            "enforcePostSaveRefresh": true,
-                            "uri": "/entity-centre-events"
-                        }
-                    },
-                    "desc": "Entity centre without calculated / custom properties, which type is strictly TgPersistentEntityWithProperties.class"
-                }],
-                "view": null,
-                "desc": "Custom group"
-            }, {
-                "key": "Custom View",
-                "menu": [],
-                "view": {
-                    "key": "view",
-                    "htmlImport": "/custom_view/CustomView",
-                    "elementName": "tg-CustomView",
-                    "viewType": "view",
-                    "attrs": {}
-                },
-                "desc": "Custom view description"
-            }, {
-                "key": "Deletion Centre",
-                "menu": [],
-                "view": {
-                    "key": "view",
-                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiDeletionTestEntity",
-                    "elementName": "tg-MiDeletionTestEntity-centre",
-                    "viewType": "centre",
-                    "attrs": {
-                        "uuid": "TgDeletionTestEntity",
-                        "autoRun": false,
-                        "enforcePostSaveRefresh": false,
-                        "uri": null
-                    }
-                },
-                "desc": "Deletion centre description"
-            }, {
-                "key": "Last group",
-                "menu": [{
-                    "key": "Property Dependency Example",
-                    "menu": [],
-                    "view": {
-                        "key": "view",
-                        "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDependency",
-                        "elementName": "tg-MiTgEntityWithPropertyDependency-centre",
-                        "viewType": "centre",
-                        "attrs": {
-                            "uuid": "Property Dependency Example",
-                            "autoRun": true,
-                            "enforcePostSaveRefresh": false,
-                            "uri": null
-                        }
-                    },
-                    "desc": "Property Dependency Example description"
-                }, {
-                    "key": "Property Descriptor Example",
-                    "menu": [],
-                    "view": {
-                        "key": "view",
-                        "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptor",
-                        "elementName": "tg-MiTgEntityWithPropertyDescriptor-centre",
-                        "viewType": "centre",
-                        "attrs": {
-                            "uuid": "Property Descriptor Example",
-                            "autoRun": true,
-                            "enforcePostSaveRefresh": false,
-                            "uri": null
-                        }
-                    },
-                    "desc": "Property Descriptor Example description"
-                }, {
-                    "key": "TimeZones Example",
-                    "menu": [],
-                    "view": {
-                        "key": "view",
-                        "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates",
-                        "elementName": "tg-MiTgEntityWithTimeZoneDates-centre",
-                        "viewType": "centre",
-                        "attrs": {
-                            "uuid": "MiTgEntityWithTimeZoneDates",
-                            "autoRun": false,
-                            "enforcePostSaveRefresh": false,
-                            "uri": null
-                        }
-                    },
-                    "desc": "TimeZone properties handling example"
-                }],
-                "view": null,
-                "desc": "Last group"
-            }],
-            "desc": "Division daily management"
-        }, {
-            "key": "Accidents",
+        "key": "Import utilities",
+        "menu": [{
+            "key": "First view",
             "menu": [],
-            "desc": "Accidents"
-        }, {
-            "key": "Maintenance",
+            "view": null,
+            "desc": "First view description"
+            }, {
+            "key": "Second view",
             "menu": [],
-            "desc": "Maintenance"
+            "view": null,
+            "desc": "Second view description"
+            }, {
+            "key": "Entity Centre 1",
+            "menu": [],
+            "view": {
+                "key": "view",
+                "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1",
+                "elementName": "tg-MiTgPersistentEntityWithProperties1-centre",
+                "viewType": "centre",
+                "attrs": {
+                    "uuid": "TgPersistentEntityWithProperties 1",
+                    "autoRun": false,
+                    "enforcePostSaveRefresh": true,
+                    "uri": "/entity-centre-events"
+                }
+            },
+            "desc": "Entity centre description"
+            }, {
+            "key": "Entity Centre 2",
+            "menu": [],
+            "view": {
+                "key": "view",
+                "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2",
+                "elementName": "tg-MiTgPersistentEntityWithProperties2-centre",
+                "viewType": "centre",
+                "attrs": {
+                    "uuid": "TgPersistentEntityWithProperties 2",
+                    "autoRun": false,
+                    "enforcePostSaveRefresh": true,
+                    "uri": "/entity-centre-events"
+                }
+            },
+            "desc": "Entity centre description"
+            }, {
+            "key": "Entity Centre 3",
+            "menu": [],
+            "view": {
+                "key": "view",
+                "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3",
+                "elementName": "tg-MiTgPersistentEntityWithProperties3-centre",
+                "viewType": "centre",
+                "attrs": {
+                    "uuid": "TgPersistentEntityWithProperties 3",
+                    "autoRun": false,
+                    "enforcePostSaveRefresh": true,
+                    "uri": "/entity-centre-events"
+                }
+            },
+            "desc": "Entity centre description"
+            }, {
+            "key": "Entity Centre 4",
+            "menu": [],
+            "view": {
+                "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4",
+                "elementName": "tg-MiTgPersistentEntityWithProperties4-centre",
+                "viewType": "centre",
+                "attrs": {
+                    "uuid": "TgPersistentEntityWithProperties 4",
+                    "autoRun": false,
+                    "enforcePostSaveRefresh": true,
+                    "uri": "/entity-centre-events"
+                }
+            },
+            "desc": "Entity centre description"
+            }, {
+            "key": "Collectional Serialisation Test",
+            "menu": [],
+            "view": {
+                "key": "view",
+                "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgCollectionalSerialisationParent",
+                "elementName": "tg-MiTgCollectionalSerialisationParent-centre",
+                "viewType": "centre",
+                "attrs": {
+                    "uuid": "TgCollectionalSerialisationParent",
+                    "autoRun": false,
+                    "enforcePostSaveRefresh": false,
+                    "uri": null
+                }
+            },
+            "desc": "Collectional Serialisation Test description"
+            }, {
+            "key": "Third view",
+            "menu": [],
+            "view": null,
+            "visible": true,
+            "desc": "Third view description"
+            }],
+        "desc": "Import utilities"
         }, {
-            "key": "User",
+        "key": "Division daily management",
+        "bgColor": "#CFD8DC",
+        "captionBgColor": "#78909C",
+        "icon": "menu:divisional-daily-management",
+        "detailIcon": "menu-detailed:divisional-daily-management",
+        "menu": [{
+            "key": "Custom group",
             "menu": [{
-                "key": "Users",
+                "key": "Entity Centre",
                 "menu": [],
                 "view": {
                     "key": "view",
-                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiUser",
-                    "elementName": "tg-MiUser-centre",
+                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties",
+                    "elementName": "tg-MiTgPersistentEntityWithProperties-centre",
                     "viewType": "centre",
                     "attrs": {
-                        "uuid": "Users",
+                        "uuid": "TgPersistentEntityWithProperties",
+                        "autoRun": true,
+                        "enforcePostSaveRefresh": true,
+                        "uri": "/entity-centre-events"
+                    }
+                },
+                "desc": "Entity centre description"
+                }, {
+                "key": "Not Generated Centre",
+                "menu": [],
+                "view": {
+                    "key": "view",
+                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiEntityCentreNotGenerated",
+                    "elementName": "tg-MiEntityCentreNotGenerated-centre",
+                    "viewType": "centre",
+                    "attrs": {
+                        "uuid": "MiEntityCentreNotGenerated",
+                        "autoRun": true,
+                        "enforcePostSaveRefresh": true,
+                        "uri": "/entity-centre-events"
+                    }
+                },
+                "desc": "Entity centre without calculated / custom properties, which type is strictly TgPersistentEntityWithProperties.class"
+                }],
+            "view": null,
+            "desc": "Custom group"
+            }, {
+            "key": "Custom View",
+            "menu": [],
+            "view": {
+                "key": "view",
+                "htmlImport": "/custom_view/CustomView",
+                "elementName": "tg-CustomView",
+                "viewType": "view",
+                "attrs": {}
+            },
+            "desc": "Custom view description"
+            }, {
+            "key": "Deletion Centre",
+            "menu": [],
+            "view": {
+                "key": "view",
+                "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiDeletionTestEntity",
+                "elementName": "tg-MiDeletionTestEntity-centre",
+                "viewType": "centre",
+                "attrs": {
+                    "uuid": "TgDeletionTestEntity",
+                    "autoRun": false,
+                    "enforcePostSaveRefresh": false,
+                    "uri": null
+                }
+            },
+            "desc": "Deletion centre description"
+            }, {
+            "key": "Last group",
+            "menu": [{
+                "key": "Property Dependency Example",
+                "menu": [],
+                "view": {
+                    "key": "view",
+                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDependency",
+                    "elementName": "tg-MiTgEntityWithPropertyDependency-centre",
+                    "viewType": "centre",
+                    "attrs": {
+                        "uuid": "Property Dependency Example",
                         "autoRun": true,
                         "enforcePostSaveRefresh": false,
                         "uri": null
                     }
                 },
-                "desc": "User centre"
-            }, {
-                "key": "User Roles",
+                "desc": "Property Dependency Example description"
+                }, {
+                "key": "Property Descriptor Example",
                 "menu": [],
                 "view": {
                     "key": "view",
-                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiUserRole",
-                    "elementName": "tg-MiUserRole-centre",
+                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptor",
+                    "elementName": "tg-MiTgEntityWithPropertyDescriptor-centre",
                     "viewType": "centre",
                     "attrs": {
-                        "uuid": "User Roles",
+                        "uuid": "Property Descriptor Example",
                         "autoRun": true,
                         "enforcePostSaveRefresh": false,
                         "uri": null
                     }
                 },
-                "desc": "User role centre"
+                "desc": "Property Descriptor Example description"
+                }, {
+                "key": "TimeZones Example",
+                "menu": [],
+                "view": {
+                    "key": "view",
+                    "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates",
+                    "elementName": "tg-MiTgEntityWithTimeZoneDates-centre",
+                    "viewType": "centre",
+                    "attrs": {
+                        "uuid": "MiTgEntityWithTimeZoneDates",
+                        "autoRun": false,
+                        "enforcePostSaveRefresh": false,
+                        "uri": null
+                    }
+                },
+                "desc": "TimeZone properties handling example"
+                }],
+            "view": null,
+            "desc": "Last group"
             }],
-            "desc": "User"
+        "desc": "Division daily management"
         }, {
-            "key": "Online reports",
-            "menu": [],
-            "desc": "Online reports"
+        "key": "Accidents",
+        "menu": [],
+        "desc": "Accidents"
         }, {
-            "key": "Fuel",
-            "menu": [],
-            "desc": "Fuel"
+        "key": "Maintenance",
+        "menu": [],
+        "desc": "Maintenance"
         }, {
-            "key": "Organisational",
+        "key": "User",
+        "menu": [{
+            "key": "Users",
             "menu": [],
-            "desc": "Organisational"
+            "view": {
+                "key": "view",
+                "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiUser",
+                "elementName": "tg-MiUser-centre",
+                "viewType": "centre",
+                "attrs": {
+                    "uuid": "Users",
+                    "autoRun": true,
+                    "enforcePostSaveRefresh": false,
+                    "uri": null
+                }
+            },
+            "desc": "User centre"
+            }, {
+            "key": "User Roles",
+            "menu": [],
+            "view": {
+                "key": "view",
+                "htmlImport": "/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiUserRole",
+                "elementName": "tg-MiUserRole-centre",
+                "viewType": "centre",
+                "attrs": {
+                    "uuid": "User Roles",
+                    "autoRun": true,
+                    "enforcePostSaveRefresh": false,
+                    "uri": null
+                }
+            },
+            "desc": "User role centre"
+            }],
+        "desc": "User"
         }, {
-            "key": "Preventive maintenance",
-            "menu": [],
-            "desc": "Preventive maintenance"
+        "key": "Online reports",
+        "menu": [],
+        "desc": "Online reports"
+        }, {
+        "key": "Fuel",
+        "menu": [],
+        "desc": "Fuel"
+        }, {
+        "key": "Organisational",
+        "menu": [],
+        "desc": "Organisational"
+        }, {
+        "key": "Preventive maintenance",
+        "menu": [],
+        "desc": "Preventive maintenance"
         }];
-    </script>
+</script>
 
 </html>
