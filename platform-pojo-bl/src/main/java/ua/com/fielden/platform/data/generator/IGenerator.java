@@ -1,0 +1,37 @@
+package ua.com.fielden.platform.data.generator;
+
+import java.util.Map;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.error.Result;
+
+/**
+ * A contract to be used for implementing data generators. 
+ * The main purpose of data generators that implement this contract is to be used by Entity Centres at their <code>run</code> phase to generate the data, which is then used for retrieval.
+ * <p>
+ * A typical example where this could be useful is some analysis, which computes the necessary data ad hoc, temporarily stores it and exposes for further interrogation via an Entity Centre.  
+ * <p>
+ * Another interesting use cases for it is the implementation of simple "wizards" where the source data for the resultant data, which needs to be produced by the wizard, is generated based on the specified selection criteria.
+ * <p>
+ * In these cases, the selection criteria values are used as parameters for a data generation algorithm.
+ * <p>
+ * It is expected that all concrete implementations of this contract will exists at the level of specific application DAO modules. 
+ * 
+ * @author TG Team
+ *
+ * @param <T> -- An entity type that describes the data, which needs to be generated. This information is especially useful in cases where the generated data underpins or used as one of the building blocks for some synthesized entity. 
+ */
+public interface IGenerator<T extends AbstractEntity<?> & WithCreatedByUser<T>> {
+    
+    /**
+     * Kicks in the data generation algorithm. 
+     * The implementation of this method should most likely be annotate with <code>@SessionRequired</code> annotation to establish a database transaction demarcation.
+     * The necessary companion objects should be injected at the constructor level. 
+     * 
+     * @param type -- A class for a type of the data to be generated. 
+     * @param params -- A map of parameter/value pairs that is used by the data generation algorithm. At run-time, these parameters are to be provided by the Entity Centre runner, but they can also be conveniently passed in for unit testing purposes.
+     * @return
+     */
+    Result gen(final Class<T> type, final Map<String, Object> params);
+
+}
