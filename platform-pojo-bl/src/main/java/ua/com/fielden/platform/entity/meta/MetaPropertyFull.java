@@ -771,7 +771,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     public final boolean isEditable() {
-        return editable;
+        return editable && getEntity().isEditable().isSuccessful();
     }
 
     public final void setEditable(final boolean editable) {
