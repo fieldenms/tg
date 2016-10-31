@@ -2,8 +2,13 @@ package ua.com.fielden.platform.web.centre.api.impl;
 
 import java.util.Optional;
 
+import org.apache.commons.lang.NotImplementedException;
+
+import ua.com.fielden.platform.data.generator.IGenerator;
+import ua.com.fielden.platform.data.generator.WithCreatedByUser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
@@ -30,6 +35,11 @@ class SelectionCriteriaLayoutBuilder<T extends AbstractEntity<?>> extends Result
         }
         this.builder.selectionCriteriaLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
         return this;
+    }
+    
+    @Override
+    public <G extends AbstractEntity<?> & WithCreatedByUser<G>> IResultSetBuilder0Checkbox<T> withGenerator(final Class<G> entityTypeToBeGenerator, final IGenerator<G> generator) {
+        throw new NotImplementedException("FIXME The support for data generators needs to be implemented.");
     }
 
 }
