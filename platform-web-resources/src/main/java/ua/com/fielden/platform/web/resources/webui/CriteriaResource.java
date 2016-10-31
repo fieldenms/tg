@@ -296,10 +296,11 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                     centre.getQueryEnhancerConfig(),
                     previouslyRunCriteriaEntity);
             
-            final Optional<ICentreGenerator<T>> centreGenerator = Optional.of(centre.createCentreGeneratorInstance((Class<? extends ICentreGenerator<T>>) TgPersistentEntityWithPropertiesCentreGenerator.class));
-            if (isRunning && centreGenerator.isPresent() && queryEnhancerAndContext.isPresent()) {
-                centreGenerator.get().generate(queryEnhancerAndContext.get().getValue());
-            }
+//             FIXME cannot be compiled by javac
+//            final Optional<ICentreGenerator<T>> centreGenerator = Optional.of(centre.createCentreGeneratorInstance((Class<? extends ICentreGenerator<T>>) TgPersistentEntityWithPropertiesCentreGenerator.class));
+//            if (isRunning && centreGenerator.isPresent() && queryEnhancerAndContext.isPresent()) {
+//                centreGenerator.get().generate(queryEnhancerAndContext.get().getValue());
+//            }
             
             final Pair<Map<String, Object>, ArrayList<?>> pair =
                     CentreResourceUtils.<T, M> createCriteriaMetaValuesCustomObjectWithResult(
