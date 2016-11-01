@@ -193,26 +193,14 @@ public class AbstractEntityTest {
     }
 
     @Test
-    public void testThatFinalValidationWorks() {
-        entity.setFinalProperty(null);
-        assertTrue("Property finalProperty validation failed when assigning null.", entity.getProperty("finalProperty").isValid());
+    public void final_property_for_non_persistent_entity_can_only_be_assigned_once() {
         entity.setFinalProperty(60.0);
-        assertTrue("Property finalProperty validation failed when assigning non-null value for the first time.", entity.getProperty("finalProperty").isValid());
+        assertTrue(entity.getProperty("finalProperty").isValid());
+        assertEquals(Double.valueOf(60.0), entity.getFinalProperty());
+        
         entity.setFinalProperty(31.0);
-        assertTrue("Property finalProperty validation failed when assigning non-null value the second time for non-persistent entity.", entity.getProperty("finalProperty").isValid());
-
-        // making entity "persistent"
-        try {
-            final Method method = Reflector.getMethod(AbstractEntity.class, "setId", Long.class);
-            method.setAccessible(true);
-            method.invoke(entity, 1L);
-            method.setAccessible(false);
-        } catch (final Exception e) {
-            fail(e.getMessage());
-        }
-        entity.setFinalProperty(35.0);
-        assertFalse("Property finalProperty validation failed when assigning non-null value the second time for persistent entity.", entity.getProperty("finalProperty").isValid());
-        assertEquals("Incorrect value for last invalid value.", new Double(35.0), entity.getProperty("finalProperty").getLastInvalidValue());
+        assertFalse(entity.getProperty("finalProperty").isValid());
+        assertEquals(Double.valueOf(60.0), entity.getFinalProperty());
     }
 
     @Test
