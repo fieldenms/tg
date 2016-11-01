@@ -197,13 +197,16 @@ public class AbstractEntityTest {
 
     @Test
     public void final_property_for_non_persistent_entity_can_only_be_assigned_once() {
+        assertTrue(entity.getProperty("finalProperty").isEditable());
         entity.setFinalProperty(60.0);
         assertTrue(entity.getProperty("finalProperty").isValid());
         assertEquals(Double.valueOf(60.0), entity.getFinalProperty());
+        assertFalse(entity.getProperty("finalProperty").isEditable());
         
         entity.setFinalProperty(31.0);
         assertFalse(entity.getProperty("finalProperty").isValid());
         assertEquals(Double.valueOf(60.0), entity.getFinalProperty());
+        assertFalse(entity.getProperty("finalProperty").isEditable());
     }
     
     @Test

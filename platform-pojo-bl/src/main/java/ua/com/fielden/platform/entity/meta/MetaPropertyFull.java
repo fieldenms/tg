@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -27,8 +28,10 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
+import ua.com.fielden.platform.entity.validation.FinalValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -119,6 +122,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private final boolean upperCase;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     
+    // if the value is present then a corresponding property has annotation {@link Final}
+    // the boolean value captures the value of attribute persistentOnly
+    private final Optional<Boolean> persistentOnlySettingForFinalAnnotation;
 
     private final PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
@@ -169,6 +175,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         this.propertyAnnotationType = propertyAnnotationType;
         this.calculated = calculated;
         this.upperCase = upperCase;
+        final Final finalAnnotation = field.getAnnotation(Final.class);
+        persistentOnlySettingForFinalAnnotation = finalAnnotation == null ? Optional.empty() : Optional.of(finalAnnotation.persistentOnly());
     }
 
     /**
@@ -771,7 +779,14 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     public final boolean isEditable() {
-        return editable && getEntity().isEditable().isSuccessful();
+        return editable && getEntity().isEditable().isSuccessful() && !isFinalised();
+    }
+    
+    private boolean isFinalised() {
+        if (persistentOnlySettingForFinalAnnotation.isPresent()) {
+            return FinalValidator.isPropertyFinalised(this, persistentOnlySettingForFinalAnnotation.get());
+        }
+        return false;
     }
 
     public final void setEditable(final boolean editable) {
