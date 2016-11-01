@@ -7,17 +7,18 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,6 +29,7 @@ import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity2;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity3;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity4;
 import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity6;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
@@ -38,7 +40,6 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
@@ -46,6 +47,8 @@ import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.either.Left;
 import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrIncorrectAttemptListener;
 
 /**
@@ -202,6 +205,17 @@ public class AbstractEntityTest {
         assertFalse(entity.getProperty("finalProperty").isValid());
         assertEquals(Double.valueOf(60.0), entity.getFinalProperty());
     }
+    
+    @Test
+    public void persistentOnly_final_property_for_non_persistent_entity_yields_invalid_definition() {
+        final Either<Exception, EntityInvalidDefinition> result = Try(() -> factory.newEntity(EntityInvalidDefinition.class, "key", "desc"));
+        assertTrue(result instanceof Left);
+        final Throwable rootCause = ExceptionUtils.getRootCause(((Left<Exception, EntityInvalidDefinition>) result).value);
+        assertTrue(rootCause instanceof EntityDefinitionException);
+        assertEquals(format("Non-persistent entity [%s] has property [%s], which is incorrectly annotated with @Final(persistentOnly = true).", EntityInvalidDefinition.class.getSimpleName(), "firstProperty"),
+                rootCause.getMessage());
+    }
+    
 
     @Test
     public void testNewEntityWithDynamicKey() {
