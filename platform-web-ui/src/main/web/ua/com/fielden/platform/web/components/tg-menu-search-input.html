@@ -35,7 +35,7 @@
         <paper-input-container id="inputContainer" no-label-float style="display:none;" on-transitionend="_inputShown">
             <input id="input" is="iron-input" type="text" bind-value="{{_menuToSearch}}" on-blur="_onBlur" on-focus="_onFocus" on-keydown="_inputKeyDown">
         </paper-input-container>
-        <tg-menu-list id="menuList" menu="[[menu]]" phrase-to-highlight="[[_menuToSearch]]" on-iron-overlay-closed="_menuListClosed"></tg-menu-list>
+        <tg-menu-list id="menuList" menu="[[menu]]" phrase-to-highlight="[[_menuToSearch]]" retrieve-container-sizes="[[_retrieveContainerSizes]]" on-iron-overlay-closed="_menuListClosed" on-tap="_menuTapped"></tg-menu-list>
     </template>
 
 </dom-module>
@@ -51,12 +51,27 @@
                  */
                 menu: Array,
 
+                cancelled: {
+                    type: Boolean,
+                    readOnly: true,
+                    value: true
+                },
+
                 ////////////////////private members that starts with undescore sign '_' shouldn't be modified from outside of this component////////////////////////
 
-                _inputOpened: {
-                    type: Boolean,
-                    value: false
+                /**
+                 * The function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container).
+                 */
+                _retrieveContainerSizes: {
+                    type: Function
                 }
+            },
+
+            ready: function () {
+                this._retrieveContainerSizes = function () {
+                    var container = this.$.inputContainer;
+                    return [container.getBoundingClientRect(), container.offsetHeight];
+                }.bind(this);
             },
 
             _onFocus: function () {
@@ -73,18 +88,30 @@
                 var self = this;
                 this.async(function () {
                     if (!menuList.opened) {
-                        menuList.selected = NaN;
+                        menuList.clearSelection();
+                        self._setCancelled(true);
                         menuList.open();
                     }
                     menuList.notifyResize();
-                }, 100);
+                });
             },
 
             _onBlur: function (e) {
-                this._toggleInputVisibility(false);
-                if (this.$.menuList.opened) {
-                    this.$.menuList.close(e);
+                var menuList = this.$.menuList;
+                // check whether relatedTarget has anything to do with this.$.menuList
+                // if it is then there is no need to cancel the overlay, which is this.$.menuList
+                var parent = e.relatedTarget;
+                while (parent && parent !== menuList) {
+                    parent = parent.parentElement;
                 }
+                if (menuList.opened && parent !== menuList) {
+                    menuList.close();
+                }
+            },
+
+            _menuTapped: function () {
+                this._setCancelled(false);
+                menuList.close();
             },
 
             _menuListClosed: function () {
@@ -93,6 +120,10 @@
                 if (elementExists) {
                     Polymer.dom(document.body).removeChild(menuList);
                     Polymer.dom.flush();
+                }
+                this._toggleInputVisibility(false);
+                if (!this.cancelled && menuList.isSelected()) {
+                    this.fire("menu-item-selected", menuList.getSelectedMenuItemPath());
                 }
             },
 
@@ -114,7 +145,6 @@
             },
 
             _inputShown: function (e) {
-                console.log("input was shown");
                 var target = e.target || e.srcElement;
                 if (target === this.$.inputContainer) {
                     this.$.input.focus();
@@ -122,8 +152,12 @@
             },
 
             _inputKeyDown: function (event) {
-                if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
-                    this._done();
+                var menuList = this.$.menuList;
+                if (event.keyCode === 13 && menuList.opened) { // 'Enter' has been pressed
+                    this._setCancelled(false);
+                    this.$.input.blur();
+                } else if (event.keyCode === 27 && menuList.opened) {
+                    this.$.input.blur();
                 } else if (event.keyCode === 38 || event.keyCode === 40) { // up/down arrow keys
                     // By devault up/down arrow keys work like home/end for and input field
                     // That's why this event should be suppressed.
@@ -135,9 +169,9 @@
 
                     // Let's now handle the up/down logic that should perform search result list navigation
                     if (event.keyCode === 38) {
-                        this.$.menuList.selectPrev();
+                        menuList.selectPrev();
                     } else if (event.keyCode === 40) {
-                        this.$.menuList.selectNext();
+                        menuList.selectNext();
                     }
 
                     // return false as part of stopping the event from propagation

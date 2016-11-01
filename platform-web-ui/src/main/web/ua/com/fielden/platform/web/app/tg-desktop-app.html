@@ -133,6 +133,7 @@
                 },
 
                 _showView: function (e) {
+                    //TODO This method should be revised because menu-item-selected event can be fired with menu search input component and may contain not only module but also a path to specified centre
                     var route = "/" + encodeURIComponent(e.detail),
                         elementToSelect = this.$$("[name='" + e.detail + "']"),
                         selectedSubPage = elementToSelect.getSelectedPage();
