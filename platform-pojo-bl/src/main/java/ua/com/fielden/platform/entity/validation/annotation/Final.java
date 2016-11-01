@@ -6,12 +6,22 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation for indicating setters that should not accept any new value if an old one is not null (i.e. was already assigned).
+ * Annotation for defining properties that should not accept any new value if it already has a not <code>null</code> value.
+ * The modus operandi of this annotation is controlled by attribute <code>persystentOnly</code>.
+ * If its value is <code>true</code> then the final semantics is enforced only for properties that had been persisted.
+ * Otherwise, by default, the final semantics are enforced immediately after assigning a <code>non-null</code> value to a property.
  * 
  * @author 01es
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.METHOD })
+@Target({ ElementType.FIELD })
 public @interface Final {
+    
+    /** 
+     * Controls when the final semantics are enforced -- before (default) or after the assigned property value is persisted.
+     * 
+     * @return
+     */
+    boolean persistentOnly() default false;
 }

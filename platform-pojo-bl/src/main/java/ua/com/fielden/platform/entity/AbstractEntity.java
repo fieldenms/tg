@@ -71,6 +71,7 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -970,7 +971,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         // try to obtain setter
         propertyValidationAnotations.addAll(extractSetterAnnotations(field, type));
         propertyValidationAnotations.addAll(extractFieldBeforeChangeAnnotations(field));
-        propertyValidationAnotations.addAll(extractFieldUniqueAnnotations(field));
+        propertyValidationAnotations.addAll(extractFieldUniqueAnnotation(field));
+        propertyValidationAnotations.addAll(extractFieldFinalAnnotation(field));
 
         // if field represents a collectional property then it may have other mutators
         if (isCollectional) {
@@ -1077,11 +1079,26 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @param entityType
      * @return
      */
-    private static List<Annotation> extractFieldUniqueAnnotations(final Field field) {
+    private static List<Annotation> extractFieldUniqueAnnotation(final Field field) {
         final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
         final Unique uniqueAnnotation = AnnotationReflector.getAnnotation(field, Unique.class);
         if (uniqueAnnotation != null) {
             propertyValidationAnotations.add(uniqueAnnotation);
+        }
+        return propertyValidationAnotations;
+    }
+
+    /**
+     * Looks for {@link Final} annotation.
+     * 
+     * @param field
+     * @return
+     */
+    private static List<Annotation> extractFieldFinalAnnotation(final Field field) {
+        final List<Annotation> propertyValidationAnotations = new ArrayList<Annotation>();
+        final Final finalAnnotation = AnnotationReflector.getAnnotation(field, Final.class);
+        if (finalAnnotation != null) {
+            propertyValidationAnotations.add(finalAnnotation);
         }
         return propertyValidationAnotations;
     }
