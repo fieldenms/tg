@@ -4,7 +4,6 @@ import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.sample.domain.mixin.TgPersistentCompositeEntityMixin;
 
@@ -49,9 +48,4 @@ public class TgPersistentCompositeEntityDao extends CommonEntityDao<TgPersistent
     //                .with("key1")
     //                .with("key2");
     //    }
-    
-    @Override
-    public int batchDelete(final EntityResultQueryModel<TgPersistentCompositeEntity> model) {
-        return defaultBatchDelete(model);
-    }
 }

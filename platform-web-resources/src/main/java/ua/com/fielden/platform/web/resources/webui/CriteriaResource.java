@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.ArrayList;
@@ -9,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -21,10 +20,10 @@ import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.data.generator.IGenerator;
+import ua.com.fielden.platform.data.generator.WithCreatedByUser;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
@@ -34,12 +33,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.sample.domain.ITgFetchProviderTestEntity;
-import ua.com.fielden.platform.sample.domain.ITgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.ITgPersistentEntityWithProperties;
-import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
-import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
-import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -48,7 +42,6 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
-import ua.com.fielden.platform.web.centre.EntityCentre.ICentreGenerator;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -67,7 +60,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends ServerResource {
+public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>, G extends AbstractEntity<?> & WithCreatedByUser<G>> extends ServerResource {
     private final static Logger logger = Logger.getLogger(CriteriaResource.class);
 
     private final static String staleCriteriaMessage = "Selection criteria have been changed, but not applied. "
@@ -211,47 +204,37 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
         return null;
     }
     
-    
-    private static class TgPersistentEntityWithPropertiesCentreGenerator implements ICentreGenerator<TgPersistentEntityWithProperties> {
-        private final ITgPersistentEntityWithProperties co;
-        private final ITgPersistentCompositeEntity coComposite;
-        private final ITgFetchProviderTestEntity coTgFetchProviderTestEntity;
+    /**
+     * Creates a property-value map for 'criteriaEntity' which contain criteria information.
+     * 
+     * @param criteriaEntity
+     * @return
+     */
+    private Map<String, Object> createGeneratorParams(final M criteriaEntity) {
+        final Map<String, Object> params = new LinkedHashMap<>();
+//        params.putAll( // TODO why NPE is thrown here?
+//            criteriaEntity
+//            .nonProxiedProperties()
+//            .map(mp -> {
+//                return new Pair<>(mp.getName(), mp.getValue());
+//            })
+//            .collect(Collectors.toMap(Pair::getKey, Pair::getValue))
+//        );
         
-        @Inject
-        public TgPersistentEntityWithPropertiesCentreGenerator(final ITgPersistentEntityWithProperties co, final ITgPersistentCompositeEntity coComposite, final ITgFetchProviderTestEntity coTgFetchProviderTestEntity) {
-            this.co = co;
-            this.coComposite = coComposite;
-            this.coTgFetchProviderTestEntity = coTgFetchProviderTestEntity;
+        final List<Pair<String, Object>> pairs = criteriaEntity
+        .nonProxiedProperties()
+        .map(mp -> {
+            return new Pair<String, Object>(mp.getName(), mp.getValue());
+        })
+        .collect(Collectors.toList());
+        
+        for (final Pair<String, Object> pair: pairs) {
+            params.put(pair.getKey(), pair.getValue());
         }
-        
-        @Override
-        public void generate(final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> centreContext) {
-            System.out.println("GENERATE " + centreContext);
-            
-            // delete all data:
-            final List<TgPersistentEntityWithProperties> withCompositeProps = co.getAllEntities(from(select(TgPersistentEntityWithProperties.class).where().prop("compositeProp").isNotNull().model()).with(fetchAll(TgPersistentEntityWithProperties.class)).model());
-            for (final TgPersistentEntityWithProperties entity: withCompositeProps) {
-                entity.setCompositeProp(null);
-                final TgPersistentEntityWithProperties saved = co.save(entity);
-                System.out.println("saved.getCompositeProp() = " + (saved.getCompositeProp() == null ? "null" : saved.getCompositeProp().getId()));
-            }
-            coTgFetchProviderTestEntity.batchDelete(select(TgFetchProviderTestEntity.class).model());
-            coComposite.batchDelete(select(TgPersistentCompositeEntity.class).model());
-            co.batchDelete(select(TgPersistentEntityWithProperties.class).model());
-            
-            // persist generated data
-            if (centreContext.isPresent() && centreContext.get().getSelectionCrit() != null) {
-                final String user = centreContext.get().getSelectionCrit() != null ? centreContext.get().getSelectionCrit().get("tgPersistentEntityWithProperties_userParam.key") : "UNKNOWN_USER";
-                final TgPersistentEntityWithProperties newEntity = centreContext.get().getSelectionCrit().getEntityFactory().newByKey(TgPersistentEntityWithProperties.class, user).setRequiredValidatedProp(30);
-                co.save(newEntity);
-//                
-//                final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setRequiredValidatedProp(30)
-//                        .setDesc("Description for entity with key 1. This is a relatively long description to demonstrate how well does is behave during value autocompletion."));
 
-            }
-        }
+        return params;
     }
-    
+
     /**
      * Handles PUT request resulting from tg-selection-criteria <code>run()</code> method.
      */
@@ -271,6 +254,7 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
             final IGlobalDomainTreeManager gdtm = ResourceFactoryUtils.getUserSpecificGlobalManager(serverGdtm, userProvider);
 
             final boolean isRunning = CentreResourceUtils.isRunning(customObject);
+            final boolean isSorting = CentreResourceUtils.isSorting(customObject);
             
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre;
             if (isRunning) {
@@ -296,11 +280,23 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                     centre.getQueryEnhancerConfig(),
                     previouslyRunCriteriaEntity);
             
-//             FIXME cannot be compiled by javac
-//            final Optional<ICentreGenerator<T>> centreGenerator = Optional.of(centre.createCentreGeneratorInstance((Class<? extends ICentreGenerator<T>>) TgPersistentEntityWithPropertiesCentreGenerator.class));
-//            if (isRunning && centreGenerator.isPresent() && queryEnhancerAndContext.isPresent()) {
-//                centreGenerator.get().generate(queryEnhancerAndContext.get().getValue());
-//            }
+            final boolean generationShouldOccur = isRunning && !isSorting && centre.getGeneratorTypes().isPresent();
+            if (generationShouldOccur) {
+                final Class<G> generatorEntityType = (Class<G>) centre.getGeneratorTypes().get().getKey();
+                // create a generator instance using an injector
+                final IGenerator<G> generator = (IGenerator<G>) centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
+                
+                // delete any previously generated for the current user data using a companion for an associated with the generator entity type
+                companionFinder.find(generatorEntityType).batchDelete(
+                    select(generatorEntityType).where().prop("createdBy").eq().val(userProvider.getUser()).model()
+                );
+                
+                // run the generator
+                final Result generationResult = generator.gen(generatorEntityType, createGeneratorParams(previouslyRunCriteriaEntity));
+                if (!generationResult.isSuccessful()) {
+                    throw generationResult;
+                }
+            }
             
             ///////////////////////////////////////////////
             // #703 pseudocode:
@@ -325,7 +321,9 @@ public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCen
                             customObject,
                             previouslyRunCriteriaEntity,
                             centre.getAdditionalFetchProvider(),
-                            queryEnhancerAndContext);
+                            queryEnhancerAndContext,
+                            // the query will be enhanced with condition createdBy=currentUser if generationShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
+                            generationShouldOccur && centre.getGeneratorTypes().get().getKey().equals(CentreResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
             if (isRunning) {
                 pair.getKey().put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)));
                 pair.getKey().put("metaValues", CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)));

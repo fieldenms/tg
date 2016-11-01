@@ -71,7 +71,7 @@ public class CentreConfigurationWebUiConfig {
                         .postActionSuccess(new IPostAction() {
                             @Override
                             public JsCode build() {
-                                return new JsCode("   return self.retrieve().then(function () { self.run(); }); \n");
+                                return new JsCode("   return self.retrieve().then(function () { self.run(true); }); \n");
                             }
                         })
                         .icon("av:sort-by-alpha")

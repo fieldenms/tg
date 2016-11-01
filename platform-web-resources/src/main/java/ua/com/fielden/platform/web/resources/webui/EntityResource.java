@@ -382,7 +382,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                                             utils.entityFactory(),
                                             centreContextHolder,
                                             centre.getQueryEnhancerConfig(),
-                                            appliedCriteriaEntity));
+                                            appliedCriteriaEntity),
+                                    Optional.of(null) /* TODO implement this! */);
 
                     if (pair.getValue() == null) {
                         return new ArrayList<AbstractEntity<?>>();

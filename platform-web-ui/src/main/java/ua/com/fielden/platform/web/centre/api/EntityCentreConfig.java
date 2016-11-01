@@ -14,6 +14,8 @@ import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
+import ua.com.fielden.platform.data.generator.IGenerator;
+import ua.com.fielden.platform.data.generator.WithCreatedByUser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
@@ -288,11 +290,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     private final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType;
 
-    ////////////////////////////////////////////////
-    ///////// QUERY ENHANCER AND FETCH /////////////
-    ////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////
+    ///////// QUERY ENHANCER, GENERATOR and FETCH /////////////
+    ///////////////////////////////////////////////////////////
 
     private final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig;
+    private final Pair<Class<?>, Class<?>> generatorTypes;
     private final IFetchProvider<T> fetchProvider;
 
     ///////////////////////////////////
@@ -358,6 +361,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType,
             final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
+            final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider) {
         this.hideCheckboxes = hideCheckboxes;
         this.toolbarConfig = toolbarConfig;
@@ -418,6 +422,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.resultSetRenderingCustomiserType = resultSetRenderingCustomiserType;
         this.resultSetCustomPropAssignmentHandlerType = resultSetCustomPropAssignmentHandlerType;
         this.queryEnhancerConfig = queryEnhancerConfig;
+        this.generatorTypes = generatorTypes;
         this.fetchProvider = fetchProvider;
     }
 
@@ -465,6 +470,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public Optional<Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {
         return Optional.ofNullable(queryEnhancerConfig);
+    }
+    
+    public Optional<Pair<Class<?>, Class<?>>> getGeneratorTypes() {
+        return Optional.ofNullable(generatorTypes);
     }
 
     public Optional<IFetchProvider<T>> getFetchProvider() {

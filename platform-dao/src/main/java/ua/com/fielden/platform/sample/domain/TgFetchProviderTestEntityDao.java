@@ -32,9 +32,5 @@ public class TgFetchProviderTestEntityDao extends CommonEntityDao<TgFetchProvide
         
         mixin = new TgFetchProviderTestEntityMixin(this);
     }
-
-    @Override
-    public int batchDelete(final EntityResultQueryModel<TgFetchProviderTestEntity> model) {
-        return defaultBatchDelete(model);
-    }
+    
 }

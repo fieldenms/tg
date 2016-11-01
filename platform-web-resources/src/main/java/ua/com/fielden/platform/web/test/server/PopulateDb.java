@@ -10,6 +10,7 @@ import java.util.SortedSet;
 
 import org.joda.time.DateTime;
 
+import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
+import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
@@ -42,7 +44,6 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import fielden.config.ApplicationDomain;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
@@ -231,6 +232,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         System.out.println("timeZone4.getId() == " + timeZone4.getId());
         final TgEntityWithTimeZoneDates timeZone5 = save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
         System.out.println("timeZone5.getId() == " + timeZone5.getId());
+        
+        final TgGeneratedEntity genEntity1 = save(new_(TgGeneratedEntity.class, "KEY1"));
+        System.out.println("genEntity1.getId() == " + genEntity1.getId());
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);

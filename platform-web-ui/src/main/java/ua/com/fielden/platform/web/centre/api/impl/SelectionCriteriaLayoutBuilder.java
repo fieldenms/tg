@@ -7,6 +7,7 @@ import org.apache.commons.lang.NotImplementedException;
 import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.data.generator.WithCreatedByUser;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder0Checkbox;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -38,8 +39,12 @@ class SelectionCriteriaLayoutBuilder<T extends AbstractEntity<?>> extends Result
     }
     
     @Override
-    public <G extends AbstractEntity<?> & WithCreatedByUser<G>> IResultSetBuilder0Checkbox<T> withGenerator(final Class<G> entityTypeToBeGenerator, final IGenerator<G> generator) {
-        throw new NotImplementedException("FIXME The support for data generators needs to be implemented.");
+    public <G extends AbstractEntity<?> & WithCreatedByUser<G>> IResultSetBuilder0Checkbox<T> withGenerator(final Class<G> entityTypeToBeGenerated, final Class<? extends IGenerator<G>> generator) {
+        if (entityTypeToBeGenerated == null || generator == null) {
+            throw new IllegalArgumentException("Generator definition requries both types to be specified (generator type and entityTypeToBeGenerated).");
+        }
+        this.builder.generatorTypes = Pair.pair(entityTypeToBeGenerated, generator);
+        return this;
     }
 
 }

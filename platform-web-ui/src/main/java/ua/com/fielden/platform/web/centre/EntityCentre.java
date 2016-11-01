@@ -15,10 +15,15 @@ import java.util.regex.Matcher;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.collect.ListMultimap;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.data.generator.IGenerator;
+import ua.com.fielden.platform.data.generator.WithCreatedByUser;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
@@ -84,9 +89,6 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
-
-import com.google.common.collect.ListMultimap;
-import com.google.inject.Injector;
 
 /**
  * Represents the entity centre.
@@ -1302,11 +1304,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
     }
     
-    public static interface ICentreGenerator<T extends AbstractEntity<?>> {
-        void generate(final Optional<CentreContext<T, ?>> centreContext);
+    public Optional<Pair<Class<?>, Class<?>>> getGeneratorTypes() {
+        return dslDefaultConfig.getGeneratorTypes();
     }
     
-    public ICentreGenerator<T> createCentreGeneratorInstance(final Class<? extends ICentreGenerator<T>> centreGeneratorType) {
-        return injector.getInstance(centreGeneratorType);
+    public IGenerator<?> createGeneratorInstance(final Class<?> centreGeneratorType) {
+        return (IGenerator<?>) injector.getInstance(centreGeneratorType);
     }
 }

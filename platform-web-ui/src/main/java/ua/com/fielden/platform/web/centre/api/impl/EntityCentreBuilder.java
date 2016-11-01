@@ -125,6 +125,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType = null;
 
     protected Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig = null;
+    protected Pair<Class<?>, Class<?>> generatorTypes = null;
     protected IFetchProvider<T> fetchProvider = null;
 
     protected boolean runAutomatically = false;
@@ -204,6 +205,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 resultSetRenderingCustomiserType,
                 resultSetCustomPropAssignmentHandlerType,
                 queryEnhancerConfig,
+                generatorTypes,
                 fetchProvider);
     }
 

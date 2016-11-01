@@ -44,6 +44,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
@@ -131,6 +132,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     public static boolean isRunning(final Map<String, Object> customObject) {
         return RunActions.RUN.toString().equals(customObject.get("@@action"));
     }
+    
+    /**
+     * Returns <code>true</code> if 'Sorting' action is performed, otherwise <code>false</code>.
+     *
+     * @param customObject
+     * @return
+     */
+    public static boolean isSorting(final Map<String, Object> customObject) {
+        return customObject.containsKey("@@sortingAction");
+    }
 
     /**
      * Creates the pair of 'custom object' (that contain 'critMetaValues', 'isCentreChanged' flag, 'resultEntities' and 'pageCount') and 'resultEntities' (query run is performed
@@ -141,9 +152,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param criteriaEntity
      * @param isCentreChanged
      * @param additionalFetchProvider
+     * @param createdByUserConstraint -- if exists then constraints the query by equality to the property 'createdBy'
      * @return
      */
-    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(final Map<String, Object> customObject, final M criteriaEntity, final Optional<IFetchProvider<T>> additionalFetchProvider, final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext) {
+    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, ArrayList<?>> createCriteriaMetaValuesCustomObjectWithResult(
+            final Map<String, Object> customObject, 
+            final M criteriaEntity, 
+            final Optional<IFetchProvider<T>> additionalFetchProvider, 
+            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
+            final Optional<User> createdByUserConstraint) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
 
         // the next action validates the entity one more time, but with the check for 'required' properties
@@ -158,6 +175,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             if (queryEnhancerAndContext.isPresent()) {
                 final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
                 criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
+            }
+            if (createdByUserConstraint.isPresent()) {
+                criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
             }
             IPage<T> page = null;
             List<T> data = new ArrayList<T>();
