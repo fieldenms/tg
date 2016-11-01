@@ -17,17 +17,17 @@ public class EntityWithDynamicEntityKey extends AbstractEntity<DynamicEntityKey>
 
     @IsProperty
     @CompositeKeyMember(1)
-    @Final
+    @Final(persistentOnly = false)
     private Integer key1;
 
     @IsProperty
     @CompositeKeyMember(2)
-    @Final
+    @Final(persistentOnly = false)
     private String key2;
 
     @IsProperty
     @CompositeKeyMember(3)
-    @Final
+    @Final(persistentOnly = false)
     private Entity key3;
 
     public Integer getKey1() {

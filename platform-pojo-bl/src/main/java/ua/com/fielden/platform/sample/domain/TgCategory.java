@@ -37,7 +37,7 @@ public class TgCategory extends ActivatableAbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    @Final(persistentOnly = true)
+    @Final
     private Integer finalProp;
 
     @Observable
