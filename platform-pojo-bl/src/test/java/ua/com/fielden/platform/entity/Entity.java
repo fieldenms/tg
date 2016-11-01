@@ -11,6 +11,8 @@ import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Monitoring;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
@@ -56,6 +58,7 @@ public class Entity extends AbstractEntity<String> {
     private Double observablePropertyInitialisedAsNull;
     @IsProperty
     @Invisible
+    @Final
     private Double finalProperty;
     @IsProperty(value = Double.class, linkProperty = "--stub to pass tests--")
     @Required
@@ -110,7 +113,6 @@ public class Entity extends AbstractEntity<String> {
         return finalProperty;
     }
 
-    @Final
     @Observable
     public void setFinalProperty(final Double finalProperty) {
         this.finalProperty = finalProperty;

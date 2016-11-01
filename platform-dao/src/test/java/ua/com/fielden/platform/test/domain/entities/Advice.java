@@ -26,7 +26,9 @@ public class Advice extends AbstractEntity<Long> {
 
     private final List<AdvicePosition> positions = new ArrayList<AdvicePosition>();
     @IsProperty
+    @Final
     private Date dateRaised;
+    
     @IsProperty
     private Date dateDispatched;
     /**
@@ -44,6 +46,7 @@ public class Advice extends AbstractEntity<Long> {
      * bogies to a Contractor's workshop for repair.
      */
     @IsProperty
+    @Final
     private Workshop initiatedAtWorkshop;
 
     @IsProperty
@@ -114,7 +117,6 @@ public class Advice extends AbstractEntity<Long> {
         return dateRaised;
     }
 
-    @Final
     @Observable
     protected Advice setDateRaised(final Date dateRaised) {
         this.dateRaised = dateRaised;
@@ -196,7 +198,6 @@ public class Advice extends AbstractEntity<Long> {
      *
      * @param initiatedAtWorkshop
      */
-    @Final
     @Observable
     public void setInitiatedAtWorkshop(final Workshop initiatedAtWorkshop) {
         this.initiatedAtWorkshop = initiatedAtWorkshop;

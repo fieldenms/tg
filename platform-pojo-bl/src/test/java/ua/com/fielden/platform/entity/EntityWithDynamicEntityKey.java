@@ -17,21 +17,23 @@ public class EntityWithDynamicEntityKey extends AbstractEntity<DynamicEntityKey>
 
     @IsProperty
     @CompositeKeyMember(1)
+    @Final
     private Integer key1;
 
     @IsProperty
     @CompositeKeyMember(2)
+    @Final
     private String key2;
 
     @IsProperty
     @CompositeKeyMember(3)
+    @Final
     private Entity key3;
 
     public Integer getKey1() {
         return key1;
     }
 
-    @Final
     @Observable
     public void setKey1(final Integer key1) {
         this.key1 = key1;
@@ -41,7 +43,6 @@ public class EntityWithDynamicEntityKey extends AbstractEntity<DynamicEntityKey>
         return key2;
     }
 
-    @Final
     @Observable
     public void setKey2(final String key2) {
         this.key2 = key2;
@@ -51,7 +52,6 @@ public class EntityWithDynamicEntityKey extends AbstractEntity<DynamicEntityKey>
         return key3;
     }
 
-    @Final
     @Observable
     public void setKey3(final Entity key3) {
         this.key3 = key3;
