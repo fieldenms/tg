@@ -855,7 +855,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
             return validators;
         } catch (final Exception ex) {
-            logger.error("Exception during collection of validators for property " + field.getName() + ".", ex);
+            logger.error(format("Exception during collection of validators for property [%s] in entity type [%s].", field.getName(), getType().getSimpleName()), ex);
             throw ex;
         }
     }
