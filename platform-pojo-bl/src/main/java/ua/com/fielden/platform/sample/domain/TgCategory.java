@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -11,6 +10,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 
 /**
  * Master entity object.
@@ -35,6 +35,20 @@ public class TgCategory extends ActivatableAbstractEntity<String> {
     @Title(value = "Dummy non persistent", desc = "Desc")
     private Integer dummy;
 
+    @IsProperty
+    @MapTo
+    @Final
+    private Integer finalProp;
+
+    @Observable
+    public TgCategory setFinalProp(final Integer finalProp) {
+        this.finalProp = finalProp;
+        return this;
+    }
+
+    public Integer getFinalProp() {
+        return finalProp;
+    }
 
     @Override
     @Observable
