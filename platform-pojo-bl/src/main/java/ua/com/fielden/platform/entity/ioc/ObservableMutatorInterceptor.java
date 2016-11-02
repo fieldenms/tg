@@ -92,7 +92,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                 logger.debug(format("Property \"%s\" was valid: %s", fullPropertyName, wasValid));
                 final Pair<Object, Object> newAndOldValues = determineNewAndOldValues(entity, propertyName, invocation.getArguments()[0], method);
                 final Object newValue = newAndOldValues.getKey();
-                final Object oldValue = newAndOldValues.getValue();
+                final Object currValue = newAndOldValues.getValue();
                 // logger.debug("Property \"" + fullPropertyName + "\" new value is \"" + newValue + "\", old value is \"" + oldValue + "\".");
 
                 // perform validation and possibly setting of the passed in value
@@ -106,20 +106,20 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                     // or the new value is null and the property is required -- need to trigger validation in such cases even if the current prop value is null
                     newValue == null && property.isRequired() ||
                     // or this is a genuine attempt to set a new property value
-                    !EntityUtils.equalsEx(oldValue, newValue)) {
+                    !EntityUtils.equalsEx(currValue, newValue)) {
                     ////////////////////////////////////////////////////
                     ///////////////// validation ///////////////////////
                     ////////////////////////////////////////////////////
                     logger.debug(format("Check if property \"%s\" has validators...", fullPropertyName));
                     if (property.hasValidators()) {
                         logger.debug(format("Execute validation for property \"%s\".", fullPropertyName));
-                        final Result result = property.validate(newValue, oldValue, property.getValidationAnnotations(), false);
+                        final Result result = property.validate(newValue, property.getValidationAnnotations(), false);
                         if (!result.isSuccessful()) {
                             logger.debug(format("Property \"%s\" validation failed: %s", fullPropertyName, property.getFirstFailure()));
                             // IMPORTANT : it fires ONLY the PropertyChangeOrIncorrectAttemptListeners!!!
                             entity.getChangeSupport().firePropertyChange(
                                     propertyName,
-                                    oldValue,
+                                    currValue,
                                     newValue,
                                     propertyWasValidAndNotEnforced(property, wasValid) ? CheckingStrategy.CHECK_EQUALITY : CheckingStrategy.CHECK_NOTHING,
                                     true);

@@ -87,7 +87,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         this.activatable = ActivatableAbstractEntity.class.isAssignableFrom(type) && !skipActiveOnly;
     }
 
-    public Result validate(final T newValue, final T oldValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
+    public Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         throw new StrictProxyException(format("Invalid call [validate] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 

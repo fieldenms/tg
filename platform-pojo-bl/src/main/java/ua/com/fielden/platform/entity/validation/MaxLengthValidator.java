@@ -22,7 +22,7 @@ public class MaxLengthValidator implements IBeforeChangeEventHandler<String> {
     }
 
     @Override
-    public Result handle(final MetaProperty<String> property, final String newValue, final String oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<String> property, final String newValue, final Set<Annotation> mutatorAnnotations) {
         final Object entity = property.getEntity();
         final String value = newValue;
         if (StringUtils.isEmpty(value)) { // no violation
