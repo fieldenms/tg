@@ -56,19 +56,12 @@ public class CriteriaResourceFactory extends Restlet {
         this.entityFactory = injector.getInstance(EntityFactory.class);
     }
     
-    private static class G extends AbstractEntity implements WithCreatedByUser<G> {
-        @Override
-        public User getCreatedBy() {
-            return null;
-        }
-    }
-
     @Override
     public void handle(final Request request, final Response response) {
         super.handle(request, response);
 
         if (Method.GET == request.getMethod() || Method.PUT == request.getMethod() || Method.POST == request.getMethod()) {
-            new CriteriaResource<AbstractEntity<?>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>, G>(
+            new CriteriaResource(
                     restUtil,
                     (EntityCentre<AbstractEntity<?>>) ResourceFactoryUtils.getEntityCentre(request, webUiConfig),
                     webUiConfig,
