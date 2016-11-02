@@ -279,7 +279,8 @@ public class CriteriaResource extends ServerResource {
                     centre.getQueryEnhancerConfig(),
                     previouslyRunCriteriaEntity);
             
-            final boolean generationShouldOccur = isRunning && !isSorting && centre.getGeneratorTypes().isPresent();
+            final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
+            final boolean generationShouldOccur = isRunning && !isSorting && createdByConstraintShouldOccur;
             if (generationShouldOccur) {
                 final Class<? extends AbstractEntity<?>> generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();
                 // create a generator instance using an injector
@@ -323,7 +324,7 @@ public class CriteriaResource extends ServerResource {
                             centre.getAdditionalFetchProvider(),
                             queryEnhancerAndContext,
                             // the query will be enhanced with condition createdBy=currentUser if generationShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
-                            generationShouldOccur && centre.getGeneratorTypes().get().getKey().equals(CentreResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
+                            createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(CentreResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
             if (isRunning) {
                 pair.getKey().put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)));
                 pair.getKey().put("metaValues", CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)));
