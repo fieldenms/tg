@@ -26,22 +26,24 @@
                 padding: 6px;
                 min-width: 100px;
             }
+            
             .menu-item:not(:first-of-type){
                 border-top: 1px solid #e3e3e3;
             }
+
             .menu-item:hover {
                 cursor: pointer;
                 background: var(--paper-blue-50);
                 color: var(--paper-blue-500);
             }
-            .menu-item:hover .dim{
+            .menu-item:hover .dim {
                 color: var(--paper-blue-300);
             }
             .menu-item.iron-selected {
                 background: var(--paper-blue-500);
                 color: var(--paper-blue-50);
             }
-            .menu-item.iron-selected .dim{
+            .menu-item.iron-selected .dim {
                 color: var(--paper-blue-100);
             }
             .primary {
@@ -118,14 +120,14 @@
                     type: String,
                     value: ""
                 },
-                
+
                 /**
                  * The function that retrives boundClientRect and offsetHeight from tg-menu-search-input component.
                  */
                 retrieveContainerSizes: {
                     type: Function
                 },
-                
+
                 /**
                  * An array of flattened menu item hierarchical list
                  */
@@ -138,20 +140,62 @@
             },
 
             selectNext: function () {
-                var selector = this.$.selector;
                 if (isNaN(selector.selected)) {
-                    selector.select(0);
+                    this.selectFirstVisisble();
                 } else {
-                    selector.selectNext();
+                    this.$.selector.selectNext();
                 }
+                this._scrollToSelected();
             },
 
             selectPrev: function () {
-                var selector = this.$.selector;
                 if (isNaN(selector.selected)) {
-                    selector.select(this._flatMenu.length - 1);
+                    this.selectLastVisisble();
                 } else {
-                    selector.selectPrevious();
+                    this.$.selector.selectPrevious();
+                }
+                this._scrollToSelected();
+            },
+
+            selectFirstVisisble: function () {
+                var menuItems = this.querySelectorAll(".menu-item");
+                var menuItem, itemIndex;
+                for (itemIndex = 0; itemIndex < menuItems.length; itemIndex++) {
+                    menuItem = menuItems[itemIndex];
+                    if (menuItem.offsetTop + menuItem.offsetHeight > this.scrollTop) {
+                        this.$.selector.select(itemIndex);
+                        return;
+                    }
+                }
+                this.$.selector.select(0);
+            },
+
+            selectLastVisisble: function () {
+                var menuItems = this.querySelectorAll(".menu-item");
+                var menuItem, itemIndex;
+                for (itemIndex = menuItems.length - 1; itemIndex >= 0; itemIndex--) {
+                    menuItem = menuItems[itemIndex];
+                    if (menuItem.offsetTop < this.scrollTop + this.clientHeight) {
+                        this.$.selector.select(itemIndex);
+                        return;
+                    }
+                }
+                this.$.selector.select(menuItems.length - 1);
+            },
+            
+            _scrollToSelected: function () {
+                var selector = this.$.selector;
+                var menuItem;
+                if (!isNaN(selector.selected)) {
+                    menuItem = this.querySelectorAll(".menu-item")[selector.selected];
+                    if (menuItem.offsetTop + menuItem.offsetHeight < this.scrollTop || menuItem.offsetTop > this.scrollTop + this.clientHeight ||
+                        menuItem.offsetTop < this.scrollTop  || menuItem.offsetTop + menuItem.offsetHeight > this.scrollTop + this.clientHeight) {
+                        if (menuItem.offsetTop < this.scrollTop) {
+                            this.scrollTop = menuItem.offsetTop;
+                        } else {
+                            this.scrollTop += (menuItem.offsetTop + menuItem.offsetHeight) - (this.scrollTop + this.clientHeight);
+                        }
+                    }
                 }
             },
 
