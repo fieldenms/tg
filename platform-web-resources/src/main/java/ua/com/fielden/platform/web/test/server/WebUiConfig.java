@@ -1327,7 +1327,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addCrit("critOnlyEntityProp").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
                 .withMatcher(CritOnlySingleEntityPropValueMatcherForCentre.class, context().withSelectedEntities()./*withMasterEntity().*/build())
                 .lightDesc()
-//                /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
+                /*    */.setDefaultValue(single().entity(TgPersistentEntityWithProperties.class)./* TODO not applicable on query generation level not().*/setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))./* TODO not applicable on query generation level canHaveNoValue(). */value())
                 .also()
                 .addCrit("userParam").asSingle().autocompleter(User.class)
                 .withProps(pair("base", false), pair("basedOnUser", false))
@@ -1586,7 +1586,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final IExtraFetchProviderSetter<TgPersistentEntityWithProperties> afterQueryEnhancerConf;
         if (withQueryEnhancer) {
-            afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withSelectionCrit().withMasterEntity().withComputation(entity -> 5).build());
+            afterQueryEnhancerConf = beforeEnhancerConfiguration.setQueryEnhancer(DetailsCentreQueryEnhancer.class, context().withMasterEntity().withComputation(entity -> 5).build());
         } else {
             afterQueryEnhancerConf = beforeEnhancerConfiguration;//.setQueryEnhancer(TgPersistentEntityWithPropertiesQueryEnhancer.class, context().withCurrentEntity().build());
         }

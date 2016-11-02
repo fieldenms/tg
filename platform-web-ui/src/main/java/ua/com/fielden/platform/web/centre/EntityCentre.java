@@ -1307,7 +1307,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.getGeneratorTypes();
     }
     
-    public IGenerator<?> createGeneratorInstance(final Class<?> centreGeneratorType) {
-        return (IGenerator<?>) injector.getInstance(centreGeneratorType);
+    /**
+     * Creates generic {@link IGenerator} instance from injector based on assumption that <code>generatorType</code> is of appropriate type (such checks are performed on API implementation level).
+     * 
+     * @param generatorType
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    public IGenerator createGeneratorInstance(final Class<?> generatorType) {
+        return (IGenerator) injector.getInstance(generatorType);
     }
 }
