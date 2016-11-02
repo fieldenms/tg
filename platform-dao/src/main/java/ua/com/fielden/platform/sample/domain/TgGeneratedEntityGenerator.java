@@ -54,7 +54,7 @@ public class TgGeneratedEntityGenerator implements IGenerator<TgGeneratedEntity>
             if (critOnlySingleCriterion.equals(userProvider.getUser())) {
                 return Result.failure(String.format("Can not generate the instance based on current user [%s], choose another user for that.", critOnlySingleCriterion));
             }
-            for (int index = 0; index < 15; index++) {
+            for (int index = 0; index < 10; index++) {
                 co.save(factory.newByKey(TgGeneratedEntity.class, critOnlySingleCriterion.getKey() + "_GEN" + index));
             }
         }
