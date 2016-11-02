@@ -10,7 +10,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 
-public class TestRenderingCustomiser implements IRenderingCustomiser<AbstractEntity<?>, Map<String, Object>> {
+public class TestRenderingCustomiser implements IRenderingCustomiser<Map<String, Object>> {
     private final Map<String, String> statusColouringScheme = new HashMap<String, String>() {
         {
             put("dR", "yellow");

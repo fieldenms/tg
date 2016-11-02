@@ -12,12 +12,14 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  * Therefore, the contract uses type parameter <code>R</code> to represent the type of such structure in the most flexible for the end developer way.
  * <p>
  * This contract should be view as a function that returns rendering hints for a single passed as an argument entity.
+ * <p>
+ * This type is not parameterized by <code>T extends AbstractEntity<?></code> specifically to reflect the fact that the entities, which are handled by entity centres are derived from a concrete entity type, but are not polymorphic with it. 
  *
  * @author TG Team
  *
- * @param <T>
+ * @param <R>
  */
-public interface IRenderingCustomiser<T extends AbstractEntity<?>, R> {
+public interface IRenderingCustomiser<R> {
 
     /**
      * Accepts an entity instance and computes rendering hints for its representation, and representation of its properties.
@@ -27,7 +29,7 @@ public interface IRenderingCustomiser<T extends AbstractEntity<?>, R> {
      *
      * @param entity
      */
-    default Optional<R> getCustomRenderingFor(final T entity) {
+    default Optional<R> getCustomRenderingFor(final AbstractEntity<?> entity) {
         return Optional.empty();
     }
 }

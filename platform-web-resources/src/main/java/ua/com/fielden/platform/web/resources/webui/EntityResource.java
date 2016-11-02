@@ -369,7 +369,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>) criteriaEntity;
 
                     // TODO this is most likely a dead code, otherwise, call to Optional.of(null) would blow.
-                    final Pair<Map<String, Object>, ArrayList<?>> pair = //Pair.pair(null, null);
+                    final Pair<Map<String, Object>, List<?>> pair = //Pair.pair(null, null);
                             CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
                                     customObject,
                                     appliedCriteriaEntity,

@@ -317,7 +317,7 @@ public class CriteriaResource extends ServerResource {
             // This should be the responsibility of the application developer to properly construct a subquery that is based on the generated data.
             ///////////////////////////////////////////////
             
-            final Pair<Map<String, Object>, ArrayList<?>> pair =
+            final Pair<Map<String, Object>, List<?>> pair =
                     CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
                             customObject,
                             previouslyRunCriteriaEntity,
@@ -337,9 +337,9 @@ public class CriteriaResource extends ServerResource {
             }
 
             //Running the rendering customiser for result set of entities.
-            final Optional<IRenderingCustomiser<AbstractEntity<?>, ?>> renderingCustomiser = centre.getRenderingCustomiser();
+            final Optional<IRenderingCustomiser<?>> renderingCustomiser = centre.getRenderingCustomiser();
             if (renderingCustomiser.isPresent()) {
-                final IRenderingCustomiser<AbstractEntity<?>, ?> renderer = renderingCustomiser.get();
+                final IRenderingCustomiser<?> renderer = renderingCustomiser.get();
                 final List<Object> renderingHints = new ArrayList<>();
                 for (final Object entity : pair.getValue()) {
                     renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>)entity).get());

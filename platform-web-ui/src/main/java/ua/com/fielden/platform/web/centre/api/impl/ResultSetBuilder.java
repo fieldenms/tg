@@ -250,7 +250,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IQueryEnhancerSetter<T> setRenderingCustomiser(final Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> type) {
+    public IQueryEnhancerSetter<T> setRenderingCustomiser(final Class<? extends IRenderingCustomiser<?>> type) {
         if (type == null) {
             throw new IllegalArgumentException("Rendering customised type should not be null.");
         }
@@ -335,7 +335,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IQueryEnhancerSetter<T> setRenderingCustomiser(final Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> type) {
+        public IQueryEnhancerSetter<T> setRenderingCustomiser(final Class<? extends IRenderingCustomiser<?>> type) {
             return ResultSetBuilder.this.setRenderingCustomiser(type);
         }
 

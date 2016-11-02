@@ -124,7 +124,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         this.injector = injector;
         this.miType = miType;
-        this.entityType = (Class<T>) CentreUtils.getEntityType(miType);
+        this.entityType = CentreUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
     }
@@ -629,9 +629,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      *
      * @return
      */
-    public Optional<IRenderingCustomiser<T, ?>> getRenderingCustomiser() {
+    public Optional<IRenderingCustomiser<?>> getRenderingCustomiser() {
         if (dslDefaultConfig.getResultSetRenderingCustomiserType().isPresent()) {
-            return (Optional<IRenderingCustomiser<T, ?>>) Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
+            return Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
         } else {
             return Optional.empty();
         }

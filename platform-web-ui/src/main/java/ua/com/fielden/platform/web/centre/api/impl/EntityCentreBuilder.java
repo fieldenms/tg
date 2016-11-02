@@ -10,6 +10,9 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -37,9 +40,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 
 /**
  * A class implementing the Entity Centre DSL contracts.
@@ -121,7 +121,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final ListMultimap<String, SummaryPropDef> summaryExpressions = ArrayListMultimap.create();
     protected EntityActionConfig resultSetPrimaryEntityAction;
     protected final List<EntityActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
-    protected Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType = null;
+    protected Class<? extends IRenderingCustomiser<?>> resultSetRenderingCustomiserType = null;
     protected Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType = null;
 
     protected Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig = null;
