@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
@@ -213,13 +215,10 @@ public class CriteriaResource extends ServerResource {
         final Map<String, Object> params = new LinkedHashMap<>();
         criteriaEntity
             .nonProxiedProperties()
-            .map(mp -> {
-                return new Pair<String, Object>(mp.getName(), mp.getValue());
-            })
-            .forEach(pair -> params.put(pair.getKey(), pair.getValue()));
+            .forEach(mp-> params.put(mp.getName(), mp.getValue()));
         return params;
     }
-
+    
     /**
      * Handles PUT request resulting from tg-selection-criteria <code>run()</code> method.
      */
