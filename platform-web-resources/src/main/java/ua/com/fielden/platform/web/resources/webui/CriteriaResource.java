@@ -286,7 +286,7 @@ public class CriteriaResource extends ServerResource {
                 final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
                 
                 // delete any previously generated for the current user data using a companion for an associated with the generator entity type
-                IEntityDao co = companionFinder.find(generatorEntityType);
+                final IEntityDao co = companionFinder.find(generatorEntityType);
                 co.batchDelete(
                     select(generatorEntityType).where().prop("createdBy").eq().val(userProvider.getUser()).model()
                 );
