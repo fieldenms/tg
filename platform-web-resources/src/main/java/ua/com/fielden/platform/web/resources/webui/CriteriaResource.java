@@ -211,26 +211,12 @@ public class CriteriaResource extends ServerResource {
      */
     private Map<String, Object> createGeneratorParams(final EnhancedCentreEntityQueryCriteria<?, ? extends IEntityDao<?>> criteriaEntity) {
         final Map<String, Object> params = new LinkedHashMap<>();
-//        params.putAll( // TODO why NPE is thrown here?
-//            criteriaEntity
-//            .nonProxiedProperties()
-//            .map(mp -> {
-//                return new Pair<>(mp.getName(), mp.getValue());
-//            })
-//            .collect(Collectors.toMap(Pair::getKey, Pair::getValue))
-//        );
-        
-        final List<Pair<String, Object>> pairs = criteriaEntity
-        .nonProxiedProperties()
-        .map(mp -> {
-            return new Pair<String, Object>(mp.getName(), mp.getValue());
-        })
-        .collect(Collectors.toList());
-        
-        for (final Pair<String, Object> pair: pairs) {
-            params.put(pair.getKey(), pair.getValue());
-        }
-
+        criteriaEntity
+            .nonProxiedProperties()
+            .map(mp -> {
+                return new Pair<String, Object>(mp.getName(), mp.getValue());
+            })
+            .forEach(pair -> params.put(pair.getKey(), pair.getValue()));
         return params;
     }
 
