@@ -18,7 +18,7 @@ import ua.com.fielden.platform.security.user.User;
 public class UserAsConfigurationOwnerValidator implements IBeforeChangeEventHandler<User> {
 
     @Override
-    public Result handle(final MetaProperty<User> property, final User newValue, final User oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<User> property, final User newValue, final Set<Annotation> mutatorAnnotations) {
         return newValue.isBase() ? Result.successful(newValue) : Result.failure(format("User [%s] is not a base user.", newValue));
     }
 

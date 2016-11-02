@@ -25,7 +25,7 @@ public class StringValidator implements IBeforeChangeEventHandler<String> {
     }
 
     @Override
-    public Result handle(final MetaProperty<String> property, final String newValue, final String oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<String> property, final String newValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue != null && !newValue.matches(regex)) {
             return Result.failure(format(validationErrorTemplate, newValue, property.getName(), property.getEntity().getType().getSimpleName()));
         }

@@ -20,7 +20,7 @@ public class StubValidator implements IBeforeChangeEventHandler {
     }
 
     @Override
-    public Result handle(final MetaProperty property, final Object newValue, final Object oldValue, final Set mutatorAnnotations) {
+    public Result handle(final MetaProperty property, final Object oldValue, final Set mutatorAnnotations) {
         throw new IllegalStateException("Handling BCE with stub validator is illegal. It should only be used for referencing purposes.");
     }
 

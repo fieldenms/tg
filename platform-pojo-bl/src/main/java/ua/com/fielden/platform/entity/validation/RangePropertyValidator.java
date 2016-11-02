@@ -38,7 +38,7 @@ public class RangePropertyValidator implements IBeforeChangeEventHandler<Object>
     }
 
     @Override
-    public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         Result result = new Result(null, "Valid");
         final List<Result> successfulResult = new ArrayList<Result>();
         for (final String opositeRangeProperty : opositeRangeProperties) {

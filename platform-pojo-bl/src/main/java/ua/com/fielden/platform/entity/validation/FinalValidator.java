@@ -24,7 +24,7 @@ public class FinalValidator implements IBeforeChangeEventHandler<Object> {
     }
     
     @Override
-    public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         final AbstractEntity<?> entity = property.getEntity();
         
         if (!isPropertyFinalised(property, persistentOnly) ||
