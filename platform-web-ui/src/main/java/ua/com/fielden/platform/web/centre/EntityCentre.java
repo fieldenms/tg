@@ -23,7 +23,6 @@ import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentr
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.data.generator.IGenerator;
-import ua.com.fielden.platform.data.generator.WithCreatedByUser;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
@@ -1129,7 +1128,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param propDef
      * @param resultSetCustomPropAssignmentHandlerType
      */
-    private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> resultSetCustomPropAssignmentHandlerType) {
+    private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler>> resultSetCustomPropAssignmentHandlerType) {
         centre.getEnhancer().addCustomProperty(root, "" /* this is the contextPath */, propName, propDef.title, propDef.desc, propDef.type);
     }
 
@@ -1278,7 +1277,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return new Pair<>(new FallbackValueMatcherWithCentreContext<V>(co), Optional.empty());
     }
 
-    public Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> getCustomPropertiesAsignmentHandler() {
+    public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {
         return dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType();
     }
 
@@ -1286,7 +1285,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.getResultSetProperties();
     }
 
-    public ICustomPropsAssignmentHandler<T> createAssignmentHandlerInstance(final Class<? extends ICustomPropsAssignmentHandler<T>> assignmentHandlerType) {
+    public ICustomPropsAssignmentHandler createAssignmentHandlerInstance(final Class<? extends ICustomPropsAssignmentHandler> assignmentHandlerType) {
         return injector.getInstance(assignmentHandlerType);
     }
 

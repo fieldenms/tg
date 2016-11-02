@@ -12,10 +12,12 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
-import ua.com.fielden.platform.data.generator.IGenerator;
-import ua.com.fielden.platform.data.generator.WithCreatedByUser;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.Pair;
@@ -36,10 +38,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.layout.FlexLayout;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
 
 /**
  *
@@ -288,7 +286,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     /**
      * Represents a type of a contract that is responsible for assigning values to custom properties as part of the data retrieval process.
      */
-    private final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType;
+    private final Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType;
 
     ///////////////////////////////////////////////////////////
     ///////// QUERY ENHANCER, GENERATOR and FETCH /////////////
@@ -359,7 +357,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final EntityActionConfig resultSetPrimaryEntityAction,
             final List<EntityActionConfig> resultSetSecondaryEntityActions,
             final Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType,
-            final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType,
+            final Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider) {
@@ -689,7 +687,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.of(Collections.unmodifiableMap(resultSetOrdering));
     }
 
-    public Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> getResultSetCustomPropAssignmentHandlerType() {
+    public Optional<Class<? extends ICustomPropsAssignmentHandler>> getResultSetCustomPropAssignmentHandlerType() {
         return Optional.ofNullable(resultSetCustomPropAssignmentHandlerType);
     }
 

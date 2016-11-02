@@ -226,7 +226,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder9RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> handler) {
+    public IResultSetBuilder9RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler> handler) {
         if (handler == null) {
             throw new IllegalArgumentException("Assignment handler for custom properties should not be null.");
         }
@@ -330,7 +330,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     private class ResultSetSecondaryActionsBuilder implements IAlsoSecondaryAction<T> {
 
         @Override
-        public IResultSetBuilder9RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> handler) {
+        public IResultSetBuilder9RenderingCustomiser<T> setCustomPropsValueAssignmentHandler(final Class<? extends ICustomPropsAssignmentHandler> handler) {
             return ResultSetBuilder.this.setCustomPropsValueAssignmentHandler(handler);
         }
 

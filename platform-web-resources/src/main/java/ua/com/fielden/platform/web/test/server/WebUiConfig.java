@@ -1096,7 +1096,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         }
     }
 
-    private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<AbstractEntity<?>> {
+    private static class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler {
         @Override
         public void assignValues(final AbstractEntity<?> entity) {
 

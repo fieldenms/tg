@@ -122,7 +122,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected EntityActionConfig resultSetPrimaryEntityAction;
     protected final List<EntityActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
     protected Class<? extends IRenderingCustomiser<? extends AbstractEntity<?>, ?>> resultSetRenderingCustomiserType = null;
-    protected Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>> resultSetCustomPropAssignmentHandlerType = null;
+    protected Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType = null;
 
     protected Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig = null;
     protected Pair<Class<?>, Class<?>> generatorTypes = null;
