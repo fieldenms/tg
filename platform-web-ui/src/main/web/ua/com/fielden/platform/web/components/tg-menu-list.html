@@ -26,11 +26,9 @@
                 padding: 6px;
                 min-width: 100px;
             }
-            
-            .menu-item:not(:first-of-type){
+            .menu-item:not(:first-of-type) {
                 border-top: 1px solid #e3e3e3;
             }
-
             .menu-item:hover {
                 cursor: pointer;
                 background: var(--paper-blue-50);
@@ -100,6 +98,18 @@
             }
             return res;
         };
+        var searchForPhrase = function (flatMenu, phraseToSearch) {
+            var itemIndex = 0;
+            var menuItem, positionInTitle, positionInDesc;
+            for (itemIndex = 0; itemIndex < flatMenu.length; itemIndex++) {
+                menuItem = flatMenu[itemIndex];
+                positionInTitle = (menuItem.title.toLowerCase()).search(phraseToSearch.toLowerCase());
+                positionInDesc = (menuItem.description.toLowerCase()).search(phraseToSearch.toLowerCase());
+                if (positionInTitle >= 0 || positionInDesc >= 0) {
+                    return itemIndex;
+                }
+            }
+        };
         Polymer({
             is: 'tg-menu-list',
 
@@ -133,6 +143,8 @@
                  */
                 _flatMenu: Array,
             },
+
+            observers: ["_scrollToFirstMatchedItem(_flatMenu, phraseToHighlight)"],
 
             ready: function () {
                 this.noAutoFocus = true;
@@ -181,22 +193,6 @@
                     }
                 }
                 this.$.selector.select(menuItems.length - 1);
-            },
-            
-            _scrollToSelected: function () {
-                var selector = this.$.selector;
-                var menuItem;
-                if (!isNaN(selector.selected)) {
-                    menuItem = this.querySelectorAll(".menu-item")[selector.selected];
-                    if (menuItem.offsetTop + menuItem.offsetHeight < this.scrollTop || menuItem.offsetTop > this.scrollTop + this.clientHeight ||
-                        menuItem.offsetTop < this.scrollTop  || menuItem.offsetTop + menuItem.offsetHeight > this.scrollTop + this.clientHeight) {
-                        if (menuItem.offsetTop < this.scrollTop) {
-                            this.scrollTop = menuItem.offsetTop;
-                        } else {
-                            this.scrollTop += (menuItem.offsetTop + menuItem.offsetHeight) - (this.scrollTop + this.clientHeight);
-                        }
-                    }
-                }
             },
 
             clearSelection: function () {
@@ -269,6 +265,31 @@
                 var visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
                 this.style['max-height'] = (visibleHeight - top - 10) + 'px'; // 10 pixels is an arbitrary adjustment
                 this.style['min-height'] = '50px';
+            },
+
+            _scrollToFirstMatchedItem: function (flatMenu, phraseToHighlight) {
+                var indexOfFirstElementWithPhrase = searchForPhrase(flatMenu, phraseToHighlight);
+                var menuItem;
+                if (indexOfFirstElementWithPhrase) {
+                    menuItem = this.querySelectorAll(".menu-item")[indexOfFirstElementWithPhrase];
+                    this.scrollTop = menuItem.offsetTop <= this.scrollHeight - this.clientHeight ? menuItem.offsetTop : this.scrollHeight - this.clientHeight;
+                }
+            },
+
+            _scrollToSelected: function () {
+                var selector = this.$.selector;
+                var menuItem;
+                if (!isNaN(selector.selected)) {
+                    menuItem = this.querySelectorAll(".menu-item")[selector.selected];
+                    if (menuItem.offsetTop + menuItem.offsetHeight < this.scrollTop || menuItem.offsetTop > this.scrollTop + this.clientHeight ||
+                        menuItem.offsetTop < this.scrollTop || menuItem.offsetTop + menuItem.offsetHeight > this.scrollTop + this.clientHeight) {
+                        if (menuItem.offsetTop < this.scrollTop) {
+                            this.scrollTop = menuItem.offsetTop;
+                        } else {
+                            this.scrollTop += (menuItem.offsetTop + menuItem.offsetHeight) - (this.scrollTop + this.clientHeight);
+                        }
+                    }
+                }
             },
 
             _menuChanged: function (newValue, oldValue) {
