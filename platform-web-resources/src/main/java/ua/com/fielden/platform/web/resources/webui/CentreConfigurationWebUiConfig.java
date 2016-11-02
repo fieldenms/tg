@@ -71,6 +71,7 @@ public class CentreConfigurationWebUiConfig {
                         .postActionSuccess(new IPostAction() {
                             @Override
                             public JsCode build() {
+                                // self.run should be invoked with isSortingAction=true parameter. See tg-entity-centre-behavior 'run' property for more details.
                                 return new JsCode("   return self.retrieve().then(function () { self.run(true); }); \n");
                             }
                         })
