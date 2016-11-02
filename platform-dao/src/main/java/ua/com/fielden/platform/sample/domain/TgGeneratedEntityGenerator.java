@@ -3,6 +3,8 @@ package ua.com.fielden.platform.sample.domain;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -22,6 +24,7 @@ import ua.com.fielden.platform.security.user.User;
  *
  */
 public class TgGeneratedEntityGenerator implements IGenerator<TgGeneratedEntity> {
+    private final Logger logger = Logger.getLogger(getClass());
     private final ITgGeneratedEntity co;
     private final EntityFactory factory;
     private final IUserProvider userProvider;
@@ -37,10 +40,13 @@ public class TgGeneratedEntityGenerator implements IGenerator<TgGeneratedEntity>
     @Override
     @SessionRequired
     public Result gen(final Class<TgGeneratedEntity> type, final Map<String, Object> params) {
+        logger.debug("TgGeneratedEntityGenerator.gen occurs. params = " + params);
         // generate instances based on crit-only multi criterion
         final List<String> critOnlyMultiCriterion = (List<String>) params.get("tgGeneratedEntity_critOnlyMultiProp");
         for (final String part : critOnlyMultiCriterion) {
-            co.save(factory.newByKey(TgGeneratedEntity.class, part));
+            for (int index = 0; index < 15; index++) {
+                co.save(factory.newByKey(TgGeneratedEntity.class, part + index));
+            }
         }
         // generate instances based on crit-only single criterion
         final User critOnlySingleCriterion = (User) params.get("tgGeneratedEntity_critOnlySingleProp");
@@ -48,7 +54,9 @@ public class TgGeneratedEntityGenerator implements IGenerator<TgGeneratedEntity>
             if (critOnlySingleCriterion.equals(userProvider.getUser())) {
                 return Result.failure(String.format("Can not generate the instance based on current user [%s], choose another user for that.", critOnlySingleCriterion));
             }
-            co.save(factory.newByKey(TgGeneratedEntity.class, critOnlySingleCriterion.getKey() + "_GEN"));
+            for (int index = 0; index < 15; index++) {
+                co.save(factory.newByKey(TgGeneratedEntity.class, critOnlySingleCriterion.getKey() + "_GEN" + index));
+            }
         }
         return Result.successful("ok");
     }
