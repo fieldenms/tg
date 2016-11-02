@@ -59,7 +59,6 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-//public class CriteriaResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>, G extends AbstractEntity<?> & WithCreatedByUser<G>> extends ServerResource {
 public class CriteriaResource extends ServerResource {
     private final static Logger logger = Logger.getLogger(CriteriaResource.class);
 

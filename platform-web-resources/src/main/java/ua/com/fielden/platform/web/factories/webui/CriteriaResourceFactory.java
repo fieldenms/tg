@@ -31,7 +31,6 @@ import ua.com.fielden.platform.web.resources.webui.CriteriaResource;
  *
  */
 public class CriteriaResourceFactory extends Restlet {
-    private final Injector injector;
     private final RestServerUtil restUtil;
     private final ICompanionObjectFinder companionFinder;
     private final IWebUiConfig webUiConfig;
@@ -47,7 +46,6 @@ public class CriteriaResourceFactory extends Restlet {
      */
     public CriteriaResourceFactory(final IWebUiConfig webUiConfig, final Injector injector) {
         this.webUiConfig = webUiConfig;
-        this.injector = injector;
         this.restUtil = injector.getInstance(RestServerUtil.class);
         this.critGenerator = injector.getInstance(ICriteriaGenerator.class);
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
@@ -63,7 +61,7 @@ public class CriteriaResourceFactory extends Restlet {
         if (Method.GET == request.getMethod() || Method.PUT == request.getMethod() || Method.POST == request.getMethod()) {
             new CriteriaResource(
                     restUtil,
-                    (EntityCentre<AbstractEntity<?>>) ResourceFactoryUtils.getEntityCentre(request, webUiConfig),
+                    ResourceFactoryUtils.getEntityCentre(request, webUiConfig),
                     webUiConfig,
                     companionFinder,
                     serverGdtm,
