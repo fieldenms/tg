@@ -545,13 +545,11 @@
             
             _modificationsChanged: function (_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist) {
                 var self = this;
-                // need to place this action on top of JS execution stack to ensure that _innerEnabled has already been set to false inside _afterExecution method (tg-abstract-action-behavior)
-                this.async(function () {
-                    var saveButton = self.$$('tg-action[role="save"]');
-                    if (saveButton) {
-                        saveButton._innerEnabled = _editedPropsExist || _bindingEntityNotPersistentOrNotPersistedOrModified;
-                    }
-                }, 1);
+                var saveButton = self.$._saveAction;
+                // console.debug('_bindingEntity self = ', self.is, 'self.$._saveAction = ', self.$._saveAction, '_bindingEntityNotPersistentOrNotPersistedOrModified', _bindingEntityNotPersistentOrNotPersistedOrModified, '_editedPropsExist', _editedPropsExist);
+                if (saveButton) {
+                    saveButton.outerEnabled = _editedPropsExist || _bindingEntityNotPersistentOrNotPersistedOrModified;
+                }
             },
 
             /**
