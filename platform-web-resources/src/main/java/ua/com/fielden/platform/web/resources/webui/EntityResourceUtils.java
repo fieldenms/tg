@@ -758,6 +758,15 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         // returns first failure if exists or successful result if there was no failure.
         final Result isValid = firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
         
+        final boolean needToBeSavedByCompanion = 
+                   !entity.isPersistent() // non-persistent entities should always be saved
+                || !entity.isPersisted() // persistent but not persisted (new) entities should always be saved
+                || !isValid.isSuccessful() // persistent+persisted entities, that have errors, should always be saved (passed to companion 'save' method to process errors in domain-driven way)
+                || entity.isDirty(); // persistent+persisted+valid+dirty entities should always be saved
+        if (!needToBeSavedByCompanion) {
+            throw Result.failure("Already saved.");
+        }
+        
         if (isValid.isSuccessful()) {
             if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null)) {
                 throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
