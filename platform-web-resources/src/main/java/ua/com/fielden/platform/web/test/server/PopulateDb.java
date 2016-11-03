@@ -109,20 +109,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         System.out.println("Settign up current user SU and its permissions...");
         save(new_composite(UserAndRoleAssociation.class, su, admin));
-        try {
-            final IApplicationSettings settings = getInstance(IApplicationSettings.class);
-            final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName());
-            final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));
-            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
-            for (final SecurityTokenNode securityNode : topNodes) {
-                alg.search(securityNode, predicate);
-            }
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
-
-        up.setUser(su);
 
         // populate testing entities
         final TgPersistentEntityWithProperties ent1 = save(new_(TgPersistentEntityWithProperties.class, "KEY1").setIntegerProp(43).setRequiredValidatedProp(30)
@@ -248,10 +234,23 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgEntityWithTimeZoneDates timeZone5 = save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
         System.out.println("timeZone5.getId() == " + timeZone5.getId());
         
-        final TgGeneratedEntity genEntity1 = save(new_(TgGeneratedEntity.class).setEntityKey("KEY1"));
+        final TgGeneratedEntity genEntity1 = save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
         System.out.println("genEntity1.getId() == " + genEntity1.getId());
 
-        System.out.println("Completed database creation and population.");
+        try {
+            final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
+            final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
+            final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
+            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));
+            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
+            for (final SecurityTokenNode securityNode : topNodes) {
+                alg.search(securityNode, predicate);
+            }
+
+            System.out.println("Completed database creation and population.");
+        } catch (final Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
