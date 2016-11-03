@@ -17,7 +17,7 @@ import ua.com.fielden.platform.error.Result;
  */
 public class BceOriginationPropertyValidation implements IBeforeChangeEventHandler<String> {
     @Override
-    public Result handle(final MetaProperty<String> property, final String newOriginationProperty, final String oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<String> property, final String newOriginationProperty, final Set<Annotation> mutatorAnnotations) {
         try {
             CalculatedProperty.validateOriginationProperty((CalculatedProperty) property.getEntity(), newOriginationProperty);
         } catch (final IncorrectCalcPropertyException e) {

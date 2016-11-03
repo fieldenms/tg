@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity.validation;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 
@@ -31,14 +30,11 @@ public interface IBeforeChangeEventHandler<T> {
      * @param property
      *            -- meta-property for the entity property being set.
      * @param newValue
-     *            -- a new value, which is a BCE handling subject and the one that will be set as an entity property value if handling succeeds.
-     * @param oldValue
-     *            -- an old or other words current property values, which might be needed for BCE handling; in case of {@link ObservableMutatorInterceptor} old value means current
-     *            value; in case of re validation (re-handling without mutator invocation) old value means previous value.
+     *            -- a new value, which is a BCE handling subject; it gets assigned to an entity property if its validation succeeds.
      * @param mutatorAnnotations
      *            -- a set of annotations defined for a method representing a mutator changing property's value
      *
      * @return
      */
-    Result handle(final MetaProperty<T> property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations);
+    Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations);
 }

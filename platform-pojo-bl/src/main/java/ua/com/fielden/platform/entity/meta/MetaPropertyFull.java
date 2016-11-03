@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -26,11 +27,12 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
+import ua.com.fielden.platform.entity.validation.FinalValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
+import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
@@ -121,6 +123,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private final boolean upperCase;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     
+    // if the value is present then a corresponding property has annotation {@link Final}
+    // the boolean value captures the value of attribute persistentOnly
+    private final Optional<Boolean> persistentOnlySettingForFinalAnnotation;
 
     private final PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
@@ -171,6 +176,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         this.propertyAnnotationType = propertyAnnotationType;
         this.calculated = calculated;
         this.upperCase = upperCase;
+        final Final finalAnnotation = field.getAnnotation(Final.class);
+        persistentOnlySettingForFinalAnnotation = finalAnnotation == null ? Optional.empty() : Optional.of(finalAnnotation.persistentOnly());
     }
 
     /**
@@ -181,17 +188,12 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * Please note that collectional properties may have up to three mutators having different annotations. Thus, a special logic is used to ensure that only validators associated
      * with the mutator being processed are applied.
      *
-     * @param property
-     * @param value
-     * @param entity
-     * @param applicableValidationAnnotations
-     * @param mutator
-     *            - an actual method modifying the value - either {@link Mutator#SETTER}, {@link Mutator#INCREMENTOR} or {@link Mutator#DECREMENTOR}
      * @return
      */
-    public synchronized final Result validate(final T newValue, final T oldValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
+    @Override
+    public synchronized final Result validate(final T newValue, final Set<Annotation> applicableValidationAnnotations, final boolean ignoreRequiredness) {
         setLastInvalidValue(null);
-        if (!ignoreRequiredness && isRequired() && isNull(newValue, oldValue)) {
+        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue())) {
             final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler == null || requiredHandler.size() > 1) {
                 throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");
@@ -208,7 +210,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                 setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), new Result(getEntity(), "Requiredness updated by successful result."));
             }
             // process all registered validators (that have its own annotations)
-            return processValidators(newValue, oldValue, applicableValidationAnnotations);
+            return processValidators(newValue, applicableValidationAnnotations);
         }
     }
 
@@ -254,10 +256,11 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *            properties as invalid only because they are empty.
      * @return revalidation result
      */
+    @Override
     public synchronized final Result revalidate(final boolean ignoreRequiredness) {
         // revalidation is required only is there is an assigned value
         if (assigned) {
-            return validate(getLastAttemptedValue(), null, validationAnnotations, ignoreRequiredness);
+            return validate(getLastAttemptedValue(), validationAnnotations, ignoreRequiredness);
         }
         return Result.successful(this);
     }
@@ -266,12 +269,11 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * Processes all registered validators (that have its own annotations) by iterating over validators associated with corresponding validation annotations (va).
      *
      * @param newValue
-     * @param oldValue
      * @param applicableValidationAnnotations
      * @param mutatorType
      * @return
      */
-    private Result processValidators(final T newValue, final T oldValue, final Set<Annotation> applicableValidationAnnotations) {
+    private Result processValidators(final T newValue, final Set<Annotation> applicableValidationAnnotations) {
         // iterate over registered validations
         for (final ValidationAnnotation va : validators.keySet()) {
             // requiredness falls outside of processing logic for other validators, so simply ignore it
@@ -284,7 +286,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                 // if validator exists ...and it should... then validated and set validation result
                 final IBeforeChangeEventHandler<T> handler = pair.getKey();
                 if (handler != null && isValidatorApplicable(applicableValidationAnnotations, va.getType())) {
-                    final Result result = pair.getKey().handle(this, newValue, oldValue, applicableValidationAnnotations);
+                    final Result result = pair.getKey().handle(this, newValue, applicableValidationAnnotations);
                     setValidationResultNoSynch(va, handler, result); // important to call setValidationResult as it fires property change event listeners
                     if (!result.isSuccessful()) {
                         // 1. isCollectional() && newValue instance of Collection : previously the size of "newValue" collection was set as LastInvalidValue, but now,
@@ -317,6 +319,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         return false;
     }
 
+    @Override
     public final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> getValidators() {
         return validators;
     }
@@ -355,6 +358,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param handler
      * @param validationResult
      */
+    @Override
     public synchronized final void setValidationResult(final ValidationAnnotation key, final IBeforeChangeEventHandler<T> handler, final Result validationResult) {
         setValidationResultNoSynch(key, handler, validationResult);
     }
@@ -364,6 +368,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @param validationResult
      */
+    @Override
     public synchronized final void setRequiredValidationResult(final Result validationResult) {
         setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.REQUIRED);
     }
@@ -373,6 +378,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @param validationResult
      */
+    @Override
     public synchronized final void setEntityExistsValidationResult(final Result validationResult) {
         setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.ENTITY_EXISTS);
     }
@@ -382,6 +388,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @param validationResult
      */
+    @Override
     public synchronized final void setDomainValidationResult(final Result validationResult) {
         setValidationResultForFirtsValidator(validationResult, ValidationAnnotation.DOMAIN);
     }
@@ -421,6 +428,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *            -- validation annotation.
      * @return
      */
+    @Override
     public synchronized final Result getValidationResult(final ValidationAnnotation va) {
         final Result failure = getFirstFailureFor(va);
         return failure != null ? failure : validators.get(va).values().iterator().next();
@@ -431,11 +439,13 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public synchronized final boolean isValid() {
         final Result failure = getFirstFailure();
         return failure == null;
     }
 
+    @Override
     public synchronized final boolean hasWarnings() {
         final Result failure = getFirstWarning();
         return failure != null;
@@ -446,6 +456,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public synchronized final Warning getFirstWarning() {
         for (final ValidationAnnotation va : validators.keySet()) {
             final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
@@ -461,6 +472,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     /**
      * Removes all validation warnings (not errors) from the propety.
      */
+    @Override
     public synchronized final void clearWarnings() {
         for (final ValidationAnnotation va : validators.keySet()) {
             final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
@@ -478,6 +490,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public synchronized final boolean isValidWithRequiredCheck() {
         final boolean result = isValid();
         if (result) {
@@ -519,6 +532,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public synchronized final Result getFirstFailure() {
         for (final ValidationAnnotation va : validators.keySet()) {
             final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
@@ -552,6 +566,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public final int numberOfValidators() {
         return validators.size();
     }
@@ -562,6 +577,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param propertyName
      * @param listener
      */
+    @Override
     public final synchronized void addValidationResultsChangeListener(final PropertyChangeListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
@@ -572,6 +588,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     /**
      * Removes validationResults change listener.
      */
+    @Override
     public synchronized final void removeValidationResultsChangeListener(final PropertyChangeListener listener) {
         changeSupport.removePropertyChangeListener(VALIDATION_RESULTS_PROPERTY_NAME, listener);
     }
@@ -582,6 +599,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param propertyName
      * @param listener
      */
+    @Override
     public final synchronized void addEditableChangeListener(final PropertyChangeListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
@@ -592,6 +610,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     /**
      * Removes change listener for property <code>editable</code>.
      */
+    @Override
     public final synchronized void removeEditableChangeListener(final PropertyChangeListener listener) {
         changeSupport.removePropertyChangeListener(EDITABLE_PROPERTY_NAME, listener);
     }
@@ -602,6 +621,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param propertyName
      * @param listener
      */
+    @Override
     public final synchronized void addRequiredChangeListener(final PropertyChangeListener listener) {
         if (listener == null) {
             throw new IllegalArgumentException("PropertyChangeListener cannot be null.");
@@ -612,18 +632,22 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     /**
      * Removes change listener for property <code>required</code>.
      */
+    @Override
     public final synchronized void removeRequiredChangeListener(final PropertyChangeListener listener) {
         changeSupport.removePropertyChangeListener(REQUIRED_PROPERTY_NAME, listener);
     }
 
+    @Override
     public final PropertyChangeSupport getChangeSupport() {
         return changeSupport;
     }
 
+    @Override
     public final T getOriginalValue() {
         return originalValue;
     }
 
+    @Override
     public final void setCollectionOriginalValue(final Number size) {
         if (isCollectional()) {
             this.collectionOrigSize = size;
@@ -638,6 +662,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @param value
      */
+    @Override
     public final MetaPropertyFull<T> setOriginalValue(final T value) {
         if (value != null) {
             if (isCollectional()) {
@@ -677,6 +702,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         return this;
     }
 
+    @Override
     public final int getValueChangeCount() {
         return valueChangeCount;
     }
@@ -689,6 +715,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         valueChangeCount = 0;
     }
 
+    @Override
     public final Object getPrevValue() {
         return prevValue;
     }
@@ -698,6 +725,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public final T getValue() {
         return entity.<T> get(name);
     }
@@ -707,6 +735,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @param value
      */
+    @Override
     public final void setValue(final Object value) {
         entity.set(name, value);
     }
@@ -719,6 +748,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param prevValue
      * @return
      */
+    @Override
     public final MetaPropertyFull<T> setPrevValue(final T prevValue) {
         incValueChangeCount();
         // just in case cater for correct processing of collection properties
@@ -737,6 +767,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public final boolean isChangedFromOriginal() {
         try {
             final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
@@ -769,6 +800,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public final boolean isChangedFromPrevious() {
         try {
             final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
@@ -783,11 +815,20 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         }
         return false;
     }
-
+    
+    @Override
     public final boolean isEditable() {
-        return editable && getEntity().isEditable().isSuccessful();
+        return editable && getEntity().isEditable().isSuccessful() && !isFinalised();
+    }
+    
+    private boolean isFinalised() {
+        if (persistentOnlySettingForFinalAnnotation.isPresent()) {
+            return FinalValidator.isPropertyFinalised(this, persistentOnlySettingForFinalAnnotation.get());
+        }
+        return false;
     }
 
+    @Override
     public final void setEditable(final boolean editable) {
         final boolean oldValue = this.editable;
         this.editable = editable;
@@ -800,6 +841,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param entityPropertyValue
      * @return
      */
+    @Override
     public final MetaPropertyFull<T> define(final T entityPropertyValue) {
         if (aceHandler != null) {
             aceHandler.handle(this, entityPropertyValue);
@@ -807,6 +849,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         return this;
     }
 
+    @Override
     public final MetaPropertyFull<T> defineForOriginalValue() {
         if (aceHandler != null) {
             aceHandler.handle(this, getOriginalValue());
@@ -819,6 +862,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public final boolean isCollectional() {
         return collectional;
     }
@@ -829,22 +873,27 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public final Class<?> getPropertyAnnotationType() {
         return propertyAnnotationType;
     }
 
+    @Override
     public final boolean isVisible() {
         return visible;
     }
 
+    @Override
     public final void setVisible(final boolean visible) {
         this.visible = visible;
     }
 
+    @Override
     public final T getLastInvalidValue() {
         return lastInvalidValue;
     }
 
+    @Override
     public final void setLastInvalidValue(final T lastInvalidValue) {
         this.lastInvalidValue = lastInvalidValue;
     }
@@ -854,6 +903,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public final boolean hasValidators() {
         return getValidators().size() > 0;
     }
@@ -866,10 +916,12 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public final T getLastAttemptedValue() {
         return isValid() ? (isAssigned() ? getValue() : getOriginalValue()) : getLastInvalidValue();
     }
 
+    @Override
     public final boolean isRequired() {
         return required;
     }
@@ -880,6 +932,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @param required
      */
+    @Override
     public final void setRequired(final boolean required) {
         if (required && !getEntity().isInitialising() && isProxy()) {
             throw new StrictProxyException(format("Property [%s] in entity [%s] is proxied and should not be made required.", getName(), getEntity().getType().getName())); 
@@ -913,15 +966,18 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         changeSupport.firePropertyChange(REQUIRED_PROPERTY_NAME, oldRequired, required);
     }
 
+    @Override
     public final void resetState() {
         setOriginalValue(entity.get(name));
         setDirty(false);
     }
 
+    @Override
     public final void resetValues() {
         setOriginalValue(entity.get(name));
     }
 
+    @Override
     public final boolean isCalculated() {
         return calculated;
     }
@@ -931,6 +987,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public final boolean containsRequiredValidator() {
         return getValidators().containsKey(ValidationAnnotation.REQUIRED);
     }
@@ -940,6 +997,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public final boolean containsDynamicValidator() {
         return getValidators().containsKey(ValidationAnnotation.DYNAMIC);
     }
@@ -948,6 +1006,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * Creates and puts EMPTY validator related to DYNAMIC validation annotation. Validation result for DYNAMIC validator can be set only from the outside logic, for e.g. using
      * method MetaProperty.setValidationResult().
      */
+    @Override
     public final void putDynamicValidator() {
         putValidator(ValidationAnnotation.DYNAMIC);
     }
@@ -956,6 +1015,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * Creates and puts EMPTY validator related to REQUIRED validation annotation. Validation result for REQURED validator can be set only from the outside logic, for e.g. using
      * method MetaProperty.setValidationResult().
      */
+    @Override
     public final void putRequiredValidator() {
         putValidator(ValidationAnnotation.REQUIRED);
     }
@@ -974,15 +1034,18 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         getValidators().put(valAnnotation, map);
     }
 
+    @Override
     public boolean isDirty() {
         return dirty || !entity.isPersisted();
     }
-
+    
+    @Override
     public MetaPropertyFull<T> setDirty(final boolean dirty) {
         this.dirty = dirty;
         return this;
     }
 
+    @Override
     public boolean isUpperCase() {
         return upperCase;
     }
@@ -990,6 +1053,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     /**
      * Restores property state to original if possible, which includes setting the original value and removal of all validation errors.
      */
+    @Override
     public final void restoreToOriginal() {
         resetValidationResult();
         // need to ignore composite key instance resetting
@@ -1006,6 +1070,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     /**
      * Resets validation results for all validators by setting their value to <code>null</code>.
      */
+    @Override
     public synchronized final void resetValidationResult() {
         for (final ValidationAnnotation va : validators.keySet()) {
             final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
@@ -1015,18 +1080,22 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         }
     }
 
+    @Override
     public boolean isEnforceMutator() {
         return enforceMutator;
     }
 
+    @Override
     public void setEnforceMutator(final boolean enforceMutator) {
         this.enforceMutator = enforceMutator;
     }
 
+    @Override
     public boolean isAssigned() {
         return assigned;
     }
 
+    @Override
     public void setAssigned(final boolean hasAssignedValue) {
         this.assigned = hasAssignedValue;
     }
@@ -1036,6 +1105,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public Set<Annotation> getValidationAnnotations() {
         return Collections.unmodifiableSet(validationAnnotations);
     }
@@ -1045,26 +1115,32 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      *
      * @return
      */
+    @Override
     public IAfterChangeEventHandler<T> getAceHandler() {
         return aceHandler;
     }
 
+    @Override
     public Number getCollectionOrigSize() {
         return collectionOrigSize;
     }
 
+    @Override
     public Number getCollectionPrevSize() {
         return collectionPrevSize;
     }
 
+    @Override
     public void setCollectionOrigSize(final Number collectionOrigSize) {
         this.collectionOrigSize = collectionOrigSize;
     }
 
+    @Override
     public void setCollectionPrevSize(final Number collectionPrevSize) {
         this.collectionPrevSize = collectionPrevSize;
     }
 
+    @Override
     public boolean shouldAssignBeforeSave() {
         return shouldAssignBeforeSave;
     }

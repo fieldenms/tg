@@ -37,7 +37,7 @@ public class UniqueValidator<E extends AbstractEntity<?>, T> implements IBeforeC
     }
 
     @Override
-    public Result handle(final MetaProperty<T> property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations) {
         @SuppressWarnings("unchecked")
         final E entity = (E) property.getEntity();
         // let's for now consider that multiple NULL values are permitted for columns with unique index...
