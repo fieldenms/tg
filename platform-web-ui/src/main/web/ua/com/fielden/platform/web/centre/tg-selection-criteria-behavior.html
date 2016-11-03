@@ -437,37 +437,41 @@
 
             /**
              * Starts the process of centre run.
+             *
+             * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
              */
-            run: function () {
+            run: function (isSortingAction) {
                 var self = this;
                 this._openToast(null, "Loading data", false, "", true);
                 this.pageNumber = 0;
                 this.pageCount = null;
-                return this._execute(RunActions.run);
+                return this._execute(RunActions.run, isSortingAction);
             },
 
             /**
              * Starts the process of centre execution. It does not alter
+             *
+             * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
              */
-            _execute: function (action) {
+            _execute: function (action, isSortingAction) {
                 var self = this;
 
                 if (self.isRunning) {
                     console.warn("Refresh is already in progress...");
                     self._refreshPromiseInProgress = self._refreshPromiseInProgress
                         .then(function () {
-                            return self._createPromise(action);
+                            return self._createPromise(action, isSortingAction);
                         });
                     return self._refreshPromiseInProgress;
                 }
 
                 // let's capture the promise being created at the instance level so that it could be referenced later...
-                self._refreshPromiseInProgress = self._createPromise(action);
+                self._refreshPromiseInProgress = self._createPromise(action, isSortingAction);
                 // ... and return it
                 return self._refreshPromiseInProgress;
             },
 
-            _createPromise: function (action) {
+            _createPromise: function (action, isSortingAction) {
                 var self = this;
 
                 return new Promise(function (resolve, reject) {
@@ -490,6 +494,7 @@
                                     return action === RunActions.run ? self._reset(_persistedModifiedPropertiesHolder) : null;
                                 },
                                 action,
+                                isSortingAction,
                                 self.requireSelectedEntities,
                                 self.requireMasterEntity
                             )
@@ -596,10 +601,13 @@
              * In this method selection criteria modifHolder should be sent every time -- it is required to actually 'run' the query.
              * However, if the query enhancing process requires the selectionCrit entity too -- it will be used without any problem.
              */
-            _createContextHolderForRunning: function (modifHolderGetter, action, requireSelectedEntities, requireMasterEntity) {
+            _createContextHolderForRunning: function (modifHolderGetter, action, isSortingAction, requireSelectedEntities, requireMasterEntity) {
                 var self = this;
                 var contextHolder = self._createContextHolder(modifHolderGetter, "true", requireSelectedEntities, requireMasterEntity);
 
+                if (isSortingAction) {
+                    self._reflector().setCustomProperty(contextHolder, "@@sortingAction", true);
+                }
                 self._reflector().setCustomProperty(contextHolder, "@@action", action);
                 self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
                 if (self.pageCount !== null) {

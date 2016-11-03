@@ -15,10 +15,14 @@ import java.util.regex.Matcher;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.collect.ListMultimap;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
@@ -85,9 +89,6 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
-import com.google.common.collect.ListMultimap;
-import com.google.inject.Injector;
-
 /**
  * Represents the entity centre.
  *
@@ -123,7 +124,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         this.injector = injector;
         this.miType = miType;
-        this.entityType = (Class<T>) CentreUtils.getEntityType(miType);
+        this.entityType = CentreUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
     }
@@ -628,9 +629,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      *
      * @return
      */
-    public Optional<IRenderingCustomiser<T, ?>> getRenderingCustomiser() {
+    public Optional<IRenderingCustomiser<?>> getRenderingCustomiser() {
         if (dslDefaultConfig.getResultSetRenderingCustomiserType().isPresent()) {
-            return (Optional<IRenderingCustomiser<T, ?>>) Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
+            return Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
         } else {
             return Optional.empty();
         }
@@ -1127,7 +1128,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param propDef
      * @param resultSetCustomPropAssignmentHandlerType
      */
-    private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> resultSetCustomPropAssignmentHandlerType) {
+    private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler>> resultSetCustomPropAssignmentHandlerType) {
         centre.getEnhancer().addCustomProperty(root, "" /* this is the contextPath */, propName, propDef.title, propDef.desc, propDef.type);
     }
 
@@ -1276,7 +1277,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return new Pair<>(new FallbackValueMatcherWithCentreContext<V>(co), Optional.empty());
     }
 
-    public Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> getCustomPropertiesAsignmentHandler() {
+    public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {
         return dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType();
     }
 
@@ -1284,7 +1285,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.getResultSetProperties();
     }
 
-    public ICustomPropsAssignmentHandler<T> createAssignmentHandlerInstance(final Class<? extends ICustomPropsAssignmentHandler<T>> assignmentHandlerType) {
+    public ICustomPropsAssignmentHandler createAssignmentHandlerInstance(final Class<? extends ICustomPropsAssignmentHandler> assignmentHandlerType) {
         return injector.getInstance(assignmentHandlerType);
     }
 
@@ -1300,5 +1301,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         } else {
             return Optional.empty();
         }
+    }
+    
+    public Optional<Pair<Class<?>, Class<?>>> getGeneratorTypes() {
+        return dslDefaultConfig.getGeneratorTypes();
+    }
+    
+    /**
+     * Creates generic {@link IGenerator} instance from injector based on assumption that <code>generatorType</code> is of appropriate type (such checks are performed on API implementation level).
+     * 
+     * @param generatorType
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    public IGenerator createGeneratorInstance(final Class<?> generatorType) {
+        return (IGenerator) injector.getInstance(generatorType);
     }
 }
