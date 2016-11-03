@@ -19,10 +19,10 @@
         </style>
         <carbon-location id="location" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></carbon-location>
         <carbon-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></carbon-route>
-        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" animate-initial-selection>
+        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
-                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_routeData.moduleName]]" submodule="{{_subroute}}"></tg-app-view>
+                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" submodule="{{_selectedSubmodule}}"></tg-app-view>
             </template>
         </neon-animated-pages>
         <tg-entity-master
@@ -108,6 +108,8 @@
                     },
                     _routeData: Object,
                     _subroute: Object,
+                    _selectedModule: Object,
+                    _selectedSubmodule: Object,
 
                     //action related properties.
                     _attrs: Object,
@@ -133,15 +135,13 @@
                 },
 
                 _showView: function (e) {
-                    //TODO This method should be revised because menu-item-selected event can be fired with menu search input component and may contain not only module but also a path to specified centre
-                    var route = "/" + encodeURIComponent(e.detail),
-                        elementToSelect = this.$$("[name='" + e.detail + "']"),
-                        selectedSubPage = elementToSelect.getSelectedPage();
-                    if (selectedSubPage) {
-                        route += "/" + selectedSubPage;
-                    }
+                    var menuPathItems = e.detail.split("/");
+                    var moduleName = menuPathItems[0];
+                    var route = "/" + encodeURIComponent(moduleName);
+                    menuPathItems.splice(0,1);
+                    route += "/" + (menuPathItems.length > 0 ? menuPathItems.map(function(pathItem) {return encodeURIComponent(pathItem);}).join("/") : "_");
                     if (this._route.path === route) {
-                        this._setSelected(e.detail);
+                        this._setSelected(moduleName);
                     } else {
                         this.set("_route.path", route);
                     }
@@ -160,6 +160,11 @@
                     var currentlySelected, currentlySelectedElement, elementToSelect;
                     if (this.menuConfig) {
                         currentlySelected = this.$.pages.selected;
+                        if (currentlySelected === selected) {
+                            this._selectedModule = this._routeData.moduleName;
+                            this._selectedSubmodule = this._subroute;
+                            return;
+                        }
                         currentlySelectedElement = currentlySelected && this.$$("[name='" + currentlySelected + "']");
                         selected = findModule(selected, this.menuConfig)
                         elementToSelect = selected && this.$$("[name='" + selected + "']");
@@ -205,6 +210,14 @@
                         }
                     }
                 },
+                
+                _animationFinished: function (e, detail, source) {
+                    var target = e.target || e.srcElement;
+                    if (target === this.$.pages){
+                        this._selectedModule = this._routeData.moduleName;
+                        this._selectedSubmodule = this._subroute;
+                    }
+                 },
 
                 //Entity master related functions
 

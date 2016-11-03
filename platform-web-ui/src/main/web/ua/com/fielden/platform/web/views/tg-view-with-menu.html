@@ -13,6 +13,7 @@
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/components/tg-menu-search-input.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
@@ -34,22 +35,28 @@
                 z-index: 1;
                 width: 50px;
                 height: 50px;
-            };
+            }
+            ;
             --paper-menu: {
                 padding: 0;
                 margin: 0;
                 overflow: auto;
-            };
+            }
+            ;
             --paper-item: {
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
-            };
+            }
+            ;
         }
         paper-menu.menu-content {
             --paper-menu: {
+                padding: 0;
+                margin: 0;
                 overflow: hidden;
-            };
+            }
+            ;
         }
         paper-checkbox::shadow #checkboxLabel {
             display: none;
@@ -115,8 +122,10 @@
         #drawerPanel:not([narrow]) paper-menu {
             border-right: 1px solid #CBCDCE;
         }
-        #menuButton {
-            margin-right: 24px;
+        tg-menu-search-input {
+            margin-right: 8px;
+            --menu-search-icon-color: white;
+            --menu-search-input-color: white;
         }
     </style>
     <template>
@@ -159,6 +168,7 @@
                 <div id="viewToolBar" class="tool-bar layout horizontal center">
                     <div class="layout horizontal center flex">
                         <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
+                        <tg-menu-search-input menu="[[menu]]"></tg-menu-search-input>
                         <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
                     </div>
                 </div>
@@ -210,6 +220,7 @@
             is: "tg-view-with-menu",
 
             properties: {
+                menu: Array,
                 menuItem: Object,
                 selectedModule: String,
                 submodule: {
@@ -296,19 +307,23 @@
                 }
                 return changedViews.length > 0 ? changedViews : undefined;
             },
-            
+
             _calcCheckboxTooltip: function (menu, visible) {
                 return "Toggle to make this " + (this._isMenuPresent(menu) ? "group of menu items " : "menu item ") + (visible ? "invisible" : "visible");
             },
-            
+
             _calcGroupStyle: function (firstLevelItem) {
                 var clazz = "blue";
-                if (firstLevelItem.visible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {return element.visible === true}) && !firstLevelItem.menu.every(function (element) {return element.visible === false})) {
+                if (firstLevelItem.visible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {
+                    return element.visible === true
+                }) && !firstLevelItem.menu.every(function (element) {
+                    return element.visible === false
+                })) {
                     clazz += " undone";
                 }
                 return clazz;
             },
-            
+
             _changeGroupVisibility: function (e) {
                 var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
                 var modelVisibility = e.target.checked;
@@ -318,7 +333,7 @@
                 this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
                 arrayToBeUsed.push(groupUri);
                 if (e.model.firstLevelItem.menu) {
-                    e.model.firstLevelItem.menu.forEach (function (menuItem, menuItemIndex) {
+                    e.model.firstLevelItem.menu.forEach(function (menuItem, menuItemIndex) {
                         if (menuItem.visible !== modelVisibility) {
                             arrayToBeUsed.push(this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, menuItem.key));
                             this.set("menuItem.menu." + e.model.groupIndex + ".menu." + menuItemIndex + ".visible", modelVisibility);
@@ -330,7 +345,7 @@
                 Polymer.updateStyles();
                 this.menuSaveCallback(visisbleItems, invisibleItems);
             },
-            
+
             _changeVisibility: function (e) {
                 var menuItemUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, e.model.item.key);
                 var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
@@ -339,7 +354,9 @@
                 var invisibleItems = [];
                 // Changing model in order to find out whether group item should be changed or not.
                 this.set("menuItem.menu." + e.model.groupIndex + ".menu." + e.model.index + ".visible", modelVisibility);
-                var shouldChangeGroupVisibility = e.model.firstLevelItem.menu.every(function (element) {return element.visible === modelVisibility}) ||
+                var shouldChangeGroupVisibility = e.model.firstLevelItem.menu.every(function (element) {
+                        return element.visible === modelVisibility
+                    }) ||
                     (modelVisibility && e.model.firstLevelItem.visible === false);
                 // Find out what action should be performed hiding menu items or to make them visible.
                 var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
@@ -349,7 +366,11 @@
                     this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
                 }
                 var checkbox = Polymer.dom(this.$.menu).querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
-                if (this.menuItem.menu[e.model.groupIndex].visible && !e.model.firstLevelItem.menu.every(function (element) {return element.visible === true}) && !e.model.firstLevelItem.menu.every(function (element) {return element.visible === false})) {
+                if (this.menuItem.menu[e.model.groupIndex].visible && !e.model.firstLevelItem.menu.every(function (element) {
+                    return element.visible === true
+                }) && !e.model.firstLevelItem.menu.every(function (element) {
+                    return element.visible === false
+                })) {
                     checkbox.classList.toggle("undone", true);
                 } else {
                     checkbox.classList.toggle("undone", false);
@@ -357,11 +378,11 @@
                 Polymer.updateStyles();
                 this.menuSaveCallback(visisbleItems, invisibleItems);
             },
-            
+
             _createUriFromModel(menuItem, groupItem, item) {
-                return encodeURIComponent(menuItem) + "/" + encodeURIComponent(groupItem) + (item ? "/" + encodeURIComponent(item): "");
+                return encodeURIComponent(menuItem) + "/" + encodeURIComponent(groupItem) + (item ? "/" + encodeURIComponent(item) : "");
             },
-            
+
             _isMenuPresent: function (menu) {
                 return menu && menu.length > 0;
             },
@@ -381,7 +402,7 @@
 
             _selectPage: function (pagePath) {
                 var menuPath = findNestedMenuItem(pagePath, this.menuItem);
-                if (menuPath.menuItem && !(menuPath.menuItem.menu && menuPath.menuItem.menu.length > 0)) {
+                if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
                     this.set("_selectedPage", menuPath.path);
                 }
             },
@@ -389,19 +410,31 @@
             _selectMenu: function (pagePath) {
                 var menuPath = findNestedMenuItem(pagePath, this.menuItem);
                 var path = menuPath.path;
-                var pathParts = findNestedMenuItem(pagePath, this.menuItem).path.split('/');
+                var pathParts = path.split('/');
                 var topMenu = this.$$("paper-submenu[name='" + pathParts[0] + "']");
+                var previousTopMenu = this.$.menu.selected && this.$$("paper-submenu[name='" + this.$.menu.selected + "']");
                 var submenu = this.$$("paper-menu[name='" + pathParts[0] + "']");
                 var submenuItem = this.$$("paper-item[name='" + path + "']");
                 var wasSelected;
-                if (!topMenu || pathParts[1] && menuPath.menuItem && (!submenu || !submenuItem)) {
+                if (pagePath === '_') {
+                    if (previousTopMenu) {
+                        previousTopMenu.close();
+                    }
+                    this.$.drawerPanel.selected = 'drawer';
+                } else if (!topMenu || pathParts[1] && menuPath.menuItem && (!submenu || !submenuItem)) {
                     this._menuToSelectAfterLoad = pagePath;
                     wasSelected = false;
                 } else {
+                    if (previousTopMenu) {
+                        previousTopMenu.close();
+                    }
                     this.$.menu.select(pathParts[0]);
                     topMenu.open();
                     if (submenu) {
                         submenu.select(path);
+                    }
+                    if (menuPath.menuItem && this._isMenuPresent(menuPath.menuItem.menu)) {
+                        this.$.drawerPanel.selected = 'drawer';
                     }
                     wasSelected = true;
                 }
@@ -476,7 +509,7 @@
                     }
                 }
             },
-            
+
             _tapCheckbox: function (event) {
                 if (event.stopPropagation) event.stopPropagation();
                 if (event.preventDefault) event.preventDefault();

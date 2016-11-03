@@ -1,13 +1,10 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-
-<link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
-
+<link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
-
 <link rel="import" href="/resources/components/tg-menu-list.html">
 
 
@@ -15,10 +12,15 @@
 
     <style>
         iron-icon {
+            transform: scale(1, 1);
+            transition: transform 200ms linear;
             cursor: pointer;
             color: var(--menu-search-icon-color);
         }
-        paper-input-container.start-transtion {
+        iron-icon.start-transition {
+            transform: scale(0, 0);
+        }
+        paper-input-container.start-transition {
             width: 0;
         }
         paper-input-container {
@@ -31,8 +33,8 @@
     </style>
 
     <template>
-        <iron-icon id="searchIcon" icon="icons:search" on-tap="_searchMenu"></iron-icon>
-        <paper-input-container id="inputContainer" no-label-float style="display:none;" on-transitionend="_inputShown">
+        <iron-icon id="searchIcon" icon="icons:search" on-tap="_searchMenu" on-transitionend="_iconTransitionFinished"></iron-icon>
+        <paper-input-container id="inputContainer" no-label-float style="display:none;" on-transitionend="_inputTransitionFinished">
             <input id="input" is="iron-input" type="text" bind-value="{{_menuToSearch}}" on-blur="_onBlur" on-focus="_onFocus" on-keydown="_inputKeyDown">
         </paper-input-container>
         <tg-menu-list id="menuList" menu="[[menu]]" phrase-to-highlight="[[_menuToSearch]]" retrieve-container-sizes="[[_retrieveContainerSizes]]" on-iron-overlay-closed="_menuListClosed" on-tap="_menuTapped"></tg-menu-list>
@@ -64,6 +66,12 @@
                  */
                 _retrieveContainerSizes: {
                     type: Function
+                },
+
+                _showInput: {
+                    type: Boolean,
+                    value: false,
+                    observer: "_showInputChanged"
                 }
             },
 
@@ -111,7 +119,7 @@
 
             _menuTapped: function () {
                 this._setCancelled(false);
-                menuList.close();
+                this.$.menuList.close();
             },
 
             _menuListClosed: function () {
@@ -121,33 +129,47 @@
                     Polymer.dom(document.body).removeChild(menuList);
                     Polymer.dom.flush();
                 }
-                this._toggleInputVisibility(false);
+                this._showInput = false;
                 if (!this.cancelled && menuList.isSelected()) {
                     this.fire("menu-item-selected", menuList.getSelectedMenuItemPath());
                 }
             },
 
             _searchMenu: function () {
-                this._toggleInputVisibility(true);
+                this._showInput = true;
             },
 
-            _toggleInputVisibility: function (inputVisible) {
-                if (inputVisible) {
-                    this.$.searchIcon.style.display = 'none';
-                    this.$.inputContainer.classList.toggle('start-transtion', true);
-                    this.$.inputContainer.style.removeProperty('display');
-                    window.getComputedStyle(this.$.input).width;
-                    this.$.inputContainer.classList.toggle('start-transtion', false);
+            _showInputChanged: function (newValue, oldValue) {
+                if (newValue) {
+                    this.$.searchIcon.classList.toggle("start-transition", true);
                 } else {
-                    this.$.searchIcon.style.removeProperty('display');
-                    this.$.inputContainer.style.display = 'none';
+                    this.$.inputContainer.classList.toggle("start-transition", true);
                 }
             },
 
-            _inputShown: function (e) {
+            _iconTransitionFinished: function (e) {
+                var target = e.target || e.srcElement;
+                if (target === this.$.searchIcon && this._showInput) {
+                    this.$.searchIcon.style.display = 'none';
+                    this.$.inputContainer.classList.toggle('start-transition', true);
+                    this.$.inputContainer.style.removeProperty('display');
+                    window.getComputedStyle(this.$.input).width;
+                    this.$.inputContainer.classList.toggle('start-transition', false);
+                }
+            },
+
+            _inputTransitionFinished: function (e) {
                 var target = e.target || e.srcElement;
                 if (target === this.$.inputContainer) {
-                    this.$.input.focus();
+                    if (this._showInput) {
+                        this.$.input.focus();
+                    } else {
+                        this.$.inputContainer.style.display = 'none';
+                        this.$.searchIcon.classList.toggle('start-transition', true);
+                        this.$.searchIcon.style.removeProperty('display');
+                        window.getComputedStyle(this.$.searchIcon).width;
+                        this.$.searchIcon.classList.toggle('start-transition', false);
+                    }
                 }
             },
 
