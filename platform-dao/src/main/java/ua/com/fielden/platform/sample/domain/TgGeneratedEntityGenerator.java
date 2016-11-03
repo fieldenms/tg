@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.sample.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
@@ -39,17 +41,17 @@ public class TgGeneratedEntityGenerator implements IGenerator<TgGeneratedEntity>
     @SuppressWarnings("unchecked")
     @Override
     @SessionRequired
-    public Result gen(final Class<TgGeneratedEntity> type, final Map<String, Object> params) {
+    public Result gen(final Class<TgGeneratedEntity> type, final Map<String, Optional<?>> params) {
         logger.debug("TgGeneratedEntityGenerator.gen occurs. params = " + params);
         // generate instances based on crit-only multi criterion
-        final List<String> critOnlyMultiCriterion = (List<String>) params.get("tgGeneratedEntity_critOnlyMultiProp");
+        final List<String> critOnlyMultiCriterion = params.get("tgGeneratedEntity_critOnlyMultiProp").map(p -> (List<String>) p).orElse(new ArrayList<>());
         for (final String part : critOnlyMultiCriterion) {
             for (int index = 0; index < 15; index++) {
                 co.save(factory.newByKey(TgGeneratedEntity.class, part + index));
             }
         }
         // generate instances based on crit-only single criterion
-        final User critOnlySingleCriterion = (User) params.get("tgGeneratedEntity_critOnlySingleProp");
+        final User critOnlySingleCriterion = (User) params.get("tgGeneratedEntity_critOnlySingleProp").map(p -> (User) p).orElse(null);
         if (critOnlySingleCriterion != null) {
             if (critOnlySingleCriterion.equals(userProvider.getUser())) {
                 return Result.failure(String.format("Can not generate the instance based on current user [%s], choose another user for that.", critOnlySingleCriterion));

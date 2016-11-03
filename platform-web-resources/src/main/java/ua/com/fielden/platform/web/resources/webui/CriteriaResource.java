@@ -1,15 +1,13 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -33,6 +31,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -206,20 +205,6 @@ public class CriteriaResource extends ServerResource {
     }
     
     /**
-     * Creates a property-value map for 'criteriaEntity' which contain criteria information.
-     * 
-     * @param criteriaEntity
-     * @return
-     */
-    private Map<String, Object> createGeneratorParams(final EnhancedCentreEntityQueryCriteria<?, ? extends IEntityDao<?>> criteriaEntity) {
-        final Map<String, Object> params = new LinkedHashMap<>();
-        criteriaEntity
-            .nonProxiedProperties()
-            .forEach(mp-> params.put(mp.getName(), mp.getValue()));
-        return params;
-    }
-    
-    /**
      * Handles PUT request resulting from tg-selection-criteria <code>run()</code> method.
      */
     @SuppressWarnings("unchecked")
@@ -269,18 +254,20 @@ public class CriteriaResource extends ServerResource {
             final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
             final boolean generationShouldOccur = isRunning && !isSorting && createdByConstraintShouldOccur;
             if (generationShouldOccur) {
-                // create a generator instance using an injector
+                // obtain the type for entities to be generated
                 final Class<? extends AbstractEntity<?>> generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();
-                final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
-                
                 // delete any previously generated for the current user data using a companion for an associated with the generator entity type
                 final IEntityDao co = companionFinder.find(generatorEntityType);
                 co.batchDelete(
                     select(generatorEntityType).where().prop("createdBy").eq().val(userProvider.getUser()).model()
                 );
                 
-                // run the generator
-                final Result generationResult = generator.gen(generatorEntityType, createGeneratorParams(previouslyRunCriteriaEntity));
+                // create and execute a generator instance
+                final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
+                final Result generationResult = generator.gen(generatorEntityType,
+                        previouslyRunCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
+                                (MetaProperty<?> mp) -> mp.getName(), 
+                                (MetaProperty<?> mp) -> Optional.ofNullable(mp.getValue()))));
                 // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
                 // otherwise, proceed with the request handling further to actually query the data
                 // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'

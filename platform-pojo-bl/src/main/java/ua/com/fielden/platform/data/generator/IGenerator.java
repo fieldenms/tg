@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.data.generator;
 
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.error.Result;
@@ -29,9 +30,9 @@ public interface IGenerator<T extends AbstractEntity<?> & WithCreatedByUser<T>> 
      * The necessary companion objects should be injected at the constructor level. 
      * 
      * @param type -- A class for a type of the data to be generated. 
-     * @param params -- A map of parameter/value pairs that is used by the data generation algorithm. At run-time, these parameters are to be provided by the Entity Centre runner, but they can also be conveniently passed in for unit testing purposes.
+     * @param params -- A map of parameter/value pairs that is used by the data generation algorithm. Values are wrapped into {@link Optional} to better reflect the fact that some parameters could have no value. At run-time, these parameters are to be provided by the Entity Centre runner, but they can also be conveniently passed in for unit testing purposes.
      * @return
      */
-    Result gen(final Class<T> type, final Map<String, Object> params);
+    Result gen(final Class<T> type, final Map<String, Optional<?>> params);
 
 }
