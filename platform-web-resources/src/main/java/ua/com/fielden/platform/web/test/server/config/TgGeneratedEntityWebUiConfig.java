@@ -22,7 +22,7 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 /** 
  * {@link TgGeneratedEntity} Web UI configuration.
  * 
- * @author Developers
+ * @author TG Team
  *
  */
 public class TgGeneratedEntityWebUiConfig {
@@ -69,10 +69,11 @@ public class TgGeneratedEntityWebUiConfig {
                 .setLayoutFor(Device.TABLET, Optional.empty(), layout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
                 .withGenerator(TgGeneratedEntity.class, TgGeneratedEntityGenerator.class)
-                .addProp("this").order(1).asc().minWidth(100)
+                .addProp("entityKey").order(1).asc().width(100)
                     .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching TgGeneratedEntity.")
                     .withAction(standardEditAction).also()
-                .addProp("createdBy").minWidth(100)
+                .addProp("desc").minWidth(400).also()
+                .addProp("createdBy").minWidth(60)
                 .addPrimaryAction(standardEditAction)
                 .build();
 
@@ -80,10 +81,11 @@ public class TgGeneratedEntityWebUiConfig {
         return entityCentre;
     }
     private EntityMaster<TgGeneratedEntity> createMaster(final Injector injector) {
-        final String layout = LayoutComposer.mkGridForMaster(640, 1, 1);
+        final String layout = LayoutComposer.mkGridForMaster(640, 2, 1);
 
         final IMaster<TgGeneratedEntity> masterConfig = new SimpleMasterBuilder<TgGeneratedEntity>().forEntity(TgGeneratedEntity.class)
-                .addProp("key").asSinglelineText().also()
+                .addProp("entityKey").asSinglelineText().also()
+                .addProp("desc").asMultilineText().also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkActionLayoutForMaster())

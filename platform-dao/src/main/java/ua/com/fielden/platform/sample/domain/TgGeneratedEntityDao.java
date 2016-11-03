@@ -14,7 +14,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 /** 
  * DAO implementation for companion object {@link ITgGeneratedEntity}.
  * 
- * @author Developers
+ * @author TG Team
  *
  */
 @EntityType(TgGeneratedEntity.class)
@@ -45,7 +45,7 @@ public class TgGeneratedEntityDao extends CommonEntityDao<TgGeneratedEntity> imp
     
     @Override
     protected IFetchProvider<TgGeneratedEntity> createFetchProvider() {
-        return super.createFetchProvider().with("key", "createdBy");
+        return super.createFetchProvider().with("entityKey", "desc", "createdBy");
     }
     
 }

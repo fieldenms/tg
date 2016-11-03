@@ -38,7 +38,6 @@ public class TgGeneratedEntityGenerator implements IGenerator<TgGeneratedEntity>
         this.userProvider = userProvider;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     @SessionRequired
     public Result gen(final Class<TgGeneratedEntity> type, final Map<String, Optional<?>> params) {
@@ -47,7 +46,7 @@ public class TgGeneratedEntityGenerator implements IGenerator<TgGeneratedEntity>
         final List<String> critOnlyMultiCriterion = params.get("tgGeneratedEntity_critOnlyMultiProp").map(p -> (List<String>) p).orElse(new ArrayList<>());
         for (final String part : critOnlyMultiCriterion) {
             for (int index = 0; index < 15; index++) {
-                co.save(factory.newByKey(TgGeneratedEntity.class, part + index));
+                co.save(factory.newEntity(TgGeneratedEntity.class).setEntityKey(part + index));
             }
         }
         // generate instances based on crit-only single criterion
@@ -57,7 +56,7 @@ public class TgGeneratedEntityGenerator implements IGenerator<TgGeneratedEntity>
                 return Result.failure(String.format("Can not generate the instance based on current user [%s], choose another user for that.", critOnlySingleCriterion));
             }
             for (int index = 0; index < 10; index++) {
-                co.save(factory.newByKey(TgGeneratedEntity.class, critOnlySingleCriterion.getKey() + "_GEN" + index));
+                co.save(factory.newEntity(TgGeneratedEntity.class).setEntityKey(critOnlySingleCriterion.getKey() + "_GEN" + index));
             }
         }
         return Result.successful("ok");
