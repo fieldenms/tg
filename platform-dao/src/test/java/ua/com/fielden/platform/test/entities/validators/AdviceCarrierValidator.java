@@ -18,7 +18,7 @@ import ua.com.fielden.platform.test.domain.entities.Wagon;
 public class AdviceCarrierValidator implements IBeforeChangeEventHandler<Wagon> {
 
     @Override
-    public Result handle(final MetaProperty<Wagon> property, final Wagon newValue, final Wagon oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Wagon> property, final Wagon newValue, final Set<Annotation> mutatorAnnotations) {
         // TODO Auto-generated method stub
         return null;
     }

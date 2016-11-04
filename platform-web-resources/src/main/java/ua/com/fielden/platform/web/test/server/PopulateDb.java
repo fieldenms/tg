@@ -26,6 +26,7 @@ import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
+import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
@@ -43,8 +44,6 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.ui.config.MainMenu;
-import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
@@ -108,6 +107,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
         System.out.println("admin.getId() == " + admin.getId());
 
+        System.out.println("Settign up current user SU and its permissions...");
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
         // populate testing entities
@@ -233,10 +233,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         System.out.println("timeZone4.getId() == " + timeZone4.getId());
         final TgEntityWithTimeZoneDates timeZone5 = save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
         System.out.println("timeZone5.getId() == " + timeZone5.getId());
-
-        final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
-        mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));
-        save(mainMenu);
+        
+        final TgGeneratedEntity genEntity1 = save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
+        System.out.println("genEntity1.getId() == " + genEntity1.getId());
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);

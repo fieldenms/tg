@@ -22,7 +22,7 @@ public class EmailValidator implements IBeforeChangeEventHandler<String> {
     public static final String validationErrorTemplate = "Value [%s] for property [%s] in entity [%s] is not a valid email address.";
     
     @Override
-    public Result handle(final MetaProperty<String> property, final String newValue, final String oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<String> property, final String newValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue != null && !isValidEmailAddress(newValue)) {
             return Result.failure(format(validationErrorTemplate, newValue, property.getName(), property.getEntity().getType().getSimpleName()));
         }

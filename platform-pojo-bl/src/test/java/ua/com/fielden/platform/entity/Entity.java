@@ -56,6 +56,7 @@ public class Entity extends AbstractEntity<String> {
     private Double observablePropertyInitialisedAsNull;
     @IsProperty
     @Invisible
+    @Final(persistentOnly = false)
     private Double finalProperty;
     @IsProperty(value = Double.class, linkProperty = "--stub to pass tests--")
     @Required
@@ -110,7 +111,6 @@ public class Entity extends AbstractEntity<String> {
         return finalProperty;
     }
 
-    @Final
     @Observable
     public void setFinalProperty(final Double finalProperty) {
         this.finalProperty = finalProperty;

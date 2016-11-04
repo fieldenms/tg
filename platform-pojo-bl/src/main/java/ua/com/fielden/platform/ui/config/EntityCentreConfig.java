@@ -10,7 +10,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 
@@ -72,7 +71,6 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     }
 
     @Observable
-    @EntityExists(MainMenuItem.class)
     public EntityCentreConfig setMenuItem(final MainMenuItem menuItem) {
         this.menuItem = menuItem;
         return this;
@@ -93,7 +91,6 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     }
 
     @Observable
-    @EntityExists(User.class)
     public EntityCentreConfig setOwner(final User owner) {
         this.owner = owner;
         return this;

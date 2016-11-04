@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -27,7 +27,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle("Role Title")
 @DescTitle("Description")
 @MapEntityTo("USER_ROLE")
-@CompanionObject(IUserRoleDao.class)
+@CompanionObject(IUserRole.class)
 public class UserRole extends ActivatableAbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 

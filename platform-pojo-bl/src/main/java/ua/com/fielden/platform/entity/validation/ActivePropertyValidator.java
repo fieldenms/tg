@@ -36,7 +36,7 @@ public class ActivePropertyValidator implements IBeforeChangeEventHandler<Boolea
 
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public Result handle(final MetaProperty<Boolean> property, final Boolean newValue, final Boolean oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Boolean> property, final Boolean newValue, final Set<Annotation> mutatorAnnotations) {
         final ActivatableAbstractEntity<?> entity = (ActivatableAbstractEntity<?>) property.getEntity();
         if (!entity.isPersisted()) { // a brand new entity is being created
             return Result.successful(newValue);

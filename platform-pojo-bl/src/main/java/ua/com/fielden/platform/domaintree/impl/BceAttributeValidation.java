@@ -17,7 +17,7 @@ import ua.com.fielden.platform.error.Result;
  */
 public class BceAttributeValidation implements IBeforeChangeEventHandler<CalculatedPropertyAttribute> {
     @Override
-    public Result handle(final MetaProperty<CalculatedPropertyAttribute> property, final CalculatedPropertyAttribute newAttribute, final CalculatedPropertyAttribute oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<CalculatedPropertyAttribute> property, final CalculatedPropertyAttribute newAttribute, final Set<Annotation> mutatorAnnotations) {
         try {
             CalculatedProperty.validateAttribute((CalculatedProperty) property.getEntity(), newAttribute);
         } catch (final IncorrectCalcPropertyException e) {

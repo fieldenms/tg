@@ -26,7 +26,9 @@ public class Advice extends AbstractEntity<Long> {
 
     private final List<AdvicePosition> positions = new ArrayList<AdvicePosition>();
     @IsProperty
+    @Final
     private Date dateRaised;
+    
     @IsProperty
     private Date dateDispatched;
     /**
@@ -44,6 +46,7 @@ public class Advice extends AbstractEntity<Long> {
      * bogies to a Contractor's workshop for repair.
      */
     @IsProperty
+    @Final
     private Workshop initiatedAtWorkshop;
 
     @IsProperty
@@ -114,7 +117,6 @@ public class Advice extends AbstractEntity<Long> {
         return dateRaised;
     }
 
-    @Final
     @Observable
     protected Advice setDateRaised(final Date dateRaised) {
         this.dateRaised = dateRaised;
@@ -147,7 +149,6 @@ public class Advice extends AbstractEntity<Long> {
     }
 
     @Observable
-    @EntityExists(Wagon.class)
     @DomainValidation
     public Advice setCarrier(final Wagon carrier) {
         this.carrier = carrier;
@@ -197,8 +198,6 @@ public class Advice extends AbstractEntity<Long> {
      *
      * @param initiatedAtWorkshop
      */
-    @Final
-    @EntityExists(Workshop.class)
     @Observable
     public void setInitiatedAtWorkshop(final Workshop initiatedAtWorkshop) {
         this.initiatedAtWorkshop = initiatedAtWorkshop;
@@ -213,7 +212,6 @@ public class Advice extends AbstractEntity<Long> {
      *
      * @param dispatchedToWorkshop
      */
-    @EntityExists(Workshop.class)
     @Observable
     public void setDispatchedToWorkshop(final Workshop dispatchedToWorkshop) {
         this.dispatchedToWorkshop = dispatchedToWorkshop;

@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.validation.annotation.DomainValidation;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
 import ua.com.fielden.platform.error.Result;
@@ -25,17 +24,27 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
 
     @IsProperty
     @CompositeKeyMember(1)
+    @Final
     private Advice advice;
+    
     @IsProperty
     @CompositeKeyMember(2)
+    @Final
     private Integer position;
+    
     @IsProperty
+    @Final
     private Rotable rotable;
+    
     @IsProperty
+    @Final
     private Workshop sendingWorkshop;
+    
     @IsProperty
     private Workshop receivingWorkshop;
+    
     @IsProperty
+    @Final
     private Date placementDate;
     @IsProperty
     private boolean received = false;
@@ -61,7 +70,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return advice;
     }
 
-    @Final
     @Observable
     protected void setAdvice(final Advice advice) {
         this.advice = advice;
@@ -71,7 +79,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return position;
     }
 
-    @Final
     @GreaterOrEqual(1)
     @Observable
     protected void setPosition(final Integer position) {
@@ -82,8 +89,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return rotable;
     }
 
-    @Final
-    @EntityExists(Rotable.class)
     @DomainValidation
     @Observable
     public AdvicePosition setRotable(final Rotable rotable) {
@@ -95,8 +100,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return sendingWorkshop;
     }
 
-    @Final
-    @EntityExists(Workshop.class)
     @Observable
     public AdvicePosition setSendingWorkshop(final Workshop sendingWorkshop) {
         this.sendingWorkshop = sendingWorkshop;
@@ -107,7 +110,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return receivingWorkshop;
     }
 
-    @EntityExists(Workshop.class)
     @Observable
     public AdvicePosition setReceivingWorkshop(final Workshop receivingWorkshop) throws Result {
         // TODO the isReceived() should be moved to a domain validator
@@ -122,7 +124,6 @@ public class AdvicePosition extends RotableLocation<DynamicEntityKey> {
         return placementDate;
     }
 
-    @Final
     @Observable
     public AdvicePosition setPlacementDate(final Date placementDate) {
         this.placementDate = placementDate;

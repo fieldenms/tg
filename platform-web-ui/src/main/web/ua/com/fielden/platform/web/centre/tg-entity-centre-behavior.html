@@ -273,6 +273,8 @@
 
                 /**
                  * Starts the process of centre run.
+                 *
+                 * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
                  */
                 run: {
                     type: Function
@@ -476,7 +478,7 @@
                     return this._ajaxDiscarder().generateRequest().completes;
                 }).bind(self);
 
-                self.run = (function () {
+                self.run = (function (isSortingAction) {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
                     }
@@ -485,7 +487,7 @@
                     self.$.egi.clearSelection();
                     self.$.egi.collapseAllCards();
                     self._triggerRun = true;
-                    return self.$.selection_criteria.run()
+                    return self.$.selection_criteria.run(isSortingAction)
                         .then(function () {
                             self.runInsertionPointActions();
                         });

@@ -15,10 +15,9 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 
 /**
  * A type for persisting an individual main menu item. Existence of an instance of this type simply indicates the existence of a corresponding main menu item.
@@ -35,7 +34,7 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
 @KeyType(String.class)
 @KeyTitle("Menu item type")
 @DescTitle("Description")
-@CompanionObject(IMainMenuItemController.class)
+@CompanionObject(IMainMenuItem.class)
 @MapEntityTo("MAIN_MENU")
 public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<MainMenuItem> {
     private static final long serialVersionUID = 1L;
@@ -86,7 +85,6 @@ public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<Ma
     }
 
     @Observable
-    @EntityExists(MainMenuItem.class)
     public MainMenuItem setParent(final MainMenuItem parent) {
         this.parent = parent;
         return this;

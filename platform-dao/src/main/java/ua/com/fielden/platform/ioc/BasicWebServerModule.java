@@ -16,7 +16,7 @@ import ua.com.fielden.platform.dao.GeneratedEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
 import ua.com.fielden.platform.entity.EntityExportActionDao;
@@ -81,20 +81,14 @@ import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser0;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
-import ua.com.fielden.platform.ui.config.IMainMenu;
-import ua.com.fielden.platform.ui.config.MainMenuDao;
 import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemController;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItemInvisibility;
-import ua.com.fielden.platform.ui.config.api.IMainMenuStructureBuilder;
+import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemControllerDao;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemInvisibilityDao;
-import ua.com.fielden.platform.ui.config.controller.mixin.PersistedMainMenuStructureBuilder;
+import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.ISortingProperty;
@@ -200,10 +194,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IWebMenuItemInvisibility.class).to(WebMenuItemInvisibilityDao.class);
 
         // configuration related binding
-        bind(IMainMenuItemController.class).to(MainMenuItemControllerDao.class);
-        bind(IMainMenuItemInvisibility.class).to(MainMenuItemInvisibilityDao.class);
-        bind(IMainMenu.class).to(MainMenuDao.class);
-        bind(IMainMenuStructureBuilder.class).to(PersistedMainMenuStructureBuilder.class);
+        bind(IMainMenuItem.class).to(MainMenuItemDao.class);
         bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);
         bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
         bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
@@ -221,7 +212,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IUser.class).to(UserDao.class);
         bind(IUserRolesUpdater.class).to(UserRolesUpdaterDao.class);
 
-        bind(IUserRoleDao.class).to(UserRoleDao.class);
+        bind(IUserRole.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
 

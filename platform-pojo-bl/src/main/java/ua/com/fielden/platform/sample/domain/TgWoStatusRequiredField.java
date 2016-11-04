@@ -21,9 +21,12 @@ public class TgWoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
     @CompositeKeyMember(1)
+    @Final
     private TgWorkOrderStatus woStatus;
+    
     @IsProperty(TgWorkOrder.class)
     @CompositeKeyMember(2)
+    @Final
     private PropertyDescriptor<TgWorkOrder> requiredProperty;
 
     protected TgWoStatusRequiredField() {
@@ -43,7 +46,6 @@ public class TgWoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
         return woStatus;
     }
 
-    @Final
     @Observable
     public void setWoStatus(final TgWorkOrderStatus woStatus) {
         this.woStatus = woStatus;
@@ -53,7 +55,6 @@ public class TgWoStatusRequiredField extends AbstractEntity<DynamicEntityKey> {
         return requiredProperty;
     }
 
-    @Final
     @Observable
     public void setRequiredProperty(final PropertyDescriptor<TgWorkOrder> requiredField) {
         this.requiredProperty = requiredField;

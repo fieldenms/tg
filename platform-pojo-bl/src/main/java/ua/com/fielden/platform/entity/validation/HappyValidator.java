@@ -15,7 +15,7 @@ import ua.com.fielden.platform.error.Result;
 public class HappyValidator implements IBeforeChangeEventHandler<Object> {
 
     @Override
-    public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         return Result.successful(property.getEntity());
     }
 
