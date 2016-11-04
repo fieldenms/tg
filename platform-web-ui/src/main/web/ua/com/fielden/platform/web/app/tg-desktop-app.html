@@ -108,8 +108,12 @@
                     },
                     _routeData: Object,
                     _subroute: Object,
-                    _selectedModule: Object,
-                    _selectedSubmodule: Object,
+                    _selectedModule: String,
+                    _selectedSubmodule: {
+                        type: String,
+                        notify: true,
+                        observer: "_selectedSubmoduleChanged"
+                    },
 
                     //action related properties.
                     _attrs: Object,
@@ -128,6 +132,12 @@
 
                 _routeChanged: function (newValue, oldValue) {
                     this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
+                },
+                
+                _selectedSubmoduleChanged: function (newValue, oldValue) {
+                    if (this._subroute.path !== newValue) {
+                        this.set("_subroute.path", newValue);
+                    }
                 },
 
                 _showMainMenu: function (e) {
@@ -162,7 +172,7 @@
                         currentlySelected = this.$.pages.selected;
                         if (currentlySelected === selected) {
                             this._selectedModule = this._routeData.moduleName;
-                            this._selectedSubmodule = this._subroute;
+                            this._selectedSubmodule = this._subroute.path;
                             return;
                         }
                         currentlySelectedElement = currentlySelected && this.$$("[name='" + currentlySelected + "']");
@@ -215,7 +225,7 @@
                     var target = e.target || e.srcElement;
                     if (target === this.$.pages){
                         this._selectedModule = this._routeData.moduleName;
-                        this._selectedSubmodule = this._subroute;
+                        this._selectedSubmodule = this._subroute.path;
                     }
                  },
 

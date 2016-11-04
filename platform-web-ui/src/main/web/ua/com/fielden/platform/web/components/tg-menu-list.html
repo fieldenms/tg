@@ -78,6 +78,7 @@
 
 <script>
     (function () {
+        'use strict'
         var flattenMenu = function (menu, parent) {
             return menu.reduce(function (reduced, menuItem) {
                 return reduced.concat(createMenuEntry(menuItem, parent));
@@ -152,53 +153,58 @@
             },
 
             selectNext: function () {
+                var selector = this.$.selector;
                 if (isNaN(selector.selected)) {
                     this.selectFirstVisisble();
                 } else {
-                    this.$.selector.selectNext();
+                    selector.selectNext();
                 }
                 this._scrollToSelected();
             },
 
             selectPrev: function () {
+                var selector = this.$.selector;
                 if (isNaN(selector.selected)) {
                     this.selectLastVisisble();
                 } else {
-                    this.$.selector.selectPrevious();
+                    selector.selectPrevious();
                 }
                 this._scrollToSelected();
             },
 
             selectFirstVisisble: function () {
+                var selector = this.$.selector;
                 var menuItems = this.querySelectorAll(".menu-item");
                 var menuItem, itemIndex;
                 for (itemIndex = 0; itemIndex < menuItems.length; itemIndex++) {
                     menuItem = menuItems[itemIndex];
                     if (menuItem.offsetTop + menuItem.offsetHeight > this.scrollTop) {
-                        this.$.selector.select(itemIndex);
+                        selector.select(itemIndex);
                         return;
                     }
                 }
-                this.$.selector.select(0);
+                selector.select(0);
             },
 
             selectLastVisisble: function () {
+                var selector = this.$.selector;
                 var menuItems = this.querySelectorAll(".menu-item");
                 var menuItem, itemIndex;
                 for (itemIndex = menuItems.length - 1; itemIndex >= 0; itemIndex--) {
                     menuItem = menuItems[itemIndex];
                     if (menuItem.offsetTop < this.scrollTop + this.clientHeight) {
-                        this.$.selector.select(itemIndex);
+                        selector.select(itemIndex);
                         return;
                     }
                 }
-                this.$.selector.select(menuItems.length - 1);
+                selector.select(menuItems.length - 1);
             },
 
             clearSelection: function () {
+                var selector = this.$.selector;
                 //The call for clear method on _selection object 
-                this.$.selector._selection.clear()
-                this.$.selector.selected = NaN;
+                selector._selection.clear()
+                selector.selected = NaN;
             },
 
             getSelectedMenuItemPath: function () {
