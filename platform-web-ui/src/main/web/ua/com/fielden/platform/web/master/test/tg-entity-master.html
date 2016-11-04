@@ -1202,21 +1202,17 @@
             
             test('avoids for existing valid non-dirty entity with Already Saved exception thrown', function (done) {
                 var firstValidation = true;
-                var secondValidation = false;
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     // validation process is legal -- it is not discarded, but saving is chained on top of last validation promise
                     // see issue https://github.com/fieldenms/tg/issues/479
-                    var saveButton = master.$$('tg-action[role="save"]').$.actionButton;
+                    var saveButton = master.$._saveAction.$.actionButton;
                     if (firstValidation) {
                         MockInteractions.tap(saveButton);
                         firstValidation = false;
-                        secondValidation = true;
-                    } else if (secondValidation) {
-                        master.$.editor_4_dateProp._editingValue = '01/02/2003 00:00';
-                        MockInteractions.tap(saveButton);
-                        secondValidation = false;
                     } else {
-                        // no need to do anything on third validation cycle
+                        master.$.editor_4_dateProp._editingValue = '01/02/2003 00:00';
+                        master.$.editor_4_dateProp.commit();
+                        MockInteractions.tap(saveButton);
                     }
                 };
                 
