@@ -104,8 +104,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
-    private EntityFactory entityFactory;
-
     @Inject
     private ICompanionObjectFinder coFinder;
 
@@ -160,16 +158,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
         
         return false;
-    }
-
-    /**
-     * A setter for injection of entityFactory instance.
-     *
-     * @param entityFactory
-     */
-    @Inject
-    protected void setEntityFactory(final EntityFactory entityFactory) {
-        this.entityFactory = entityFactory;
     }
 
     /**
@@ -1098,10 +1086,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return new EntityBatchDeleterByIds<T>(getSession(), (PersistedEntityMetadata<T>) domainMetadata.getPersistedEntityMetadataMap().get(getEntityType())).deleteEntities(propName, entitiesIds);
     }
 
-    protected EntityFactory getEntityFactory() {
-        return entityFactory;
-    }
-
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
     }
@@ -1328,4 +1312,5 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public <E extends IContinuationData> Optional<E> moreData(final String key) {
         return Optional.ofNullable((E) this.moreData.get(key));
     }
+
 }
