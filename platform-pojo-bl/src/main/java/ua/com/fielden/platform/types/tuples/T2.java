@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.types.tuples;
 
+import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -58,5 +59,10 @@ public class T2<T_1, T_2> {
         final T2 that = (T2) obj;
         
         return equalsEx(this._1, that._1) && equalsEx(this._2, that._2);
+    }
+
+    @Override
+    public String toString() {
+        return format("(%s, %s)", _1, _2);
     }
 }
