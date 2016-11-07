@@ -94,6 +94,10 @@
                 var yearMonth = { year: year, month: month, day: 1 };
                 return _momentTz(yearMonth, this.timeZone).daysInMonth();
             },
+            getDaysInPreviousMonth = function (year, month) {
+                var yearMonth = { year: year, month: month, day: 1 };
+                return _momentTz(yearMonth, this.timeZone).add(-1, 'M').daysInMonth();
+            },
             createMonth = function (year, month) {
                 var weeks = [],
                     week = [],
@@ -111,7 +115,7 @@
                 var week = [],
                     firstDay = _momentTz(yearMonthDay, this.timeZone).day(),
                     days = getDaysInMonth(year, month),
-                    previousMonthDays = getDaysInMonth(year, month - 1),
+                    previousMonthDays = getDaysInPreviousMonth(year, month),
                     nextMonthDay = -1,
                     _i = 0;
                 // In case when the first day of the month is not a sanday then add 0 to the first days of the week.
@@ -182,31 +186,22 @@
              * Goes to the previous month.
              */
             _prevMonth: function () {
-                this._selectMonth(this.month - 1);
+                this._selectMonth(-1);
             },
 
             /**
              * Goes to the next month.
              */
             _nextMonth: function () {
-                this._selectMonth(this.month + 1);
-            },
-
-            /**
-             * Selectes the year on the displayed calendar
-             */
-            _selectYear: function (year) {
-                var yearMonth = { year: year, month: this.month, day: 1 };
-                var momentToShow = _momentTz(yearMonth, this.timeZone);
-                this._adjustMonth(momentToShow);
+                this._selectMonth(1);
             },
 
             /**
              * Selects month depending on increment (the increment might be positive or negetive).
              */
-            _selectMonth: function (month) {
-                var yearMonth = { year: this.year, month: month, day: 1 };
-                var momentToShow = _momentTz(yearMonth, this.timeZone);
+            _selectMonth: function (inc) {
+                var yearMonth = { year: this.year, month: this.month, day: 1 };
+                var momentToShow = _momentTz(yearMonth, this.timeZone).add(inc, 'M');
                 this._adjustMonth(momentToShow);
             },
 
