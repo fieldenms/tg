@@ -41,7 +41,7 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  * 
  */
-public abstract class LifecycleModel<T extends AbstractEntity> {
+public abstract class LifecycleModel<T extends AbstractEntity<?>> {
 
     private final Class<T> entityType;
     private final DateTime leftBoundary;
