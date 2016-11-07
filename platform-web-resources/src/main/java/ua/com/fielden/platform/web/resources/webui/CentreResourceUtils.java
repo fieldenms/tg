@@ -162,60 +162,53 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
             final Optional<User> createdByUserConstraint) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
-
-        // the next action validates the entity one more time, but with the check for 'required' properties
-        final Result validationResult = criteriaEntity.isValid();
-
-        if (validationResult.isSuccessful()) {
-            // final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> resultingCriteria = applied;
-            criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
-            if (additionalFetchProvider.isPresent()) {
-                criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
-            }
-            if (queryEnhancerAndContext.isPresent()) {
-                final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
-                criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
-            }
-            if (createdByUserConstraint.isPresent()) {
-                criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
-            }
-            IPage<T> page = null;
-            List<T> data = new ArrayList<T>();
-            final Integer pageCapacity = (Integer) customObject.get("@@pageCapacity");
-            final String action = (String) customObject.get("@@action");
-            if (isRunning(customObject)) {
-                page = criteriaEntity.run(pageCapacity);
-                resultantCustomObject.put("summary", page.summary());
-                data = page.data();
-            } else if (RunActions.REFRESH.toString().equals(action)) {
-                final Pair<IPage<T>, T> refreshedData = criteriaEntity.getPageWithSummaries((Integer) customObject.get("@@pageNumber"), pageCapacity);
-                page = refreshedData.getKey();
-                data = page.data();
-                resultantCustomObject.put("summary", refreshedData.getValue());
-            } else if (RunActions.NAVIGATE.toString().equals(action)) {
-                try {
-                    page = criteriaEntity.getPage((Integer) customObject.get("@@pageNumber"), pageCapacity);
-                } catch (final Exception e) {
-                    final Pair<IPage<T>, T> navigatedData = criteriaEntity.getPageWithSummaries((Integer) customObject.get("@@pageNumber"), pageCapacity);
-                    page = navigatedData.getKey();
-                    resultantCustomObject.put("summary", navigatedData.getValue());
-                }
-                data = page.data();
-            } else if (RunActions.EXPORTALL.toString().equals(action)) {
-                page = null;
-                data = criteriaEntity.getAllEntities();
-            }
-            customObject.remove("@@pageCapacity");
-            customObject.remove("@@exportAll");
-            customObject.remove("@@pageNumber");
-            customObject.remove("@@pageCount");
-            final ArrayList<Object> resultEntities = new ArrayList<Object>(data);
-            resultantCustomObject.put("resultEntities", resultEntities);
-            resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
-            resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
-            return new Pair<>(resultantCustomObject, resultEntities);
+        
+        criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
+        if (additionalFetchProvider.isPresent()) {
+            criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
         }
-        return new Pair<>(resultantCustomObject, null);
+        if (queryEnhancerAndContext.isPresent()) {
+            final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
+            criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
+        }
+        if (createdByUserConstraint.isPresent()) {
+            criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
+        }
+        IPage<T> page = null;
+        List<T> data = new ArrayList<T>();
+        final Integer pageCapacity = (Integer) customObject.get("@@pageCapacity");
+        final String action = (String) customObject.get("@@action");
+        if (isRunning(customObject)) {
+            page = criteriaEntity.run(pageCapacity);
+            resultantCustomObject.put("summary", page.summary());
+            data = page.data();
+        } else if (RunActions.REFRESH.toString().equals(action)) {
+            final Pair<IPage<T>, T> refreshedData = criteriaEntity.getPageWithSummaries((Integer) customObject.get("@@pageNumber"), pageCapacity);
+            page = refreshedData.getKey();
+            data = page.data();
+            resultantCustomObject.put("summary", refreshedData.getValue());
+        } else if (RunActions.NAVIGATE.toString().equals(action)) {
+            try {
+                page = criteriaEntity.getPage((Integer) customObject.get("@@pageNumber"), pageCapacity);
+            } catch (final Exception e) {
+                final Pair<IPage<T>, T> navigatedData = criteriaEntity.getPageWithSummaries((Integer) customObject.get("@@pageNumber"), pageCapacity);
+                page = navigatedData.getKey();
+                resultantCustomObject.put("summary", navigatedData.getValue());
+            }
+            data = page.data();
+        } else if (RunActions.EXPORTALL.toString().equals(action)) {
+            page = null;
+            data = criteriaEntity.getAllEntities();
+        }
+        customObject.remove("@@pageCapacity");
+        customObject.remove("@@exportAll");
+        customObject.remove("@@pageNumber");
+        customObject.remove("@@pageCount");
+        final ArrayList<Object> resultEntities = new ArrayList<Object>(data);
+        resultantCustomObject.put("resultEntities", resultEntities);
+        resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
+        resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
+        return new Pair<>(resultantCustomObject, resultEntities);
     }
 
     ///////////////////////////////// CUSTOM OBJECTS [END] ///////////////////////////

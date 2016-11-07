@@ -63,6 +63,7 @@ import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
+import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
@@ -124,6 +125,7 @@ import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.test.server.config.LayoutComposer;
+import ua.com.fielden.platform.web.test.server.config.StandardActions;
 import ua.com.fielden.platform.web.test.server.config.TgEntityWithTimeZoneDatesWebUiConfig;
 import ua.com.fielden.platform.web.test.server.config.TgGeneratedEntityWebUiConfig;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
@@ -252,6 +254,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
+                        .addTopAction(CentreConfigActions.SORT_ACTION.mkAction()).also()
+                        .addTopAction(StandardActions.EXPORT_ACTION.mkAction(TgFetchProviderTestEntity.class))
                         .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).also()
                         .addCrit("propForValidation").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
                             .setDefaultValue(
