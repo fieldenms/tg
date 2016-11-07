@@ -123,6 +123,7 @@ import ua.com.fielden.platform.web.resources.webui.MenuWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
+import ua.com.fielden.platform.web.test.server.config.LayoutComposer;
 import ua.com.fielden.platform.web.test.server.config.TgEntityWithTimeZoneDatesWebUiConfig;
 import ua.com.fielden.platform.web.test.server.config.TgGeneratedEntityWebUiConfig;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
@@ -251,8 +252,15 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final EntityCentre<TgFetchProviderTestEntity> fetchProviderTestCentre = new EntityCentre<>(MiTgFetchProviderTestEntity.class, "TgFetchProviderTestEntity",
                 EntityCentreBuilder.centreFor(TgFetchProviderTestEntity.class)
-                        .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).
-                        setLayoutFor(Device.DESKTOP, Optional.empty(), "[[]]")
+                        .addCrit("property").asMulti().autocompleter(TgPersistentEntityWithProperties.class).setDefaultValue(multi().string().setValues("KE*").value()).also()
+                        .addCrit("propForValidation").asSingle().autocompleter(TgPersistentEntityWithProperties.class)
+                            .setDefaultValue(
+                                single()
+                                .entity(TgPersistentEntityWithProperties.class)
+                                .setValue(injector().getInstance(ITgPersistentEntityWithProperties.class).findByKey("KEY8"))
+                                .value()
+                            ).
+                        setLayoutFor(Device.DESKTOP, Optional.empty(), LayoutComposer.mkGridForCentre(1, 2))
 
                         .addProp("property")
                         .setFetchProvider(EntityUtils.fetch(TgFetchProviderTestEntity.class).with("additionalProperty"))
@@ -867,6 +875,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*    */.addMenuItem("Property Descriptor Example").description("Property Descriptor Example description").centre(propDescriptorCentre).done()
                 /*    */.addMenuItem("TimeZones Example").description("TimeZone properties handling example").centre(configApp().getCentre(MiTgEntityWithTimeZoneDates.class).get()).done()
                 /*    */.addMenuItem("Generation Example").description("Centre entities generation example").centre(configApp().getCentre(MiTgGeneratedEntity.class).get()).done()
+                /*    */.addMenuItem("Fetch Provider Example").description("Fetch Provider example").centre(configApp().getCentre(MiTgFetchProviderTestEntity.class).get()).done()
                 /*  */.done()
                 .done().done()
                 .addModule("Accidents")
