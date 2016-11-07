@@ -228,6 +228,14 @@ public class CriteriaResource extends ServerResource {
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre;
             if (isRunning) {
                 final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm);
+                
+                // the next action validates the entity one more time, but with the check for 'required' properties
+                final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
+                if (!validationResult.isSuccessful()) {
+                    logger.debug("CRITERIA_RESOURCE: run finished.");
+                    final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
+                    return restUtil.rawListJSONRepresentation(freshCentreAppliedCriteriaEntity, resultantCustomObject);
+                }
                 updatedFreshCentre = freshCentreAppliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
                 
                 CentreUpdater.initAndCommit(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME, updatedFreshCentre);
@@ -266,8 +274,8 @@ public class CriteriaResource extends ServerResource {
                 final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
                 final Result generationResult = generator.gen(generatorEntityType,
                         previouslyRunCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
-                                (MetaProperty<?> mp) -> mp.getName(), 
-                                (MetaProperty<?> mp) -> Optional.ofNullable(mp.getValue()))));
+                                (final MetaProperty<?> mp) -> mp.getName(), 
+                                (final MetaProperty<?> mp) -> Optional.ofNullable(mp.getValue()))));
                 // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
                 // otherwise, proceed with the request handling further to actually query the data
                 // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
