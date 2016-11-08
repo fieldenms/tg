@@ -9,6 +9,7 @@
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
 
 <link rel="import" href="/resources/components/lodash-lib.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/editors/tg-highlighting-behavior.html">
 <link rel="import" href="/resources/editors/tg-dom-stamper.html">
 
@@ -62,8 +63,8 @@
         </style>
         <iron-selector id="selector" tabindex="0">
             <!-- begin of dom-repeat -->
-            <template is="dom-repeat" items="[[_flatMenu]]" as="menuItem">
-                <div class="menu-item">
+            <template is="dom-repeat" items="[[_filteredMenu]]" as="menuItem">
+                <div class="menu-item" tooltip-text$="[[_calcTooltip(menuItem)]]">
                     <div class="layout vertical" style$="[[_calcMenuItemStyle(menuItem)]]">
                         <tg-dom-stamper class="primary truncate" dom-text="[[_highlightValue(menuItem, 'title', phraseToHighlight)]]"></tg-dom-stamper>
                         <tg-dom-stamper class="secondary dim truncate" dom-text="[[_highlightValue(menuItem, 'description', phraseToHighlight)]]"></tg-dom-stamper>
@@ -99,22 +100,15 @@
             }
             return res;
         };
-        var searchForPhrase = function (flatMenu, phraseToSearch) {
-            var itemIndex = 0;
-            var menuItem, positionInTitle, positionInDesc;
-            for (itemIndex = 0; itemIndex < flatMenu.length; itemIndex++) {
-                menuItem = flatMenu[itemIndex];
-                positionInTitle = (menuItem.title.toLowerCase()).search(phraseToSearch.toLowerCase());
-                positionInDesc = (menuItem.description.toLowerCase()).search(phraseToSearch.toLowerCase());
-                if (positionInTitle >= 0 || positionInDesc >= 0) {
-                    return itemIndex;
-                }
-            }
+        var isHighlighted = function (menuItem, phraseToSearch) {
+            var positionInTitle = (menuItem.title.toLowerCase()).search(phraseToSearch.toLowerCase());
+            var positionInDesc = (menuItem.description.toLowerCase()).search(phraseToSearch.toLowerCase());
+            return positionInTitle >= 0 || positionInDesc >= 0;
         };
         Polymer({
             is: 'tg-menu-list',
 
-            behaviors: [Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgHighlightingBehavior],
+            behaviors: [Polymer.IronOverlayBehavior, Polymer.TgBehaviors.TgHighlightingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
             properties: {
                 /**
@@ -143,13 +137,18 @@
                  * An array of flattened menu item hierarchical list
                  */
                 _flatMenu: Array,
+                /**
+                 * An array of filtered menu items.
+                 */
+                _filteredMenu: Array
             },
 
-            observers: ["_scrollToFirstMatchedItem(_flatMenu, phraseToHighlight)"],
+            observers: ["_filterMenu(_flatMenu, phraseToHighlight)"],
 
             ready: function () {
                 this.noAutoFocus = true;
                 this.alwaysOnTop = true;
+                this.noCancelOnOutsideClick = true;
             },
 
             selectNext: function () {
@@ -211,15 +210,18 @@
                 var selector = this.$.selector;
                 var menuItem, menuItemPath;
                 if (!isNaN(selector.selected)) {
-                    menuItem = this._flatMenu[selector.selected];
-                    menuItemPath = menuItem.title;
-                    while (menuItem.parent) {
-                        menuItemPath = menuItem.parent.title + "/" + menuItemPath;
-                        menuItem = menuItem.parent;
-                    }
-                    return menuItemPath;
+                    return this._getMenuItemPath(this._filteredMenu[selector.selected]);
                 }
                 return "";
+            },
+
+            _getMenuItemPath: function (menuItem) {
+                var menuItemPath = encodeURIComponent(menuItem.title);
+                while (menuItem.parent) {
+                    menuItemPath = encodeURIComponent(menuItem.parent.title) + "/" + menuItemPath;
+                    menuItem = menuItem.parent;
+                }
+                return menuItemPath;
             },
 
             isSelected: function () {
@@ -273,13 +275,31 @@
                 this.style['min-height'] = '50px';
             },
 
-            _scrollToFirstMatchedItem: function (flatMenu, phraseToHighlight) {
-                var indexOfFirstElementWithPhrase = searchForPhrase(flatMenu, phraseToHighlight);
-                var menuItem;
-                if (indexOfFirstElementWithPhrase) {
-                    menuItem = this.querySelectorAll(".menu-item")[indexOfFirstElementWithPhrase];
-                    this.scrollTop = menuItem.offsetTop <= this.scrollHeight - this.clientHeight ? menuItem.offsetTop : this.scrollHeight - this.clientHeight;
-                }
+            _filterMenu: function (flatMenu, phraseToHighlight) {
+                var invisibleItems = {};
+                var filteredMenu = [];
+                //Check each menu item whether it matches the phrase to highlight and if not add to invisible list otherwise remove it's parents from invisible list.
+                flatMenu.forEach(function (menuItem, itemIndex) {
+                    var menuItemPath;
+                    if (!isHighlighted(menuItem, phraseToHighlight)) {
+                        invisibleItems[this._getMenuItemPath(menuItem)] = itemIndex;
+                    } else {
+                        while (menuItem.parent) {
+                            menuItemPath = this._getMenuItemPath(menuItem.parent);
+                            if (invisibleItems.hasOwnProperty(menuItemPath)) {
+                                delete invisibleItems[menuItemPath];
+                            }
+                            menuItem = menuItem.parent;
+                        }
+                    }
+                }.bind(this));
+                //Create filtered menu item list. It is a orderd list of menu items that is not present in invisibleItems map.
+                flatMenu.forEach(function (menuItem) {
+                    if (!invisibleItems.hasOwnProperty(this._getMenuItemPath(menuItem))) {
+                        filteredMenu.push(menuItem)
+                    }
+                }.bind(this));
+                this._filteredMenu = filteredMenu;
             },
 
             _scrollToSelected: function () {
@@ -322,6 +342,12 @@
                     parent = parent.parent;
                 }
                 return "margin-left: " + margin + "px";
+            },
+
+            _calcTooltip: function (menuItem) {
+                var tooltip = "<b>" + menuItem.title + "</b>";
+                tooltip += menuItem.description ? "<br>" + menuItem.description : "";
+                return tooltip;
             }
         });
     })();

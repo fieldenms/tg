@@ -132,6 +132,13 @@
                     return view.getSelectedPage();
                 }
             },
+            
+            selectSubroute: function (subroute) {
+                var view = this.$$("#view");
+                if (view._selectMenu) {
+                    view._selectMenu(subroute);
+                }
+            },
 
             load: function () {
                 this.$$("#view").load();

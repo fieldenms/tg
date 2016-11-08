@@ -178,7 +178,7 @@
             _itemSelected: function (e, detail) {
                 var model = e.model;
                 if (isMenuPresent(model.item.menu)) {
-                    this.fire("menu-item-selected", model.item.key);
+                    this.fire("menu-item-selected", encodeURIComponent(model.item.key));
                 }
             },
             _calcItemFilter: function (item) {

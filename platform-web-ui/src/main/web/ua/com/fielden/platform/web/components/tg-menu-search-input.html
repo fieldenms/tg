@@ -183,7 +183,6 @@
                 } else if (event.keyCode === 38 || event.keyCode === 40) { // up/down arrow keys
                     // By devault up/down arrow keys work like home/end for and input field
                     // That's why this event should be suppressed.
-                    event.stopPropagation();
                     if (event.stopPropagation) event.stopPropagation();
                     if (event.preventDefault) event.preventDefault();
                     event.cancelBubble = true;
@@ -199,7 +198,7 @@
                     // return false as part of stopping the event from propagation
                     return false;
                 }
-            }
+            },
         });
     })();
 </script>

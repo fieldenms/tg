@@ -146,10 +146,10 @@
 
                 _showView: function (e) {
                     var menuPathItems = e.detail.split("/");
-                    var moduleName = menuPathItems[0];
-                    var route = "/" + encodeURIComponent(moduleName);
+                    var moduleName = decodeURIComponent(menuPathItems[0]);
+                    var route = "/" + menuPathItems[0];
                     menuPathItems.splice(0,1);
-                    route += "/" + (menuPathItems.length > 0 ? menuPathItems.map(function(pathItem) {return encodeURIComponent(pathItem);}).join("/") : "_");
+                    route += "/" + (menuPathItems.length > 0 ? menuPathItems.join("/") : "_");
                     if (this._route.path === route) {
                         this._setSelected(moduleName);
                     } else {
@@ -170,12 +170,17 @@
                     var currentlySelected, currentlySelectedElement, elementToSelect;
                     if (this.menuConfig) {
                         currentlySelected = this.$.pages.selected;
+                        currentlySelectedElement = currentlySelected && this.$$("[name='" + currentlySelected + "']");
                         if (currentlySelected === selected) {
-                            this._selectedModule = this._routeData.moduleName;
-                            this._selectedSubmodule = this._subroute.path;
+                            if (this._selectedSubmodule === this._subroute.path) {
+                                if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
+                                    currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
+                                }
+                            } else {
+                                this._selectedSubmodule = this._subroute.path
+                            }
                             return;
                         }
-                        currentlySelectedElement = currentlySelected && this.$$("[name='" + currentlySelected + "']");
                         selected = findModule(selected, this.menuConfig)
                         elementToSelect = selected && this.$$("[name='" + selected + "']");
                         if (currentlySelectedElement) {
@@ -223,9 +228,16 @@
                 
                 _animationFinished: function (e, detail, source) {
                     var target = e.target || e.srcElement;
+                    var currentlySelectedElement
                     if (target === this.$.pages){
                         this._selectedModule = this._routeData.moduleName;
-                        this._selectedSubmodule = this._subroute.path;
+                        if (this._selectedSubmodule === this._subroute.path) {
+                            if (detail.toPage.selectSubroute) {
+                                detail.toPage.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
+                            }
+                        } else {
+                            this._selectedSubmodule = this._subroute.path;
+                        }
                     }
                  },
 
