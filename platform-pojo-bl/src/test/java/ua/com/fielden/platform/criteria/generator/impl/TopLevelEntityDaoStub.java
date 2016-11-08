@@ -156,4 +156,10 @@ public class TopLevelEntityDaoStub implements ITopLevelEntity {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public TopLevelEntity new_() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

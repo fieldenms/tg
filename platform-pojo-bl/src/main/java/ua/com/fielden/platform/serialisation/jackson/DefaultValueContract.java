@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import java.lang.reflect.Method;
 
 import org.apache.log4j.Logger;
@@ -253,7 +254,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public static boolean isEntityTitleDefault(final Class<?> entityType, final String entityTitle) {
+    public static boolean isEntityTitleDefault(final Class<? extends AbstractEntity<?>> entityType, final String entityTitle) {
         return EntityUtils.equalsEx(entityTitle, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getKey());
     }
 
@@ -262,7 +263,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public static boolean isEntityDescDefault(final Class<?> entityType, final String entityDesc) {
+    public static boolean isEntityDescDefault(final Class<? extends AbstractEntity<?>> entityType, final String entityDesc) {
         return EntityUtils.equalsEx(entityDesc, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getValue());
     }
 

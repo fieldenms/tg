@@ -14,7 +14,7 @@ import ua.com.fielden.platform.equery.lifecycle.IProperty.IValueProperty;
  * @param <T>
  *            - indicates an entity type.
  */
-public interface IGroup<T extends AbstractEntity> {
+public interface IGroup<T extends AbstractEntity<?>> {
 
     /**
      * @return a property by which grouping has been performed. It could be {@link ITimeProperty time-distribution property} or {@link IValueProperty value-distribution property}.

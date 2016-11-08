@@ -230,6 +230,13 @@ public class CriteriaResource extends ServerResource {
                 final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm);
                 updatedFreshCentre = freshCentreAppliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
                 
+                // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
+                final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
+                if (!validationResult.isSuccessful()) {
+                    logger.debug("CRITERIA_RESOURCE: run finished.");
+                    return restUtil.rawListJSONRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(miType, gdtm, updatedFreshCentre, new LinkedHashMap<>()));
+                }
+                
                 CentreUpdater.initAndCommit(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME, updatedFreshCentre);
             } else {
                 updatedFreshCentre = null;
@@ -266,8 +273,8 @@ public class CriteriaResource extends ServerResource {
                 final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
                 final Result generationResult = generator.gen(generatorEntityType,
                         previouslyRunCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
-                                (MetaProperty<?> mp) -> mp.getName(), 
-                                (MetaProperty<?> mp) -> Optional.ofNullable(mp.getValue()))));
+                                (final MetaProperty<?> mp) -> mp.getName(), 
+                                (final MetaProperty<?> mp) -> Optional.ofNullable(mp.getValue()))));
                 // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
                 // otherwise, proceed with the request handling further to actually query the data
                 // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
@@ -289,9 +296,7 @@ public class CriteriaResource extends ServerResource {
                             // The query will be enhanced with condition createdBy=currentUser if createdByConstraintShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
                             createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(CentreResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
             if (isRunning) {
-                pair.getKey().put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)));
-                pair.getKey().put("metaValues", CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)));
-                pair.getKey().put("staleCriteriaMessage", null);
+                updateResultantCustomObject(miType, gdtm, updatedFreshCentre, pair.getKey());
             }
 
             if (pair.getValue() == null) {
@@ -327,6 +332,25 @@ public class CriteriaResource extends ServerResource {
             logger.debug("CRITERIA_RESOURCE: run finished.");
             return restUtil.rawListJSONRepresentation(list.toArray());
         }, restUtil);
+    }
+
+    /**
+     * Resultant custom object contains important result information such as 'isCentreChanged' (guards enablement of SAVE / DISCARD buttons) or 'metaValues' 
+     * (they bind to metaValues criteria editors) or information whether selection criteria is stale (config button colour).
+     * <p>
+     * This method updates such information just before returning resultant custom object to the client.
+     * 
+     * @param miType
+     * @param gdtm
+     * @param updatedFreshCentre
+     * @param resultantCustomObject
+     * @return
+     */
+    private static Map<String, Object> updateResultantCustomObject(final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre, final Map<String, Object> resultantCustomObject) {
+        resultantCustomObject.put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)));
+        resultantCustomObject.put("metaValues", CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)));
+        resultantCustomObject.put("staleCriteriaMessage", null);
+        return resultantCustomObject;
     }
 
     public static Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> createQueryEnhancerAndContext(

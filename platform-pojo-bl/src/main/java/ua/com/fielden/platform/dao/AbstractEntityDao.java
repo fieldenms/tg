@@ -11,9 +11,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
@@ -36,6 +39,9 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
     private final Class<? extends Comparable<?>> keyType;
     private final Class<T> entityType;
     private IFetchProvider<T> fetchProvider;
+    
+    @Inject
+    private EntityFactory entityFactory;
 
     protected boolean getFilterable() {
         return false;
@@ -250,4 +256,20 @@ public abstract class AbstractEntityDao<T extends AbstractEntity<?>> implements 
         // provides a very minimalistic version of fetch provider by default (only id and version are included)
         return EntityUtils.fetch(getEntityType());
     }
+    
+    protected EntityFactory getEntityFactory() {
+        return entityFactory;
+    }
+ 
+    /**
+     * Instantiates an instrumented new entity of the type for which this object is a companion.
+     * The default entity constructor, which should be protected, is used for instantiation.
+     *
+     * @return
+     */
+    @Override
+    public T new_() {
+        return entityFactory.newEntity(getEntityType());
+    }
+
 }

@@ -287,7 +287,7 @@ public class RestServerUtil {
      *
      * @return
      */
-    public <T extends AbstractEntity> Representation lifecycleRepresentation(final LifecycleModel<T> lifecycleModel) {
+    public <T extends AbstractEntity<?>> Representation lifecycleRepresentation(final LifecycleModel<T> lifecycleModel) {
         logger.debug("Start building lifecycle representation:" + new DateTime());
         try {
             // create a Result enclosing lifecycle data

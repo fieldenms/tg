@@ -412,5 +412,12 @@ public interface IEntityDao<T extends AbstractEntity<?>> extends IComputationMon
      * @return
      */
     IFetchProvider<T> getFetchProvider();
-    
+ 
+    /**
+     * Instantiates an new entity of the type for which this object is a companion.
+     *
+     * @return
+     */
+    T new_();
+
 }
