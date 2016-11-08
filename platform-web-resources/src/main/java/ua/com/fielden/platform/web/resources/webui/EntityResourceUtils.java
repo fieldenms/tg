@@ -772,7 +772,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         // 4) persistent+persisted+notDirty+inValid entities should always be saved: passed to companion 'save' method to process validation errors in domain-driven way by companion object itself
         // 5) persistent+persisted+notDirty+valid entities saving should be skipped
         if (!entity.isDirty() && entity.isValid().isSuccessful()) {
-            throw Result.failure("Already saved.");
+            throw Result.failure("There are no changes to save.");
         }
         
         if (continuationsPresent) {

@@ -1228,7 +1228,7 @@
                     assert.isNotNull(potentiallySavedOrNewEntity.id, "Entity id should be not null.");
                     
                     assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), "Entity's exceptionOccured should exist.");
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Already saved.', "Entity's exceptionOccured should exist.");
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'There are no changes to save.', "Entity's exceptionOccured should exist.");
                     
                     var arrivedValue = _millis('01/02/2003 00:00:00.000');
                     
