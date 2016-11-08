@@ -366,6 +366,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
                     final Class<? extends MiWithConfigurationSupport<?>> miType = CentreUtils.getMiType((Class<EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>>) criteriaEntity.getClass());
                     final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(miType);
                     customObject.putAll(centreContextHolder.getCustomObject());
+                    // at this stage (during exporting of centre data) appliedCriteriaEntity is valid, because it represents 'previouslyRun' centre criteria which is getting updated only if Run was initiated and selection criteria validation succeeded
                     final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>) criteriaEntity;
                     // if the export() invocation occurs on the centre that warrants data generation
                     // then for an entity centre configuration check if a generator was provided
