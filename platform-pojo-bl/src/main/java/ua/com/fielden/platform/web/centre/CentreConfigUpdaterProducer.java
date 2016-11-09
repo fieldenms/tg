@@ -2,12 +2,13 @@ package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -26,8 +27,6 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.streaming.ValueCollectors;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Inject;
 
 /**
  * A producer for new instances of entity {@link CentreConfigUpdater}.
@@ -56,7 +55,7 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
             .values().stream()
             .collect(Collectors.toCollection(LinkedHashSet::new));
         
-        entity.setSortingVals(sortingVals);
+        entity.setSortingVals(new ArrayList<>(sortingVals));
         return entity;
     }
 

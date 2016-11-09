@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.web.centre;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -14,10 +15,13 @@ import ua.com.fielden.platform.streaming.ValueCollectors;
  * @author TG Team
  *
  */
-public class CentreConfigUpdaterSortingValsDefiner implements IAfterChangeEventHandler<Set<String>> {
+public class CentreConfigUpdaterSortingValsDefiner implements IAfterChangeEventHandler<List<String>> {
 
     @Override
-    public void handle(final MetaProperty<Set<String>> property, final Set<String> sortingVals) {
+    public void handle(final MetaProperty<List<String>> property, final List<String> sortingVals) {
+        if (new HashSet<>(sortingVals).size() < sortingVals.size()) { // if sortingVals contain duplicates then sortingVals was not formed correctly in tg-collectional-editor (programming error, please correct tg-collectional-editor implementation in such case) 
+            throw new IllegalArgumentException(String.format("SortingVals [%s] contains duplicates, please correct implementation in tg-collectional-editor.", sortingVals));
+        }
         final CentreConfigUpdater updater = (CentreConfigUpdater) property.getEntity();
         
         // clear sorting properties
