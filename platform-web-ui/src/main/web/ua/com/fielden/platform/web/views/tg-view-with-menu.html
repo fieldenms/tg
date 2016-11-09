@@ -168,7 +168,7 @@
                 <div id="viewToolBar" class="tool-bar layout horizontal center">
                     <div class="layout horizontal center flex">
                         <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
-                        <tg-menu-search-input menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
+                        <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
                         <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
                     </div>
                 </div>
@@ -306,6 +306,10 @@
                     }
                 }
                 return changedViews.length > 0 ? changedViews : undefined;
+            },
+
+            searchMenu: function (event) {
+                this.$.menuSearcher.searchMenu();
             },
 
             _calcCheckboxTooltip: function (menu, visible) {
@@ -492,8 +496,12 @@
                 var viewToLoad;
                 if (this.$.pages.selected !== '_') {
                     viewToLoad = detail.toPage;
-                    if (viewToLoad && !viewToLoad.wasLoaded()) {
-                        viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
+                    if (viewToLoad) {
+                        if (!viewToLoad.wasLoaded()) {
+                            viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
+                        } else {
+                            viewToLoad.focusLoadedView();
+                        }
                     }
                 }
             },

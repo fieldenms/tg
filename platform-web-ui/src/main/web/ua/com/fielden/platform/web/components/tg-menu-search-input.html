@@ -34,7 +34,7 @@
     </style>
 
     <template>
-        <iron-icon id="searchIcon" icon="icons:search" on-tap="_searchMenu" on-transitionend="_iconTransitionFinished" tooltip-text$="[[tooltip]]"></iron-icon>
+        <iron-icon id="searchIcon" icon="icons:search" on-tap="searchMenu" on-transitionend="_iconTransitionFinished" tooltip-text$="[[tooltip]]"></iron-icon>
         <paper-input-container id="inputContainer" no-label-float style="display:none;" on-transitionend="_inputTransitionFinished">
             <input id="input" is="iron-input" type="text" bind-value="{{_menuToSearch}}" on-blur="_onBlur" on-focus="_onFocus" on-keydown="_inputKeyDown">
         </paper-input-container>
@@ -85,6 +85,10 @@
                     var container = this.$.inputContainer;
                     return [container.getBoundingClientRect(), container.offsetHeight];
                 }.bind(this);
+            },
+            
+            searchMenu: function () {
+                this._showInput = true;
             },
 
             _onFocus: function () {
@@ -139,10 +143,7 @@
                     this.fire("menu-item-selected", menuList.getSelectedMenuItemPath());
                     this._menuToSearch = "";
                 }
-            },
-
-            _searchMenu: function () {
-                this._showInput = true;
+                this.fire("menu-search-list-closed");
             },
 
             _showInputChanged: function (newValue, oldValue) {
