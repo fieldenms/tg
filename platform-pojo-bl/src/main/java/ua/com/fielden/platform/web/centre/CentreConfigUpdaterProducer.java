@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -23,6 +24,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.streaming.ValueCollectors;
 import ua.com.fielden.platform.utils.Pair;
 
 import com.google.inject.Inject;
@@ -44,19 +46,16 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
     }
 
     @Override
-    // @Authorise(UserRoleReviewToken.class)
     protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
         final LinkedHashSet<SortingProperty> sortingProperties = createSortingProperties(masterEntity.freshCentreSupplier().get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
         entity.setSortingProperties(sortingProperties);
         
-        final SortedMap<Integer, String> sortingValsMap = new TreeMap<>();
-        for (final SortingProperty sortingProperty: sortingProperties) {
-            if (sortingProperty.getSortingNumber() >= 0) {
-                sortingValsMap.put(sortingProperty.getSortingNumber(), sortingProperty.getKey() + ':' + (Boolean.TRUE.equals(sortingProperty.getSorting()) ? "asc" : "desc"));
-            }
-        }
-        final Set<String> sortingVals = new LinkedHashSet<>();
-        sortingVals.addAll(sortingValsMap.values());
+        final Set<String> sortingVals = sortingProperties.stream()
+            .filter(sp -> sp.getSortingNumber() >= 0) // consider only 'sorted' properties
+            .collect(ValueCollectors.toTreeMap(sp -> sp.getSortingNumber(), sp -> sp.getKey() + ':' + (Boolean.TRUE.equals(sp.getSorting()) ? "asc" : "desc"))) // map sorted by 'sortingNumber'
+            .values().stream()
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+        
         entity.setSortingVals(sortingVals);
         return entity;
     }

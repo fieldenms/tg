@@ -3,8 +3,6 @@ package ua.com.fielden.platform.web.centre;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.inject.Inject;
-
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.streaming.ValueCollectors;
@@ -17,11 +15,6 @@ import ua.com.fielden.platform.streaming.ValueCollectors;
  *
  */
 public class CentreConfigUpdaterSortingValsDefiner implements IAfterChangeEventHandler<Set<String>> {
-
-    @Inject
-    public CentreConfigUpdaterSortingValsDefiner() {
-        super();
-    }
 
     @Override
     public void handle(final MetaProperty<Set<String>> property, final Set<String> sortingVals) {

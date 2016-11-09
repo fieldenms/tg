@@ -59,7 +59,7 @@ public class MetaPropertyCollectionalTest {
     public void original_value_is_set_after_property_state_was_reset() {
         prop(entity).resetState();
         
-        final Set<TgCollectionalSerialisationChild> expected = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> expected = new HashSet<>();
         assertEquals(expected, prop(entity).getOriginalValue());
         
         assertFalse(prop(entity).getValue() == prop(entity).getOriginalValue()); // references should be different
@@ -70,7 +70,7 @@ public class MetaPropertyCollectionalTest {
     public void prev_value_is_set_after_property_state_was_reset() {
         prop(entity).resetState();
         
-        final Set<TgCollectionalSerialisationChild> expected = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> expected = new HashSet<>();
         assertEquals(expected, prop(entity).getPrevValue());
         
         assertFalse(prop(entity).getValue() == prop(entity).getPrevValue()); // references should be different
@@ -80,13 +80,13 @@ public class MetaPropertyCollectionalTest {
     
     @Test
     public void original_value_remains_the_same_after_property_value_was_set() {
-        final Set<TgCollectionalSerialisationChild> origVal = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> origVal = new HashSet<>();
         origVal.add(factory.newByKey(TgCollectionalSerialisationChild.class, entity, "0"));
         prop(entity).setValue(origVal);
         prop(entity).resetState();
         
         // set value once
-        final Set<TgCollectionalSerialisationChild> val = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> val = new HashSet<>();
         val.add(factory.newByKey(TgCollectionalSerialisationChild.class, entity, "1"));
         prop(entity).setValue(val);
         
@@ -96,13 +96,13 @@ public class MetaPropertyCollectionalTest {
     
     @Test
     public void prev_value_remains_the_same_after_property_value_was_set() {
-        final Set<TgCollectionalSerialisationChild> origVal = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> origVal = new HashSet<>();
         origVal.add(factory.newByKey(TgCollectionalSerialisationChild.class, entity, "0"));
         prop(entity).setValue(origVal);
         prop(entity).resetState();
         
         // set value once
-        final Set<TgCollectionalSerialisationChild> val = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> val = new HashSet<>();
         val.add(factory.newByKey(TgCollectionalSerialisationChild.class, entity, "1"));
         prop(entity).setValue(val);
         
@@ -114,16 +114,16 @@ public class MetaPropertyCollectionalTest {
     
     @Test
     public void original_value_remains_the_same_after_property_value_was_set_twice() {
-        final Set<TgCollectionalSerialisationChild> origVal = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> origVal = new HashSet<>();
         origVal.add(factory.newByKey(TgCollectionalSerialisationChild.class, entity, "0"));
         prop(entity).setValue(origVal);
         prop(entity).resetState();
         
         // set value twice
-        final Set<TgCollectionalSerialisationChild> val = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> val = new HashSet<>();
         val.add(factory.newByKey(TgCollectionalSerialisationChild.class, entity, "1"));
         prop(entity).setValue(val);
-        final Set<TgCollectionalSerialisationChild> secondVal = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> secondVal = new HashSet<>();
         secondVal.add(factory.newByKey(TgCollectionalSerialisationChild.class, entity, "2"));
         prop(entity).setValue(secondVal);
         
@@ -133,16 +133,16 @@ public class MetaPropertyCollectionalTest {
     
     @Test
     public void prev_value_is_updated_after_property_value_was_set_twice() {
-        final Set<TgCollectionalSerialisationChild> origVal = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> origVal = new HashSet<>();
         origVal.add(factory.newByKey(TgCollectionalSerialisationChild.class, entity, "0"));
         prop(entity).setValue(origVal);
         prop(entity).resetState();
         
         // set value twice
-        final Set<TgCollectionalSerialisationChild> val = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> val = new HashSet<>();
         val.add(factory.newByKey(TgCollectionalSerialisationChild.class, entity, "1"));
         prop(entity).setValue(val);
-        final Set<TgCollectionalSerialisationChild> secondVal = new HashSet<TgCollectionalSerialisationChild>();
+        final Set<TgCollectionalSerialisationChild> secondVal = new HashSet<>();
         secondVal.add(factory.newByKey(TgCollectionalSerialisationChild.class, entity, "2"));
         prop(entity).setValue(secondVal);
         
