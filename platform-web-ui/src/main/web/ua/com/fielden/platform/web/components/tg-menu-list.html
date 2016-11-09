@@ -35,15 +35,21 @@
                 background: var(--paper-blue-50);
                 color: var(--paper-blue-500);
             }
-            .menu-item:hover .dim {
+            .menu-item:hover .secondary {
                 color: var(--paper-blue-300);
             }
             .menu-item.iron-selected {
                 background: var(--paper-blue-500);
                 color: var(--paper-blue-50);
             }
-            .menu-item.iron-selected .dim {
+            .menu-item.iron-selected .secondary {
                 color: var(--paper-blue-100);
+            }
+            .menu-item.iron-selected .highlighted {
+                background: var(--paper-blue-500);
+            }
+            .highlighted {
+                background-color: #ffff46;
             }
             .primary {
                 font-size: 10pt;
@@ -51,8 +57,6 @@
             }
             .secondary {
                 font-size: 8pt;
-            }
-            .dim {
                 color: gray;
             }
             .truncate {
@@ -67,7 +71,7 @@
                 <div class="menu-item" tooltip-text$="[[_calcTooltip(menuItem)]]">
                     <div class="layout vertical" style$="[[_calcMenuItemStyle(menuItem)]]">
                         <tg-dom-stamper class="primary truncate" dom-text="[[_highlightValue(menuItem, 'title', phraseToHighlight)]]"></tg-dom-stamper>
-                        <tg-dom-stamper class="secondary dim truncate" dom-text="[[_highlightValue(menuItem, 'description', phraseToHighlight)]]"></tg-dom-stamper>
+                        <tg-dom-stamper class="secondary truncate" dom-text="[[_highlightValue(menuItem, 'description', phraseToHighlight)]]"></tg-dom-stamper>
                     </div>
                 </div>
             </template>
@@ -104,6 +108,15 @@
             var positionInTitle = (menuItem.title.toLowerCase()).search(phraseToSearch.toLowerCase());
             var positionInDesc = (menuItem.description.toLowerCase()).search(phraseToSearch.toLowerCase());
             return positionInTitle >= 0 || positionInDesc >= 0;
+        };
+        var hasHighlightedParent = function (menuItem, phraseToHighlight) {
+            while (menuItem.parent) {
+                if (isHighlighted(menuItem.parent, phraseToHighlight)) {
+                    return true;
+                }
+                menuItem = menuItem.parent;
+            }
+            return false;
         };
         Polymer({
             is: 'tg-menu-list',
@@ -278,11 +291,12 @@
             _filterMenu: function (flatMenu, phraseToHighlight) {
                 var invisibleItems = {};
                 var filteredMenu = [];
+
                 //Check each menu item whether it matches the phrase to highlight and if not add to invisible list otherwise remove it's parents from invisible list.
                 flatMenu.forEach(function (menuItem, itemIndex) {
-                    var menuItemPath;
-                    if (!isHighlighted(menuItem, phraseToHighlight)) {
-                        invisibleItems[this._getMenuItemPath(menuItem)] = itemIndex;
+                    var menuItemPath = this._getMenuItemPath(menuItem);
+                    if (!isHighlighted(menuItem, phraseToHighlight) && !hasHighlightedParent(menuItem, phraseToHighlight)) {
+                        invisibleItems[menuItemPath] = itemIndex;
                     } else {
                         while (menuItem.parent) {
                             menuItemPath = this._getMenuItemPath(menuItem.parent);
@@ -329,7 +343,7 @@
                 return phraseToHighlight === '' ?
                     menuItem[propName] :
                     this._matchedParts(menuItem[propName], phraseToHighlight).reduce(function (html, part) {
-                        return html + (part.matched ? '<span style="background-color: #ffff46;">' + part.part + '</span>' : part.part);
+                        return html + (part.matched ? '<span class="highlighted">' + part.part + '</span>' : part.part);
                     }, "");
             },
 
