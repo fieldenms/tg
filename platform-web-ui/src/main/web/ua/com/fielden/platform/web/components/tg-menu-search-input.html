@@ -137,6 +137,7 @@
                 this._showInput = false;
                 if (!this.cancelled && menuList.isSelected()) {
                     this.fire("menu-item-selected", menuList.getSelectedMenuItemPath());
+                    this._menuToSearch = "";
                 }
             },
 
