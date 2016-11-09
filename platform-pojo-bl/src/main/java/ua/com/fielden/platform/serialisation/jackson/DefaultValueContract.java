@@ -109,15 +109,6 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> boolean getChangedFromOriginal(final MetaProperty<M> metaProperty) {
-        if (metaProperty != null && metaProperty.isCollectional()) {
-            try { // the following implementation is obtained from MetaPropertyFull.isChangedFromOriginal and works for collectional properties similarly as for others
-                final Method getter = Reflector.obtainPropertyAccessor(metaProperty.getEntity().getClass(), metaProperty.getName());
-                final Object currValue = getter.invoke(metaProperty.getEntity());
-                return !EntityUtils.equalsEx(currValue, metaProperty.getOriginalValue());
-            } catch (final Exception e) {
-                logger.debug(e.getMessage(), e);
-            }
-        }
         return metaProperty == null ? getChangedFromOriginalDefault() : metaProperty.isChangedFromOriginal();
     }
 
