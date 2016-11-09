@@ -6,6 +6,7 @@
 <link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/components/tg-menu-search-input.html">
 <link rel="import" href="/resources/views/tg-app-animation-behavior.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
@@ -51,12 +52,15 @@
             margin: 4px -4px;
             overflow: auto;
         }
+        tg-menu-search-input {
+            --menu-search-icon-color: white;
+            --menu-search-input-color: white;
+        }
     </style>
 
     <template>
-        <paper-toolbar id="toolbar">
-            <!-- TODO: need to get the user information from somewhere (from cookies?) and represent it in application (maybe in 'logout' area?) -->
-            <span class="title"></span>
+        <paper-toolbar id="toolbar" justify="justified">
+            <tg-menu-search-input menu="[[menuConfig.menu]]"></tg-menu-search-input>
             <a href="/logout" tabIndex="-1">
                 <paper-icon-button icon="icons:exit-to-app"></paper-icon-button>
             </a>
@@ -170,10 +174,11 @@
                     'hero': Polymer.dom(this.root).querySelector('.hero-animatable[name="' + next + '"]')
                 };
             },
+                        
             _itemSelected: function (e, detail) {
                 var model = e.model;
                 if (isMenuPresent(model.item.menu)) {
-                    this.fire("menu-item-selected", model.item.key);
+                    this.fire("menu-item-selected", encodeURIComponent(model.item.key));
                 }
             },
             _calcItemFilter: function (item) {

@@ -19,10 +19,10 @@
         </style>
         <carbon-location id="location" route="{{_route}}" url-space-regex="^/#/" use-hash-as-path></carbon-location>
         <carbon-route route="{{_route}}" pattern="/:moduleName" data="{{_routeData}}" tail="{{_subroute}}"></carbon-route>
-        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" animate-initial-selection>
+        <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]"></tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
-                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_routeData.moduleName]]" submodule="{{_subroute}}"></tg-app-view>
+                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" submodule="{{_selectedSubmodule}}"></tg-app-view>
             </template>
         </neon-animated-pages>
         <tg-entity-master
@@ -108,6 +108,12 @@
                     },
                     _routeData: Object,
                     _subroute: Object,
+                    _selectedModule: String,
+                    _selectedSubmodule: {
+                        type: String,
+                        notify: true,
+                        observer: "_selectedSubmoduleChanged"
+                    },
 
                     //action related properties.
                     _attrs: Object,
@@ -127,20 +133,25 @@
                 _routeChanged: function (newValue, oldValue) {
                     this._routeData && this._setSelected(decodeURIComponent(this._routeData.moduleName));
                 },
+                
+                _selectedSubmoduleChanged: function (newValue, oldValue) {
+                    if (this._subroute.path !== newValue) {
+                        this.set("_subroute.path", newValue);
+                    }
+                },
 
                 _showMainMenu: function (e) {
                     this._setSelected("menu");
                 },
 
                 _showView: function (e) {
-                    var route = "/" + encodeURIComponent(e.detail),
-                        elementToSelect = this.$$("[name='" + e.detail + "']"),
-                        selectedSubPage = elementToSelect.getSelectedPage();
-                    if (selectedSubPage) {
-                        route += "/" + selectedSubPage;
-                    }
+                    var menuPathItems = e.detail.split("/");
+                    var moduleName = decodeURIComponent(menuPathItems[0]);
+                    var route = "/" + menuPathItems[0];
+                    menuPathItems.splice(0,1);
+                    route += "/" + (menuPathItems.length > 0 ? menuPathItems.join("/") : "_");
                     if (this._route.path === route) {
-                        this._setSelected(e.detail);
+                        this._setSelected(moduleName);
                     } else {
                         this.set("_route.path", route);
                     }
@@ -160,6 +171,16 @@
                     if (this.menuConfig) {
                         currentlySelected = this.$.pages.selected;
                         currentlySelectedElement = currentlySelected && this.$$("[name='" + currentlySelected + "']");
+                        if (currentlySelected === selected) {
+                            if (this._selectedSubmodule === this._subroute.path) {
+                                if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
+                                    currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
+                                }
+                            } else {
+                                this._selectedSubmodule = this._subroute.path
+                            }
+                            return;
+                        }
                         selected = findModule(selected, this.menuConfig)
                         elementToSelect = selected && this.$$("[name='" + selected + "']");
                         if (currentlySelectedElement) {
@@ -204,6 +225,21 @@
                         }
                     }
                 },
+                
+                _animationFinished: function (e, detail, source) {
+                    var target = e.target || e.srcElement;
+                    var currentlySelectedElement
+                    if (target === this.$.pages){
+                        this._selectedModule = this._routeData.moduleName;
+                        if (this._selectedSubmodule === this._subroute.path) {
+                            if (detail.toPage.selectSubroute) {
+                                detail.toPage.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
+                            }
+                        } else {
+                            this._selectedSubmodule = this._subroute.path;
+                        }
+                    }
+                 },
 
                 //Entity master related functions
 

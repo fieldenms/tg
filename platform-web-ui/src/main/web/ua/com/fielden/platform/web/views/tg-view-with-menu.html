@@ -13,6 +13,7 @@
 <link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/components/tg-menu-search-input.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
@@ -34,22 +35,28 @@
                 z-index: 1;
                 width: 50px;
                 height: 50px;
-            };
+            }
+            ;
             --paper-menu: {
                 padding: 0;
                 margin: 0;
                 overflow: auto;
-            };
+            }
+            ;
             --paper-item: {
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
-            };
+            }
+            ;
         }
         paper-menu.menu-content {
             --paper-menu: {
+                padding: 0;
+                margin: 0;
                 overflow: hidden;
-            };
+            }
+            ;
         }
         paper-checkbox::shadow #checkboxLabel {
             display: none;
@@ -115,8 +122,10 @@
         #drawerPanel:not([narrow]) paper-menu {
             border-right: 1px solid #CBCDCE;
         }
-        #menuButton {
-            margin-right: 24px;
+        tg-menu-search-input {
+            margin-right: 8px;
+            --menu-search-icon-color: white;
+            --menu-search-input-color: white;
         }
     </style>
     <template>
@@ -130,16 +139,16 @@
                 </div>
 
                 <paper-menu id="menu" class="flex" attr-for-selected="name" on-iron-activate="_itemActivated">
-                    <template is="dom-repeat" on-dom-change="_menuTemplateRendered" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
+                    <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
                         <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
                             <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.desc]]">
                                 <iron-icon icon="av:play-arrow" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
                                 <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
                                 <span>[[firstLevelItem.key]]</span>
                             </paper-item>
-                            <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]" on-dom-change="_menuTemplateRendered">
+                            <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                                 <paper-menu class="menu-content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
-                                    <template is="dom-repeat" items="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
+                                    <template is="dom-repeat" items="[[firstLevelItem.menu]]">
                                         <!--TODO remove groupIndex-->
                                         <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
                                             <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
@@ -159,6 +168,7 @@
                 <div id="viewToolBar" class="tool-bar layout horizontal center">
                     <div class="layout horizontal center flex">
                         <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
+                        <tg-menu-search-input menu="[[menu]]"></tg-menu-search-input>
                         <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
                     </div>
                 </div>
@@ -210,10 +220,11 @@
             is: "tg-view-with-menu",
 
             properties: {
+                menu: Array,
                 menuItem: Object,
                 selectedModule: String,
                 submodule: {
-                    type: Object,
+                    type: String,
                     notify: true
                 },
                 canEdit: Boolean,
@@ -296,19 +307,23 @@
                 }
                 return changedViews.length > 0 ? changedViews : undefined;
             },
-            
+
             _calcCheckboxTooltip: function (menu, visible) {
                 return "Toggle to make this " + (this._isMenuPresent(menu) ? "group of menu items " : "menu item ") + (visible ? "invisible" : "visible");
             },
-            
+
             _calcGroupStyle: function (firstLevelItem) {
                 var clazz = "blue";
-                if (firstLevelItem.visible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {return element.visible === true}) && !firstLevelItem.menu.every(function (element) {return element.visible === false})) {
+                if (firstLevelItem.visible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {
+                    return element.visible === true
+                }) && !firstLevelItem.menu.every(function (element) {
+                    return element.visible === false
+                })) {
                     clazz += " undone";
                 }
                 return clazz;
             },
-            
+
             _changeGroupVisibility: function (e) {
                 var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
                 var modelVisibility = e.target.checked;
@@ -318,7 +333,7 @@
                 this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
                 arrayToBeUsed.push(groupUri);
                 if (e.model.firstLevelItem.menu) {
-                    e.model.firstLevelItem.menu.forEach (function (menuItem, menuItemIndex) {
+                    e.model.firstLevelItem.menu.forEach(function (menuItem, menuItemIndex) {
                         if (menuItem.visible !== modelVisibility) {
                             arrayToBeUsed.push(this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, menuItem.key));
                             this.set("menuItem.menu." + e.model.groupIndex + ".menu." + menuItemIndex + ".visible", modelVisibility);
@@ -330,7 +345,7 @@
                 Polymer.updateStyles();
                 this.menuSaveCallback(visisbleItems, invisibleItems);
             },
-            
+
             _changeVisibility: function (e) {
                 var menuItemUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, e.model.item.key);
                 var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
@@ -339,7 +354,9 @@
                 var invisibleItems = [];
                 // Changing model in order to find out whether group item should be changed or not.
                 this.set("menuItem.menu." + e.model.groupIndex + ".menu." + e.model.index + ".visible", modelVisibility);
-                var shouldChangeGroupVisibility = e.model.firstLevelItem.menu.every(function (element) {return element.visible === modelVisibility}) ||
+                var shouldChangeGroupVisibility = e.model.firstLevelItem.menu.every(function (element) {
+                        return element.visible === modelVisibility
+                    }) ||
                     (modelVisibility && e.model.firstLevelItem.visible === false);
                 // Find out what action should be performed hiding menu items or to make them visible.
                 var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
@@ -349,7 +366,11 @@
                     this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
                 }
                 var checkbox = Polymer.dom(this.$.menu).querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
-                if (this.menuItem.menu[e.model.groupIndex].visible && !e.model.firstLevelItem.menu.every(function (element) {return element.visible === true}) && !e.model.firstLevelItem.menu.every(function (element) {return element.visible === false})) {
+                if (this.menuItem.menu[e.model.groupIndex].visible && !e.model.firstLevelItem.menu.every(function (element) {
+                    return element.visible === true
+                }) && !e.model.firstLevelItem.menu.every(function (element) {
+                    return element.visible === false
+                })) {
                     checkbox.classList.toggle("undone", true);
                 } else {
                     checkbox.classList.toggle("undone", false);
@@ -357,11 +378,11 @@
                 Polymer.updateStyles();
                 this.menuSaveCallback(visisbleItems, invisibleItems);
             },
-            
+
             _createUriFromModel(menuItem, groupItem, item) {
-                return encodeURIComponent(menuItem) + "/" + encodeURIComponent(groupItem) + (item ? "/" + encodeURIComponent(item): "");
+                return encodeURIComponent(menuItem) + "/" + encodeURIComponent(groupItem) + (item ? "/" + encodeURIComponent(item) : "");
             },
-            
+
             _isMenuPresent: function (menu) {
                 return menu && menu.length > 0;
             },
@@ -372,45 +393,55 @@
 
             _updatePage(menuItem, submodule) {
                 var pageName;
-                var submodulePart = submodule.path.substring(1).split("?")[0];
+                var submodulePart = submodule.substring(1).split("?")[0];
                 if (menuItem.key === decodeURIComponent(this.selectedModule)) {
-                    this._selectPage(submodulePart);
                     this._selectMenu(submodulePart);
+                    this._selectPage(submodulePart);
                 }
             },
 
             _selectPage: function (pagePath) {
                 var menuPath = findNestedMenuItem(pagePath, this.menuItem);
-                if (menuPath.menuItem && !(menuPath.menuItem.menu && menuPath.menuItem.menu.length > 0)) {
+                if (pagePath === '_') {
+                    this.set("_selectedPage", "_");
+                } else if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
                     this.set("_selectedPage", menuPath.path);
                 }
             },
 
             _selectMenu: function (pagePath) {
-                var menuPath = findNestedMenuItem(pagePath, this.menuItem);
-                var path = menuPath.path;
-                var pathParts = findNestedMenuItem(pagePath, this.menuItem).path.split('/');
-                var topMenu = this.$$("paper-submenu[name='" + pathParts[0] + "']");
-                var submenu = this.$$("paper-menu[name='" + pathParts[0] + "']");
-                var submenuItem = this.$$("paper-item[name='" + path + "']");
-                var wasSelected;
-                if (!topMenu || pathParts[1] && menuPath.menuItem && (!submenu || !submenuItem)) {
-                    this._menuToSelectAfterLoad = pagePath;
-                    wasSelected = false;
-                } else {
-                    this.$.menu.select(pathParts[0]);
-                    topMenu.open();
-                    if (submenu) {
-                        submenu.select(path);
+                var previousTopMenu = this.$.menu.selected && this.$$("paper-submenu[name='" + this.$.menu.selected + "']");
+                var menuPath, path, pathParts, topMenu, submenu;
+                if (pagePath === '_') {
+                    if (previousTopMenu) {
+                        previousTopMenu.close();
                     }
-                    wasSelected = true;
-                }
-                return wasSelected;
-            },
-
-            _menuTemplateRendered: function () {
-                if (this._menuToSelectAfterLoad && this._selectMenu(this._menuToSelectAfterLoad)) {
-                    delete this._menuToSelectAfterLoad;
+                    this.$.menu._selection.clear();
+                    this.$.menu.selected = "_";
+                    this.$.drawerPanel.selected = 'drawer';
+                } else {
+                    menuPath = findNestedMenuItem(pagePath, this.menuItem);
+                    path = menuPath.path;
+                    pathParts = path.split('/');
+                    topMenu = this.$$("paper-submenu[name='" + pathParts[0] + "']");
+                    submenu = this.$$("paper-menu[name='" + pathParts[0] + "']");
+                    if (this.$.menu.selected !== pathParts[0]) {
+                        if (previousTopMenu) {
+                            previousTopMenu.close();
+                        }
+                        this.$.menu.select(pathParts[0]);
+                        topMenu.open();
+                        if (submenu) {
+                            submenu.select(path);
+                        }
+                    } else if (submenu && submenu.selected !== path) {
+                        if (submenu) {
+                            submenu.select(path);
+                        }
+                    }
+                    if (menuPath.menuItem && this._isMenuPresent(menuPath.menuItem.menu)) {
+                        this.$.drawerPanel.selected = 'drawer';
+                    }
                 }
             },
 
@@ -442,8 +473,7 @@
              * The listener that listens the menu item activation on tap.
              */
             _itemActivated: function (e, detail) {
-                this.set("submodule.path", "/" + detail.selected);
-                this._selectPage(detail.selected);
+                this.submodule = "/" + detail.selected
             },
 
             _selectedPageChanged: function (newValue, oldValue) {
@@ -460,10 +490,10 @@
 
             _animationFinished: function (e, detail, source) {
                 var viewToLoad;
-                if (this.$.menu.selected !== '_') {
+                if (this.$.pages.selected !== '_') {
                     viewToLoad = detail.toPage;
                     if (viewToLoad && !viewToLoad.wasLoaded()) {
-                        viewToLoad.load();
+                        viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
                     }
                 }
             },
@@ -476,7 +506,7 @@
                     }
                 }
             },
-            
+
             _tapCheckbox: function (event) {
                 if (event.stopPropagation) event.stopPropagation();
                 if (event.preventDefault) event.preventDefault();
