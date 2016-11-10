@@ -48,7 +48,6 @@ import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -1157,7 +1156,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
         @Override
         public List<T> data() {
-            return hasNext() ? data.subList(0, capacity()) : data;
+            return Collections.unmodifiableList(data);
         }
 
         @Override
