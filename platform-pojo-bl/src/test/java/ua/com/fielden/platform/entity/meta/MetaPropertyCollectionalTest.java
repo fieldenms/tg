@@ -23,9 +23,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Contains tests for original / prev values handling during collectional property mutation.
- * <p>
- * Please, note that {@link MetaProperty#isChangedFromOriginal()} and {@link MetaProperty#isChangedFromPrevious()} is still based on 
- * collectional value count rather than on value itself.
  * 
  * @author TG Team
  *
@@ -48,11 +45,13 @@ public class MetaPropertyCollectionalTest {
     @Test
     public void original_value_is_not_set_for_new_entity() {
         assertNull(prop(entity).getOriginalValue());
+        assertTrue(prop(entity).isChangedFromOriginal()); // null (originalValue) is not equal to default value in entity definition which is typically empty collection like '= new LinkedHashSet<Entity>();'
     }
     
     @Test
     public void prev_value_is_not_set_for_new_entity() {
         assertNull(prop(entity).getPrevValue());
+        assertTrue(prop(entity).isChangedFromPrevious()); // null (prevValue) is not equal to default value in entity definition which is typically empty collection like '= new LinkedHashSet<Entity>();'
     }
     
     @Test
@@ -61,6 +60,7 @@ public class MetaPropertyCollectionalTest {
         
         final Set<TgCollectionalSerialisationChild> expected = new HashSet<>();
         assertEquals(expected, prop(entity).getOriginalValue());
+        assertFalse(prop(entity).isChangedFromOriginal());
         
         assertFalse(prop(entity).getValue() == prop(entity).getOriginalValue()); // references should be different
         assertTrue(EntityUtils.equalsEx(prop(entity).getValue(), prop(entity).getOriginalValue())); // values should be equal
@@ -72,6 +72,7 @@ public class MetaPropertyCollectionalTest {
         
         final Set<TgCollectionalSerialisationChild> expected = new HashSet<>();
         assertEquals(expected, prop(entity).getPrevValue());
+        assertFalse(prop(entity).isChangedFromPrevious());
         
         assertFalse(prop(entity).getValue() == prop(entity).getPrevValue()); // references should be different
         assertFalse(prop(entity).getOriginalValue() == prop(entity).getPrevValue()); // references should be different
@@ -92,6 +93,7 @@ public class MetaPropertyCollectionalTest {
         
         assertEquals(origVal, prop(entity).getOriginalValue());
         assertFalse(origVal == prop(entity).getOriginalValue()); // references should be different
+        assertTrue(prop(entity).isChangedFromOriginal());
     }
     
     @Test
@@ -110,6 +112,7 @@ public class MetaPropertyCollectionalTest {
         assertFalse(origVal == prop(entity).getPrevValue()); // references should be different
         assertFalse(prop(entity).getOriginalValue() == prop(entity).getPrevValue()); // references should be different
         assertTrue(EntityUtils.equalsEx(prop(entity).getOriginalValue(), prop(entity).getPrevValue())); // values should be equal
+        assertTrue(prop(entity).isChangedFromPrevious());
     }
     
     @Test
@@ -129,6 +132,7 @@ public class MetaPropertyCollectionalTest {
         
         assertEquals(origVal, prop(entity).getOriginalValue());
         assertFalse(origVal == prop(entity).getOriginalValue()); // references should be different
+        assertTrue(prop(entity).isChangedFromOriginal());
     }
     
     @Test
@@ -148,5 +152,6 @@ public class MetaPropertyCollectionalTest {
         
         assertEquals(val, prop(entity).getPrevValue());
         assertFalse(val == prop(entity).getPrevValue()); // references should be different
+        assertTrue(prop(entity).isChangedFromPrevious());
     }
 }

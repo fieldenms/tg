@@ -1,17 +1,12 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import java.lang.reflect.Method;
-
-import org.apache.log4j.Logger;
-
 import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -26,7 +21,6 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class DefaultValueContract {
-    private final static Logger logger = Logger.getLogger(DefaultValueContract.class);
     private DefaultValueContract() {
     }
 
