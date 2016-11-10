@@ -4,6 +4,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Ticker;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
+
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -29,6 +37,8 @@ import ua.com.fielden.platform.sample.domain.ITgBogie;
 import ua.com.fielden.platform.sample.domain.ITgBogieClass;
 import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
 import ua.com.fielden.platform.sample.domain.ITgCategory;
+import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationChild;
+import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.ITgEntityWithLoopedCalcProps;
 import ua.com.fielden.platform.sample.domain.ITgFuelType;
@@ -67,6 +77,8 @@ import ua.com.fielden.platform.sample.domain.TgBogieClassDao;
 import ua.com.fielden.platform.sample.domain.TgBogieDao;
 import ua.com.fielden.platform.sample.domain.TgBogieLocationDao;
 import ua.com.fielden.platform.sample.domain.TgCategoryDao;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChildDao;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentDao;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesDao;
 import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcPropsDao;
 import ua.com.fielden.platform.sample.domain.TgFuelTypeDao;
@@ -112,14 +124,6 @@ import ua.com.fielden.platform.test.entities.IComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntityKey;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-
-import com.google.common.base.Ticker;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
 
 /**
  * Serve IoC module for platform related testing.
@@ -220,6 +224,9 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         
         bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
         }).to(EntityWithMoneyDao.class);
+        
+        bind(ITgCollectionalSerialisationParent.class).to(TgCollectionalSerialisationParentDao.class);
+        bind(ITgCollectionalSerialisationChild.class).to(TgCollectionalSerialisationChildDao.class);
     }
 
     public static class TestSessionCacheBuilder implements Provider<Cache<String, UserSession>> {

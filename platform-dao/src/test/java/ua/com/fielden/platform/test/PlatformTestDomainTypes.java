@@ -23,6 +23,8 @@ import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgCategory;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcProps;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
@@ -116,6 +118,8 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgAuthoriser.class);
         add(TgOriginator.class);
         add(TgEntityWithComplexSummaries.class);
+        add(TgCollectionalSerialisationParent.class);
+        add(TgCollectionalSerialisationChild.class);
     }
 
     @Override
