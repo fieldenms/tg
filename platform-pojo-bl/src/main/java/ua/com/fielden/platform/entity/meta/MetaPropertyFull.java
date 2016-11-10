@@ -644,48 +644,27 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         return originalValue;
     }
 
-//    @Override
-//    public final void setCollectionOriginalValue(final Number size) {
-//        if (isCollectional()) {
-//            this.collectionOrigSize = size;
-//        }
-//    }
-
     /**
      * Sets the original value.
      *
      * <p>
      * VERY IMPORTANT : the method should not cause proxy initialisation!!!
      *
-     * @param value
+     * @param value -- new originalValue for the property
      */
     @Override
     public final MetaPropertyFull<T> setOriginalValue(final T value) {
-        if (value != null) {
-            if (isCollectional()) {
-                final Collection<?> collection = (Collection<?>) value;
-                // FIXME collectionOrigSize = collection.size();
-                // set the shallow copy of collection into originalValue to be able to perform comparison between actual value and original value of the collection
-                EntityUtils.copyCollectionalValue(value).map(copy -> originalValue = copy.orElse(null));
-            } else { // The single property (proxied or not!!!)
-                originalValue = value;
-            }
-        } else if (isCollectional()) {
-            // FIXME collectionOrigSize = 0;
-            originalValue = null;
-        } else {
-            originalValue = null;
-        }
         // when original property value is set then the previous value should be the same
         // the previous value setter is not used deliberately since it has some logic not needed here
         if (isCollectional()) {
-            // FIXME collectionPrevSize = collectionOrigSize;
+            // set the shallow copy of collection into originalValue to be able to perform comparison between actual value and original value of the collection
+            EntityUtils.copyCollectionalValue(value).map(copy -> originalValue = copy.orElse(null));
             // set the shallow copy of collection into prevValue to be able to perform comparison between actual value and prevValue value of the collection
             EntityUtils.copyCollectionalValue(originalValue).map(copy -> prevValue = copy.orElse(null));
-        } else {
+        } else { // The single property (proxied or not!!!)
+            originalValue = value;
             prevValue = originalValue;
         }
-
         // reset value change counter
         resetValueChageCount();
         //
@@ -734,24 +713,18 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     /**
      * Updates the previous value for the entity property. Increments the update counter and check if the original value should be updated as well.
      *
-     * Please note that for collectional properties their size is used as previous and original values.
-     *
-     * @param prevValue
+     * @param value -- new prevValue for the property
      * @return
      */
     @Override
-    public final MetaPropertyFull<T> setPrevValue(final T prevValue) {
+    public final MetaPropertyFull<T> setPrevValue(final T value) {
         incValueChangeCount();
         // just in case cater for correct processing of collection properties
-        if (isCollectional() && prevValue instanceof Collection) {
-            // FIXME this.collectionPrevSize = ((Collection<?>) prevValue).size();
+        if (isCollectional()) {
             // set the shallow copy of collection into this.prevValue to be able to perform comparison between actual value and previous value of the collection
-            EntityUtils.copyCollectionalValue(prevValue).map(copy -> this.prevValue = copy.orElse(null));
-        } else if (isCollectional() && prevValue == null) { // very unlikely, but let's be defensive
-            // FIXME this.collectionPrevSize = 0;
-            this.prevValue = null;
+            EntityUtils.copyCollectionalValue(value).map(copy -> this.prevValue = copy.orElse(null));
         } else {
-            this.prevValue = prevValue;
+            this.prevValue = value;
         }
         return this;
     }
@@ -1099,26 +1072,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     public IAfterChangeEventHandler<T> getAceHandler() {
         return aceHandler;
     }
-
-//    @Override
-//    public Number getCollectionOrigSize() {
-//        return collectionOrigSize;
-//    }
-
-//    @Override
-//    public Number getCollectionPrevSize() {
-//        return collectionPrevSize;
-//    }
-//
-//    @Override
-//    public void setCollectionOrigSize(final Number collectionOrigSize) {
-//        this.collectionOrigSize = collectionOrigSize;
-//    }
-//
-//    @Override
-//    public void setCollectionPrevSize(final Number collectionPrevSize) {
-//        this.collectionPrevSize = collectionPrevSize;
-//    }
 
     @Override
     public boolean shouldAssignBeforeSave() {
