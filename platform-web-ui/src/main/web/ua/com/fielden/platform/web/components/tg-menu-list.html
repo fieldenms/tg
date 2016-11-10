@@ -71,7 +71,7 @@
                 <div class="menu-item" tooltip-text$="[[_calcTooltip(menuItem)]]">
                     <div class="layout vertical" style$="[[_calcMenuItemStyle(menuItem)]]">
                         <tg-dom-stamper class="primary truncate" dom-text="[[_highlightValue(menuItem, 'title', phraseToHighlight)]]"></tg-dom-stamper>
-                        <tg-dom-stamper class="secondary truncate" dom-text="[[_highlightValue(menuItem, 'description', phraseToHighlight)]]"></tg-dom-stamper>
+                        <tg-dom-stamper class="secondary truncate" dom-text="[[menuItem.description]]"></tg-dom-stamper>
                     </div>
                 </div>
             </template>
@@ -105,9 +105,7 @@
             return res;
         };
         var isHighlighted = function (menuItem, phraseToSearch) {
-            var positionInTitle = (menuItem.title.toLowerCase()).search(phraseToSearch.toLowerCase());
-            var positionInDesc = (menuItem.description.toLowerCase()).search(phraseToSearch.toLowerCase());
-            return positionInTitle >= 0 || positionInDesc >= 0;
+            return (menuItem.title.toLowerCase()).search(phraseToSearch.toLowerCase()) >= 0;
         };
         var hasHighlightedParent = function (menuItem, phraseToHighlight) {
             while (menuItem.parent) {
@@ -162,6 +160,7 @@
                 this.noAutoFocus = true;
                 this.alwaysOnTop = true;
                 this.noCancelOnOutsideClick = true;
+                this.scopeSubtree(this.$.selector, true);
             },
 
             selectNext: function () {
