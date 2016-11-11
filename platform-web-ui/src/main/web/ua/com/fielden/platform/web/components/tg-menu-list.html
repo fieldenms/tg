@@ -154,7 +154,7 @@
                 _filteredMenu: Array
             },
 
-            observers: ["_filterMenu(_flatMenu, phraseToHighlight)"],
+            observers: ["_filterMenu(_flatMenu, phraseToHighlight, opened)"],
 
             ready: function () {
                 this.noAutoFocus = true;
@@ -287,32 +287,34 @@
                 this.style['min-height'] = '50px';
             },
 
-            _filterMenu: function (flatMenu, phraseToHighlight) {
+            _filterMenu: function (flatMenu, phraseToHighlight, opened) {
                 var invisibleItems = {};
                 var filteredMenu = [];
 
-                //Check each menu item whether it matches the phrase to highlight and if not add to invisible list otherwise remove it's parents from invisible list.
-                flatMenu.forEach(function (menuItem, itemIndex) {
-                    var menuItemPath = this._getMenuItemPath(menuItem);
-                    if (!isHighlighted(menuItem, phraseToHighlight) && !hasHighlightedParent(menuItem, phraseToHighlight)) {
-                        invisibleItems[menuItemPath] = itemIndex;
-                    } else {
-                        while (menuItem.parent) {
-                            menuItemPath = this._getMenuItemPath(menuItem.parent);
-                            if (invisibleItems.hasOwnProperty(menuItemPath)) {
-                                delete invisibleItems[menuItemPath];
+                if (opened) {
+                    //Check each menu item whether it matches the phrase to highlight and if not add to invisible list otherwise remove it's parents from invisible list.
+                    flatMenu.forEach(function (menuItem, itemIndex) {
+                        var menuItemPath = this._getMenuItemPath(menuItem);
+                        if (!isHighlighted(menuItem, phraseToHighlight) && !hasHighlightedParent(menuItem, phraseToHighlight)) {
+                            invisibleItems[menuItemPath] = itemIndex;
+                        } else {
+                            while (menuItem.parent) {
+                                menuItemPath = this._getMenuItemPath(menuItem.parent);
+                                if (invisibleItems.hasOwnProperty(menuItemPath)) {
+                                    delete invisibleItems[menuItemPath];
+                                }
+                                menuItem = menuItem.parent;
                             }
-                            menuItem = menuItem.parent;
                         }
-                    }
-                }.bind(this));
-                //Create filtered menu item list. It is a orderd list of menu items that is not present in invisibleItems map.
-                flatMenu.forEach(function (menuItem) {
-                    if (!invisibleItems.hasOwnProperty(this._getMenuItemPath(menuItem))) {
-                        filteredMenu.push(menuItem)
-                    }
-                }.bind(this));
-                this._filteredMenu = filteredMenu;
+                    }.bind(this));
+                    //Create filtered menu item list. It is a orderd list of menu items that is not present in invisibleItems map.
+                    flatMenu.forEach(function (menuItem) {
+                        if (!invisibleItems.hasOwnProperty(this._getMenuItemPath(menuItem))) {
+                            filteredMenu.push(menuItem)
+                        }
+                    }.bind(this));
+                    this._filteredMenu = filteredMenu;
+                }
             },
 
             _scrollToSelected: function () {

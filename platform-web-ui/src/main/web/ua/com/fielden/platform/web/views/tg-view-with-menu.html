@@ -406,28 +406,21 @@
 
             _selectPage: function (pagePath) {
                 var menuPath = findNestedMenuItem(pagePath, this.menuItem);
-                if (pagePath === '_') {
-                    this.set("_selectedPage", "_");
-                } else if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
+                if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
                     this.set("_selectedPage", menuPath.path);
                 }
             },
 
             _selectMenu: function (pagePath) {
-                var previousTopMenu = this.$.menu.selected && this.$$("paper-submenu[name='" + this.$.menu.selected + "']");
-                var menuPath, path, pathParts, topMenu, submenu;
+                var previousTopMenu, menuPath, path, pathParts, topMenu, submenu;
                 if (pagePath === '_') {
-                    if (previousTopMenu) {
-                        previousTopMenu.close();
-                    }
-                    this.$.menu._selection.clear();
-                    this.$.menu.selected = "_";
                     this.$.drawerPanel.selected = 'drawer';
                 } else {
                     menuPath = findNestedMenuItem(pagePath, this.menuItem);
                     path = menuPath.path;
                     pathParts = path.split('/');
                     topMenu = this.$$("paper-submenu[name='" + pathParts[0] + "']");
+                    previousTopMenu = this.$.menu.selected && this.$$("paper-submenu[name='" + this.$.menu.selected + "']");
                     submenu = this.$$("paper-menu[name='" + pathParts[0] + "']");
                     if (this.$.menu.selected !== pathParts[0]) {
                         if (previousTopMenu) {
@@ -445,15 +438,9 @@
                     }
                     if (menuPath.menuItem && this._isMenuPresent(menuPath.menuItem.menu)) {
                         this.$.drawerPanel.selected = 'drawer';
+                    } else {
+                        this.$.drawerPanel.selected = 'main';
                     }
-                }
-            },
-
-            _initDrawerPanel: function () {
-                if (this._selectedPage === '_') {
-                    this.$.drawerPanel.selected = 'drawer';
-                } else {
-                    this.$.drawerPanel.selected = 'main';
                 }
             },
 
@@ -489,7 +476,6 @@
                     submenu = this.$$("paper-menu[name='" + oldFirstLevelItem + "']");
                     submenu.select();
                 }
-                this._initDrawerPanel();
             },
 
             _animationFinished: function (e, detail, source) {
