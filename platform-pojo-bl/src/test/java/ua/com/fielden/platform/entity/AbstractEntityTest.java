@@ -296,7 +296,6 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>meta-property correctly records old and new sizes correctly (this is actually done by {@link ObservableMutatorInterceptor}))
      * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
@@ -320,8 +319,14 @@ public class AbstractEntityTest {
         entity.setDoubles(Arrays.asList(new Double[] { 2.0 }));
 
         assertEquals("Property should have been observed.", true, observed);
-        assertNull("Incorrect original value", doublesProperty.getCollectionOrigSize());
-        assertEquals("Incorrect previous value", 2, doublesProperty.getCollectionPrevSize());
+        
+        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
+        assertTrue("Incorrect isChangedFrom original.", doublesProperty.isChangedFromOriginal());
+        assertEquals("Incorrect previous value", Arrays.asList(new Double[] { 2.0, 3.0 }), doublesProperty.getPrevValue());
+        assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
+        assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
+        assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
+        
         assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
         assertNotNull("There should be a requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
@@ -337,7 +342,6 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>meta-property correctly records old and new sizes correctly (this is actually done by {@link ObservableMutatorInterceptor}))
      * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
@@ -358,8 +362,14 @@ public class AbstractEntityTest {
 
         assertEquals("Property should have been observed.", true, observed);
         assertEquals("Incorrect size for doubles", 3, entity.getDoubles().size());
-        assertNull("Incorrect original value", doublesProperty.getCollectionOrigSize());
-        assertEquals("Incorrect previous value", 2, doublesProperty.getCollectionPrevSize());
+
+        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
+        assertTrue("Incorrect isChangedFrom original.", doublesProperty.isChangedFromOriginal());
+        assertEquals("Incorrect previous value", Arrays.asList(new Double[] { -2.0, -3.0 }), doublesProperty.getPrevValue());
+        assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
+        assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
+        assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
+        
         assertNotNull("There should be a domain validation result.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertNotNull("There should be requiredness validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));
         assertTrue("Requiredness validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED).isSuccessful());
@@ -375,7 +385,6 @@ public class AbstractEntityTest {
      * <ul>
      * <li>meta-property has correct validators (determination of validators is done by {@link IMetaPropertyFactory})
      * <li>changes done through mutators are observed
-     * <li>meta-property correctly records old and new sizes correctly (this is actually done by {@link ObservableMutatorInterceptor}))
      * <li>validators are provided with correct values (this is actually done by {@link ValidationMutatorInterceptor})), which is checked indirectly
      * </ul>
      */
@@ -396,8 +405,14 @@ public class AbstractEntityTest {
 
         assertTrue("Property should have been observed.", observed);
         assertEquals("Incorrect size for doubles", 1, entity.getDoubles().size());
-        assertNull("Incorrect original value", doublesProperty.getCollectionOrigSize());
-        assertEquals("Incorrect previous value", 2, doublesProperty.getCollectionPrevSize());
+        
+        assertNull("Incorrect original value", doublesProperty.getOriginalValue());
+        assertTrue("Incorrect isChangedFrom original.", doublesProperty.isChangedFromOriginal());
+        assertEquals("Incorrect previous value", Arrays.asList(new Double[] { -2.0, -3.0 }), doublesProperty.getPrevValue());
+        assertTrue("Incorrect isChangedFrom previous.", doublesProperty.isChangedFromPrevious());
+        assertTrue("Incorrect isDirty.", doublesProperty.isDirty());
+        assertTrue("Incorrect isDirty for whole entity.", entity.isDirty());
+        
         assertNotNull("There should be domain validation result at this stage.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN));
         assertTrue("Domain validation result should be successful.", doublesProperty.getValidationResult(ValidationAnnotation.DOMAIN).isSuccessful());
         assertNotNull("There should be requiredness validation result.", doublesProperty.getValidationResult(ValidationAnnotation.REQUIRED));

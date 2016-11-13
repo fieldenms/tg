@@ -2,10 +2,9 @@ package ua.com.fielden.platform.streaming;
 
 import static java.lang.String.format;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.TreeMap;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -41,5 +40,25 @@ public class ValueCollectors {
                 valueMapper, 
                 (k, v) -> {throw new IllegalStateException(format("A duplicate value occurred for key [%s].", k));}, 
                 LinkedHashMap::new);
+    }
+    
+    /**
+     * Collects elements of a stream into a new instance of type {@link TreeMap}.
+     * <p>
+     * Internally, method {@link Collectors#toMap} uses {@link HashMap#merge(Object, Object, java.util.function.BiFunction)}, which throws NPE in case of either key or value is <code>null</code>.
+     * Therefore, depending on a paricular situation, it might be prudent to wrap the mapped values in {@link Optional} when implementing function <code>valueMapper</code>.
+     * 
+     * @param keyMapper -- Maps elements to corresponding keys.
+     * @param valueMapper -- Maps elements to corresponding values.
+     * @return
+     */
+    public static <T, K, U> Collector<T, ?, TreeMap<K, U>> toTreeMap(
+            final Function<? super T, ? extends K> keyMapper, 
+            final Function<? super T, ? extends U> valueMapper) {
+        return Collectors.toMap(
+                keyMapper, 
+                valueMapper, 
+                (k, v) -> {throw new IllegalStateException(format("A duplicate value occurred for key [%s].", k));}, 
+                TreeMap::new);
     }
 }
