@@ -15,7 +15,8 @@
     <style>
         :host {
             overflow: hidden;
-            --paper-toolbar-background: var(--paper-light-blue-700);;
+            --paper-toolbar-background: var(--paper-light-blue-700);
+            ;
             --paper-toolbar-color: white;
             --paper-toolbar-height: 44px;
         }
@@ -60,7 +61,7 @@
 
     <template>
         <paper-toolbar id="toolbar" justify="justified">
-            <tg-menu-search-input menu="[[menuConfig.menu]]"></tg-menu-search-input>
+            <tg-menu-search-input id="menuSearcher" menu="[[menuConfig.menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
             <a href="/logout" tabIndex="-1">
                 <paper-icon-button icon="icons:exit-to-app"></paper-icon-button>
             </a>
@@ -124,7 +125,6 @@
                 Polymer.TgBehaviors.TgTooltipBehavior
             ],
 
-
             /**
              * Is called before moving on to page that implements this behavior. Prev - the name of previously selected page.
              */
@@ -174,7 +174,11 @@
                     'hero': Polymer.dom(this.root).querySelector('.hero-animatable[name="' + next + '"]')
                 };
             },
-                        
+
+            searchMenu: function (event) {
+                this.$.menuSearcher.searchMenu();
+            },
+
             _itemSelected: function (e, detail) {
                 var model = e.model;
                 if (isMenuPresent(model.item.menu)) {
@@ -191,7 +195,7 @@
                 return "color: " + item.bgColor + ";";
             },
             _calcCaptionStyleForItem: function (item) {
-                return "background-color: " + item.captionBgColor + ";" + (isMenuPresent(item.menu) ? "": "cursor: default;s");
+                return "background-color: " + item.captionBgColor + ";" + (isMenuPresent(item.menu) ? "" : "cursor: default;s");
             }
         });
     })();

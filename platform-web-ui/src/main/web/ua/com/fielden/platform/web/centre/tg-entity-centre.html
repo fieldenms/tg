@@ -196,6 +196,18 @@
             }
         },
         
+        focusSelectedView: function () {
+            if (this._selectedView === 0) {
+                this.$.selectionView.focus();
+            } else if (this._selectedView === 1) {
+                var elementToFocus = this.querySelector(".custom-egi").$$("#elementToFocus");
+                //Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing. 
+                if (elementToFocus && typeof elementToFocus.focus === 'function') {
+                    elementToFocus.focus();
+                }
+            }
+        },
+        
         addOwnKeyBindings: function () {
             var egi = this.querySelector(".custom-egi");
             var selectionCriteria = this.$.selectionView;

@@ -82,6 +82,13 @@
                         }
                     }, 1);
                 },
+                
+                focusLoadedView: function () {
+                    var elementToLoad = this.$$("#elementToLoad");
+                    if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.focusView === 'function') {
+                        elementToLoad.loadedElement.focusView();
+                    }
+                },
 
                 _isCentre: function (menuItem) {
                     return menuItem.view.viewType === 'centre';

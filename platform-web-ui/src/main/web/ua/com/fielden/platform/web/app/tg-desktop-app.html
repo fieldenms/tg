@@ -9,6 +9,8 @@
 <link rel="import" href="/resources/master/tg-entity-master.html">
 <link rel="import" href="/resources/master/tg-entity-master-behavior.html">
 <link rel="import" href="/resources/actions/tg-ui-action.html">
+<link rel="import" href="/resources/polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <dom-module id="tg-desktop-app">
     <template>
@@ -102,6 +104,14 @@
                         type: Boolean,
                         value: true
                     },
+                    
+                    keyEventTarget: {
+                        type: Object,
+                        value: function() {
+                            return document.body;
+                        }
+                    },
+                    
                     _route: {
                         type: Object,
                         observer: "_routeChanged"
@@ -123,11 +133,32 @@
                     _saveMenuVisibilityChanges: Function
                 },
 
-                behaviors: [Polymer.TgBehaviors.TgEntityMasterBehavior],
+                behaviors: [Polymer.TgBehaviors.TgEntityMasterBehavior, Polymer.IronA11yKeysBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
+                
+                keyBindings: {
+                    'f3': '_searchMenu'
+                },
 
                 listeners: {
                     "main-menu": "_showMainMenu",
-                    "menu-item-selected": "_showView"
+                    "menu-item-selected": "_showView",
+                    "menu-search-list-closed": "_restoreLastFocusedElement"
+                },
+                
+                _searchMenu: function (event) {
+                    var selectedElement = this.$$("[name='" + this.$.pages.selected + "']");
+                    if (selectedElement && selectedElement.searchMenu) {
+                        this.persistActiveElement();
+                        selectedElement.searchMenu();
+                        if (event.stopPropagation) event.stopPropagation();
+                        if (event.preventDefault) event.preventDefault();
+                        event.cancelBubble = true;
+                        event.returnValue = false;
+                    }
+                },
+                
+                _restoreLastFocusedElement: function (event) {
+                    this.restoreActiveElement();
                 },
 
                 _routeChanged: function (newValue, oldValue) {
