@@ -168,7 +168,7 @@
                 <div id="viewToolBar" class="tool-bar layout horizontal center">
                     <div class="layout horizontal center flex">
                         <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
-                        <tg-menu-search-input menu="[[menu]]"></tg-menu-search-input>
+                        <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
                         <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
                     </div>
                 </div>
@@ -308,6 +308,10 @@
                 return changedViews.length > 0 ? changedViews : undefined;
             },
 
+            searchMenu: function (event) {
+                this.$.menuSearcher.searchMenu();
+            },
+
             _calcCheckboxTooltip: function (menu, visible) {
                 return "Toggle to make this " + (this._isMenuPresent(menu) ? "group of menu items " : "menu item ") + (visible ? "invisible" : "visible");
             },
@@ -402,28 +406,21 @@
 
             _selectPage: function (pagePath) {
                 var menuPath = findNestedMenuItem(pagePath, this.menuItem);
-                if (pagePath === '_') {
-                    this.set("_selectedPage", "_");
-                } else if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
+                if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
                     this.set("_selectedPage", menuPath.path);
                 }
             },
 
             _selectMenu: function (pagePath) {
-                var previousTopMenu = this.$.menu.selected && this.$$("paper-submenu[name='" + this.$.menu.selected + "']");
-                var menuPath, path, pathParts, topMenu, submenu;
+                var previousTopMenu, menuPath, path, pathParts, topMenu, submenu;
                 if (pagePath === '_') {
-                    if (previousTopMenu) {
-                        previousTopMenu.close();
-                    }
-                    this.$.menu._selection.clear();
-                    this.$.menu.selected = "_";
                     this.$.drawerPanel.selected = 'drawer';
                 } else {
                     menuPath = findNestedMenuItem(pagePath, this.menuItem);
                     path = menuPath.path;
                     pathParts = path.split('/');
                     topMenu = this.$$("paper-submenu[name='" + pathParts[0] + "']");
+                    previousTopMenu = this.$.menu.selected && this.$$("paper-submenu[name='" + this.$.menu.selected + "']");
                     submenu = this.$$("paper-menu[name='" + pathParts[0] + "']");
                     if (this.$.menu.selected !== pathParts[0]) {
                         if (previousTopMenu) {
@@ -441,15 +438,9 @@
                     }
                     if (menuPath.menuItem && this._isMenuPresent(menuPath.menuItem.menu)) {
                         this.$.drawerPanel.selected = 'drawer';
+                    } else {
+                        this.$.drawerPanel.selected = 'main';
                     }
-                }
-            },
-
-            _initDrawerPanel: function () {
-                if (this._selectedPage === '_') {
-                    this.$.drawerPanel.selected = 'drawer';
-                } else {
-                    this.$.drawerPanel.selected = 'main';
                 }
             },
 
@@ -485,15 +476,18 @@
                     submenu = this.$$("paper-menu[name='" + oldFirstLevelItem + "']");
                     submenu.select();
                 }
-                this._initDrawerPanel();
             },
 
             _animationFinished: function (e, detail, source) {
                 var viewToLoad;
                 if (this.$.pages.selected !== '_') {
                     viewToLoad = detail.toPage;
-                    if (viewToLoad && !viewToLoad.wasLoaded()) {
-                        viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
+                    if (viewToLoad) {
+                        if (!viewToLoad.wasLoaded()) {
+                            viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
+                        } else {
+                            viewToLoad.focusLoadedView();
+                        }
                     }
                 }
             },

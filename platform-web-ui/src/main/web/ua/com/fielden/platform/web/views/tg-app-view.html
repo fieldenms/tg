@@ -133,6 +133,13 @@
                 }
             },
             
+            searchMenu: function () {
+                var view = this.$$("#view");
+                if (view.searchMenu) {
+                    view.searchMenu();
+                }
+            },
+            
             selectSubroute: function (subroute) {
                 var view = this.$$("#view");
                 if (view._selectMenu) {

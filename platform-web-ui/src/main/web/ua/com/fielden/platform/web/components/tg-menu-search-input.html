@@ -6,6 +6,7 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input-container.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/components/tg-menu-list.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 
 <dom-module id="tg-menu-search-input">
@@ -33,7 +34,7 @@
     </style>
 
     <template>
-        <iron-icon id="searchIcon" icon="icons:search" on-tap="_searchMenu" on-transitionend="_iconTransitionFinished"></iron-icon>
+        <iron-icon id="searchIcon" icon="icons:search" on-tap="searchMenu" on-transitionend="_iconTransitionFinished" tooltip-text$="[[tooltip]]"></iron-icon>
         <paper-input-container id="inputContainer" no-label-float style="display:none;" on-transitionend="_inputTransitionFinished">
             <input id="input" is="iron-input" type="text" bind-value="{{_menuToSearch}}" on-blur="_onBlur" on-focus="_onFocus" on-keydown="_inputKeyDown">
         </paper-input-container>
@@ -58,6 +59,8 @@
                     readOnly: true,
                     value: true
                 },
+                
+                tooltip: String,
 
                 ////////////////////private members that starts with undescore sign '_' shouldn't be modified from outside of this component////////////////////////
 
@@ -74,12 +77,18 @@
                     observer: "_showInputChanged"
                 }
             },
+            
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
 
             ready: function () {
                 this._retrieveContainerSizes = function () {
                     var container = this.$.inputContainer;
                     return [container.getBoundingClientRect(), container.offsetHeight];
                 }.bind(this);
+            },
+            
+            searchMenu: function () {
+                this._showInput = true;
             },
 
             _onFocus: function () {
@@ -132,11 +141,9 @@
                 this._showInput = false;
                 if (!this.cancelled && menuList.isSelected()) {
                     this.fire("menu-item-selected", menuList.getSelectedMenuItemPath());
+                    this._menuToSearch = "";
                 }
-            },
-
-            _searchMenu: function () {
-                this._showInput = true;
+                this.fire("menu-search-list-closed");
             },
 
             _showInputChanged: function (newValue, oldValue) {
