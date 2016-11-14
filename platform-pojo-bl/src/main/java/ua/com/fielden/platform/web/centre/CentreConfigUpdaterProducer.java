@@ -51,8 +51,8 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         
         final Set<String> sortingVals = sortingProperties.stream()
             .filter(sp -> sp.getSortingNumber() >= 0) // consider only 'sorted' properties
-            .collect(ValueCollectors.toTreeMap(sp -> sp.getSortingNumber(), sp -> sp.getKey() + ':' + (Boolean.TRUE.equals(sp.getSorting()) ? "asc" : "desc"))) // map sorted by 'sortingNumber'
-            .values().stream()
+            .sorted((o1, o2) -> o1.getSortingNumber().compareTo(o2.getSortingNumber()))
+            .map(sp -> sp.getKey() + ':' + (Boolean.TRUE.equals(sp.getSorting()) ? "asc" : "desc"))
             .collect(Collectors.toCollection(LinkedHashSet::new));
         
         entity.setSortingVals(new ArrayList<>(sortingVals));
