@@ -2,8 +2,13 @@ package ua.com.fielden.platform.web.centre;
 
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
@@ -20,9 +25,8 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.streaming.ValueCollectors;
 import ua.com.fielden.platform.utils.Pair;
-
-import com.google.inject.Inject;
 
 /**
  * A producer for new instances of entity {@link CentreConfigUpdater}.
@@ -41,10 +45,17 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
     }
 
     @Override
-    // @Authorise(UserRoleReviewToken.class)
     protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
         final LinkedHashSet<SortingProperty> sortingProperties = createSortingProperties(masterEntity.freshCentreSupplier().get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
         entity.setSortingProperties(sortingProperties);
+        
+        final Set<String> sortingVals = sortingProperties.stream()
+            .filter(sp -> sp.getSortingNumber() >= 0) // consider only 'sorted' properties
+            .sorted((o1, o2) -> o1.getSortingNumber().compareTo(o2.getSortingNumber()))
+            .map(sp -> sp.getKey() + ':' + (Boolean.TRUE.equals(sp.getSorting()) ? "asc" : "desc"))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+        
+        entity.setSortingVals(new ArrayList<>(sortingVals));
         return entity;
     }
 

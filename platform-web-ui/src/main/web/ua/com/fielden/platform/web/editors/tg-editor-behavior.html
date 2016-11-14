@@ -82,7 +82,15 @@
                  */
                 entity: {
                 	type: Object,
-                	observer: '_entityChanged'
+                	observer: '_entityChanged',
+                	notify: true
+                },
+                
+                /**
+                 * The entity that contains original binding values. This should be used to identify whether _editingValue is modified from original _editingValue during editing.
+                 */
+                originalEntity: {
+                	type: Object
                 },
                 
                 /**
@@ -323,7 +331,9 @@
             behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
             
             observers: [
-            	'_recordDefinition(entity, propertyName, _editorValidationMsg)'
+            	'_recordDefinition(entity, propertyName, _editorValidationMsg)',
+            	'_identifyModification(_editingValue)',
+    		    '_editedPropsChanged(entity.@editedProps)'
 			],
 
             ready: function () {
@@ -343,6 +353,28 @@
                     this._validationComponentsDefined = true;
                 }
             },
+            
+            _identifyModification: function (_editingValue) {
+                if (this.reflector().isEntity(this.entity)) {
+                    var _originalEditingValue = this.originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(this.originalEntity, this.propertyName)) : _editingValue;
+                    var prevEditedProps = this.entity['@editedProps'];
+                    var newEditedProps = {};
+                    for (var prop in prevEditedProps) {
+                        if (prevEditedProps.hasOwnProperty(prop)) {
+                            newEditedProps[prop] = prevEditedProps[prop];
+                        }
+                    }
+                    if (!this.reflector().equalsEx(this._editingValue, _originalEditingValue)) {
+                        newEditedProps[this.propertyName] = true;
+                    } else {
+                        delete newEditedProps[this.propertyName];
+                    }
+                    this.set('entity.@editedProps', newEditedProps);
+                }
+            },
+            
+    		_editedPropsChanged: function (editedProps) {
+    		},
             
             /**
              * This function returns the tooltip for this editor.

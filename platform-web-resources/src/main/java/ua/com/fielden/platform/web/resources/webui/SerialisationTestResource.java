@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getChangedFromOriginal;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginal;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditable;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequired;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
@@ -230,8 +230,8 @@ public class SerialisationTestResource extends ServerResource {
         }
         // dirty equality
         //        if (!metaProp1.isCollectional()) {
-        if (getChangedFromOriginal(metaProp1)) {
-            if (!EntityUtils.equalsEx(getChangedFromOriginal(metaProp1), metaProp2.isDirty())) {
+        if (isChangedFromOriginal(metaProp1)) {
+            if (!EntityUtils.equalsEx(isChangedFromOriginal(metaProp1), metaProp2.isDirty())) {
                 return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
             }
         }

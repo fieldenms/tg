@@ -35,6 +35,7 @@ import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * Implements the concept of a meta-property.
@@ -96,8 +97,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * should be set via setters. The use of factories would provide additional flexibility, where default values could be governed by business logic and a place of entity
      * instantiation.
      */
-    private Number collectionOrigSize;
-    private Number collectionPrevSize;
     private T originalValue;
     private T prevValue;
     private T lastInvalidValue;
@@ -645,42 +644,27 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         return originalValue;
     }
 
-    @Override
-    public final void setCollectionOriginalValue(final Number size) {
-        if (isCollectional()) {
-            this.collectionOrigSize = size;
-        }
-    }
-
     /**
      * Sets the original value.
      *
      * <p>
      * VERY IMPORTANT : the method should not cause proxy initialisation!!!
      *
-     * @param value
+     * @param value -- new originalValue for the property
      */
     @Override
     public final MetaPropertyFull<T> setOriginalValue(final T value) {
-        if (value != null) {
-            if (isCollectional()) {
-                collectionOrigSize = ((Collection<?>) value).size();
-            } else { // The single property (proxied or not!!!)
-                originalValue = value;
-            }
-        } else if (isCollectional()) {
-            collectionOrigSize = 0;
-        } else {
-            originalValue = null;
-        }
         // when original property value is set then the previous value should be the same
         // the previous value setter is not used deliberately since it has some logic not needed here
         if (isCollectional()) {
-            collectionPrevSize = collectionOrigSize;
-        } else {
+            // set the shallow copy of collection into originalValue to be able to perform comparison between actual value and original value of the collection
+            EntityUtils.copyCollectionalValue(value).map(copy -> originalValue = copy.orElse(null));
+            // set the shallow copy of collection into prevValue to be able to perform comparison between actual value and prevValue value of the collection
+            EntityUtils.copyCollectionalValue(originalValue).map(copy -> prevValue = copy.orElse(null));
+        } else { // The single property (proxied or not!!!)
+            originalValue = value;
             prevValue = originalValue;
         }
-
         // reset value change counter
         resetValueChageCount();
         //
@@ -702,7 +686,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     @Override
-    public final Object getPrevValue() {
+    public final T getPrevValue() {
         return prevValue;
     }
 
@@ -729,21 +713,18 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     /**
      * Updates the previous value for the entity property. Increments the update counter and check if the original value should be updated as well.
      *
-     * Please note that for collectional properties their size is used as previous and original values.
-     *
-     * @param prevValue
+     * @param value -- new prevValue for the property
      * @return
      */
     @Override
-    public final MetaPropertyFull<T> setPrevValue(final T prevValue) {
+    public final MetaPropertyFull<T> setPrevValue(final T value) {
         incValueChangeCount();
         // just in case cater for correct processing of collection properties
-        if (isCollectional() && prevValue instanceof Collection) {
-            this.collectionPrevSize = ((Collection<?>) prevValue).size();
-        } else if (isCollectional() && prevValue == null) { // very unlikely, but let's be defensive
-            this.collectionPrevSize = 0;
+        if (isCollectional()) {
+            // set the shallow copy of collection into this.prevValue to be able to perform comparison between actual value and previous value of the collection
+            EntityUtils.copyCollectionalValue(value).map(copy -> this.prevValue = copy.orElse(null));
         } else {
-            this.prevValue = prevValue;
+            this.prevValue = value;
         }
         return this;
     }
@@ -755,26 +736,23 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     @Override
     public final boolean isChangedFromOriginal() {
+        return isChangedFrom(getOriginalValue());
+    }
+    
+    /**
+     * Checks if the current value is changed from the specified one by means of equality. <code>null</code> value is permitted.
+     * <p>
+     * Please, note that property accessor (aka getter) is used to get current value. If exception occurs during current value getting -- 
+     * this method returns <code>false</code> and silently ignores this exception (with some debugging logging).
+     * 
+     * @param value
+     * @return
+     */
+    private final boolean isChangedFrom(final T value) {
         try {
             final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
-            if (!isCollectional()) {
-                final Object currValue = getter.invoke(entity);
-                if (getOriginalValue() == null) {
-                    return currValue != null;
-                } else {
-                    return currValue == null || !currValue.equals(getOriginalValue());
-                }
-            } else {
-                if (getCollectionPrevSize() == null){
-                    // if getCollectionPrevSize() == null this means that the property value was not assigned via setter
-                    // this in turn means that if the property has a non-null value then it is a default one, assigned in class definition
-                    // and should be ignored in determining "changed from original" condition
-                    return false;
-                } else {
-                    final Integer currentSize = ((Collection<?>) getter.invoke(entity)).size();
-                    return !currentSize.equals(getCollectionPrevSize());
-                }
-            }
+            final Object currValue = getter.invoke(entity);
+            return !EntityUtils.equalsEx(currValue, value);
         } catch (final Exception e) {
             logger.debug(e.getMessage(), e);
         }
@@ -782,24 +760,13 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     /**
-     * Checks if the current value is changed from the previous one
+     * Checks if the current value is changed from the previous one.
      *
      * @return
      */
     @Override
     public final boolean isChangedFromPrevious() {
-        try {
-            final Method getter = Reflector.obtainPropertyAccessor(entity.getClass(), getName());
-            final Object currValue = isCollectional() ? ((Collection<?>) getter.invoke(entity)).size() : getter.invoke(entity);
-            if (getPrevValue() == null) {
-                return currValue != null;
-            } else {
-                return currValue == null || !currValue.equals(getPrevValue());
-            }
-        } catch (final Exception e) {
-            // TODO change to logging
-        }
-        return false;
+        return isChangedFrom(getPrevValue());
     }
     
     @Override
@@ -1104,26 +1071,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public IAfterChangeEventHandler<T> getAceHandler() {
         return aceHandler;
-    }
-
-    @Override
-    public Number getCollectionOrigSize() {
-        return collectionOrigSize;
-    }
-
-    @Override
-    public Number getCollectionPrevSize() {
-        return collectionPrevSize;
-    }
-
-    @Override
-    public void setCollectionOrigSize(final Number collectionOrigSize) {
-        this.collectionOrigSize = collectionOrigSize;
-    }
-
-    @Override
-    public void setCollectionPrevSize(final Number collectionPrevSize) {
-        this.collectionPrevSize = collectionPrevSize;
     }
 
     @Override

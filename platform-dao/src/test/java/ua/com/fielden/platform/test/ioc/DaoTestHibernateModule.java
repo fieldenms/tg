@@ -27,12 +27,16 @@ import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
 import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
 import ua.com.fielden.platform.migration.dao.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationChild;
+import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.ITgMeterReading;
 import ua.com.fielden.platform.sample.domain.ITgTimesheet;
 import ua.com.fielden.platform.sample.domain.ITgVehicle;
 import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
 import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.ITgWorkOrder;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChildDao;
+import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentDao;
 import ua.com.fielden.platform.sample.domain.TgMeterReadingDao;
 import ua.com.fielden.platform.sample.domain.TgTimesheetDao;
 import ua.com.fielden.platform.sample.domain.TgVehicleDao;
@@ -188,6 +192,9 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
             }
 
         });
+
+        bind(ITgCollectionalSerialisationParent.class).to(TgCollectionalSerialisationParentDao.class);
+        bind(ITgCollectionalSerialisationChild.class).to(TgCollectionalSerialisationChildDao.class);
     }
 
 

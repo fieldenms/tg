@@ -174,7 +174,6 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         final String fullPropertyName = entity.getType().getName() + "." + propertyName;
         logger.debug("Processing simple property \"" + fullPropertyName + "\".");
         final Object oldValue = entity.get(propertyName);
-        final Object newValue = mutator.getArguments()[0];
         try {
             // try to proceed setter - if unhandled exception throws -> take it to the next level.
             final SetterResult setterResult = proceedSetter(entity, propertyName, mutator, wasValidAndNotEnforced, newAndOldValues);
@@ -182,6 +181,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                 // DYNAMIC validation didn't pass -> return "possible" setter returning value.
                 return entity;
             } else {
+                final Object newValue = mutator.getArguments()[0];
                 // ///// ALL validation succeeded : ///////
                 // fire change event: if wasValid - use standard equality checking, if wasInvalid -> fire all listeners events always!
                 // IMPORTANT : it fires ALL the listeners - including the PropertyChangeOrIncorrectAttemptListeners and all other listeners added externally by the user
@@ -189,17 +189,12 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                         : CheckingStrategy.CHECK_NOTHING, false);
                 // update meta-property information
                 final MetaProperty metaProperty = entity.getProperty(propertyName);
-                if (metaProperty != null) {
-                    // set previous value and recalculate meta-property properties based on the new value
-                    metaProperty.setPrevValue(oldValue).define(newValue);
-                    // determine property and entity dirty state
-                    if (!metaProperty.isCalculated() && metaProperty.getValueChangeCount() > 0) {
-                        final boolean isValueDifferentFromOriginal = !EntityUtils.equalsEx(metaProperty.getOriginalValue(), newValue);
-
-                        metaProperty.setDirty(isValueDifferentFromOriginal);
-
-                        entity.setDirty(entity.isDirty() || metaProperty.isDirty());
-                    }
+                // set previous value and recalculate meta-property properties based on the new value
+                metaProperty.setPrevValue(oldValue).define(newValue);
+                // determine property and entity dirty state
+                if (!metaProperty.isCalculated() && metaProperty.getValueChangeCount() > 0) {
+                    metaProperty.setDirty(metaProperty.isChangedFromOriginal());
+                    entity.setDirty(entity.isDirty() || metaProperty.isDirty());
                 }
                 // handle updating of the dependent properties (dependent properties error recovery).
                 handleDependentProperties(metaProperty);
@@ -231,9 +226,10 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             throws Throwable {
         final String fullPropertyName = entity.getType().getName() + "." + propertyName;
         logger.debug("Processing collectional property \"" + fullPropertyName + "\".");
-        // get size before invoking mutator
-        final Collection<?> collection = (Collection<?>) entity.get(propertyName);
-        final Integer oldSize = collection == null ? 0 : collection.size();
+        // get oldValue (and its size) before invoking mutator
+        final Collection<?> currValue = entity.get(propertyName);
+        final Integer currSize = currValue == null ? 0 : currValue.size();
+        final Optional<Optional<Collection<?>>> potentialPrevValue = EntityUtils.copyCollectionalValue(currValue);
         try {
             // try to proceed setter - if unhandled exception throws -> take it to the next level.
             final SetterResult setterResult = proceedSetter(entity, propertyName, mutator, wasValidAndNotEnforced, newAndOldValues);
@@ -243,33 +239,36 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             } else {
                 // get new value and size
                 final Collection<?> newValue = entity.get(propertyName);
-                final Integer newSize = newValue.size();
-                // fire change event
+                final Integer newSize = newValue == null ? 0 : newValue.size();
+                
+                // At this stage firing of property changes will occur in most cases:
                 if (Mutator.SETTER == Mutator.getValueByMethod(mutator.getMethod())) {
+                    // firing will occur always, collection is not checked on equality with its previous value
+                    // TODO the statement above is no longer valid... however, the change support with fire property changes is most likely irrelevant and needs to be phased out. 
                     entity.getChangeSupport().firePropertyChange(propertyName, 0, 1);
                 } else {
                     if (Mutator.INCREMENTOR == Mutator.getValueByMethod(mutator.getMethod())) {
+                        // firing will occur always, collection is not checked on equality with its previous value. Edge-case: if collection elements is of type Integer and newAddedValue equals to old size of collection.
                         final Object newAddedValue = mutator.getArguments()[0];
-                        entity.getChangeSupport().firePropertyChange(propertyName, oldSize, newAddedValue);
+                        entity.getChangeSupport().firePropertyChange(propertyName, currSize, newAddedValue);
                     } else { // is DECREMENTOR
+                        // firing will occur always, collection is not checked on equality with its previous value. Edge-case: if collection elements is of type Integer and oldRemovedValue equals to new size of collection.
                         final Object oldRemovedValue = mutator.getArguments()[0];
                         entity.getChangeSupport().firePropertyChange(propertyName, oldRemovedValue, newSize);
                     }
                 }
                 // update meta-property information
                 final MetaProperty<Collection<?>> metaProperty = entity.getProperty(propertyName);
-                if (metaProperty != null) {
-                    // set previous value and recalculate meta-property properties based on the new value
-                    metaProperty.setCollectionPrevSize(oldSize);
-                    metaProperty.define(newValue);
-                }
-
+                // set previous value and recalculate meta-property properties based on the new value
+                potentialPrevValue.map(copy -> metaProperty.setPrevValue(copy.orElse(null)));
+                metaProperty.define(newValue);
+                
                 // determine property and entity dirty state
                 if (!metaProperty.isCalculated() && metaProperty.getValueChangeCount() > 0) {
-                    metaProperty.setDirty(oldSize != newSize);
+                    metaProperty.setDirty(metaProperty.isChangedFromOriginal());
                     entity.setDirty(entity.isDirty() || metaProperty.isDirty());
                 }
-
+                
                 // handle updating of the dependent properties (dependent properties error recovery).
                 handleDependentProperties(metaProperty);
                 return setterResult.getSetterReturningValue();

@@ -131,6 +131,36 @@
                 _currBindingEntity: {
                 	type: Object
                 },
+                
+                /**
+                 * Returns true in case where binding entity has modified properties, false otherwise.
+                 * 
+                 * Please, note that this property recomputes and caches manually strictly when _currBindingEntity and _originalBindingEntity changes (_postEntityReceived method).
+                 *
+                 * Also, invalid entity value will be 'modified', even though the entities from server arrive with valid value only (+invalid validation result). 
+                 * Client-side logic handles this gracefully in method _extractBindingView(entity, previousModifiedPropertiesHolder, prevCurrBindingEntity).
+                 * 
+                 * This property can not be used in tg-selection-criteria-behavior due to the fact that it will be isModified from previous, not from original version of centre.
+                 * Currently _centreChanged property is used (see tg-entity-centre-behavior and tg-selection-criteria-behavior).
+                 */
+                _bindingEntityModified: {
+                    type: Boolean,
+                    observer: '_bindingEntityModifiedChanged'
+                },
+                
+                /**
+                 * Returns indication whether SAVE button should be enabled for the entity (AND canClose should be false). Returns true in following cases:
+                 *
+                 * 1) the entity is not persistent (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons);
+                 * 2) the entity is persistent but is not persisted yet (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons);
+                 * 3) the entity is persistent, is persisted but and it is modified (SAVE is enabled always, can not close, only through SAVE / CANCEL buttons).
+                 *
+                 * Please, note that this property (analogously to _bindingEntityModified) recomputes and caches manually strictly when _currBindingEntity and _originalBindingEntity changes (_postEntityReceived method).
+                 */
+                _bindingEntityNotPersistentOrNotPersistedOrModified: {
+                    type: Boolean,
+                    observer: '_bindingEntityNotPersistentOrNotPersistedOrModifiedChanged'
+                },
 
                 /**
                  * '_createModifiedPropertiesHolder' function, that is designated for binding.
@@ -262,10 +292,32 @@
                 _validationPromise: {
                     type: Object,
                     observer: '_validationPromiseChanged'
+                },
+                
+                /**
+                 * Returns true in case where there exist some properties which were edited (but not yet committed) by tg-editor-behavior.
+                 */
+                _editedPropsExist: {
+                    type: Boolean
                 }
     		},
     		
+    		observers: [
+    		    '_editedPropsChanged(_currBindingEntity.@editedProps)',
+    		    '_modificationsChanged(_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist)'
+    		],
+    		
     		_validationPromiseChanged: function (newValidationPromise, oldValidationPromise) {
+    		},
+    		_bindingEntityModifiedChanged: function (new_bindingEntityModified, old_bindingEntityModified) {
+    		},
+    		_bindingEntityNotPersistentOrNotPersistedOrModifiedChanged: function (newValue, oldValue) {
+    		},
+    		_modificationsChanged: function (_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist) {
+    		},
+    		
+    		_editedPropsChanged: function (editedProps) {
+    		    this._editedPropsExist = typeof editedProps === 'undefined' ? false : Object.keys(editedProps).length !== 0;
     		},
     		
     		/**
@@ -283,6 +335,9 @@
             ready: function () {
                 var self = this;
                 
+                self._bindingEntityModified = false;
+                self._bindingEntityNotPersistentOrNotPersistedOrModified = false;
+                self._editedPropsExist = false;
                 self._resetState();
                 
                 self._createModifiedPropertiesHolder = (function () {
@@ -401,7 +456,7 @@
                 	    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
                     	slf._validator().abortValidationIfAny();
 
-        	            // NOTE: no need to check whether the hasModified(holder) === true -- because the error recovery should happen!
+        	            // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
             	        // (if the entity was not modified -- _validate(holder) will start the error recovery process)
                     	slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
                 	}, 50);
@@ -657,7 +712,9 @@
                                 "val": value,
                                 "origVal": originalValue
                             };
-                            modPropHolder["@modified"] = true;
+                            if (propertyName !== 'surrogateVersion') { // need to skip collectional editor surrogate property not to affect @modified
+                                modPropHolder["@modified"] = true;
+                            }
                             if (typeof valId !== 'undefined') {
                                 modPropHolder[propertyName]['valId'] = valId;
                             }
@@ -678,6 +735,15 @@
 
             _idConvert: function (id) {
                 return id === null ? "new" : ("" + id);
+            },
+            
+            /**
+             * Returns 'true' if the entity has been modified from original, 'false' otherwise.
+             *
+             * @param modifiedPropertiesHolder -- the entity with modified properties
+             */
+            _hasModified: function (modifiedPropertiesHolder) {
+                return modifiedPropertiesHolder["@modified"];
             },
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////
@@ -712,6 +778,13 @@
                     self.fire('binding-entity-appeared', self._currBindingEntity);
                 }
                 self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity);
+                
+                self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
+                // console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
+                self._bindingEntityNotPersistentOrNotPersistedOrModified = !self._currBindingEntity.type().isPersistent() || 
+                                                                           !self._currBindingEntity.isPersisted()         ||
+                                                                           self._bindingEntityModified;
+                // console.debug('_bindingEntityNotPersistentOrNotPersistedOrModified = ', self._bindingEntityNotPersistentOrNotPersistedOrModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
 
                 console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
                 return self._currBindingEntity;

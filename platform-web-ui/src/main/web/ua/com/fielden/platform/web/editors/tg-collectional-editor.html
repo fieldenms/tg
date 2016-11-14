@@ -218,6 +218,10 @@
             }).bind(this);
         },
         
+        attached: function () {
+            this._originalChosenIds = null;
+        },
+        
         _calcItemTooltip: function (item) {
             var header = this._calcItemText(item, this.headerPropertyName);
             var desc = this._calcItemText(item, this.descriptionPropertyName);
@@ -244,33 +248,38 @@
          * This method promotes 'IRRELEVANT' into _editingValue which should not be a problem, since this 'editor' edits entity property (with name 'chosenNumbersPropertyName') directly.
          */
         convertToString: function (value) {
-            this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
+            // _entities, _originalChosenIds, this.$.input should be initialised only once for the session of collectional editing.
+            // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
+            // It is believed that resetting of _originalChosenIds can be safely done in attached callback of tg-collectional-editor.
+            if (this._originalChosenIds === null) {
+                this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
             
-            var selEntities = [];
-            var chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
-            if (typeof this.entity.chosenIds === 'undefined') {
-                this._forReview = true;
-            }
-            
-            this._originalChosenIds = [];
-            
-            for (var index = 0; index < chosenIds.length; index++) {
-                var foundEntity = this._find(this._entities, chosenIds[index]);
-                if (foundEntity !== null) {
-                    selEntities.push(foundEntity);
-                    this._originalChosenIds.push(chosenIds[index]);
+                var selEntities = [];
+                var chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
+                if (typeof this.entity.chosenIds === 'undefined') {
+                    this._forReview = true;
                 }
+                
+                this._originalChosenIds = [];
+                
+                for (var index = 0; index < chosenIds.length; index++) {
+                    var foundEntity = this._find(this._entities, chosenIds[index]);
+                    if (foundEntity !== null) {
+                        selEntities.push(foundEntity);
+                        this._originalChosenIds.push(chosenIds[index]);
+                    }
+                }
+    
+                this._disableSelectionListeners = true;
+                this.$.input.clearSelection();
+                
+                for (var index = 0; index < selEntities.length; index++) {
+                    this.$.input.selectItem(selEntities[index]);
+                }
+                this._disableSelectionListeners = false;
+                
+                this.scrollToFirstFoundElement();
             }
-
-            this._disableSelectionListeners = true;
-            this.$.input.clearSelection();
-            
-            for (var index = 0; index < selEntities.length; index++) {
-                this.$.input.selectItem(selEntities[index]);
-            }
-            this._disableSelectionListeners = false;
-            
-            this.scrollToFirstFoundElement();
             
             this.provideSorting(this.entity.sortingVals, this._entities);
             
@@ -362,6 +371,7 @@
         },
         
         _toggleOrdering: function (item, index) {
+            var self = this;
             if (item.sorting === true) {
                 this.set("_entities." + index + ".sorting", false);
             } else if (item.sorting === false) {
@@ -372,6 +382,12 @@
                 this._turnOnOrdering(index);
             }
             this.provideSorting(this.entity.sortingVals, this._entities);
+            // invoke validation after user has toggled ordering of some property
+            if (self._shouldInvokeValidation()) {
+                self.validationCallback();
+            } else {
+                self._skipValidationAction();
+            }
         },
         
         _turnOnOrdering: function (index) {
@@ -478,6 +494,12 @@
 	                        } else {
 	                            throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
 	                        }
+	                        // invoke validation after user has removed some item from collection
+	                        if (self._shouldInvokeValidation()) {
+	                            self.validationCallback();
+	                        } else {
+	                            self._skipValidationAction();
+	                        }
 	                    }
 	                });
 	                
@@ -501,6 +523,12 @@
                             if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
                                 addedIds.push(self.idOrKey(added));
                             }
+	                        // invoke validation after user has added some item to collection
+	                        if (self._shouldInvokeValidation()) {
+	                            self.validationCallback();
+	                        } else {
+	                            self._skipValidationAction();
+	                        }
 	                    }
 	                }
 	            }, self);
