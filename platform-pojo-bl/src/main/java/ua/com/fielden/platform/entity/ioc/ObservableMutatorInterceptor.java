@@ -227,9 +227,9 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         final String fullPropertyName = entity.getType().getName() + "." + propertyName;
         logger.debug("Processing collectional property \"" + fullPropertyName + "\".");
         // get oldValue (and its size) before invoking mutator
-        final Collection<?> oldValue = entity.get(propertyName);
-        final Integer oldSize = oldValue == null ? 0 : oldValue.size();
-        final Optional<Optional<Collection<?>>> potentialPrevValue = EntityUtils.copyCollectionalValue(oldValue);
+        final Collection<?> currValue = entity.get(propertyName);
+        final Integer currSize = currValue == null ? 0 : currValue.size();
+        final Optional<Optional<Collection<?>>> potentialPrevValue = EntityUtils.copyCollectionalValue(currValue);
         try {
             // try to proceed setter - if unhandled exception throws -> take it to the next level.
             final SetterResult setterResult = proceedSetter(entity, propertyName, mutator, wasValidAndNotEnforced, newAndOldValues);
@@ -244,12 +244,13 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                 // At this stage firing of property changes will occur in most cases:
                 if (Mutator.SETTER == Mutator.getValueByMethod(mutator.getMethod())) {
                     // firing will occur always, collection is not checked on equality with its previous value
+                    // TODO the statement above is no longer valid... however, the change support with fire property changes is most likely irrelevant and needs to be phased out. 
                     entity.getChangeSupport().firePropertyChange(propertyName, 0, 1);
                 } else {
                     if (Mutator.INCREMENTOR == Mutator.getValueByMethod(mutator.getMethod())) {
                         // firing will occur always, collection is not checked on equality with its previous value. Edge-case: if collection elements is of type Integer and newAddedValue equals to old size of collection.
                         final Object newAddedValue = mutator.getArguments()[0];
-                        entity.getChangeSupport().firePropertyChange(propertyName, oldSize, newAddedValue);
+                        entity.getChangeSupport().firePropertyChange(propertyName, currSize, newAddedValue);
                     } else { // is DECREMENTOR
                         // firing will occur always, collection is not checked on equality with its previous value. Edge-case: if collection elements is of type Integer and oldRemovedValue equals to new size of collection.
                         final Object oldRemovedValue = mutator.getArguments()[0];
