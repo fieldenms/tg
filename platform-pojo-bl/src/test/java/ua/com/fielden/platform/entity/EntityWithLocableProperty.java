@@ -23,11 +23,11 @@ import ua.com.fielden.platform.types.Money;
 public class EntityWithLocableProperty extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    private boolean lockPropertyValidation = true;
+    private volatile boolean lockPropertyValidation = true;
 
     @IsProperty
     @Title(value = "First Property", desc = "used for testing")
-    private Integer firstProperty = null;
+    private volatile Integer firstProperty = null;
 
     @IsProperty
     @Title("Observable Property")
