@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getChangedFromOriginal;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginal;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditable;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getOriginalValue;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequired;
@@ -153,7 +153,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                                 existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, getEditable(metaProperty));
                             }
                             if (!isChangedFromOriginalDefault(metaProperty)) {
-                                existingMetaProps.put("_cfo", getChangedFromOriginal(metaProperty));
+                                existingMetaProps.put("_cfo", isChangedFromOriginal(metaProperty));
                                 existingMetaProps.put("_originalVal", getOriginalValue(metaProperty));
                             }
                             if (!isRequiredDefault(metaProperty)) {

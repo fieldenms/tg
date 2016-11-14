@@ -92,18 +92,18 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public static boolean getChangedFromOriginalDefault() {
+    public static boolean isChangedFromOriginalDefault() {
         return false;
     }
 
     /**
-     * Returns the value of <code>changedFromOriginal</code> property.
+     * Returns the value of <code>isChangedFromOriginal</code> meta-property attribute, defaulting to {@link #isChangedFromOriginalDefault()} if <code>metaProperty</code> is null.
      *
      * @param metaProperty
      * @return
      */
-    public static <M> boolean getChangedFromOriginal(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? getChangedFromOriginalDefault() : metaProperty.isChangedFromOriginal();
+    public static <M> boolean isChangedFromOriginal(final MetaProperty<M> metaProperty) {
+        return metaProperty == null ? isChangedFromOriginalDefault() : metaProperty.isChangedFromOriginal();
     }
 
     /**
@@ -126,7 +126,7 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> boolean isChangedFromOriginalDefault(final MetaProperty<M> metaProperty) {
-        return EntityUtils.equalsEx(getChangedFromOriginal(metaProperty), getChangedFromOriginalDefault());
+        return EntityUtils.equalsEx(isChangedFromOriginal(metaProperty), isChangedFromOriginalDefault());
     }
 
     ///////////////////////////////////////////////// REQUIRED /////////////////////////////////////////////////
