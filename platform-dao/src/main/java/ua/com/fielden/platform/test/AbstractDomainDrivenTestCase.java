@@ -53,7 +53,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
     private static final List<String> dataScript = new ArrayList<String>();
     private static final List<String> truncateScript = new ArrayList<String>();
 
-    public final static IDomainDrivenTestCaseConfiguration config = createConfig();
+    private final static IDomainDrivenTestCaseConfiguration config = createConfig();
 
     private final ICompanionObjectFinder provider = config.getInstance(ICompanionObjectFinder.class);
     private final EntityFactory factory = config.getEntityFactory();

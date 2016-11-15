@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.fetch;
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.*;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 
@@ -79,9 +79,7 @@ public class FetchModelReconstructionTest extends AbstractDomainDrivenTestCase {
     @Test
     public void fetch_model_reconstruction_recognizes_properties_of_type_AbstractUnionEntity() {
         final TgWorkshop workshop = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
-        final TgBogieLocation location = config.getEntityFactory()
-                .newEntity(TgBogieLocation.class)
-                .setWorkshop(workshop);
+        final TgBogieLocation location = co(TgBogieLocation.class).new_().setWorkshop(workshop);
         final TgBogie bogie = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
         assertEquals(workshop, bogie.getLocation().activeEntity());
 
