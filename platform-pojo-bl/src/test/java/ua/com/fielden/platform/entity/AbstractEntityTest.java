@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.Before;
@@ -32,7 +33,6 @@ import ua.com.fielden.platform.associations.one2many.incorrect.MasterEntity6;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
-import ua.com.fielden.platform.entity.ioc.ObservableMutatorInterceptor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -1055,16 +1055,23 @@ public class AbstractEntityTest {
     public void test_entity_locking_during_validation_of_its_property() throws Exception {
         final EntityWithLocableProperty entity = factory.newEntity(EntityWithLocableProperty.class);
 
+        // the latch is used to ensure that the changingThread has started and executed setLockPropertyValidation(true) before continuing
+        final CountDownLatch latch = new CountDownLatch(1);
+
         // changing property happens on a separate thread
         final Thread changingThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 // this call should put setting into a long running mode until property validation is unlocked
                 entity.setLockPropertyValidation(true);
+                latch.countDown(); // release the latch, notifying the main thread that it can proceed
                 entity.setLockableProperty(Money.zero);
             }
         });
         changingThread.start();
+
+        // wait for changingThread...
+        latch.await();
 
         // validation happens on a separate thread
         final Thread validationThread = new Thread(new Runnable() {
