@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.dao;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.hibernate.Session;
 
 import com.google.inject.Inject;
@@ -29,7 +26,7 @@ public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> impleme
 
     @SessionRequired
     public EntityWithMoney saveWithException(final EntityWithMoney entity) {
-        final EntityWithMoney savedEntity = super.save(entity);
+        super.save(entity);
         throw new RuntimeException("Purposeful exception.");
     }
 
