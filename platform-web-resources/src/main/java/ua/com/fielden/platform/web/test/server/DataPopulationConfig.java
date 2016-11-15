@@ -32,10 +32,9 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     /**
      * Default constructor is required for dynamic instantiation by {@link DbDrivenTestCase}.
      */
-    public DataPopulationConfig() {
+    public DataPopulationConfig(final Properties props) {
         // instantiate all the factories and Hibernate utility
         try {
-            final Properties props = hbc;
             // application properties
             props.setProperty("app.name", "TG Test App");
             props.setProperty("reports.path", "");
@@ -59,16 +58,6 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     @Override
     public EntityFactory getEntityFactory() {
         return entityFactory;
-    }
-
-    @Override
-    public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-        return module.getDomainMetaPropertyConfig();
-    }
-
-    @Override
-    public DomainValidationConfig getDomainValidationConfig() {
-        return module.getDomainValidationConfig();
     }
 
     @Override

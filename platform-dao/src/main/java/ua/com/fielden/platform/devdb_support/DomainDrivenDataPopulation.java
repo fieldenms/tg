@@ -12,6 +12,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -40,6 +41,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
     private final List<String> truncateScript = new ArrayList<String>();
 
     public final IDomainDrivenTestCaseConfiguration config;
+    private final Properties props;
 
     private final ICompanionObjectFinder provider;
     private final EntityFactory factory;
@@ -47,8 +49,9 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
 
     private boolean domainPopulated = false;
 
-    protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config) {
+    protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
         try {
+            this.props = props;
             this.config = config;
             provider = config.getInstance(ICompanionObjectFinder.class);
             factory = config.getEntityFactory();
@@ -108,7 +111,7 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
                 st.close();
 
                 // create truncate statements
-                for (final PersistedEntityMetadata entry : config.getDomainMetadata().getPersistedEntityMetadatas()) {
+                for (final PersistedEntityMetadata<?> entry : config.getDomainMetadata().getPersistedEntityMetadatas()) {
                     truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
                 }
             }
@@ -131,11 +134,11 @@ public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
         exec(truncateScript, conn);
     }
 
-    private static Connection createConnection() {
-        final String url = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.url");
-        final String jdbcDriver = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.driver_class");
-        final String user = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.username");
-        final String passwd = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.password");
+    private Connection createConnection() {
+        final String url = props.getProperty("hibernate.connection.url");
+        final String jdbcDriver = props.getProperty("hibernate.connection.driver_class");
+        final String user = props.getProperty("hibernate.connection.username");
+        final String passwd = props.getProperty("hibernate.connection.password");
 
         try {
             Class.forName(jdbcDriver);

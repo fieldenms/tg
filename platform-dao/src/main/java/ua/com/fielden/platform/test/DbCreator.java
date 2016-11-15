@@ -40,7 +40,7 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
     private final List<String> truncateScript = new ArrayList<>();
 
     private final Collection<PersistedEntityMetadata<?>> entityMetadatas;
-    public final INewDomainDrivenTestCaseConfiguration config;
+    public final IDomainDrivenTestCaseConfiguration config;
     private final Properties hbc = new Properties();
 
     public DbCreator(final Class<T> testCaseType) {
@@ -52,7 +52,7 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
 
     private static final String baseDir = "./src/test/resources/db";
 
-    private INewDomainDrivenTestCaseConfiguration createConfig(final Class<T> testCaseType, final Properties hbc) {
+    private IDomainDrivenTestCaseConfiguration createConfig(final Class<T> testCaseType, final Properties hbc) {
         try {
 
             final Properties testProps = new Properties();
@@ -72,8 +72,8 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
             hbc.setProperty("hibernate.hbm2ddl.auto", "create");
 
             final String configClassName = testProps.getProperty("config-domain");
-            final Class<INewDomainDrivenTestCaseConfiguration> type = (Class<INewDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
-            final Constructor<INewDomainDrivenTestCaseConfiguration> constructor = type.getConstructor(Properties.class);
+            final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
+            final Constructor<IDomainDrivenTestCaseConfiguration> constructor = type.getConstructor(Properties.class);
             return constructor.newInstance(hbc);
         } catch (final Exception e) {
             throw new IllegalStateException(format("Could not create a configuration for test case [%s]", testCaseType.getSimpleName()), e);

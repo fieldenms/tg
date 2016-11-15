@@ -16,12 +16,12 @@ import ua.com.fielden.platform.serialisation.api.impl.DefaultSerialisationClassP
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule;
 
 /**
- * Provides Platform specific implementation of {@link INewDomainDrivenTestCaseConfiguration} for testing purposes, which is mainly related to construction of appropriate IoC modules.
+ * Provides Platform specific implementation of {@link IDomainDrivenTestCaseConfiguration} for testing purposes, which is mainly related to construction of appropriate IoC modules.
  * 
  * @author TG Team
  * 
  */
-public final class PlatformDomainDrivenTestCaseConfiguration implements INewDomainDrivenTestCaseConfiguration {
+public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainDrivenTestCaseConfiguration {
     private final EntityFactory entityFactory;
     private final Injector injector;
     private final PlatformTestServerModule hibernateModule;
