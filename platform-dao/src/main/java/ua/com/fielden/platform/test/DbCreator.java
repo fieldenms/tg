@@ -40,7 +40,7 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
     private final List<String> truncateScript = new ArrayList<>();
 
     private final Collection<PersistedEntityMetadata<?>> entityMetadatas;
-    private final INewDomainDrivenTestCaseConfiguration config;
+    public final INewDomainDrivenTestCaseConfiguration config;
     private final Properties hbc = new Properties();
 
     public DbCreator(final Class<T> testCaseType) {
@@ -80,22 +80,23 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
         }
     }
 
+    // TODO used to called from @AfterClass... is this really needed?
     public final void removeDbSchema() {
         domainPopulated = false;
         dataScript.clear();
         truncateScript.clear();
     }
 
-    private final String dataScriptFile(final T testCase) { 
+    private final String dataScriptFile(final AbstractDomainDrivenTestCase testCase) { 
         return format("%s/data-%s.script", baseDir, testCase.getClass().getName());
     }
     
-    private final String truncateScriptFile(final T testCase) {
+    private final String truncateScriptFile(final AbstractDomainDrivenTestCase testCase) {
         return format("%s/truncate-%s.script", baseDir, testCase.getClass().getName());
     }
 
     
-    public final void beforeTest(final T testCase) throws Exception {
+    public final void beforeTest(final AbstractDomainDrivenTestCase testCase) throws Exception {
         if (testCase.useSavedDataPopulationScript() && testCase.saveDataPopulationScriptToFile()) {
             throw new IllegalStateException("useSavedDataPopulationScript() && saveDataPopulationScriptToFile() should not be true at the same time.");
         }
@@ -134,7 +135,7 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
 
     }
 
-    private void restoreDataFromFile(final T testCase, final Connection conn) throws Exception {
+    private void restoreDataFromFile(final AbstractDomainDrivenTestCase testCase, final Connection conn) throws Exception {
         dataScript.clear();
         final File dataPopulationScriptFile = new File(dataScriptFile(testCase));
         if (!dataPopulationScriptFile.exists()) {
@@ -152,7 +153,7 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
         exec(dataScript, conn);
     }
 
-    private void recordDataPopulationScript(final T testCase, final Connection conn) throws Exception {
+    private void recordDataPopulationScript(final AbstractDomainDrivenTestCase testCase, final Connection conn) throws Exception {
         final Statement st = conn.createStatement();
         final ResultSet set = st.executeQuery("SCRIPT");
         while (set.next()) {
