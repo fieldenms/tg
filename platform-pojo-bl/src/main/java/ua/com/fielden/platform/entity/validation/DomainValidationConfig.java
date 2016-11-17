@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
  * @author 01es
  * 
  */
+@Deprecated
 public class DomainValidationConfig {
     private final Logger logger = Logger.getLogger(this.getClass());
     /**

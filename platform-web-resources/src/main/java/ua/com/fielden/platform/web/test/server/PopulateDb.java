@@ -62,14 +62,14 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
     private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
 
-    private PopulateDb(final IDomainDrivenTestCaseConfiguration config) {
-        super(config);
+    private PopulateDb(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
+        super(config, props);
     }
 
     public static void main(final String[] args) throws Exception {
         final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application.properties";
         final FileInputStream in = new FileInputStream(configFileName);
-        final Properties props = IDomainDrivenTestCaseConfiguration.hbc;
+        final Properties props = new Properties();
         props.load(in);
         in.close();
 
@@ -78,9 +78,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         props.put("hibernate.format_sql", "true");
         props.put("hibernate.hbm2ddl.auto", "create");
 
-        final IDomainDrivenTestCaseConfiguration config = new DataPopulationConfig();
+        final IDomainDrivenTestCaseConfiguration config = new DataPopulationConfig(props);
 
-        final PopulateDb popDb = new PopulateDb(config);
+        final PopulateDb popDb = new PopulateDb(config, props);
         popDb.createAndPopulate();
     }
 

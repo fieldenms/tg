@@ -2,38 +2,27 @@ package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-
-import com.google.common.io.Files;
+import org.junit.ClassRule;
+import org.junit.rules.ExternalResource;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
@@ -48,50 +37,62 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  *
  */
 public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData {
-    transient private final Logger logger = Logger.getLogger(this.getClass());
 
-    private static final List<String> dataScript = new ArrayList<String>();
-    private static final List<String> truncateScript = new ArrayList<String>();
+    /**
+     * This static map holds references to DB related information, including data population and truncation scripts, for each test case type.
+     * It gets populated at the time of test case class loading using a <code<ClassRule</code> below. 
+     */
+    private static final Map<Class<? extends AbstractDomainDrivenTestCase>, DbCreator<?>> dbCreators = new ConcurrentHashMap<>(200, 10);
+    
+    /**
+     * A convenient factory/accessor method for instances of {@link DbCreator} that are associated with a passed in test case type.
+     * 
+     * @param testCaseType
+     * @return
+     */
+    protected static final DbCreator<?> dbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
+        if (!dbCreators.containsKey(testCaseType)) {
+            final DbCreator<?> dbCreator = new DbCreator<>(testCaseType);
+            dbCreators.put(testCaseType, dbCreator);
+        }
+        
+        return dbCreators.get(testCaseType);
+    }
 
-    public final static IDomainDrivenTestCaseConfiguration config = createConfig();
+    /**
+     * A class rule (this is a new concept introduced in JUnit 4.x) that acts similar to <code>@BeforeClass/@AfterClass</code> by executing at the time of loading/off-loading a test case class.
+     * Its main purpose is to generate and populate a database specific for a test case with a class that is being loaded.
+     * The use of a class rule has an advantage over static method initializers by providing additional information such as a test case class.
+     * This provides a way to encapsulate test case specific database creation and population logic at the level of this base class that all other test cases inherit from. 
+     */
+    @ClassRule
+    public static final ExternalResource resource = new ExternalResource() {
+        public Statement apply(final Statement base, final Description description) {
+            final Class<? extends AbstractDomainDrivenTestCase> testCaseType = (Class<? extends AbstractDomainDrivenTestCase>) description.getTestClass();
+            try {
+                // this call populates the above static map dbCreators
+                // the created instance holds the data population and truncation scripts that get reused by individual test
+                // at the same time, the actual database can be created ad-hoc even on per test (method) basis if needed
+                dbCreator(testCaseType)
+                .populateOrRestoreData(testCaseType.newInstance(), false) // a test case instantiation here is a trick to call its method populateDomain at the time of a static initialization
+                .clearData();
+            } catch (Exception ex) {
+                throw new Error(format("Could not populate data for test case %s.", description), ex);
+            }
 
-    private final ICompanionObjectFinder provider = config.getInstance(ICompanionObjectFinder.class);
-    private final EntityFactory factory = config.getEntityFactory();
+            return super.apply(base, description);
+        };
+    };
+
+    /**
+     * Holds the test case specific db connectivity properties.
+     */
+    private final Properties dbProps = dbCreator(this.getClass()).mkDbProps();
+    
+    private final ICompanionObjectFinder provider = dbCreator(this.getClass()).config.getInstance(ICompanionObjectFinder.class);
+    private final EntityFactory factory = dbCreator(this.getClass()).config.getEntityFactory();
     private final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
     private final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-    private final Collection<PersistedEntityMetadata<?>> entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
-
-    private static boolean domainPopulated = false;
-
-    private static final String baseDir = "./src/test/resources/db";
-
-    private static IDomainDrivenTestCaseConfiguration createConfig() {
-        try {
-
-            final Properties testProps = new Properties();
-            final FileInputStream in = new FileInputStream("src/test/resources/test.properties");
-            testProps.load(in);
-            in.close();
-
-            // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
-            //      This should be modified once correct db schema generation is implemented
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", format("jdbc:h2:%s/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE", baseDir));
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.username", "sa");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.password", "");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.show_sql", "false");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.format_sql", "true");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.hbm2ddl.auto", "create");
-
-            final String configClassName = testProps.getProperty("config-domain");
-            final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
-            return type.newInstance();
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
 
     /**
      * Should be implemented in order to provide domain driven data population.
@@ -105,156 +106,20 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
      */
     protected abstract List<Class<? extends AbstractEntity<?>>> domainEntityTypes();
 
-    @AfterClass
-    public final static void removeDbSchema() {
-        domainPopulated = false;
-        dataScript.clear();
-        truncateScript.clear();
-    }
-
     @Before
     public final void beforeTest() throws Exception {
-        if (useSavedDataPopulationScript() && saveDataPopulationScriptToFile()) {
-            throw new IllegalStateException("useSavedDataPopulationScript() && saveDataPopulationScriptToFile() should not be true at the same time.");
-        }
-
-        final Connection conn = createConnection();
-        Optional<Exception> raisedEx = Optional.empty();
-
-        if (domainPopulated) {
-            // apply data population script
-            logger.debug("Executing data population script.");
-            exec(dataScript, conn);
-        } else {
-            try {
-                if (useSavedDataPopulationScript()) {
-                    restoreDataFromFile(conn);
-                }
-                populateDomain();
-            } catch (final Exception ex) {
-                raisedEx = Optional.of(ex);
-                ex.printStackTrace();
-            }
-
-            // record data population statements
-            if (!useSavedDataPopulationScript()) {
-                recordDataPopulationScript(conn);
-            }
-            domainPopulated = true;
-        }
-
-        conn.close();
-
-        if (raisedEx.isPresent()) {
-            domainPopulated = false;
-            throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
-        }
-
+        dbCreator(this.getClass()).populateOrRestoreData(this, true, dbProps);
     }
-
-    private void restoreDataFromFile(final Connection conn) throws Exception {
-        dataScript.clear();
-        final File dataPopulationScriptFile = new File(dataScriptFile);
-        if (!dataPopulationScriptFile.exists()) {
-            throw new IllegalStateException(format("File %s with data population script is missing.", dataScriptFile));
-        }
-        dataScript.addAll(Files.readLines(dataPopulationScriptFile, StandardCharsets.UTF_8));
-
-        truncateScript.clear();
-        final File truncateTablesScriptFile = new File(truncateScriptFile);
-        if (!truncateTablesScriptFile.exists()) {
-            throw new IllegalStateException(format("File %s with table truncation script is missing.", truncateTablesScriptFile));
-        }
-        truncateScript.addAll(Files.readLines(truncateTablesScriptFile, StandardCharsets.UTF_8));
-
-        exec(dataScript, conn);
-    }
-
-    private void recordDataPopulationScript(final Connection conn) throws Exception {
-        final Statement st = conn.createStatement();
-        final ResultSet set = st.executeQuery("SCRIPT");
-        while (set.next()) {
-            final String result = set.getString(1).trim();
-            final String upperCasedResult = result.toUpperCase();
-            if (!upperCasedResult.startsWith("INSERT INTO PUBLIC.UNIQUE_ID")
-                    && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {
-                // resultant script should NOT be UPPERCASED in order not to upperCase for e.g. values,
-                // that was perhaps lover cased while populateDomain() invocation was performed
-                dataScript.add(result.replace("\n", " ").replace("\r", " "));
-            }
-        }
-        set.close();
-        st.close();
-
-        // create truncate statements
-        for (final PersistedEntityMetadata<?> entry : entityMetadatas) {
-            truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
-        }
-
-        if (saveDataPopulationScriptToFile()) {
-            // flush data population script to file for later use
-            try (PrintWriter out = new PrintWriter(dataScriptFile, StandardCharsets.UTF_8.name())) {
-                final StringBuilder builder = new StringBuilder();
-                for (final Iterator<String> iter = dataScript.iterator(); iter.hasNext();) {
-                    final String line = iter.next();
-                    builder.append(line);
-                    if (iter.hasNext()) {
-                        builder.append("\n");
-                    }
-                }
-                out.print(builder.toString());
-            }
-
-            // flush table truncation script to file for later use
-            try (PrintWriter out = new PrintWriter(truncateScriptFile, StandardCharsets.UTF_8.name())) {
-                final StringBuilder builder = new StringBuilder();
-                for (final Iterator<String> iter = truncateScript.iterator(); iter.hasNext();) {
-                    final String line = iter.next();
-                    builder.append(line);
-                    if (iter.hasNext()) {
-                        builder.append("\n");
-                    }
-                }
-                out.print(builder.toString());
-            }
-        }
-
-    }
-
-    private final String dataScriptFile = format("%s/data-%s.script", baseDir, getClass().getName());
-    private final String truncateScriptFile = format("%s/truncate-%s.script", baseDir, getClass().getName());
-
-    private void exec(final List<String> statements, final Connection conn) throws SQLException {
-        final Statement st = conn.createStatement();
-        for (final String stmt : statements) {
-            st.execute(stmt);
-        }
-        st.close();
-    }
-
+   
     @After
     public final void afterTest() throws Exception {
-        exec(truncateScript, createConnection());
-        logger.debug("Executing tables truncation script.");
+        dbCreator(this.getClass()).clearData(dbProps);
     }
 
-    private static Connection createConnection() {
-        final String url = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.url");
-        final String jdbcDriver = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.driver_class");
-        final String user = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.username");
-        final String passwd = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.password");
-
-        try {
-            Class.forName(jdbcDriver);
-            return DriverManager.getConnection(url, user, passwd);
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
+   
     @Override
     public final <T> T getInstance(final Class<T> type) {
-        return config.getInstance(type);
+        return dbCreator(this.getClass()).config.getInstance(type);
     }
 
     @Override

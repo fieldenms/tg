@@ -1646,7 +1646,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final TgWorkshop workshop1 = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
         final TgWorkshop workshop2 = save(new_(TgWorkshop.class, "WSHOP2", "Workshop 2"));
 
-        final TgBogieLocation location = config.getEntityFactory().newEntity(TgBogieLocation.class);
+        final TgBogieLocation location = co(TgBogieLocation.class).new_();
         location.setWorkshop(workshop1);
         final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
         final TgBogie bogie2 = save(new_(TgBogie.class, "BOGIE2", "Bogie 2"));
