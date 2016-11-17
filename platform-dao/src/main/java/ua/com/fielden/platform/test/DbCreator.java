@@ -41,14 +41,16 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
 
     private final Collection<PersistedEntityMetadata<?>> entityMetadatas;
     public final IDomainDrivenTestCaseConfiguration config;
-    private final Properties hbc = new Properties();
+    private final Properties defaultDbProps; // mainly used for db creation and population at the time of loading the test case classes
+    
+    private final Class<T> testCaseType;
 
     public DbCreator(final Class<T> testCaseType) {
-        config = createConfig(testCaseType, hbc);
+        this.testCaseType = testCaseType;
+        defaultDbProps = mkDbProps();
+        config = createConfig(testCaseType, mkDbProps());
         entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
     }
-
-    private boolean domainPopulated = false;
 
     private static final String baseDir = "./src/test/resources/db";
 
@@ -60,13 +62,7 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
             testProps.load(in);
             in.close();
 
-            // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
-            //      This should be modified once correct db schema generation is implemented
-            hbc.setProperty("hibernate.connection.url", format("jdbc:h2:%s/test_domain_db_for_%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", baseDir, testCaseType.getSimpleName()));
-            hbc.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
             hbc.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-            hbc.setProperty("hibernate.connection.username", "sa");
-            hbc.setProperty("hibernate.connection.password", "");
             hbc.setProperty("hibernate.show_sql", "false");
             hbc.setProperty("hibernate.format_sql", "true");
             hbc.setProperty("hibernate.hbm2ddl.auto", "create");
@@ -79,40 +75,54 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
             throw new IllegalStateException(format("Could not create a configuration for test case [%s]", testCaseType.getSimpleName()), e);
         }
     }
-
-    // TODO used to called from @AfterClass... is this really needed?
-    public final void removeDbSchema() {
-        domainPopulated = false;
-        dataScript.clear();
-        truncateScript.clear();
+    
+    /**
+     * Creates db connectivity properties.
+     * The database name is generated based on the test class name and the current thread id.
+     * 
+     * @return
+     */
+    public final Properties mkDbProps() {
+        final Properties dbProps = new Properties();
+        // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
+        //      This should be modified once correct db schema generation is implemented
+        dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s/test_domain_db_for_%s_%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", baseDir, testCaseType.getSimpleName(), Thread.currentThread().getId()));
+        dbProps.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
+        dbProps.setProperty("hibernate.connection.username", "sa");
+        dbProps.setProperty("hibernate.connection.password", "");
+        return dbProps;
     }
 
-    private final String dataScriptFile(final AbstractDomainDrivenTestCase testCase) { 
-        return format("%s/data-%s.script", baseDir, testCase.getClass().getName());
+    private final String dataScriptFile() { 
+        return format("%s/data-%s.script", baseDir, testCaseType.getSimpleName());
     }
     
-    private final String truncateScriptFile(final AbstractDomainDrivenTestCase testCase) {
-        return format("%s/truncate-%s.script", baseDir, testCase.getClass().getName());
+    private final String truncateScriptFile() {
+        return format("%s/truncate-%s.script", baseDir, testCaseType.getSimpleName());
     }
 
+    public final DbCreator<T> populateOrRestoreData(final AbstractDomainDrivenTestCase testCase, final boolean restoreData) throws Exception {
+        return populateOrRestoreData(testCase, restoreData, defaultDbProps);
+    }
     
-    public final void beforeTest(final AbstractDomainDrivenTestCase testCase) throws Exception {
+    public final DbCreator<T> populateOrRestoreData(final AbstractDomainDrivenTestCase testCase, final boolean restoreData, final Properties dbProps) throws Exception {
         if (testCase.useSavedDataPopulationScript() && testCase.saveDataPopulationScriptToFile()) {
             throw new IllegalStateException("useSavedDataPopulationScript() && saveDataPopulationScriptToFile() should not be true at the same time.");
         }
 
-        final Connection conn = createConnection(hbc);
+        final Connection conn = createConnection(dbProps);
         Optional<Exception> raisedEx = Optional.empty();
 
-        if (domainPopulated) {
+        if (restoreData) {
             // apply data population script
             logger.debug("Executing data population script.");
             exec(dataScript, conn);
         } else {
             try {
                 if (testCase.useSavedDataPopulationScript()) {
-                    restoreDataFromFile(testCase, conn);
+                    restoreDataFromFile(conn);
                 }
+                // need to call populateDomain, which might have some initialization even if the actual data saving does not need to occur
                 testCase.populateDomain();
             } catch (final Exception ex) {
                 raisedEx = Optional.of(ex);
@@ -121,30 +131,29 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
 
             // record data population statements
             if (!testCase.useSavedDataPopulationScript()) {
-                recordDataPopulationScript(testCase, conn);
+                recordDataPopulationScript(testCase.saveDataPopulationScriptToFile(), conn);
             }
-            domainPopulated = true;
         }
 
         conn.close();
 
         if (raisedEx.isPresent()) {
-            domainPopulated = false;
             throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
         }
 
+        return this;
     }
-
-    private void restoreDataFromFile(final AbstractDomainDrivenTestCase testCase, final Connection conn) throws Exception {
+    
+    private void restoreDataFromFile(final Connection conn) throws Exception {
         dataScript.clear();
-        final File dataPopulationScriptFile = new File(dataScriptFile(testCase));
+        final File dataPopulationScriptFile = new File(dataScriptFile());
         if (!dataPopulationScriptFile.exists()) {
-            throw new IllegalStateException(format("File %s with data population script is missing.", dataScriptFile(testCase)));
+            throw new IllegalStateException(format("File %s with data population script is missing.", dataScriptFile()));
         }
         dataScript.addAll(Files.readLines(dataPopulationScriptFile, StandardCharsets.UTF_8));
 
         truncateScript.clear();
-        final File truncateTablesScriptFile = new File(truncateScriptFile(testCase));
+        final File truncateTablesScriptFile = new File(truncateScriptFile());
         if (!truncateTablesScriptFile.exists()) {
             throw new IllegalStateException(format("File %s with table truncation script is missing.", truncateTablesScriptFile));
         }
@@ -153,7 +162,7 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
         exec(dataScript, conn);
     }
 
-    private void recordDataPopulationScript(final AbstractDomainDrivenTestCase testCase, final Connection conn) throws Exception {
+    private void recordDataPopulationScript(final boolean shouldSaveDataPopulationScriptToFile, final Connection conn) throws Exception {
         final Statement st = conn.createStatement();
         final ResultSet set = st.executeQuery("SCRIPT");
         while (set.next()) {
@@ -174,9 +183,9 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
             truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
         }
 
-        if (testCase.saveDataPopulationScriptToFile()) {
+        if (shouldSaveDataPopulationScriptToFile) {
             // flush data population script to file for later use
-            try (PrintWriter out = new PrintWriter(dataScriptFile(testCase), StandardCharsets.UTF_8.name())) {
+            try (PrintWriter out = new PrintWriter(dataScriptFile(), StandardCharsets.UTF_8.name())) {
                 final StringBuilder builder = new StringBuilder();
                 for (final Iterator<String> iter = dataScript.iterator(); iter.hasNext();) {
                     final String line = iter.next();
@@ -189,7 +198,7 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
             }
 
             // flush table truncation script to file for later use
-            try (PrintWriter out = new PrintWriter(truncateScriptFile(testCase), StandardCharsets.UTF_8.name())) {
+            try (PrintWriter out = new PrintWriter(truncateScriptFile(), StandardCharsets.UTF_8.name())) {
                 final StringBuilder builder = new StringBuilder();
                 for (final Iterator<String> iter = truncateScript.iterator(); iter.hasNext();) {
                     final String line = iter.next();
@@ -212,8 +221,13 @@ public class DbCreator<T extends AbstractDomainDrivenTestCase> {
         st.close();
     }
 
-    public final void afterTest() throws Exception {
-        exec(truncateScript, createConnection(hbc));
+    public final void clearData() throws Exception {
+        exec(truncateScript, createConnection(defaultDbProps));
+        logger.debug("Executing tables truncation script.");
+    }
+    
+    public final void clearData(final Properties dbProps) throws Exception {
+        exec(truncateScript, createConnection(dbProps));
         logger.debug("Executing tables truncation script.");
     }
 
