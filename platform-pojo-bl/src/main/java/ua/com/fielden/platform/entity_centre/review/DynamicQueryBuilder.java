@@ -76,7 +76,7 @@ public class DynamicQueryBuilder {
 
         private final Class<?> entityClass;
         private final String propertyName, conditionBuildingName;
-        private final boolean critOnly, single;
+        private final boolean critOnly, single, aECritOnlyChild;
         private final Class<?> type;
         /** The type of collection which contain this property. If this property is not in collection hierarchy it should be null. */
         private final Class<? extends AbstractEntity<?>> collectionContainerType, collectionContainerParentType;
@@ -134,6 +134,10 @@ public class DynamicQueryBuilder {
 
             final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
             this.critOnly = critAnnotation != null;
+
+            final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
+            final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(propertyName) ? PropertyTypeDeterminator.penultAndLast(propertyName).getKey() : null;
+            this.aECritOnlyChild = !isEntityItself && PropertyTypeDeterminator.isDotNotation(propertyName) && AnnotationReflector.isAnnotationPresentInHierarchy(CritOnly.class, this.entityClass, penultPropertyName);
             this.single = isCritOnly() && Type.SINGLE.equals(critAnnotation.value());
         }
 
@@ -248,7 +252,7 @@ public class DynamicQueryBuilder {
          * @return
          */
         public boolean shouldBeIgnored() {
-            return isCritOnly() || isEmpty() && !TRUE.equals(orNull);
+            return isCritOnly() || isAECritOnlyChild() || isEmpty() && !TRUE.equals(orNull);
         }
 
         /**
@@ -350,6 +354,15 @@ public class DynamicQueryBuilder {
          */
         public boolean isCritOnly() {
             return critOnly;
+        }
+        
+        /**
+         * Returns <code>true</code> if property is a child of crit-only AE property (dot-notated), <code>false</code> otherwise.
+         *
+         * @return
+         */
+        public boolean isAECritOnlyChild() {
+            return aECritOnlyChild;
         }
 
         /**
