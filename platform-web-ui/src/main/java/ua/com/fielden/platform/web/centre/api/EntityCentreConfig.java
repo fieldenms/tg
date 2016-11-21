@@ -469,7 +469,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     public Optional<Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>>> getQueryEnhancerConfig() {
         return Optional.ofNullable(queryEnhancerConfig);
     }
-    
+
     public Optional<Pair<Class<?>, Class<?>>> getGeneratorTypes() {
         return Optional.ofNullable(generatorTypes);
     }
@@ -723,6 +723,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                     .map(resultSetProp -> resultSetProp.propAction.get())
                     .collect(Collectors.toList())
                     .get(actionNumber);
+        } else if (FunctionalActionKind.INSERTION_POINT == actionKind) {
+            if (!getInsertionPointActions().isPresent()) {
+                throw new IllegalArgumentException("No insertion point exists.");
+            }
+            return getInsertionPointActions().get().get(actionNumber);
         } // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
     }
