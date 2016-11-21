@@ -29,7 +29,6 @@ mark element with tooltip-text attribute.
             properties: {
                 triggerManual: {
                     type: String,
-                    value: false,
                     observer: "_triggerManualChanged"
                 },
 
@@ -58,6 +57,8 @@ mark element with tooltip-text attribute.
                 this._hideTooltip = this._hideTooltip.bind(this);
                 //Register mouse listeners for mouse events     
                 this.addEventListener('mousemove', this._handleMouseMove);
+                //Set the default values for properties.
+                this.triggerManual = false;
             },
 
             /**
