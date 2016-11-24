@@ -122,12 +122,13 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     ////////////////////// 1.4. Annotation related logic //////////////////////
     @Override
     @Test
-    public void test_that_children_of_crit_only_AE_or_AE_collection_property_are_excluded() {
+    public void test_that_children_of_crit_only_AE_or_AE_collection_property_are_NOT_excluded() {
     }
 
     @Test
     public void test_that_crit_only_properties_are_excluded() {
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 assertTrue("Crit-only property should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
             }
@@ -169,6 +170,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     @Test
     public void test_that_first_tick_for_properties_of_entity_with_AE_key_type_are_disabled() {
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
                     assertTrue("Property of 'entity with AE key' type should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
@@ -182,6 +184,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
         // range types (except dates)
         // integer
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
                     assertTrue("Property should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
@@ -193,6 +196,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     @Test
     public void test_that_first_tick_for_properties_of_entity_or_date_or_boolean_or_string_or_integer_are_NOT_disabled() {
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
                     assertFalse("Property should be not disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
@@ -204,6 +208,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     @Test
     public void test_that_first_tick_for_integer_EXPR_calculated_properties_originated_from_date_property_are_enabled() {
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 ((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().addCalculatedProperty(MasterEntity.class, name, "YEAR(dateProp)", "Calc date prop", "Desc", CalculatedPropertyAttribute.NO_ATTR, "dateProp");
                 ((AbstractAnalysisDomainTreeRepresentation) dtm()).parentCentreDomainTreeManager().getEnhancer().apply();
@@ -247,6 +252,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_second_tick_for_all_properties_is_disabled() {
         // TODO check whether it's correct
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
                     assertTrue("Property should be disabled.", dtm().getSecondTick().isDisabledImmutably(MasterEntity.class, name));
@@ -316,6 +322,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     public void test_that_excluded_properties_actions_for_second_ticks_cause_exceptions_for_all_specific_logic() {
         final String message = "Excluded property should cause IllegalArgument exception.";
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 // isOrderingDisabled/disableOrdering
                 try {
@@ -358,6 +365,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
 
         // Alter DEFAULT and check //
         allLevels(new IAction() {
+            @Override
             public void action(final String name) {
                 if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
                     dtm().getSecondTick().disableOrderingImmutably(MasterEntity.class, name);
@@ -432,6 +440,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
     @Test
     public void test_that_checked_properties_first_tick_are_actually_disabled() {
         allLevelsWithoutCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
                     assertFalse("By contract of 'disabled' it should NOT be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
@@ -439,6 +448,7 @@ public class AbstractAnalysisDomainTreeRepresentationTest extends AbstractDomain
             }
         }, "checkedManuallyProp");
         allLevelsWithCollections(new IAction() {
+            @Override
             public void action(final String name) {
                 if (!dtm().isExcludedImmutably(MasterEntity.class, name)) {
                     assertTrue("By contract of 'disabled' it should be disabled.", dtm().getFirstTick().isDisabledImmutably(MasterEntity.class, name));
