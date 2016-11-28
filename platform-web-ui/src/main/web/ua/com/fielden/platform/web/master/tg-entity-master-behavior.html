@@ -325,7 +325,7 @@
                     // isRefreshingProcess should be 'true' to reset old binding information in case where 'continuously created' entity arrive
                     var newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, isContinuouslyCreated);
                     
-                    if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                    if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
                         newBindingEntity["@@touchedProps"] = { names: [], counts: [] };
                     }
@@ -335,7 +335,7 @@
                         this.postSaved.bind(this)(potentiallySavedOrNewEntity, newBindingEntity);
                     }
 
-                    if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                    if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after successful save
                         this._continuations = {};
                         
@@ -436,7 +436,7 @@
                         this.enableView();
                     }
 
-                    return potentiallySavedOrNewEntity.isValidWithoutSavingException();
+                    return potentiallySavedOrNewEntity.isValidWithoutException();
                 }).bind(self);
 
                 self._postSavedDefaultError = (function (errorResult) {

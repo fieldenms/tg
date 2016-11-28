@@ -183,15 +183,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             resultantCustomObject.put("summary", page.summary());
             data = page.data();
         } else if (RunActions.REFRESH.toString().equals(action)) {
-            final Pair<IPage<T>, T> refreshedData = criteriaEntity.getPageWithSummaries((Integer) customObject.get("@@pageNumber"), pageCapacity);
+            final Integer pageNumber = (Integer) customObject.get("@@pageNumber");
+            final Pair<IPage<T>, T> refreshedData = criteriaEntity.getPageWithSummaries(pageNumber, pageCapacity);
             page = refreshedData.getKey();
             data = page.data();
             resultantCustomObject.put("summary", refreshedData.getValue());
         } else if (RunActions.NAVIGATE.toString().equals(action)) {
+            final Integer pageNumber = (Integer) customObject.get("@@pageNumber");
             try {
-                page = criteriaEntity.getPage((Integer) customObject.get("@@pageNumber"), pageCapacity);
+                page = criteriaEntity.getPage(pageNumber, pageCapacity);
             } catch (final Exception e) {
-                final Pair<IPage<T>, T> navigatedData = criteriaEntity.getPageWithSummaries((Integer) customObject.get("@@pageNumber"), pageCapacity);
+                final Pair<IPage<T>, T> navigatedData = criteriaEntity.getPageWithSummaries(pageNumber, pageCapacity);
                 page = navigatedData.getKey();
                 resultantCustomObject.put("summary", navigatedData.getValue());
             }
@@ -200,10 +202,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             page = null;
             data = criteriaEntity.getAllEntities();
         }
-        customObject.remove("@@pageCapacity");
-        customObject.remove("@@exportAll");
-        customObject.remove("@@pageNumber");
-        customObject.remove("@@pageCount");
         final ArrayList<Object> resultEntities = new ArrayList<Object>(data);
         resultantCustomObject.put("resultEntities", resultEntities);
         resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());

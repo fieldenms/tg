@@ -379,7 +379,7 @@
 
                 self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-                    if (criteriaEntity === null || criteriaEntity.isValid()) {
+                    if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                         if (typeof summary !== 'undefined') {
                             this.retrievedTotals = summary;
                         }
@@ -390,6 +390,10 @@
                                 this._selectedView = 1;
                             }, 100);
                             this._triggerRun = false;
+                        }
+                        if (this.$.selection_criteria._wasRun !== 'yes') {
+                            this.$.selection_criteria._wasRun = 'yes';
+                            console.debug('_wasRun has been changed to: ', this.$.selection_criteria._wasRun);
                         }
                     }
                 }).bind(self);
@@ -442,7 +446,7 @@
                 }).bind(self);
 
                 self._postFunctionalEntitySaved = (function (savingException, potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
-                    if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                    if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
                         this.refreshEntities(selectedEntitiesInContext);
                     }

@@ -4,12 +4,15 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.Session;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -22,6 +25,9 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.ISessionEnabled;
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
@@ -226,20 +232,51 @@ public class CriteriaResource extends ServerResource {
             final boolean isSorting = CentreResourceUtils.isSorting(customObject);
             
             final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre;
+            final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity;
+            
             if (isRunning) {
-                final EnhancedCentreEntityQueryCriteria<?, ?> freshCentreAppliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm);
+                freshCentreAppliedCriteriaEntity = CentreResourceUtils.createCriteriaEntity(centreContextHolder.getModifHolder(), companionFinder, critGenerator, miType, gdtm);
                 updatedFreshCentre = freshCentreAppliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
                 
                 // There is a need to validate criteria entity with the check for 'required' properties. If it is not successful -- immediately return result without query running, fresh centre persistence, data generation etc.
                 final Result validationResult = freshCentreAppliedCriteriaEntity.isValid();
                 if (!validationResult.isSuccessful()) {
-                    logger.debug("CRITERIA_RESOURCE: run finished.");
-                    return restUtil.rawListJSONRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(miType, gdtm, updatedFreshCentre, new LinkedHashMap<>()));
+                    logger.debug("CRITERIA_RESOURCE: run finished (validation failed).");
+                    final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, gdtm, companionFinder, critGenerator);
+                    return restUtil.rawListJSONRepresentation(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(miType, gdtm, updatedFreshCentre, new LinkedHashMap<>(), staleCriteriaMessage));
                 }
-                
-                CentreUpdater.initAndCommit(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME, updatedFreshCentre);
             } else {
                 updatedFreshCentre = null;
+                freshCentreAppliedCriteriaEntity = null;
+            }
+            
+            // if the run() invocation warrants data generation (e.g. it has nothing to do with sorting)
+            // then for an entity centre configuration check if a generator was provided
+            final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
+            final boolean generationShouldOccur = isRunning && !isSorting && createdByConstraintShouldOccur;
+            if (generationShouldOccur) {
+                // obtain the type for entities to be generated
+                final Class<? extends AbstractEntity<?>> generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();
+                
+                // create and execute a generator instance
+                final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
+                final Result generationResult = generator.gen(generatorEntityType,
+                        freshCentreAppliedCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
+                                (final MetaProperty<?> mp) -> mp.getName(), 
+                                (final MetaProperty<?> mp) -> Optional.ofNullable(mp.getValue()))));
+                // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
+                // otherwise, proceed with the request handling further to actually query the data
+                // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
+                if (!generationResult.isSuccessful()) {
+                    logger.debug("CRITERIA_RESOURCE: run finished (generation failed).");
+                    final String staleCriteriaMessage = CriteriaResource.createStaleCriteriaMessage((String) centreContextHolder.getModifHolder().get("@@wasRun"), updatedFreshCentre, miType, gdtm, companionFinder, critGenerator);
+                    final Result result = generationResult.copyWith(new ArrayList<>(Arrays.asList(freshCentreAppliedCriteriaEntity, updateResultantCustomObject(miType, gdtm, updatedFreshCentre, new LinkedHashMap<>(), staleCriteriaMessage))));
+                    return restUtil.resultJSONRepresentation(result);
+                }
+            }
+            
+            if (isRunning) {
+                CentreUpdater.initAndCommit(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME, updatedFreshCentre);
             }
             
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME);
@@ -256,33 +293,6 @@ public class CriteriaResource extends ServerResource {
                     centre.getQueryEnhancerConfig(),
                     previouslyRunCriteriaEntity);
             
-            // if the run() invocation warrants data generation (e.g. it has nothing to do with sorting)
-            // then for an entity centre configuration check if a generator was provided
-            final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
-            final boolean generationShouldOccur = isRunning && !isSorting && createdByConstraintShouldOccur;
-            if (generationShouldOccur) {
-                // obtain the type for entities to be generated
-                final Class<? extends AbstractEntity<?>> generatorEntityType = (Class<? extends AbstractEntity<?>>) centre.getGeneratorTypes().get().getKey();
-                // delete any previously generated for the current user data using a companion for an associated with the generator entity type
-                final IEntityDao co = companionFinder.find(generatorEntityType);
-                co.batchDelete(
-                    select(generatorEntityType).where().prop("createdBy").eq().val(userProvider.getUser()).model()
-                );
-                
-                // create and execute a generator instance
-                final IGenerator generator = centre.createGeneratorInstance(centre.getGeneratorTypes().get().getValue());
-                final Result generationResult = generator.gen(generatorEntityType,
-                        previouslyRunCriteriaEntity.nonProxiedProperties().collect(toLinkedHashMap(
-                                (final MetaProperty<?> mp) -> mp.getName(), 
-                                (final MetaProperty<?> mp) -> Optional.ofNullable(mp.getValue()))));
-                // if the data generation was unsuccessful based on the returned Result value then stop any further logic and return the obtained result
-                // otherwise, proceed with the request handling further to actually query the data
-                // in most cases, the generated and queried data would be represented by the same entity and, thus, the final query needs to be enhanced with user related filtering by property 'createdBy'
-                if (!generationResult.isSuccessful()) {
-                    throw generationResult;
-                }
-            }
-            
             final Pair<Map<String, Object>, List<?>> pair =
                     CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithResult(
                             customObject,
@@ -296,15 +306,10 @@ public class CriteriaResource extends ServerResource {
                             // The query will be enhanced with condition createdBy=currentUser if createdByConstraintShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
                             createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(CentreResourceUtils.getEntityType(miType)) ? Optional.of(userProvider.getUser()) : Optional.empty());
             if (isRunning) {
-                updateResultantCustomObject(miType, gdtm, updatedFreshCentre, pair.getKey());
+                updateResultantCustomObject(miType, gdtm, previouslyRunCentre, pair.getKey(), null);
             }
 
-            if (pair.getValue() == null) {
-                logger.debug("CRITERIA_RESOURCE: run finished.");
-                return restUtil.rawListJSONRepresentation(isRunning ? previouslyRunCriteriaEntity : null, pair.getKey());
-            }
-
-            //Running the rendering customiser for result set of entities.
+            // Running the rendering customiser for result set of entities.
             final Optional<IRenderingCustomiser<?>> renderingCustomiser = centre.getRenderingCustomiser();
             if (renderingCustomiser.isPresent()) {
                 final IRenderingCustomiser<?> renderer = renderingCustomiser.get();
@@ -344,12 +349,18 @@ public class CriteriaResource extends ServerResource {
      * @param gdtm
      * @param updatedFreshCentre
      * @param resultantCustomObject
+     * @param staleCriteriaMessage
+     * 
      * @return
      */
-    private static Map<String, Object> updateResultantCustomObject(final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre, final Map<String, Object> resultantCustomObject) {
+    private static Map<String, Object> updateResultantCustomObject(final Class<? extends MiWithConfigurationSupport<?>> miType, final IGlobalDomainTreeManager gdtm, final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre, final Map<String, Object> resultantCustomObject, final String staleCriteriaMessage) {
         resultantCustomObject.put("isCentreChanged", CentreResourceUtils.isFreshCentreChanged(updatedFreshCentre, CentreUpdater.updateCentre(gdtm, miType, CentreUpdater.SAVED_CENTRE_NAME)));
         resultantCustomObject.put("metaValues", CentreResourceUtils.createCriteriaMetaValues(updatedFreshCentre, CentreResourceUtils.getEntityType(miType)));
-        resultantCustomObject.put("staleCriteriaMessage", null);
+        
+        // Resultant custom object contains information whether selection criteria is stale (config button colour).
+        // Such information should be updated just before returning resultant custom object to the client.
+        resultantCustomObject.put("staleCriteriaMessage", staleCriteriaMessage);
+        
         return resultantCustomObject;
     }
 

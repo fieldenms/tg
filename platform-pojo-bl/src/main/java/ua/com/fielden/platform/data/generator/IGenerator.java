@@ -27,7 +27,8 @@ public interface IGenerator<T extends AbstractEntity<?> & WithCreatedByUser<T>> 
     /**
      * Kicks in the data generation algorithm. 
      * The implementation of this method should most likely be annotate with <code>@SessionRequired</code> annotation to establish a database transaction demarcation.
-     * The necessary companion objects should be injected at the constructor level. 
+     * The necessary companion objects should be injected at the constructor level.
+     * Removal of previously generated for current user data should be implemented as part of this method.
      * 
      * @param type -- A class for a type of the data to be generated. 
      * @param params -- A map of parameter/value pairs that is used by the data generation algorithm. Values are wrapped into {@link Optional} to better reflect the fact that some parameters could have no value. At run-time, these parameters are to be provided by the Entity Centre runner, but they can also be conveniently passed in for unit testing purposes.

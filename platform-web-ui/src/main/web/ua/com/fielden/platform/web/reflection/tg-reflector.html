@@ -425,10 +425,10 @@
         }
         
         /**
-         * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occured during saving.
+         * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occured during some server-side process behind the entity (master entity saving, centre selection-crit entity running etc.).
          *
          */
-        Entity.prototype.isValidWithoutSavingException = function () {
+        Entity.prototype.isValidWithoutException = function () {
             return this.isValid() && !this.exceptionOccured();
         }
         
