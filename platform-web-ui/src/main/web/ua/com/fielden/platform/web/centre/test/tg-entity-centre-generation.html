@@ -186,6 +186,135 @@
 
             centre.retrieve();
         });
+        
+        test('first run generation does not occur in case of generator exception', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                
+                assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
+                assert.strictEqual(criteriaEntity.isValid(), true, 'Criteria entity should be valid.');
+                assert.strictEqual(criteriaEntity.isValidWithoutException(), false, 'Criteria entity should be valid, but should have an exception.');
+                assert.strictEqual(criteriaEntity.exceptionOccured().message, 'Can not generate the instance based on current user [SU], choose another user for that.', 'Criteria entity should be valid, but should have an exception.');
+                
+                centre.async(function () {
+                    assert.strictEqual(centre._selectedView, 0, 'The view should not be switched to EGI result-set.');
+                    assert.strictEqual(centre._viewerDisabled, true, 'The viewer button should remain disabled after unsuccessful generation (first RUN).');
+                    assert.strictEqual(centre._runnerDisabled, false, 'The runner button should remain enabled after unsuccessful generation (first RUN).');
+                    
+                    done();
+                }, 200);
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                _changeCentreCriteriaWithAction(centre, '', '', 'SU', '', function () {
+                    centre.run();
+                });
+            };
+
+            centre.retrieve();
+        });
+        
+        test('consequent generation exceptions does not alter previous centre results and ability to interact with them', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                
+                assert.strictEqual(resultEntities.length, 25, 'The count of resultant entities for the centre should be 25 after generation.');
+                
+                // go to selection criteria
+                centre._activateSelectionCriteriaView();
+                
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+
+                    assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
+                    assert.strictEqual(criteriaEntity.isValid(), true, 'Criteria entity should be valid.');
+                    assert.strictEqual(criteriaEntity.isValidWithoutException(), false, 'Criteria entity should be valid, but should have an exception.');
+                    assert.strictEqual(criteriaEntity.exceptionOccured().message, 'Can not generate the instance based on current user [SU], choose another user for that.', 'Criteria entity should be valid, but should have an exception.');
+                    
+                    centre.async(function () {
+                        assert.strictEqual(centre._selectedView, 0, 'The view should not be switched to EGI result-set.');
+                        assert.strictEqual(centre._viewerDisabled, false, 'The viewer button should remain enabled after unsuccessful generation (RUN after any successful RUN).');
+                        assert.strictEqual(centre._runnerDisabled, false, 'The runner button should remain enabled after unsuccessful generation (RUN after any successful RUN).');
+                        assert.ok(centre.$.selection_criteria.staleCriteriaMessage, 'Criteria should be stale.');
+                        
+                        var firstTime = false;
+                        
+                        centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                            old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                            
+                            assert.strictEqual(resultEntities.length, 25, 'The count of resultant entities for the centre should remain 25 after page refresh.');
+                            
+                            // master opening and saving of its entity should perform well after generation exception on previous centre results
+                           	if (firstTime === false) {
+                                   assert.strictEqual(resultEntities.length, 25, 'The count of resultant entities for the centre should be 25.');
+                               	var entity = resultEntities[0];
+                                   
+                                   var editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
+                                   editAction.currentEntity = entity;
+                                   var value = editAction._run();
+                                   
+                                   editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                                       console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
+                                       
+                                       var outerMaster = editAction._masterReferenceForTesting;
+                                       var innerMaster = outerMaster.$$('tg-tggeneratedentity-master');
+                                       var loader = outerMaster.$.loader;
+                                       
+                                       outerMaster.addEventListener('after-load', function (event) {
+                                           var embeddedMaster = event.detail;
+                                           
+                           		        var edProperty = embeddedMaster.$.editor_4_desc;
+                           		        
+                           		        embeddedMaster.postSaved = function (potentiallySavedOrNewEntity, bindingEntity) {
+                           	                assert.strictEqual(edProperty._editingValue, 'new description', "_editingValue should be correct.");
+                           	                assert.strictEqual(edProperty._commValue, 'new description', "_commValue should be correct.");
+                           	                assert.strictEqual(edProperty._acceptedValue, 'new description', "_acceptedValue should be correct.");
+                           	                
+                           	                assert.strictEqual(potentiallySavedOrNewEntity.get("desc"), 'new description', "'property' value should be correct.");
+
+                           	                done();
+                           	            };
+                                           
+                                           embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+                           	                edProperty._editingValue = 'new description';
+                           	                edProperty.commit();
+                           	                embeddedMaster.save();
+                           	            };
+                                       });
+                                   }
+                                   
+                                   firstTime = true;
+                           	} else {
+                           	    assert.strictEqual(resultEntities.length, 25, 'The count of refreshed entities for the centre should be 25.');
+                           	}
+                        }
+                        
+                        // go to selection criteria
+                        centre._activateSelectionCriteriaView();
+                        
+                        _changeCentreCriteriaWithAction(centre, '', '', 'SU', 'A*', function () {
+                            centre.currentPage();
+                        });
+                    }, 200);
+                }
+                
+                _changeCentreCriteriaWithAction(centre, '', '', 'SU', 'A*', function () {
+                    centre.run();
+                });
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                _changeCentreCriteriaWithAction(centre, '', '', 'DEMO', 'A*', function () {
+                    centre.run();
+                });
+            };
+
+            centre.retrieve();
+        });
     });
     </script>
 
