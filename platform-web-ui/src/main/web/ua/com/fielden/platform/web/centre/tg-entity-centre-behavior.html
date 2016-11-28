@@ -379,7 +379,7 @@
 
                 self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-                    if (criteriaEntity === null || criteriaEntity.isValidWithoutSavingException()) {
+                    if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                         if (typeof summary !== 'undefined') {
                             this.retrievedTotals = summary;
                         }
@@ -446,7 +446,7 @@
                 }).bind(self);
 
                 self._postFunctionalEntitySaved = (function (savingException, potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
-                    if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                    if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
                         this.refreshEntities(selectedEntitiesInContext);
                     }
