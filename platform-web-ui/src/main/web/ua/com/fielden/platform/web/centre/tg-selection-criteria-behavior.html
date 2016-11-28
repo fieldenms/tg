@@ -136,7 +136,8 @@
                 },
 
                 /**
-                 * The current number of pages after the firstPage has been retrieved. To update this please invoke run() action one more time.
+                 * The current number of pages after the data has been retrieved from the server.
+                 * This updating occurs not only during Run, but also during Refresh and Page Navigate actions.
                  */
                 pageCount: {
                     type: Number,
@@ -145,6 +146,9 @@
 
                 /**
                  * The current page number.
+                 *
+                 * Refresh and Page Navigate processes are heavily based on this number (it goes to server), however, this number could perhaps be 
+                 * corrected after data arrival from the server.
                  */
                 pageNumber: {
                     type: Number,
@@ -208,7 +212,7 @@
                         self._provideExceptionOccured(criteriaEntity, exceptionOccured);
                         var customObject = self._reflector().customObject(entityAndCustomObject);
                         var resultEntities = customObject.resultEntities || [];
-                        var pageCount = customObject.pageCount; /* || null; */
+                        var pageCount = customObject.pageCount;
                         var pageNumber = customObject.pageNumber;
                         var metaValues = customObject.metaValues;
                         var centreChanged = customObject.isCentreChanged;
@@ -234,8 +238,7 @@
                     if (typeof pageCount !== 'undefined') {
                         this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
                     }
-                    // custom external action
-                    if (typeof pageNumber !== 'undefined' && pageNumber !== null) {
+                    if (typeof pageNumber !== 'undefined') {
                         this.pageNumber = pageNumber;
                     }
                     this.pageNumberUpdated = this.pageNumber;
@@ -445,8 +448,6 @@
             run: function (isSortingAction) {
                 var self = this;
                 this._openToast(null, "Loading data", false, "", true);
-                // this.pageNumber = 0;
-                // this.pageCount = null;
                 return this._execute(RunActions.run, isSortingAction);
             },
 
@@ -610,10 +611,8 @@
                 self._reflector().setCustomProperty(contextHolder, "@@pageCapacity", self.pageCapacity);
                 if (self.pageCount !== null) {
                     self._reflector().setCustomProperty(contextHolder, "@@pageNumber", self.pageNumber);
-                    self._reflector().setCustomProperty(contextHolder, "@@pageCount", self.pageCount);
                 } else {
                     self._reflector().removeCustomProperty(contextHolder, "@@pageNumber");
-                    self._reflector().removeCustomProperty(contextHolder, "@@pageCount");
                 }
 
                 return contextHolder;
