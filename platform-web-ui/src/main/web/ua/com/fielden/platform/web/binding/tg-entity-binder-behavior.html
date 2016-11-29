@@ -876,6 +876,9 @@
                 originalBindingView["_type"] = entity["_type"];
                 originalBindingView["id"] = entity["id"];
                 originalBindingView["version"] = entity["version"];
+                // this property of the bindingView will hold the reference to fully-fledged entity, 
+                //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 
+                originalBindingView["@@origin"] = entity;
 
                 entity.traverseProperties(function (propertyName) {
                     var fullValue = entity.getOriginal(propertyName);

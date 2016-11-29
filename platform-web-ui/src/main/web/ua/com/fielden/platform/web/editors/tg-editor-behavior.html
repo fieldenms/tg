@@ -332,7 +332,7 @@
             
             observers: [
             	'_recordDefinition(entity, propertyName, _editorValidationMsg)',
-            	'_identifyModification(_editingValue)',
+            	'_identifyModification(_editingValue, originalEntity)',
     		    '_editedPropsChanged(entity.@editedProps)'
 			],
 
@@ -354,9 +354,9 @@
                 }
             },
             
-            _identifyModification: function (_editingValue) {
+            _identifyModification: function (_editingValue, originalEntity) {
                 if (this.reflector().isEntity(this.entity)) {
-                    var _originalEditingValue = this.originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(this.originalEntity, this.propertyName)) : _editingValue;
+                    var _originalEditingValue = originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(originalEntity, this.propertyName)) : _editingValue;
                     var prevEditedProps = this.entity['@editedProps'];
                     var newEditedProps = {};
                     for (var prop in prevEditedProps) {
