@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -1098,6 +1099,7 @@ public class AbstractEntityTest {
         assertNotNull(entity.isValid().isSuccessful());
     }
 
+    @Ignore
     @Test
     public void test_entity_locking_during_its_validation() throws Exception {
         final EntityWithLocableValidation entity = factory.newEntity(EntityWithLocableValidation.class);
