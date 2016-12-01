@@ -467,16 +467,15 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
     
     /**
-     * Removes all validation warnings (not errors) from the propety.
+     * Removes all validation warnings (not errors) from the property.
      */
     @Override
     public synchronized final void clearWarnings() {
         for (final ValidationAnnotation va : validators.keySet()) {
             final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = validators.get(va);
-            for (final Iterator<Result> iter = annotationHandlers.values().iterator(); iter.hasNext(); ) {
-                final Result result = iter.next(); 
-                if (result != null && result.isWarning()) {
-                    iter.remove();
+            for (final Entry<IBeforeChangeEventHandler<T>, Result> handlerAndResult : annotationHandlers.entrySet()) {
+                if (handlerAndResult.getValue() != null && handlerAndResult.getValue().isWarning()) {
+                    annotationHandlers.put(handlerAndResult.getKey(), null);
                 }
             }
         }
