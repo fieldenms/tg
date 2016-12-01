@@ -357,6 +357,7 @@
             _identifyModification: function (_editingValue, originalEntity) {
                 if (this.reflector().isEntity(this.entity)) {
                     var _originalEditingValue = originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(originalEntity, this.propertyName)) : _editingValue;
+                    // console.debug('_bindingEntity (_identifyModification) self = ', this.is, '_editingValue', _editingValue, '_originalEditingValue', _originalEditingValue);
                     var prevEditedProps = this.entity['@editedProps'];
                     var newEditedProps = {};
                     for (var prop in prevEditedProps) {

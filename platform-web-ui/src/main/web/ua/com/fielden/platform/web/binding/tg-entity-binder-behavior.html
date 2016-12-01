@@ -318,6 +318,7 @@
     		
     		_editedPropsChanged: function (editedProps) {
     		    this._editedPropsExist = typeof editedProps === 'undefined' ? false : Object.keys(editedProps).length !== 0;
+    		    // console.debug('_bindingEntity (_editedPropsChanged) self = ', this.is, 'this.$._saveAction = ', (this.$._saveAction ? this.$._saveAction.is : 'undefined'), 'editedProps', editedProps, 'this._editedPropsExist', this._editedPropsExist);
     		},
     		
     		/**
