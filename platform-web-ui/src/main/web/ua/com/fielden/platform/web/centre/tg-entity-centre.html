@@ -169,7 +169,7 @@
         },
 
         _pageSelectionChanged: function (event) {
-            var target = e.target || e.srcElement;
+            var target = event.target || event.srcElement;
             if (target === this.$.views) {
                 var egi = this.querySelector(".custom-egi");
                 var selectionCriteria = this.$.selectionView;
