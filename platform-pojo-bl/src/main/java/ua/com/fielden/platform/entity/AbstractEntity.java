@@ -350,8 +350,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     private transient java.util.Optional<IMetaPropertyFactory> metaPropertyFactory = empty();
 
     /**
-     * Preferred property should be used by custom logic to set what property is from certain perspective is preferred. 
-     * The original requirement for this was due to custom logic driven determination as to what property should be focused by default on an entity master. 
+     * Preferred property should be used by custom logic to set what property is from certain perspective is preferred.
+     * The original requirement for this was due to custom logic driven determination as to what property should be focused by default on an entity master.
      * So, the place where in the application logic an entity was instantiated can determine which of its properties should be focused by default.
      */
     private transient String preferredProperty;
@@ -362,7 +362,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     @SuppressWarnings("unchecked")
     protected AbstractEntity() {
         actualEntityType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.stripIfNeeded(getClass());
-        
+
         changeSupport = new PropertyChangeSupportEx(this);
         properties = new LinkedHashMap<>();
         lock = new ReentrantLock();
@@ -403,7 +403,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 				tmpDerivedFromType = (Class<? extends AbstractEntity<?>>) Class.forName(cleanName);
 			} catch (final ClassNotFoundException e) {
 				e.printStackTrace();
-			} 
+			}
         }
         return tmpDerivedFromType;
 	}
@@ -484,9 +484,9 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         }
 
         // TODO need to carefully consider this bit of logic for comparing ID-only values
-        if (this.isPersistent() && (that.isIdOnlyProxy() || this.isIdOnlyProxy()) && 
-                (!that.isInstrumented() || !that.isDirty()) && 
-                (!this.isInstrumented() || !this.isDirty()) && 
+        if (this.isPersistent() && (that.isIdOnlyProxy() || this.isIdOnlyProxy()) &&
+                (!that.isInstrumented() || !that.isDirty()) &&
+                (!this.isInstrumented() || !this.isDirty()) &&
                 that.getId().equals(this.getId())) {
             return true;
         }
@@ -494,7 +494,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         final Object thatKey = that.getKey();
         return getKey() != null && getKey().equals(thatKey) || getKey() == null && thatKey == null;
     }
-    
+
     @Override
     public String toString() {
         return getKey() != null ? getKey().toString() : null;
@@ -650,7 +650,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 // the cause of type Result should be reported as is
                 if (e.getCause() instanceof Result) {
                     throw (Result) e.getCause();
-                } else { // otherwise wrap the cause in EntityException 
+                } else { // otherwise wrap the cause in EntityException
                     throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e.getCause());
                 }
             } else {
@@ -684,14 +684,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         //logger.debug("Iterating through " + fields.size() + " properties for building corresponding meta-properties.");
         for (final Field field : fields) { // for each property field
             final String propName = field.getName();
-            
+
             Reflector.obtainPropertyAccessor(getType(), propName);
             // determine property type and adjacent virtues
             final Class<?> type = determineType(field);
             //logger.debug("TYPE (" + field.getName() + ") : " + type);
             final boolean isKey = keyMembers.contains(field);
             //logger.debug("IS_KEY (" + field.getName() + ") : " + isKey);
-            
+
             if (Reflector.isPropertyProxied(this, propName)) {
                 properties.put(propName, new MetaProperty(this, field, type, isKey, true, extractDependentProperties(field, fields)));
             } else {
@@ -703,10 +703,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
                     final boolean isCollectional = Collection.class.isAssignableFrom(type);
                     //logger.debug("IS_COLLECTIONAL (" + field.getName() + ") : " + isCollectional);
-    
+
                     final IsProperty isPropertyAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
                     final Class<?> propertyAnnotationType = isPropertyAnnotation.value();
-    
+
                     // perform some early runtime validation whether property was defined correctly
                     // TODO this kind of validation should really be implemented as part of the compilation process
                     if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
@@ -715,7 +715,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                         logger.error(error);
                         throw new EntityDefinitionException(error);
                     }
-    
+
                     final Class<? extends AbstractEntity<?>> entityType = getType();
                     if (isCollectional && isLinkPropertyRequiredButMissing(propName)) {
                         final String error = format("Property [%s] in entity [%s] is collectional, but has missing <b>link property</b> argument, which should be specified as part of annotation IsProperty or through composite key relation.",
@@ -723,7 +723,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                         logger.error(error);
                         throw new EntityDefinitionException(error);
                     }
-    
+
                     if (EntityUtils.isEntityType(type) && EntityUtils.isEntityType(PropertyTypeDeterminator.determinePropertyType(type, KEY))
                             && !Finder.isOne2One_association(entityType, propName)) {
                         final String error = format("Property [%s] in entity [%s] has AE key type, but it does not form correct one2one association due to non-parent type of property key.",
@@ -731,7 +731,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                         logger.error(error);
                         throw new EntityDefinitionException(error);
                     }
-    
+
                     // if setter is annotated then try to instantiate specified validator
                     //logger.debug("Collecting validators for " + field.getName());
                     final Set<Annotation> declatedValidationAnnotations = new HashSet<Annotation>();
@@ -772,10 +772,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         endInitialising();
         //logger.debug("Finished meta construction for type " + getType());
     }
-    
+
     /**
      * A predicate method to identify whether a collectional property requires, but is missing a corresponding <code>link property</code> information.
-     * 
+     *
      * @param propertyName
      * @return
      */
@@ -1071,7 +1071,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         }
         return propertyValidationAnotations;
     }
-    
+
     /**
      * Looks for {@link Unique} annotation.
      *
@@ -1090,7 +1090,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * Looks for {@link Final} annotation.
-     * 
+     *
      * @param field
      * @return
      */
@@ -1112,7 +1112,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         assertInstrumented();
         return Collections.unmodifiableMap(properties);
     }
-    
+
     /**
      * Guarantees to return an instance of {@link MetaProperty} for the specified property name if it exists.
      * Otherwise, throws an exception.
@@ -1126,14 +1126,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         if (mp != null) {
             return mp;
         }
-        
+
         throw new EntityException(format("Meta-data for property [%s] in entity [%s] could not be located.", name, getType().getName()));
     }
-    
+
     /**
      * Returns an empty optional if the specified name represents a proxied property.
-     * Throws {@link EntityException} in case of uninstrumeted entity. 
-     * 
+     * Throws {@link EntityException} in case of uninstrumeted entity.
+     *
      * @param name
      * @return
      */
@@ -1152,7 +1152,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     public final java.util.Optional<MetaProperty<?>> getPropertyOptionally(final String name) {
         if (metaPropertyFactory.isPresent()) {
             final MetaProperty<?> mp = getProperties().get(name);
-            return mp != null ? of(mp) : empty(); 
+            return mp != null ? of(mp) : empty();
         }
         return empty();
     }
@@ -1165,16 +1165,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
             throw new EntityException(format("Meta-properties for this instance of entity [%s] do not exist as it was not instrumented.", getType().getName()));
         }
     }
-    
+
     /**
      * A convenient method to check if this instance is instrumented.
-     * 
+     *
      * @return
      */
     public final boolean isInstrumented() {
         return PropertyTypeDeterminator.isInstrumented(this.getClass());
     }
-    
+
     /**
      * Increases <code>lockCount</code> by one in a thread safe manner.
      */
@@ -1273,14 +1273,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         final java.util.Optional<Result> firstFailure = nonProxiedProperties()
         .filter(mp -> !mp.isValidWithRequiredCheck() && mp.getFirstFailure() != null)
         .findFirst().map(mp -> mp.getFirstFailure());
-        
+
         // returns first failure if exists or successful result if there was no failure.
         return firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
     }
-    
+
     /**
      * Returns either empty or a list of warnings associated with entity's non-proxied properties.
-     * 
+     *
      * @return
      */
     public final List<Warning> warnings() {
@@ -1292,11 +1292,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         .filter(mp -> mp.hasWarnings())
         .map(mp -> mp.getFirstWarning())
         .collect(Collectors.toList());
-        
+
         return warnings;
     }
-    
-    public final boolean hasWarnings() {
+
+    public boolean hasWarnings() {
         if (!isInstrumented()) {
             throw new EntityException(format("Uninstrumented entity [%s] should not be checked for warnings.", getType().getName()));
         }
@@ -1304,13 +1304,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         final java.util.Optional<Boolean> res = nonProxiedProperties()
         .filter(mp -> mp.hasWarnings())
         .findFirst().map(mp -> true);
-        
+
         return res.isPresent();
     }
 
     /**
      * A convenient getter to obtain an entity factory.
-     * 
+     *
      * @return {@link EntityFactory} which created this {@link AbstractEntity}
      */
     public final EntityFactory getEntityFactory() {
@@ -1357,10 +1357,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Any change to a property on an instrumented entity instance leads to its dirtiness.
      * Once a dirty entity is persisted, the dirty state gets reset to <code>false</code>.
-     * 
-     * The dirty state is applicable strictly to instrumented entities. 
+     *
+     * The dirty state is applicable strictly to instrumented entities.
      * Therefore, an exception is thrown if this method is invoked on an uninstrumented instance.
-     * 
+     *
      * @return
      */
     public final boolean isDirty() {
@@ -1380,13 +1380,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     /**
      * A convenient method to obtain only meta-properties representing non-proxied properties.
-     * 
+     *
      * @return
      */
     public Stream<MetaProperty<?>> nonProxiedProperties() {
         return getProperties().values().stream().filter(mp -> !mp.isProxy());
     }
-    
+
     /**
      * A utility method for accessing dirty properties.
      *
@@ -1593,16 +1593,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Returns a list of proxied properties. Could return an empty set.
      * This method should not be final due to the need for interception.
-     * 
+     *
      * @return
      */
     public Set<String> proxiedPropertyNames() {
         return Collections.emptySet();
     }
-    
+
     /**
      * Indicates whether this instance represents a proxied id-only value.
-     * 
+     *
      * @return
      */
     public boolean isIdOnlyProxy() {
