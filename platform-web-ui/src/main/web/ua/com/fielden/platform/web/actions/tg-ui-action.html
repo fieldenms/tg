@@ -561,9 +561,9 @@
             	self._enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
             }
             // enhances it with information of what 'property' was chosen (property result-set actions)
-            if (self.chosenProperty !== null) {
-            	self._enhanceContextWithChosenProperty(context, self.chosenProperty);
-            }
+            // if (self.chosenProperty !== null) {
+            self._enhanceContextWithChosenProperty(context, self.chosenProperty);
+            // }
 			return context;
         },
 

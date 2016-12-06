@@ -68,6 +68,13 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
         assertFalse(PropertyTypeDeterminator.isInstrumented(owner.getClass()));
     }
     
+    @Test
+    public void isIntrumented_is_true_for_proxied_instrumented_entity() {
+        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class, "entityProp");
+        final TgOwnerEntity owner = factory.newEntity(ownerType, 1L);
+        assertTrue(PropertyTypeDeterminator.isInstrumented(owner.getClass()));
+    }
+    
     //////////////////////////////////// isProxied ////////////////////////////////////
     @Test
     public void isProxied_is_false_for_uninstrumented_entity() {

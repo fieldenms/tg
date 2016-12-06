@@ -1503,7 +1503,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
                 try {
                     copy.set(propName, get(propName));
                 } catch (final Exception e) {
-                    logger.trace("Setter for property " + propName + " did not succeed during coping.");
+                    logger.error("Setter for property " + propName + " did not succeed during coping.");
                 }
             }
         });

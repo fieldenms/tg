@@ -5,12 +5,14 @@ import static java.lang.String.format;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 
@@ -30,6 +32,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -98,19 +101,27 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JsonNode uninstrumentedJsonNode = node.get("@uninstrumented");
             final boolean uninstrumented = uninstrumentedJsonNode != null;
 
+            final String[] proxiedProps = properties.stream()
+                    .map(cachedProp -> cachedProp.field().getName())
+                    .filter(prop -> node.get(prop) == null)
+                    .collect(Collectors.toList())
+                    .toArray(new String[] {});
+            if (!propertyDescriptorType && proxiedProps.length > 0) {
+                logger.error(String.format("New proxy type will be created for [%s] with proxied properties [%s].", type.getSimpleName(), Arrays.asList(proxiedProps)));
+            }
             final T entity;
             if (uninstrumented) {
                 if (propertyDescriptorType) {
                     entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText());
                 } else {
-                    entity = factory.newPlainEntity(type, id);
+                    entity = factory.newPlainEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
                 }
                 entity.setEntityFactory(factory);
             } else {
                 if (propertyDescriptorType) {
                     entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText(), factory);
                 } else {
-                    entity = factory.newEntity(type, id);
+                    entity = factory.newEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
                 }
             }
             entity.beginInitialising();
