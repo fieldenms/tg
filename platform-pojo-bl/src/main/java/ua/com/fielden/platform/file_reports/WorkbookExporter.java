@@ -1,20 +1,16 @@
 package ua.com.fielden.platform.file_reports;
 
 import static org.apache.commons.lang.StringUtils.join;
-import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
-import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
-import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.zip.Deflater;
 
@@ -30,7 +26,9 @@ import org.apache.poi.ss.usermodel.CreationHelper;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.xstream.GZipOutputStreamEx;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -80,6 +78,7 @@ public class WorkbookExporter {
         return wb;
     }
 
+    @SuppressWarnings("unchecked")
     private static <M extends AbstractEntity<?>> void addSheetWithData(final HSSFWorkbook wb, final DataForWorkbookSheet<M> sheetData) {
         final HSSFSheet sheet = wb.createSheet(sheetData.getSheetTitle());
         // Create a header row.
@@ -111,6 +110,7 @@ public class WorkbookExporter {
         dateCellStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd/mm/yyyy hh:mm"));
 
         // let's make cell style to handle borders
+        final Map<String, String> shortCollectionalProps = new HashMap<>();
         final HSSFCellStyle dataCellStyle = wb.createCellStyle();
         dataCellStyle.setBorderRight(HSSFCellStyle.BORDER_HAIR);
         for (int index = 0; index < sheetData.getEntities().size(); index++) {
@@ -125,7 +125,10 @@ public class WorkbookExporter {
                 final String propertyName = sheetData.getPropNames().get(propIndex);
                 final Object value = StringUtils.isEmpty(propertyName) ? entity : entity.get(propertyName); // get the value
                 // need to try to do the best job with types
-                if (value instanceof Date) {
+                if (shortCollectionalProps.containsKey(propertyName)) {
+                    cell.setCellType(HSSFCell.CELL_TYPE_STRING);
+                    cell.setCellValue(join(createShortColection((Collection<AbstractEntity<?>>) value, shortCollectionalProps.get(propertyName)), ", "));
+                } else if (value instanceof Date) {
                     cell.setCellValue((Date) value);
                     cell.setCellStyle(dateCellStyle);
                 } else if (value instanceof DateTime) {
@@ -141,8 +144,14 @@ public class WorkbookExporter {
                     cell.setCellType(HSSFCell.CELL_TYPE_BLANK);
                 } else { // otherwise treat value as String
                     cell.setCellType(HSSFCell.CELL_TYPE_STRING);
-                    if (isShortCollection(entity.getType(), propertyName)) {
-                        cell.setCellValue(join(createShortColection(entity, propertyName), ", "));
+                    if (EntityUtils.isCollectional(value.getClass())) {
+                        final Optional<String> keyToInclude = findKeyToExclude((Collection<?>) value);
+                        if (keyToInclude.isPresent()) {
+                            shortCollectionalProps.put(propertyName, keyToInclude.get());
+                            cell.setCellValue(join(createShortColection((Collection<AbstractEntity<?>>) value, keyToInclude.get()), ", "));
+                        } else {
+                            cell.setCellValue(join((Collection<?>) value, ", "));
+                        }
                     } else {
                         cell.setCellValue(value.toString());
                     }
@@ -163,20 +172,35 @@ public class WorkbookExporter {
         sheet.createFreezePane(0, 1);
     }
 
-    /**
-     * Analyses the value of a short collectional property and returns the list of key entities which are not equal to entity that contains the collectional property.
-     *
-     * @param entity
-     * @param propertyName
-     * @return
-     */
+    private static List<AbstractEntity<?>> createShortColection(final Collection<AbstractEntity<?>> collection, final String keyToInclude) {
+        return collection.stream().map(entityElement -> (AbstractEntity<?>) entityElement.get(keyToInclude)).collect(Collectors.toList());
+    }
+
     @SuppressWarnings("unchecked")
-    private static List<AbstractEntity<?>> createShortColection(final AbstractEntity<?> entity, final String propertyName) {
-        final Collection<AbstractEntity<?>> value = (Collection<AbstractEntity<?>>) entity.get(propertyName);
-        final AbstractEntity<?> containerEntity = isDotNotation(propertyName) ? (AbstractEntity<?>) entity.get(penultAndLast(propertyName).getKey()) : entity;
-        final List<Field> keyMemebers = getKeyMembers(determinePropertyType(entity.getType(), propertyName));
-        final String keyElement = keyMemebers.stream().filter(field -> !field.getType().equals(getOriginalType(containerEntity.getType())))
-                .findFirst().map(findField -> findField.getName()).get();
-        return value.stream().map(entityElement -> (AbstractEntity<?>) entityElement.get(keyElement)).collect(Collectors.toList());
+    private static Optional<String> findKeyToExclude(final Collection<?> collection) {
+        return collection.stream()
+                .filter(element -> element != null)
+                .findFirst()
+                .map(firstElem -> {
+                    final Class<?> elementType = firstElem.getClass();
+                    final boolean isShortCollection = EntityUtils.isEntityType(elementType) &&
+                            EntityUtils.isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
+                            Finder.getKeyMembers(elementType).size() == 2 &&
+                            Finder.getKeyMembers(elementType).stream().allMatch(field -> EntityUtils.isEntityType(field.getType()));
+                    if (isShortCollection) {
+                        final AbstractEntity<?> firstEntity = (AbstractEntity<?>) firstElem;
+                        final List<String> keyProps = Finder.getKeyMembers(elementType).stream().map(field -> field.getName()).collect(Collectors.toList());
+                        final Object key1 = firstEntity.get(keyProps.get(0));
+                        final Object key2 = firstEntity.get(keyProps.get(1));
+                        if (collection.stream().filter(element -> element != null).allMatch(elem -> EntityUtils.equalsEx(((AbstractEntity<?>) elem).get(keyProps.get(0)), key1))) {
+                            return keyProps.get(1);
+                        } else if (collection.stream().filter(element -> element != null).allMatch(elem -> EntityUtils.equalsEx(((AbstractEntity<?>) elem).get(keyProps.get(1)), key2))) {
+                            return keyProps.get(0);
+                        } else {
+                            return null;
+                        }
+                    }
+                    return null;
+                });
     }
 }
