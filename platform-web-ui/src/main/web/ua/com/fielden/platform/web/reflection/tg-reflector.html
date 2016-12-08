@@ -1256,7 +1256,9 @@
         ) {
             var centreContextHolder = this.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
             centreContextHolder.id = null;
-            centreContextHolder["customObject"] = {}; // should always exist, potentially empty
+            centreContextHolder['customObject'] = {}; // should always exist, potentially empty
+            centreContextHolder['key'] = 'centreContextHolder_key';
+            centreContextHolder['desc'] = 'centreContextHolder description';
             
             if (requireSelectionCriteria !== null) {
             	this.provideSelectionCriteria(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder);
@@ -1290,6 +1292,8 @@
         	var reflector = this;
             var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
             savingInfoHolder.id = null;
+            savingInfoHolder['key'] = 'savingInfoHolder_key';
+            savingInfoHolder['desc'] = 'savingInfoHolder description';
             savingInfoHolder['modifHolder'] = modifiedPropertiesHolder;
         	
         	if (savingContext) { // if saving context was defined (not 'undefined'):

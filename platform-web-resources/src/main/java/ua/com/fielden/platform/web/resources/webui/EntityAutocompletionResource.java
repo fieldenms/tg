@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -68,7 +69,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             //            throw new IllegalStateException("Illegal state during entity searching.");
             final CentreContextHolder centreContextHolder = EntityResourceUtils.restoreCentreContextHolder(envelope, restUtil);
 
-            final CONTEXT context = utils.constructEntity(centreContextHolder.getModifHolder()).getKey();
+            final CONTEXT context = utils.constructEntity(!centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<String, Object>()).getKey();
             logger.debug("context = " + context);
 
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
