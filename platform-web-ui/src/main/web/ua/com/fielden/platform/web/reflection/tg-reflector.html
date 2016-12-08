@@ -1279,7 +1279,7 @@
 			if (requireSelectionCriteria === "true") {
 				centreContextHolder["modifHolder"] = createModifiedPropertiesHolder();
             } else if (requireSelectionCriteria === "false") {
-            	centreContextHolder["modifHolder"] = null;
+            	centreContextHolder["modifHolder"] = {};
             } else {
             	throw "Unknown value for attribute 'requireSelectionCriteria': " + requireSelectionCriteria;
             }

@@ -398,6 +398,22 @@ public class EntitySerialisationWithJacksonTest {
         assertEquals("Incorrect prop.", "okay", restoredEntity.getProp());
         assertFalse("Incorrect prop visibility.", restoredEntity.getProperty("prop").isVisible());
     }
+    
+    @Test
+    public void entity_with_proxied_prop_should_be_restored() throws Exception {
+        final EntityWithString entity = factory.createEntityWithStringProxied();
+        assertEquals(1, entity.proxiedPropertyNames().size());
+        assertTrue(entity.proxiedPropertyNames().contains("prop"));
+        
+        final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+        
+        assertTrue(restoredEntity.getProperty("prop").isProxy());
+        assertEquals(1, restoredEntity.proxiedPropertyNames().size());
+        assertTrue(restoredEntity.proxiedPropertyNames().contains("prop"));
+    }
 
     @Test
     public void entity_with_required_prop_should_be_restored() throws Exception {

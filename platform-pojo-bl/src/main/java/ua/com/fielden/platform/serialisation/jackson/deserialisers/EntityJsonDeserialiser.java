@@ -160,20 +160,21 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 final String propertyName = prop.field().getName();
                 final JsonNode propNode = node.get(propertyName);
                 final Object value = determineValue(propNode, prop.field());
-                if (value != null) { // TODO need to revisit: what if entity from client arrives with property of 'null' value, but entity definition has default value assigned? Do we need to remain default value there?
-                    try {
-                        // at this stage the field should be already accessible
-                        prop.field().set(entity, value);
-                    } catch (final IllegalAccessException e) {
-                        // developer error -- please ensure that all fields are accessible
-                        e.printStackTrace();
-                        logger.error("The field [" + prop.field() + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", e);
-                        throw new RuntimeException(e);
-                    } catch (final IllegalArgumentException e) {
-                        e.printStackTrace();
-                        logger.error("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", e);
-                        throw e;
-                    }
+                if (value == null) {
+                    logger.error(String.format("The value [null] has been retrieved from JSON node for property %s. Type [%s].", propertyName, entity.getClass().getSimpleName()));
+                }
+                try {
+                    // at this stage the field should be already accessible
+                    prop.field().set(entity, value);
+                } catch (final IllegalAccessException e) {
+                    // developer error -- please ensure that all fields are accessible
+                    e.printStackTrace();
+                    logger.error("The field [" + prop.field() + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", e);
+                    throw new RuntimeException(e);
+                } catch (final IllegalArgumentException e) {
+                    e.printStackTrace();
+                    logger.error("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", e);
+                    throw e;
                 }
                 final JsonNode metaPropNode = node.get("@" + propertyName);
                 if (metaPropNode != null) {

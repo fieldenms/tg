@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
@@ -93,7 +94,7 @@ public class FactoryForTestingEntities {
         assertFalse("Incorrect desc ChangedFromOriginal.", entity.getProperty(AbstractEntity.DESC).isChangedFromOriginal());
 
         final Optional<MetaProperty<?>> op = entity.getPropertyOptionally("prop");
-        if (op.isPresent() && !op.get().isCollectional()) {
+        if (op.isPresent() && !op.get().isProxy() && !op.get().isCollectional()) {
             assertFalse("Incorrect key ChangedFromOriginal.", op.get().isChangedFromOriginal());
             assertFalse("Incorrect prop dirtiness.", op.get().isDirty());
         }
@@ -172,6 +173,11 @@ public class FactoryForTestingEntities {
         final EntityWithString entity = createPersistedEntity(EntityWithString.class, 1L, "key", "description");
         entity.setProp("okay");
         entity.getProperty("prop").setVisible(false);
+        return finalise(entity);
+    }
+    
+    public EntityWithString createEntityWithStringProxied() {
+        final EntityWithString entity = createPersistedEntity(EntityProxyContainer.proxy(EntityWithString.class, "prop"), 1L, "key", "description");
         return finalise(entity);
     }
 
