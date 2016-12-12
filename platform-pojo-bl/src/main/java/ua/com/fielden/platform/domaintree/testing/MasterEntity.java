@@ -30,7 +30,7 @@ import ua.com.fielden.platform.types.Money;
 public class MasterEntity extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
-    protected MasterEntity() {
+    public MasterEntity() {
     }
 
     public enum EnumType {
