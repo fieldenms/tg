@@ -1493,7 +1493,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         // Under certain circumstances copying happens for an uninstrumented entity instance
         // In such cases there would be no meta-properties, and copying would fail.
         // Therefore, it is important to perform ad-hoc property retrieval via reflection.
-        final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(field -> field.getName());
+        final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(field -> field.getName()).filter(name -> !Reflector.isPropertyProxied(this, name));
 
         // Copy each identified property into a new instance.
         propertyNames.forEach(propName -> {
