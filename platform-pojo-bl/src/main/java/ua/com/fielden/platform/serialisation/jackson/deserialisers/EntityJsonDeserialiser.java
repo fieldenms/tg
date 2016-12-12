@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -160,7 +161,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 final String propertyName = prop.field().getName();
                 final JsonNode propNode = node.get(propertyName);
                 final Object value = determineValue(propNode, prop.field());
-                if (value == null) {
+                if (value == null && !Arrays.asList(LAST_UPDATED_BY, LAST_UPDATED_DATE, LAST_UPDATED_TRANSACTION_GUID).contains(propertyName)) {
                     logger.error(String.format("The value [null] has been retrieved from JSON node for property %s. Type [%s].", propertyName, entity.getClass().getSimpleName()));
                 }
                 try {

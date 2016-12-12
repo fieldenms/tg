@@ -1216,8 +1216,7 @@
         provideMasterEntity: function(requireMasterEntity, centreContextHolder, getMasterEntity) {
 			if (requireMasterEntity === "true") {
 				centreContextHolder["masterEntity"] = getMasterEntity();
-            } else if (requireMasterEntity === "false") {
-            	centreContextHolder["masterEntity"] = null;
+            } else if (requireMasterEntity === "false") { // 'masterEntity' will be proxied after server-side deserialisation
             } else {
             	throw "Unknown value for attribute 'requireMasterEntity': " + requireMasterEntity;
             }
@@ -1231,8 +1230,7 @@
 				centreContextHolder["selectedEntities"] = getSelectedEntities();
             } else if (requireSelectedEntities === "ONE") {
             	centreContextHolder["selectedEntities"] = getSelectedEntities().length > 0 ? [getSelectedEntities()[0]] : [];
-            } else if (requireSelectedEntities === "NONE") {
-            	centreContextHolder["selectedEntities"] = null;
+            } else if (requireSelectedEntities === "NONE") { // 'selectedEntities' will be proxied after server-side deserialisation
             } else {
             	throw "Unknown value for attribute 'requireSelectedEntities': " + requireSelectedEntities;
             }
@@ -1278,8 +1276,7 @@
         provideSelectionCriteria: function(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder) {
 			if (requireSelectionCriteria === "true") {
 				centreContextHolder["modifHolder"] = createModifiedPropertiesHolder();
-            } else if (requireSelectionCriteria === "false") {
-            	centreContextHolder["modifHolder"] = {};
+            } else if (requireSelectionCriteria === "false") { // 'modifHolder' will be proxied after server-side deserialisation
             } else {
             	throw "Unknown value for attribute 'requireSelectionCriteria': " + requireSelectionCriteria;
             }
