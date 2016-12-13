@@ -1,11 +1,15 @@
 package ua.com.fielden.platform.entity.proxy;
 
+import static java.util.stream.Collectors.joining;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.DynamicType.Builder;
@@ -25,9 +29,11 @@ import ua.com.fielden.platform.reflection.Reflector;
  *
  * @param <T>
  */
-public class EntityProxyContainer<T extends AbstractEntity<?>> {
+public class EntityProxyContainer {
 
     private static final MethodDelegation proxyChecker = MethodDelegation.to(ProxyPropertyInterceptor.class);
+    
+    private static final Cache<Class<? extends AbstractEntity<?>>, Cache<String, Class<? extends AbstractEntity<?>>>> typesMap = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).build();
     
     private EntityProxyContainer() {
     }
@@ -47,8 +53,16 @@ public class EntityProxyContainer<T extends AbstractEntity<?>> {
         }
         
         // let's use a set to avoid potential property duplicates
-        final Set<String> properties = new HashSet<>();
-        properties.addAll(Arrays.asList(propNames));
+        // it should be an ordered set to ensure equality between sets for the same propNames, but in different order
+        final Set<String> properties = new TreeSet<>(Arrays.asList(propNames));
+        final String key = properties.stream().collect(joining(","));
+
+        // let's try to find the generated type in the cache
+        final Cache<String, Class<? extends AbstractEntity<?>>> typeCache = getOrCreateTypeCache(entityType);
+        final Class<? extends AbstractEntity<?>> type = typeCache.getIfPresent(key);
+        if (type != null) {
+            return (Class<? extends T>) type;
+        }
         
         Builder<T> buddy = new ByteBuddy().subclass(entityType);
 
@@ -72,7 +86,19 @@ public class EntityProxyContainer<T extends AbstractEntity<?>> {
             .load(ClassLoader.getSystemClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
             .getLoaded();
 
-        
+        typeCache.put(key, ownerType);
         return ownerType;
+    }
+
+
+    protected static <T extends AbstractEntity<?>> Cache<String, Class<? extends AbstractEntity<?>>> getOrCreateTypeCache(final Class<T> entityType) {
+        final Cache<String, Class<? extends AbstractEntity<?>>> typeCache = typesMap.getIfPresent(entityType);
+        if (typeCache != null) {
+            return typeCache;
+        } else {
+            final Cache<String, Class<? extends AbstractEntity<?>>> newTypeCache = CacheBuilder.newBuilder().build();
+            typesMap.put(entityType, newTypeCache);
+            return newTypeCache;
+        }
     }
 }
