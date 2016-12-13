@@ -54,7 +54,7 @@ public class DbCreator {
         entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
     }
 
-    private static final String baseDir = "./src/test/resources/db";
+    public static final String baseDir = "./src/test/resources/db";
 
     private IDomainDrivenTestCaseConfiguration createConfig(final Properties hbc) {
         try {
@@ -95,12 +95,12 @@ public class DbCreator {
         return dbProps;
     }
 
-    private final String dataScriptFile() { 
-        return format("%s/data-%s.script", baseDir, uuid);
+    private final String dataScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) { 
+        return format("%s/data-%s.script", baseDir, testCaseType.getSimpleName());
     }
     
-    private final String truncateScriptFile() {
-        return format("%s/truncate-%s.script", baseDir, uuid);
+    private final String truncateScriptFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
+        return format("%s/truncate-%s.script", baseDir, testCaseType.getSimpleName());
     }
 
     public final DbCreator populateOrRestoreData(final AbstractDomainDrivenTestCase testCase) throws Exception {
@@ -144,26 +144,18 @@ public class DbCreator {
     }
     
     private void restoreDataFromFile(final Class<? extends AbstractDomainDrivenTestCase> testCaseType, final Connection conn) throws Exception {
-        final List<String> dataScript = dataScripts.getIfPresent(testCaseType);
-        if (dataScript == null) {
-            throw new IllegalStateException(format("The data script for test case of [%s] is missing!", testCaseType));
-        }
-
+        final List<String> dataScript = initDataScriptForTestCase(testCaseType);
         dataScript.clear();
-        final File dataPopulationScriptFile = new File(dataScriptFile());
+        final File dataPopulationScriptFile = new File(dataScriptFile(testCaseType));
         if (!dataPopulationScriptFile.exists()) {
-            throw new IllegalStateException(format("File %s with data population script is missing.", dataScriptFile()));
+            throw new IllegalStateException(format("File %s with data population script is missing.", dataScriptFile(testCaseType)));
         }
         dataScript.addAll(Files.readLines(dataPopulationScriptFile, StandardCharsets.UTF_8));
 
         
-        final List<String> truncateScript = truncateScripts.getIfPresent(testCaseType);
-        if (truncateScript == null) {
-            throw new IllegalStateException(format("The truncate script for test case of [%s] is missing!", testCaseType));
-        }
-        
+        final List<String> truncateScript = initTruncateScriptForTestCase(testCaseType);
         truncateScript.clear();
-        final File truncateTablesScriptFile = new File(truncateScriptFile());
+        final File truncateTablesScriptFile = new File(truncateScriptFile(testCaseType));
         if (!truncateTablesScriptFile.exists()) {
             throw new IllegalStateException(format("File %s with table truncation script is missing.", truncateTablesScriptFile));
         }
@@ -200,7 +192,7 @@ public class DbCreator {
 
             if (testCase.saveDataPopulationScriptToFile()) {
                 // flush data population script to file for later use
-                try (PrintWriter out = new PrintWriter(dataScriptFile(), StandardCharsets.UTF_8.name())) {
+                try (PrintWriter out = new PrintWriter(dataScriptFile(testCase.getClass()), StandardCharsets.UTF_8.name())) {
                     final StringBuilder builder = new StringBuilder();
                     for (final Iterator<String> iter = dataScript.iterator(); iter.hasNext();) {
                         final String line = iter.next();
@@ -213,7 +205,7 @@ public class DbCreator {
                 }
 
                 // flush table truncation script to file for later use
-                try (PrintWriter out = new PrintWriter(truncateScriptFile(), StandardCharsets.UTF_8.name())) {
+                try (PrintWriter out = new PrintWriter(truncateScriptFile(testCase.getClass()), StandardCharsets.UTF_8.name())) {
                     final StringBuilder builder = new StringBuilder();
                     for (final Iterator<String> iter = truncateScript.iterator(); iter.hasNext();) {
                         final String line = iter.next();
