@@ -16,7 +16,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.rules.ExternalResource;
-import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -73,13 +72,11 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
     @ClassRule
     public static final ExternalResource resource = new ExternalResource() {
         public Statement apply(final Statement base, final Description description) {
-            System.out.println("APPLY!!!");
             final Class<? extends AbstractDomainDrivenTestCase> testCaseType = (Class<? extends AbstractDomainDrivenTestCase>) description.getTestClass();
             try {
                 // this call populates the above static map dbCreators
                 // the created instance holds the data population and truncation scripts that get reused by individual test
                 // at the same time, the actual database can be created ad-hoc even on per test (method) basis if needed
-                System.out.println("TEST UUID IS " + uuid());
                 dbCreator(uuid());
             } catch (Exception ex) {
                 throw new Error(format("Could not populate data for test case %s.", description), ex);
@@ -90,15 +87,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
         
     };
 
-    @ClassRule
-    public static final TestWatcher watcher = new TestWatcher() {
-        protected void finished(final Description description) {
-            System.out.println("Finished!!!");
-//            final Class<? extends AbstractDomainDrivenTestCase> testCaseType = (Class<? extends AbstractDomainDrivenTestCase>) description.getTestClass();
-//            dbCreators.invalidate(testCaseType);
-        };
-    };
-    
     private final ICompanionObjectFinder provider = dbCreator(uuid()).config.getInstance(ICompanionObjectFinder.class);
     private final EntityFactory factory = dbCreator(uuid()).config.getEntityFactory();
     private final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
