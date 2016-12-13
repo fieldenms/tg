@@ -2,16 +2,13 @@ package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
 
+import java.lang.management.ManagementFactory;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -19,8 +16,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.rules.ExternalResource;
+import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.data.IDomainDrivenData;
@@ -42,7 +43,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
      * This static map holds references to DB related information, including data population and truncation scripts, for each test case type.
      * It gets populated at the time of test case class loading using a <code<ClassRule</code> below. 
      */
-    private static final Map<Class<? extends AbstractDomainDrivenTestCase>, DbCreator<?>> dbCreators = new ConcurrentHashMap<>(200, 10);
+    private static final Cache<String, DbCreator> dbCreators = CacheBuilder.newBuilder().build();
     
     /**
      * A convenient factory/accessor method for instances of {@link DbCreator} that are associated with a passed in test case type.
@@ -50,15 +51,19 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
      * @param testCaseType
      * @return
      */
-    protected static final DbCreator<?> dbCreator(final Class<? extends AbstractDomainDrivenTestCase> testCaseType) {
-        if (!dbCreators.containsKey(testCaseType)) {
-            final DbCreator<?> dbCreator = new DbCreator<>(testCaseType);
-            dbCreators.put(testCaseType, dbCreator);
+    protected static final DbCreator dbCreator(final String uuid) {
+        if (dbCreators.getIfPresent(uuid) == null) {
+            final DbCreator dbCreator = new DbCreator(uuid);
+            dbCreators.put(uuid, dbCreator);
         }
         
-        return dbCreators.get(testCaseType);
+        return dbCreators.getIfPresent(uuid);
     }
 
+    private static String uuid() {
+        return ManagementFactory.getRuntimeMXBean().getName() + "_" + Thread.currentThread().getId();
+    }
+    
     /**
      * A class rule (this is a new concept introduced in JUnit 4.x) that acts similar to <code>@BeforeClass/@AfterClass</code> by executing at the time of loading/off-loading a test case class.
      * Its main purpose is to generate and populate a database specific for a test case with a class that is being loaded.
@@ -68,29 +73,34 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
     @ClassRule
     public static final ExternalResource resource = new ExternalResource() {
         public Statement apply(final Statement base, final Description description) {
+            System.out.println("APPLY!!!");
             final Class<? extends AbstractDomainDrivenTestCase> testCaseType = (Class<? extends AbstractDomainDrivenTestCase>) description.getTestClass();
             try {
                 // this call populates the above static map dbCreators
                 // the created instance holds the data population and truncation scripts that get reused by individual test
                 // at the same time, the actual database can be created ad-hoc even on per test (method) basis if needed
-                dbCreator(testCaseType)
-                .populateOrRestoreData(testCaseType.newInstance(), false) // a test case instantiation here is a trick to call its method populateDomain at the time of a static initialization
-                .clearData();
+                System.out.println("TEST UUID IS " + uuid());
+                dbCreator(uuid());
             } catch (Exception ex) {
                 throw new Error(format("Could not populate data for test case %s.", description), ex);
             }
 
             return super.apply(base, description);
         };
+        
     };
 
-    /**
-     * Holds the test case specific db connectivity properties.
-     */
-    private final Properties dbProps = dbCreator(this.getClass()).mkDbProps();
+    @ClassRule
+    public static final TestWatcher watcher = new TestWatcher() {
+        protected void finished(final Description description) {
+            System.out.println("Finished!!!");
+//            final Class<? extends AbstractDomainDrivenTestCase> testCaseType = (Class<? extends AbstractDomainDrivenTestCase>) description.getTestClass();
+//            dbCreators.invalidate(testCaseType);
+        };
+    };
     
-    private final ICompanionObjectFinder provider = dbCreator(this.getClass()).config.getInstance(ICompanionObjectFinder.class);
-    private final EntityFactory factory = dbCreator(this.getClass()).config.getEntityFactory();
+    private final ICompanionObjectFinder provider = dbCreator(uuid()).config.getInstance(ICompanionObjectFinder.class);
+    private final EntityFactory factory = dbCreator(uuid()).config.getEntityFactory();
     private final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
     private final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -108,18 +118,18 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
 
     @Before
     public final void beforeTest() throws Exception {
-        dbCreator(this.getClass()).populateOrRestoreData(this, true, dbProps);
+        dbCreator(uuid()).populateOrRestoreData(this);
     }
    
     @After
     public final void afterTest() throws Exception {
-        dbCreator(this.getClass()).clearData(dbProps);
+        dbCreator(uuid()).clearData(this.getClass());
     }
 
    
     @Override
     public final <T> T getInstance(final Class<T> type) {
-        return dbCreator(this.getClass()).config.getInstance(type);
+        return dbCreator(uuid()).config.getInstance(type);
     }
 
     @Override
