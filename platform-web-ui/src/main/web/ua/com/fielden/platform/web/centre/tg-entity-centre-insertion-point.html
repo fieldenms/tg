@@ -11,7 +11,11 @@
 
 <dom-module id="tg-entity-centre-insertion-point">
     <template>
-        <paper-material id="pm" style="margin: 10px; background: white; border-radius: 2px;">
+        <paper-material id="pm" class="layout vertical" style="margin: 10px; background: white; border-radius: 2px;">
+            <div class="layout horizontal justified center">
+                <span class="truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
+                <paper-icon-button hidden=[[!_minimised]] class="minimize-button" style="margin-left:10px" icon="tg-icons:expandMin" on-tap="minimizeDialog"></paper-icon-button>
+            </div>
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </paper-material>
         <tg-toast id="toaster"></tg-toast>
@@ -34,6 +38,21 @@
                     type: Boolean,
                     value: false
                 },
+                /**
+                 * Determnes whether insertion point is in the detached mode or not.
+                 */
+                detached: {
+                    type: Boolean,
+                    value: false
+                },
+                /**
+                 * The title for insertion point
+                 */
+                shortDesc:String,
+                /**
+                 * The explanation description for insertion point
+                 */
+                longDesc: String,
                 /**
                  * The entities retrieved when running centre that has this insertion point
                  */
