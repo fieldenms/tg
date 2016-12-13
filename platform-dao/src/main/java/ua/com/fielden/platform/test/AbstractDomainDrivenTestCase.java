@@ -2,10 +2,17 @@ package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -16,6 +23,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.rules.ExternalResource;
+import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -72,7 +80,6 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
     @ClassRule
     public static final ExternalResource resource = new ExternalResource() {
         public Statement apply(final Statement base, final Description description) {
-            final Class<? extends AbstractDomainDrivenTestCase> testCaseType = (Class<? extends AbstractDomainDrivenTestCase>) description.getTestClass();
             try {
                 // this call populates the above static map dbCreators
                 // the created instance holds the data population and truncation scripts that get reused by individual test
@@ -87,6 +94,24 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData 
         
     };
 
+    @ClassRule
+    public static final TestWatcher watcher = new TestWatcher() {
+        protected void finished(final Description description) {
+            final DbCreator dbCreator = dbCreators.getIfPresent(uuid());
+            try {
+                final Path rootPath = Paths.get(DbCreator.baseDir);
+                Files.walk(rootPath)
+                .filter(path -> path.getFileName().toString().contains(dbCreator.dbName()))
+                    .map(Path::toFile)
+                    .peek(file -> System.out.println(format("Removing %s", file.getName())))
+                    .forEach(File::delete);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        };
+    };
+    
     private final ICompanionObjectFinder provider = dbCreator(uuid()).config.getInstance(ICompanionObjectFinder.class);
     private final EntityFactory factory = dbCreator(uuid()).config.getEntityFactory();
     private final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");

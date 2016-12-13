@@ -45,18 +45,18 @@ public class DbCreator {
     public final IDomainDrivenTestCaseConfiguration config;
     private final Properties defaultDbProps; // mainly used for db creation and population at the time of loading the test case classes
     
-    private final String uuid;
+    private final String dbName;
 
     public DbCreator(final String uuid) {
-        this.uuid = uuid;
-        defaultDbProps = mkDbProps(uuid);
-        config = createConfig(mkDbProps(uuid));
+        this.dbName = format("test_domain_db_for_%s", uuid);
+        defaultDbProps = mkDbProps();
+        config = createConfig();
         entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
     }
 
     public static final String baseDir = "./src/test/resources/db";
 
-    private IDomainDrivenTestCaseConfiguration createConfig(final Properties hbc) {
+    private IDomainDrivenTestCaseConfiguration createConfig() {
         try {
 
             final Properties testProps = new Properties();
@@ -64,31 +64,34 @@ public class DbCreator {
             testProps.load(in);
             in.close();
 
-            hbc.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-            hbc.setProperty("hibernate.show_sql", "false");
-            hbc.setProperty("hibernate.format_sql", "true");
-            hbc.setProperty("hibernate.hbm2ddl.auto", "create");
+            defaultDbProps.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
+            defaultDbProps.setProperty("hibernate.show_sql", "false");
+            defaultDbProps.setProperty("hibernate.format_sql", "true");
+            defaultDbProps.setProperty("hibernate.hbm2ddl.auto", "create");
 
             final String configClassName = testProps.getProperty("config-domain");
             final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
             final Constructor<IDomainDrivenTestCaseConfiguration> constructor = type.getConstructor(Properties.class);
-            return constructor.newInstance(hbc);
+            return constructor.newInstance(defaultDbProps);
         } catch (final Exception e) {
             throw new IllegalStateException(format("Could not create a configuration."), e);
         }
     }
     
+    public String dbName() {
+        return dbName;
+    }
     /**
      * Creates db connectivity properties.
      * The database name is generated based on the test class name and the current thread id.
      * 
      * @return
      */
-    private final Properties mkDbProps(final String uuid) {
+    private final Properties mkDbProps() {
         final Properties dbProps = new Properties();
         // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
         //      This should be modified once correct db schema generation is implemented
-        dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s/test_domain_db_for_%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", baseDir, uuid));
+        dbProps.setProperty("hibernate.connection.url", format("jdbc:h2:%s/%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", baseDir, dbName()));
         dbProps.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
         dbProps.setProperty("hibernate.connection.username", "sa");
         dbProps.setProperty("hibernate.connection.password", "");
