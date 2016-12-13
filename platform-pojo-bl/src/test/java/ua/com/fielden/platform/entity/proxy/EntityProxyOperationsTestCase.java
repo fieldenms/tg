@@ -432,13 +432,7 @@ public class EntityProxyOperationsTestCase {
         final Class<? extends TgOwnerEntity> ownerType3 = EntityProxyContainer.proxy(TgOwnerEntity.class, "intProp", "booleanProp");
 
         assertTrue(ownerType1 == ownerType2);
-        ssertFalse(ownerType1 == ownerType3);
+        assertFalse(ownerType1 == ownerType3);
     }
-
-    private void ssertFalse(boolean b) {
-        // TODO Auto-generated method stub
-        
-    }
-
 
 }
