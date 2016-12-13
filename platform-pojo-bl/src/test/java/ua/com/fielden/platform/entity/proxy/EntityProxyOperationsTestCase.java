@@ -368,7 +368,7 @@ public class EntityProxyOperationsTestCase {
 
     @Test
     public void method_proxiedPropertyNames_contains_names_of_proxied_properties() throws Exception {
-        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class, "entityProp", "intProp");
+        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class, "intProp", "entityProp");
         
         // creation via factory
         final TgOwnerEntity owner = factory.newByKey(ownerType, "OWN1");
