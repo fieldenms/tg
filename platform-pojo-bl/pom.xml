@@ -232,10 +232,7 @@
 				<configuration>
 					<forkCount>4</forkCount>
 					<reuseForks>true</reuseForks>
-					<parallel>classes</parallel>
-					<useUnlimitedThreads>true</useUnlimitedThreads>
-					<argLine>-Xms512m -Xmx1024m</argLine>
-					<argLine>-Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
+					<argLine>-server -Xms256m -Xmx1024m -Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
 				</configuration>
 			</plugin>
 		</plugins>
