@@ -4,19 +4,57 @@
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/resources/images/tg-icons.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
 
 <dom-module id="tg-entity-centre-insertion-point">
     <template>
-        <paper-material id="pm" class="layout vertical" style="margin: 10px; background: white; border-radius: 2px;">
-            <div class="layout horizontal justified center">
-                <span class="truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
-                <paper-icon-button hidden=[[!_minimised]] class="minimize-button" style="margin-left:10px" icon="tg-icons:expandMin" on-tap="minimizeDialog"></paper-icon-button>
+        <style>
+            .truncate {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .title-bar {
+                padding: 0 16px;
+                height: 44px;
+                min-height: 44px;
+                font-size: 18px;
+                cursor: default;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+                background-color: var(--paper-light-blue-600);
+            }
+            .title-text {
+                pointer-events: none;
+            }
+            paper-icon-button.expand-colapse-button {
+                width: 19px;
+                height: 19px;
+                stroke: var(--paper-grey-100);
+                fill: var(--paper-grey-100);
+                color: var(--paper-grey-100);
+            }
+            paper-icon-button.expand-colapse-button:hover {
+                stroke: var(--paper-grey-300);
+                fill: var(--paper-grey-300);
+                color: var(--paper-grey-300);
+            }
+        </style>
+        <paper-material id="pm" hidden$="[[detached]]" class="layout vertical" style="background: white; border-radius: 2px; margin: 10px;">
+            <div id="insertionPointContent" class="layout vertical">
+                <div class="title-bar layout horizontal justified center" hidden$="[[!hasTitleBar]]">
+                    <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
+                    <paper-icon-button class="expand-colapse-button" style="margin-left:10px" icon="[[_getButtonIcon(detached)]]" on-tap="_expandColapseTap"></paper-icon-button>
+                </div>
+                <tg-element-loader id="elementLoader"></tg-element-loader>
             </div>
-            <tg-element-loader id="elementLoader"></tg-element-loader>
         </paper-material>
         <tg-toast id="toaster"></tg-toast>
     </template>
@@ -46,9 +84,16 @@
                     value: false
                 },
                 /**
+                 * Determines whether insertion point has title bar or not.
+                 */
+                hasTitleBar: {
+                    type: Boolean,
+                    value: false
+                },
+                /**
                  * The title for insertion point
                  */
-                shortDesc:String,
+                shortDesc: String,
                 /**
                  * The explanation description for insertion point
                  */
@@ -167,6 +212,21 @@
 
             _onIronResize: function () {
                 this._adjustView();
+            },
+
+            _getButtonIcon: function (detached) {
+                if (detached) {
+                    return "icons:cancel";
+                }
+                return "icons:open-in-new";
+            },
+
+            _expandColapseTap: function (event) {
+                if (this.detached) {
+                    //TODO implement content attachment.
+                } else {
+                    //TODO implement content detachment.
+                }
             }
         });
     })();
