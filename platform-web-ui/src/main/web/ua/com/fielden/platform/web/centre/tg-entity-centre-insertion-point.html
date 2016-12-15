@@ -1,15 +1,21 @@
 <link rel="import" href="/app/tg-element-loader.html">
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<link rel="import" href="/resources/polymer/iron-overlay-behavior/iron-overlay-behavior.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
-<link rel="import" href="/resources/polymer/paper-styles/color.html">
-<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
-<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
+
 <link rel="import" href="/resources/images/tg-icons.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-toast.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
+<link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
+<link rel="import" href="/resources/polymer/paper-dialog/paper-dialog.html">
+
+<link rel="import" href="/resources/polymer/neon-animation/animations/fade-in-animation.html">
+<link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
 
 <dom-module id="tg-entity-centre-insertion-point">
     <template>
@@ -25,6 +31,7 @@
                 min-height: 44px;
                 font-size: 18px;
                 cursor: default;
+                color: white;
                 -webkit-user-select: none;
                 -moz-user-select: none;
                 -ms-user-select: none;
@@ -34,9 +41,12 @@
             .title-text {
                 pointer-events: none;
             }
+            paper-icon-button {
+                width: 22px;
+                height: 22px;
+                padding: 0px;
+            }
             paper-icon-button.expand-colapse-button {
-                width: 19px;
-                height: 19px;
                 stroke: var(--paper-grey-100);
                 fill: var(--paper-grey-100);
                 color: var(--paper-grey-100);
@@ -48,12 +58,14 @@
             }
         </style>
         <paper-material id="pm" hidden$="[[detached]]" class="layout vertical" style="background: white; border-radius: 2px; margin: 10px;">
-            <div id="insertionPointContent" class="layout vertical">
+            <div id="insertionPointContent" class="layout vertical flex">
                 <div class="title-bar layout horizontal justified center" hidden$="[[!hasTitleBar]]">
                     <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                     <paper-icon-button class="expand-colapse-button" style="margin-left:10px" icon="[[_getButtonIcon(detached)]]" on-tap="_expandColapseTap"></paper-icon-button>
                 </div>
-                <tg-element-loader id="elementLoader"></tg-element-loader>
+                <div class="relative flex">
+                    <tg-element-loader id="elementLoader"></tg-element-loader>
+                </div>
             </div>
         </paper-material>
         <tg-toast id="toaster"></tg-toast>
@@ -65,7 +77,7 @@
 
             is: "tg-entity-centre-insertion-point",
 
-            behaviors: [Polymer.IronResizableBehavior],
+            behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
             listeners: {
                 'iron-resize': '_onIronResize'
@@ -117,7 +129,45 @@
                 _element: {
                     type: Object,
                     value: null
+                },
+                /**
+                 * The dialog for detached insertion point.
+                 */
+                _dialog: Object
+            },
+
+            /**
+             * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
+             */
+            _createDialog: function () {
+                var dialog = document.createElement('paper-dialog');
+                dialog.addEventListener("iron-overlay-closed", this._dialogClosed.bind(this));
+                dialog.autoFitOnAttach = true;
+                dialog.entryAnimation = "fade-in-animation";
+                dialog.exitAnimation = "fade-out-animation";
+                return dialog;
+            },
+
+            _showDialog: function () {
+                if (!this._dialog) {
+                    this._dialog = this._createDialog();
                 }
+                if (!this._dialog.opened) {
+                    this.detached = true;
+                    Polymer.dom(document.body).appendChild(this._dialog);
+                    Polymer.dom(this._dialog).appendChild(this.$.insertionPointContent);
+                    Polymer.dom.flush();
+                    this._dialog.open();
+                }
+            },
+
+            _closeDialog: function () {},
+
+            _dialogClosed: function (event) {
+                Polymer.dom(document.body).removeChild(this._dialog);
+                Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
+                Polymer.dom.flush();
+                this.detached = false;
             },
 
             _getElement: function (customAction) {
@@ -202,7 +252,7 @@
                 if (this.$.elementLoader.prefDim) {
                     var prefDim = this.$.elementLoader.prefDim;
                     this.$.pm.style.width = prefDim.width() + prefDim.widthUnit;
-                    this.$.pm.style.height = prefDim.height() + prefDim.heightUnit;
+                    this.$.pm.style.height = "calc(" + prefDim.height() + prefDim.heightUnit + " + 44px)";
                 } else {
                     this.$.pm.width = "auto";
                     this.$.pm.height = "auto";
@@ -223,9 +273,9 @@
 
             _expandColapseTap: function (event) {
                 if (this.detached) {
-                    //TODO implement content attachment.
+                    this._createDialog();
                 } else {
-                    //TODO implement content detachment.
+                    this._showDialog();
                 }
             }
         });
