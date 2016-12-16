@@ -17,6 +17,52 @@
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-in-animation.html">
 <link rel="import" href="/resources/polymer/neon-animation/animations/fade-out-animation.html">
 
+<style is="custom-style">
+    .insertion-point-dialog > #insertionPointContent {
+        margin: 0;
+        padding: 0;
+    }
+    #insertionPointContent {
+        line-height: normal;
+        overflow: auto;
+    }
+    #insertionPointContent .truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #insertionPointContent .title-bar {
+        padding: 0 16px;
+        height: 44px;
+        min-height: 44px;
+        font-size: 18px;
+        cursor: default;
+        color: white;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        background-color: var(--paper-light-blue-600);
+    }
+    #insertionPointContent .title-text {
+        pointer-events: none;
+    }
+    #insertionPointContent paper-icon-button {
+        width: 22px;
+        height: 22px;
+        padding: 0px;
+    }
+    #insertionPointContent paper-icon-button.expand-colapse-button {
+        stroke: var(--paper-grey-100);
+        fill: var(--paper-grey-100);
+        color: var(--paper-grey-100);
+    }
+    #insertionPointContent paper-icon-button.expand-colapse-button:hover {
+        stroke: var(--paper-grey-300);
+        fill: var(--paper-grey-300);
+        color: var(--paper-grey-300);
+    }
+</style>
 <dom-module id="tg-entity-centre-insertion-point">
     <template>
         <style>
@@ -63,7 +109,7 @@
                     <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                     <paper-icon-button class="expand-colapse-button" style="margin-left:10px" icon="[[_getButtonIcon(detached)]]" on-tap="_expandColapseTap"></paper-icon-button>
                 </div>
-                <div class="relative flex">
+                <div id="loadableContent" class="relative flex">
                     <tg-element-loader id="elementLoader"></tg-element-loader>
                 </div>
             </div>
@@ -135,16 +181,29 @@
                  */
                 _dialog: Object
             },
+            
+            observers: ['_adjustView(detached)'],
 
             /**
              * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
              */
             _createDialog: function () {
                 var dialog = document.createElement('paper-dialog');
+                dialog.classList.toggle("insertion-point-dialog", true);
+                dialog.classList.toggle("layout", true);
+                dialog.classList.toggle("vertical", true);
                 dialog.addEventListener("iron-overlay-closed", this._dialogClosed.bind(this));
                 dialog.autoFitOnAttach = true;
                 dialog.entryAnimation = "fade-in-animation";
                 dialog.exitAnimation = "fade-out-animation";
+                dialog.style.margin = "0px";
+                dialog.refit = function () {
+                    this.style.position = "fixed";
+                    this.style.top = "0px";
+                    this.style.left = "0px";
+                    this.style.bottom = "0px";
+                    this.style.right = "0px";
+                }.bind(dialog);
                 return dialog;
             },
 
@@ -161,7 +220,9 @@
                 }
             },
 
-            _closeDialog: function () {},
+            _closeDialog: function () {
+                this._dialog.close();
+            },
 
             _dialogClosed: function (event) {
                 Polymer.dom(document.body).removeChild(this._dialog);
@@ -224,13 +285,13 @@
                             if (promise) {
                                 return promise
                                     .then(function () {
-                                        self._adjustView();
+                                        self._adjustView(this.detached);
                                         customAction.restoreActiveElement();
                                     });
                             } else {
                                 return Promise.resolve()
                                     .then(function () {
-                                        self._adjustView();
+                                        self._adjustView(this.detached);
                                         customAction.restoreActiveElement();
                                     });
                             }
@@ -246,22 +307,22 @@
                 }
             },
 
-            _adjustView: function () {
+            _adjustView: function (detached) {
                 var self = this;
 
-                if (this.$.elementLoader.prefDim) {
+                if (this.$.elementLoader.prefDim && !detached) {
                     var prefDim = this.$.elementLoader.prefDim;
-                    this.$.pm.style.width = prefDim.width() + prefDim.widthUnit;
-                    this.$.pm.style.height = "calc(" + prefDim.height() + prefDim.heightUnit + " + 44px)";
+                    this.$.loadableContent.style.width =  prefDim.width() + prefDim.widthUnit;
+                    this.$.loadableContent.style.height = prefDim.height() + prefDim.heightUnit;
                 } else {
-                    this.$.pm.width = "auto";
-                    this.$.pm.height = "auto";
+                    this.$.loadableContent.style.width = "auto";
+                    this.$.loadableContent.style.height = "auto";
                 }
                 this.updateStyles();
             },
 
             _onIronResize: function () {
-                this._adjustView();
+                this._adjustView(this.detached);
             },
 
             _getButtonIcon: function (detached) {
@@ -273,10 +334,14 @@
 
             _expandColapseTap: function (event) {
                 if (this.detached) {
-                    this._createDialog();
+                    this._closeDialog();
                 } else {
                     this._showDialog();
                 }
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
             }
         });
     })();
