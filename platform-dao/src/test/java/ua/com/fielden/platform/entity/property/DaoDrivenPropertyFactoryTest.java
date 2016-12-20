@@ -20,7 +20,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
@@ -134,9 +133,6 @@ public class DaoDrivenPropertyFactoryTest extends AbstractDomainDrivenTestCase {
         private EntityWithDynamicCompositeKey propertyTwo;
         @IsProperty
         private String propertyThree;
-
-        public Entity() {
-        }
 
         public EntityWithMoney getProperty() {
             return property;

@@ -63,7 +63,6 @@ import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContextProducer;
-import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
@@ -1546,6 +1545,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addPrimaryAction(action(EntityEditAction.class).
                         withContext(context().withCurrentEntity().withSelectionCrit().build()).
                         icon("editor:mode-edit").
+                        withStyle("color: green").
                         shortDesc("Edit entity").
                         longDesc("Opens master for editing this entity").
                         // withNoParentCentreRefresh().
@@ -1572,6 +1572,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                         + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
                                         ))
                                 .icon("accessibility")
+                                .withStyle("color: red")
                                 .shortDesc("Dummy")
                                 .longDesc("Dummy action, simply prints its result into console.")
                                 .build()

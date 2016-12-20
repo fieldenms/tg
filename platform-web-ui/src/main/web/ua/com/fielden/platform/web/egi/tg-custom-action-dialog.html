@@ -97,7 +97,7 @@
                 <paper-icon-button class="close-button" icon="icons:cancel" on-tap="closeDialog"></paper-icon-button>
             </div>
         </div>
-        <div hidden$=[[_minimised]] class="relative flex">
+        <div id="dialogBody" hidden$=[[_minimised]] class="relative flex">
             <tg-element-loader id="elementLoader"></tg-element-loader>
         </div>
         <tg-toast id="toaster"></tg-toast>
@@ -243,13 +243,7 @@
             },
 
             _prefDimChanged: function (newValue, oldValue) {
-                if (newValue) {
-                    this.style.width = (typeof newValue.width === 'function' ? newValue.width() : newValue.width) + newValue.widthUnit;
-                    this.style.height = (typeof newValue.height === 'function' ? newValue.height() : newValue.height) + newValue.heightUnit;
-                } else {
-                    this.style.width = 'auto';
-                    this.style.height = 'auto';
-                }
+                this._dialogMinimised();
             },
 
             _onCaptureClick: function (event) {
@@ -317,10 +311,10 @@
                     this._closeDialogAndIndicateActionCompletion(this._lastAction);
                 }
             },
-            
+
             _closeChildren: function () {
                 var canClose = true;
-                
+
                 this._childDialogs.slice().forEach(function (dialog) {
                     dialog.closeDialog();
                     if (dialog.opened) {
@@ -330,23 +324,24 @@
                         }
                     }
                 });
-                
+
                 return canClose;
             },
 
             _dialogMinimised: function () {
-                if (this._minimised) {
-                    this.style.width = "auto";
-                    this.style.height = "auto";
-                } else {
-                    if (this.prefDim) {
-                        this.style.width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
-                        this.style.height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
-                    } else {
-                        this.style.width = "auto";
-                        this.style.height = "auto";
-                    }
+                var width = "auto";
+                var height = "auto";
+                if (!this._minimised && this.prefDim) {
+                    width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
+                    height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
                 }
+                this._setDialogBodyDimensions(width, height);
+            },
+
+            _setDialogBodyDimensions: function (width, height) {
+                this.style.width = width;
+                // +44px - height of the title bar please see styles for .title-bar selector.
+                this.style.height = "calc(" + height + " + 44px)";
             },
 
             _isTitleSplitterHidden: function (staticTitle, dynamicTitle) {
