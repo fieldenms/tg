@@ -229,6 +229,7 @@
                 Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
                 this.detached = false;
+                this.notifyResize();
             },
 
             _getElement: function (customAction) {
