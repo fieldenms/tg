@@ -1495,18 +1495,20 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
         // Therefore, it is important to perform ad-hoc property retrieval via reflection.
         final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(field -> field.getName());
 
-        // Copy each identified property into a new instance.
-        propertyNames.forEach(propName -> {
-            if (AbstractEntity.KEY.equals(propName) && copy.getKeyType().equals(getKeyType()) && DynamicEntityKey.class.isAssignableFrom(getKeyType())) {
-                copy.setKey(new DynamicEntityKey(copy));
-            } else {
-                try {
-                    copy.set(propName, get(propName));
-                } catch (final Exception e) {
-                    logger.trace("Setter for property " + propName + " did not succeed during coping.");
+        // Copy each identified property, which is not proxied into a new instance.
+        propertyNames
+            .filter(propName -> !proxiedPropertyNames().contains(propName))
+            .forEach(propName -> {
+                if (AbstractEntity.KEY.equals(propName) && copy.getKeyType().equals(getKeyType()) && DynamicEntityKey.class.isAssignableFrom(getKeyType())) {
+                    copy.setKey(new DynamicEntityKey(copy));
+                } else {
+                    try {
+                        copy.set(propName, get(propName));
+                    } catch (final Exception e) {
+                        logger.trace(format("Setter for property %s did not succeed during coping.", propName));
+                    }
                 }
-            }
-        });
+            });
         copy.endInitialising();
         return copy;
     }
@@ -1519,8 +1521,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     protected final <COPY extends AbstractEntity> COPY createCopyInstance(final Class<COPY> type) {
-        assertEntityFactoryPresence();
-        return getEntityFactory().newEntity(type, getId());
+        final COPY copy;
+        if (this.isInstrumented()) {
+            assertEntityFactoryPresence();
+            copy = getEntityFactory().newEntity(type, getId());
+        } else {
+            copy = EntityFactory.newPlainEntity(type,  getId()); 
+        }
+        copy.setVersion(getVersion());
+        return copy;
     }
 
     /**
