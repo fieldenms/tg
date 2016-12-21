@@ -11,8 +11,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgMessage;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 
-public class TgStopRenderingCustomiser implements IRenderingCustomiser<AbstractEntity<?>, Map<String, Map<String, String>>> {
-    
+public class TgStopRenderingCustomiser implements IRenderingCustomiser<Map<String, Map<String, String>>> {
+
     private final List<String> properties = new ArrayList<String>() {
         {
             add("machineResult");

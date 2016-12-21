@@ -2,6 +2,7 @@ package ua.com.fielden.platform.dao.dynamic;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -25,9 +26,6 @@ import ua.com.fielden.platform.types.Money;
 @MapEntityTo("SLAVE_ENTITY")
 public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
-
-    protected SlaveEntity() {
-    }
 
     @IsProperty
     @CompositeKeyMember(1)
@@ -65,7 +63,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
 
     ///////// Collections /////////
     @IsProperty(EvenSlaverEntity.class)
-    private List<EvenSlaverEntity> collection = new ArrayList<EvenSlaverEntity>();
+    private List<EvenSlaverEntity> collection = new ArrayList<>();
 
     public MasterEntity getMasterEntityProp() {
         return masterEntityProp;
@@ -140,7 +138,7 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     }
 
     public List<EvenSlaverEntity> getCollection() {
-        return collection;
+        return Collections.unmodifiableList(collection);
     }
 
     @Observable

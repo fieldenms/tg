@@ -11,7 +11,7 @@ import ua.com.fielden.platform.error.Warning;
 public class BceForEntityWithWarningsIntProp implements IBeforeChangeEventHandler<Integer> {
 
     @Override
-    public Result handle(MetaProperty<Integer> property, Integer newValue, Integer oldValue, Set<Annotation> mutatorAnnotations) {
+    public Result handle(MetaProperty<Integer> property, Integer newValue, Set<Annotation> mutatorAnnotations) {
         if (newValue != null && newValue > 100) {
             return new Warning("Value is potentially too large.");
         }

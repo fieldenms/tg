@@ -150,7 +150,6 @@ public class TgAuthor extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    @EntityExists(TgPersonName.class)
     public TgAuthor setName(final TgPersonName name) {
         this.name = name;
         return this;

@@ -63,10 +63,6 @@ public class MigrationError extends AbstractEntity<DynamicEntityKey> {
     /**
      * Constructor for the entity factory from TG.
      */
-    protected MigrationError() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public MigrationHistory getMigrationHistory() {
         return migrationHistory;
     }

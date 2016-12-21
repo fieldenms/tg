@@ -32,6 +32,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     private boolean lightDesc = false;
 
     private final Map<String, Boolean> additionalProps = new LinkedHashMap<>();
+    private final Map<String, Boolean> defaultAdditionalProps = new LinkedHashMap<>();
 
     protected AbstractEntityAutocompletionWidget(
             final String widgetPath,
@@ -43,7 +44,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         // let's provide some sensible defaults for additional properties
         // in most cases description is included if it exists for the type... also it is searched by default
         if (EntityUtils.hasDescProperty(propType)) {
-            additionalProps.put(AbstractEntity.DESC, true);
+            defaultAdditionalProps.put(AbstractEntity.DESC, true);
         }
         // in case of composite entities that has more than one key member, all key members should be included and highlighted as they'are searched by
         // in case of a single key member, displaying only the key is sufficient
@@ -51,10 +52,13 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
             final List<Field> members = Finder.getKeyMembers(propType);
             if (members.size() > 1) {
                 for (final Field member: members) {
-                    additionalProps.put(member.getName(), true);
+                    defaultAdditionalProps.put(member.getName(), true);
                 }
             }
         }
+        
+        // assigned the collected default props 
+        additionalProps.putAll(defaultAdditionalProps);
     }
 
     public AbstractEntityAutocompletionWidget setAdditionalProps(final List<Pair<String, Boolean>> pairs) {
@@ -62,6 +66,9 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
         for (final Pair<String, Boolean> pair: pairs) {
             // TODO potentially there could be a check whether the specified properties really belong to a corresponding entity type
             additionalProps.put(pair.getKey(), pair.getValue());
+        }
+        if (additionalProps.isEmpty()) {
+            additionalProps.putAll(defaultAdditionalProps);
         }
         return this;
     }

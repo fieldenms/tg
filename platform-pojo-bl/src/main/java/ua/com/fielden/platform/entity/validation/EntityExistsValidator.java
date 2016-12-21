@@ -44,7 +44,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     }
 
     @Override
-    public Result handle(final MetaProperty<T> property, final T newValue, final T oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<T> property, final T newValue, final Set<Annotation> mutatorAnnotations) {
         final IEntityDao<T> co = coFinder.find(type);
         if (co == null) {
             throw new IllegalStateException("EntityExistsValidator is not fully initialised: companion object is missing");

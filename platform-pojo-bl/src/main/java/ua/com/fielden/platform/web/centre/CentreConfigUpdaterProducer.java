@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.web.centre;
 
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
+
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.inject.Inject;
 
@@ -20,6 +25,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.streaming.ValueCollectors;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -39,10 +45,17 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
     }
 
     @Override
-    // @Authorise(UserRoleReviewToken.class)
     protected CentreConfigUpdater provideCurrentlyAssociatedValues(final CentreConfigUpdater entity, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>> masterEntity) {
         final LinkedHashSet<SortingProperty> sortingProperties = createSortingProperties(masterEntity.freshCentreSupplier().get(), masterEntity.getEntityClass(), masterEntity.getManagedType(), factory());
         entity.setSortingProperties(sortingProperties);
+        
+        final Set<String> sortingVals = sortingProperties.stream()
+            .filter(sp -> sp.getSortingNumber() >= 0) // consider only 'sorted' properties
+            .sorted((o1, o2) -> o1.getSortingNumber().compareTo(o2.getSortingNumber()))
+            .map(sp -> sp.getKey() + ':' + (Boolean.TRUE.equals(sp.getSorting()) ? "asc" : "desc"))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+        
+        entity.setSortingVals(new ArrayList<>(sortingVals));
         return entity;
     }
 
@@ -51,12 +64,12 @@ public class CentreConfigUpdaterProducer extends AbstractFunctionalEntityForColl
         final List<Pair<String, Ordering>> orderedProperties = cdtmae.getSecondTick().orderedProperties(root);
         final LinkedHashSet<SortingProperty> result = new LinkedHashSet<>();
         for (final String checkedProp: checkedProperties) {
-            if ("".equals(checkedProp) || (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) && 
-                    !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp))) {
+            if ("".equals(checkedProp) || (!AbstractDomainTreeRepresentation.isCalculatedAndOfTypes(managedType, checkedProp, CalculatedPropertyCategory.AGGREGATED_EXPRESSION) &&
+                    !AnnotationReflector.isPropertyAnnotationPresent(CustomProp.class, managedType, checkedProp) && !isShortCollection(managedType, checkedProp))) {
                 final Pair<String, String> titleAndDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, checkedProp);
                 final SortingProperty sortingProperty = factory.newEntity(SortingProperty.class, null, "".equals(checkedProp) ? "this" : checkedProp, titleAndDesc.getValue());
                 sortingProperty.setTitle(titleAndDesc.getKey());
-    
+
                 final Pair<Ordering, Integer> orderingAndNumber = getOrderingAndNumber(orderedProperties, checkedProp);
                 if (orderingAndNumber != null) {
                     sortingProperty.setSorting(Ordering.ASCENDING == orderingAndNumber.getKey()); // 'null' is by default, means no sorting exist

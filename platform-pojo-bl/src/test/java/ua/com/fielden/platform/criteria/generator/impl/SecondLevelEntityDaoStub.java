@@ -178,4 +178,10 @@ public class SecondLevelEntityDaoStub implements ISecondLevelEntity {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public SecondLevelEntity new_() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

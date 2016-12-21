@@ -10,8 +10,10 @@
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
 <link rel="import" href="/resources/polymer/paper-drawer-panel/paper-drawer-panel.html">
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/components/postal-lib.html">
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/components/tg-menu-search-input.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
@@ -22,7 +24,8 @@
     <style>
         :host {
             --paper-fab-background: #fcfcfc;
-            --paper-menu-color: #01579b;
+            --paper-menu-color: var(--paper-light-blue-700);
+            --paper-menu-undone-color: var(--paper-light-blue-100);
             --paper-item-min-height: 40px;
             --paper-fab: {
                 color: #666464;
@@ -46,6 +49,31 @@
                 transition: all 300ms ease-in-out;
             }
             ;
+        }
+        paper-menu.menu-content {
+            --paper-menu: {
+                padding: 0;
+                margin: 0;
+                overflow: hidden;
+            }
+            ;
+        }
+        paper-checkbox::shadow #checkboxLabel {
+            display: none;
+        }
+        paper-checkbox {
+            margin: 0 4px 2px 2px;
+            --paper-checkbox-size: 16px;
+            --paper-checkbox-unchecked-color: var(--paper-menu-color);
+            --paper-checkbox-unchecked-ink-color: var(--paper-menu-color);
+        }
+        paper-checkbox.blue {
+            --paper-checkbox-checked-color: var(--paper-menu-color);
+            --paper-checkbox-checked-ink-color: var(--paper-menu-color);
+        }
+        paper-checkbox.blue.undone {
+            --paper-checkbox-checked-color: #acdbfe;
+            --paper-checkbox-checked-ink-color: var(--paper-menu-color);
         }
         neon-animated-pages {
             position: absolute;
@@ -76,6 +104,11 @@
         .menu-item-view {
             overflow: auto;
         }
+        .menu-item-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .tool-bar {
             padding: 0 16px;
             height: 44px;
@@ -89,8 +122,10 @@
         #drawerPanel:not([narrow]) paper-menu {
             border-right: 1px solid #CBCDCE;
         }
-        #menuButton {
-            margin-right: 24px;
+        tg-menu-search-input {
+            margin-right: 8px;
+            --menu-search-icon-color: white;
+            --menu-search-input-color: white;
         }
     </style>
     <template>
@@ -100,20 +135,25 @@
             <div class="layout vertical" drawer>
 
                 <div id="menuToolBar" class="tool-bar layout horizontal center">
-                    <div class="flex">[[menuItem.title]]</div>
+                    <div class="flex">[[menuItem.key]]</div>
                 </div>
 
                 <paper-menu id="menu" class="flex" attr-for-selected="name" on-iron-activate="_itemActivated">
-                    <template is="dom-repeat" on-dom-change="_menuTemplateRendered" items="[[menuItem.menu]]" as="firstLevelItem">
+                    <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
                         <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
-                            <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.description]]">
-                                <iron-icon icon="av:play-arrow" opened$="[[firstLevelItem.opened]]" without-menu$="[[!firstLevelItem.menu]]"></iron-icon>
-                                <span>[[firstLevelItem.title]]</span>
+                            <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.desc]]">
+                                <iron-icon icon="av:play-arrow" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
+                                <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
+                                <span>[[firstLevelItem.key]]</span>
                             </paper-item>
-                            <template is="dom-if" if="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
+                            <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                                 <paper-menu class="menu-content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
-                                    <template is="dom-repeat" items="[[firstLevelItem.menu]]" on-dom-change="_menuTemplateRendered">
-                                        <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.description]]">[[item.title]]</paper-item>
+                                    <template is="dom-repeat" items="[[firstLevelItem.menu]]">
+                                        <!--TODO remove groupIndex-->
+                                        <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
+                                            <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
+                                            <span class="menu-item-title">[[item.key]]</span>
+                                        </paper-item>
                                     </template>
                                 </paper-menu>
                             </template>
@@ -128,6 +168,7 @@
                 <div id="viewToolBar" class="tool-bar layout horizontal center">
                     <div class="layout horizontal center flex">
                         <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
+                        <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
                         <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
                     </div>
                 </div>
@@ -135,12 +176,12 @@
                 <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
                     <div class="menu-item-view" page-name="_"></div>
                     <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
-                        <template is="dom-if" if="[[!firstLevelItem.menu]]">
-                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.title]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                        <template is="dom-if" if="[[!_isMenuPresent(firstLevelItem.menu)]]">
+                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
                         </template>
-                        <template is="dom-if" if="[[firstLevelItem.menu]]">
+                        <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                             <template is="dom-repeat" items="[[firstLevelItem.menu]]">
-                                <tg-menu-item-view page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.description]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.title]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                                <tg-menu-item-view page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
                             </template>
                         </template>
                     </template>
@@ -157,7 +198,7 @@
     (function () {
         var findMenuItem = function (itemName, menuItem) {
             return menuItem.menu && menuItem.menu.find(function (item) {
-                return item.title === decodeURIComponent(itemName);
+                return item.key === decodeURIComponent(itemName);
             });
         };
         var findNestedMenuItem = function (itemPath, menuItem) {
@@ -179,12 +220,15 @@
             is: "tg-view-with-menu",
 
             properties: {
+                menu: Array,
                 menuItem: Object,
                 selectedModule: String,
                 submodule: {
-                    type: Object,
+                    type: String,
                     notify: true
                 },
+                canEdit: Boolean,
+                menuSaveCallback: Function,
                 animationConfig: {
                     value: function () {
                         return {
@@ -224,7 +268,6 @@
                     type: String,
                     observer: '_selectedPageChanged'
                 }
-
             },
 
             behaviors: [
@@ -265,59 +308,139 @@
                 return changedViews.length > 0 ? changedViews : undefined;
             },
 
+            searchMenu: function (event) {
+                this.$.menuSearcher.searchMenu();
+            },
+
+            _calcCheckboxTooltip: function (menu, visible) {
+                return "Toggle to make this " + (this._isMenuPresent(menu) ? "group of menu items " : "menu item ") + (visible ? "invisible" : "visible");
+            },
+
+            _calcGroupStyle: function (firstLevelItem) {
+                var clazz = "blue";
+                if (firstLevelItem.visible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {
+                    return element.visible === true
+                }) && !firstLevelItem.menu.every(function (element) {
+                    return element.visible === false
+                })) {
+                    clazz += " undone";
+                }
+                return clazz;
+            },
+
+            _changeGroupVisibility: function (e) {
+                var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
+                var modelVisibility = e.target.checked;
+                var visisbleItems = [];
+                var invisibleItems = [];
+                var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
+                this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
+                arrayToBeUsed.push(groupUri);
+                if (e.model.firstLevelItem.menu) {
+                    e.model.firstLevelItem.menu.forEach(function (menuItem, menuItemIndex) {
+                        if (menuItem.visible !== modelVisibility) {
+                            arrayToBeUsed.push(this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, menuItem.key));
+                            this.set("menuItem.menu." + e.model.groupIndex + ".menu." + menuItemIndex + ".visible", modelVisibility);
+                        }
+                    }.bind(this));
+                }
+                var checkbox = Polymer.dom(this.$.menu).querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
+                checkbox.classList.toggle("undone", false);
+                Polymer.updateStyles();
+                this.menuSaveCallback(visisbleItems, invisibleItems);
+            },
+
+            _changeVisibility: function (e) {
+                var menuItemUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, e.model.item.key);
+                var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
+                var modelVisibility = e.target.checked;
+                var visisbleItems = [];
+                var invisibleItems = [];
+                // Changing model in order to find out whether group item should be changed or not.
+                this.set("menuItem.menu." + e.model.groupIndex + ".menu." + e.model.index + ".visible", modelVisibility);
+                var shouldChangeGroupVisibility = e.model.firstLevelItem.menu.every(function (element) {
+                        return element.visible === modelVisibility
+                    }) ||
+                    (modelVisibility && e.model.firstLevelItem.visible === false);
+                // Find out what action should be performed hiding menu items or to make them visible.
+                var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
+                arrayToBeUsed.push(menuItemUri);
+                if (shouldChangeGroupVisibility) {
+                    arrayToBeUsed.push(groupUri);
+                    this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
+                }
+                var checkbox = Polymer.dom(this.$.menu).querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
+                if (this.menuItem.menu[e.model.groupIndex].visible && !e.model.firstLevelItem.menu.every(function (element) {
+                    return element.visible === true
+                }) && !e.model.firstLevelItem.menu.every(function (element) {
+                    return element.visible === false
+                })) {
+                    checkbox.classList.toggle("undone", true);
+                } else {
+                    checkbox.classList.toggle("undone", false);
+                }
+                Polymer.updateStyles();
+                this.menuSaveCallback(visisbleItems, invisibleItems);
+            },
+
+            _createUriFromModel(menuItem, groupItem, item) {
+                return encodeURIComponent(menuItem) + "/" + encodeURIComponent(groupItem) + (item ? "/" + encodeURIComponent(item) : "");
+            },
+
+            _isMenuPresent: function (menu) {
+                return menu && menu.length > 0;
+            },
+
             _calcItemPath: function (groupItem, item) {
-                return encodeURIComponent(groupItem.title) + (item ? "/" + encodeURIComponent(item.title) : '');
+                return encodeURIComponent(groupItem.key) + (item ? "/" + encodeURIComponent(item.key) : '');
             },
 
             _updatePage(menuItem, submodule) {
                 var pageName;
-                var submodulePart = submodule.path.substring(1).split("?")[0];
-                if (menuItem.title === decodeURIComponent(this.selectedModule)) {
-                    this._selectPage(submodulePart);
+                var submodulePart = submodule.substring(1).split("?")[0];
+                if (menuItem.key === decodeURIComponent(this.selectedModule)) {
                     this._selectMenu(submodulePart);
+                    this._selectPage(submodulePart);
                 }
             },
 
             _selectPage: function (pagePath) {
                 var menuPath = findNestedMenuItem(pagePath, this.menuItem);
-                if (menuPath.menuItem && !menuPath.menuItem.menu) {
+                if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
                     this.set("_selectedPage", menuPath.path);
                 }
             },
 
             _selectMenu: function (pagePath) {
-                var menuPath = findNestedMenuItem(pagePath, this.menuItem);
-                var path = menuPath.path;
-                var pathParts = findNestedMenuItem(pagePath, this.menuItem).path.split('/');
-                var topMenu = this.$$("paper-submenu[name='" + pathParts[0] + "']");
-                var submenu = this.$$("paper-menu[name='" + pathParts[0] + "']");
-                var submenuItem = this.$$("paper-item[name='" + path + "']");
-                var wasSelected;
-                if (!topMenu || pathParts[1] && menuPath.menuItem && (!submenu || !submenuItem)) {
-                    this._menuToSelectAfterLoad = pagePath;
-                    wasSelected = false;
-                } else {
-                    this.$.menu.select(pathParts[0]);
-                    topMenu.open();
-                    if (submenu) {
-                        submenu.select(path);
-                    }
-                    wasSelected = true;
-                }
-                return wasSelected;
-            },
-
-            _menuTemplateRendered: function () {
-                if (this._menuToSelectAfterLoad && this._selectMenu(this._menuToSelectAfterLoad)) {
-                    delete this._menuToSelectAfterLoad;
-                }
-            },
-
-            _initDrawerPanel: function () {
-                if (this._selectedPage === '_') {
+                var previousTopMenu, menuPath, path, pathParts, topMenu, submenu;
+                if (pagePath === '_') {
                     this.$.drawerPanel.selected = 'drawer';
                 } else {
-                    this.$.drawerPanel.selected = 'main';
+                    menuPath = findNestedMenuItem(pagePath, this.menuItem);
+                    path = menuPath.path;
+                    pathParts = path.split('/');
+                    topMenu = this.$$("paper-submenu[name='" + pathParts[0] + "']");
+                    previousTopMenu = this.$.menu.selected && this.$$("paper-submenu[name='" + this.$.menu.selected + "']");
+                    submenu = this.$$("paper-menu[name='" + pathParts[0] + "']");
+                    if (this.$.menu.selected !== pathParts[0]) {
+                        if (previousTopMenu) {
+                            previousTopMenu.close();
+                        }
+                        this.$.menu.select(pathParts[0]);
+                        topMenu.open();
+                        if (submenu) {
+                            submenu.select(path);
+                        }
+                    } else if (submenu && submenu.selected !== path) {
+                        if (submenu) {
+                            submenu.select(path);
+                        }
+                    }
+                    if (menuPath.menuItem && this._isMenuPresent(menuPath.menuItem.menu)) {
+                        this.$.drawerPanel.selected = 'drawer';
+                    } else {
+                        this.$.drawerPanel.selected = 'main';
+                    }
                 }
             },
 
@@ -334,15 +457,14 @@
             },
 
             _calcSubmoduleId: function (firtsLevelItem, secondLevelItem) {
-                return firtsLevelItem.title + (secondLevelItem ? '/' + secondLevelItem.title : '');
+                return firtsLevelItem.key + (secondLevelItem ? '/' + secondLevelItem.key : '');
             },
 
             /**
              * The listener that listens the menu item activation on tap.
              */
             _itemActivated: function (e, detail) {
-                this.set("submodule.path", "/" + detail.selected);
-                this._selectPage(detail.selected);
+                this.submodule = "/" + detail.selected
             },
 
             _selectedPageChanged: function (newValue, oldValue) {
@@ -354,15 +476,18 @@
                     submenu = this.$$("paper-menu[name='" + oldFirstLevelItem + "']");
                     submenu.select();
                 }
-                this._initDrawerPanel();
             },
 
             _animationFinished: function (e, detail, source) {
                 var viewToLoad;
-                if (this.$.menu.selected !== '_') {
+                if (this.$.pages.selected !== '_') {
                     viewToLoad = detail.toPage;
-                    if (viewToLoad && !viewToLoad.wasLoaded()) {
-                        viewToLoad.load();
+                    if (viewToLoad) {
+                        if (!viewToLoad.wasLoaded()) {
+                            viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
+                        } else {
+                            viewToLoad.focusLoadedView();
+                        }
                     }
                 }
             },
@@ -374,6 +499,13 @@
                         target.__content.focus();
                     }
                 }
+            },
+
+            _tapCheckbox: function (event) {
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
             }
         });
     })();

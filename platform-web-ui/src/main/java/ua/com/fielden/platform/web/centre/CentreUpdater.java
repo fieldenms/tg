@@ -371,6 +371,19 @@ public class CentreUpdater {
     private static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final ICentreDomainTreeManagerAndEnhancer differencesCentre, final Class<AbstractEntity<?>> root) {
         for (final String property : differencesCentre.getFirstTick().checkedProperties(root)) {
             if (!AbstractDomainTree.isPlaceholder(property)) {
+                // Check whether the 'property' has not been disappeared from domain type since last server restart.
+                // In such case 'checkedProperties' will contain that property but 'managedType(root, differencesCentre)' will not contain corresponding field.
+                // Such properties need to be silently ignored. During next diffCentre creation such properties will disappear from diffCentre fully.
+                final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
+                if (!isEntityItself) {
+                    try {
+                        PropertyTypeDeterminator.determinePropertyType(managedType(root, differencesCentre), property);
+                    } catch (final Exception ex) {
+                        logger.warn(String.format("Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", property, managedType(root, differencesCentre).getSimpleName()), ex);
+                        continue;
+                    }
+                }
+                
                 if (AbstractDomainTree.isDoubleCriterion(managedType(root, differencesCentre), property)) {
                     if (differencesCentre.getFirstTick().isMetaValuePresent(MetaValueType.EXCLUSIVE, root, property)) {
                         targetCentre.getFirstTick().setExclusive(root, property, differencesCentre.getFirstTick().getExclusive(root, property));
@@ -421,6 +434,19 @@ public class CentreUpdater {
             }
             // and apply new ones from diff centre:
             for (final Pair<String, Ordering> newOrderedProperty: differencesCentre.getSecondTick().orderedProperties(root)) {
+                // Check whether the 'property' has not been disappeared from domain type since last server restart.
+                // In such case 'orderedProperties' will contain that property but 'managedType(root, differencesCentre)' will not contain corresponding field.
+                // Such properties need to be silently ignored. During next diffCentre creation such properties will disappear from diffCentre fully.
+                final boolean isEntityItself = "".equals(newOrderedProperty.getKey()); // empty property means "entity itself"
+                if (!isEntityItself) {
+                    try {
+                        PropertyTypeDeterminator.determinePropertyType(managedType(root, differencesCentre), newOrderedProperty.getKey());
+                    } catch (final Exception ex) {
+                        logger.warn(String.format("Property [%s] could not be found in type [%s] in diffCentre. It will be skipped. Most likely this property was deleted from domain type definition.", newOrderedProperty.getKey(), managedType(root, differencesCentre).getSimpleName()), ex);
+                        continue;
+                    }
+                }
+                
                 targetCentre.getSecondTick().toggleOrdering(root, newOrderedProperty.getKey());
                 if (Ordering.DESCENDING == newOrderedProperty.getValue()) {
                     targetCentre.getSecondTick().toggleOrdering(root, newOrderedProperty.getKey());

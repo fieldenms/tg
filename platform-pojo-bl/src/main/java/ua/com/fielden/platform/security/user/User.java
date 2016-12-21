@@ -273,4 +273,17 @@ public class User extends ActivatableAbstractEntity<String> {
 
         return superResult;
     }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        // if "this" and "that" users are persisted and not dirty then an id-based comparison should be used
+        if (obj instanceof User && this.isPersisted() && (!this.isInstrumented() || !this.isDirty())) {
+            final User that = (User) obj;
+            if (that.isPersisted() && (!that.isInstrumented() || !that.isDirty())) {
+                return this.getId().equals(that.getId());
+            }
+            
+        }
+        return super.equals(obj);
+    }
 }

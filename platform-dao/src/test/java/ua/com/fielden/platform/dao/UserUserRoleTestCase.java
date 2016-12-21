@@ -23,13 +23,13 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
- * Test case for the {@link IUserRoleDao}, {@link IUserAndRoleAssociation}, and {@link SecurityRoleAssociationDao} classes
+ * Test case for the {@link IUserRole}, {@link IUserAndRoleAssociation}, and {@link SecurityRoleAssociationDao} classes
  * 
  * @author TG Team
  * 
  */
 public class UserUserRoleTestCase extends AbstractDaoTestCase {
-    private final IUserRoleDao coUserRole = getInstance(IUserRoleDao.class);
+    private final IUserRole coUserRole = getInstance(IUserRole.class);
     private final IUserAndRoleAssociation coUserAndRoleAssociation = getInstance(IUserAndRoleAssociation.class);
     private final ISecurityRoleAssociation coSecurityRoleAssociation = getInstance(ISecurityRoleAssociation.class);
     private final IUser coUser = getInstance(IUser.class);

@@ -268,7 +268,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     }
 
     @Test
-    public void test_that_children_of_crit_only_AE_or_AE_collection_property_are_excluded() {
+    public void test_that_children_of_crit_only_AE_or_AE_collection_property_are_NOT_excluded() {
         // test that crit-only entity properties itself are included
         allLevels(new IAction() {
             @Override
@@ -277,28 +277,28 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
             }
         }, "critOnlyAEProp", "critOnlyAECollectionProp");
 
-        // test that crit-only entity properties children are excluded (1-level children)
+        // test that crit-only entity properties children are NOT excluded (1-level children)
         allLevels(new IAction() {
             @Override
             public void action(final String name) {
-                assertTrue("Crit-only AE property/collection child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
+                assertFalse("Crit-only AE property/collection child should be not excluded.", dtm().isExcludedImmutably(MasterEntity.class, name));
             }
         }, "critOnlyAEProp.integerProp", "critOnlyAECollectionProp.integerProp");
 
         // test that crit-only entity properties children are excluded (2-level children)
-        assertTrue("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "critOnlyAEProp.entityProp.integerProp"));
-        assertTrue("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.critOnlyAEProp.slaveEntityProp.integerProp"));
-        assertTrue("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.entityProp.critOnlyAEProp.entityProp.integerProp"));
-        assertTrue("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "collection.critOnlyAEProp.slaveEntityProp.integerProp"));
-        assertTrue("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.collection.critOnlyAEProp.entityProp.integerProp"));
-        assertTrue("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyAEProp.slaveEntityProp.integerProp"));
+        assertFalse("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "critOnlyAEProp.entityProp.integerProp"));
+        assertFalse("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.critOnlyAEProp.slaveEntityProp.integerProp"));
+        assertFalse("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.entityProp.critOnlyAEProp.entityProp.integerProp"));
+        assertFalse("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "collection.critOnlyAEProp.slaveEntityProp.integerProp"));
+        assertFalse("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.collection.critOnlyAEProp.entityProp.integerProp"));
+        assertFalse("Crit-only AE property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyAEProp.slaveEntityProp.integerProp"));
 
-        assertTrue("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "critOnlyAECollectionProp.entityProp.integerProp"));
-        assertTrue("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.critOnlyAECollectionProp.slaveEntityProp.integerProp"));
-        assertTrue("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.entityProp.critOnlyAECollectionProp.entityProp.integerProp"));
-        assertTrue("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "collection.critOnlyAECollectionProp.slaveEntityProp.integerProp"));
-        assertTrue("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.collection.critOnlyAECollectionProp.entityProp.integerProp"));
-        assertTrue("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyAECollectionProp.slaveEntityProp.integerProp"));
+        assertFalse("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "critOnlyAECollectionProp.entityProp.integerProp"));
+        assertFalse("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.critOnlyAECollectionProp.slaveEntityProp.integerProp"));
+        assertFalse("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.entityProp.critOnlyAECollectionProp.entityProp.integerProp"));
+        assertFalse("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "collection.critOnlyAECollectionProp.slaveEntityProp.integerProp"));
+        assertFalse("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.collection.critOnlyAECollectionProp.entityProp.integerProp"));
+        assertFalse("Crit-only AE collection property child should be excluded.", dtm().isExcludedImmutably(MasterEntity.class, "entityProp.collection.slaveEntityProp.critOnlyAECollectionProp.slaveEntityProp.integerProp"));
     }
 
     ////////////////////// 1.5. Recursive excluding logic //////////////////////
@@ -420,8 +420,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
             }
         }, "entityProp.collection.slaveEntityProp.moneyProp.amount", //
                 "collection.entityPropWithoutKeyType.key", //
-                "entityProp.collection.enumProp", //
-                "entityProp.collection.critOnlyAECollectionProp.integerProp"); //
+                "entityProp.collection.enumProp"); //
     }
 
     ////////////////////// 2.1. Specific disabling logic //////////////////////
@@ -492,8 +491,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
             }
         }, "entityProp.collection.slaveEntityProp.moneyProp.amount", //
                 "collection.entityPropWithoutKeyType.key", //
-                "entityProp.collection.enumProp", //
-                "entityProp.collection.critOnlyAECollectionProp.integerProp"); //
+                "entityProp.collection.enumProp"); //
     }
 
     ////////////////////// 3.1. Specific disabling logic //////////////////////
@@ -568,8 +566,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
             }
         }, "entityProp.collection.slaveEntityProp.moneyProp.amount", //
                 "collection.entityPropWithoutKeyType.key", //
-                "entityProp.collection.enumProp", //
-                "entityProp.collection.critOnlyAECollectionProp.integerProp"); //
+                "entityProp.collection.enumProp"); //
     }
 
     ////////////////////// 4.1. Specific checking logic //////////////////////
@@ -647,8 +644,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
             }
         }, "entityProp.collection.slaveEntityProp.moneyProp.amount", //
                 "collection.entityPropWithoutKeyType.key", //
-                "entityProp.collection.enumProp", //
-                "entityProp.collection.critOnlyAECollectionProp.integerProp"); //
+                "entityProp.collection.enumProp"); //
     }
 
     ////////////////////// 5.1. Specific checking logic //////////////////////
@@ -767,7 +763,6 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
             }
         }, "entityProp.collection.slaveEntityProp.moneyProp.amount", //
                 "collection.entityPropWithoutKeyType.key", //
-                "entityProp.collection.enumProp", //
-                "entityProp.collection.critOnlyAECollectionProp.integerProp"); //
+                "entityProp.collection.enumProp"); //
     }
 }

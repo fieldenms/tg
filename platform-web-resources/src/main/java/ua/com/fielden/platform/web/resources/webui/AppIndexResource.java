@@ -2,8 +2,6 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import java.io.ByteArrayInputStream;
 import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
-import java.util.List;
 
 import org.restlet.Context;
 import org.restlet.Request;
@@ -63,7 +61,7 @@ public class AppIndexResource extends DeviceProfileDifferentiatorResource {
     @Override
     protected Representation get() throws ResourceException {
         final User currentUser = userProvider.getUser();
-        if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && isJRebelEnabled() && currentUser != null) {
+        if (!Workflows.deployment.equals(webUiConfig.workflow()) && !Workflows.vulcanizing.equals(webUiConfig.workflow()) && isDebugMode() && currentUser != null) {
             // if application user hits refresh -- all configurations will be cleared (including cahced instances of centres). This is useful when using with JRebel -- no need to restart server after 
             //  changing Web UI configurations (all configurations should exist in scope of IWebUiConfig.initConfiguration() method).
             webUiConfig.clearConfiguration(serverGdtm.get(currentUser.getKey()));
@@ -79,12 +77,8 @@ public class AppIndexResource extends DeviceProfileDifferentiatorResource {
      * 
      * @return
      */
-    private boolean isJRebelEnabled() {
-        final RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
-        final List<String> arguments = runtimeMxBean.getInputArguments();
-        
-        return arguments.stream()
-            .filter(argument -> argument.startsWith("-agentpath:") && (argument.contains("jrebel64.") || argument.contains("jrebel32.")))
-            .count() > 0;
+    private boolean isDebugMode() {
+        return ManagementFactory.getRuntimeMXBean()
+                .getInputArguments().toString().indexOf("jdwp") >= 0;
     }
 }

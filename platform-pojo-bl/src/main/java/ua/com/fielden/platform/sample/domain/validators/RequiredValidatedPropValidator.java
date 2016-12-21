@@ -17,7 +17,7 @@ public class RequiredValidatedPropValidator implements IBeforeChangeEventHandler
     }
 
     @Override
-    public Result handle(final MetaProperty<Integer> property, final Integer newValue, final Integer oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Integer> property, final Integer newValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue > 9999) {
             return Result.failure(newValue, "Over 9999.");
         } else if (newValue > 100) {

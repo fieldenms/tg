@@ -42,4 +42,11 @@ public class TgCollectionalSerialisationParent extends AbstractEntity<String> {
     public Set<TgCollectionalSerialisationChild> getCollProp() {
         return Collections.unmodifiableSet(collProp);
     }
+    
+    @Override
+    @Observable
+    public TgCollectionalSerialisationParent setDesc(final String desc) {
+        super.setDesc(desc);
+        return this;
+    }
 }

@@ -24,7 +24,7 @@ public class EntityValidator implements IBeforeChangeEventHandler<TgPersistentEn
     }
 
     @Override
-    public Result handle(final MetaProperty<TgPersistentEntityWithProperties> property, final TgPersistentEntityWithProperties newValue, final TgPersistentEntityWithProperties oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<TgPersistentEntityWithProperties> property, final TgPersistentEntityWithProperties newValue, final Set<Annotation> mutatorAnnotations) {
         if (newValue != null) {
             final TgPersistentEntityWithProperties val = co.findById(newValue.getId(), fetchAll(TgPersistentEntityWithProperties.class));
             if (val.getRequiredValidatedProp() != null && val.getRequiredValidatedProp() < 5) {

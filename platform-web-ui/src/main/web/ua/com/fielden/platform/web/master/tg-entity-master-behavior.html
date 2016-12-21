@@ -344,7 +344,7 @@
                     // isRefreshingProcess should be 'true' to reset old binding information in case where 'continuously created' entity arrive
                     var newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, isContinuouslyCreated);
                     
-                    if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                    if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
                         newBindingEntity["@@touchedProps"] = { names: [], counts: [] };
                     }
@@ -354,7 +354,7 @@
                         this.postSaved.bind(this)(potentiallySavedOrNewEntity, newBindingEntity);
                     }
 
-                    if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                    if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // in case where overridden _resetState function will not be invoked it is necessary to reset _continuations after successful save
                         this._continuations = {};
                         
@@ -455,7 +455,7 @@
                         this.enableView();
                     }
 
-                    return potentiallySavedOrNewEntity.isValidWithoutSavingException();
+                    return potentiallySavedOrNewEntity.isValidWithoutException();
                 }).bind(self);
 
                 self._postSavedDefaultError = (function (errorResult) {
@@ -489,15 +489,11 @@
                 self._createSavingPromise = (function () {
                     var holder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
 
-                    // IMPORTANT: at this stage no client side check is needed for hasModified(holder).
-                    //            This check will be done on server -- and appropriate _postSavedDefault callback will be triggered.
+                    // There is no need check at the client side whether _hasModified(holder).
+                    // This check will be too restrictive from the perspective of developer-driven usage of 'save' method.
+                    // It means that developer could perform manually saving of 'unmodified' entity for some reasons.
+                    // However, please check the _bindingEntityModified property (tg-entity-binder-behavior) and its usage for more information.
                     return this._saveModifiedProperties(this._reset(holder));
-                    // if (this._hasModified(holder)) {
-                    //     this._saveModifiedProperties(this._reset(holder));
-                    // } else {
-                    //     this._validator().validate(this._reset(holder));
-                    // }
-
                 }).bind(self);
 
                 self.save = (function (newContinuation, continuationProperty) {
@@ -564,6 +560,15 @@
                     }
                 }
 
+            },
+            
+            _modificationsChanged: function (_bindingEntityNotPersistentOrNotPersistedOrModified, _editedPropsExist) {
+                var self = this;
+                var saveButton = self.$._saveAction;
+                // console.debug('_bindingEntity self = ', self.is, 'self.$._saveAction = ', self.$._saveAction, '_bindingEntityNotPersistentOrNotPersistedOrModified', _bindingEntityNotPersistentOrNotPersistedOrModified, '_editedPropsExist', _editedPropsExist);
+                if (saveButton) {
+                    saveButton.outerEnabled = _editedPropsExist || _bindingEntityNotPersistentOrNotPersistedOrModified;
+                }
             },
 
             /**
@@ -760,17 +765,6 @@
             },
 
             /**
-             * Returns 'true' if the entity has been modified from original, 'false' otherwise.
-             *
-             * NOTE: it is designed to be used once (after that hasModified() will not be working for the same instance of modPropsHolder).
-             *
-             * @param modifiedPropertiesHolder -- the entity with modified properties
-             */
-            _hasModified: function (modifiedPropertiesHolder) {
-                return modifiedPropertiesHolder["@modified"];
-            },
-
-            /**
              * Method implementing .canLeave contract as disignated in classList.
              * It is used to identify whether master can be "left/closed" without any adverse effect on the data it represents (i.e. there was no unsaved changes).
              */
@@ -787,26 +781,23 @@
                 }
 
                 if (this.classList.contains('canLeave')) {
-                    // create modif holder to analyze the currently bound entity on subject of its modifications
-                    var modifHolder = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
-                    // the master can be left in case where there is no modifications and the entity is not new
-                    if (modifHolder.id === null) {
-                        return {
-                            isNew: true,
-                            msg: "A new entity is being created. Please save your changes."
-                        };
+                    // The master can be left in case where there is no modifications and the entity is not new and the entity is not persistent. 
+                    // Refer to _bindingEntityNotPersistentOrNotPersistedOrModified property of tg-entity-binder-behavior for more information.
+                    if (this._editedPropsExist || this._bindingEntityNotPersistentOrNotPersistedOrModified) {
+                        if (this._currBindingEntity.id === null) {
+                            return {
+                                isNew: true,
+                                msg: "A new entity is being created. Please save your changes."
+                            };
+                        } else {
+                            return {
+                                isNew: undefined, // this could be not persistent entity (new) or persistent persisted entity (not new)
+                                msg: "Please save or cancel your changes."
+                            };
+                        }
                     }
-                    if (this._hasModified(modifHolder)) {
-                        return {
-                            isNew: false,
-                            msg: "Please save or cancel your changes."
-                        };
-                    }
-
-                    return undefined;
-                } else {
-                    return undefined;
                 }
+                return undefined;
             },
 
             //////////////////////////////////////// BINDING & UTILS ////////////////////////////////////////

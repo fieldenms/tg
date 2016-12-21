@@ -5,7 +5,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -15,6 +17,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -117,20 +120,6 @@ public class EntityUtils {
     }
 
     /**
-     * Null-safe equals.
-     *
-     * @param o1
-     * @param o2
-     * @return
-     */
-    public static boolean safeEquals(final Object o1, final Object o2) {
-        if (o1 == null && o2 == null || o1 != null && o1.equals(o2)) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * Null-safe equals based on the {@link AbstractEntity}'s id property. If id property is not present in both entities then default equals for entities will be called.
      *
      * @param entity1
@@ -142,7 +131,7 @@ public class EntityUtils {
             if (entity1.getId() == null && entity2.getId() == null) {
                 return entity1.equals(entity2);
             } else {
-                return safeEquals(entity1.getId(), entity2.getId());
+                return equalsEx(entity1.getId(), entity2.getId());
             }
         }
         return entity1 == entity2;
@@ -1097,5 +1086,29 @@ public class EntityUtils {
      */
     public static <T extends AbstractEntity<?>> IFetchProvider<T> fetchNotInstrumentedWithKeyAndDesc(final Class<T> entityType) {
         return FetchProviderFactory.createFetchProviderWithKeyAndDesc(entityType, false);
+    }
+
+    /**
+     * Tries to perform shallow copy of collectional value. If unsuccessful, returns empty {@link Optional}.
+     * 
+     * @param value
+     * @return
+     */
+    public static <T> Optional<Optional<T>> copyCollectionalValue(final T value) {
+        if (value == null) {
+            return Optional.of(Optional.empty()); // return non-empty optional of empty (null) copy
+        }
+        try {
+            final Collection<?> collection = (Collection<?>) value;
+            // try to obtain empty constructor to perform shallow copying of collection
+            final Constructor<? extends Collection> constructor = collection.getClass().getConstructor();
+            final Collection copy = constructor.newInstance();
+            copy.addAll(collection);
+            // return non-empty optional of non-empty copy
+            return Optional.of(Optional.of((T) copy));
+        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            logger.debug(e.getMessage(), e);
+        }
+        return Optional.empty(); // return empty optional indicating the failure of copying
     }
 }

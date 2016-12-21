@@ -12,7 +12,7 @@ import ua.com.fielden.platform.error.Warning;
 public class BceForEntityWithWarningsSelfRefProp implements IBeforeChangeEventHandler<EntityWithWarnings> {
 
     @Override
-    public Result handle(MetaProperty<EntityWithWarnings> property, EntityWithWarnings newValue, EntityWithWarnings oldValue, Set<Annotation> mutatorAnnotations) {
+    public Result handle(MetaProperty<EntityWithWarnings> property, EntityWithWarnings newValue, Set<Annotation> mutatorAnnotations) {
         if (property.getEntity() == newValue) {
             return new Warning("Self references are discouraged.");
         }

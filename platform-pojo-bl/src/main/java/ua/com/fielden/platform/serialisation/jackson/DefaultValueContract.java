@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
+import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
@@ -21,7 +23,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
 public class DefaultValueContract {
     private DefaultValueContract() {
     }
-    
+
     ///////////////////////////////////////////////// EDITABLE /////////////////////////////////////////////////
     /**
      * Returns the default value of <code>editable</code> property.
@@ -51,40 +53,57 @@ public class DefaultValueContract {
     public static boolean isEditableDefault(final MetaProperty<Object> metaProperty) {
         return EntityUtils.equalsEx(getEditable(metaProperty), getEditableDefault());
     }
-    
+
     /**
      * Returns the value of <code>timeZone</code> for date-typed property or <code>null</code> in case of default one.
      * <p>
-     * If default timeZone is active for this property (<code>null</code> has been returned from this method), 
+     * If default timeZone is active for this property (<code>null</code> has been returned from this method),
      * then it was specified on JVM level rather explicitly (through -Duser.timezone=Europe/Sofia) or through OS-dependent timeZone setting.
      *
      * @param entityType
      * @param propertyName
-     * 
+     *
      * @return
      */
     public static String getTimeZone(final Class<?> entityType, final String propertyName) {
         final PersistentType persistentType = AnnotationReflector.getPropertyAnnotation(PersistentType.class, entityType, propertyName);
         return persistentType != null && persistentType.userType().equals(IUtcDateTimeType.class) ? "UTC" : null;
     }
+
+    /**
+     * Returns the value that indicates what portion of date property to display.
+     *
+     * @param entityType
+     * @param propertyName
+     * @return
+     */
+    public static String getTimePortionToDisplay(final Class<?> entityType, final String propertyName) {
+        if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, entityType, propertyName)) {
+            return "DATE";
+        } else if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, entityType, propertyName)) {
+            return "TIME";
+        }
+        return null;
+    }
+
     ///////////////////////////////////////////////// DIRTY /////////////////////////////////////////////////
     /**
      * Returns the default value of <code>changedFromOriginal</code> property.
      *
      * @return
      */
-    public static boolean getChangedFromOriginalDefault() {
+    public static boolean isChangedFromOriginalDefault() {
         return false;
     }
 
     /**
-     * Returns the value of <code>changedFromOriginal</code> property.
+     * Returns the value of <code>isChangedFromOriginal</code> meta-property attribute, defaulting to {@link #isChangedFromOriginalDefault()} if <code>metaProperty</code> is null.
      *
      * @param metaProperty
      * @return
      */
-    public static <M> boolean getChangedFromOriginal(final MetaProperty<M> metaProperty) {
-        return metaProperty == null ? getChangedFromOriginalDefault() : metaProperty.isChangedFromOriginal();
+    public static <M> boolean isChangedFromOriginal(final MetaProperty<M> metaProperty) {
+        return metaProperty == null ? isChangedFromOriginalDefault() : metaProperty.isChangedFromOriginal();
     }
 
     /**
@@ -107,7 +126,7 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> boolean isChangedFromOriginalDefault(final MetaProperty<M> metaProperty) {
-        return EntityUtils.equalsEx(getChangedFromOriginal(metaProperty), getChangedFromOriginalDefault());
+        return EntityUtils.equalsEx(isChangedFromOriginal(metaProperty), isChangedFromOriginalDefault());
     }
 
     ///////////////////////////////////////////////// REQUIRED /////////////////////////////////////////////////
@@ -220,7 +239,7 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public static boolean isEntityTitleDefault(final Class<?> entityType, final String entityTitle) {
+    public static boolean isEntityTitleDefault(final Class<? extends AbstractEntity<?>> entityType, final String entityTitle) {
         return EntityUtils.equalsEx(entityTitle, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getKey());
     }
 
@@ -229,10 +248,10 @@ public class DefaultValueContract {
      *
      * @return
      */
-    public static boolean isEntityDescDefault(final Class<?> entityType, final String entityDesc) {
+    public static boolean isEntityDescDefault(final Class<? extends AbstractEntity<?>> entityType, final String entityDesc) {
         return EntityUtils.equalsEx(entityDesc, TitlesDescsGetter.getDefaultEntityTitleAndDesc(entityType).getValue());
     }
-    
+
     /**
      * Returns <code>true</code> if the value of <code>displayDesc</code> is default, <code>false</code> otherwise.
      *

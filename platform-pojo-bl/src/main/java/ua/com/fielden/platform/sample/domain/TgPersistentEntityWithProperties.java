@@ -160,13 +160,13 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Status", desc = "The current status of this entity")
     private TgPersistentStatus status;
-    
+
     @IsProperty
     @PersistentType(userType = IColourType.class)
     @Title(value = "Colour prop", desc = "Colour prop description")
     @MapTo
     private Colour colourProp;
-    
+
     @IsProperty
     @MapTo
     @Title(value = "Hyperlink", desc = "A property of type Hyperlink.")
@@ -182,7 +182,7 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     public Hyperlink getHyperlinkProp() {
         return hyperlinkProp;
     }
-    
+
     @Observable
     public TgPersistentEntityWithProperties setColourProp(final Colour prop) {
         this.colourProp = prop;

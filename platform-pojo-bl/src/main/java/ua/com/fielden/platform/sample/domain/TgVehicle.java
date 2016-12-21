@@ -23,7 +23,6 @@ import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 
@@ -302,7 +301,6 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(TgVehicleModel.class)
     public TgVehicle setModel(final TgVehicleModel model) {
         this.model = model;
         return this;
@@ -313,7 +311,6 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(TgOrgUnit5.class)
     public TgVehicle setStation(final TgOrgUnit5 station) {
         this.station = station;
         return this;
@@ -334,7 +331,6 @@ public class TgVehicle extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(TgVehicle.class)
     public TgVehicle setReplacedBy(final TgVehicle replacedBy) {
         this.replacedBy = replacedBy;
         return this;

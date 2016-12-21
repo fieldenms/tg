@@ -35,6 +35,7 @@ import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
+import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgMachine;
 import ua.com.fielden.platform.sample.domain.TgMessage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit;
@@ -56,8 +57,6 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.ui.config.MainMenu;
-import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
@@ -76,14 +75,14 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
     private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
 
-    private PopulateDb(final IDomainDrivenTestCaseConfiguration config) {
-        super(config);
+    private PopulateDb(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
+        super(config, props);
     }
 
     public static void main(final String[] args) throws Exception {
         final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application.properties";
         final FileInputStream in = new FileInputStream(configFileName);
-        final Properties props = IDomainDrivenTestCaseConfiguration.hbc;
+        final Properties props = new Properties();
         props.load(in);
         in.close();
 
@@ -92,9 +91,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         props.put("hibernate.format_sql", "true");
         props.put("hibernate.hbm2ddl.auto", "create");
 
-        final IDomainDrivenTestCaseConfiguration config = new DataPopulationConfig();
+        final IDomainDrivenTestCaseConfiguration config = new DataPopulationConfig(props);
 
-        final PopulateDb popDb = new PopulateDb(config);
+        final PopulateDb popDb = new PopulateDb(config, props);
         popDb.createAndPopulate();
     }
 
@@ -121,6 +120,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
         System.out.println("admin.getId() == " + admin.getId());
 
+        System.out.println("Settign up current user SU and its permissions...");
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
         // populate testing entities
@@ -369,10 +369,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
             e1.printStackTrace();
             throw new RuntimeException(e1);
         }
-
-        final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
-        mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));
-        save(mainMenu);
+        
+        final TgGeneratedEntity genEntity1 = save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
+        System.out.println("genEntity1.getId() == " + genEntity1.getId());
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);

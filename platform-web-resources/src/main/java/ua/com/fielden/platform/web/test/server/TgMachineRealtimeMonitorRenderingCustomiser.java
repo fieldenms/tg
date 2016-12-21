@@ -9,8 +9,8 @@ import java.util.Optional;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 
-public class TgMachineRealtimeMonitorRenderingCustomiser implements IRenderingCustomiser<AbstractEntity<?>, Map<String, Map<String, String>>> {
-    
+public class TgMachineRealtimeMonitorRenderingCustomiser implements IRenderingCustomiser<Map<String, Map<String, String>>> {
+
     private final List<String> properties = new ArrayList<String>() {
         {
             add("");

@@ -130,7 +130,6 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
@@ -325,7 +324,6 @@ class TgKryo0 extends Kryo implements ISerialiserEngine {
         register(Class.class);
         // register menu and configuration related
         register(MainMenuItem.class);
-        register(MainMenuItemInvisibility.class);
         register(EntityCentreConfig.class);
         register(EntityMasterConfig.class);
         register(EntityLocatorConfig.class);

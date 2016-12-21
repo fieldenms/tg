@@ -15,6 +15,15 @@ import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.keygen.KeyNumber;
+import ua.com.fielden.platform.menu.CustomView;
+import ua.com.fielden.platform.menu.EntityCentreView;
+import ua.com.fielden.platform.menu.EntityMasterView;
+import ua.com.fielden.platform.menu.Menu;
+import ua.com.fielden.platform.menu.MenuSaveAction;
+import ua.com.fielden.platform.menu.Module;
+import ua.com.fielden.platform.menu.ModuleMenuItem;
+import ua.com.fielden.platform.menu.View;
+import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.migration.MigrationError;
 import ua.com.fielden.platform.migration.MigrationHistory;
 import ua.com.fielden.platform.migration.MigrationRun;
@@ -30,9 +39,7 @@ import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
-import ua.com.fielden.platform.ui.config.MainMenu;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.MainMenuItemInvisibility;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.SortingProperty;
 
@@ -41,8 +48,6 @@ public class PlatformDomainTypes {
 
     static {
         types.add(MainMenuItem.class);
-        types.add(MainMenuItemInvisibility.class);
-        types.add(MainMenu.class);
         types.add(User.class);
         types.add(UserRolesUpdater.class);
         types.add(UserSession.class);
@@ -71,5 +76,14 @@ public class PlatformDomainTypes {
         types.add(EntityExportAction.class);
         types.add(AcknowledgeWarnings.class);
         types.add(PropertyWarning.class);
+        types.add(ModuleMenuItem.class);
+        types.add(EntityCentreView.class);
+        types.add(View.class);
+        types.add(CustomView.class);
+        types.add(Module.class);
+        types.add(Menu.class);
+        types.add(EntityMasterView.class);
+        types.add(MenuSaveAction.class);
+        types.add(WebMenuItemInvisibility.class);
     }
 }

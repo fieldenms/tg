@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -486,7 +488,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         // NOTE: "missing value" for Java entities is also 'null' as for JS entities
         if (EntityUtils.isEntityType(propertyType)) {
             if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
-                throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s]. Collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
+                throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s + %s] from reflected value [%s]. Entity-typed collectional properties are not supported.", type.getSimpleName(), propertyName, reflectedValue));
             }
 
             final Class<AbstractEntity<?>> entityPropertyType = (Class<AbstractEntity<?>>) propertyType;
@@ -528,17 +530,21 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
                 return propertyCompanion.findByKeyAndFetch(fetchForProperty(companionFinder, type, propertyName).fetchModel(), key);
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
-        } else if (PropertyTypeDeterminator.isCollectional(type, propertyName) && Set.class.isAssignableFrom(Finder.findFieldByName(type, propertyName).getType()) && String.class.isAssignableFrom(propertyType)) {
-            final List<Object> list = (ArrayList<Object>) reflectedValue;
-            final Set<String> resultSet = new LinkedHashSet<>();
-            for (final Object entry : list) {
-                if (entry == null) {
-                    resultSet.add(null);
-                } else {
-                    resultSet.add(entry.toString());
-                }
+        } else if (PropertyTypeDeterminator.isCollectional(type, propertyName)) {
+            final Class<?> collectionType = Finder.findFieldByName(type, propertyName).getType();
+            final boolean isSet = Set.class.isAssignableFrom(collectionType);
+            final boolean isList = List.class.isAssignableFrom(collectionType);
+            final boolean isStringElem = String.class.isAssignableFrom(propertyType);
+            final boolean isLongElem = Long.class.isAssignableFrom(propertyType);
+            if (!isSet && !isList || !isStringElem && !isLongElem) {
+                throw new UnsupportedOperationException(String.format("Unsupported conversion to [%s@%s] from reflected value [%s] of collectional type [%s] with [%s] elements. Only [Set / List] of [String / Long] elements are supported.", propertyName, type.getSimpleName(), reflectedValue, collectionType.getSimpleName(), propertyType.getSimpleName()));
             }
-            return resultSet;
+            final List<Object> list = (ArrayList<Object>) reflectedValue;
+            final Stream<Object> stream = list.stream().map( 
+                item -> item == null ? null : 
+                    isStringElem ? item.toString() : extractLongValueFrom(item)
+            );
+            return stream.collect(Collectors.toCollection(isSet ? LinkedHashSet::new : ArrayList::new));
         } else if (EntityUtils.isString(propertyType)) {
             return reflectedValue;
         } else if (Integer.class.isAssignableFrom(propertyType)) {
@@ -593,17 +599,6 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Map<String, Object> map = (Map<String, Object>) reflectedValue;
             final String linkValue = (String) map.get("value");
             return linkValue == null ? null : new Hyperlink(linkValue);
-        } else if (PropertyTypeDeterminator.isCollectional(type, propertyName) && Set.class.isAssignableFrom(Finder.findFieldByName(type, propertyName).getType()) && Long.class.isAssignableFrom(propertyType)) {
-            final List<Object> list = (ArrayList<Object>) reflectedValue;
-            final Set<Long> resultSet = new LinkedHashSet<>();
-            for (final Object entry : list) {
-                if (entry == null) {
-                    resultSet.add(null);
-                } else {
-                    resultSet.add(Long.parseLong(entry.toString()));
-                }
-            }
-            return resultSet;
         } else if (Long.class.isAssignableFrom(propertyType)) {
             return extractLongValueFrom(reflectedValue);
         } else {
@@ -764,6 +759,15 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null) {
                 entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
             }
+        }
+        
+        // 1) non-persistent entities should always be saved (isDirty will always be true)
+        // 2) persistent but not persisted (new) entities should always be saved (isDirty will always be true)
+        // 3) persistent+persisted+dirty (by means of dirty properties existence) entities should always be saved
+        // 4) persistent+persisted+notDirty+inValid entities should always be saved: passed to companion 'save' method to process validation errors in domain-driven way by companion object itself
+        // 5) persistent+persisted+notDirty+valid entities saving should be skipped
+        if (!entity.isDirty() && entity.isValid().isSuccessful()) {
+            throw Result.failure("There are no changes to save.");
         }
         
         if (continuationsPresent) {

@@ -151,16 +151,16 @@
             display: none;
         }
         paper-checkbox.blue {
-            --paper-checkbox-checked-color: #0288D1;
-            --paper-checkbox-checked-ink-color: #0288D1;
+            --paper-checkbox-checked-color: var(--paper-light-blue-700);
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
         }
         paper-checkbox.header {
-            --paper-checkbox-unchecked-color: #757575;
-            --paper-checkbox-unchecked-ink-color: #757575;
+            --paper-checkbox-unchecked-color: var(--paper-grey-600);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-600);
         }
         paper-checkbox.body {
-            --paper-checkbox-unchecked-color: #212121;
-            --paper-checkbox-unchecked-ink-color: #212121;
+            --paper-checkbox-unchecked-color: var(--paper-grey-900);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900);
         }
         .table-icon {
             --iron-icon-width: 1.3rem;
@@ -341,7 +341,7 @@
                                     <template is="dom-if" if="[[primaryAction]]">
                                         <div class="action-cell layout horizontal center no-flexible">
                                             <template is="dom-if" if="[[!_isPrimaryActionsFixed(checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
-                                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
+                                                <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                                             </template>
                                         </div>
                                     </template>
@@ -366,7 +366,7 @@
                                         <div class="action-cell layout horizontal center no-flexible">
                                             <template is="dom-if" if="[[!_isSecondaryActionsFixed(secondaryActionsFixed)]]">
                                                 <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                                    <tg-ui-action class="action" show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" action-kind="[[secondaryActions.0.actionKind]]" number-of-action="[[secondaryActions.0.numberOfAction]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
+                                                    <tg-ui-action class="action" show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" action-kind="[[secondaryActions.0.actionKind]]" number-of-action="[[secondaryActions.0.numberOfAction]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]" icon-style="[[secondaryActions.0.iconStyle]]"></tg-ui-action>
                                                 </template>
                                                 <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
                                                     <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
@@ -446,7 +446,7 @@
                                             </div>
                                             <template is="dom-if" if="[[_isPrimaryActionVisibleAndFixed(primaryAction, checkboxesWithPrimaryActionsFixed, numOfFixedCols)]]">
                                                 <div class="action-cell layout horizontal center no-flexible">
-                                                    <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
+                                                    <tg-ui-action class="action" show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                                                 </div>
                                             </template>
                                             <template is="dom-repeat" items="[[columns]]" as="column">
@@ -517,7 +517,7 @@
                                     <template is="dom-repeat" items="[[egiModel]]" as="egiEntity" index-as="entityIndex">
                                         <div class="action-cell layout horizontal center table-data-row no-flexible" selected$="[[egiEntity.selected]]" over$="[[egiEntity.over]]" on-mouseenter="_mouseRowEnter" on-mouseleave="_mouseRowLeave">
                                             <template is="dom-if" if="[[_isOnlyOneSecondaryActions(secondaryActions)]]">
-                                                <tg-ui-action class="action" show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" action-kind="[[secondaryActions.0.actionKind]]" number-of-action="[[secondaryActions.0.numberOfAction]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]"></tg-ui-action>
+                                                <tg-ui-action class="action" show-dialog="[[secondaryActions.0.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[secondaryActions.0.shortDesc]]" long-desc="[[secondaryActions.0.longDesc]]" icon="[[secondaryActions.0.icon]]" component-uri="[[secondaryActions.0.componentUri]]" element-name="[[secondaryActions.0.elementName]]" action-kind="[[secondaryActions.0.actionKind]]" number-of-action="[[secondaryActions.0.numberOfAction]]" attrs="[[secondaryActions.0.attrs]]" create-context-holder="[[secondaryActions.0.createContextHolder]]" require-selection-criteria="[[secondaryActions.0.requireSelectionCriteria]]" require-selected-entities="[[secondaryActions.0.requireSelectedEntities]]" require-master-entity="[[secondaryActions.0.requireMasterEntity]]" pre-action="[[secondaryActions.0.preAction]]" post-action-success="[[secondaryActions.0.postActionSuccess]]" post-action-error="[[secondaryActions.0.postActionError]]" should-refresh-parent-centre-after-save="[[secondaryActions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[secondaryActions.0.uiRole]]" icon-style="[[secondaryActions.0.iconStyle]]"></tg-ui-action>
                                             </template>
                                             <template is="dom-if" if="[[!_isOnlyOneSecondaryActions(secondaryActions)]]">
                                                 <tg-secondary-action-button class="action" current-entity="[[egiEntity.entity]]" actions="[[secondaryActions]]"></tg-secondary-action-button>
@@ -702,13 +702,13 @@
                         <div class="layout horizontal center relative">
                             <paper-checkbox class="blue" style="margin-right:11px;" checked="[[egiEntity.selected]]" on-change="_selectionChanged" tooltip-text$="[[_selectTooltip(egiEntity.selected)]]"></paper-checkbox>
                             <template is="dom-if" if="[[primaryAction]]">
-                                <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]"></tg-ui-action>
+                                <tg-ui-action show-dialog="[[primaryAction.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[primaryAction.shortDesc]]" long-desc="[[primaryAction.longDesc]]" icon="[[primaryAction.icon]]" component-uri="[[primaryAction.componentUri]]" element-name="[[primaryAction.elementName]]" action-kind="[[primaryAction.actionKind]]" number-of-action="[[primaryAction.numberOfAction]]" attrs="[[primaryAction.attrs]]" create-context-holder="[[primaryAction.createContextHolder]]" require-selection-criteria="[[primaryAction.requireSelectionCriteria]]" require-selected-entities="[[primaryAction.requireSelectedEntities]]" require-master-entity="[[primaryAction.requireMasterEntity]]" pre-action="[[primaryAction.preAction]]" post-action-success="[[primaryAction.postActionSuccess]]" post-action-error="[[primaryAction.postActionError]]" should-refresh-parent-centre-after-save="[[primaryAction.shouldRefreshParentCentreAfterSave]]" ui-role="[[primaryAction.uiRole]]" icon-style="[[primaryAction.iconStyle]]"></tg-ui-action>
                             </template>
                         </div>
                         <div class="layout horizontal center relative">
                             <template is="dom-if" if="[[_isSecondaryActionsPresent(secondaryActions)]]">
                                 <template is="dom-repeat" items="[[secondaryActions]]">
-                                    <tg-ui-action show-dialog="[[item.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[item.shortDesc]]" long-desc="[[item.longDesc]]" icon="[[item.icon]]" component-uri="[[item.componentUri]]" element-name="[[item.elementName]]" action-kind="[[item.actionKind]]" number-of-action="[[item.numberOfAction]]" attrs="[[item.attrs]]" create-context-holder="[[item.createContextHolder]]" require-selection-criteria="[[item.requireSelectionCriteria]]" require-selected-entities="[[item.requireSelectedEntities]]" require-master-entity="[[item.requireMasterEntity]]" pre-action="[[item.preAction]]" post-action-success="[[item.postActionSuccess]]" post-action-error="[[item.postActionError]]" should-refresh-parent-centre-after-save="[[item.shouldRefreshParentCentreAfterSave]]" ui-role="[[item.uiRole]]"></tg-ui-action>
+                                    <tg-ui-action show-dialog="[[item.showDialog]]" current-entity="[[egiEntity.entity]]" short-desc="[[item.shortDesc]]" long-desc="[[item.longDesc]]" icon="[[item.icon]]" component-uri="[[item.componentUri]]" element-name="[[item.elementName]]" action-kind="[[item.actionKind]]" number-of-action="[[item.numberOfAction]]" attrs="[[item.attrs]]" create-context-holder="[[item.createContextHolder]]" require-selection-criteria="[[item.requireSelectionCriteria]]" require-selected-entities="[[item.requireSelectedEntities]]" require-master-entity="[[item.requireMasterEntity]]" pre-action="[[item.preAction]]" post-action-success="[[item.postActionSuccess]]" post-action-error="[[item.postActionError]]" should-refresh-parent-centre-after-save="[[item.shouldRefreshParentCentreAfterSave]]" ui-role="[[item.uiRole]]" icon-style="[[item.iconStyle]]"></tg-ui-action>
                                 </template>
                             </template>
                         </div>
@@ -736,45 +736,58 @@
 <script>
     (function () {
         var _checkCollapsiblePanelVisibility = function (layout) {
-                this.collapsePanelVisible = !!(this.cardLayout && layout);
-            },
-            _areEqual = function (a, b) {
-                return a.id === b.id;
-            },
-            _hasEntity = function (entity, entities) {
-                for (var i = 0; i < entities.length; i += 1) {
-                    if (_areEqual(entity, entities[i])) {
-                        return true;
-                    }
+            this.collapsePanelVisible = !!(this.cardLayout && layout);
+        };
+        var _areEqual = function (a, b) {
+            return a.id === b.id;
+        };
+        var _hasEntity = function (entity, entities) {
+            for (var i = 0; i < entities.length; i += 1) {
+                if (_areEqual(entity, entities[i])) {
+                    return true;
                 }
-                return false;
-            },
-            _findEntity = function (entity, entities) {
-                for (var i = 0; i < entities.length; i += 1) {
-                    if (_areEqual(entity, entities[i])) {
-                        return i;
-                    }
+            }
+            return false;
+        };
+        var _findEntity = function (entity, entities) {
+            for (var i = 0; i < entities.length; i += 1) {
+                if (_areEqual(entity, entities[i])) {
+                    return i;
                 }
-                return -1;
-            },
-            _processEntitySelection = function (selectedEntities, entity, select, egi) {
-                var selectedIndex = selectedEntities.indexOf(entity);
-                if (select) {
-                    if (selectedIndex < 0) {
-                        selectedEntities.push(entity);
+            }
+            return -1;
+        };
+        var _processEntitySelection = function (selectedEntities, entity, select, egi) {
+            var selectedIndex = selectedEntities.indexOf(entity);
+            if (select) {
+                if (selectedIndex < 0) {
+                    selectedEntities.push(entity);
                         if (egi) {
                             egi.retrievedEntitySelection = {entity: entity, selected: true};
                         }
-                    }
-                } else {
-                    if (selectedIndex >= 0) {
-                        selectedEntities.splice(selectedIndex, 1);
+                }
+            } else {
+                if (selectedIndex >= 0) {
+                    selectedEntities.splice(selectedIndex, 1);
                         if (egi) {
                             egi.retrievedEntitySelection = {entity: entity, selected: false};
                         }
-                    }
                 }
-            };
+            }
+        };
+        var generateShortCollection = function (entity, property, typeObject) {
+            var collectionValue = entity.get(property);
+            var containerPropertyValue = entity.get(property.substr(0, property.lastIndexOf('.')));
+            var keys = typeObject.compositeKeyNames();
+            return collectionValue.map(function (subEntity) {
+                var key = keys.find(function (key) {
+                    if (subEntity.get(key) !== containerPropertyValue) {
+                        return key;
+                    }
+                });
+                return subEntity.get(key);
+            });
+        };
         Polymer({
             is: "tg-@miType-grid-inspector",
 
@@ -1239,35 +1252,46 @@
             },
 
             _getTooltip: function (entity, column, action) {
-                var property = entity.prop(column.property);
-                var validationResult = property.validationResult();
-                var value;
-                var tooltip = "";
-                if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
-                    tooltip = validationResult.message && ("<b>" + validationResult.message + "</b>");
-                } else if (column.tooltipProperty) {
-                    value = this._getValue(entity, column.tooltipProperty, "String").toString();
-                    tooltip = value && ("<b>" + value + "</b>");
-                } else if (this.$.reflector.findTypeByName(column.type)) {
-                    tooltip = this._generateEntityTooltip(entity, column);
-                } else {
-                    value = this._getValue(entity, column.property, column.type).toString();
-                    tooltip = value && ("<b>" + value + "</b>");
+                try {
+                    var property = entity.prop(column.property);
+                    var validationResult = property.validationResult();
+                    var value;
+                    var tooltip = "";
+                    if (this.$.reflector.isWarning(validationResult) || this.$.reflector.isError(validationResult)) {
+                        tooltip = validationResult.message && ("<b>" + validationResult.message + "</b>");
+                    } else if (column.tooltipProperty) {
+                        value = this._getValue(entity, column.tooltipProperty, "String").toString();
+                        tooltip = value && ("<b>" + value + "</b>");
+                    } else if (this.$.reflector.findTypeByName(column.type)) {
+                        tooltip = this._generateEntityTooltip(entity, column);
+                    } else {
+                        value = this._getValue(entity, column.property, column.type).toString();
+                        tooltip = value && ("<b>" + value + "</b>");
+                    }
+                    if (column.columnDesc) {
+                        tooltip += (tooltip && "<br><br>") + column.columnDesc;
+                    }
+                    if (action && (action.shortDesc || action.longDesc)) {
+                        tooltip += (tooltip && "<br><br>") + this._generateActionTooltip(action);
+                    }
+                    return tooltip;
+                } catch (e) {
+                    return '';
                 }
-                if (column.columnDesc) {
-                    tooltip += (tooltip && "<br><br>") + column.columnDesc;
-                }
-                if (action && (action.shortDesc || action.longDesc)) {
-                    tooltip += (tooltip && "<br><br>") + this._generateActionTooltip(action);
-                }
-                return tooltip;
             },
 
             _generateEntityTooltip: function (entity, column) {
                 var key = this._getValue(entity, column.property, column.type);
                 var desc;
                 try {
-                    desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                    if (Array.isArray(this._get(entity, column.property))) {
+                        desc = generateShortCollection(entity, column.property, this.$.reflector.findTypeByName(column.type))
+                            .map(function (subEntity) {
+                                return subEntity.get("desc");
+                            }).join(", ");
+                    } else {
+                        desc = entity.get(column.property === '' ? "desc" : (column.property + ".desc"));
+                    }
                 } catch (e) {
                     desc = "";
                 }
@@ -1727,9 +1751,14 @@
                 if (entity === null || property === null || type === null || this._get(entity, property) === null) {
                     return "";
                 } else if (this.$.reflector.findTypeByName(type)) {
-                    return this.$.reflector.convert(this._get(entity, property));
-                } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC' or 'Date:Europe/London'
-                    return _millisDateRepresentation(entity.get(property), type === 'Date' ? null : type.substring(5));
+                    var propertyValue = this._get(entity, property);
+                    if (Array.isArray(propertyValue)) {
+                        propertyValue = generateShortCollection(entity, property, this.$.reflector.findTypeByName(type));
+                    }
+                    return Array.isArray(propertyValue) ? this.$.reflector.convert(propertyValue).join(", ") : this.$.reflector.convert(propertyValue);
+                } else if (type.lastIndexOf('Date', 0) === 0) { // check whether type startsWith 'Date'. Type can be like 'Date', 'Date:UTC:' or 'Date:Europe/London:'
+                    var splitedType = type.split(':');
+                    return _millisDateRepresentation(entity.get(property), splitedType[1] || null, splitedType[2] || null);
                 } else if (typeof entity.get(property) === 'number') {
                     if (type === 'BigDecimal') {
                         return this.$.reflector.formatDecimal(entity.get(property), this.$.appConfig.locale);

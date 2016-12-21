@@ -56,4 +56,11 @@ public class TgCollectionalSerialisationChild extends AbstractEntity<DynamicEnti
     public TgCollectionalSerialisationParent getKey1() {
         return key1;
     }
+    
+    @Override
+    @Observable
+    public TgCollectionalSerialisationChild setDesc(final String desc) {
+        super.setDesc(desc);
+        return this;
+    }
 }

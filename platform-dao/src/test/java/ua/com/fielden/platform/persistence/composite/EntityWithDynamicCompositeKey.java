@@ -37,11 +37,9 @@ public class EntityWithDynamicCompositeKey extends AbstractEntity<DynamicEntityK
     private EntityWithMoney keyPartTwo;
 
     protected EntityWithDynamicCompositeKey() {
-        setKey(new DynamicEntityKey(this));
     }
 
     public EntityWithDynamicCompositeKey(final String keyPartOne, final EntityWithMoney keyPartTwo) {
-        this();
         setKeyPartOne(keyPartOne);
         setKeyPartTwo(keyPartTwo);
     }

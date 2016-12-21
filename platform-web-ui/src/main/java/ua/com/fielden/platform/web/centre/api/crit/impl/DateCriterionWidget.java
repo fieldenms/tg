@@ -25,13 +25,15 @@ public class DateCriterionWidget extends AbstractRangeCriterionWidget {
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getKey(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getKey(),
                         false,
-                        DefaultValueContract.getTimeZone(managedType, propertyName)
+                        DefaultValueContract.getTimeZone(managedType, propertyName),
+                        DefaultValueContract.getTimePortionToDisplay(managedType, propertyName)
                 ),
                 new DateTimePickerWidget(
                         AbstractCriterionWidget.generateTitleDesc(root, managedType, propertyName).getValue(),
                         AbstractCriterionWidget.generateNames(root, managedType, propertyName).getValue(),
                         true,
-                        DefaultValueContract.getTimeZone(managedType, propertyName)
+                        DefaultValueContract.getTimeZone(managedType, propertyName),
+                        DefaultValueContract.getTimePortionToDisplay(managedType, propertyName)
                 ));
     }
 

@@ -32,11 +32,6 @@ public class SecondLevelEntity extends FirstLevelEntity {
     @Title("Dummy Reference")
     private Reference<SecondLevelEntity> dummyReferenceProperty;
 
-    public SecondLevelEntity() {
-        super(null, null, "");
-        setKey(new DynamicEntityKey(this));
-    }
-
     public Long getAnotherProperty() {
         return anotherProperty;
     }

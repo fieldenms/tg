@@ -8,6 +8,8 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
 <link rel="import" href="/resources/editors/tg-dom-stamper.html">
 
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+
 <dom-module id="tg-collectional-editor">
     <style>
         iron-list {
@@ -19,6 +21,7 @@
         
         .item {
             @apply(--layout-horizontal);
+            @apply(--layout-center);
             padding: 16px 22px;
             border-bottom: 1px solid #DDD;
         }
@@ -32,8 +35,11 @@
             outline: 0;
         }
         
-        .item.selected .star {
-            color: var(--paper-blue-600);
+        paper-checkbox {
+            --paper-checkbox-checked-color: var(--paper-light-blue-700);
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+            --paper-checkbox-unchecked-color: var(--paper-grey-900:);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900:);
         }
         .item.selected {
             background-color: var(--google-grey-100);
@@ -46,7 +52,7 @@
         
         .pad {
             @apply(--layout-vertical);
-            padding-left: 16px;
+            padding-left: 14px;
             width: calc(100% - 40px);
         }
         .without-pad {
@@ -62,12 +68,6 @@
         }
         .dim {
             color: gray;
-        }
-        .star {
-            min-width: 24px;
-            min-height: 24px;
-            width: 24px;
-            height: 24px;
         }
         .truncate {
             white-space: nowrap;
@@ -99,7 +99,7 @@
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
                       <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(item.sorting)]]">
-                          <iron-icon icon$="[[iconForItem(selected)]]" hidden$="[[_selectingIconHidden(_forReview, item)]]" class="star"></iron-icon>
+                          <paper-checkbox hidden$="[[_selectingIconHidden(_forReview, item)]]" checked="[[selected]]"></paper-checkbox>
                           <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                               <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                               <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
@@ -218,6 +218,10 @@
             }).bind(this);
         },
         
+        attached: function () {
+            this._originalChosenIds = null;
+        },
+        
         _calcItemTooltip: function (item) {
             var header = this._calcItemText(item, this.headerPropertyName);
             var desc = this._calcItemText(item, this.descriptionPropertyName);
@@ -244,33 +248,38 @@
          * This method promotes 'IRRELEVANT' into _editingValue which should not be a problem, since this 'editor' edits entity property (with name 'chosenNumbersPropertyName') directly.
          */
         convertToString: function (value) {
-            this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
+            // _entities, _originalChosenIds, this.$.input should be initialised only once for the session of collectional editing.
+            // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
+            // It is believed that resetting of _originalChosenIds can be safely done in attached callback of tg-collectional-editor.
+            if (this._originalChosenIds === null) {
+                this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
             
-            var selEntities = [];
-            var chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
-            if (typeof this.entity.chosenIds === 'undefined') {
-                this._forReview = true;
-            }
-            
-            this._originalChosenIds = [];
-            
-            for (var index = 0; index < chosenIds.length; index++) {
-                var foundEntity = this._find(this._entities, chosenIds[index]);
-                if (foundEntity !== null) {
-                    selEntities.push(foundEntity);
-                    this._originalChosenIds.push(chosenIds[index]);
+                var selEntities = [];
+                var chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
+                if (typeof this.entity.chosenIds === 'undefined') {
+                    this._forReview = true;
                 }
+                
+                this._originalChosenIds = [];
+                
+                for (var index = 0; index < chosenIds.length; index++) {
+                    var foundEntity = this._find(this._entities, chosenIds[index]);
+                    if (foundEntity !== null) {
+                        selEntities.push(foundEntity);
+                        this._originalChosenIds.push(chosenIds[index]);
+                    }
+                }
+    
+                this._disableSelectionListeners = true;
+                this.$.input.clearSelection();
+                
+                for (var index = 0; index < selEntities.length; index++) {
+                    this.$.input.selectItem(selEntities[index]);
+                }
+                this._disableSelectionListeners = false;
+                
+                this.scrollToFirstFoundElement();
             }
-
-            this._disableSelectionListeners = true;
-            this.$.input.clearSelection();
-            
-            for (var index = 0; index < selEntities.length; index++) {
-                this.$.input.selectItem(selEntities[index]);
-            }
-            this._disableSelectionListeners = false;
-            
-            this.scrollToFirstFoundElement();
             
             this.provideSorting(this.entity.sortingVals, this._entities);
             
@@ -326,10 +335,6 @@
             return classes;
         },
         
-        iconForItem: function (isSelected) {
-            return isSelected ? 'star' : 'star-border';
-        },
-        
         _sortingIconForItem: function (sorting) {
             return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
         },
@@ -366,6 +371,7 @@
         },
         
         _toggleOrdering: function (item, index) {
+            var self = this;
             if (item.sorting === true) {
                 this.set("_entities." + index + ".sorting", false);
             } else if (item.sorting === false) {
@@ -376,6 +382,12 @@
                 this._turnOnOrdering(index);
             }
             this.provideSorting(this.entity.sortingVals, this._entities);
+            // invoke validation after user has toggled ordering of some property
+            if (self._shouldInvokeValidation()) {
+                self.validationCallback();
+            } else {
+                self._skipValidationAction();
+            }
         },
         
         _turnOnOrdering: function (index) {
@@ -482,6 +494,12 @@
 	                        } else {
 	                            throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
 	                        }
+	                        // invoke validation after user has removed some item from collection
+	                        if (self._shouldInvokeValidation()) {
+	                            self.validationCallback();
+	                        } else {
+	                            self._skipValidationAction();
+	                        }
 	                    }
 	                });
 	                
@@ -505,6 +523,12 @@
                             if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
                                 addedIds.push(self.idOrKey(added));
                             }
+	                        // invoke validation after user has added some item to collection
+	                        if (self._shouldInvokeValidation()) {
+	                            self.validationCallback();
+	                        } else {
+	                            self._skipValidationAction();
+	                        }
 	                    }
 	                }
 	            }, self);

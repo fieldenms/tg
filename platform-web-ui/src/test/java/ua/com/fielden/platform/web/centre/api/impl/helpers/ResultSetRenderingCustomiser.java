@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.centre.api.impl.helpers;
 
-import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 
 /**
@@ -9,6 +8,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
  * @author TG Team
  *
  */
-public class ResultSetRenderingCustomiser implements IRenderingCustomiser<TgWorkOrder, String> {
+public class ResultSetRenderingCustomiser implements IRenderingCustomiser<String> {
 
 }

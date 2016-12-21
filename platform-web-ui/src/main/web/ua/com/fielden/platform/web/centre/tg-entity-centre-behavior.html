@@ -221,24 +221,32 @@
                 _criteriaLoaded: {
                     type: Boolean
                 },
-
+                
+                /**
+                 * Indicates whether some action (run, save or discard) is currently in progress.
+                 */
+                _actionInProgress: {
+                    type: Boolean,
+                    value: false
+                },
+                
                 _saverDisabled: {
                     type: Boolean,
-                    computed: '_computeSaverDisabled(_centreChanged)'
+                    computed: '_computeSaverDisabled(_centreChanged, _actionInProgress)'
                 },
                 _discarderDisabled: {
                     type: Boolean,
-                    computed: '_computeDiscarderDisabled(_centreChanged)'
+                    computed: '_computeDiscarderDisabled(_centreChanged, _actionInProgress)'
                 },
 
                 _runnerDisabled: {
                     type: Boolean,
-                    computed: '_computeRunnerDisabled(_criteriaLoaded)'
+                    computed: '_computeRunnerDisabled(_criteriaLoaded, _actionInProgress)'
                 },
 
                 _viewerDisabled: {
                     type: Boolean,
-                    computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun)'
+                    computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun, _actionInProgress)'
                 },
 
                 _url: {
@@ -290,6 +298,8 @@
 
                 /**
                  * Starts the process of centre run.
+                 *
+                 * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
                  */
                 run: {
                     type: Function
@@ -351,21 +361,20 @@
                 }
             },
 
-
-            _computeSaverDisabled: function (_centreChanged) {
-                return !this.canSave(_centreChanged);
+            _computeSaverDisabled: function (_centreChanged, _actionInProgress) {
+                return _actionInProgress === true || !this.canSave(_centreChanged);
             },
 
-            _computeDiscarderDisabled: function (_centreChanged) {
-                return !this.canDiscard(_centreChanged);
+            _computeDiscarderDisabled: function (_centreChanged, _actionInProgress) {
+                return _actionInProgress === true || !this.canDiscard(_centreChanged);
             },
 
-            _computeRunnerDisabled: function (_criteriaLoaded) {
-                return _criteriaLoaded === false;
+            _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
+                return _actionInProgress === true || _criteriaLoaded === false;
             },
 
-            _computeViewerDisabled: function (_criteriaLoaded, _wasRun) {
-                return _criteriaLoaded === false || _wasRun !== "yes";
+            _computeViewerDisabled: function (_criteriaLoaded, _wasRun, _actionInProgress) {
+                return _actionInProgress === true || _criteriaLoaded === false || _wasRun !== "yes";
             },
 
             _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
@@ -395,7 +404,7 @@
 
                 self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-                    if (criteriaEntity === null || criteriaEntity.isValid()) {
+                    if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                         if (typeof summary !== 'undefined') {
                             this.retrievedTotals = summary;
                         }
@@ -406,6 +415,10 @@
                                 this._selectedView = 1;
                             }, 100);
                             this._triggerRun = false;
+                        }
+                        if (this.$.selection_criteria._wasRun !== 'yes') {
+                            this.$.selection_criteria._wasRun = 'yes';
+                            console.debug('_wasRun has been changed to: ', this.$.selection_criteria._wasRun);
                         }
                     }
                 }).bind(self);
@@ -458,7 +471,7 @@
                 }).bind(self);
 
                 self._postFunctionalEntitySaved = (function (savingException, potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
-                    if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                    if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
                         this.refreshEntities(selectedEntitiesInContext);
                     }
@@ -474,6 +487,7 @@
                     }
                     console.log("CENTRE SAVE");
 
+                    self._actionInProgress = true;
                     var sc = this.$.selection_criteria;
                     var holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
 
@@ -481,7 +495,9 @@
                     sc._validator().abortValidationIfAny();
 
                     this._ajaxSaver().body = JSON.stringify(sc._serialiser().serialise(sc._reset(holder)));
-                    return this._ajaxSaver().generateRequest().completes;
+                    return this._ajaxSaver().generateRequest().completes.then(function () {
+                        self._actionInProgress = false;
+                    });
                 }).bind(self);
 
                 self.discard = (function () {
@@ -490,6 +506,7 @@
                     }
                     console.log("CENTRE DISCARD");
 
+                    self._actionInProgress = true;
                     var sc = this.$.selection_criteria;
 
                     // cancel previous validation before starting Discard process!
@@ -498,21 +515,25 @@
                     var customObject = {};
                     customObject['@@wasRun'] = this.$.selection_criteria._wasRun;
                     this._ajaxDiscarder().body = JSON.stringify(customObject);
-                    return this._ajaxDiscarder().generateRequest().completes;
+                    return this._ajaxDiscarder().generateRequest().completes.then(function () {
+                        self._actionInProgress = false;
+                    });
                 }).bind(self);
 
-                self.run = (function () {
+                self.run = (function (isSortingAction) {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
                     }
 
                     var self = this;
+                    self._actionInProgress = true;
                     self.$.egi.clearSelection();
                     self.$.egi.collapseAllCards();
                     self._triggerRun = true;
-                    return self.$.selection_criteria.run()
+                    return self.$.selection_criteria.run(isSortingAction)
                         .then(function () {
                             self.runInsertionPointActions();
+                            self._actionInProgress = false;
                         });
                 }).bind(self);
 

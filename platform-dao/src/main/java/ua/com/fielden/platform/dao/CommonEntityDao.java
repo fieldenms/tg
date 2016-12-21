@@ -48,7 +48,6 @@ import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -104,8 +103,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
-    private EntityFactory entityFactory;
-
     @Inject
     private ICompanionObjectFinder coFinder;
 
@@ -160,16 +157,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
         
         return false;
-    }
-
-    /**
-     * A setter for injection of entityFactory instance.
-     *
-     * @param entityFactory
-     */
-    @Inject
-    protected void setEntityFactory(final EntityFactory entityFactory) {
-        this.entityFactory = entityFactory;
     }
 
     /**
@@ -1098,10 +1085,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return new EntityBatchDeleterByIds<T>(getSession(), (PersistedEntityMetadata<T>) domainMetadata.getPersistedEntityMetadataMap().get(getEntityType())).deleteEntities(propName, entitiesIds);
     }
 
-    protected EntityFactory getEntityFactory() {
-        return entityFactory;
-    }
-
     public DomainMetadata getDomainMetadata() {
         return domainMetadata;
     }
@@ -1173,7 +1156,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
         @Override
         public List<T> data() {
-            return hasNext() ? data.subList(0, capacity()) : data;
+            return Collections.unmodifiableList(data);
         }
 
         @Override
@@ -1328,4 +1311,5 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     public <E extends IContinuationData> Optional<E> moreData(final String key) {
         return Optional.ofNullable((E) this.moreData.get(key));
     }
+
 }

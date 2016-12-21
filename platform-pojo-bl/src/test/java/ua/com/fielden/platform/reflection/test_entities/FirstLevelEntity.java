@@ -41,15 +41,6 @@ public class FirstLevelEntity extends AbstractEntity<DynamicEntityKey> implement
     @Title("AE")
     private SimpleEntity critOnlyAEProperty;
 
-    protected FirstLevelEntity(final Long id, final DynamicEntityKey key, final String desc) {
-        super(null, null, "");
-    }
-
-    protected FirstLevelEntity() {
-        super(null, null, "");
-        setKey(new DynamicEntityKey(this));
-    }
-
     public String getProperty() {
         return property;
     }
