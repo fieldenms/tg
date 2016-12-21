@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
-import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -68,11 +67,13 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
             final Long editedEntityId = Long.valueOf(entityEditAction.getEntityId());
             producedEntity = provideDefaultValuesForStandardEdit(editedEntityId, entityEditAction);
         } else {
-            final T entity = factory.newEntity(entityType);
             final IEntityDao<T> companion = co(this.entityType);
-            
+            final T entity;
             if (companion != null) {
+                entity = companion.new_();
                 provideProxies(entity, companion.getFetchProvider());
+            } else {
+                entity = factory().newEntity(this.entityType);
             }
             
             if (entity instanceof AbstractFunctionalEntityWithCentreContext) {
