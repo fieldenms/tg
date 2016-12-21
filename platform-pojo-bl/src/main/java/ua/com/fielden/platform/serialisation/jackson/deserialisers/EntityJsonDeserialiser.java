@@ -115,7 +115,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 if (propertyDescriptorType) {
                     entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText());
                 } else {
-                    entity = factory.newPlainEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
+                    entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
                 }
                 entity.setEntityFactory(factory);
             } else {
