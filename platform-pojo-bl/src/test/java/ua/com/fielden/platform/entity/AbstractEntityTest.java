@@ -35,6 +35,8 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.entity.proxy.TgOwnerEntity;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
@@ -899,7 +901,6 @@ public class AbstractEntityTest {
     @Test
     public void test_copy_for_entities_with_dynamic_key() {
         final CorrectEntityWithDynamicEntityKey one = factory.newEntity(CorrectEntityWithDynamicEntityKey.class, 1L);
-        ;
         one.property1 = 38L;
         one.property2 = 98L;
         final DynamicEntityKey keyOne = new DynamicEntityKey(one);
@@ -933,9 +934,9 @@ public class AbstractEntityTest {
     }
 
     @Test
-    public void test_copy_from_non_instrumented_instance() {
+    public void copy_from_non_instrumented_instance_is_also_non_instrumented() {
         final Entity entity = new Entity();
-        entity.setEntityFactory(factory); // factory is required at all times
+        entity.setVersion(42L);
         entity.setId(1L);
         entity.setKey("key");
         entity.setDesc("description");
@@ -944,15 +945,71 @@ public class AbstractEntityTest {
         final Entity copy = entity.copy(Entity.class);
 
         assertEquals("Copy does not equal to the original instance", entity, copy);
-        assertFalse("Should have not been dirty", copy.isDirty());
-        assertEquals("Property id does not match", entity.getId(), copy.getId());
+        assertFalse("Copy is instrumented", copy.isInstrumented());
+        assertEquals("IDs do not match", entity.getId(), copy.getId());
+        assertEquals("Versions do not match.", Long.valueOf(42L), copy.getVersion());
         assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
         assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
     }
+    
+    @Test
+    public void copy_from_instrumented_instance_is_also_instrumented() {
+        final Entity entity = factory.newEntity(Entity.class);
+        entity.setVersion(42L);
+        entity.setId(1L);
+        entity.setKey("key");
+        entity.setDesc("description");
+        entity.setMoney(new Money("23.25"));
 
+        final Entity copy = entity.copy(Entity.class);
+
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Copy is not instrumented", copy.isInstrumented());
+        assertFalse("Copy is dirty", copy.isDirty());
+        assertEquals("IDs do not match", entity.getId(), copy.getId());
+        assertEquals("Versions do not match.", Long.valueOf(42L), copy.getVersion());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertEquals("Property money does not match", entity.getMoney(), copy.getMoney());
+    }
+    
+    @Test
+    public void copy_from_uninstrumented_proxied_instance_is_also_uninstrumented_and_proxied() {
+        final Class<? extends Entity> type = EntityProxyContainer.proxy(Entity.class, "firstProperty", "monitoring", "observableProperty");
+        
+        final Entity entity = EntityFactory.newPlainEntity(type, 12L);
+        entity.setVersion(42L);
+        entity.setKey("key");
+        entity.setDesc("description");
+
+        final Entity copy = entity.copy(type);
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertFalse("Copy is instrumented", copy.isInstrumented());
+        assertEquals("Property id does not match", entity.getId(), copy.getId());
+        assertEquals("Versions should match.", Long.valueOf(42L), copy.getVersion());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertEquals("Proxied properties do not match", entity.proxiedPropertyNames(), copy.proxiedPropertyNames());
+    }
 
     @Test
-    public void test_equals_for_instances_of_the_same_type_with_the_same_key_values() {
+    public void copy_from_instrumented_proxied_instance_is_also_instrumented_and_proxied() {
+        final Class<? extends Entity> type = EntityProxyContainer.proxy(Entity.class, "firstProperty", "monitoring", "observableProperty");
+        
+        final Entity entity = factory.newEntity(type, 12L);
+        entity.setVersion(42L);
+        entity.setKey("key");
+        entity.setDesc("description");
+
+        final Entity copy = entity.copy(type);
+        assertEquals("Copy does not equal to the original instance", entity, copy);
+        assertTrue("Copy is not instrumented", copy.isInstrumented());
+        assertEquals("Property id does not match", entity.getId(), copy.getId());
+        assertEquals("Versions should match.", Long.valueOf(42L), copy.getVersion());
+        assertEquals("Property desc does not match", entity.getDesc(), copy.getDesc());
+        assertEquals("Proxied properties do not match", entity.proxiedPropertyNames(), copy.proxiedPropertyNames());
+    }
+
+    @Test
+    public void two_instances_of_the_same_type_with_the_same_key_values_are_equal() {
         final Entity thisEntity = factory.newEntity(Entity.class, 1L);
         thisEntity.setKey("key");
         final Entity thatEntity = factory.newEntity(Entity.class, 2L);
