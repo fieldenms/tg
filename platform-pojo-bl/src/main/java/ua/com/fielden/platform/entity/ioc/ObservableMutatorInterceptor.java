@@ -81,7 +81,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         // check if entity can be modified at all
         final Result editableResult = entity.isEditable();
         if (!entity.isIgnoreEditableState() && !editableResult.isSuccessful()) {
-            logger.warn(format("Entity is not editable and none of its properties should be modified.", entity));
+            logger.warn(format("Entity [%s] is not editable and none of its properties should be modified.", entity));
             throw editableResult;
         }
         // proceed with property processing
@@ -96,7 +96,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                 // logger.debug("Property \"" + fullPropertyName + "\" new value is \"" + newValue + "\", old value is \"" + oldValue + "\".");
 
                 // perform validation and possibly setting of the passed in value
-                logger.debug(format("Checking if validation is needed for \"\"...", fullPropertyName));
+                logger.debug(format("Checking if validation is needed for [%s]...", fullPropertyName));
                 if (// enforcement happens in case of dependent properties
                     property.isEnforceMutator() ||
                     // or it could be an error recovery (forces validation + setter + necessarily firePropertyChange(!) )

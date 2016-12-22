@@ -42,15 +42,4 @@ public interface ProgressiveInterfacesWithCommonBeginSpike {
         LogicalOperatorOrEnd prop();
     }
     
-    public static void main(final String[] args) {
-        final OpenParenthesis a = null;
-        
-        a.begin().prop().add().prop().add().prop().add().prop().end();
-        
-        a.begin().prop().add().prop().end();
-        
-        a.begin().prop().gt().prop().end();
-        
-        a.begin().prop().gt().prop().and().prop().gt().prop().end();
-    }
 }

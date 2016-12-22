@@ -240,8 +240,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
             return false;
         }
         final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(root, property);
-        final Class<?> realType = isEntityItself ? null : PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
-        return !isEntityItself && realType != null && Collection.class.isAssignableFrom(realType); // or collections itself
+        final Class<?> realType = PropertyTypeDeterminator.determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, false);
+        return realType != null && Collection.class.isAssignableFrom(realType); // or collections itself
     }
 
     /**
