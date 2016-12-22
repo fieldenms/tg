@@ -44,9 +44,6 @@
         user-select: none;
         background-color: var(--paper-light-blue-600);
     }
-    #insertionPointContent .title-text {
-        pointer-events: none;
-    }
     #insertionPointContent paper-icon-button {
         width: 22px;
         height: 22px;
@@ -83,9 +80,6 @@
                 -ms-user-select: none;
                 user-select: none;
                 background-color: var(--paper-light-blue-600);
-            }
-            .title-text {
-                pointer-events: none;
             }
             paper-icon-button {
                 width: 22px;
@@ -183,6 +177,10 @@
             },
             
             observers: ['_adjustView(detached)'],
+            
+            ready: function () {
+                this.triggerElement = this.$.insertionPointContent;
+            },
 
             /**
              * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
