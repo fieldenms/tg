@@ -60,7 +60,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
                         + "    import='/centre_ui/%s' "
                         + "    element-name='tg-%s-centre'>"
                         + "</tg-element-loader>",
-                        entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName(), attributes))
+                        entityCentre.getMenuItemType().getName(), entityCentre.getMenuItemType().getSimpleName()))
                 .replace("//@ready-callback", "self.classList.remove('canLeave');")
                 .replace("//@attached-callback", format("this.$.loader.attrs = %s;\n", attributes))
                 .replace("@prefDim", "null")
