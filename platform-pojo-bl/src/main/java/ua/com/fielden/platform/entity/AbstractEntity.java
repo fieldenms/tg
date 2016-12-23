@@ -497,7 +497,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     @Override
     public String toString() {
-        return getKey() != null ? getKey().toString() : null;
+        return getKey() != null ? getKey().toString() : "[key is assigned]";
     }
 
     /**
