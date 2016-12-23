@@ -24,6 +24,7 @@ import com.google.common.base.Charsets;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
@@ -71,13 +72,15 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
     private final EntityFactory factory;
     private final EntityTypeInfoGetter entityTypeInfoGetter;
     private final ISerialisationTypeEncoder serialisationTypeEncoder;
+    public final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
-    public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder) {
+    public TgJackson(final EntityFactory entityFactory, final ISerialisationClassProvider provider, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         super();
         this.module = new TgJacksonModule();
         this.factory = entityFactory;
         entityTypeInfoGetter = new EntityTypeInfoGetter();
         this.serialisationTypeEncoder = serialisationTypeEncoder.setTgJackson(this);
+        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
 
         // enable(SerializationFeature.INDENT_OUTPUT);
         // enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);

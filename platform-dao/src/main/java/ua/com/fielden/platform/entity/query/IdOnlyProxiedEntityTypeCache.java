@@ -1,27 +1,22 @@
 package ua.com.fielden.platform.entity.query;
 
-import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.dao.DomainMetadata;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
 import ua.com.fielden.platform.dao.PropertyMetadata;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.utils.Pair;
 
-public class IdOnlyProxiedEntityTypeCache {
+public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCache {
 
     private final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> typesMap;
 
@@ -29,6 +24,7 @@ public class IdOnlyProxiedEntityTypeCache {
         typesMap = buildMap(domainMetadata);
     }
 
+    @Override
     public <T extends AbstractEntity<?>> Class<? extends T> getIdOnlyProxiedTypeFor(final Class<T> originalType) {
         return (Class<? extends T>) typesMap.get(originalType);
     }
