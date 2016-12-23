@@ -47,6 +47,8 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    private int i, j;
+    
     @Override
     protected ICentreDomainTreeManager dtm() {
         return (ICentreDomainTreeManager) just_a_dtm();
@@ -717,8 +719,6 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
     @Override
     public void test_that_WeakPropertyCheckingListeners_work() {
     }
-
-    private static int i, j;
 
     @Test
     public void test_that_PropertyValue1And2Listeners_work() {

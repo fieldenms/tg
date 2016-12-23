@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.eql.s1.elements;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -20,7 +18,6 @@ public class Yields1 implements IElement1<Yields2> {
 
     @Override
     public Yields2 transform(final TransformatorToS2 resolver) {
-        final List<Yield2> transformed = new ArrayList<>();
         final Yields2 result = new Yields2();
         for (final Yield1 yield : yields.values()) {
             result.addYield(new Yield2(yield.getOperand().transform(resolver), yield.getAlias(), yield.isRequiredHint()));

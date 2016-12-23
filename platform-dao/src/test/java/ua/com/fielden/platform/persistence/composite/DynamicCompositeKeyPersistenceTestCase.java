@@ -37,7 +37,6 @@ public class DynamicCompositeKeyPersistenceTestCase extends DbDrivenTestCase {
      */
     public void testThatEntityIsCorrectlyRetrievedFromDb() {
         final String keyPartOne = "key-1-1";
-        final EntityWithMoney keyPartTwo = new EntityWithMoney("key1", "desc", new Money("20.00"));
 
         final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
         final EntityWithDynamicCompositeKey result = (EntityWithDynamicCompositeKey) session.load(EntityWithDynamicCompositeKey.class, 1L);

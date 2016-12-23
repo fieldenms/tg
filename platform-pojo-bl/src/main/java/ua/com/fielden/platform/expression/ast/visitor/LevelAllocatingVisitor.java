@@ -184,7 +184,7 @@ public class LevelAllocatingVisitor extends AbstractAstVisitor {
             // this statement handles the very first assignment of the level variable based on the first non-null level value of this operation's operands
             level = child.getLevel() != null && level == null ? child.getLevel() : level; // i.e. level is assigned only if it was not assigned before
 
-            if (child.getLevel() != null && level != null && level != child.getLevel()) {
+            if (child.getLevel() != null && level != null && !level.equals(child.getLevel())) {
                 //if (contextLevel < level || contextLevel < child.getLevel()) {
                 throw new IncompatibleOperandException("Incompatible operand nesting level for operands of operation '" + node.getToken().text + "'.", node.getToken());
                 //}

@@ -34,6 +34,8 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    private int i, j;
+    
     @Override
     protected IDomainTreeManagerAndEnhancer dtm() {
         return (IDomainTreeManagerAndEnhancer) just_a_dtm();
@@ -348,8 +350,6 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp1")));
         assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp2")));
     }
-
-    private static int i, j;
 
     @Test
     public void test_that_PropertyListeners_work() {

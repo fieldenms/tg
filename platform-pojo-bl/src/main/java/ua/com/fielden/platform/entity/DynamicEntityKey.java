@@ -40,7 +40,7 @@ public final class DynamicEntityKey implements Comparable<DynamicEntityKey> {
     private List<String> memberNames = new ArrayList<>();
 
     private transient final AbstractEntity<DynamicEntityKey> entity;
-    private static final SimpleDateFormat dateFormatter = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
+    private final SimpleDateFormat dateFormatter = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
     public final String KEY_MEMBERS_SEPARATOR;
     /** There case where key members do not implement Comparable. In such cases a comparator class should be provided. */
     private transient final Map<Integer, Comparator<?>> keyMemberComparables = new HashMap<>();

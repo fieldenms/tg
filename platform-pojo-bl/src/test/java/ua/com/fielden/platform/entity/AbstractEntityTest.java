@@ -17,11 +17,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -36,7 +34,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.IMetaPropertyFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
-import ua.com.fielden.platform.entity.proxy.TgOwnerEntity;
 import ua.com.fielden.platform.entity.validation.HappyValidator;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
@@ -1107,95 +1104,6 @@ public class AbstractEntityTest {
             fail("Should be failed.");
         } catch (final IllegalStateException e) {
         }
-    }
-
-    @Test
-    public void test_entity_locking_during_validation_of_its_property() throws Exception {
-        final EntityWithLocableProperty entity = factory.newEntity(EntityWithLocableProperty.class);
-
-        // the latch is used to ensure that the changingThread has started and executed setLockPropertyValidation(true) before continuing
-        final CountDownLatch latch = new CountDownLatch(1);
-
-        // changing property happens on a separate thread
-        final Thread changingThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // this call should put setting into a long running mode until property validation is unlocked
-                entity.setLockPropertyValidation(true);
-                latch.countDown(); // release the latch, notifying the main thread that it can proceed
-                entity.setLockableProperty(Money.zero);
-            }
-        });
-        changingThread.start();
-
-        // wait for changingThread...
-        latch.await();
-
-        // validation happens on a separate thread
-        final Thread validationThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                entity.isValid();
-            }
-        });
-        validationThread.start();
-
-        // both threads should be alive
-        assertTrue(changingThread.isAlive());
-        assertTrue(validationThread.isAlive());
-
-        assertNull(entity.getLockableProperty()); // property should not have been changed yet
-
-        entity.setLockPropertyValidation(false); // release property validation lock
-
-        // wait for both threads to complete
-        changingThread.join();
-        validationThread.join();
-
-        assertNotNull(entity.getLockableProperty()); // property should have been changed already
-        assertNotNull(entity.isValid().isSuccessful());
-    }
-
-    @Ignore
-    @Test
-    public void test_entity_locking_during_its_validation() throws Exception {
-        final EntityWithLocableValidation entity = factory.newEntity(EntityWithLocableValidation.class);
-
-        // validation happens on a separate thread
-        final Thread validationThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // this call should put entity validation into a long running mode until validation is unlocked explicitly
-                entity.setLockEntityValidation(true);
-                entity.isValid();
-            }
-        });
-        validationThread.start();
-
-        // changing property happens on a separate thread
-        final Thread changingThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // this should lock due to a running entity validation process
-                entity.setMoney(Money.zero);
-            }
-        });
-        changingThread.start();
-        
-        // both threads should be alive
-        assertTrue(changingThread.isAlive());
-        assertTrue(validationThread.isAlive());
-
-        assertNull(entity.getMoney()); // property should not have been changed yet
-
-        entity.setLockEntityValidation(false); // release validation lock
-
-        // wait for both threads to complete
-        validationThread.join();
-        changingThread.join();
-
-        assertNotNull(entity.getMoney()); // property should have been changed already
-        assertNotNull(entity.isValid().isSuccessful());
     }
 
     @Test

@@ -395,7 +395,7 @@ public/* final */class ValuedInterval implements Comparable<ValuedInterval>, Clo
 
     @Override
     public String toString() {
-        return getKey() != null ? getKey().toString() : null;
+        return getKey() != null ? getKey().toString() : "[key is assigned]";
     }
 
     public boolean contains(final DateTime moment) {

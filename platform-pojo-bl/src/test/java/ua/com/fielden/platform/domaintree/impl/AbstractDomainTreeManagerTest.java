@@ -31,6 +31,8 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    private int i, j;
+    
     @Override
     protected IDomainTreeManager dtm() {
         return (IDomainTreeManager) just_a_dtm();
@@ -358,8 +360,6 @@ public class AbstractDomainTreeManagerTest extends AbstractDomainTreeTest {
         } catch (final IllegalArgumentException e) {
         }
     }
-
-    private static int i, j;
 
     @Test
     public void test_that_PropertyCheckingListeners_work() {

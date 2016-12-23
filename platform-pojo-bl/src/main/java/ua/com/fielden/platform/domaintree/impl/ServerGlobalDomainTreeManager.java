@@ -26,9 +26,7 @@ public class ServerGlobalDomainTreeManager implements IServerGlobalDomainTreeMan
 
     @Override
     public IGlobalDomainTreeManager get(final String username) {
-        if (!managersByUser.containsKey(username)) {
-            managersByUser.put(username, gdtmProvider.get());
-        }
+        managersByUser.putIfAbsent(username, gdtmProvider.get());
         return managersByUser.get(username);
     }
 }
