@@ -58,7 +58,7 @@ public class EntityUtils {
     /**
      * dd/MM/yyyy format instance
      */
-    public static final SimpleDateFormat dateWithoutTimeFormat = new SimpleDateFormat("dd/MM/yyyy");
+    public static final String dateWithoutTimeFormat = "dd/MM/yyyy";
 
     /**
      * Convenient method for value to {@link String} conversion
@@ -77,7 +77,7 @@ public class EntityUtils {
             return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
         } else if (valueType == Date.class || valueType == DateTime.class) {
             final Date date = valueType == Date.class ? (Date) value : ((DateTime) value).toDate();
-            return new SimpleDateFormat("dd/MM/yyyy").format(date) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
+            return new SimpleDateFormat(dateWithoutTimeFormat).format(date) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
         } else if (Money.class.isAssignableFrom(valueType)) {
             return value instanceof Number ? new Money(value.toString()).toString() : value.toString();
         } else if (valueType == BigDecimalWithTwoPlaces.class) {
@@ -323,7 +323,7 @@ public class EntityUtils {
             return NumberFormat.getInstance().format(new BigDecimal(value.toString()));
         } else if (valueType == Date.class || valueType == DateTime.class) {
             final Object convertedValue = value instanceof DateTime ? ((DateTime) value).toDate() : value;
-            return new SimpleDateFormat("dd/MM/yyyy").format(convertedValue) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(convertedValue);
+            return new SimpleDateFormat(dateWithoutTimeFormat).format(convertedValue) + " " + DateFormat.getTimeInstance(DateFormat.SHORT).format(convertedValue);
         } else {
             return value.toString();
         }

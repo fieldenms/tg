@@ -15,7 +15,7 @@ import ua.com.fielden.platform.types.Money;
  *
  */
 public class GreaterValidator implements IBeforeChangeEventHandler<Object> {
-    private String limit;
+    protected String limit;
 
     @Override
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
