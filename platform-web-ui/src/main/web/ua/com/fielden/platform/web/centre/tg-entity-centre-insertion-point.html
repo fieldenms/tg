@@ -19,12 +19,7 @@
 
 <style is="custom-style">
     .insertion-point-dialog > #insertionPointContent {
-        margin: 0;
-        padding: 0;
-    }
-    #insertionPointContent {
-        line-height: normal;
-        overflow: auto;
+        background-color: white;
     }
     #insertionPointContent .truncate {
         white-space: nowrap;
@@ -175,9 +170,9 @@
                  */
                 _dialog: Object
             },
-            
+
             observers: ['_adjustView(detached)'],
-            
+
             ready: function () {
                 this.triggerElement = this.$.insertionPointContent;
             },
@@ -186,22 +181,16 @@
              * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
              */
             _createDialog: function () {
-                var dialog = document.createElement('paper-dialog');
+                var dialog = document.createElement('div');
                 dialog.classList.toggle("insertion-point-dialog", true);
                 dialog.classList.toggle("layout", true);
                 dialog.classList.toggle("vertical", true);
-                dialog.addEventListener("iron-overlay-closed", this._dialogClosed.bind(this));
-                dialog.autoFitOnAttach = true;
-                dialog.entryAnimation = "fade-in-animation";
-                dialog.exitAnimation = "fade-out-animation";
-                dialog.style.margin = "0px";
-                dialog.refit = function () {
-                    this.style.position = "fixed";
-                    this.style.top = "0px";
-                    this.style.left = "0px";
-                    this.style.bottom = "0px";
-                    this.style.right = "0px";
-                }.bind(dialog);
+                dialog.style.position = "absolute";
+                dialog.style.top = "0px";
+                dialog.style.left = "0px";
+                dialog.style.bottom = "0px";
+                dialog.style.right = "0px";
+                dialog.style.zIndex = "1";
                 return dialog;
             },
 
@@ -214,15 +203,10 @@
                     Polymer.dom(document.body).appendChild(this._dialog);
                     Polymer.dom(this._dialog).appendChild(this.$.insertionPointContent);
                     Polymer.dom.flush();
-                    this._dialog.open();
                 }
             },
 
             _closeDialog: function () {
-                this._dialog.close();
-            },
-
-            _dialogClosed: function (event) {
                 Polymer.dom(document.body).removeChild(this._dialog);
                 Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
@@ -311,7 +295,7 @@
 
                 if (this.$.elementLoader.prefDim && !detached) {
                     var prefDim = this.$.elementLoader.prefDim;
-                    this.$.loadableContent.style.width =  prefDim.width() + prefDim.widthUnit;
+                    this.$.loadableContent.style.width = prefDim.width() + prefDim.widthUnit;
                     this.$.loadableContent.style.height = prefDim.height() + prefDim.heightUnit;
                 } else {
                     this.$.loadableContent.style.width = "100%";
