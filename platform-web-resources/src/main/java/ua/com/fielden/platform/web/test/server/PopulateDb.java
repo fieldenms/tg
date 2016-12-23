@@ -138,7 +138,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
                 // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
                 // .setProducerInitProp(ent1)
-                .setIntegerProp(7).setMoneyProp(new Money("7.0", Currency.getInstance("USD"))).setBigDecimalProp(new BigDecimal(7.7))
+                .setIntegerProp(7).setMoneyProp(new Money("7.0", Currency.getInstance("USD"))).setBigDecimalProp(new BigDecimal("7.7"))
                 .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30)
                 .setColourProp(Colour.RED).setHyperlinkProp(new Hyperlink("https://www.fielden.com.au"));
         de.setDesc("Default entity description");

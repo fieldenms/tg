@@ -19,7 +19,7 @@ public class DefaultValueAssignerForRangeDecimal implements IValueAssigner<Range
 
     @Override
     public Optional<RangeCritOtherValueMnemonic<BigDecimal>> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
-        return null;
+        return Optional.empty();
     }
 
 }

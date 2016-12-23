@@ -22,9 +22,9 @@ public class UtcDateTimePersistanceTestCase extends AbstractDaoTestCase {
         utcFormat.setTimeZone(UTC);
     }
     
-    private static final TimeZone australia = TimeZone.getTimeZone("Australia/Melbourne");
-    private static final DateFormat localFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    static {
+    private final TimeZone australia = TimeZone.getTimeZone("Australia/Melbourne");
+    private final DateFormat localFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    {
         localFormat.setTimeZone(australia);
     }
     
