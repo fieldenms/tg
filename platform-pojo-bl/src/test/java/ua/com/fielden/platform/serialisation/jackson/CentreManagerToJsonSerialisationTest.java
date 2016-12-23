@@ -80,7 +80,7 @@ public class CentreManagerToJsonSerialisationTest {
                     + "\"resultProperties\":[" + "\"integerProp\"," + "\"moneyProp\"," + "\"booleanProp\"," + "\"stringProp\"," + "\"\"," + "\"entityProp\","
                     + "\"entityProp.entityProp.dateProp\"," + "\"entityProp.entityProp.simpleEntityProp\"" + "]" + "}";
             Assert.assertEquals("The serialised object isn't correct", expectedJson, /* tgToJson.writeValueAsString(cdtm) */
-                    serialiser.serialise(cdtm, SerialiserEngines.JACKSON).toString());
+                    new String(serialiser.serialise(cdtm, SerialiserEngines.JACKSON)));
         } catch (final Exception e) {
             e.printStackTrace();
             fail("The json serialisation doesn't work!");

@@ -37,6 +37,8 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    private int i, j;
+    
     @Override
     protected IAbstractAnalysisDomainTreeManager dtm() {
         return (IAbstractAnalysisDomainTreeManager) just_a_dtm();
@@ -363,8 +365,6 @@ public class AbstractAnalysisDomainTreeManagerTest extends AbstractDomainTreeMan
     @Override
     public void test_that_WeakPropertyCheckingListeners_work() {
     }
-
-    private static int i, j;
 
     @Test
     public void test_that_PropertyUsageListeners_work() {

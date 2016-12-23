@@ -18,7 +18,7 @@ public class DefaultValueAssignerForRangeDate implements IValueAssigner<RangeCri
 
     @Override
     public Optional<RangeCritDateValueMnemonic> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
-        return null;
+        return Optional.empty();
     }
 
 }

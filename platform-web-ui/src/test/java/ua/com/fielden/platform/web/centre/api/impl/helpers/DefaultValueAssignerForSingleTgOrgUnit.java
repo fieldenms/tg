@@ -19,7 +19,7 @@ public class DefaultValueAssignerForSingleTgOrgUnit implements IValueAssigner<Si
 
     @Override
     public Optional<SingleCritOtherValueMnemonic<TgOrgUnit1>> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
-        return null;
+        return Optional.empty();
     }
 
 }

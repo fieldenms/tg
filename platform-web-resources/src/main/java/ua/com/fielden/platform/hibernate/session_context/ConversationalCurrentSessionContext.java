@@ -70,8 +70,8 @@ public class ConversationalCurrentSessionContext implements CurrentSessionContex
 
     private boolean needsWrapping(final Session session) {
         // try to make sure we don't wrap and already wrapped session
-        return session != null && !Proxy.isProxyClass(session.getClass())
-                || (Proxy.getInvocationHandler(session) != null && !(Proxy.getInvocationHandler(session) instanceof TransactionProtectionWrapper));
+        return !Proxy.isProxyClass(session.getClass()) ||
+               (Proxy.getInvocationHandler(session) != null && !(Proxy.getInvocationHandler(session) instanceof TransactionProtectionWrapper));
     }
 
     protected Session wrap(final Session session) {
