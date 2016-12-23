@@ -188,23 +188,28 @@ public class SerialisationTestResource extends ServerResource {
                                 return metaPropEq;
                             }
                         }
-                        // check property value equality
-                        if (EntityUtils.isEntityType(prop.getPropertyType())) {
-                            final Result eq = deepEqualsForTesting((AbstractEntity<?>) e1.get(propName), (AbstractEntity<?>) e2.get(propName), setOfCheckedEntities);
-                            if (!eq.isSuccessful()) {
-                                return eq;
+                        if (e1.proxiedPropertyNames().contains(propName)) {
+                            if (!e2.proxiedPropertyNames().contains(propName)) {
+                                return Result.failure(format("e1 [%s] (type = %s) prop [%s] isProxied (true) does not equal to e2 [%s] (type = %s) prop [%s] isProxied (false).", e1, e1.getType().getSimpleName(), propName, e2, e2.getType().getSimpleName(), propName));
                             }
                         } else {
-                            if (e1.getType().getSimpleName().equals("EntityWithDefiner") && propName.equals("prop2")) { // special check for the entity which has definer artifacts (the props do not equal)
-                                if (e1.get(propName) != null || !"okay_defined".equals(e2.get(propName))) {
-                                    return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to null OR e2 [%s] (type = %s) prop [%s] value [%s] not equal to 'okay_defined'.", e1, e1.getType().getSimpleName(), propName, e1.get(propName), e2, e2.getType().getSimpleName(), propName, e2.get(propName)));
+                            // check property value equality
+                            if (EntityUtils.isEntityType(prop.getPropertyType())) {
+                                final Result eq = deepEqualsForTesting((AbstractEntity<?>) e1.get(propName), (AbstractEntity<?>) e2.get(propName), setOfCheckedEntities);
+                                if (!eq.isSuccessful()) {
+                                    return eq;
                                 }
-                            } else if (!EntityUtils.equalsEx(e1.get(propName), e2.get(propName))) { // prop equality
-                                final String value1 = getValue(e1, propName);
-                                final String value2 = getValue(e2, propName);
-                                return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to e2 [%s] (type = %s) prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, value1, e2, e2.getType().getSimpleName(), propName, value2));
+                            } else {
+                                if (e1.getType().getSimpleName().equals("EntityWithDefiner") && propName.equals("prop2")) { // special check for the entity which has definer artifacts (the props do not equal)
+                                    if (e1.get(propName) != null || !"okay_defined".equals(e2.get(propName))) {
+                                        return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to null OR e2 [%s] (type = %s) prop [%s] value [%s] not equal to 'okay_defined'.", e1, e1.getType().getSimpleName(), propName, e1.get(propName), e2, e2.getType().getSimpleName(), propName, e2.get(propName)));
+                                    }
+                                } else if (!EntityUtils.equalsEx(e1.get(propName), e2.get(propName))) { // prop equality
+                                    final String value1 = getValue(e1, propName);
+                                    final String value2 = getValue(e2, propName);
+                                    return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to e2 [%s] (type = %s) prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, value1, e2, e2.getType().getSimpleName(), propName, value2));
+                                }
                             }
-
                         }
                     }
                 }
@@ -229,31 +234,37 @@ public class SerialisationTestResource extends ServerResource {
         if (metaProp1 == null && metaProp2 != null) {
             return Result.failure(format("MetaProperty of originally created entity is null, but meta property of deserialised entity is not."));
         }
-        // dirty equality
-        //        if (!metaProp1.isCollectional()) {
-        if (isChangedFromOriginal(metaProp1)) {
-            if (!EntityUtils.equalsEx(isChangedFromOriginal(metaProp1), metaProp2.isDirty())) {
-                return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
+        
+        if (metaProp1.isProxy() && !metaProp2.isProxy()) {
+            return Result.failure(format("MetaProperty of originally created entity is proxied, but meta property of deserialised entity is not."));
+        }
+        if (!metaProp1.isProxy()) {
+            // dirty equality
+            //        if (!metaProp1.isCollectional()) {
+            if (isChangedFromOriginal(metaProp1)) {
+                if (!EntityUtils.equalsEx(isChangedFromOriginal(metaProp1), metaProp2.isDirty())) {
+                    return Result.failure(format("e1 [%s] prop's [%s] changedFromOriginal [%s] does not equal to e2 [%s] prop's [%s] changedFromOriginal [%s].", metaProp1.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp1.isChangedFromOriginal(), metaProp2.getEntity().getType().getSimpleName(), metaProp1.getName(), metaProp2.isChangedFromOriginal()));
+                }
             }
-        }
-        //        } else {
-        //            // not supported -- dirtiness of the collectional properties for new entities differs from the regular properties
-        //        }
-        // editable equality
-        if (!EntityUtils.equalsEx(getEditable(metaProp1), getEditable(metaProp2))) {
-            return Result.failure(format("e1 [%s] editability [%s] does not equal to e2 [%s] editability [%s].", metaProp1.getEntity(), metaProp1.isEditable(), metaProp2.getEntity(), metaProp2.isEditable()));
-        }
-        // required equality
-        if (!EntityUtils.equalsEx(getRequired(metaProp1), getRequired(metaProp2))) {
-            return Result.failure(format("e1 [%s] requiredness [%s] does not equal to e2 [%s] requiredness [%s].", metaProp1.getEntity(), metaProp1.isRequired(), metaProp2.getEntity(), metaProp2.isRequired()));
-        }
-        // visible equality
-        if (!EntityUtils.equalsEx(getVisible(metaProp1), getVisible(metaProp2))) {
-            return Result.failure(format("e1 [%s] Visible [%s] does not equal to e2 [%s] Visible [%s].", metaProp1.getEntity(), metaProp1.isVisible(), metaProp2.getEntity(), metaProp2.isVisible()));
-        }
-        // validationResult equality
-        if (!resultsAreExpected(getValidationResult(metaProp1), getValidationResult(metaProp2))) {
-            return Result.failure(format("e1 [%s] ValidationResult [%s] does not equal to e2 [%s] ValidationResult [%s].", metaProp1.getEntity(), getValidationResult(metaProp1), metaProp2.getEntity(), getValidationResult(metaProp2)));
+            //        } else {
+            //            // not supported -- dirtiness of the collectional properties for new entities differs from the regular properties
+            //        }
+            // editable equality
+            if (!EntityUtils.equalsEx(getEditable(metaProp1), getEditable(metaProp2))) {
+                return Result.failure(format("e1 [%s] editability [%s] does not equal to e2 [%s] editability [%s].", metaProp1.getEntity(), metaProp1.isEditable(), metaProp2.getEntity(), metaProp2.isEditable()));
+            }
+            // required equality
+            if (!EntityUtils.equalsEx(getRequired(metaProp1), getRequired(metaProp2))) {
+                return Result.failure(format("e1 [%s] requiredness [%s] does not equal to e2 [%s] requiredness [%s].", metaProp1.getEntity(), metaProp1.isRequired(), metaProp2.getEntity(), metaProp2.isRequired()));
+            }
+            // visible equality
+            if (!EntityUtils.equalsEx(getVisible(metaProp1), getVisible(metaProp2))) {
+                return Result.failure(format("e1 [%s] Visible [%s] does not equal to e2 [%s] Visible [%s].", metaProp1.getEntity(), metaProp1.isVisible(), metaProp2.getEntity(), metaProp2.isVisible()));
+            }
+            // validationResult equality
+            if (!resultsAreExpected(getValidationResult(metaProp1), getValidationResult(metaProp2))) {
+                return Result.failure(format("e1 [%s] ValidationResult [%s] does not equal to e2 [%s] ValidationResult [%s].", metaProp1.getEntity(), getValidationResult(metaProp1), metaProp2.getEntity(), getValidationResult(metaProp2)));
+            }
         }
         return Result.successful("OK");
     }
@@ -329,7 +340,11 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createUninstrumentedEntityWithInstrumentedProperty(),
                 factory.createPropertyDescriptor(),
                 factory.createPropertyDescriptorInstrumented(),
-                factory.createEntityWithHyperlink()
+                factory.createEntityWithHyperlink(),
+                factory.createEntityWithProxyType(),
+                factory.createUninstrumentedEntityWithProxyType(),
+                factory.createUninstrumentedGeneratedEntityWithProxyType()._1,
+                factory.createInstrumentedGeneratedEntityWithProxyType()._1
                 );
     }
     

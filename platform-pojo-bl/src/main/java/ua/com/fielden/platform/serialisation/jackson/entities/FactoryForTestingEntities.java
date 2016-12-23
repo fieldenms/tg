@@ -27,6 +27,8 @@ import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
+import ua.com.fielden.platform.ui.menu.sample.MiEntityWithString;
 
 /**
  * The factory for testing entities for serialisation integration test and EntitySerialisationWithJacksonTest.
@@ -208,17 +210,35 @@ public class FactoryForTestingEntities {
         return createUninstrumentedPersistedEntity(EntityProxyContainer.proxy(EntityWithString.class, "prop"), 1L, "key", "description");
     }
     
-    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createUninstrumentedGeneratedEntityWithProxyType() throws ClassNotFoundException {
+    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createUninstrumentedGeneratedEntityWithProxyType() {
         final Class<EntityWithString> entityType = EntityWithString.class;
         final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-        final Class<AbstractEntity<?>> entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName())).endModification();
+        final Class<AbstractEntity<?>> entityTypeGenerated;
+        try {
+            entityTypeGenerated = (Class<AbstractEntity<?>>) 
+                    cl.startModification(entityType.getName())
+                    .modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName()))
+                    .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEntityWithString.class))
+                .endModification();
+        } catch (final ClassNotFoundException e) {
+            throw Result.failure(e);
+        }
         return T2.t2(createUninstrumentedPersistedEntity(EntityProxyContainer.proxy(entityTypeGenerated, "prop"), 1L, "key", "description"), entityTypeGenerated);
     }
 
-    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createInstrumentedGeneratedEntityWithProxyType() throws ClassNotFoundException {
+    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createInstrumentedGeneratedEntityWithProxyType() {
         final Class<EntityWithString> entityType = EntityWithString.class;
         final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-        final Class<AbstractEntity<?>> entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName())).endModification();
+        final Class<AbstractEntity<?>> entityTypeGenerated;
+        try {
+            entityTypeGenerated = (Class<AbstractEntity<?>>) 
+                    cl.startModification(entityType.getName())
+                    .modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName()))
+                    .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEntityWithString.class))
+                .endModification();
+        } catch (final ClassNotFoundException e) {
+            throw Result.failure(e);
+        }
         return T2.t2(createPersistedEntity(EntityProxyContainer.proxy(entityTypeGenerated, "prop"), 1L, "key", "description"), entityTypeGenerated);
     }
 
