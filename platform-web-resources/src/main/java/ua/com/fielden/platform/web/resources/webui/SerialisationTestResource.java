@@ -37,10 +37,12 @@ import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProperty;
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
+import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -341,10 +343,10 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createPropertyDescriptor(),
                 factory.createPropertyDescriptorInstrumented(),
                 factory.createEntityWithHyperlink(),
-                factory.createEntityWithProxyType(),
-                factory.createUninstrumentedEntityWithProxyType(),
-                factory.createUninstrumentedGeneratedEntityWithProxyType()._1,
-                factory.createInstrumentedGeneratedEntityWithProxyType()._1
+                factory.createUninstrumentedEntity(true, EntityWithOtherEntity.class),
+                factory.createEntity(true, EntityWithOtherEntity.class),
+                factory.createUninstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1,
+                factory.createInstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1
                 );
     }
     

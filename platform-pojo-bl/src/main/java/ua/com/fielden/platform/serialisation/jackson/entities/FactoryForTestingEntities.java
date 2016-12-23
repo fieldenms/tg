@@ -28,7 +28,6 @@ import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
-import ua.com.fielden.platform.ui.menu.sample.MiEntityWithString;
 
 /**
  * The factory for testing entities for serialisation integration test and EntitySerialisationWithJacksonTest.
@@ -201,45 +200,43 @@ public class FactoryForTestingEntities {
         return finalise(entity);
     }
     
-    public EntityWithString createEntityWithProxyType() {
-        final EntityWithString entity = createPersistedEntity(EntityProxyContainer.proxy(EntityWithString.class, "prop"), 1L, "key", "description");
+    public AbstractEntity createEntity(final boolean proxiedType, final Class entityType) {
+        final AbstractEntity entity = createPersistedEntity(proxiedType ? EntityProxyContainer.proxy(entityType, "prop") : entityType, 1L, "key", "description");
         return finalise(entity);
     }
     
-    public EntityWithString createUninstrumentedEntityWithProxyType() {
-        return createUninstrumentedPersistedEntity(EntityProxyContainer.proxy(EntityWithString.class, "prop"), 1L, "key", "description");
+    public AbstractEntity createUninstrumentedEntity(final boolean proxiedType, final Class entityType) {
+        return createUninstrumentedPersistedEntity(proxiedType ? EntityProxyContainer.proxy(entityType, "prop") : entityType, 1L, "key", "description");
     }
     
-    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createUninstrumentedGeneratedEntityWithProxyType() {
-        final Class<EntityWithString> entityType = EntityWithString.class;
+    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createUninstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType, final Class miType) {
         final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         final Class<AbstractEntity<?>> entityTypeGenerated;
         try {
             entityTypeGenerated = (Class<AbstractEntity<?>>) 
                     cl.startModification(entityType.getName())
                     .modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName()))
-                    .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEntityWithString.class))
+                    .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
                 .endModification();
         } catch (final ClassNotFoundException e) {
             throw Result.failure(e);
         }
-        return T2.t2(createUninstrumentedPersistedEntity(EntityProxyContainer.proxy(entityTypeGenerated, "prop"), 1L, "key", "description"), entityTypeGenerated);
+        return T2.t2(createUninstrumentedPersistedEntity(proxiedType ? (Class<AbstractEntity<?>>) EntityProxyContainer.proxy(entityTypeGenerated, "prop") : entityTypeGenerated, 1L, "key", "description"), entityTypeGenerated);
     }
 
-    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createInstrumentedGeneratedEntityWithProxyType() {
-        final Class<EntityWithString> entityType = EntityWithString.class;
+    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createInstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType, final Class miType) {
         final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         final Class<AbstractEntity<?>> entityTypeGenerated;
         try {
             entityTypeGenerated = (Class<AbstractEntity<?>>) 
                     cl.startModification(entityType.getName())
                     .modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName()))
-                    .addClassAnnotations(new MiTypeAnnotation().newInstance(MiEntityWithString.class))
+                    .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
                 .endModification();
         } catch (final ClassNotFoundException e) {
             throw Result.failure(e);
         }
-        return T2.t2(createPersistedEntity(EntityProxyContainer.proxy(entityTypeGenerated, "prop"), 1L, "key", "description"), entityTypeGenerated);
+        return T2.t2(createPersistedEntity(proxiedType ? (Class<AbstractEntity<?>>) EntityProxyContainer.proxy(entityTypeGenerated, "prop") : entityTypeGenerated, 1L, "key", "description"), entityTypeGenerated);
     }
 
     public EntityWithString createEntityWithStringRequired() {
