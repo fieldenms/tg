@@ -354,7 +354,6 @@ public class SerialisationTestResource extends ServerResource {
             entity = (AbstractEntity<String>) serialiser.factory().newEntity(emptyEntityTypeEnhanced, 159L);
         } else {
             entity = (AbstractEntity<String>) EntityFactory.newPlainEntity(emptyEntityTypeEnhanced, 159L);
-            entity.setEntityFactory(serialiser.factory());
         }
 
         entity.beginInitialising();

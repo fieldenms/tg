@@ -21,9 +21,12 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * The factory for testing entities for serialisation integration test and EntitySerialisationWithJacksonTest.
@@ -79,6 +82,26 @@ public class FactoryForTestingEntities {
         entity.beginInitialising();
         entity.set(AbstractEntity.KEY, key);
         entity.setDesc(desc);
+
+        return entity;
+    }
+    
+    /**
+     * Creates an uninstrumented entity that mimics the one that was retrieved from the database.
+     *
+     * @param type
+     * @param id
+     * @param key
+     * @param desc
+     * @return
+     */
+    private <T extends AbstractEntity<?>> T createUninstrumentedPersistedEntity(final Class<T> type, final Long id, final String key, final String desc) {
+        final T entity = EntityFactory.newPlainEntity(type, id);
+
+        entity.beginInitialising();
+        entity.set(AbstractEntity.KEY, key);
+        entity.setDesc(desc);
+        entity.endInitialising();
 
         return entity;
     }
@@ -176,9 +199,27 @@ public class FactoryForTestingEntities {
         return finalise(entity);
     }
     
-    public EntityWithString createEntityWithStringProxied() {
+    public EntityWithString createEntityWithProxyType() {
         final EntityWithString entity = createPersistedEntity(EntityProxyContainer.proxy(EntityWithString.class, "prop"), 1L, "key", "description");
         return finalise(entity);
+    }
+    
+    public EntityWithString createUninstrumentedEntityWithProxyType() {
+        return createUninstrumentedPersistedEntity(EntityProxyContainer.proxy(EntityWithString.class, "prop"), 1L, "key", "description");
+    }
+    
+    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createUninstrumentedGeneratedEntityWithProxyType() throws ClassNotFoundException {
+        final Class<EntityWithString> entityType = EntityWithString.class;
+        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+        final Class<AbstractEntity<?>> entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName())).endModification();
+        return T2.t2(createUninstrumentedPersistedEntity(EntityProxyContainer.proxy(entityTypeGenerated, "prop"), 1L, "key", "description"), entityTypeGenerated);
+    }
+
+    public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createInstrumentedGeneratedEntityWithProxyType() throws ClassNotFoundException {
+        final Class<EntityWithString> entityType = EntityWithString.class;
+        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+        final Class<AbstractEntity<?>> entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(entityType.getName())).endModification();
+        return T2.t2(createPersistedEntity(EntityProxyContainer.proxy(entityTypeGenerated, "prop"), 1L, "key", "description"), entityTypeGenerated);
     }
 
     public EntityWithString createEntityWithStringRequired() {
@@ -318,7 +359,6 @@ public class FactoryForTestingEntities {
         final Entity1WithEntity2 entity = factory.newEntity(Entity1WithEntity2.class, 159L);
         
         final Entity2WithEntity1 uninstrumentedPropValue = EntityFactory.newPlainEntity(Entity2WithEntity1.class, 162L);
-        uninstrumentedPropValue.setEntityFactory(factory);
 
         entity.beginInitialising();
         entity.setProp(uninstrumentedPropValue);
@@ -331,7 +371,6 @@ public class FactoryForTestingEntities {
 
     public Entity1WithEntity2 createUninstrumentedEntityWithInstrumentedProperty() {
         final Entity1WithEntity2 entity = EntityFactory.newPlainEntity(Entity1WithEntity2.class, 159L);
-        entity.setEntityFactory(factory);
         
         final Entity2WithEntity1 uninstrumentedPropValue = factory.newEntity(Entity2WithEntity1.class, 162L);
 

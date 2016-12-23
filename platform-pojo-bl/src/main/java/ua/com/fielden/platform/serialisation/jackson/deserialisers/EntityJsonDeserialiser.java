@@ -107,9 +107,14 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     .filter(prop -> node.get(prop) == null)
                     .collect(Collectors.toList())
                     .toArray(new String[] {});
-            if (!propertyDescriptorType && proxiedProps.length > 0) {
-                logger.error(String.format("New proxy type will be created for [%s] with proxied properties [%s].", type.getSimpleName(), Arrays.asList(proxiedProps)));
-            }
+//            final String[] nonPrxProps = properties.stream()
+//                    .map(cachedProp -> cachedProp.field().getName())
+//                    .filter(prop -> node.get(prop) != null)
+//                    .collect(Collectors.toList())
+//                    .toArray(new String[] {});
+//            if (!propertyDescriptorType && proxiedProps.length > 0) {
+//                logger.error(String.format("Proxy type will be used for [%s] with non-proxied properties [%s].", type.getSimpleName(), Arrays.asList(nonPrxProps)));
+//            }
             final T entity;
             if (uninstrumented) {
                 if (propertyDescriptorType) {
@@ -117,7 +122,6 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 } else {
                     entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
                 }
-                entity.setEntityFactory(factory);
             } else {
                 if (propertyDescriptorType) {
                     entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText(), factory);
@@ -161,9 +165,9 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 final String propertyName = prop.field().getName();
                 final JsonNode propNode = node.get(propertyName);
                 final Object value = determineValue(propNode, prop.field());
-                if (value == null && !Arrays.asList(LAST_UPDATED_BY, LAST_UPDATED_DATE, LAST_UPDATED_TRANSACTION_GUID).contains(propertyName)) {
-                    logger.error(String.format("The value [null] has been retrieved from JSON node for property %s. Type [%s].", propertyName, entity.getClass().getSimpleName()));
-                }
+//                if (value == null && !Arrays.asList(LAST_UPDATED_BY, LAST_UPDATED_DATE, LAST_UPDATED_TRANSACTION_GUID).contains(propertyName)) {
+//                    logger.error(String.format("[null] value has been retrieved from JSON node for property [%s] for type [%s].", propertyName, entity.getClass().getSimpleName()));
+//                }
                 try {
                     // at this stage the field should be already accessible
                     prop.field().set(entity, value);
