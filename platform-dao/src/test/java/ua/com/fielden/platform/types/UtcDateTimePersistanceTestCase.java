@@ -16,9 +16,9 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 public class UtcDateTimePersistanceTestCase extends AbstractDaoTestCase {
 
-    private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
-    private static final DateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    static {
+    private final TimeZone UTC = TimeZone.getTimeZone("UTC");
+    private final DateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    {
         utcFormat.setTimeZone(UTC);
     }
     

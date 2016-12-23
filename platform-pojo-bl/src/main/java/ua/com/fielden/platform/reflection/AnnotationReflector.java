@@ -79,7 +79,7 @@ public final class AnnotationReflector {
             for (final Annotation ann : method.getAnnotations()) {
                 newCached.put(ann.annotationType(), ann);
             }
-            annotations.put(methodKey, newCached);
+            annotations.putIfAbsent(methodKey, newCached);
         }
         return annotations.get(methodKey).values();
         //	return Arrays.asList(method.getAnnotations()); // make some caching
