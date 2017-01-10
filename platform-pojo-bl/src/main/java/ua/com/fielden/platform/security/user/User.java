@@ -73,7 +73,7 @@ public class User extends ActivatableAbstractEntity<String> {
         }
     }
     
-    public static final String PASSWD_RESET_UUID_SEPERATOR = "-";
+    public static final String SECRET_RESET_UUID_SEPERATOR = "-";
     public static final String USER_NAME_REGEX = "^[^-]+$"; // PASSWD_RESET_UUID_SEPERATOR should not be permitted for user names
     
     @IsProperty
