@@ -39,15 +39,14 @@ public class DataMigrator {
     private final Logger logger = Logger.getLogger(this.getClass());
 
     private final HibernateUtil hiberUtil;
-    private final EntityFactory factory;
     private final List<IRetriever<? extends AbstractEntity<?>>> retrievers = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
     private final Injector injector;
     private final DomainMetadataAnalyser dma;
     private final boolean includeDetails;
     private final IdCache cache;
 
-    private final static TimeZone utcTz = TimeZone.getTimeZone("UTC");
-    private final static Calendar utcCal = Calendar.getInstance(utcTz);
+    private static final TimeZone utcTz = TimeZone.getTimeZone("UTC");
+    private static final Calendar utcCal = Calendar.getInstance(utcTz);
 
     private static List<IRetriever<? extends AbstractEntity<?>>> instantiateRetrievers(final Injector injector, final Class... retrieversClasses) {
         final List<IRetriever<? extends AbstractEntity<?>>> result = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
@@ -57,11 +56,10 @@ public class DataMigrator {
         return result;
     }
 
-    public DataMigrator(final Injector injector, final HibernateUtil hiberUtil, final EntityFactory factory, //
+    public DataMigrator(final Injector injector, final HibernateUtil hiberUtil,
             final boolean skipValidations, final boolean includeDetails, final Class... retrieversClasses) throws Exception {
         final DateTime start = new DateTime();
         this.injector = injector;
-        this.factory = factory;
         this.hiberUtil = hiberUtil;
         dma = new DomainMetadataAnalyser(injector.getInstance(DomainMetadata.class));
         retrievers.addAll(instantiateRetrievers(injector, retrieversClasses));
@@ -109,24 +107,20 @@ public class DataMigrator {
      * @return
      * @throws Exception
      */
-    private boolean validateRetrievalSqlForKeyFieldsUniqueness(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn)
-            throws Exception {
-        final Statement st = conn.createStatement();
+    private boolean validateRetrievalSqlForKeyFieldsUniqueness(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) {
         final String sql = new RetrieverSqlProducer(dma).getKeyUniquenessViolationSql(retriever);
         boolean result = false;
-        try {
+        try (final Statement st = conn.createStatement()) {
             logger.debug("Checking uniqueness of key data for [" + retriever.getClass().getSimpleName() + "]");
-            final ResultSet rs = st.executeQuery(sql);
-            if (rs.next()) {
-                logger.error("There are duplicates in data of [" + retriever.getClass().getSimpleName() + "].\n" + (includeDetails ? sql + "\n\n\n" : ""));
-                result = true;
+            try (final ResultSet rs = st.executeQuery(sql)) {
+                if (rs.next()) {
+                    logger.error("There are duplicates in data of [" + retriever.getClass().getSimpleName() + "].\n" + (includeDetails ? sql + "\n\n\n" : ""));
+                    result = true;
+                }
             }
-            rs.close();
         } catch (final Exception ex) {
             logger.error("Exception while checking [" + retriever.getClass().getSimpleName() + "]" + ex + " SQL:\n" + sql);
             result = true;
-        } finally {
-            st.close();
         }
 
         return result;
@@ -138,115 +132,100 @@ public class DataMigrator {
      * @return
      * @throws Exception
      */
-    private boolean checkRetrievalSqlForSyntaxErrors(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn)
-            throws Exception {
-        final Statement st = conn.createStatement();
+    private boolean checkRetrievalSqlForSyntaxErrors(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) {
+        
         final String sql = new RetrieverSqlProducer(dma).getSql(retriever);
         boolean result = false;
-        try {
+        try (final Statement st = conn.createStatement()) {
             logger.debug("Checking sql syntax for [" + retriever.getClass().getSimpleName() + "]");
             final ResultSet rs = st.executeQuery(sql);
             rs.close();
         } catch (final Exception ex) {
             logger.error("Exception while checking syntax for [" + retriever.getClass().getSimpleName() + "]" + ex + " SQL:\n" + sql);
             result = true;
-        } finally {
-            st.close();
         }
-
         return result;
     }
 
     private boolean checkDataIntegrity(final DomainMetadataAnalyser dma, final Connection conn) throws Exception {
         final Map<Class<? extends AbstractEntity<?>>, String> stmts = new RetrieverDeadReferencesSeeker(dma).determineUsers(retrievers);
-        final Statement st = conn.createStatement();
-        boolean result = false;
-        for (final Entry<Class<? extends AbstractEntity<?>>, String> entry : stmts.entrySet()) {
-            try {
-                final ResultSet rs = st.executeQuery(entry.getValue());
-                rs.next();
-                final Integer count = rs.getInt(1);
-                if (count > 0) {
-                    logger.error("Dead references count for entity type [" + entry.getKey().getSimpleName() + "] is [" + count + "].\n"
-                            + (includeDetails ? entry.getValue() + "\n\n\n" : ""));
+        try (final Statement st = conn.createStatement()) {        
+            boolean result = false;
+            for (final Entry<Class<? extends AbstractEntity<?>>, String> entry : stmts.entrySet()) {
+                try {
+                    final ResultSet rs = st.executeQuery(entry.getValue());
+                    rs.next();
+                    final Integer count = rs.getInt(1);
+                    if (count > 0) {
+                        logger.error("Dead references count for entity type [" + entry.getKey().getSimpleName() + "] is [" + count + "].\n"
+                                + (includeDetails ? entry.getValue() + "\n\n\n" : ""));
+                    }
+                    rs.close();
+                } catch (final Exception ex) {
+                    logger.error("Exception while counting dead references for entity type [" + entry.getKey().getSimpleName() + "]" + ex + " SQL:\n" + entry.getValue());
+                    result = true;
+                } finally {
                 }
-                rs.close();
-            } catch (final Exception ex) {
-                logger.error("Exception while counting dead references for entity type [" + entry.getKey().getSimpleName() + "]" + ex + " SQL:\n" + entry.getValue());
-                result = true;
-            } finally {
+    
             }
-
+            return result;
         }
-        st.close();
-
-        return result;
     }
 
 
-    private boolean checkEmptyStrings(final DomainMetadataAnalyser dma, final Connection conn) throws Exception {
+    private boolean checkEmptyStrings(final DomainMetadataAnalyser dma, final Connection conn) throws SQLException {
         final Set<String> stmts = new RetrieverEmptyStringsChecker(dma).getSqls(retrievers);
-        final Statement st = conn.createStatement();
-        boolean result = false;
-        for (final String sql : stmts) {
-            try {
-                final ResultSet rs = st.executeQuery(sql);
-                rs.next();
-                final String retriever = rs.getString(1);
-                final String prop = rs.getString(2);
-                final Integer count = rs.getInt(3);
-                if (count > 0) {
-                    logger.error("Empty string reference count for property [" + prop + "] within retriever [" + retriever + "] is [" + count + "].\n"
-                            + (includeDetails ? sql + "\n\n\n" : ""));
+        try (final Statement st = conn.createStatement()) {
+            boolean result = false;
+            for (final String sql : stmts) {
+                try (final ResultSet rs = st.executeQuery(sql)) {
+                    rs.next();
+                    final String retriever = rs.getString(1);
+                    final String prop = rs.getString(2);
+                    final Integer count = rs.getInt(3);
+                    if (count > 0) {
+                        logger.error("Empty string reference count for property [" + prop + "] within retriever [" + retriever + "] is [" + count + "].\n" + (includeDetails ? sql + "\n\n\n" : ""));
+                    }
+                    
+                } catch (final SQLException ex) {
+                    logger.error("Exception while counting empty strings with SQL:\n" + sql);
+                    result = true;
                 }
-                rs.close();
-            } catch (final Exception ex) {
-                logger.error("Exception while counting empty strings with SQL:\n" + sql);
-                result = true;
-            } finally {
             }
-
+            return result;
         }
-        st.close();
-
-        return result;
     }
 
-    private boolean checkRequiredness(final DomainMetadataAnalyser dma, final Connection conn) throws Exception {
+    private boolean checkRequiredness(final DomainMetadataAnalyser dma, final Connection conn) throws SQLException {
         final Set<String> stmts = new RetrieverPropsRequirednessChecker(dma).getSqls(retrievers);
-        final Statement st = conn.createStatement();
-        boolean result = false;
-        for (final String sql : stmts) {
-            try {
-                final ResultSet rs = st.executeQuery(sql);
-                rs.next();
-                final String retriever = rs.getString(1);
-                final String prop = rs.getString(2);
-                final Integer count = rs.getInt(3);
-                if (count > 0) {
-                    logger.error("Violated requiredness records count for property [" + prop + "] within retriever [" + retriever + "] is [" + count + "].\n"
-                            + (includeDetails ? sql + "\n\n\n" : ""));
-                }
-                rs.close();
-            } catch (final Exception ex) {
-                logger.error("Exception while counting records with violated requiredness with SQL:\n" + sql);
-                result = true;
-            } finally {
+        try (final Statement st = conn.createStatement()) {
+            boolean result = false;
+            for (final String sql : stmts) {
+                try (final ResultSet rs = st.executeQuery(sql)) {
+                    rs.next();
+                    final String retriever = rs.getString(1);
+                    final String prop = rs.getString(2);
+                    final Integer count = rs.getInt(3);
+                    if (count > 0) {
+                        logger.error("Violated requiredness records count for property [" + prop + "] within retriever [" + retriever + "] is [" + count + "].\n"
+                                + (includeDetails ? sql + "\n\n\n" : ""));
+                    }
+                } catch (final SQLException ex) {
+                    logger.error("Exception while counting records with violated requiredness with SQL:\n" + sql);
+                    result = true;
+                } 
             }
-
+            return result;
         }
-        st.close();
-
-        return result;
     }
 
     private void runSql(final List<String> ddl) throws Exception {
         final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
         final Connection conn = hiberUtil.getSessionFactory().getCurrentSession().connection();
         for (final String sql : ddl) {
-            final Statement st = conn.createStatement();
-            st.execute(sql);
-            st.close();
+            try (final Statement st = conn.createStatement()) {
+                st.execute(sql);
+            }
         }
         tr.commit();
     }
@@ -255,12 +234,12 @@ public class DataMigrator {
         Integer result = null;
         final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
         final Connection targetConn = hiberUtil.getSessionFactory().getCurrentSession().connection();
-        final Statement st = targetConn.createStatement();
-        final ResultSet rs = st.executeQuery("SELECT NEXT_VALUE FROM UNIQUE_ID");
-        rs.next();
-        result = rs.getInt(1);
-        st.close();
-        targetConn.close();
+        try (final Statement st = targetConn.createStatement();
+             final ResultSet rs = st.executeQuery("SELECT NEXT_VALUE FROM UNIQUE_ID")) {
+            rs.next();
+            result = rs.getInt(1);
+        }
+        tr.commit();
         return result;
 
     }
@@ -277,7 +256,7 @@ public class DataMigrator {
                 foundErrors = true;
             }
         }
-        conn.close();
+        
         if (foundErrors) {
             logger.error("\n\n\n======== Validation detected errors. Pls consult the log file for details ==========\n\n\n");
         }
@@ -287,20 +266,18 @@ public class DataMigrator {
             throws Exception {
         final RetrieverSqlProducer rsp = new RetrieverSqlProducer(dma);
         Integer id = startingId;
-        final Statement legacyStmt = legacyConn.createStatement();
+        try (final Statement legacyStmt = legacyConn.createStatement()) {
+            for (final IRetriever<? extends AbstractEntity<?>> retriever : retrievers) {
+                try (final ResultSet legacyRs = legacyStmt.executeQuery(rsp.getSql(retriever))) {
+                    if (retriever.isUpdater()) {
+                        performBatchUpdates(new RetrieverBatchUpdateStmtGenerator(dma, retriever), legacyRs);
+                    } else {
+                        id = performBatchInserts(new RetrieverBatchInsertStmtGenerator(dma, retriever), legacyRs, id);
+                    }
 
-        for (final IRetriever<? extends AbstractEntity<?>> retriever : retrievers) {
-            final ResultSet legacyRs = legacyStmt.executeQuery(rsp.getSql(retriever));
-
-            if (retriever.isUpdater()) {
-                performBatchUpdates(new RetrieverBatchUpdateStmtGenerator(dma, retriever), legacyRs);
-            } else {
-                id = performBatchInserts(new RetrieverBatchInsertStmtGenerator(dma, retriever), legacyRs, id);
+                }
             }
-
-            legacyRs.close();
         }
-        legacyStmt.close();
 
         return id;
     }
@@ -313,40 +290,39 @@ public class DataMigrator {
         final Map<Object, Integer> typeCache = cache.getCacheForType(rbsg.getRetriever().type());
         final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
         final Connection targetConn = hiberUtil.getSessionFactory().getCurrentSession().connection();
-        final PreparedStatement insertStmt = targetConn.prepareStatement(insertSql);
-        int batchId = 0;
-        final List<List<Object>> batchValues = new ArrayList<>();
+        try (final PreparedStatement insertStmt = targetConn.prepareStatement(insertSql)) {
+            int batchId = 0;
+            final List<List<Object>> batchValues = new ArrayList<>();
 
-        while (legacyRs.next()) {
-            batchId = batchId + 1;
-            final List<Object> keyValue = new ArrayList<>();
-            for (final Integer keyIndex : indexFields) {
-                keyValue.add(legacyRs.getObject(keyIndex.intValue()));
-            }
-            final int id = typeCache.get(keyValue.size() == 1 ? keyValue.get(0) : keyValue);
-            int index = 1;
-            final List<Object> currTransformedValues = rbsg.transformValues(legacyRs, cache, id);
-            batchValues.add(currTransformedValues);
-            for (final Object value : currTransformedValues) {
-                insertStmt.setObject(index, value);
-                index = index + 1;
-            }
-            insertStmt.addBatch();
+            while (legacyRs.next()) {
+                batchId = batchId + 1;
+                final List<Object> keyValue = new ArrayList<>();
+                for (final Integer keyIndex : indexFields) {
+                    keyValue.add(legacyRs.getObject(keyIndex.intValue()));
+                }
+                final int id = typeCache.get(keyValue.size() == 1 ? keyValue.get(0) : keyValue);
+                int index = 1;
+                final List<Object> currTransformedValues = rbsg.transformValues(legacyRs, cache, id);
+                batchValues.add(currTransformedValues);
+                for (final Object value : currTransformedValues) {
+                    insertStmt.setObject(index, value);
+                    index = index + 1;
+                }
+                insertStmt.addBatch();
 
-            if ((batchId % 100) == 0) {
+                if ((batchId % 100) == 0) {
+                    repeatAction(insertStmt, batchValues, exceptions);
+                    batchValues.clear();
+                    insertStmt.clearBatch();
+                }
+            }
+
+            if ((batchId % 100) != 0) {
                 repeatAction(insertStmt, batchValues, exceptions);
-                batchValues.clear();
-                insertStmt.clearBatch();
             }
+
+            tr.commit();
         }
-
-        if ((batchId % 100) != 0) {
-            repeatAction(insertStmt, batchValues, exceptions);
-        }
-
-        tr.commit();
-        insertStmt.close();
-
         System.out.println(generateFinalMessage(start, rbsg.getRetriever().getClass().getSimpleName(), typeCache.size(), insertSql, exceptions));
 
     }
@@ -360,57 +336,57 @@ public class DataMigrator {
         final Map<Object, Integer> typeCache = cache.getCacheForType(rbsg.getRetriever().type());
         final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
         final Connection targetConn = hiberUtil.getSessionFactory().getCurrentSession().connection();
-        final PreparedStatement insertStmt = targetConn.prepareStatement(insertSql);
-        int batchId = 0;
-        final List<List<Object>> batchValues = new ArrayList<>();
-        Integer id = startingId;
-
-        while (legacyRs.next()) {
-            id = id + 1;
-            batchId = batchId + 1;
-            final List<Object> keyValue = new ArrayList<>();
-            for (final Integer keyIndex : indexFields) {
-                keyValue.add(legacyRs.getObject(keyIndex.intValue()));
-            }
-            typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
-
-            int index = 1;
-            final List<Object> currTransformedValues = rbsg.transformValuesForInsert(legacyRs, cache, id);
-            batchValues.add(currTransformedValues);
-            for (final Object value : currTransformedValues) {
-                // UTC transformation
-                final PropertyMetadata field = rbsg.insertFields.get(index - 1);
-                if (field.getHibTypeAsUserType() instanceof IUtcDateTimeType) {
-                    final Timestamp ts = (Timestamp) value;
-                    insertStmt.setTimestamp(index, ts, utcCal);
-                } else {
-                    insertStmt.setObject(index, value);
+        try (final PreparedStatement insertStmt = targetConn.prepareStatement(insertSql)) {
+            int batchId = 0;
+            final List<List<Object>> batchValues = new ArrayList<>();
+            Integer id = startingId;
+    
+            while (legacyRs.next()) {
+                id = id + 1;
+                batchId = batchId + 1;
+                final List<Object> keyValue = new ArrayList<>();
+                for (final Integer keyIndex : indexFields) {
+                    keyValue.add(legacyRs.getObject(keyIndex.intValue()));
                 }
-                index = index + 1;
+                typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
+    
+                int index = 1;
+                final List<Object> currTransformedValues = rbsg.transformValuesForInsert(legacyRs, cache, id);
+                batchValues.add(currTransformedValues);
+                for (final Object value : currTransformedValues) {
+                    // UTC transformation
+                    final PropertyMetadata field = rbsg.insertFields.get(index - 1);
+                    if (field.getHibTypeAsUserType() instanceof IUtcDateTimeType) {
+                        final Timestamp ts = (Timestamp) value;
+                        insertStmt.setTimestamp(index, ts, utcCal);
+                    } else {
+                        insertStmt.setObject(index, value);
+                    }
+                    index = index + 1;
+                }
+                insertStmt.addBatch();
+    
+                if ((batchId % 100) == 0) {
+                    repeatAction(insertStmt, batchValues, exceptions);
+                    batchValues.clear();
+                    insertStmt.clearBatch();
+                }
             }
-            insertStmt.addBatch();
-
-            if ((batchId % 100) == 0) {
+    
+            if ((batchId % 100) != 0) {
                 repeatAction(insertStmt, batchValues, exceptions);
-                batchValues.clear();
-                insertStmt.clearBatch();
             }
+    
+            tr.commit();
+            
+            System.out.println(generateFinalMessage(start, rbsg.getRetriever().getClass().getSimpleName(), typeCache.size(), insertSql, exceptions));
+            return id;
         }
-
-        if ((batchId % 100) != 0) {
-            repeatAction(insertStmt, batchValues, exceptions);
-        }
-
-        tr.commit();
-        insertStmt.close();
-
-        System.out.println(generateFinalMessage(start, rbsg.getRetriever().getClass().getSimpleName(), typeCache.size(), insertSql, exceptions));
-        return id;
     }
 
     private String generateFinalMessage(final DateTime start, final String retrieverName, final int entitiesCount, final String insertSql, final Map<String, List<List<Object>>> exceptions) {
         final Period pd = new Period(start, new DateTime());
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         sb.append(retrieverName + " -- duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms. Entities count: " + entitiesCount + "\n");
         if (exceptions.size() > 0) {
             sb.append(StringUtils.repeat(" ", retrieverName.length()) + " -- SQL: " + insertSql + "\n");
