@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -20,8 +20,9 @@ public class Vulcanize extends VulcanizingUtility {
      * The procedure of vulcanization all-in-one.
      *
      * @param args
+     * @throws IOException 
      */
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws IOException {
         final Pair<Properties, String[]> propsAndAdditionalPaths = processVmArguments(args);
         final Logger logger = Logger.getLogger(Vulcanize.class);
         logger.info("Starting app...");
