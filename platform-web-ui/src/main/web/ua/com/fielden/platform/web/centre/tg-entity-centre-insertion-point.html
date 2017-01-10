@@ -94,7 +94,7 @@
         </style>
         <paper-material id="pm" hidden$="[[detached]]" class="layout vertical" style="background: white; border-radius: 2px; margin: 10px;">
             <div id="insertionPointContent" class="layout vertical flex">
-                <div class="title-bar layout horizontal justified center" hidden$="[[!hasTitleBar]]">
+                <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
                     <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                     <paper-icon-button class="expand-colapse-button" style="margin-left:10px" icon="[[_getButtonIcon(detached)]]" on-tap="_expandColapseTap"></paper-icon-button>
                 </div>
@@ -127,13 +127,6 @@
                  * Determnes whether insertion point is in the detached mode or not.
                  */
                 detached: {
-                    type: Boolean,
-                    value: false
-                },
-                /**
-                 * Determines whether insertion point has title bar or not.
-                 */
-                hasTitleBar: {
                     type: Boolean,
                     value: false
                 },
@@ -325,6 +318,10 @@
                 if (event.preventDefault) event.preventDefault();
                 event.cancelBubble = true;
                 event.returnValue = false;
+            },
+            
+            _hasTitleBar: function (shortDesc) {
+                return !!shortDesc;
             }
         });
     })();

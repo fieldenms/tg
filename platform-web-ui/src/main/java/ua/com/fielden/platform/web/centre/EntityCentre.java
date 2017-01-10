@@ -950,9 +950,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
         for (final FunctionalActionElement el : insertionPointActionsElements) {
-            DomElement insertionPoint = new DomElement("tg-entity-centre-insertion-point")
+            final DomElement insertionPoint = new DomElement("tg-entity-centre-insertion-point")
                     .attr("id", "ip" + el.numberOfAction)
-                    .attr("has-title-bar", el.conf().shortDesc.isPresent())
                     .attr("short-desc", el.conf().shortDesc.orElse(""))
                     .attr("long-desc", el.conf().longDesc.orElse(""))
                     .attr("retrieved-entities", "{{retrievedEntities}}")
