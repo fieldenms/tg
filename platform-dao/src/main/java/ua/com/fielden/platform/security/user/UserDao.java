@@ -253,7 +253,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             throw new SecurityException("User password resetting UUID cannot be empty.");
         }
 
-        final String[] uuidParts = uuid.split(User.passwordResetUuidSeperator);
+        final String[] uuidParts = uuid.split(User.PASSWD_RESET_UUID_SEPERATOR);
         if (uuidParts.length != 3) {
             return Optional.empty();
         }
@@ -283,7 +283,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // if the user was found then a password reset request UUID needs to be generated
         // and associated wit the identified user
         if (user != null) {
-            final String uuid = format("%s%s%s%s%s", user.getKey(), User.passwordResetUuidSeperator, crypto.nextSessionId(), User.passwordResetUuidSeperator, getUniversalConstants().now().plusHours(24).getMillis());
+            final String uuid = format("%s%s%s%s%s", user.getKey(), User.PASSWD_RESET_UUID_SEPERATOR, crypto.nextSessionId(), User.PASSWD_RESET_UUID_SEPERATOR, getUniversalConstants().now().plusHours(24).getMillis());
             return Optional.of(save(user.setResetUuid(uuid)));
         }
 
@@ -298,7 +298,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             return false;
         } else {
             // if a corresponding user was found then UUID is valid if it is not expired
-            final String[] uuidParts = uuid.split(User.passwordResetUuidSeperator);
+            final String[] uuidParts = uuid.split(User.PASSWD_RESET_UUID_SEPERATOR);
             final long expirationTime = Long.valueOf(uuidParts[2]);
             final boolean expired = getUniversalConstants().now().getMillis() >= expirationTime;
             // dissociation UUID form user if has expired

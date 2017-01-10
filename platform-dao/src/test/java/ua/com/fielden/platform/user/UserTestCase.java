@@ -56,7 +56,7 @@ public class UserTestCase extends AbstractDaoTestCase {
     @Test
     public void username_does_not_permit_password_reset_UUID_separator() {
         final User user = new_(User.class);
-        final String value = format("USER%s1", User.passwordResetUuidSeperator);
+        final String value = format("USER%s1", User.PASSWD_RESET_UUID_SEPERATOR);
         user.setKey(value);
         assertFalse(user.getProperty(KEY).isValid());
         assertEquals(format(StringValidator.validationErrorTemplate, value, KEY, User.class.getSimpleName()), user.getProperty("key").getFirstFailure().getMessage());
@@ -167,7 +167,7 @@ public class UserTestCase extends AbstractDaoTestCase {
         final Optional<User> user = coUser.assignPasswordResetUuid("USER3");
         assertTrue(user.isPresent());
         
-        final String[] uuidParts = user.get().getResetUuid().split(User.passwordResetUuidSeperator);
+        final String[] uuidParts = user.get().getResetUuid().split(User.PASSWD_RESET_UUID_SEPERATOR);
         assertEquals(3, uuidParts.length);
         assertEquals(user.get().getKey(), uuidParts[0]);
         assertEquals(consts.now().plusHours(24).getMillis(), Long.valueOf(uuidParts[2]).longValue());

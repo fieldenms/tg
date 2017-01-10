@@ -192,7 +192,6 @@ public class MigrateDb {
                 : decodeLimitToParameter(limitToParamArgument, retrieversClassesSequence).toArray(new Class[] {});
 
         final HibernateUtil hibernateUtil = injector.getInstance(HibernateUtil.class);
-        final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
         if (cmdParams.containsKey(CmdParams.CREATE_DB_SCHEMA)) {
             System.out.println("Creating database schema...");
