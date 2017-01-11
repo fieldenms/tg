@@ -112,11 +112,11 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * Register all serialisers / deserialisers for entity types present in TG app.
      */
     protected void registerEntityTypes(final ISerialisationClassProvider provider, final TgJacksonModule module) {
-        new EntitySerialiser<EntityType>(EntityType.class, this.module, this, this.factory, entityTypeInfoGetter, true, serialisationTypeEncoder, false);
-        new EntitySerialiser<EntityTypeProp>(EntityTypeProp.class, this.module, this, this.factory, entityTypeInfoGetter, true, serialisationTypeEncoder, false);
+        new EntitySerialiser<EntityType>(EntityType.class, this.module, this, this.factory, entityTypeInfoGetter, true, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, false);
+        new EntitySerialiser<EntityTypeProp>(EntityTypeProp.class, this.module, this, this.factory, entityTypeInfoGetter, true, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, false);
         for (final Class<?> type : provider.classes()) {
             if (EntityUtils.isPropertyDescriptor(type)) {
-                new EntitySerialiser<PropertyDescriptor<?>>((Class<PropertyDescriptor<?>>) ClassesRetriever.findClass("ua.com.fielden.platform.entity.meta.PropertyDescriptor"), this.module, this, this.factory, entityTypeInfoGetter, false, serialisationTypeEncoder, true);
+                new EntitySerialiser<PropertyDescriptor<?>>((Class<PropertyDescriptor<?>>) ClassesRetriever.findClass("ua.com.fielden.platform.entity.meta.PropertyDescriptor"), this.module, this, this.factory, entityTypeInfoGetter, false, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, true);
             } else if (AbstractEntity.class.isAssignableFrom(type)) {
                 registerNewEntityType((Class<AbstractEntity<?>>) type);
             }
@@ -130,7 +130,7 @@ public final class TgJackson extends ObjectMapper implements ISerialiserEngine {
      * @return
      */
     public EntityType registerNewEntityType(final Class<AbstractEntity<?>> newType) {
-        return new EntitySerialiser<AbstractEntity<?>>(newType, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder).getEntityTypeInfo();
+        return new EntitySerialiser<AbstractEntity<?>>(newType, module, this, factory, entityTypeInfoGetter, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache).getEntityTypeInfo();
     }
 
     @Override

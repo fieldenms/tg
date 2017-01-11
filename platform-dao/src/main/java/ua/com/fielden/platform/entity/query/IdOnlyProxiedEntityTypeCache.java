@@ -47,7 +47,7 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
             if (!ID.equals(name) &&
                     !(KEY.equals(name) && !ppi.affectsMapping()) &&
                     !ppi.isCollection() &&
-                    !name.contains(".") &&
+                    !name.contains(".") && // to skip subproperty 'amount' of ISimpleMoneyType properties
                     !ppi.isSynthetic()) {
                 proxiedProps.add(name);
             }

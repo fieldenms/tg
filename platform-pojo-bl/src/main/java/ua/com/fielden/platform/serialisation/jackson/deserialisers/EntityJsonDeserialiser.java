@@ -1,12 +1,10 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.AbstractPersistentEntity.*;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +32,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -44,6 +43,7 @@ import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProp
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
+import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDeserializer<T> {
     private static final long serialVersionUID = 1L;
@@ -55,13 +55,15 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private final List<CachedProperty> properties;
     private final ISerialisationTypeEncoder serialisationTypeEncoder;
     private final boolean propertyDescriptorType;
+    private final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
-    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final ISerialisationTypeEncoder serialisationTypeEncoder, final boolean propertyDescriptorType) {
+    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache, final boolean propertyDescriptorType) {
         super(type);
         this.factory = entityFactory;
         this.mapper = mapper;
         this.properties = properties;
         this.serialisationTypeEncoder = serialisationTypeEncoder;
+        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
 
         this.type = type;
         versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
@@ -203,9 +205,14 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         if (propNode.isNull()) {
             value = null;
         } else {
-            value = mapper.readValue(propNode.traverse(mapper), concreteTypeOf(constructType(mapper.getTypeFactory(), propertyField), () -> {
+            final JavaType concreteType = concreteTypeOf(constructType(mapper.getTypeFactory(), propertyField), () -> {
                 return propNode.get("@id") == null ? propNode.get("@id_ref") : propNode.get("@id");
-            }));
+            });
+            if (propNode.canConvertToLong() && EntityUtils.isEntityType(concreteType.getRawClass())) { // id-only proxy instance is represented as simple id number
+                value = EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor((Class) concreteType.getRawClass()), propNode.asLong());
+            } else {
+                value = mapper.readValue(propNode.traverse(mapper), concreteType);
+            }
         }
         return value;
     }

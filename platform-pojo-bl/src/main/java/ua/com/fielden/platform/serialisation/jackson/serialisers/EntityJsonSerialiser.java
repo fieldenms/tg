@@ -138,52 +138,57 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                         throw e;
                     }
                     
-                    if (!disregardValueSerialisation(value, prop.isEntityTyped(), excludeNulls)) {
+                    if (!disregardValueSerialisation(value, excludeNulls)) {
                         // write actual property
                         generator.writeFieldName(name);
-                        generator.writeObject(value);
-
-                        if (!uninstrumented) {
-                            final MetaProperty<Object> metaProperty = entity.getProperty(name);
-                            if (metaProperty == null) {
-                                throw new IllegalStateException(String.format("Meta property [%s] does not exist for instrumented entity instance with type [%s].", name, entity.getClass().getSimpleName()));
-                            }
-                            final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
-                            if (!isEditableDefault(metaProperty)) {
-                                existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, getEditable(metaProperty));
-                            }
-                            if (!isChangedFromOriginalDefault(metaProperty)) {
-                                existingMetaProps.put("_cfo", isChangedFromOriginal(metaProperty));
-                                existingMetaProps.put("_originalVal", getOriginalValue(metaProperty));
-                            }
-                            if (!isRequiredDefault(metaProperty)) {
-                                existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, getRequired(metaProperty));
-                            }
-                            if (!isVisibleDefault(metaProperty)) {
-                                existingMetaProps.put("_visible", getVisible(metaProperty));
-                            }
-                            if (!isValidationResultDefault(metaProperty)) {
-                                existingMetaProps.put("_validationResult", getValidationResult(metaProperty));
-                            }
-                            final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
-                            final Integer min = minMax.getKey();
-                            final Integer max = minMax.getValue();
-                            if (!isMinDefault(min)) {
-                                existingMetaProps.put("_min", min);
-                            }
-                            if (!isMaxDefault(max)) {
-                                existingMetaProps.put("_max", max);
-                            }
-
-                            // write actual meta-property
-                            if (!existingMetaProps.isEmpty()) {
-                                generator.writeFieldName("@" + name);
-                                generator.writeStartObject();
-                                for (final Map.Entry<String, Object> nameAndVal : existingMetaProps.entrySet()) {
-                                    generator.writeFieldName(nameAndVal.getKey());
-                                    generator.writeObject(nameAndVal.getValue());
+                        if (value != null && isIdOnlyProxiedEntity(value, prop.isEntityTyped())) {
+                            final AbstractEntity<?> idOnlyProxyEntity = (AbstractEntity<?>) value;
+                            generator.writeObject(idOnlyProxyEntity.getId());
+                        } else {
+                            generator.writeObject(value);
+    
+                            if (!uninstrumented) {
+                                final MetaProperty<Object> metaProperty = entity.getProperty(name);
+                                if (metaProperty == null) {
+                                    throw new IllegalStateException(String.format("Meta property [%s] does not exist for instrumented entity instance with type [%s].", name, entity.getClass().getSimpleName()));
                                 }
-                                generator.writeEndObject();
+                                final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
+                                if (!isEditableDefault(metaProperty)) {
+                                    existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, getEditable(metaProperty));
+                                }
+                                if (!isChangedFromOriginalDefault(metaProperty)) {
+                                    existingMetaProps.put("_cfo", isChangedFromOriginal(metaProperty));
+                                    existingMetaProps.put("_originalVal", getOriginalValue(metaProperty));
+                                }
+                                if (!isRequiredDefault(metaProperty)) {
+                                    existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, getRequired(metaProperty));
+                                }
+                                if (!isVisibleDefault(metaProperty)) {
+                                    existingMetaProps.put("_visible", getVisible(metaProperty));
+                                }
+                                if (!isValidationResultDefault(metaProperty)) {
+                                    existingMetaProps.put("_validationResult", getValidationResult(metaProperty));
+                                }
+                                final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
+                                final Integer min = minMax.getKey();
+                                final Integer max = minMax.getValue();
+                                if (!isMinDefault(min)) {
+                                    existingMetaProps.put("_min", min);
+                                }
+                                if (!isMaxDefault(max)) {
+                                    existingMetaProps.put("_max", max);
+                                }
+    
+                                // write actual meta-property
+                                if (!existingMetaProps.isEmpty()) {
+                                    generator.writeFieldName("@" + name);
+                                    generator.writeStartObject();
+                                    for (final Map.Entry<String, Object> nameAndVal : existingMetaProps.entrySet()) {
+                                        generator.writeFieldName(nameAndVal.getKey());
+                                        generator.writeObject(nameAndVal.getValue());
+                                    }
+                                    generator.writeEndObject();
+                                }
                             }
                         }
                     }
@@ -198,13 +203,11 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
      * Returns <code>true</code> in case when value serialisation should be skipped, <code>false</code> otherwise.
      * 
      * @param value
-     * @param isEntityTyped
      * @param excludeNulls
      * @return
      */
-    private static boolean disregardValueSerialisation(final Object value, final boolean isEntityTyped, final boolean excludeNulls) {
-        return value == null && excludeNulls || 
-               value != null && isIdOnlyProxiedEntity(value, isEntityTyped);
+    private static boolean disregardValueSerialisation(final Object value, final boolean excludeNulls) {
+        return value == null && excludeNulls;
     }
     
     /**
