@@ -344,7 +344,7 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createPropertyDescriptorInstrumented(),
                 factory.createEntityWithHyperlink(),
                 factory.createUninstrumentedEntity(true, EntityWithOtherEntity.class),
-                factory.createEntity(true, EntityWithOtherEntity.class),
+                factory.createInstrumentedEntity(true, EntityWithOtherEntity.class),
                 factory.createUninstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1,
                 factory.createInstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1
                 );

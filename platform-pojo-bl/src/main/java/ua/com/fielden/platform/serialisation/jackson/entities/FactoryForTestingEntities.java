@@ -200,13 +200,13 @@ public class FactoryForTestingEntities {
         return finalise(entity);
     }
     
-    public AbstractEntity createEntity(final boolean proxiedType, final Class entityType) {
-        final AbstractEntity entity = createPersistedEntity(proxiedType ? EntityProxyContainer.proxy(entityType, "prop") : entityType, 1L, "key", "description");
-        return finalise(entity);
-    }
-    
     public AbstractEntity createUninstrumentedEntity(final boolean proxiedType, final Class entityType) {
         return createUninstrumentedPersistedEntity(proxiedType ? EntityProxyContainer.proxy(entityType, "prop") : entityType, 1L, "key", "description");
+    }
+    
+    public AbstractEntity createInstrumentedEntity(final boolean proxiedType, final Class entityType) {
+        final AbstractEntity entity = createPersistedEntity(proxiedType ? EntityProxyContainer.proxy(entityType, "prop") : entityType, 1L, "key", "description");
+        return finalise(entity);
     }
     
     public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createUninstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType, final Class miType) {
