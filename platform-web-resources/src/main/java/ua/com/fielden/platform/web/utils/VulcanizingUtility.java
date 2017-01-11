@@ -88,7 +88,7 @@ public class VulcanizingUtility {
      * @throws IOException 
      * @throws FileNotFoundException 
      */
-    private static Properties retrieveApplicationPropertiesAndConfigureLogging(final String fileName) throws FileNotFoundException, IOException {
+    private static Properties retrieveApplicationPropertiesAndConfigureLogging(final String fileName) throws IOException {
         final Properties props = new Properties();
         try (final InputStream st = new FileInputStream(fileName)){
             props.load(st);
