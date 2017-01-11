@@ -27,6 +27,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -39,6 +40,7 @@ import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProp
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.FactoryForTestingEntities;
+import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
@@ -168,10 +170,6 @@ public class SerialisationTestResource extends ServerResource {
                 if (!EntityUtils.equalsEx(e1.getId(), e2.getId())) {
                     return Result.failure(format("e1 [%s] id [%s] does not equal to e2 [%s] id [%s].", e1, e1.getId(), e2, e2.getId()));
                 }
-                // version equality
-                if (!EntityUtils.equalsEx(e1.getVersion(), e2.getVersion())) {
-                    return Result.failure(format("e1 [%s] version [%s] does not equal to e2 [%s] version [%s].", e1, e1.getVersion(), e2, e2.getVersion()));
-                }
                 
                 final boolean e1Instrumented = e1 == null ? false : PropertyTypeDeterminator.isInstrumented(e1.getClass());
                 final boolean e2Instrumented = e2 == null ? false : PropertyTypeDeterminator.isInstrumented(e2.getClass());
@@ -179,37 +177,61 @@ public class SerialisationTestResource extends ServerResource {
                     return Result.failure(format("e1's [%s] instrumentation [%s] does not equal to e2's [%s] instrumentation [%s].", e1, e1Instrumented, e2, e2Instrumented));
                 }
                 
-                final List<CachedProperty> props = EntitySerialiser.createCachedProperties(e1.getType());
-                for (final CachedProperty prop : props) {
-                    final String propName = prop.field().getName();
-                    if (prop.getPropertyType() != null) {
-                        // check property meta-info equality
-                        if (e1Instrumented) {
-                            final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName));
-                            if (!metaPropEq.isSuccessful()) {
-                                return metaPropEq;
-                            }
+                // id-only proxy instances equality
+                if (e1.isIdOnlyProxy()) {
+                    if (!e2.isIdOnlyProxy()) {
+                        return Result.failure(format("e1 [%s] id-only proxiness [%s] does not equal to e2 [%s] id-only proxiness [%s].", e1, e1.isIdOnlyProxy(), e2, e2.isIdOnlyProxy()));
+                    }
+                    
+                    // id-only proxy class equality
+                    if (e1Instrumented) {
+                        // getSuperclass() is needed due to wrapping of the actual class by Guice during instrumentation
+                        if (!EntityUtils.equalsEx(e1.getClass().getSuperclass(), e2.getClass().getSuperclass())) {
+                            return Result.failure(format("e1 [%s] id-only proxy type [%s] does not equal to e2 [%s] id-only proxy type [%s].", e1, e1.getClass().getSuperclass(), e2, e2.getClass().getSuperclass()));
                         }
-                        if (e1.proxiedPropertyNames().contains(propName)) {
-                            if (!e2.proxiedPropertyNames().contains(propName)) {
-                                return Result.failure(format("e1 [%s] (type = %s) prop [%s] isProxied (true) does not equal to e2 [%s] (type = %s) prop [%s] isProxied (false).", e1, e1.getType().getSimpleName(), propName, e2, e2.getType().getSimpleName(), propName));
+                    } else {
+                        if (!EntityUtils.equalsEx(e1.getClass(), e2.getClass())) {
+                            return Result.failure(format("e1 [%s] id-only proxy type [%s] does not equal to e2 [%s] id-only proxy type [%s].", e1, e1.getClass(), e2, e2.getClass()));
+                        }
+                    }
+                } else {
+                    // version equality
+                    if (!EntityUtils.equalsEx(e1.getVersion(), e2.getVersion())) {
+                        return Result.failure(format("e1 [%s] version [%s] does not equal to e2 [%s] version [%s].", e1, e1.getVersion(), e2, e2.getVersion()));
+                    }
+                    
+                    final List<CachedProperty> props = EntitySerialiser.createCachedProperties(e1.getType());
+                    for (final CachedProperty prop : props) {
+                        final String propName = prop.field().getName();
+                        if (prop.getPropertyType() != null) {
+                            // check property meta-info equality
+                            if (e1Instrumented) {
+                                final Result metaPropEq = deepEqualsForTesting(e1.getProperty(propName), e2.getProperty(propName));
+                                if (!metaPropEq.isSuccessful()) {
+                                    return metaPropEq;
+                                }
                             }
-                        } else {
-                            // check property value equality
-                            if (EntityUtils.isEntityType(prop.getPropertyType())) {
-                                final Result eq = deepEqualsForTesting((AbstractEntity<?>) e1.get(propName), (AbstractEntity<?>) e2.get(propName), setOfCheckedEntities);
-                                if (!eq.isSuccessful()) {
-                                    return eq;
+                            if (e1.proxiedPropertyNames().contains(propName)) {
+                                if (!e2.proxiedPropertyNames().contains(propName)) {
+                                    return Result.failure(format("e1 [%s] (type = %s) prop [%s] isProxied (true) does not equal to e2 [%s] (type = %s) prop [%s] isProxied (false).", e1, e1.getType().getSimpleName(), propName, e2, e2.getType().getSimpleName(), propName));
                                 }
                             } else {
-                                if (e1.getType().getSimpleName().equals("EntityWithDefiner") && propName.equals("prop2")) { // special check for the entity which has definer artifacts (the props do not equal)
-                                    if (e1.get(propName) != null || !"okay_defined".equals(e2.get(propName))) {
-                                        return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to null OR e2 [%s] (type = %s) prop [%s] value [%s] not equal to 'okay_defined'.", e1, e1.getType().getSimpleName(), propName, e1.get(propName), e2, e2.getType().getSimpleName(), propName, e2.get(propName)));
+                                // check property value equality
+                                if (EntityUtils.isEntityType(prop.getPropertyType())) {
+                                    final Result eq = deepEqualsForTesting((AbstractEntity<?>) e1.get(propName), (AbstractEntity<?>) e2.get(propName), setOfCheckedEntities);
+                                    if (!eq.isSuccessful()) {
+                                        return eq;
                                     }
-                                } else if (!EntityUtils.equalsEx(e1.get(propName), e2.get(propName))) { // prop equality
-                                    final String value1 = getValue(e1, propName);
-                                    final String value2 = getValue(e2, propName);
-                                    return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to e2 [%s] (type = %s) prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, value1, e2, e2.getType().getSimpleName(), propName, value2));
+                                } else {
+                                    if (e1.getType().getSimpleName().equals("EntityWithDefiner") && propName.equals("prop2")) { // special check for the entity which has definer artifacts (the props do not equal)
+                                        if (e1.get(propName) != null || !"okay_defined".equals(e2.get(propName))) {
+                                            return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to null OR e2 [%s] (type = %s) prop [%s] value [%s] not equal to 'okay_defined'.", e1, e1.getType().getSimpleName(), propName, e1.get(propName), e2, e2.getType().getSimpleName(), propName, e2.get(propName)));
+                                        }
+                                    } else if (!EntityUtils.equalsEx(e1.get(propName), e2.get(propName))) { // prop equality
+                                        final String value1 = getValue(e1, propName);
+                                        final String value2 = getValue(e2, propName);
+                                        return Result.failure(format("e1 [%s] (type = %s) prop [%s] value [%s] does not equal to e2 [%s] (type = %s) prop [%s] value [%s].", e1, e1.getType().getSimpleName(), propName, value1, e2, e2.getType().getSimpleName(), propName, value2));
+                                    }
                                 }
                             }
                         }
@@ -346,8 +368,18 @@ public class SerialisationTestResource extends ServerResource {
                 factory.createUninstrumentedEntity(true, EntityWithOtherEntity.class),
                 factory.createInstrumentedEntity(true, EntityWithOtherEntity.class),
                 factory.createUninstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1,
-                factory.createInstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1
+                factory.createInstrumentedGeneratedEntity(true, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1,
+                factory.createUninstrumentedEntity(false, EntityWithOtherEntity.class).set("prop", createIdOnlyProxy(restUtil.getSerialiser())),
+                factory.createInstrumentedEntity(false, EntityWithOtherEntity.class).set("prop", createIdOnlyProxy(restUtil.getSerialiser())),
+                factory.createUninstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1.set("prop", createIdOnlyProxy(restUtil.getSerialiser())),
+                factory.createInstrumentedGeneratedEntity(false, EntityWithOtherEntity.class, MiEntityWithOtherEntity.class)._1.set("prop", createIdOnlyProxy(restUtil.getSerialiser()))
                 );
+    }
+    
+    private static AbstractEntity createIdOnlyProxy(final ISerialiser serialiser) {
+        final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
+        final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = tgJackson.idOnlyProxiedEntityTypeCache;
+        return EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor(OtherEntity.class), 189L);
     }
     
     private static AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final boolean instrumented) {

@@ -453,6 +453,7 @@ public class EntitySerialisationWithJacksonTest {
         
         assertEquals(0, restoredEntity.proxiedPropertyNames().size());
         assertTrue(((AbstractEntity) restoredEntity.get("prop")).isIdOnlyProxy());
+        assertEquals(entity.get("prop").getClass(), restoredEntity.get("prop").getClass()); // literally the same id-only proxy type
         assertEquals(expectedType, restoredEntity.getClass());
     }
     
@@ -497,6 +498,7 @@ public class EntitySerialisationWithJacksonTest {
         
         assertEquals(0, restoredEntity.proxiedPropertyNames().size());
         assertTrue(((AbstractEntity) restoredEntity.get("prop")).isIdOnlyProxy());
+        assertEquals(entity.get("prop").getClass(), restoredEntity.get("prop").getClass()); // literally the same id-only proxy type
         assertEquals(expectedType, restoredEntity.getClass().getSuperclass());
     }
     
@@ -552,6 +554,7 @@ public class EntitySerialisationWithJacksonTest {
         
         assertEquals(0, restoredEntity.proxiedPropertyNames().size());
         assertTrue(((AbstractEntity) restoredEntity.get("prop")).isIdOnlyProxy());
+        assertEquals(entity.get("prop").getClass(), restoredEntity.get("prop").getClass()); // literally the same id-only proxy type
         assertEquals(expectedType, restoredEntity.getClass());
     }
     
@@ -609,6 +612,7 @@ public class EntitySerialisationWithJacksonTest {
         
         assertEquals(0, restoredEntity.proxiedPropertyNames().size());
         assertTrue(((AbstractEntity) restoredEntity.get("prop")).isIdOnlyProxy());
+        assertEquals(entity.get("prop").getClass(), restoredEntity.get("prop").getClass()); // literally the same id-only proxy type
         assertEquals(expectedType, restoredEntity.getClass().getSuperclass());
     }
     

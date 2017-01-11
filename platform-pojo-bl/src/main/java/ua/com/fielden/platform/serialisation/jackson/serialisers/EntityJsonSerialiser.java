@@ -146,49 +146,49 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             generator.writeObject(idOnlyProxyEntity.getId());
                         } else {
                             generator.writeObject(value);
-    
-                            if (!uninstrumented) {
-                                final MetaProperty<Object> metaProperty = entity.getProperty(name);
-                                if (metaProperty == null) {
-                                    throw new IllegalStateException(String.format("Meta property [%s] does not exist for instrumented entity instance with type [%s].", name, entity.getClass().getSimpleName()));
+                        }
+                        
+                        if (!uninstrumented) {
+                            final MetaProperty<Object> metaProperty = entity.getProperty(name);
+                            if (metaProperty == null) {
+                                throw new IllegalStateException(String.format("Meta property [%s] does not exist for instrumented entity instance with type [%s].", name, entity.getClass().getSimpleName()));
+                            }
+                            final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
+                            if (!isEditableDefault(metaProperty)) {
+                                existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, getEditable(metaProperty));
+                            }
+                            if (!isChangedFromOriginalDefault(metaProperty)) {
+                                existingMetaProps.put("_cfo", isChangedFromOriginal(metaProperty));
+                                existingMetaProps.put("_originalVal", getOriginalValue(metaProperty));
+                            }
+                            if (!isRequiredDefault(metaProperty)) {
+                                existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, getRequired(metaProperty));
+                            }
+                            if (!isVisibleDefault(metaProperty)) {
+                                existingMetaProps.put("_visible", getVisible(metaProperty));
+                            }
+                            if (!isValidationResultDefault(metaProperty)) {
+                                existingMetaProps.put("_validationResult", getValidationResult(metaProperty));
+                            }
+                            final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
+                            final Integer min = minMax.getKey();
+                            final Integer max = minMax.getValue();
+                            if (!isMinDefault(min)) {
+                                existingMetaProps.put("_min", min);
+                            }
+                            if (!isMaxDefault(max)) {
+                                existingMetaProps.put("_max", max);
+                            }
+                            
+                            // write actual meta-property
+                            if (!existingMetaProps.isEmpty()) {
+                                generator.writeFieldName("@" + name);
+                                generator.writeStartObject();
+                                for (final Map.Entry<String, Object> nameAndVal : existingMetaProps.entrySet()) {
+                                    generator.writeFieldName(nameAndVal.getKey());
+                                    generator.writeObject(nameAndVal.getValue());
                                 }
-                                final Map<String, Object> existingMetaProps = new LinkedHashMap<>();
-                                if (!isEditableDefault(metaProperty)) {
-                                    existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, getEditable(metaProperty));
-                                }
-                                if (!isChangedFromOriginalDefault(metaProperty)) {
-                                    existingMetaProps.put("_cfo", isChangedFromOriginal(metaProperty));
-                                    existingMetaProps.put("_originalVal", getOriginalValue(metaProperty));
-                                }
-                                if (!isRequiredDefault(metaProperty)) {
-                                    existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, getRequired(metaProperty));
-                                }
-                                if (!isVisibleDefault(metaProperty)) {
-                                    existingMetaProps.put("_visible", getVisible(metaProperty));
-                                }
-                                if (!isValidationResultDefault(metaProperty)) {
-                                    existingMetaProps.put("_validationResult", getValidationResult(metaProperty));
-                                }
-                                final Pair<Integer, Integer> minMax = Reflector.extractValidationLimits(entity, name);
-                                final Integer min = minMax.getKey();
-                                final Integer max = minMax.getValue();
-                                if (!isMinDefault(min)) {
-                                    existingMetaProps.put("_min", min);
-                                }
-                                if (!isMaxDefault(max)) {
-                                    existingMetaProps.put("_max", max);
-                                }
-    
-                                // write actual meta-property
-                                if (!existingMetaProps.isEmpty()) {
-                                    generator.writeFieldName("@" + name);
-                                    generator.writeStartObject();
-                                    for (final Map.Entry<String, Object> nameAndVal : existingMetaProps.entrySet()) {
-                                        generator.writeFieldName(nameAndVal.getKey());
-                                        generator.writeObject(nameAndVal.getValue());
-                                    }
-                                    generator.writeEndObject();
-                                }
+                                generator.writeEndObject();
                             }
                         }
                     }
