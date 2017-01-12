@@ -60,7 +60,7 @@ import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 @EntityType(User.class)
 public class UserDao extends CommonEntityDao<User> implements IUser {
 
-    private transient final Logger logger = Logger.getLogger(UserDao.class);
+    private static final Logger logger = Logger.getLogger(UserDao.class);
 
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;

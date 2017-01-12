@@ -57,7 +57,7 @@ public class LogoutResource extends ServerResource {
     }
 
     @Override
-    protected Representation get() throws ResourceException {
+    protected Representation get() {
         try {
             // check if there is a valid authenticator
             // if there is then the logout request is authentic and should be honored

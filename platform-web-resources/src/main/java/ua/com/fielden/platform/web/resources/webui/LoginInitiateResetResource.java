@@ -18,11 +18,11 @@ import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.mail.SmtpEmailSender;
 import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -45,15 +45,17 @@ public class LoginInitiateResetResource extends ServerResource {
 
     private final String appUri;
     private final IUser coUser;
+    private final IUserProvider up;
     private final IUniversalConstants constants;
 
     /**
      * Creates {@link LoginInitiateResetResource}.
      */
     public LoginInitiateResetResource(//
-            final @AppUri String appUri,
+            @AppUri final String appUri,
             final IUniversalConstants constants,
             final IUser coUser,
+            final IUserProvider userProvider,
             final Context context, //
             final Request request, //
             final Response response) {
@@ -61,6 +63,7 @@ public class LoginInitiateResetResource extends ServerResource {
         this.appUri = appUri;
         this.constants = constants;
         this.coUser = coUser;
+        this.up = userProvider;
     }
 
     @Override
@@ -83,10 +86,13 @@ public class LoginInitiateResetResource extends ServerResource {
     }
     
     @Post
-    public void initiateLoginReset(final Representation entity) throws ResourceException {
+    public void initiateLoginReset(final Representation entity) {
         try {
             final Form form = new Form(entity);
             final String usernameOrEmail = form.getValues("username_or_email");
+            
+            // the user initiating a password reset is not logged in, therefore SU is used as the current user for auditing purposes
+            up.setUsername(User.system_users.SU.name(), coUser);
             
             final Optional<User> opUser = coUser.assignPasswordResetUuid(usernameOrEmail);
             
@@ -118,10 +124,14 @@ public class LoginInitiateResetResource extends ServerResource {
 
     private String makePasswordRestEmail(final String appName, final String appUri, final User user) {
         final StringBuilder builder = new StringBuilder();
-        builder.append(format("We heard that you lost your %s password. Sorry about that!\n\n", appName));
-        builder.append("But don’t worry! You can use the following link within the next day to reset your password:\n\n");
-        builder.append(format("%sreset_password/%s\n\n", appUri, user.getResetUuid()));
-        builder.append(format("If you don’t use this link within 24 hours, it will expire. To get a new password reset link, visit %sforgotten\n\n", appUri));
+        builder.append(format("We heard that you lost your %s password. Sorry about that!", appName));
+        builder.append("\n\n");
+        builder.append("But don’t worry! You can use the following link within the next day to reset your password:");
+        builder.append("\n\n");
+        builder.append(format("%sreset_password/%s", appUri, user.getResetUuid()));
+        builder.append("\n\n");
+        builder.append(format("If you don’t use this link within 24 hours, it will expire. To get a new password reset link, visit %sforgotten", appUri));
+        builder.append("\n\n");
         builder.append("Thanks,\n");
         builder.append("Your support team");
 

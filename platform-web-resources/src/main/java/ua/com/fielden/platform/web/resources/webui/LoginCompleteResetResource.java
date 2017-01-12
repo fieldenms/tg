@@ -22,6 +22,7 @@ import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.ResourceLoader;
 
@@ -44,17 +45,20 @@ public class LoginCompleteResetResource extends ServerResource {
     private static final Logger LOGGER = Logger.getLogger(LoginCompleteResetResource.class);
 
     private final IUser coUser;
+    private final IUserProvider up;
     
     /**
      * Creates {@link LoginCompleteResetResource}.
      */
     public LoginCompleteResetResource(//
             final IUser coUser,
-            final Context context, //
-            final Request request, //
+            final IUserProvider up,
+            final Context context,
+            final Request request,
             final Response response) {
         init(context, request, response);
         this.coUser = coUser;
+        this.up = up;
     }
 
     @Override
@@ -127,6 +131,9 @@ public class LoginCompleteResetResource extends ServerResource {
                     throw new SecurityException(format("Could not find a user matching requested UUID [%s].", uuid));
                 }
                  
+                // the user has been identified and it should be recognized as the current one before proceeding with any further changes
+                up.setUsername(user.get().getKey(), coUser);
+                
                 final String passwd = form.getValues("passwd");
                 final String passwdConfirmed = form.getValues("passwd-confirmed");
                 // validate the password
