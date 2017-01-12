@@ -191,12 +191,11 @@
                 if (!this._dialog) {
                     this._dialog = this._createDialog();
                 }
-                if (!this._dialog.opened) {
-                    this.detached = true;
-                    Polymer.dom(document.body).appendChild(this._dialog);
-                    Polymer.dom(this._dialog).appendChild(this.$.insertionPointContent);
-                    Polymer.dom.flush();
-                }
+
+                this.detached = true;
+                Polymer.dom(document.body).appendChild(this._dialog);
+                Polymer.dom(this._dialog).appendChild(this.$.insertionPointContent);
+                Polymer.dom.flush();
             },
 
             _closeDialog: function () {
@@ -286,7 +285,7 @@
             _adjustView: function (detached) {
                 var self = this;
 
-                if (this.$.elementLoader.prefDim && !detached) {
+                if (this.$.elementLoader.prefDim && detached == false) {
                     var prefDim = this.$.elementLoader.prefDim;
                     this.$.loadableContent.style.width = prefDim.width() + prefDim.widthUnit;
                     this.$.loadableContent.style.height = prefDim.height() + prefDim.heightUnit;
