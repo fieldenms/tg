@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.test.server;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -16,37 +17,24 @@ import org.restlet.data.Protocol;
  *
  */
 public class Start {
-    private static final Logger logger = Logger.getLogger(Start.class);
+    private static final Logger LOGGER = Logger.getLogger(Start.class);
 
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws IOException {
         final String fileName = "src/main/resources/application.properties";
-        InputStream st = null;
-        Properties props = null;
-        try {
-            st = new FileInputStream(fileName);
-            props = new Properties();
+        final Properties props = new Properties();
+        try (final InputStream st = new FileInputStream(fileName);) {
             props.load(st);
-        } catch (final Exception e) {
-            System.out.println(String.format("Application property file %s could not be located or its values are not recognised.", fileName));
-            e.printStackTrace();
-            System.exit(1);
-        } finally {
-            try {
-                st.close();
-            } catch (final Exception e) {
-                e.printStackTrace(); // can be ignored
-            }
         }
 
         DOMConfigurator.configure(props.getProperty("log4j"));
 
-        logger.info("Starting...");
+        LOGGER.info("Starting...");
         final Component component = new TgTestApplicationConfiguration(props);
         component.getServers().add(Protocol.HTTP, Integer.parseInt(props.getProperty("port")));
 
         try {
             component.start();
-            logger.info("started");
+            LOGGER.info("started");
         } catch (final Exception e) {
             e.printStackTrace();
             System.exit(100);

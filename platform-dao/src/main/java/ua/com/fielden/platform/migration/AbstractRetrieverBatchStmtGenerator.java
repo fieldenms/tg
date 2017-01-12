@@ -86,7 +86,7 @@ public abstract class AbstractRetrieverBatchStmtGenerator {
         return result;
     }
 
-    protected Object transformValue(final Class type, final List<Object> values, final IdCache cache) throws Exception {
+    protected Object transformValue(final Class type, final List<Object> values, final IdCache cache) {
         if (EntityUtils.isPersistedEntityType(type)) {
             final Map<Object, Integer> cacheForType = cache.getCacheForType(type);
             final Object entityKeyObject = values.size() == 1 ? values.get(0) : values;

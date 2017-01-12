@@ -18,6 +18,8 @@ public class IoHelper {
     /* Block size that is read at once.*/
     private static final int READ_BLOCK = 8192;
 
+    private IoHelper() {}
+    
     /**
      * Reads everything from the input stream using NIO and returns an array of bytes.
      *
@@ -45,13 +47,14 @@ public class IoHelper {
      */
     public static ByteBuffer readAsByteBuffer(final InputStream source) throws IOException {
         // create channel for input stream
-        final ReadableByteChannel bc = Channels.newChannel(source);
-        ByteBuffer bb = ByteBuffer.allocate(READ_BLOCK);
-        while (bc.read(bb) != -1) { // read the data while it lasts in chunks defined by READ_BLOCK
-            bb = resizeBuffer(bb); //resize the buffer if required to fit the data on the next read
+        try (final ReadableByteChannel bc = Channels.newChannel(source)) {
+            ByteBuffer bb = ByteBuffer.allocate(READ_BLOCK);
+            while (bc.read(bb) != -1) { // read the data while it lasts in chunks defined by READ_BLOCK
+                bb = resizeBuffer(bb); //resize the buffer if required to fit the data on the next read
+            }
+            bb.flip();
+            return bb;
         }
-        bb.flip();
-        return bb;
     }
 
     /**
