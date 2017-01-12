@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.test.server;
 
 import java.io.IOException;
 import java.util.Properties;
+import java.util.function.Function;
 
 import org.apache.log4j.Logger;
 
@@ -36,6 +37,7 @@ public class Vulcanize extends VulcanizingUtility {
         final String loginTargetPlatformSpecificPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
         final String mobileAndDesktopAppSpecificPath = "../platform-web-ui/src/main/web/ua/com/fielden/platform/web/";
 
+        final Function<String, String[]> commandMaker = System.getProperty("os.name").toLowerCase().contains("windows") ? Vulcanize::windowsCommands : Vulcanize::unixCommands;
         vulcanize(
                 component.injector(), 
                 platformVendorResourcesPath, 
@@ -44,7 +46,7 @@ public class Vulcanize extends VulcanizingUtility {
                 appWebUiResourcesPath, 
                 loginTargetPlatformSpecificPath, 
                 mobileAndDesktopAppSpecificPath, 
-                VulcanizingUtility::windowsCommands, 
+                commandMaker, 
                 propsAndAdditionalPaths.getValue());
     }
 
