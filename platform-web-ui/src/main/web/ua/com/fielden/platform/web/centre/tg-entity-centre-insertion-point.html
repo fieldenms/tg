@@ -265,13 +265,13 @@
                             if (promise) {
                                 return promise
                                     .then(function () {
-                                        self._adjustView(this.detached);
+                                        self._adjustView(self.detached);
                                         customAction.restoreActiveElement();
                                     });
                             } else {
                                 return Promise.resolve()
                                     .then(function () {
-                                        self._adjustView(this.detached);
+                                        self._adjustView(self.detached);
                                         customAction.restoreActiveElement();
                                     });
                             }
@@ -289,7 +289,6 @@
 
             _adjustView: function (detached) {
                 var self = this;
-
                 if (this.$.elementLoader.prefDim && detached === false) {
                     var prefDim = this.$.elementLoader.prefDim;
                     this.$.loadableContent.style.width = prefDim.width() + prefDim.widthUnit;
