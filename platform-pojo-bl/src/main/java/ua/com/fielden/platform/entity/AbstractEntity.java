@@ -250,10 +250,9 @@ import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrInc
  *
  * @author TG Team
  */
-public abstract class AbstractEntity<K extends Comparable> implements Serializable, Comparable<AbstractEntity<K>>, IBindingEntity {
-    private static final long serialVersionUID = 1L;
+public abstract class AbstractEntity<K extends Comparable> implements Comparable<AbstractEntity<K>>, IBindingEntity {
 
-    protected transient final Logger logger;
+    protected final Logger logger;
 
     @MapTo("_ID")
     private Long id;
@@ -312,23 +311,23 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Provides property change support.
      */
-    private transient final PropertyChangeSupportEx changeSupport;
+    private final PropertyChangeSupportEx changeSupport;
     /**
      * Holds meta-properties for entity properties.
      */
-    private transient final Map<String, MetaProperty<?>> properties;
+    private final Map<String, MetaProperty<?>> properties;
     /**
      * Indicates if entity instance is being initialised.
      */
-    private transient boolean initialising = false;
+    private boolean initialising = false;
 
     /**
      * True indicates that the editable state of entity should be ignored during entity mutation
      * This property should be used with care. */
-    private transient boolean ignoreEditableState = false;
+    private boolean ignoreEditableState = false;
 
-    private transient final Class<K> keyType;
-    private transient final Class<? extends AbstractEntity<?>> actualEntityType;
+    private final Class<K> keyType;
+    private final Class<? extends AbstractEntity<?>> actualEntityType;
     /**
      * A reference to the application specific {@link EntityFactory} instance responsible for instantiation of this and other entities. It is also used for entity cloning.
      */
