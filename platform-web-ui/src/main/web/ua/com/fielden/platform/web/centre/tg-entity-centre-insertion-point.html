@@ -9,6 +9,7 @@
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-styles/shadow.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
@@ -20,6 +21,10 @@
 <style is="custom-style">
     .insertion-point-dialog > #insertionPointContent {
         background-color: white;
+        @apply(--shadow-elevation-2dp);
+    }
+    .insertion-point-dialog .title-bar paper-icon-button {
+        transform: scale(-1, -1);
     }
     #insertionPointContent .truncate {
         white-space: nowrap;
@@ -96,7 +101,7 @@
             <div id="insertionPointContent" class="layout vertical flex">
                 <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
                     <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
-                    <paper-icon-button class="expand-colapse-button" style="margin-left:10px" icon="[[_getButtonIcon(detached)]]" on-tap="_expandColapseTap"></paper-icon-button>
+                    <paper-icon-button class="expand-colapse-button" style="margin-left:10px" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
                 </div>
                 <div id="loadableContent" class="relative flex">
                     <tg-element-loader id="elementLoader"></tg-element-loader>
@@ -179,10 +184,10 @@
                 dialog.classList.toggle("layout", true);
                 dialog.classList.toggle("vertical", true);
                 dialog.style.position = "absolute";
-                dialog.style.top = "0px";
-                dialog.style.left = "0px";
-                dialog.style.bottom = "0px";
-                dialog.style.right = "0px";
+                dialog.style.top = "2%";
+                dialog.style.left = "2%";
+                dialog.style.width = "96%";
+                dialog.style.height = "96%";
                 dialog.style.zIndex = "1";
                 return dialog;
             },
@@ -285,7 +290,7 @@
             _adjustView: function (detached) {
                 var self = this;
 
-                if (this.$.elementLoader.prefDim && detached == false) {
+                if (this.$.elementLoader.prefDim && detached === false) {
                     var prefDim = this.$.elementLoader.prefDim;
                     this.$.loadableContent.style.width = prefDim.width() + prefDim.widthUnit;
                     this.$.loadableContent.style.height = prefDim.height() + prefDim.heightUnit;
@@ -298,13 +303,6 @@
 
             _onIronResize: function () {
                 this._adjustView(this.detached);
-            },
-
-            _getButtonIcon: function (detached) {
-                if (detached) {
-                    return "icons:cancel";
-                }
-                return "icons:open-in-new";
             },
 
             _expandColapseTap: function (event) {
