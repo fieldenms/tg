@@ -40,7 +40,6 @@ import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
 @MapEntityTo
 @CompanionObject(IUser.class)
 public class User extends ActivatableAbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     public static final String EMAIL = "email";
     
@@ -74,7 +73,7 @@ public class User extends ActivatableAbstractEntity<String> {
     }
     
     public static final String SECRET_RESET_UUID_SEPERATOR = "-";
-    public static final String USER_NAME_REGEX = "^[^-]+$"; // PASSWD_RESET_UUID_SEPERATOR should not be permitted for user names
+    public static final String USER_NAME_REGEX = "^[^-]+$"; // SECRET_RESET_UUID_SEPERATOR should not be permitted for user names
     
     @IsProperty
     @MapTo
