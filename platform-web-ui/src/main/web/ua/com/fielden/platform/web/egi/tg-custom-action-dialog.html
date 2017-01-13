@@ -329,8 +329,8 @@
             },
 
             _dialogMinimised: function () {
-                var width = "auto";
-                var height = "auto";
+                var width = "";
+                var height = "";
                 if (!this._minimised && this.prefDim) {
                     width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
                     height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
@@ -341,7 +341,7 @@
             _setDialogBodyDimensions: function (width, height) {
                 this.style.width = width;
                 // +44px - height of the title bar please see styles for .title-bar selector.
-                this.style.height = "calc(" + height + " + 44px)";
+                this.style.height = height && "calc(" + height + " + 44px)";
             },
 
             _isTitleSplitterHidden: function (staticTitle, dynamicTitle) {

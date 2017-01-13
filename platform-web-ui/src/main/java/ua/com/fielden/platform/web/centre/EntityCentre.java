@@ -950,12 +950,18 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
         for (final FunctionalActionElement el : insertionPointActionsElements) {
+            final DomElement insertionPoint = new DomElement("tg-entity-centre-insertion-point")
+                    .attr("id", "ip" + el.numberOfAction)
+                    .attr("short-desc", el.conf().shortDesc.orElse(""))
+                    .attr("long-desc", el.conf().longDesc.orElse(""))
+                    .attr("retrieved-entities", "{{retrievedEntities}}")
+                    .attr("retrieved-totals", "{{retrievedTotals}}");
             if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.LEFT) {
-                leftInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "{{retrievedEntities}}").attr("retrieved-totals", "{{retrievedTotals}}"));
+                leftInsertionPointsDom.add(insertionPoint);
             } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.RIGHT) {
-                rightInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "{{retrievedEntities}}").attr("retrieved-totals", "{{retrievedTotals}}"));
+                rightInsertionPointsDom.add(insertionPoint);
             } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.BOTTOM) {
-                bottomInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction).attr("retrieved-entities", "{{retrievedEntities}}").attr("retrieved-totals", "{{retrievedTotals}}"));
+                bottomInsertionPointsDom.add(insertionPoint);
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }
@@ -1302,14 +1308,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             return Optional.empty();
         }
     }
-    
+
     public Optional<Pair<Class<?>, Class<?>>> getGeneratorTypes() {
         return dslDefaultConfig.getGeneratorTypes();
     }
-    
+
     /**
      * Creates generic {@link IGenerator} instance from injector based on assumption that <code>generatorType</code> is of appropriate type (such checks are performed on API implementation level).
-     * 
+     *
      * @param generatorType
      * @return
      */
