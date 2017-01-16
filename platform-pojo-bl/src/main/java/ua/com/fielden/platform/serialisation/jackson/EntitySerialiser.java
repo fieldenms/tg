@@ -58,6 +58,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class EntitySerialiser<T extends AbstractEntity<?>> {
     public static final String ENTITY_JACKSON_REFERENCES = "entity-references";
+    public static final String ID_ONLY_PROXY_PREFIX = "_______id_only_proxy_______";
     private final Class<T> type;
     private final List<CachedProperty> properties;
     private final EntityFactory factory;

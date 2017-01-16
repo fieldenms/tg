@@ -58,33 +58,17 @@
 				    // properties:
 				    assert.strictEqual(typeof entity.get("integerProp"), "object", "The entity response property is not correct.");
 				    assert.strictEqual(entity.get("integerProp"), null, "The entity response property is not correct.");
-				
-				    // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-				    // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-				    // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-				    // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-				    // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-				    // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-				    // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-				    // try {
-				    //     entity.get("desc");
-				    //     assert.fail("", "", "The unfetched property for entity should throw an exception.");
-				    // } catch (ex) {
-				    //     if (ex instanceof chai.AssertionError) {
-				    //         throw ex;
-				    //     }
-				    //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");
-				    // }
-				
-				    // try {
-				    //     entity.get("key");
-				    //     assert.fail("", "", "The unfetched property for entity should throw an exception.");
-				    // } catch (ex) {
-				    //     if (ex instanceof chai.AssertionError) {
-				    //         throw ex;
-				    //     }
-				    //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");
-				    // }
+				    
+	                try {
+	                    entity.get("idOnlyProxyProp");
+	                    assert.fail("", "", "The unfetched property for entity should throw an exception.");
+	                } catch (ex) {
+	                    if (ex instanceof chai.AssertionError) {
+	                        throw ex;
+	                    }
+	                    assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");
+	                    assert.strictEqual(ex.message, 'Strict proxy exception: property [idOnlyProxyProp] is id-only proxy in the entity of type [TgPersistentEntityWithProperties]. Please, check the fetch strategy or construction strategy of the entity object.');
+	                }
 				
 				    // instance meta-properties
 				    assert.strictEqual(entity.prop("integerProp").isChangedFromOriginal(), false, "The entity response instance prop should be not changedFromOriginal.");
@@ -149,32 +133,16 @@
 	                // properties:
 	                assert.strictEqual(entity.get("integerProp"), 43, "The entity response property is not correct.");
 
-	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-	                // IMPORTANT NOTE: regular properties are not proxied at this stage! So they are serialised...
-	                // try {
-	                //     entity.get("desc");
-	                //     assert.fail("", "", "The unfetched property for entity should throw an exception.");
-	                // } catch (ex) {
-	                //     if (ex instanceof chai.AssertionError) {
-	                //         throw ex;
-	                //     }
-	                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");
-	                // }
-
-	                // try {
-	                //     entity.get("key");
-	                //     assert.fail("", "", "The unfetched property for entity should throw an exception.");
-	                // } catch (ex) {
-	                //     if (ex instanceof chai.AssertionError) {
-	                //         throw ex;
-	                //     }
-	                //     assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");
-	                // }
+	                try {
+	                    entity.get("proxyProp");
+	                    assert.fail("", "", "The unfetched property for entity should throw an exception.");
+	                } catch (ex) {
+	                    if (ex instanceof chai.AssertionError) {
+	                        throw ex;
+	                    }
+	                    assert.strictEqual(ex instanceof reflector.getStrictProxyExceptionPrototype(), true, "The exception thrown should be of type StrictProxyException.");
+	                    assert.strictEqual(ex.message, 'Strict proxy exception: property [proxyProp] does not exist in the entity of type [TgPersistentEntityWithProperties]. Please, check the fetch strategy or construction strategy of the entity object.');
+	                }
 
 	                // instance meta-properties
 	                assert.strictEqual(entity.prop("integerProp").isChangedFromOriginal(), false, "The entity response instance prop should be not changedFromOriginal.");
@@ -777,7 +745,7 @@
 	                	console.log('	change to 5');
 		                master._currBindingEntity.setAndRegisterPropertyTouch("stringProp", "5");
 		                master.validate();
-	                }, 55);
+	                }, 70);
 
 	                //master.async(function () {
 		            // ACTUAL PROPERTY CHANGE

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
@@ -44,6 +45,7 @@ import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
 import ua.com.fielden.platform.utils.EntityUtils;
+import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
 
 public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDeserializer<T> {
     private static final long serialVersionUID = 1L;
@@ -199,7 +201,7 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             return entity;
         }
     }
-
+    
     private Object determineValue(final JsonNode propNode, final Field propertyField) throws IOException, JsonMappingException, JsonParseException {
         final Object value;
         if (propNode.isNull()) {
@@ -208,8 +210,9 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JavaType concreteType = concreteTypeOf(constructType(mapper.getTypeFactory(), propertyField), () -> {
                 return propNode.get("@id") == null ? propNode.get("@id_ref") : propNode.get("@id");
             });
-            if (propNode.canConvertToLong() && EntityUtils.isEntityType(concreteType.getRawClass())) { // id-only proxy instance is represented as simple id number
-                value = EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor((Class) concreteType.getRawClass()), propNode.asLong());
+            if (propNode.isTextual() && EntityUtils.isEntityType(concreteType.getRawClass()) && propNode.asText().startsWith(ID_ONLY_PROXY_PREFIX)) { // id-only proxy instance is represented as id-only proxy prefix concatenated with id number
+                final Long determinedId = Long.valueOf(propNode.asText().replaceFirst(Pattern.quote(ID_ONLY_PROXY_PREFIX), ""));
+                value = EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor((Class) concreteType.getRawClass()), determinedId);
             } else {
                 value = mapper.readValue(propNode.traverse(mapper), concreteType);
             }

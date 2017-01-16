@@ -324,6 +324,8 @@
             } else {
                 if (this._isObjectUndefined(name)) {
                     throw new StrictProxyException(name, this.type()._simpleClassName());
+                } else if (this._isIdOnlyProxy(name)) {
+                    throw new StrictProxyException(name, this.type()._simpleClassName(), true);
                 }
                 return this[name];
             }
@@ -349,6 +351,14 @@
          */
         Entity.prototype._isObjectUndefined = function (name) {
             return (typeof this[name] === 'undefined') || (typeof this[name] === 'function');
+        }
+        
+        /**
+         * Returns 'true' if property represents id-only proxy instance, 'false' otherwise.
+         *
+         */
+        Entity.prototype._isIdOnlyProxy = function (name) {
+            return typeof this[name] === 'string' && (this[name].lastIndexOf('_______id_only_proxy_______', 0) === 0); // starts with 'id-only' prefix
         }
 
         /**
@@ -404,6 +414,10 @@
 
         /**
          * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and '@prop' instance meta-props.
+         * 
+         * Proxy: 
+         *    a) proxied properties are missing in serialised entity graph -- this method disregards such properties;
+         *    b) id-only proxy properties exist (foe e.g. '_______id_only_proxy_______673') -- this method disregards such properties too.
          *
          * @param propertyCallback -- function(propertyName) to be called on each property
          */
@@ -411,7 +425,9 @@
             var entity = this;
             for (var membName in entity) {
                 if (entity.hasOwnProperty(membName) && membName[0] !== "@" && membName !== "_type" && membName !== "id" && membName !== "version") {
-                    propertyCallback(membName);
+                    if (!entity._isObjectUndefined(membName) && !entity._isIdOnlyProxy(membName)) {
+                        propertyCallback(membName);
+                    }
                 }
             }
         }
@@ -682,10 +698,10 @@
 	   	/**
 	  	 * Exception prototype for strict proxy exceptions.
 	  	 */
-		var StrictProxyException = function (propName, simpleClassName) { // rawObject
+		var StrictProxyException = function (propName, simpleClassName, isIdOnlyProxy) { // rawObject
 	        Object.call(this);
 	
-	        this.message = "Strict proxy exception: the property [" + propName + "] does not exist in the entity of type [" + simpleClassName + "]. Please, check the fetch strategy or construction strategy of the entity object.";
+	        this.message = "Strict proxy exception: property [" + propName + "] " + (isIdOnlyProxy === true ? "is id-only proxy" : "does not exist") + " in the entity of type [" + simpleClassName + "]. Please, check the fetch strategy or construction strategy of the entity object.";
 	    };
 	    StrictProxyException.prototype = Object.create(Object.prototype);
 	    StrictProxyException.prototype.constructor = StrictProxyException;
@@ -1231,6 +1247,7 @@
             } else if (requireSelectedEntities === "ONE") {
             	centreContextHolder["selectedEntities"] = getSelectedEntities().length > 0 ? [getSelectedEntities()[0]] : [];
             } else if (requireSelectedEntities === "NONE") { // 'selectedEntities' will be proxied after server-side deserialisation
+                centreContextHolder["selectedEntities"] = [];
             } else {
             	throw "Unknown value for attribute 'requireSelectedEntities': " + requireSelectedEntities;
             }

@@ -172,6 +172,37 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @Title(value = "Hyperlink", desc = "A property of type Hyperlink.")
     @PersistentType(userType = IHyperlinkType.class)
     private Hyperlink hyperlinkProp;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Proxy prop", desc = "Property to test proxiness (not added to fetch provider)")
+    private TgPersistentEntityWithProperties proxyProp;
+    
+    @IsProperty
+    @MapTo
+    // @SkipEntityExistsValidation
+    @Title(value = "Id-only proxy prop", desc = "Property to test id-only proxiness (added to fetch provider but provided with id-only proxy instance)")
+    private TgPersistentEntityWithProperties idOnlyProxyProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setIdOnlyProxyProp(final TgPersistentEntityWithProperties idOnlyProxyProp) {
+        this.idOnlyProxyProp = idOnlyProxyProp;
+        return this;
+    }
+
+    public TgPersistentEntityWithProperties getIdOnlyProxyProp() {
+        return idOnlyProxyProp;
+    }
+
+    @Observable
+    public TgPersistentEntityWithProperties setProxyProp(final TgPersistentEntityWithProperties proxyProp) {
+        this.proxyProp = proxyProp;
+        return this;
+    }
+
+    public TgPersistentEntityWithProperties getProxyProp() {
+        return proxyProp;
+    }
 
     @Observable
     public TgPersistentEntityWithProperties setHyperlinkProp(final Hyperlink hyperlinkProp) {

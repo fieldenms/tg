@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isRequiredDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValidationResultDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isVisibleDefault;
+import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -143,7 +144,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                         generator.writeFieldName(name);
                         if (value != null && isIdOnlyProxiedEntity(value, prop.isEntityTyped())) {
                             final AbstractEntity<?> idOnlyProxyEntity = (AbstractEntity<?>) value;
-                            generator.writeObject(idOnlyProxyEntity.getId());
+                            generator.writeObject(ID_ONLY_PROXY_PREFIX + idOnlyProxyEntity.getId());
                         } else {
                             generator.writeObject(value);
                         }
