@@ -8,6 +8,7 @@ import org.restlet.data.Method;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.web.resources.webui.LoginCompleteResetResource;
 
 /**
@@ -31,6 +32,7 @@ public class LoginCompleteResetResourceFactory extends Restlet {
         if (Method.GET.equals(request.getMethod()) || Method.POST.equals(request.getMethod())) {
             new LoginCompleteResetResource(
                     injector.getInstance(IUser.class),
+                    injector.getInstance(IUserProvider.class),
                     getContext(),
                     request,
                     response

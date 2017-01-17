@@ -23,7 +23,7 @@ public class PrefDim {
 
 	/** Unit of measure such as pixels or percent. */
 	public enum Unit {
-        PX("px"), PRC("%");
+        PX("px"), PRC("%"), NOUNIT("");
 
 		public final String value;
 
@@ -51,9 +51,9 @@ public class PrefDim {
 		return new PrefDim(widthExpr, unit, heightExpr, unit);
 	}
 
-	public static PrefDim mkDim(final String widthExpr, final String heightExpr) {
-		return new PrefDim(widthExpr, Unit.PX, heightExpr, Unit.PX);
-	}
+    public static PrefDim mkDim(final String widthExpr, final String heightExpr) {
+        return new PrefDim(widthExpr, Unit.NOUNIT, heightExpr, Unit.NOUNIT);
+    }
 
 	public static PrefDim mkDim(final int width, final int height, final Unit unit) {
 		return new PrefDim(String.valueOf(width), unit, String.valueOf(height), unit);

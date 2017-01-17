@@ -10,7 +10,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,10 +65,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     private static final long serialVersionUID = 9154466083364529734L;
 
-    @SuppressWarnings("rawtypes")
-    private final Map<String, IValueMatcher> valueMatchers = new HashMap<String, IValueMatcher>();
-    private final IValueMatcherFactory valueMatcherFactory;
-
     private final DAO dao;
     private final IGeneratedEntityController<T> generatedEntityController;
 
@@ -85,7 +80,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
     public EntityQueryCriteria(final IValueMatcherFactory valueMatcherFactory, final IGeneratedEntityController generatedEntityController, final ISerialiser serialiser, final ICompanionObjectFinder controllerProvider) {
-        this.valueMatcherFactory = valueMatcherFactory;
         this.generatedEntityController = generatedEntityController;
         this.serialiser = serialiser;
         this.controllerProvider = controllerProvider;
@@ -490,10 +484,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             generatedEntityController.setEntityType(getManagedType());
             content = generatedEntityController.export(query, propertyNames, propertyTitles, getByteArrayForManagedType());
         }
-        final FileOutputStream fo = new FileOutputStream(fileName);
-        fo.write(content);
-        fo.flush();
-        fo.close();
+        try (final FileOutputStream fo = new FileOutputStream(fileName)) {
+            fo.write(content);
+            fo.flush();
+        }
     }
 
     private QueryExecutionModel<T, EntityResultQueryModel<T>> generateQuery() {

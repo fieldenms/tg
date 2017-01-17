@@ -1,31 +1,34 @@
 package ua.com.fielden.platform.migration;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
 import org.hibernate.Transaction;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 import ua.com.fielden.platform.security.user.IUser;
 
 public class MigrateDb {
 
+    private static final Logger LOGGER = Logger.getLogger(MigrateDb.class);
     /**
      * Checks whether servicing structures exists, and creates them in case of non-existence.
      *
      * @param ddl
      * @param conn
+     * @throws SQLException 
      * @throws Exception
      */
-    private static void checkAndCreate(final List<String> ddl, final HibernateUtil hiberUtil) throws Exception {
+    private static void checkAndCreate(final List<String> ddl, final HibernateUtil hiberUtil) throws SQLException {
         final Transaction tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
         final Connection conn = hiberUtil.getSessionFactory().getCurrentSession().connection();
         for (final String sql : ddl) {
@@ -37,19 +40,15 @@ public class MigrateDb {
         tr.commit();
     }
 
-    private List<Class> limitedWithFromStmt(final String fromRetriever, final Class[] retrieversClassesSequence) {
-        //final Options options = new Options();
-
-        final List<Class> result = new ArrayList<Class>();
+    private List<Class<?>> limitedWithFromStmt(final String fromRetriever, final Class<?>[] retrieversClassesSequence) {
+        final List<Class<?>> result = new ArrayList<>();
 
         boolean foundFromRetriever = false;
-        final Class fromRetrieverClass = getRetrieverClassBySimpleName(fromRetriever.trim(), retrieversClassesSequence);
+        final Class<?> fromRetrieverClass = getRetrieverClassBySimpleName(fromRetriever.trim(), retrieversClassesSequence);
 
-        for (final Class retrieverClass : retrieversClassesSequence) {
-            if (!foundFromRetriever) {
-                if (retrieverClass.equals(fromRetrieverClass)) {
-                    foundFromRetriever = true;
-                }
+        for (final Class<?> retrieverClass : retrieversClassesSequence) {
+            if (!foundFromRetriever && retrieverClass.equals(fromRetrieverClass)) {
+                foundFromRetriever = true;
             }
 
             if (foundFromRetriever) {
@@ -60,13 +59,13 @@ public class MigrateDb {
         return result;
     }
 
-    private List<Class> limitedWithToStmt(final String toRetriever, final Class[] retrieversClassesSequence) {
-        final List<Class> result = new ArrayList<Class>();
+    private List<Class<?>> limitedWithToStmt(final String toRetriever, final Class<?>[] retrieversClassesSequence) {
+        final List<Class<?>> result = new ArrayList<>();
 
         boolean foundToRetriever = false;
-        final Class toRetrieverClass = getRetrieverClassBySimpleName(toRetriever.trim(), retrieversClassesSequence);
+        final Class<?> toRetrieverClass = getRetrieverClassBySimpleName(toRetriever.trim(), retrieversClassesSequence);
 
-        for (final Class retrieverClass : retrieversClassesSequence) {
+        for (final Class<?> retrieverClass : retrieversClassesSequence) {
             if (!foundToRetriever) {
                 result.add(retrieverClass);
 
@@ -79,17 +78,17 @@ public class MigrateDb {
         return result;
     }
 
-    private List<Class> limitedWithList(final String[] retrieverNames, final Class[] retrieversClassesSequence) {
-        final List<Class> result = new ArrayList<Class>();
+    private List<Class<?>> limitedWithList(final String[] retrieverNames, final Class<?>[] retrieversClassesSequence) {
+        final List<Class<?>> result = new ArrayList<>();
 
         for (final String retrieverName : retrieverNames) {
             result.add(getRetrieverClassBySimpleName(retrieverName.trim(), retrieversClassesSequence));
         }
 
-        final List<Class> result2 = new ArrayList<Class>();
+        final List<Class<?>> result2 = new ArrayList<>();
 
         // rearranging user limited subset of retrievers according to established retrievers sequence
-        for (final Class retrieverClass : retrieversClassesSequence) {
+        for (final Class<?> retrieverClass : retrieversClassesSequence) {
             if (result.contains(retrieverClass)) {
                 result2.add(retrieverClass);
             }
@@ -98,8 +97,8 @@ public class MigrateDb {
         return result2;
     }
 
-    private Class getRetrieverClassBySimpleName(final String retieverClassSimpleName, final Class[] retrieversClassesSequence) {
-        for (final Class retrieverClass : retrieversClassesSequence) {
+    private Class<?> getRetrieverClassBySimpleName(final String retieverClassSimpleName, final Class<?>[] retrieversClassesSequence) {
+        for (final Class<?> retrieverClass : retrieversClassesSequence) {
             if (retrieverClass.getSimpleName().equalsIgnoreCase(retieverClassSimpleName)) {
                 return retrieverClass;
             }
@@ -108,7 +107,7 @@ public class MigrateDb {
         throw new IllegalArgumentException("Can't find class for retriever with simple name: " + retieverClassSimpleName);
     }
 
-    private static enum CmdParams {
+    private enum CmdParams {
         LIMIT_TO("-limitTo"), RESET_PASSWORDS("-resetPasswords"), DETAILS("-details"), CREATE_DB_SCHEMA("-createSchema"), PRINT_DB_SCHEMA("-printSchema"), SKIP_VALIDATIONS(
                 "-skipValidations");
 
@@ -118,10 +117,6 @@ public class MigrateDb {
             this.value = value;
         }
 
-        public String getValue() {
-            return value;
-        }
-
         @Override
         public String toString() {
             return value;
@@ -129,7 +124,7 @@ public class MigrateDb {
     }
 
     private Map<CmdParams, String> retrieveCommandLineParams(final String[] args) {
-        final Map<CmdParams, String> result = new HashMap<CmdParams, String>();
+        final Map<CmdParams, String> result = new EnumMap<>(CmdParams.class);
 
         for (int i = 0; i < args.length; i++) {
             if (CmdParams.LIMIT_TO.value.equals(args[i])) {
@@ -157,63 +152,60 @@ public class MigrateDb {
         return result;
     }
 
-    private List<Class> decodeLimitToParameter(final String paramValue, final Class[] retrieversClassesSequence) {
-
+    private List<Class<?>> decodeLimitToParameter(final String paramValue, final Class<?>[] retrieversClassesSequence) {
         final String[] values = paramValue.trim().split(",");
-        if (values.length > 0) {
-            if (values.length != 1 || values[0].trim().split(" ").length == 1) {
-                return limitedWithList(values, retrieversClassesSequence);
-            } else {
-                final String[] fromOrTovalues = values[0].split(" ");
-                final String fromOrTo = fromOrTovalues[0].trim();
-                if (fromOrTovalues.length == 2) {
-                    if ("from".equalsIgnoreCase(fromOrTo)) {
-                        return limitedWithFromStmt(fromOrTovalues[1], retrieversClassesSequence);
-                    } else if ("to".equalsIgnoreCase(fromOrTo)) {
-                        return limitedWithToStmt(fromOrTovalues[1], retrieversClassesSequence);
-                    } else {
-                        throw new IllegalArgumentException("Invalid argument in condition to limit subset of existing retrievers. Should be either 'from' or 'to'. Was '"
-                                + fromOrTo + "'");
-                    }
-                } else {
-                    throw new IllegalArgumentException("-limitTo parameter has more than 2 words in its string argument: " + paramValue);
-                }
-            }
-        } else {
+        if (values.length == 0) {
             throw new IllegalArgumentException("-limitTo parameter has incorrect argument");
+        }
+
+        if (values.length != 1 || values[0].trim().split(" ").length == 1) {
+            return limitedWithList(values, retrieversClassesSequence);
+        } else {
+            final String[] fromOrTovalues = values[0].split(" ");
+            final String fromOrTo = fromOrTovalues[0].trim();
+            if (fromOrTovalues.length == 2) {
+                if ("from".equalsIgnoreCase(fromOrTo)) {
+                    return limitedWithFromStmt(fromOrTovalues[1], retrieversClassesSequence);
+                } else if ("to".equalsIgnoreCase(fromOrTo)) {
+                    return limitedWithToStmt(fromOrTovalues[1], retrieversClassesSequence);
+                } else {
+                    throw new IllegalArgumentException("Invalid argument in condition to limit subset of existing retrievers. Should be either 'from' or 'to'. Was '"
+                            + fromOrTo + "'");
+                }
+            } else {
+                throw new IllegalArgumentException("-limitTo parameter has more than 2 words in its string argument: " + paramValue);
+            }
         }
     }
 
-    public void migrate(final String[] args, final Properties props, final List<String> ddl, final Class[] retrieversClassesSequence, final Injector injector)
-            throws Exception {
+    public void migrate(final String[] args, final Properties props, final List<String> ddl, final Class[] retrieversClassesSequence, final Injector injector) throws SQLException {
         final Map<CmdParams, String> cmdParams = retrieveCommandLineParams(args);
         final String limitToParamArgument = cmdParams.get(CmdParams.LIMIT_TO);
         final Class[] limitToRetrievers = limitToParamArgument == null ? retrieversClassesSequence
                 : decodeLimitToParameter(limitToParamArgument, retrieversClassesSequence).toArray(new Class[] {});
 
         final HibernateUtil hibernateUtil = injector.getInstance(HibernateUtil.class);
-        final EntityFactory factory = injector.getInstance(EntityFactory.class);
 
         if (cmdParams.containsKey(CmdParams.CREATE_DB_SCHEMA)) {
-            System.out.println("Creating database schema...");
+            LOGGER.info("Creating database schema...");
             checkAndCreate(ddl, hibernateUtil);
         }
 
         if (cmdParams.containsKey(CmdParams.PRINT_DB_SCHEMA)) {
-            System.out.println("Printing database schema...\n");
+            LOGGER.info("Printing database schema...\n");
             for (final String ddlStmt : ddl) {
-                System.out.println(ddlStmt);
+                LOGGER.info(ddlStmt);
             }
         } else {
-            new DataMigrator(injector, hibernateUtil, factory, cmdParams.containsKey(CmdParams.SKIP_VALIDATIONS), cmdParams.containsKey(CmdParams.DETAILS), limitToRetrievers);//.populateData();
+            new DataMigrator(injector, hibernateUtil, cmdParams.containsKey(CmdParams.SKIP_VALIDATIONS), cmdParams.containsKey(CmdParams.DETAILS), limitToRetrievers);
         }
         // reset passwords
         if (cmdParams.containsKey(CmdParams.RESET_PASSWORDS)) {
-            System.out.println("Resetting user passwords...");
+            LOGGER.info("Resetting user passwords...");
             final ResetUserPassword passwordReset = new ResetUserPassword(injector.getInstance(IUser.class));
             passwordReset.resetAll();
         }
 
-        System.out.println("\nData migration completed.");
+        LOGGER.info("\nData migration completed.");
     }
 }
