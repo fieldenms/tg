@@ -13,6 +13,12 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithOtherEntity;
 
+/**
+ * The test for {@link CentreContext}.
+ * 
+ * @author TG Team
+ *
+ */
 public class CentreContextTest {
 
     @Test

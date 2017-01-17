@@ -8,6 +8,12 @@ import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 
+/**
+ * {@link IIdOnlyProxiedEntityTypeCache} implementation for tests.
+ * 
+ * @author TG Team
+ *
+ */
 public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCache {
 
     private final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> typesMap;
@@ -26,19 +32,4 @@ public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCac
         map.put(OtherEntity.class, EntityProxyContainer.proxy(OtherEntity.class, "version", "key", "desc"));
         return map;
     }
-
-//    private <T extends AbstractEntity<?>> Class<? extends T> produceIdOnlyProxiedResultType(final Class<T> originalType, final Collection<PropertyMetadata> propsMetadata) {
-//        final Set<String> proxiedProps = new HashSet<>();
-//        for (final PropertyMetadata ppi : propsMetadata) {
-//            final String name = ppi.getName();
-//            if (!ID.equals(name) &&
-//                    !(KEY.equals(name) && !ppi.affectsMapping()) &&
-//                    !ppi.isCollection() &&
-//                    !name.contains(".") &&
-//                    !ppi.isSynthetic()) {
-//                proxiedProps.add(name);
-//            }
-//        }
-//        return EntityProxyContainer.proxy(originalType, proxiedProps.toArray(new String[] {}));
-//    }
 }

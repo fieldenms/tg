@@ -180,7 +180,6 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     
     @IsProperty
     @MapTo
-    // @SkipEntityExistsValidation
     @Title(value = "Id-only proxy prop", desc = "Property to test id-only proxiness (added to fetch provider but provided with id-only proxy instance)")
     private TgPersistentEntityWithProperties idOnlyProxyProp;
 
