@@ -1,18 +1,30 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
+
 <link rel="import" href="/resources/components/d3-lib.html">
 
 <dom-module id="d3-chart-spike">
 
     <template>
         <style>
-            rect {
+            :host {
+                @apply(--layout-vertical);
+
+            }
+            svg {
+                @apply(--layout-flex);
+
+            }
+            .bar {
                 fill: steelblue;
             }
-            text {
-                fill: white;
-                font: 10px sans-serif;
-                text-anchor: middle;
+            .bar:hover {
+                fill: brown;
+            }
+            .axis--x path {
+                display: none;
             }
         </style>
 
@@ -31,61 +43,99 @@
 
             properties: {
                 // declare properties for the element's public API
-                data: {
-                    type: Array,
-                    value: null,
-                    observer: "_dataChanged"
-                }
+                data: Array,
+
+                _readyToDraw: Boolean
             },
 
-            //Need to have width
-            //Need to have height
-            _dataChanged: function (newData, oldData) {
-                var x = d3.scale.ordinal()
-                    .rangeRoundBands([0, this.$.chart.offsetWidth], .1)
-                    .domain(data.map(function (d) {
+            behaviors: [Polymer.IronResizableBehavior],
+
+            observers: ["_drawChart(data, _readyToDraw)"],
+
+            ready: function () {
+                this.scopeSubtree(this.$.chart, true);
+                this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+            },
+
+            attached: function () {
+                this._waitForDimensions(0);
+            },
+
+            _waitForDimensions: function (time) {
+                this.async(function () {
+                    if (this.offsetWidth && this.offsetHeight) {
+                        this._readyToDraw = true;
+                    } else {
+                        this._waitForDimensions(100);
+                    }
+                }, time);
+            },
+
+            _drawChart: function () {
+                this.$.chart.innerHTML = "";
+                var svg = d3.select(this.$.chart);
+                var margin = {
+                    top: 20,
+                    right: 20,
+                    bottom: 30,
+                    left: 40
+                };
+                var width = this.offsetWidth - margin.left - margin.right;
+                var height = this.offsetHeight - margin.top - margin.bottom;
+
+                var x = d3.scaleBand()
+                    .rangeRound([0, width])
+                    .padding(0.1)
+                    .domain(this.data.map(function (d) {
                         return d.name;
-                    }));
+                    }.bind(this)));
 
-                var y = d3.scale.linear()
-                    .range([this.$.chart.offsetHeight, 0])
-                    .domain([0, d3.max(data, function (d) {
+                var y = d3.scaleLinear()
+                    .range([height, 0])
+                    .domain([0, d3.max(this.data, function (d) {
                         return d.value;
-                    })]);
+                    }.bind(this))]);
 
-                var xAxis = d3.svg.axis()
-                    .scale(x)
-                    .orient("bottom");
+                var g = svg.append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-                var yAxis = d3.svg.axis()
-                    .scale(y)
-                    .orient("left");
+                var yAxis = d3.axisLeft(y).ticks(10, "%");
 
                 var chart = d3.select(this.$.chart);
 
-                chart.append("g")
-                    .attr("class", "x axis")
+                g.append("g")
+                    .attr("class", "axis axis--x")
                     .attr("transform", "translate(0," + height + ")")
-                    .call(xAxis);
+                    .call(d3.axisBottom(x));
 
-                chart.append("g")
-                    .attr("class", "y axis")
-                    .call(yAxis);
+                g.append("g")
+                    .attr("class", "axis axis--y")
+                    .call(d3.axisLeft(y).ticks(10, "%"))
+                    .append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 6)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    .text("Frequency");
 
-                chart.selectAll(".bar")
-                    .data(data)
+                g.selectAll(".bar")
+                    .data(this.data)
                     .enter().append("rect")
                     .attr("class", "bar")
                     .attr("x", function (d) {
                         return x(d.name);
-                    })
+                    }.bind(this))
                     .attr("y", function (d) {
                         return y(d.value);
-                    })
+                    }.bind(this))
                     .attr("height", function (d) {
                         return height - y(d.value);
-                    })
-                    .attr("width", x.rangeBand());
+                    }.bind(this))
+                    .attr("width", x.bandwidth());
+            },
+
+            _resizeEventListener: function (event, details) {
+                this._drawChart();
             }
         });
     </script>
