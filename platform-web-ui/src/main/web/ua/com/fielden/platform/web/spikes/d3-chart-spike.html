@@ -73,35 +73,34 @@
 
             _drawChart: function () {
                 this.$.chart.innerHTML = "";
-                var svg = d3.select(this.$.chart);
-                var margin = {
+                
+                const margin = {
                     top: 20,
                     right: 20,
                     bottom: 30,
                     left: 40
                 };
-                var width = this.offsetWidth - margin.left - margin.right;
-                var height = this.offsetHeight - margin.top - margin.bottom;
+                const width = this.offsetWidth - margin.left - margin.right;
+                const height = this.offsetHeight - margin.top - margin.bottom;
 
-                var x = d3.scaleBand()
+                const x = d3.scaleBand()
                     .rangeRound([0, width])
                     .padding(0.1)
                     .domain(this.data.map(function (d) {
                         return d.name;
                     }.bind(this)));
 
-                var y = d3.scaleLinear()
+                const y = d3.scaleLinear()
                     .range([height, 0])
                     .domain([0, d3.max(this.data, function (d) {
                         return d.value;
                     }.bind(this))]);
 
-                var g = svg.append("g")
+                const svg = d3.select(this.$.chart);
+                const g = svg.append("g")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-                var yAxis = d3.axisLeft(y).ticks(10, "%");
-
-                var chart = d3.select(this.$.chart);
+                const yAxis = d3.axisLeft(y).ticks(10, "%");
 
                 g.append("g")
                     .attr("class", "axis axis--x")
