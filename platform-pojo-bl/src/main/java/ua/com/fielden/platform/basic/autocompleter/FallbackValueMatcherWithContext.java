@@ -26,16 +26,6 @@ public class FallbackValueMatcherWithContext<CONTEXT extends AbstractEntity<?>, 
     }
 
     @Override
-    public void setContext(final CONTEXT context) {
-
-    }
-
-    @Override
-    public CONTEXT getContext() {
-        return null;
-    }
-
-    @Override
     public Integer getPageSize() {
         return IEntityDao.DEFAULT_PAGE_CAPACITY;
     }
