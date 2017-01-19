@@ -281,7 +281,7 @@ public class PropertyTypeDeterminator {
         final int indexOfLastDot = dotNotationExp.lastIndexOf(PROPERTY_SPLITTER);
         final String penultPart = dotNotationExp.substring(0, indexOfLastDot);
         final String lastPart = dotNotationExp.substring(indexOfLastDot + 1);
-        return new Pair<String, String>(penultPart, lastPart);
+        return new Pair<>(penultPart, lastPart);
     }
 
     public static Pair<String, String> firstAndRest(final String dotNotationExp) {
