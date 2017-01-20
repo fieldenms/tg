@@ -3,6 +3,7 @@
 <link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
 
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/d3-lib.html">
 
 <dom-module id="d3-chart-spike">
@@ -17,14 +18,19 @@
                 @apply(--layout-flex);
 
             }
+            .background {
+                fill: #DDD;
+            }
+            .grid path,
+            .grid line {
+                fill: none;
+                stroke: #fff;
+            }
             .bar {
                 fill: steelblue;
             }
             .bar:hover {
                 fill: brown;
-            }
-            .axis--x path {
-                display: none;
             }
         </style>
 
@@ -35,108 +41,276 @@
     </template>
 
     <script>
-        // element registration
-        Polymer({
-            is: "d3-chart-spike",
+        (function () {
+            const defaultMargin = {
+                top: 20,
+                right: 20,
+                bottom: 30,
+                left: 40
+            };
 
-            // add properties and methods on the element's prototype
-
-            properties: {
-                // declare properties for the element's public API
-                data: Array,
-
-                _readyToDraw: Boolean
-            },
-
-            behaviors: [Polymer.IronResizableBehavior],
-
-            observers: ["_drawChart(data, _readyToDraw)"],
-
-            ready: function () {
-                this.scopeSubtree(this.$.chart, true);
-                this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
-            },
-
-            attached: function () {
-                this._waitForDimensions(0);
-            },
-
-            _waitForDimensions: function (time) {
-                this.async(function () {
-                    if (this.offsetWidth && this.offsetHeight) {
-                        this._readyToDraw = true;
-                    } else {
-                        this._waitForDimensions(100);
-                    }
-                }, time);
-            },
-
-            _drawChart: function () {
-                this.$.chart.innerHTML = "";
-                
-                const margin = {
-                    top: 20,
-                    right: 20,
-                    bottom: 30,
-                    left: 40
-                };
-                const width = this.offsetWidth - margin.left - margin.right;
-                const height = this.offsetHeight - margin.top - margin.bottom;
-
-                const x = d3.scaleBand()
-                    .rangeRound([0, width])
-                    .padding(0.1)
-                    .domain(this.data.map(function (d) {
-                        return d.name;
-                    }.bind(this)));
-
-                const y = d3.scaleLinear()
-                    .range([height, 0])
-                    .domain([0, d3.max(this.data, function (d) {
-                        return d.value;
-                    }.bind(this))]);
-
-                const svg = d3.select(this.$.chart);
-                const g = svg.append("g")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-                const yAxis = d3.axisLeft(y).ticks(10, "%");
-
-                g.append("g")
-                    .attr("class", "axis axis--x")
-                    .attr("transform", "translate(0," + height + ")")
-                    .call(d3.axisBottom(x));
-
-                g.append("g")
-                    .attr("class", "axis axis--y")
-                    .call(d3.axisLeft(y).ticks(10, "%"))
-                    .append("text")
-                    .attr("transform", "rotate(-90)")
-                    .attr("y", 6)
-                    .attr("dy", ".71em")
-                    .style("text-anchor", "end")
-                    .text("Frequency");
-
-                g.selectAll(".bar")
-                    .data(this.data)
-                    .enter().append("rect")
-                    .attr("class", "bar")
-                    .attr("x", function (d) {
-                        return x(d.name);
-                    }.bind(this))
-                    .attr("y", function (d) {
-                        return y(d.value);
-                    }.bind(this))
-                    .attr("height", function (d) {
-                        return height - y(d.value);
-                    }.bind(this))
+            const bar = (selection, x, y, h, tooltipCallback, clickCallback) => {
+                let selectedBar = selection
+                    .attr("x", d => x(d.name))
+                    .attr("y", d => y(d.value))
+                    .attr("height", d => h - y(d.value))
                     .attr("width", x.bandwidth());
-            },
+                if (tooltipCallback) {
+                    selectedBar.attr("tooltip-text", tooltipCallback);
+                }
+                if (clickCallback) {
+                    selectedBar.on("dblclick", clickCallback);
+                }
+            };
 
-            _resizeEventListener: function (event, details) {
-                this._drawChart();
-            }
-        });
+            const xScale = (w, data) => {
+                return d3.scaleBand()
+                    .rangeRound([0, w])
+                    .padding(0.1) // could by configurable 
+                    .domain(data.map(d => d.name));
+            };
+
+            const yScale = (h, data) => {
+                return d3.scaleLinear()
+                    .range([h, 0])
+                    .domain([0, d3.max(data, d => d.value)]);
+            };
+
+            d3.barChart = (container) => {
+                let svg = container;
+                let width = defaultMargin.right + defaultMargin.left;
+                let height = defaultMargin.bottom + defaultMargin.top;
+                let margin = defaultMargin;
+                let data = [];
+                let tooltipCallback = d => d.name + ": " + d.value;
+                let dblclickCallback = d => alert("you clicked " + d.name + ": " + d.value);
+
+                //Drawing the chart 
+                const w = width - margin.left - margin.right;
+                const h = height - margin.bottom - margin.top;
+                //Create zoom behavior
+                const zoom = d3.zoom()
+                    .scaleExtent([1, 10]);
+                //Creating grid that should be modifiable
+                const yGrid = d3.axisLeft(yScale(h, data)).tickSize(-w).tickFormat("");
+                //Createing x and y axis they also should be modifiable.
+                const xAxis = d3.axisBottom(xScale(w, data));
+                const yAxis = d3.axisLeft(yScale(h, data)).ticks(10, "%");
+                // Create a clip path so that zoomed or panned parts would be cut of
+                const clipPath = d3.select(container)
+                    .append('defs')
+                    .append("clipPath").attr("id", "chart-area")
+                    .append("rect").attr("width", w).attr("height", h);
+                //Create the chart area
+                const g = d3.select(container).append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                    //.call(zoom)
+                    //.on("dblclick.zoom", null);
+                //Draw background
+                const background = g.append("rect")
+                    .attr("class", "background")
+                    .attr("width", w)
+                    .attr("height", h);
+                //Draw y grid
+                const yGridGroup = g.append("g")
+                    .attr("class", "grid y-grid")
+                    .call(yGrid);
+                //Draw containr that will contain bar chart and it's markers and should be clipped with clip-path
+                const graphContainer = g.append("g").attr("clip-path", "url(#chart-area)").append("g").attr("class", "chart-container");
+                //Draw bars
+                graphContainer.selectAll(".bar")
+                    .data(data)
+                    .enter().append("rect").attr("class", "bar")
+                    .call(bar, xAxis.scale(), yAxis.scale(), h, tooltipCallback, dblclickCallback);
+                //TODO paint markers.
+                //Draw x axis
+                const xAxisGroup = g.append("g")
+                    .attr("class", "axis x-axis")
+                    .attr("transform", "translate(0," + h + ")")
+                    .call(xAxis);
+                //Draw y axis
+                const yAxisGroup = g.append("g")
+                    .attr("class", "axis y-axis")
+                    .call(yAxis);
+                
+//                zoom.on("zoom", () => {
+//                    const transform = d3.event.transform;
+//                    yAxisGroup.call(yAxis.scale(transform.rescaleY(yScale(height - margin.bottom - margin.top, data))));
+//                    yGridGroup.call(yGrid.scale(transform.rescaleY(yScale(height - margin.bottom - margin.top, data))));
+//                    graphContainer.attr("transform", "translate(0, " + transform.y + ")scale(1, " + transform.k + ")");
+//                });
+
+                const updateChart = () => {
+                    const lw = width - margin.left - margin.right;
+                    const lh = height - margin.bottom - margin.top;
+
+                    xAxis.scale().rangeRound([0, lw]).domain(data.map(d => d.name));
+                    yAxis.scale().range([lh, 0]).domain([0, d3.max(data, d => d.value)]);
+                    yGrid.scale().range([lh, 0]).domain([0, d3.max(data, d => d.value)]);
+
+                    yGrid.tickSize(-lw);
+
+                    clipPath.attr("width", lw).attr("height", lh);
+                    g.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                    background.attr("width", lw).attr("height", lh);
+                    yGridGroup.call(yGrid);
+                    xAxisGroup.attr("transform", "translate(0," + lh + ")").call(xAxis);
+                    yAxisGroup.call(yAxis);
+                    //TODO update markers here.
+                    const barsData = graphContainer.selectAll(".bar").data(data).call(bar, xAxis.scale(), yAxis.scale(), lh);
+                    barsData.enter().append("rect").attr("class", "bar").call(bar, xAxis.scale(), yAxis.scale(), lh, tooltipCallback, dblclickCallback);
+                    barsData.exit().remove();
+                };
+
+                
+
+                const chart = {
+                    width: w => {
+                        if (w > 0) {
+                            width = w;
+                            updateChart();
+                            return chart;
+                        } else {
+                            return width;
+                        }
+                    },
+                    height: h => {
+                        if (h > 0) {
+                            height = h;
+                            updateChart();
+                            return chart;
+                        } else {
+                            return height;
+                        }
+                    },
+                    margin: m => {
+                        if (m) {
+                            margin = {
+                                top: m.hasOwnProperty("top") ? m.top : defaultMargin.top,
+                                bottom: m.hasOwnProperty("bottom") ? m.bottom : defaultMargin.bottom,
+                                right: m.hasOwnProperty("right") ? m.right : defaultMargin.right,
+                                left: m.hasOwnProperty("left") ? m.left : defaultMargin.left
+                            };
+                            updateChart();
+                            return chart;
+                        } else {
+                            return margin;
+                        }
+                    },
+                    data: d => {
+                        if (d) {
+                            data = d;
+                            updateChart();
+                            return chart;
+                        } else {
+                            return data;
+                        }
+                    },
+                    tooltip: callback => {
+                        if (callback) {
+                            tooltipCallback = callback;
+                            g.selectAll(".bar").attr("tooltip-text", tooltipCallback);
+                            return chart;
+                        } else {
+                            return tooltipCallback;
+                        }
+                    },
+                    dblclick: callback => {
+                        if (callback) {
+                            dblclickCallback = callback;
+                            g.selectAll(".bar").on("dblclick", dblclickCallback);
+                            return chart;
+                        } else {
+                            return dblclickCallback;
+                        }
+                    }
+                };
+
+                return chart;
+            };
+
+            // element registration
+            Polymer({
+                is: "d3-chart-spike",
+
+                // add properties and methods on the element's prototype
+
+                properties: {
+                    // Declare properties for the element's public API
+                    data: {
+                        type: Array,
+                        observer: "_dataChanged"
+                    },
+
+                    tooltipCallback: {
+                        type: Function,
+                        observer: "_tooltipCallbackChanged"
+                    },
+
+                    dblclickCallback: {
+                        type: Function,
+                        observer: "_dblclickCallbackChanged"
+                    },
+
+                    _chart: Object
+                },
+
+                behaviors: [Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+
+                ready: function () {
+                    this._chart = d3.barChart(this.$.chart);
+                    if (this.data) {
+                        this._chart.data(this.data);
+                    }
+                    if (this.tooltipCallback) {
+                        this._chart.tooltipCallback(this.tooltipCallback);
+                    }
+                    if (this.dblclickCallback) {
+                        this._chart.dblclickCallback(this.dblclickCallback);
+                    }
+                    this.scopeSubtree(this.$.chart, true);
+                    this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+                },
+
+                attached: function () {
+                    this._waitForDimensions(0);
+                },
+
+                _waitForDimensions: function (time) {
+                    this.async(function () {
+                        if (this.offsetWidth && this.offsetHeight && this._cahrt) {
+                            this._chart.width(this.offsetWidth).height(this.offsetHeight);
+                        } else {
+                            this._waitForDimensions(100);
+                        }
+                    }, time);
+                },
+
+                _dataChanged: function (newData, oldData) {
+                    if (this._chart) {
+                        this._chart.data(newData);
+                    }
+                },
+
+                _tooltipCallbackChanged: function (newCallback, oldCallback) {
+                    if (this._chart) {
+                        this._chart.tooltipCallback(newCallback);
+                    }
+                },
+
+                _dblclickCallbackChanged: function (newCallback, oldCallback) {
+                    if (this._chart) {
+                        this._chart.dblclickCallback(newCallback);
+                    }
+                },
+
+                _resizeEventListener: function (event, details) {
+                    if (this._chart) {
+                        this._chart.width(this.offsetWidth).height(this.offsetHeight);
+                    }
+                }
+            });
+        })();
     </script>
 
 </dom-module>
