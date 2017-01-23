@@ -42,13 +42,29 @@
 
     <script>
         (function () {
+            // Holds the default margins for bar chart.
             const defaultMargin = {
                 top: 20,
                 right: 20,
                 bottom: 30,
                 left: 40
             };
-
+            //The following two functions create domain values for x axis and y axis accordingly.
+            const xDomain = data => data.map(d => d.name);
+            const yDomain = data => [0, d3.max(data, d => d.value)];
+            // Two following two functions create scales for x axis and y axis accordingly.
+            const xScale = (w, data) => {
+                return d3.scaleBand()
+                    .rangeRound([0, w])
+                    .padding(0.1) // could by configurable 
+                    .domain(xDomain(data));
+            };
+            const yScale = (h, data) => {
+                return d3.scaleLinear()
+                    .range([h, 0])
+                    .domain(yDomain(data));
+            };
+            //Configures bars according to xscale, yscale, height of the chart. Also adds appropriate listeners and tooltips to the bars if they are defined. 
             const bar = (selection, x, y, h, tooltipCallback, clickCallback) => {
                 let selectedBar = selection
                     .attr("x", d => x(d.name))
@@ -63,39 +79,26 @@
                 }
             };
 
-            const xScale = (w, data) => {
-                return d3.scaleBand()
-                    .rangeRound([0, w])
-                    .padding(0.1) // could by configurable 
-                    .domain(data.map(d => d.name));
-            };
-
-            const yScale = (h, data) => {
-                return d3.scaleLinear()
-                    .range([h, 0])
-                    .domain([0, d3.max(data, d => d.value)]);
-            };
-
             d3.barChart = (container) => {
-                let svg = container;
                 let width = defaultMargin.right + defaultMargin.left;
                 let height = defaultMargin.bottom + defaultMargin.top;
                 let margin = defaultMargin;
                 let data = [];
                 let tooltipCallback = d => d.name + ": " + d.value;
                 let dblclickCallback = d => alert("you clicked " + d.name + ": " + d.value);
+                let currentTransform = d3.zoomIdentity;
 
                 //Drawing the chart 
                 const w = width - margin.left - margin.right;
                 const h = height - margin.bottom - margin.top;
-                //Create zoom behavior
-                const zoom = d3.zoom()
-                    .scaleExtent([1, 10]);
+                //Create x and y scales for grid and axis.
+                let x = xScale(w, data);
+                let y = yScale(h, data);
                 //Creating grid that should be modifiable
-                const yGrid = d3.axisLeft(yScale(h, data)).tickSize(-w).tickFormat("");
+                const yGrid = d3.axisLeft(y).tickSize(-w).tickFormat("");
                 //Createing x and y axis they also should be modifiable.
-                const xAxis = d3.axisBottom(xScale(w, data));
-                const yAxis = d3.axisLeft(yScale(h, data)).ticks(10, "%");
+                const xAxis = d3.axisBottom(x);
+                const yAxis = d3.axisLeft(y).ticks(10, "%");
                 // Create a clip path so that zoomed or panned parts would be cut of
                 const clipPath = d3.select(container)
                     .append('defs')
@@ -104,8 +107,6 @@
                 //Create the chart area
                 const g = d3.select(container).append("g")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-                    //.call(zoom)
-                    //.on("dblclick.zoom", null);
                 //Draw background
                 const background = g.append("rect")
                     .attr("class", "background")
@@ -117,11 +118,21 @@
                     .call(yGrid);
                 //Draw containr that will contain bar chart and it's markers and should be clipped with clip-path
                 const graphContainer = g.append("g").attr("clip-path", "url(#chart-area)").append("g").attr("class", "chart-container");
+                //Create zoom behavior
+                const zoom = d3.zoom()
+                    .scaleExtent([1, 10])
+                    .on("zoom", () => {
+                        currentTransform = d3.event.transform;
+                        yAxisGroup.call(yAxis.scale(currentTransform.rescaleY(y)));
+                        yGridGroup.call(yGrid.scale(currentTransform.rescaleY(y)));
+                        graphContainer.attr("transform", "translate(0, " + currentTransform.y + ")scale(1, " + currentTransform.k + ")");
+                    });
+                g.call(zoom).on("dblclick.zoom", null);
                 //Draw bars
                 graphContainer.selectAll(".bar")
                     .data(data)
                     .enter().append("rect").attr("class", "bar")
-                    .call(bar, xAxis.scale(), yAxis.scale(), h, tooltipCallback, dblclickCallback);
+                    .call(bar, x, y, h, tooltipCallback, dblclickCallback);
                 //TODO paint markers.
                 //Draw x axis
                 const xAxisGroup = g.append("g")
@@ -132,37 +143,30 @@
                 const yAxisGroup = g.append("g")
                     .attr("class", "axis y-axis")
                     .call(yAxis);
-                
-//                zoom.on("zoom", () => {
-//                    const transform = d3.event.transform;
-//                    yAxisGroup.call(yAxis.scale(transform.rescaleY(yScale(height - margin.bottom - margin.top, data))));
-//                    yGridGroup.call(yGrid.scale(transform.rescaleY(yScale(height - margin.bottom - margin.top, data))));
-//                    graphContainer.attr("transform", "translate(0, " + transform.y + ")scale(1, " + transform.k + ")");
-//                });
 
                 const updateChart = () => {
                     const lw = width - margin.left - margin.right;
                     const lh = height - margin.bottom - margin.top;
 
-                    xAxis.scale().rangeRound([0, lw]).domain(data.map(d => d.name));
-                    yAxis.scale().range([lh, 0]).domain([0, d3.max(data, d => d.value)]);
-                    yGrid.scale().range([lh, 0]).domain([0, d3.max(data, d => d.value)]);
-
-                    yGrid.tickSize(-lw);
+                    x = xScale(lw, data);
+                    y = yScale(lh, data);
 
                     clipPath.attr("width", lw).attr("height", lh);
                     g.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
                     background.attr("width", lw).attr("height", lh);
-                    yGridGroup.call(yGrid);
-                    xAxisGroup.attr("transform", "translate(0," + lh + ")").call(xAxis);
-                    yAxisGroup.call(yAxis);
+                    yGridGroup.call(yGrid.scale(y).tickSize(-lw));
+                    xAxisGroup.attr("transform", "translate(0," + lh + ")").call(xAxis.scale(x));
+                    yAxisGroup.call(yAxis.scale(y));
                     //TODO update markers here.
-                    const barsData = graphContainer.selectAll(".bar").data(data).call(bar, xAxis.scale(), yAxis.scale(), lh);
-                    barsData.enter().append("rect").attr("class", "bar").call(bar, xAxis.scale(), yAxis.scale(), lh, tooltipCallback, dblclickCallback);
+                    const barsData = graphContainer.selectAll(".bar").data(data).call(bar, x, y, lh);
+                    barsData.enter().append("rect").attr("class", "bar").call(bar, x, y, lh, tooltipCallback, dblclickCallback);
                     barsData.exit().remove();
+                    // Rescale grid along y axis and also rescale y axis.
+                    yGridGroup.call(yGrid.scale(currentTransform.rescaleY(y)));
+                    yAxisGroup.call(yAxis.scale(currentTransform.rescaleY(y)));
                 };
 
-                
+
 
                 const chart = {
                     width: w => {
