@@ -6,7 +6,6 @@ import static java.util.Optional.of;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -1208,7 +1207,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         .findFirst().map(mp -> mp.getFirstFailure());
 
         // returns first failure if exists or successful result if there was no failure.
-        return firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
+        return firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity is valid.");
     }
 
     /**

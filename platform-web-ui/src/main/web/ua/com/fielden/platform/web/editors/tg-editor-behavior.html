@@ -90,7 +90,9 @@
                  * The entity that contains original binding values. This should be used to identify whether _editingValue is modified from original _editingValue during editing.
                  */
                 originalEntity: {
-                	type: Object
+                	type: Object,
+                	observer: '_originalEntityChanged',
+                	notify: true
                 },
                 
                 /**
@@ -139,6 +141,13 @@
                  */
                 debug: {
                 	type: Boolean
+                },
+                
+                /**
+                 * This modif holder is needed for lazy value conversion.
+                 */
+                previousModifiedPropertiesHolder: {
+                    type: Object
                 },
 
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -445,6 +454,23 @@
                     this.commit();
                 }
             },
+            
+            _originalEntityChanged: function (newValue, oldValue) {
+                if (this.reflector().isEntity(newValue)) {
+                    //////////////////////////////////////////////////////////////////
+                    var entity = this.entity["@@origin"];
+                    var propertyName = this.propertyName;
+                    
+                    var originalBindingView = newValue;
+                    var fullOriginalValue = entity.getOriginal(propertyName);
+                    originalBindingView[propertyName] = this.reflector().convert(fullOriginalValue);
+                    if (this.reflector().isEntity(fullOriginalValue) && fullOriginalValue['id'] !== null) {
+                        originalBindingView['@' + propertyName + '_id'] = fullOriginalValue['id'];
+                    }
+                    
+                    //////////////////////////////////////////////////////////////////
+                }
+            },
 
             /**
              * This method is called once the entity was changed from the outside of the component.
@@ -458,6 +484,52 @@
                     // not only after master's 'save' / 'refresh' or centre's 'run', 'save' or 'discard'
                     // (to be precise it is done for every case when _currBindingEntity is changed for this editor)
                     this._refreshCycleStarted = true;
+                    
+                    //////////////////////////////////////////////////////////////////
+                    var entity = newValue["@@origin"];
+                    var propertyName = this.propertyName;
+                    var bindingView = newValue;
+                    if (this.reflector().isError(entity.prop(propertyName).validationResult())) {
+                        if (this.previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
+                            // bind the received from server property value
+                            var fullValue = entity.get(propertyName);
+                            bindingView[propertyName] = this.reflector().convert(fullValue);
+                            if (this.reflector().isEntity(fullValue) && fullValue['id'] !== null) {
+                                bindingView['@' + propertyName + '_id'] = fullValue['id'];
+                            }
+                        } else { // otherwise, this entity instance has already been received before and should be handled accordingly
+                            if (typeof this.previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
+                                // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
+                                //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
+                                //   invalid 'attempted value' -- but originalVal exists and should be used in this case!
+                                bindingView[propertyName] = this.previousModifiedPropertiesHolder[propertyName].origVal;
+                                if (typeof this.previousModifiedPropertiesHolder[propertyName].origValId !== 'undefined') {
+                                    bindingView['@' + propertyName + '_id'] = this.previousModifiedPropertiesHolder[propertyName].origValId;
+                                }
+                            } else {
+                                bindingView[propertyName] = this.previousModifiedPropertiesHolder[propertyName].val;
+                                if (typeof this.previousModifiedPropertiesHolder[propertyName].valId !== 'undefined') {
+                                    bindingView['@' + propertyName + '_id'] = this.previousModifiedPropertiesHolder[propertyName].valId;
+                                }
+                            }
+                        }
+                    } else {
+                        var fullValue = entity.get(propertyName);
+                    	bindingView[propertyName] = this.reflector().convert(fullValue);
+                        if (this.reflector().isEntity(fullValue) && fullValue['id'] !== null) {
+                            bindingView['@' + propertyName + '_id'] = fullValue['id'];
+                        }
+
+                        if (this.reflector().isEntity(fullValue)) {
+                            bindingView["@" + propertyName + "_desc"] = this.reflector().convert(fullValue.get("desc"));
+                        }
+                    }
+
+                    if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
+                        throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
+                    }
+                    //////////////////////////////////////////////////////////////////
+                    
                     
                     var convertedValue = this.reflector().getBindingValue.bind(this.reflector())(newValue, this.propertyName);
                     var newEditingValue = this.convertToString(convertedValue);
