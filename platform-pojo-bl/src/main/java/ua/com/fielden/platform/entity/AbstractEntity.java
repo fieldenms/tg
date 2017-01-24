@@ -1207,7 +1207,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         .findFirst().map(mp -> mp.getFirstFailure());
 
         // returns first failure if exists or successful result if there was no failure.
-        return firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity is valid.");
+        return firstFailure.isPresent() ? firstFailure.get() : Result.successful(this);
     }
 
     /**
