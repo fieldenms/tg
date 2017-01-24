@@ -817,46 +817,16 @@
                 bindingView["@@touchedProps"] = (prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"]) ? prevCurrBindingEntity["@@touchedProps"] : { names: [], counts: [] };
 
                 entity.traverseProperties(function (propertyName) {
+                    // value conversion of property value performs here only for specialised properties (see method '_isNecessaryForConversion');
+                    // conversion for other properties performs in corresponding editors (tg-editor-behavior).
+                    if (self._isNecessaryForConversion(propertyName)) {
+                        self._reflector().convertPropertyValue(bindingView, propertyName, entity, previousModifiedPropertiesHolder);
+                    }
+                    
+                    // meta-state is provided for all properties, not only specialised
                     if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
-                        if (self._isNecessaryForConversion(propertyName)) {
-                            if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
-                                // bind the received from server property value
-                                var fullValue = entity.get(propertyName);
-                                bindingView[propertyName] = self._reflector().convert(fullValue);
-                                if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
-                                    bindingView['@' + propertyName + '_id'] = fullValue['id'];
-                                }
-                            } else { // otherwise, this entity instance has already been received before and should be handled accordingly
-                                if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
-                                    // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
-                                    //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
-                                    //   invalid 'attempted value' -- but originalVal exists and should be used in this case!
-                                    bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
-                                    if (typeof previousModifiedPropertiesHolder[propertyName].origValId !== 'undefined') {
-                                        bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].origValId;
-                                    }
-                                } else {
-                                    bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
-                                    if (typeof previousModifiedPropertiesHolder[propertyName].valId !== 'undefined') {
-                                        bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].valId;
-                                    }
-                                }
-                            }
-                        }
                         bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                     } else {
-                        if (self._isNecessaryForConversion(propertyName)) {
-                            var fullValue = entity.get(propertyName);
-                            bindingView[propertyName] = self._reflector().convert(fullValue);
-                            if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
-                                bindingView['@' + propertyName + '_id'] = fullValue['id'];
-                            }
-                            
-                            if (self._reflector().isEntity(fullValue)) {
-                                bindingView["@" + propertyName + "_desc"] = self._reflector().convert(fullValue.get("desc"));
-                            }
-                        }
-
                         if (self._reflector().isWarning(entity.prop(propertyName).validationResult())) {
                             bindingView["@" + propertyName + "_warning"] = entity.prop(propertyName).validationResult();
                         }
@@ -867,10 +837,6 @@
                         bindingView["@" + propertyName + "_uppercase"] = true;
                     }
                     bindingView["@" + propertyName + "_editable"] = entity.prop(propertyName).isEditable();
-
-                    if (self._isNecessaryForConversion(propertyName) && (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined)) {
-                        throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
-                    }
                 });
 
                 // console.log("       entity + bindingView", entity, bindingView);
@@ -879,7 +845,7 @@
             
             _isNecessaryForConversion: function (propertyName) {
                 return ['entityType', 'importUri', 'elementName', 'entityId',
-                        'menuTitle', 'sectionTitle',
+                        'forNew', 'menuTitle', 'sectionTitle',
                         'mime', 'fileName', 'data', 'pageCapacity'].indexOf(propertyName) !== -1;
             },
 
@@ -895,12 +861,10 @@
                 originalBindingView["@@origin"] = entity;
 
                 entity.traverseProperties(function (propertyName) {
+                    // value conversion of original property value performs here only for specialised properties (see method '_isNecessaryForConversion');
+                    // conversion for other properties performs in corresponding editors (tg-editor-behavior).
                     if (self._isNecessaryForConversion(propertyName)) {
-                        var fullValue = entity.getOriginal(propertyName);
-                        originalBindingView[propertyName] = self._reflector().convert(fullValue);
-                        if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
-                            originalBindingView['@' + propertyName + '_id'] = fullValue['id'];
-                        }
+                        self._reflector().convertOriginalPropertyValue(originalBindingView, propertyName, entity);
                     }
                 });
 

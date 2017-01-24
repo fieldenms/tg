@@ -457,18 +457,8 @@
             
             _originalEntityChanged: function (newValue, oldValue) {
                 if (this.reflector().isEntity(newValue)) {
-                    //////////////////////////////////////////////////////////////////
-                    var entity = this.entity["@@origin"];
-                    var propertyName = this.propertyName;
-                    
-                    var originalBindingView = newValue;
-                    var fullOriginalValue = entity.getOriginal(propertyName);
-                    originalBindingView[propertyName] = this.reflector().convert(fullOriginalValue);
-                    if (this.reflector().isEntity(fullOriginalValue) && fullOriginalValue['id'] !== null) {
-                        originalBindingView['@' + propertyName + '_id'] = fullOriginalValue['id'];
-                    }
-                    
-                    //////////////////////////////////////////////////////////////////
+                    // lazy conversion of original property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
+                    this.reflector().convertOriginalPropertyValue(newValue, this.propertyName, this.entity["@@origin"]);
                 }
             },
 
@@ -485,51 +475,8 @@
                     // (to be precise it is done for every case when _currBindingEntity is changed for this editor)
                     this._refreshCycleStarted = true;
                     
-                    //////////////////////////////////////////////////////////////////
-                    var entity = newValue["@@origin"];
-                    var propertyName = this.propertyName;
-                    var bindingView = newValue;
-                    if (this.reflector().isError(entity.prop(propertyName).validationResult())) {
-                        if (this.previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
-                            // bind the received from server property value
-                            var fullValue = entity.get(propertyName);
-                            bindingView[propertyName] = this.reflector().convert(fullValue);
-                            if (this.reflector().isEntity(fullValue) && fullValue['id'] !== null) {
-                                bindingView['@' + propertyName + '_id'] = fullValue['id'];
-                            }
-                        } else { // otherwise, this entity instance has already been received before and should be handled accordingly
-                            if (typeof this.previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
-                                // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
-                                //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
-                                //   invalid 'attempted value' -- but originalVal exists and should be used in this case!
-                                bindingView[propertyName] = this.previousModifiedPropertiesHolder[propertyName].origVal;
-                                if (typeof this.previousModifiedPropertiesHolder[propertyName].origValId !== 'undefined') {
-                                    bindingView['@' + propertyName + '_id'] = this.previousModifiedPropertiesHolder[propertyName].origValId;
-                                }
-                            } else {
-                                bindingView[propertyName] = this.previousModifiedPropertiesHolder[propertyName].val;
-                                if (typeof this.previousModifiedPropertiesHolder[propertyName].valId !== 'undefined') {
-                                    bindingView['@' + propertyName + '_id'] = this.previousModifiedPropertiesHolder[propertyName].valId;
-                                }
-                            }
-                        }
-                    } else {
-                        var fullValue = entity.get(propertyName);
-                    	bindingView[propertyName] = this.reflector().convert(fullValue);
-                        if (this.reflector().isEntity(fullValue) && fullValue['id'] !== null) {
-                            bindingView['@' + propertyName + '_id'] = fullValue['id'];
-                        }
-
-                        if (this.reflector().isEntity(fullValue)) {
-                            bindingView["@" + propertyName + "_desc"] = this.reflector().convert(fullValue.get("desc"));
-                        }
-                    }
-
-                    if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
-                        throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
-                    }
-                    //////////////////////////////////////////////////////////////////
-                    
+                    // lazy conversion of property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
+                    this.reflector().convertPropertyValue(newValue, this.propertyName, newValue["@@origin"], this.previousModifiedPropertiesHolder);
                     
                     var convertedValue = this.reflector().getBindingValue.bind(this.reflector())(newValue, this.propertyName);
                     var newEditingValue = this.convertToString(convertedValue);
