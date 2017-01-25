@@ -32,6 +32,19 @@
             .bar:hover {
                 fill: brown;
             }
+            .mark-text {
+                font-family: sans-serif;
+                font-size: 10px;
+                stroke: none;
+                fill: #000;
+                pointer-events: none;
+            }
+            .mark-rect {
+                fill: #d8d7ba;
+                stroke: #c0c0c0;
+                vector-effect: non-scaling-stroke;
+                pointer-events: none;
+            }
         </style>
 
         <!-- local DOM for your element -->
@@ -66,7 +79,7 @@
             };
             //Configures bars according to xscale, yscale, height of the chart. Also adds appropriate listeners and tooltips to the bars if they are defined. 
             const bar = (selection, x, y, h, tooltipCallback, clickCallback) => {
-                let selectedBar = selection
+                const selectedBar = selection
                     .attr("x", d => x(d.name))
                     .attr("y", d => y(d.value))
                     .attr("height", d => h - y(d.value))
@@ -79,6 +92,26 @@
                 }
             };
 
+            const marker = (selection, x, y, h, unscalableNodes, draw) => {
+                const markerSelection = selection.attr("transform", d => "translate(" + (x(d.name) + x.bandwidth() / 2) + ", " + (y(d.value) - 10) + ")");
+                if (draw) {
+                    selection.each(function (d) {
+                        let rect = d3.select(this).append("rect").attr("class", "mark-rect");
+                        let text = d3.select(this).append("text").attr("class", "mark-text").style("text-anchor", "middle").text(d => d.value)
+                        let textBox = text.node().getBBox();
+                        rect.attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
+                    }).each(() => {
+                        unscalableNodes.push(this);
+                    });
+                } else {
+                    selection.each(function (d) {
+                        let text = d3.select(this).select(".mark-text").text(d => d.value)
+                        let textBox = text.node().getBBox();
+                        d3.select(this).select(".mark-rect").attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
+                    });
+                }
+            };
+
             d3.barChart = (container) => {
                 let width = defaultMargin.right + defaultMargin.left;
                 let height = defaultMargin.bottom + defaultMargin.top;
@@ -87,10 +120,11 @@
                 let tooltipCallback = d => d.name + ": " + d.value;
                 let dblclickCallback = d => alert("you clicked " + d.name + ": " + d.value);
                 let currentTransform = d3.zoomIdentity;
+                let unscalableNodes = [];
 
                 //Drawing the chart 
-                const w = width - margin.left - margin.right;
-                const h = height - margin.bottom - margin.top;
+                let w = width - margin.left - margin.right;
+                let h = height - margin.bottom - margin.top;
                 //Create x and y scales for grid and axis.
                 let x = xScale(w, data);
                 let y = yScale(h, data);
@@ -133,6 +167,11 @@
                     .data(data)
                     .enter().append("rect").attr("class", "bar")
                     .call(bar, x, y, h, tooltipCallback, dblclickCallback);
+                //Draw markers
+                graphContainer.selectAll(".marker")
+                    .data(data)
+                    .enter().append("g").attr("class", "marker")
+                    .call(marker, x, y, h, unscalableNodes, true);
                 //TODO paint markers.
                 //Draw x axis
                 const xAxisGroup = g.append("g")
@@ -145,28 +184,30 @@
                     .call(yAxis);
 
                 const updateChart = () => {
-                    const lw = width - margin.left - margin.right;
-                    const lh = height - margin.bottom - margin.top;
+                    w = width - margin.left - margin.right;
+                    h = height - margin.bottom - margin.top;
 
-                    x = xScale(lw, data);
-                    y = yScale(lh, data);
+                    x = xScale(w, data);
+                    y = yScale(h, data);
 
-                    clipPath.attr("width", lw).attr("height", lh);
+                    clipPath.attr("width", w).attr("height", h);
                     g.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-                    background.attr("width", lw).attr("height", lh);
-                    yGridGroup.call(yGrid.scale(y).tickSize(-lw));
-                    xAxisGroup.attr("transform", "translate(0," + lh + ")").call(xAxis.scale(x));
+                    background.attr("width", w).attr("height", h);
+                    yGridGroup.call(yGrid.scale(y).tickSize(-w));
+                    xAxisGroup.attr("transform", "translate(0," + h + ")").call(xAxis.scale(x));
                     yAxisGroup.call(yAxis.scale(y));
                     //TODO update markers here.
-                    const barsData = graphContainer.selectAll(".bar").data(data).call(bar, x, y, lh);
-                    barsData.enter().append("rect").attr("class", "bar").call(bar, x, y, lh, tooltipCallback, dblclickCallback);
+                    const barsData = graphContainer.selectAll(".bar").data(data).call(bar, x, y, h);
+                    barsData.enter().append("rect").attr("class", "bar").call(bar, x, y, h, tooltipCallback, dblclickCallback);
                     barsData.exit().remove();
+                    const markers = graphContainer.selectAll(".marker").data(data);
+                    markers.call(marker, x, y, h, unscalableNodes);
+                    markers.enter().append("g").attr("class", "marker").call(marker, x, y, h, unscalableNodes, true);
+                    markers.exit().remove();
                     // Rescale grid along y axis and also rescale y axis.
                     yGridGroup.call(yGrid.scale(currentTransform.rescaleY(y)));
                     yAxisGroup.call(yAxis.scale(currentTransform.rescaleY(y)));
                 };
-
-
 
                 const chart = {
                     width: w => {
