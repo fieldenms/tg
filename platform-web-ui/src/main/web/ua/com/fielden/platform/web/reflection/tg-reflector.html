@@ -319,7 +319,7 @@
                     }
                     return internalList;
                 } else {
-                    throw 'Unsupported dot-notation.';
+                    throw 'Unsupported dot-notation [' + name + '] in type [' + this.type().fullClassName() + '].';
                 }
             } else {
                 if (this._isObjectUndefined(name)) {

@@ -476,7 +476,9 @@
                     this._refreshCycleStarted = true;
                     
                     // lazy conversion of property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
-                    this.reflector().convertPropertyValue(newValue, this.propertyName, newValue["@@origin"], this.previousModifiedPropertiesHolder);
+                    if (!this.reflector().isDotNotated(this.propertyName)) {
+                        this.reflector().convertPropertyValue(newValue, this.propertyName, newValue["@@origin"], this.previousModifiedPropertiesHolder);
+                    }
                     
                     var convertedValue = this.reflector().getBindingValue.bind(this.reflector())(newValue, this.propertyName);
                     var newEditingValue = this.convertToString(convertedValue);
