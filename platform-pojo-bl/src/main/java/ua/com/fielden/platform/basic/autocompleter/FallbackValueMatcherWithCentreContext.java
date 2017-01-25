@@ -27,16 +27,6 @@ public class FallbackValueMatcherWithCentreContext<T extends AbstractEntity<?>> 
     }
 
     @Override
-    public void setContext(final CentreContext<T, ?> context) {
-
-    }
-
-    @Override
-    public CentreContext<T, ?> getContext() {
-        return null;
-    }
-
-    @Override
     public Integer getPageSize() {
         return 10;
     }
