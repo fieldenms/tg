@@ -843,10 +843,16 @@
                 return bindingView;
             },
             
+            /**
+             * Defines whether the property should be converted to binding entity representation regardless of existence of corresponding editor.
+             */
             _isNecessaryForConversion: function (propertyName) {
-                return ['entityType', 'importUri', 'elementName', 'entityId',
-                        'forNew', 'menuTitle', 'sectionTitle',
-                        'mime', 'fileName', 'data', 'pageCapacity'].indexOf(propertyName) !== -1;
+                return ['entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
+                        'forNew', 'menuTitle', 'sectionTitle', // compound master opening actions
+                        'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)
+                        'surrogateVersion', 'chosenIds', 'addedIds', 'removedIds', 'sortingVals', // collectional modification actions
+                        'visibleMenuItems', 'invisibleMenuItems' // menu visibility action (MenuSaveAction)
+                       ].indexOf(propertyName) !== -1;
             },
 
             _extractOriginalBindingView: function (entity) {
