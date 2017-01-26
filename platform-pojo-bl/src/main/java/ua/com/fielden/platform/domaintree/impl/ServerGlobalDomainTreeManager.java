@@ -26,9 +26,7 @@ public class ServerGlobalDomainTreeManager implements IServerGlobalDomainTreeMan
 
     @Override
     public IGlobalDomainTreeManager get(final String username) {
-        if (!managersByUser.containsKey(username)) {
-            managersByUser.put(username, gdtmProvider.get());
-        }
-        return managersByUser.get(username);
+        // lazy initialisation using computeIfAbsent and 'name -> gdtmProvider.get()' is required not to reinitialise gdtm every time after putting it into concurrent hash map
+        return managersByUser.computeIfAbsent(username, name -> gdtmProvider.get());
     }
 }

@@ -20,9 +20,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -253,10 +250,9 @@ import ua.com.fielden.platform.utils.PropertyChangeSupportEx.PropertyChangeOrInc
  *
  * @author TG Team
  */
-public abstract class AbstractEntity<K extends Comparable> implements Serializable, Comparable<AbstractEntity<K>>, IBindingEntity {
-    private static final long serialVersionUID = 1L;
+public abstract class AbstractEntity<K extends Comparable> implements Comparable<AbstractEntity<K>>, IBindingEntity {
 
-    protected transient final Logger logger;
+    protected final Logger logger;
 
     @MapTo("_ID")
     private Long id;
@@ -315,30 +311,23 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     /**
      * Provides property change support.
      */
-    private transient final PropertyChangeSupportEx changeSupport;
+    private final PropertyChangeSupportEx changeSupport;
     /**
      * Holds meta-properties for entity properties.
      */
-    private transient final Map<String, MetaProperty<?>> properties;
+    private final Map<String, MetaProperty<?>> properties;
     /**
      * Indicates if entity instance is being initialised.
      */
-    private transient boolean initialising = false;
+    private boolean initialising = false;
 
     /**
      * True indicates that the editable state of entity should be ignored during entity mutation
      * This property should be used with care. */
-    private transient boolean ignoreEditableState = false;
+    private boolean ignoreEditableState = false;
 
-    /*
-     * Block of fields responsible for synchronisation of validation for properties and entity itself.
-     */
-    private transient final Lock lock;
-    private transient final Condition validationInProgress;
-    private transient volatile int lockCount;
-
-    private transient final Class<K> keyType;
-    private transient final Class<? extends AbstractEntity<?>> actualEntityType;
+    private final Class<K> keyType;
+    private final Class<? extends AbstractEntity<?>> actualEntityType;
     /**
      * A reference to the application specific {@link EntityFactory} instance responsible for instantiation of this and other entities. It is also used for entity cloning.
      */
@@ -365,9 +354,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
         changeSupport = new PropertyChangeSupportEx(this);
         properties = new LinkedHashMap<>();
-        lock = new ReentrantLock();
-        validationInProgress = lock.newCondition();
-        lockCount = 0;
 
         keyType = (Class<K>) AnnotationReflector.getKeyType(this.getClass());
         if (keyType == null) {
@@ -497,7 +483,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
 
     @Override
     public String toString() {
-        return getKey() != null ? getKey().toString() : null;
+        return getKey() != null ? getKey().toString() : "[key is assigned]";
     }
 
     /**
@@ -1176,29 +1162,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
     }
 
     /**
-     * Increases <code>lockCount</code> by one in a thread safe manner.
-     */
-    @Override
-    public final void lock() {
-        lock.lock();
-        lockCount++;
-        lock.unlock();
-    }
-
-    /**
-     * Decreases <code>lockCount</code> by one in a thread safe manner. Signals lock condition <code>validationInProgress</code> when <code>lockCount</code> reaches value zero.
-     */
-    @Override
-    public final void unlock() {
-        lock.lock();
-        lockCount = lockCount > 0 ? lockCount - 1 : 0;
-        if (lockCount == 0) {
-            validationInProgress.signal();
-        }
-        lock.unlock();
-    }
-
-    /**
      * This method should be used to check whether entity is valid.
      * <p>
      * Supports locking mechanism to ensure that property validation finishes before checking its results.
@@ -1206,23 +1169,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     public final Result isValid() {
-        // employ locking
-        lock.lock();
-        try {
-            while (lockCount != 0) {
-                try {
-                    validationInProgress.await();
-                } catch (final InterruptedException e) {
-                    // no need to handle
-                }
-            }
-
-            // invoke validation logic
-            return validate();
-
-        } finally {
-            lock.unlock();
-        }
+        // invoke validation logic
+        return validate();
     }
 
     /**
@@ -1237,23 +1185,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Serializab
      * @return
      */
     public final Result isValid(final ICustomValidator validator) {
-        // employ locking
-        lock.lock();
-        try {
-            while (lockCount != 0) {
-                try {
-                    validationInProgress.await();
-                } catch (final InterruptedException e) {
-                    // no need to handle
-                }
-            }
-
             // invoke custom validation logic
             return validator.validate(this);
-
-        } finally {
-            lock.unlock();
-        }
     }
 
     /**

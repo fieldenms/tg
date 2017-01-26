@@ -18,7 +18,7 @@ public class DefaultValueAssignerForSingleString implements IValueAssigner<Singl
 
     @Override
     public Optional<SingleCritOtherValueMnemonic<String>> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
-        return null;
+        return Optional.empty();
     }
 
 }

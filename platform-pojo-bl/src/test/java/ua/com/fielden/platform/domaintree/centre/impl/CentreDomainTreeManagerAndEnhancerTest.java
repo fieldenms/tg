@@ -40,6 +40,8 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    private int i, j;
+    
     @Override
     protected ICentreDomainTreeManagerAndEnhancer dtm() {
         return (ICentreDomainTreeManagerAndEnhancer) just_a_dtm();
@@ -229,8 +231,6 @@ public class CentreDomainTreeManagerAndEnhancerTest extends AbstractDomainTreeMa
         test_initialisation_discarding_and_saving_of_Analyses(AnalysisType.SIMPLE, "A brand new SIMPLE analysis");
         test_initialisation_discarding_and_saving_of_Analyses(AnalysisType.LIFECYCLE, "A brand new LIFECYCLE analysis");
     }
-
-    private static int i, j;
 
     @Test
     public void test_that_AnalysisListeners_work() {

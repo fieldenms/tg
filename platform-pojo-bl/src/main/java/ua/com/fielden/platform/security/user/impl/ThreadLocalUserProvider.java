@@ -15,13 +15,14 @@ import ua.com.fielden.platform.security.user.User;
  */
 public class ThreadLocalUserProvider implements IUserProvider {
 
-    public ThreadLocal<User> users = new ThreadLocal<>();
+    private final ThreadLocal<User> users = new ThreadLocal<>();
 
     @Override
     public User getUser() {
         return users.get();
     }
 
+    @Override
     public void setUsername(final String username, final IUser coUser) {
         final User user = coUser.findUser(username);
         if (user == null) {

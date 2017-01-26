@@ -9,6 +9,7 @@
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
+<link rel="import" href="/resources/polymer/paper-styles/shadow.html">
 <link rel="import" href="/resources/polymer/paper-styles/paper-styles-classes.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-material/paper-material.html">
@@ -19,12 +20,11 @@
 
 <style is="custom-style">
     .insertion-point-dialog > #insertionPointContent {
-        margin: 0;
-        padding: 0;
+        background-color: white;
+        @apply(--shadow-elevation-2dp);
     }
-    #insertionPointContent {
-        line-height: normal;
-        overflow: auto;
+    .insertion-point-dialog .title-bar paper-icon-button {
+        transform: scale(-1, -1);
     }
     #insertionPointContent .truncate {
         white-space: nowrap;
@@ -43,9 +43,6 @@
         -ms-user-select: none;
         user-select: none;
         background-color: var(--paper-light-blue-600);
-    }
-    #insertionPointContent .title-text {
-        pointer-events: none;
     }
     #insertionPointContent paper-icon-button {
         width: 22px;
@@ -84,9 +81,6 @@
                 user-select: none;
                 background-color: var(--paper-light-blue-600);
             }
-            .title-text {
-                pointer-events: none;
-            }
             paper-icon-button {
                 width: 22px;
                 height: 22px;
@@ -105,9 +99,9 @@
         </style>
         <paper-material id="pm" hidden$="[[detached]]" class="layout vertical" style="background: white; border-radius: 2px; margin: 10px;">
             <div id="insertionPointContent" class="layout vertical flex">
-                <div class="title-bar layout horizontal justified center" hidden$="[[!hasTitleBar]]">
+                <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
                     <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
-                    <paper-icon-button class="expand-colapse-button" style="margin-left:10px" icon="[[_getButtonIcon(detached)]]" on-tap="_expandColapseTap"></paper-icon-button>
+                    <paper-icon-button class="expand-colapse-button" style="margin-left:10px" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
                 </div>
                 <div id="loadableContent" class="relative flex">
                     <tg-element-loader id="elementLoader"></tg-element-loader>
@@ -138,13 +132,6 @@
                  * Determnes whether insertion point is in the detached mode or not.
                  */
                 detached: {
-                    type: Boolean,
-                    value: false
-                },
-                /**
-                 * Determines whether insertion point has title bar or not.
-                 */
-                hasTitleBar: {
                     type: Boolean,
                     value: false
                 },
@@ -200,29 +187,27 @@
                  */
                 _dialog: Object
             },
-            
+
             observers: ['_adjustView(detached)'],
+
+            ready: function () {
+                this.triggerElement = this.$.insertionPointContent;
+            },
 
             /**
              * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
              */
             _createDialog: function () {
-                var dialog = document.createElement('paper-dialog');
+                var dialog = document.createElement('div');
                 dialog.classList.toggle("insertion-point-dialog", true);
                 dialog.classList.toggle("layout", true);
                 dialog.classList.toggle("vertical", true);
-                dialog.addEventListener("iron-overlay-closed", this._dialogClosed.bind(this));
-                dialog.autoFitOnAttach = true;
-                dialog.entryAnimation = "fade-in-animation";
-                dialog.exitAnimation = "fade-out-animation";
-                dialog.style.margin = "0px";
-                dialog.refit = function () {
-                    this.style.position = "fixed";
-                    this.style.top = "0px";
-                    this.style.left = "0px";
-                    this.style.bottom = "0px";
-                    this.style.right = "0px";
-                }.bind(dialog);
+                dialog.style.position = "absolute";
+                dialog.style.top = "2%";
+                dialog.style.left = "2%";
+                dialog.style.width = "96%";
+                dialog.style.height = "96%";
+                dialog.style.zIndex = "1";
                 return dialog;
             },
 
@@ -230,20 +215,14 @@
                 if (!this._dialog) {
                     this._dialog = this._createDialog();
                 }
-                if (!this._dialog.opened) {
-                    this.detached = true;
-                    Polymer.dom(document.body).appendChild(this._dialog);
-                    Polymer.dom(this._dialog).appendChild(this.$.insertionPointContent);
-                    Polymer.dom.flush();
-                    this._dialog.open();
-                }
+
+                this.detached = true;
+                Polymer.dom(document.body).appendChild(this._dialog);
+                Polymer.dom(this._dialog).appendChild(this.$.insertionPointContent);
+                Polymer.dom.flush();
             },
 
             _closeDialog: function () {
-                this._dialog.close();
-            },
-
-            _dialogClosed: function (event) {
                 Polymer.dom(document.body).removeChild(this._dialog);
                 Polymer.dom(this.$.pm).appendChild(this.$.insertionPointContent);
                 Polymer.dom.flush();
@@ -325,13 +304,13 @@
                             if (promise) {
                                 return promise
                                     .then(function () {
-                                        self._adjustView(this.detached);
+                                        self._adjustView(self.detached);
                                         customAction.restoreActiveElement();
                                     });
                             } else {
                                 return Promise.resolve()
                                     .then(function () {
-                                        self._adjustView(this.detached);
+                                        self._adjustView(self.detached);
                                         customAction.restoreActiveElement();
                                     });
                             }
@@ -349,27 +328,19 @@
 
             _adjustView: function (detached) {
                 var self = this;
-
-                if (this.$.elementLoader.prefDim && !detached) {
+                if (this.$.elementLoader.prefDim && detached === false) {
                     var prefDim = this.$.elementLoader.prefDim;
-                    this.$.loadableContent.style.width =  prefDim.width() + prefDim.widthUnit;
+                    this.$.loadableContent.style.width = prefDim.width() + prefDim.widthUnit;
                     this.$.loadableContent.style.height = prefDim.height() + prefDim.heightUnit;
                 } else {
-                    this.$.loadableContent.style.width = "auto";
-                    this.$.loadableContent.style.height = "auto";
+                    this.$.loadableContent.style.width = "100%";
+                    this.$.loadableContent.style.height = "100%";
                 }
                 this.updateStyles();
             },
 
             _onIronResize: function () {
                 this._adjustView(this.detached);
-            },
-
-            _getButtonIcon: function (detached) {
-                if (detached) {
-                    return "icons:cancel";
-                }
-                return "icons:open-in-new";
             },
 
             _expandColapseTap: function (event) {
@@ -382,6 +353,10 @@
                 if (event.preventDefault) event.preventDefault();
                 event.cancelBubble = true;
                 event.returnValue = false;
+            },
+            
+            _hasTitleBar: function (shortDesc) {
+                return !!shortDesc;
             }
         });
     })();

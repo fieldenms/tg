@@ -18,7 +18,7 @@ public class DefaultValueAssignerForSingleDate implements IValueAssigner<SingleC
 
     @Override
     public Optional<SingleCritDateValueMnemonic> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
-        return null;
+        return Optional.empty();
     }
 
 

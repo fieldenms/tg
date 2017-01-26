@@ -62,15 +62,4 @@ public interface IBindingEntity {
      * @return
      */
     Class<?> getPropertyType(final String propertyName);
-
-    /**
-     * Increases <code>lockCount</code> by one in a thread safe manner.
-     */
-    void lock();
-
-    /**
-     * Decreases <code>lockCount</code> by one in a thread safe manner. Signals lock condition <code>validationInProgress</code> when <code>lockCount</code> reaches value zero.
-     */
-    void unlock();
-
 }

@@ -19,10 +19,7 @@ public class StringValidator implements IBeforeChangeEventHandler<String> {
     public static final String regexProp = "regex";
     public static final String validationErrorTemplate = "New value [%s] for property [%s] in entity [%s] does not pass pattern validation.";
     
-    private String regex;
-
-    public StringValidator() {
-    }
+    protected String regex;
 
     @Override
     public Result handle(final MetaProperty<String> property, final String newValue, final Set<Annotation> mutatorAnnotations) {

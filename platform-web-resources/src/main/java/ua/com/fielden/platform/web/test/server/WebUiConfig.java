@@ -1278,7 +1278,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .icon("assignment-ind")
                             .shortDesc("Function 4")
                             .longDesc("Functional context-dependent action 4")
-                            .prefDimForView(mkDim("document.body.clientWidth / 4", "400"))
+                            .prefDimForView(mkDim("document.body.clientWidth / 4 + 'px'", "'400px'"))
                             .withNoParentCentreRefresh()
                             .build()
                     ).also();

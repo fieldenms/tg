@@ -40,7 +40,6 @@ import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
 @MapEntityTo
 @CompanionObject(IUser.class)
 public class User extends ActivatableAbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     public static final String EMAIL = "email";
     
@@ -73,12 +72,12 @@ public class User extends ActivatableAbstractEntity<String> {
         }
     }
     
-    public static final String passwordResetUuidSeperator = "-";
-    public static final String usernameRegex = "^[^-]+$"; // passwordResetUuidSeperator should not be permitted for user names
+    public static final String SECRET_RESET_UUID_SEPERATOR = "-";
+    public static final String USER_NAME_REGEX = "^[^-]+$"; // SECRET_RESET_UUID_SEPERATOR should not be permitted for user names
     
     @IsProperty
     @MapTo
-    @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = usernameRegex)}))
+    @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = USER_NAME_REGEX)}))
     private String key;
     
     @IsProperty
@@ -89,7 +88,7 @@ public class User extends ActivatableAbstractEntity<String> {
 
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
     @Title(value = "Roles", desc = "The associated with this user roles.")
-    private final Set<UserAndRoleAssociation> roles = new HashSet<UserAndRoleAssociation>();
+    private final Set<UserAndRoleAssociation> roles = new HashSet<>();
 
     @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")

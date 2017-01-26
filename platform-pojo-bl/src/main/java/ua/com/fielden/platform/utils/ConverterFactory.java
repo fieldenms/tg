@@ -252,7 +252,7 @@ public class ConverterFactory {
     }
 
     private static class DateConverter extends Converter {
-        private static final DateFormat format = new SimpleDateFormat(createFullDateFormat(Locale.getDefault()));
+        private final DateFormat format = new SimpleDateFormat(createFullDateFormat(Locale.getDefault()));
 
         @Override
         public String convertToString(final Object value) {

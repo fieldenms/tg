@@ -81,77 +81,66 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         // check if entity can be modified at all
         final Result editableResult = entity.isEditable();
         if (!entity.isIgnoreEditableState() && !editableResult.isSuccessful()) {
-            logger.warn(format("Entity is not editable and none of its properties should be modified.", entity));
+            logger.warn(format("Entity [%s] is not editable and none of its properties should be modified.", entity));
             throw editableResult;
         }
         // proceed with property processing
-        synchronized (entity) {
-            entity.lock(); // this locking is required to prevent entity validation until all individual properties complete their modification (either successfully or not)
-            try { // unlocking try-finally block
-                final boolean wasValid = property.isValid(); // this flag is needed for correct change event firing
-                logger.debug(format("Property \"%s\" was valid: %s", fullPropertyName, wasValid));
-                final Pair<Object, Object> newAndOldValues = determineNewAndOldValues(entity, propertyName, invocation.getArguments()[0], method);
-                final Object newValue = newAndOldValues.getKey();
-                final Object currValue = newAndOldValues.getValue();
-                // logger.debug("Property \"" + fullPropertyName + "\" new value is \"" + newValue + "\", old value is \"" + oldValue + "\".");
+        final boolean wasValid = property.isValid(); // this flag is needed for correct change event firing
+        logger.debug(format("Property \"%s\" was valid: %s", fullPropertyName, wasValid));
+        final Pair<Object, Object> newAndOldValues = determineNewAndOldValues(entity, propertyName, invocation.getArguments()[0], method);
+        final Object newValue = newAndOldValues.getKey();
+        final Object currValue = newAndOldValues.getValue();
+        // logger.debug("Property \"" + fullPropertyName + "\" new value is \"" + newValue + "\", old value is \"" + oldValue + "\".");
 
-                // perform validation and possibly setting of the passed in value
-                logger.debug(format("Checking if validation is needed for \"\"...", fullPropertyName));
-                if (// enforcement happens in case of dependent properties
-                    property.isEnforceMutator() ||
-                    // or it could be an error recovery (forces validation + setter + necessarily firePropertyChange(!) )
-                    !wasValid ||
-                    // or it could be validation + setter + firePropertyChange(see "processMutatorForCollectionalProperty" method) for a collectional property
-                    property.isCollectional() ||
-                    // or the new value is null and the property is required -- need to trigger validation in such cases even if the current prop value is null
-                    newValue == null && property.isRequired() ||
-                    // or this is a genuine attempt to set a new property value
-                    !EntityUtils.equalsEx(currValue, newValue)) {
-                    ////////////////////////////////////////////////////
-                    ///////////////// validation ///////////////////////
-                    ////////////////////////////////////////////////////
-                    logger.debug(format("Check if property \"%s\" has validators...", fullPropertyName));
-                    if (property.hasValidators()) {
-                        logger.debug(format("Execute validation for property \"%s\".", fullPropertyName));
-                        final Result result = property.validate(newValue, property.getValidationAnnotations(), false);
-                        if (!result.isSuccessful()) {
-                            logger.debug(format("Property \"%s\" validation failed: %s", fullPropertyName, property.getFirstFailure()));
-                            // IMPORTANT : it fires ONLY the PropertyChangeOrIncorrectAttemptListeners!!!
-                            entity.getChangeSupport().firePropertyChange(
-                                    propertyName,
-                                    currValue,
-                                    newValue,
-                                    propertyWasValidAndNotEnforced(property, wasValid) ? CheckingStrategy.CHECK_EQUALITY : CheckingStrategy.CHECK_NOTHING,
-                                    true);
-                            // This return is a tricky one, since there in no really information as to what should be returned by the original method call.
-                            // However, so far, validation was associated only with entity setters, which should return an instance of its owner or void.
-                            return entity;
-                        } else if (property.hasWarnings()) {
-                            logger.debug(format("Property \"%s\" validation complains about warning: %s", fullPropertyName, property.getFirstWarning()));
-                        }
-                    }
-                    // validation was successful -- proceed with observing logic.
-                    // //////////////////////////////////////////////////
-                    // /////////////// observing ////////////////////////
-                    // //////////////////////////////////////////////////
-                    logger.debug(format("Property \"%s\" validation succeeded. Proceeding with observing logic.", fullPropertyName));
-                    // the observed setter could either be index or simple: setCollectionPropertyValue(index, value) or setPropertyValue(value)
-                    if (!property.isCollectional() && Mutator.SETTER == Mutator.getValueByMethod(method)) { // covers setter for a simple property
-                        return processSimpleProperty(entity, propertyName, invocation, propertyWasValidAndNotEnforced(property, wasValid), newAndOldValues);
-                    } else if (property.isCollectional()) { // covers collectional property mutators
-                        return processMutatorForCollectionalProperty(entity, propertyName, invocation, propertyWasValidAndNotEnforced(property, wasValid), newAndOldValues);
-                    }
-                    final String errorMsg = format("Method %s.%s is not recognised neither as a simple nor collectional mutator.", entity.getType().getName(), method.getName());
-                    logger.error(errorMsg);
-                    throw new IllegalStateException(errorMsg);
-                } else { // here the attempt of setting the same value was performed for the "valid" "simple" property
-                    logger.debug(format("Validation for property \"%s\" is not needed and nor further processing is required (mutator is not invoked).", fullPropertyName));
-                    // the inner setter does not invoke - just return a most likely returning value for a setter, which should be an entity itself
+        // perform validation and possibly setting of the passed in value
+        logger.debug(format("Checking if validation is needed for [%s]...", fullPropertyName));
+        if (// enforcement happens in case of dependent properties
+        property.isEnforceMutator() ||
+        // or it could be an error recovery (forces validation + setter + necessarily firePropertyChange(!) )
+                !wasValid ||
+                // or it could be validation + setter + firePropertyChange(see "processMutatorForCollectionalProperty" method) for a collectional property
+                property.isCollectional() ||
+                // or the new value is null and the property is required -- need to trigger validation in such cases even if the current prop value is null
+                newValue == null && property.isRequired() ||
+                // or this is a genuine attempt to set a new property value
+                !EntityUtils.equalsEx(currValue, newValue)) {
+            ////////////////////////////////////////////////////
+            ///////////////// validation ///////////////////////
+            ////////////////////////////////////////////////////
+            logger.debug(format("Check if property \"%s\" has validators...", fullPropertyName));
+            if (property.hasValidators()) {
+                logger.debug(format("Execute validation for property \"%s\".", fullPropertyName));
+                final Result result = property.validate(newValue, property.getValidationAnnotations(), false);
+                if (!result.isSuccessful()) {
+                    logger.debug(format("Property \"%s\" validation failed: %s", fullPropertyName, property.getFirstFailure()));
+                    // IMPORTANT : it fires ONLY the PropertyChangeOrIncorrectAttemptListeners!!!
+                    entity.getChangeSupport().firePropertyChange(propertyName, currValue, newValue, propertyWasValidAndNotEnforced(property, wasValid)
+                            ? CheckingStrategy.CHECK_EQUALITY : CheckingStrategy.CHECK_NOTHING, true);
+                    // This return is a tricky one, since there in no really information as to what should be returned by the original method call.
+                    // However, so far, validation was associated only with entity setters, which should return an instance of its owner or void.
                     return entity;
+                } else if (property.hasWarnings()) {
+                    logger.debug(format("Property \"%s\" validation complains about warning: %s", fullPropertyName, property.getFirstWarning()));
                 }
-            } finally {
-                entity.unlock();
             }
+            // validation was successful -- proceed with observing logic.
+            // //////////////////////////////////////////////////
+            // /////////////// observing ////////////////////////
+            // //////////////////////////////////////////////////
+            logger.debug(format("Property \"%s\" validation succeeded. Proceeding with observing logic.", fullPropertyName));
+            // the observed setter could either be index or simple: setCollectionPropertyValue(index, value) or setPropertyValue(value)
+            if (!property.isCollectional() && Mutator.SETTER == Mutator.getValueByMethod(method)) { // covers setter for a simple property
+                return processSimpleProperty(entity, propertyName, invocation, propertyWasValidAndNotEnforced(property, wasValid), newAndOldValues);
+            } else if (property.isCollectional()) { // covers collectional property mutators
+                return processMutatorForCollectionalProperty(entity, propertyName, invocation, propertyWasValidAndNotEnforced(property, wasValid), newAndOldValues);
+            }
+            final String errorMsg = format("Method %s.%s is not recognised neither as a simple nor collectional mutator.", entity.getType().getName(), method.getName());
+            logger.error(errorMsg);
+            throw new IllegalStateException(errorMsg);
+        } else { // here the attempt of setting the same value was performed for the "valid" "simple" property
+            logger.debug(format("Validation for property \"%s\" is not needed and nor further processing is required (mutator is not invoked).", fullPropertyName));
+            // the inner setter does not invoke - just return a most likely returning value for a setter, which should be an entity itself
+            return entity;
         }
     }
 
