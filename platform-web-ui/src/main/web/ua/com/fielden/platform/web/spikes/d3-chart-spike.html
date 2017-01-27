@@ -67,7 +67,7 @@
             };
             //The following two functions create domain values for x axis and y axis accordingly.
             const xDomain = data => data.map(d => d.name);
-            const yDomain = data => {
+            const yDomain = (data) => {
                 let maxRange = d3.max(data, d => d.value);
                 return [0, maxRange + 0.1 * maxRange];
             };
@@ -81,7 +81,7 @@
             const yScale = (h, data) => {
                 return d3.scaleLinear()
                     .range([h, 0])
-                    .domain(yDomain(data));
+                    .domain(yDomain(data))
             };
             //Configures bars according to xscale, yscale, height of the chart. Also adds appropriate listeners and tooltips to the bars if they are defined. 
             const bar = (selection, x, y, h, tooltipCallback, clickCallback) => {
@@ -218,30 +218,43 @@
                     .call(yAxis);
 
                 const updateChart = () => {
+                    let oldY = yAxis.scale().invert(0);
+                    //Calculate new width and height without margins.
                     w = width - margin.left - margin.right;
                     h = height - margin.bottom - margin.top;
-
+                    //Create new scales acoording to new width and height.
                     x = xScale(w, data);
                     y = yScale(h, data);
 
+                    //Update clip path according to new width and height.
                     clipPath.attr("width", w).attr("height", h);
+                    //Update chart group node according to new margins. 
                     g.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                    //Update background rectangle according to new width and height
                     background.attr("width", w).attr("height", h);
+                    //Update grids according to new viewport width and height.
                     yGridGroup.call(yGrid.scale(y).tickSize(-w));
                     xAxisGroup.attr("transform", "translate(0," + h + ")").call(xAxis.scale(x));
                     yAxisGroup.call(yAxis.scale(y));
+                    //Trigger zoom event in order to retranslte the container according to new extents.
                     zoom.translateExtent([[0, 0], [0, h]])
                         .extent([[0, 0], [0, h]]);
+                    //g.call(zoom.translateBy, 0, 0);
+                    //Update bars.
                     const barsData = graphContainer.selectAll(".bar").data(data).call(bar, x, y, h, tooltipCallback);
                     barsData.enter().append("rect").attr("class", "bar").call(bar, x, y, h, tooltipCallback, dblclickCallback);
                     barsData.exit().remove();
+                    //Update markers.
                     const markers = graphContainer.selectAll(".marker").data(data).call(marker, x, y, h, unscalableNodes, markerGenerator);
                     markers.enter().append("g").attr("class", "marker").call(marker, x, y, h, unscalableNodes, markerGenerator, true);
                     markers.exit().call(removeUnscalableNodes, unscalableNodes).remove();
                     unscalableNodes.forEach(el => unscale(el, g));
-                    // Rescale grid along y axis and also rescale y axis.
+                    //Rescale grid along y axis and also rescale y axis.
                     yGridGroup.call(yGrid.scale(currentTransform.rescaleY(y)));
                     yAxisGroup.call(yAxis.scale(currentTransform.rescaleY(y)));
+                    
+                    let newH = yAxis.scale()(oldY);
+                    g.call(zoom.translateBy, 0, (0 - newH)/currentTransform.k);
                 };
 
                 const chart = {
