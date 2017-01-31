@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.test.server;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
 
 import java.util.Optional;
 
@@ -126,6 +127,7 @@ public class TgMessageWebUiConfig {
                             .withContext(context().withSelectionCrit().build())
                             .icon("credit-card")
                             .shortDesc("TgMessage map")
+                            .prefDimForView(mkDim("'auto'", "'400px'"))
                             .withNoParentCentreRefresh()
                             .build(),
                     InsertionPoints.BOTTOM
