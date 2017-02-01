@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>SVG text bounding box (with transform)</title>
+    <script src="/resources/d3/d3.min.js"></script>
+    <style>
+        text {
+            font-size: 80px;
+            font-family: Georgia;
+            text-anchor: middle;
+        }
+        rect {
+            fill: yellow;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+
+<body>
+</body>
+<script>
+    (function () {
+        var height, svg, width;
+
+        var setTM = function (element, m) {
+            return element.transform.baseVal.initialize(element.ownerSVGElement.createSVGTransformFromMatrix(m));
+        };
+
+        var setHelloText = function (selection) {
+            var rect = selection.append('rect');
+            var text = selection.append('text').text(d => d.name).attr('dy', '0.35em');
+            var bbox = text.node().getBBox();
+            rect.attr('x', bbox.x).attr('y', bbox.y).attr('width', bbox.width).attr('height', bbox.height);
+        };
+
+        var initRect = function (selection) {
+            selection.each(function (d) {
+                var rect = d3.select(this).append('rect');
+                var text = d3.select(this).append('text').text(d => d.name).attr('dy', '0.35em');
+                var bbox = text.node().getBBox();
+                rect.attr('x', bbox.x).attr('y', bbox.y).attr('width', bbox.width).attr('height', bbox.height);
+            });
+        };
+
+        width = 960;
+
+        height = 500;
+
+        /* create the SVG .append('text').text('Hello world!').attr('dy', '0.35em').attr('transform', 'translate(480,250)');
+         */
+
+        svg = d3.select('body').append('svg').attr('width', width).attr('height', height);
+
+        /**/
+        svg.selectAll(".marker").data([
+            {
+                name: 'Hello world!',
+                shift: 250
+            }, {
+                name: "Another hello!",
+                shift: 340
+            }])
+            .enter().append('g').attr("class", "marker").attr('transform', d => 'translate(480,' + d.shift+ ')').call(initRect);
+
+        //svg.selectAll(".marker").call(initRect);
+
+    }).call(this);
+</script>
+
+</html>
