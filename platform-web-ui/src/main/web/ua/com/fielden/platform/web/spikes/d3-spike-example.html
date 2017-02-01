@@ -24,19 +24,25 @@
     <template is="dom-bind" id="app">
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
-        <d3-chart-spike id="chart" class="fit" data="[[data]]" tooltip-callback="[[generateTooltip()]]" marker-generator="[[generateMarker()]]"></d3-chart-spike>
+        <d3-chart-spike id="chart" class="fit" data="[[data]]" options="[[options]]"></d3-chart-spike>
     </template>
     <script>
         (function () {
             var app = document.querySelector('#app');
-            app.generateTooltip = function () {
-                return function (d) {
-                    return d.name + ": " + app.$.reflector.formatDecimal(d.value * 100, app.$.appConfig.locale) + "%";
-                }
-            };
-            app.generateMarker = function () {
-                return function (d) {
-                     return app.$.reflector.formatDecimal(d.value * 100, app.$.appConfig.locale) + "%";
+            app.options = {
+                label: "Bar chart example",
+                xAxis: {label: "Letters"},
+                yAxis: {label: "Frequency"},
+                margin: {
+                    left: 60,
+                    top: 40,
+                    bottom: 50
+                },
+                markerGenerator: function (d) {
+                    return d.value;
+                },
+                tooltipCallback: function (d) {
+                    return d.name + "<br><b>value:</b> " + d.value;
                 }
             };
             app.data = [{name: 'A',	value: 0.08167},
