@@ -9,12 +9,12 @@
     <link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
     <link rel="import" href="/app/tg-app-config.html">
     <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/resources/spikes/d3-chart-spike.html">
+    <link rel="import" href="/resources/components/tg-bar-chart/tg-bar-chart.html">
     
     <style>
-        d3-chart-spike {
+        tg-bar-chart {
             min-width: 500px;
-            min-height: 200px;
+            min-height: 500px;
         }
     </style>
 
@@ -24,7 +24,7 @@
     <template is="dom-bind" id="app">
         <tg-app-config id="appConfig"></tg-app-config>
         <tg-reflector id="reflector"></tg-reflector>
-        <d3-chart-spike id="chart" class="fit" data="[[data]]" options="[[options]]"></d3-chart-spike>
+        <tg-bar-chart id="chart" class="fit" data="[[data]]" options="[[options]]"></tg-bar-chart>
     </template>
     <script>
         (function () {

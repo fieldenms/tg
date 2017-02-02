@@ -9,30 +9,48 @@
             bottom: 30,
             left: 40
         };
-        // The following two functions create domain values for x axis and y axis accordingly.
-        const xDomain = data => data.map(d => d.name);
-        const yDomain = (data) => {
-            let maxRange = d3.max(data, d => d.value);
+        //Returns new margin that is a result of merge of two margin objects: old and new one.
+        const initMargins = (newMargin, oldMargin) => {
+            return {
+                top: newMargin.hasOwnProperty("top") ? newMargin.top : oldMargin.top,
+                bottom: newMargin.hasOwnProperty("bottom") ? newMargin.bottom : oldMargin.bottom,
+                right: newMargin.hasOwnProperty("right") ? newMargin.right : oldMargin.right,
+                left: newMargin.hasOwnProperty("left") ? newMargin.left : oldMargin.left
+            };
+        };
+
+        const initDataOptions = (newDataOptions, oldDataOptions) => {
+                return {
+                    groupPropName: newDataOptions.hasOwnProperty("groupPropName") ? newDataOptions.groupPropName : oldDataOptions.groupPropName,
+                    valuePropName: newDataOptions.hasOwnProperty("valuePropName") ? newDataOptions.valuePropName : oldDataOptions.valuePropName,
+                    colorPropName: newDataOptions.hasOwnProperty("colorPropName") ? newDataOptions.colorPropName : oldDataOptions.colorPropName
+                };
+            }
+            // The following two functions create domain values for x axis and y axis accordingly.
+        const xDomain = (data, dataOptions) => data.map(d => d[dataOptions.groupPropName]);
+        const yDomain = (data, dataOptions) => {
+            let maxRange = d3.max(data, d => d[dataOptions.valuePropName]);
             return [0, maxRange + 0.1 * maxRange];
         };
         // The following two functions create scales for x axis and y axis accordingly.
-        const xScale = (w, data) => {
+        const xScale = (w, data, dataOptions) => {
             return d3.scaleBand()
                 .rangeRound([0, w])
                 .padding(0.1) // could be configurable 
-                .domain(xDomain(data));
+                .domain(xDomain(data, dataOptions));
         };
-        const yScale = (h, data) => {
+        const yScale = (h, data, dataOptions) => {
             return d3.scaleLinear()
                 .range([h, 0])
-                .domain(yDomain(data))
+                .domain(yDomain(data, dataOptions))
         };
         // Configures bars according to xscale, yscale, height of the chart. Also adds appropriate listeners and tooltips to the bars if they are defined.
-        const bar = (selection, x, y, h, tooltipCallback, clickCallback) => {
+        const bar = (selection, dataOptions, x, y, h, tooltipCallback, clickCallback) => {
             const selectedBar = selection
-                .attr("x", d => x(d.name))
-                .attr("y", d => y(d.value))
-                .attr("height", d => h - y(d.value))
+                .style("fill", d => d[dataOptions.colorPropName])
+                .attr("x", d => x(d[dataOptions.groupPropName]))
+                .attr("y", d => y(d[dataOptions.valuePropName]))
+                .attr("height", d => h - y(d[dataOptions.valuePropName]))
                 .attr("width", x.bandwidth());
             if (tooltipCallback) {
                 selectedBar.attr("tooltip-text", tooltipCallback);
@@ -42,8 +60,8 @@
             }
         };
 
-        const marker = (selection, x, y, h, unscalableNodes, markerGenerator, draw) => {
-            const markerSelection = selection.attr("transform", d => "translate(" + (x(d.name) + x.bandwidth() / 2) + ", " + (y(d.value) - 10) + ")");
+        const marker = (selection, dataOptions, x, y, h, unscalableNodes, markerGenerator, draw) => {
+            const markerSelection = selection.attr("transform", d => "translate(" + (x(d[dataOptions.groupPropName]) + x.bandwidth() / 2) + ", " + (y(d[dataOptions.valuePropName]) - 10) + ")");
             if (draw) {
                 selection.each(function (d) {
                     let rect = d3.select(this).append("rect").attr("class", "mark-rect");
@@ -87,27 +105,41 @@
         }
 
         d3.barChart = (container) => {
-            let width = defaultMargin.right + defaultMargin.left;
-            let height = defaultMargin.bottom + defaultMargin.top;
-            let margin = defaultMargin;
+            let options = {
+                width: defaultMargin.right + defaultMargin.left,
+                height: defaultMargin.bottom + defaultMargin.top,
+                margin: defaultMargin,
+                label: "",
+                xAxis: {
+                    label: ""
+                },
+                yAxis: {
+                    label: ""
+                },
+                dataOptions: {
+                    groupPropName: "name",
+                    valuePropName: "value",
+                    colorPropName: "color"
+                },
+                tooltipCallback: d => d[options.dataOptions.groupPropName] + ": " + d[options.dataOptions.valuePropName],
+                clickCallback: d => alert("you clicked " + d[options.dataOptions.groupPropName] + ": " + d[options.dataOptions.valuePropName]),
+                markerGenerator: d => d[options.dataOptions.valuePropName],
+            };
             let data = [];
-            let tooltipCallback = d => d.name + ": " + d.value;
-            let clickCallback = d => alert("you clicked " + d.name + ": " + d.value);
-            let markerGenerator = d => d.value;
             let currentTransform = d3.zoomIdentity;
             let unscalableNodes = [];
 
             // Drawing the chart 
-            let w = width - margin.left - margin.right;
-            let h = height - margin.bottom - margin.top;
+            let w = options.width - options.margin.left - options.margin.right;
+            let h = options.height - options.margin.bottom - options.margin.top;
             // Create x and y scales for grid and axis.
-            let x = xScale(w, data);
-            let y = yScale(h, data);
+            let x = xScale(w, data, options.dataOptions);
+            let y = yScale(h, data, options.dataOptions);
             // Creating grid that should be modifiable
             const yGrid = d3.axisLeft(y).tickSize(-w).tickFormat("");
             // Createing x and y axis they also should be modifiable.
             const xAxis = d3.axisBottom(x);
-            const yAxis = d3.axisLeft(y).ticks(10, "%");
+            const yAxis = d3.axisLeft(y).ticks(10);
             // Create a clip path so that zoomed or panned parts would be cut of
             const clipPath = d3.select(container)
                 .append('defs')
@@ -115,7 +147,7 @@
                 .append("rect").attr("width", w).attr("height", h);
             // Create the chart area
             const g = d3.select(container).append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                .attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")");
             // Draw background
             const background = g.append("rect")
                 .attr("class", "background")
@@ -144,13 +176,12 @@
             graphContainer.selectAll(".bar")
                 .data(data)
                 .enter().append("rect").attr("class", "bar")
-                .call(bar, x, y, h, tooltipCallback, clickCallback);
+                .call(bar, options.dataOptions, x, y, h, options.tooltipCallback, options.clickCallback);
             // Draw markers
             graphContainer.selectAll(".marker")
                 .data(data)
                 .enter().append("g").attr("class", "marker")
-                .call(marker, x, y, h, unscalableNodes, markerGenerator, true);
-            // TODO paint markers.
+                .call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator, true);
             // Draw x axis
             const xAxisGroup = g.append("g")
                 .attr("class", "axis x-axis")
@@ -160,20 +191,53 @@
             const yAxisGroup = g.append("g")
                 .attr("class", "axis y-axis")
                 .call(yAxis);
+            // Create labels for chart and axis
+            const chartLabel = d3.select(container)
+                .append("text")
+                .attr("class", "chart-label")
+                .style("text-anchor", "middle")
+                .style("alignment-baseline", "baseline")
+                .attr("x", options.margin.left + w / 2)
+                .attr("y", options.margin.top - 10)
+                .text(options.label);
+            const xAxisLabel = d3.select(container)
+                .append("text")
+                .attr("class", "x-axis-label")
+                .style("text-anchor", "middle")
+                .style("alignment-baseline", "hanging")
+                .attr("x", options.margin.left + w / 2)
+                .attr("y", h + options.margin.top + xAxisGroup.node().getBBox().height + 10)
+                .text(options.xAxis.label);
+            const yAxisLabel = d3.select(container)
+                .append("text")
+                .attr("class", "y-axis-label")
+                .style("text-anchor", "middle")
+                .style("alignment-baseline", "baseline")
+                .attr("x", -options.margin.top - h / 2)
+                .attr("y", options.margin.left - yAxisGroup.node().getBBox().width - 10)
+                .attr("transform", "rotate(-90)")
+                .text(options.yAxis.label);
 
             const updateChart = () => {
                 let oldY = yAxis.scale().invert(0);
                 // Calculate new width and height without margins.
-                w = width - margin.left - margin.right;
-                h = height - margin.bottom - margin.top;
+                w = options.width - options.margin.left - options.margin.right;
+                h = options.height - options.margin.bottom - options.margin.top;
+                if (w < 0) {
+                    options.width = options.margin.left + options.margin.right
+                    w = 0;
+                }
+                if (h < 0) {
+                    options.height = options.margin.bottom + options.margin.top;
+                    h = 0;
+                }
                 // Create new scales acoording to new width and height.
-                x = xScale(w, data);
-                y = yScale(h, data);
-
+                x = xScale(w, data, options.dataOptions);
+                y = yScale(h, data, options.dataOptions);
                 // Update clip path according to new width and height.
                 clipPath.attr("width", w).attr("height", h);
                 // Update chart group node according to new margins. 
-                g.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                g.attr("transform", "translate(" + options.margin.left + "," + options.margin.top + ")");
                 // Update background rectangle according to new width and height
                 background.attr("width", w).attr("height", h);
                 // Update grids according to new viewport width and height.
@@ -185,18 +249,31 @@
                     .extent([[0, 0], [0, h]]);
                 //g.call(zoom.translateBy, 0, 0);
                 // Update bars.
-                const barsData = graphContainer.selectAll(".bar").data(data).call(bar, x, y, h, tooltipCallback);
-                barsData.enter().append("rect").attr("class", "bar").call(bar, x, y, h, tooltipCallback, clickCallback);
+                const barsData = graphContainer.selectAll(".bar").data(data).call(bar, options.dataOptions, x, y, h, options.tooltipCallback);
+                barsData.enter().append("rect").attr("class", "bar").call(bar, options.dataOptions, x, y, h, options.tooltipCallback, options.clickCallback);
                 barsData.exit().remove();
                 // Update markers.
-                const markers = graphContainer.selectAll(".marker").data(data).call(marker, x, y, h, unscalableNodes, markerGenerator);
-                markers.enter().append("g").attr("class", "marker").call(marker, x, y, h, unscalableNodes, markerGenerator, true);
+                const markers = graphContainer.selectAll(".marker").data(data).call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator);
+                markers.enter().append("g").attr("class", "marker").call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator, true);
                 markers.exit().call(removeUnscalableNodes, unscalableNodes).remove();
                 unscalableNodes.forEach(el => unscale(el, g));
                 // Rescale grid along y axis and also rescale y axis.
                 yGridGroup.call(yGrid.scale(currentTransform.rescaleY(y)));
                 yAxisGroup.call(yAxis.scale(currentTransform.rescaleY(y)));
-
+                // Update chart and axis captioins
+                chartLabel
+                    .attr("x", options.margin.left + w / 2)
+                    .attr("y", options.margin.top - 10)
+                    .text(options.label);
+                xAxisLabel
+                    .attr("x", options.margin.left + w / 2)
+                    .attr("y", h + options.margin.top + xAxisGroup.node().getBBox().height + 10)
+                    .text(options.xAxis.label);
+                yAxisLabel
+                    .attr("x", -options.margin.top - h / 2)
+                    .attr("y", options.margin.left - yAxisGroup.node().getBBox().width - 10)
+                    .text(options.yAxis.label);
+                //Update the container translation in order to remain current translate position when window size was changed
                 let newH = yAxis.scale()(oldY);
                 g.call(zoom.translateBy, 0, (0 - newH) / currentTransform.k);
             };
@@ -204,7 +281,7 @@
             const chart = {
                 width: w => {
                     if (w > 0) {
-                        width = w;
+                        options.width = w;
                         updateChart();
                         return chart;
                     } else {
@@ -213,25 +290,47 @@
                 },
                 height: h => {
                     if (h > 0) {
-                        height = h;
+                        options.height = h;
                         updateChart();
                         return chart;
                     } else {
                         return height;
                     }
                 },
-                margin: m => {
-                    if (m) {
-                        margin = {
-                            top: m.hasOwnProperty("top") ? m.top : defaultMargin.top,
-                            bottom: m.hasOwnProperty("bottom") ? m.bottom : defaultMargin.bottom,
-                            right: m.hasOwnProperty("right") ? m.right : defaultMargin.right,
-                            left: m.hasOwnProperty("left") ? m.left : defaultMargin.left
-                        };
-                        updateChart();
-                        return chart;
-                    } else {
-                        return margin;
+                options: o => {
+                    if (options) {
+                        let shouldUpdateChart = (o.width || o.width === 0) || (o.height || o.height === 0) || o.margin || o.dataOptions;
+                        options.width = o.width || o.width === 0 ? o.width : options.width;
+                        options.height = o.height || o.height === 0 ? o.height : options.height;
+                        options.margin = o.margin ? initMargins(o.margin, options.margin) : options.margin;
+                        options.dataOptions = o.dataOptions ? initDataOptions(o.dataOptions, options.dataOptions) : options.dataOptions;
+                        if (o.label) {
+                            options.label = o.label;
+                            g.select(".chart-label").text(options.label);
+                        }
+                        if (o.xAxis && o.xAxis.label) {
+                            options.xAxis.label = o.xAxis.label;
+                            g.select(".x-axis-label").text(options.xAxis.label);
+                        }
+                        if (o.yAxis && o.yAxis.label) {
+                            options.yAxis.label = o.yAxis.label;
+                            g.select(".y-axis-label").text(options.yAxis.label);
+                        }
+                        if (o.tooltipCallback) {
+                            options.tooltipCallback = o.tooltipCallback;
+                            g.selectAll(".bar").attr("tooltip-text", options.tooltipCallback);
+                        }
+                        if (o.clickCallback) {
+                            options.clickCallback = o.clickCallback;
+                            g.selectAll(".bar").on("click", options.clickCallback);
+                        }
+                        if (o.markerGenerator) {
+                            options.markerGenerator = o.markerGenerator;
+                            g.selectAll(".marker").call(marker, options.dataOptions, x, y, h, unscalableNodes, options.markerGenerator);
+                        }
+                        if (shouldUpdateChart) {
+                            updateChart();
+                        }
                     }
                 },
                 data: d => {
@@ -241,33 +340,6 @@
                         return chart;
                     } else {
                         return data;
-                    }
-                },
-                tooltip: callback => {
-                    if (callback) {
-                        tooltipCallback = callback;
-                        g.selectAll(".bar").attr("tooltip-text", tooltipCallback);
-                        return chart;
-                    } else {
-                        return tooltipCallback;
-                    }
-                },
-                marker: callback => {
-                    if (callback) {
-                        markerGenerator = callback;
-                        g.selectAll(".marker").call(marker, x, y, h, unscalableNodes, markerGenerator);
-                        return chart;
-                    } else {
-                        return merkerGenerator;
-                    }
-                },
-                click: callback => {
-                    if (callback) {
-                        clickCallback = callback;
-                        g.selectAll(".bar").on("click", clickCallback);
-                        return chart;
-                    } else {
-                        return clickCallback;
                     }
                 }
             };
