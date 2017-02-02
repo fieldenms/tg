@@ -335,28 +335,31 @@
                 return subheaderHierarchy;
             },
             _handleMobileScreen: function (newValue, oldValue) {
-                if (newValue && this.whenMobile && this.contentLoaded) {
-                    setLayout.bind(this)(this.whenMobile);
+                var layout = this.whenMobile || this.whenTablet || this.whenDesktop;
+                if (newValue && layout && this.contentLoaded) {
+                    setLayout.bind(this)(layout);
                 }
             },
             _handleTabletScreen: function (newValue, oldValue) {
-                if (newValue && this.whenTablet && this.contentLoaded) {
-                    setLayout.bind(this)(this.whenTablet);
+                var layout = this.whenTablet || this.whenMobile || this.whenDesktop;
+                if (newValue && layout && this.contentLoaded) {
+                    setLayout.bind(this)(layout);
                 }
             },
             _handleDesktopScreen: function (newValue, oldValue) {
-                if (newValue && this.whenDesktop && this.contentLoaded) {
-                    setLayout.bind(this)(this.whenDesktop);
+                var layout = this.whenDesktop || this.whenTablet || this.whenMobile;
+                if (newValue && layout && this.contentLoaded) {
+                    setLayout.bind(this)(layout);
                 }
             },
             _handleContentLoading: function (newValue, oldValue) {
-                if (newValue) {
-                    if (this.desktopScreen && this.whenDesktop) {
-                        setLayout.bind(this)(this.whenDesktop);
-                    } else if (this.tabletScreen && this.whenTablet) {
-                        setLayout.bind(this)(this.whenTablet);
-                    } else if (this.mobileScreen && this.whenMobile) {
-                        setLayout.bind(this)(this.whenMobile);
+                if (newValue && (this.whenDesktop || this.whenTablet || this.whenMobile)) {
+                    if (this.desktopScreen) {
+                        setLayout.bind(this)(this.whenDesktop || this.whenTablet || this.whenMobile);
+                    } else if (this.tabletScreen) {
+                        setLayout.bind(this)(this.whenTablet || this.whenMobile || this.whenDesktop);
+                    } else if (this.mobileScreen) {
+                        setLayout.bind(this)(this.whenMobile || this.whenTablet || this.whenDesktop);
                     }
                 }
             },
