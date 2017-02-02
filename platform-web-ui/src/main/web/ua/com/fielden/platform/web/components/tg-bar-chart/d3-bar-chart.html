@@ -28,9 +28,9 @@
             }
             // The following two functions create domain values for x axis and y axis accordingly.
         const xDomain = (data, dataOptions) => data.map(d => d[dataOptions.groupPropName]);
-        const yDomain = (data, dataOptions) => {
+        const yDomain = (data, h, dataOptions) => {
             let maxRange = d3.max(data, d => d[dataOptions.valuePropName]);
-            return [0, maxRange + 0.1 * maxRange];
+            return [0, maxRange + (0.1 + Math.abs(0.3 - 0.0001 * h)) * maxRange];
         };
         // The following two functions create scales for x axis and y axis accordingly.
         const xScale = (w, data, dataOptions) => {
@@ -42,7 +42,7 @@
         const yScale = (h, data, dataOptions) => {
             return d3.scaleLinear()
                 .range([h, 0])
-                .domain(yDomain(data, dataOptions))
+                .domain(yDomain(data, h, dataOptions))
         };
         // Configures bars according to xscale, yscale, height of the chart. Also adds appropriate listeners and tooltips to the bars if they are defined.
         const bar = (selection, dataOptions, x, y, h, tooltipCallback, clickCallback) => {
@@ -114,7 +114,8 @@
                     label: ""
                 },
                 yAxis: {
-                    label: ""
+                    label: "",
+                    ticks: 10
                 },
                 dataOptions: {
                     groupPropName: "name",
@@ -136,10 +137,10 @@
             let x = xScale(w, data, options.dataOptions);
             let y = yScale(h, data, options.dataOptions);
             // Creating grid that should be modifiable
-            const yGrid = d3.axisLeft(y).tickSize(-w).tickFormat("");
+            const yGrid = d3.axisLeft(y).ticks(options.yAxis.ticks).tickSize(-w).tickFormat("");
             // Createing x and y axis they also should be modifiable.
             const xAxis = d3.axisBottom(x);
-            const yAxis = d3.axisLeft(y).ticks(10);
+            const yAxis = d3.axisLeft(y).ticks(options.yAxis.ticks);
             // Create a clip path so that zoomed or panned parts would be cut of
             const clipPath = d3.select(container)
                 .append('defs')
@@ -275,7 +276,9 @@
                     .text(options.yAxis.label);
                 //Update the container translation in order to remain current translate position when window size was changed
                 let newH = yAxis.scale()(oldY);
-                g.call(zoom.translateBy, 0, (0 - newH) / currentTransform.k);
+                if (newH) {
+                    g.call(zoom.translateBy, 0, (0 - newH) / currentTransform.k);
+                }
             };
 
             const chart = {
@@ -306,15 +309,22 @@
                         options.dataOptions = o.dataOptions ? initDataOptions(o.dataOptions, options.dataOptions) : options.dataOptions;
                         if (o.label) {
                             options.label = o.label;
-                            g.select(".chart-label").text(options.label);
+                            chartLabel.text(options.label);
                         }
                         if (o.xAxis && o.xAxis.label) {
                             options.xAxis.label = o.xAxis.label;
-                            g.select(".x-axis-label").text(options.xAxis.label);
+                            xAxisLabel.text(options.xAxis.label);
                         }
-                        if (o.yAxis && o.yAxis.label) {
-                            options.yAxis.label = o.yAxis.label;
-                            g.select(".y-axis-label").text(options.yAxis.label);
+                        if (o.yAxis) {
+                            if (o.yAxis.label) {
+                                options.yAxis.label = o.yAxis.label;
+                                yAxisLabel.text(options.yAxis.label);
+                            }
+                            if (o.yAxis.ticks) {
+                                options.yAxis.ticks = o.yAxis.ticks;
+                                yAxisGroup.call(yAxis.ticks(options.yAxis.ticks));
+                                yGridGroup.call(yGrid.ticks(options.yAxis.ticks));
+                            }
                         }
                         if (o.tooltipCallback) {
                             options.tooltipCallback = o.tooltipCallback;
