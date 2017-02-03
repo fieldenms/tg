@@ -274,9 +274,8 @@
 				
 				if (withDesc === true) {
 				    let propValueAsString = this._propValueByName(v, 'desc');
-				    if (propValueAsString) {
+				    if (propValueAsString && propValueAsString !== 'null' && propValueAsString !== '') {
 					    html = html	+ '<span style="color:#737373"> &ndash; <i>';				
-					    
 						matchedParts = this._matchedParts(propValueAsString, this.searchQuery);
 						for (let index = 0; index < matchedParts.length; index++) {
 							let part = matchedParts[index];
