@@ -67,33 +67,36 @@
                 if (!Array.isArray(layout)) {
                     throw "The layout must be an array";
                 }
-                if (!this.componentsToLayout) {
-                    this.componentsToLayout = [];
-                    Array.prototype.forEach.call(Polymer.dom(this.$.elements).getDistributedNodes(), function (item) {
-                        this.componentsToLayout.push(item);
-                    }.bind(this));
-                }
-                // Removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
-                // This method is defined in tg-polymer-utils.
-                _removeAllLightDOMChildrenFrom(this);
-                resetSubheaderComponents.bind(this)();
+                if (this.currentLayout !== layout) {
+                    if (!this.componentsToLayout) {
+                        this.componentsToLayout = [];
+                        Array.prototype.forEach.call(Polymer.dom(this.$.elements).getDistributedNodes(), function (item) {
+                            this.componentsToLayout.push(item);
+                        }.bind(this));
+                    }
+                    // Removes all Light DOM children, that were distributed through content insertion points or added manually using DOM API
+                    // This method is defined in tg-polymer-utils.
+                    _removeAllLightDOMChildrenFrom(this);
+                    resetSubheaderComponents.bind(this)();
 
-                Polymer.dom.flush();
-                removeStylesAndClasses.bind(this)(this);
-                this.toggleClass("layout", true);
-                this.toggleClass("vertical", true);
-                if (this.debug) {
-                    setDebugStyle(this);
-                } else {
-                    removeDebugStyle(this);
+                    Polymer.dom.flush();
+                    removeStylesAndClasses.bind(this)(this);
+                    this.toggleClass("layout", true);
+                    this.toggleClass("vertical", true);
+                    if (this.debug) {
+                        setDebugStyle(this);
+                    } else {
+                        removeDebugStyle(this);
+                    }
+                    orderedElements = this.componentsToLayout.slice();
+                    splitElements.bind(this)(selectedElements, orderedElements, layout);
+                    layout.forEach((function (layoutElem) {
+                        subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
+                    }).bind(this));
+                    Polymer.dom.flush();
+                    this._setCurrentLayout(layout);
+                    this.fire('layout-finished', layout);
                 }
-                orderedElements = this.componentsToLayout.slice();
-                splitElements.bind(this)(selectedElements, orderedElements, layout);
-                layout.forEach((function (layoutElem) {
-                    subheader = createFlexCell.bind(this)(this, layoutElem, selectedElements, orderedElements, subheader, true);
-                }).bind(this));
-                Polymer.dom.flush();
-                this.fire('layout-finished', layout);
             },
             resetSubheaderComponents = function () {
                 this._subheaders.forEach(function (subheader) {
@@ -292,6 +295,10 @@
                     type: Boolean,
                     readOnly: true,
                     observer: "_handleMobileScreen"
+                },
+                currentLayout: {
+                    type: Boolean,
+                    readOnly: true
                 },
                 contentLoaded: {
                     type: Boolean,
