@@ -137,7 +137,7 @@
             let x = xScale(w, data, options.dataOptions);
             let y = yScale(h, data, options.dataOptions);
             // Creating grid that should be modifiable
-            const yGrid = d3.axisLeft(y).ticks(options.yAxis.ticks).tickSize(-w).tickFormat("");
+            const yGrid = d3.axisLeft(y).ticks(options.yAxis.ticks).tickSize(-w).tickFormat("").tickSizeOuter(0);
             // Createing x and y axis they also should be modifiable.
             const xAxis = d3.axisBottom(x);
             const yAxis = d3.axisLeft(y).ticks(options.yAxis.ticks);
