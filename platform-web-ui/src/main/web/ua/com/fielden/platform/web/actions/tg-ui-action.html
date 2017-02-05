@@ -355,7 +355,8 @@
              * This 'master' reference is strictly for testing purposes.
              */
             _masterReferenceForTesting: {
-                type: Object
+                type: Object,
+                observer: '_masterReferenceForTestingChanged'
             },
             
             ////////////////////////////////////////////////////////////
