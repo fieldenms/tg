@@ -342,19 +342,19 @@
                 return subheaderHierarchy;
             },
             _handleMobileScreen: function (newValue, oldValue) {
-                var layout = this.whenMobile || this.whenTablet || this.whenDesktop;
+                const layout = this.whenMobile || this.whenTablet || this.whenDesktop;
                 if (newValue && layout && this.contentLoaded) {
                     setLayout.bind(this)(layout);
                 }
             },
             _handleTabletScreen: function (newValue, oldValue) {
-                var layout = this.whenTablet || this.whenMobile || this.whenDesktop;
+                const layout = this.whenTablet || this.whenMobile || this.whenDesktop;
                 if (newValue && layout && this.contentLoaded) {
                     setLayout.bind(this)(layout);
                 }
             },
             _handleDesktopScreen: function (newValue, oldValue) {
-                var layout = this.whenDesktop || this.whenTablet || this.whenMobile;
+                const layout = this.whenDesktop || this.whenTablet || this.whenMobile;
                 if (newValue && layout && this.contentLoaded) {
                     setLayout.bind(this)(layout);
                 }
