@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.criteria.generator.impl;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
-import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -121,7 +121,6 @@ public class TopLevelEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(SecondLevelEntity.class)
     public void setEntityProp(final SecondLevelEntity entityProp) {
         this.entityProp = entityProp;
     }

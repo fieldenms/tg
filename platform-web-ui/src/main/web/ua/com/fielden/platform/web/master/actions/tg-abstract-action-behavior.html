@@ -1,8 +1,9 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <script>
 	Polymer.TgBehaviors = Polymer.TgBehaviors || {};
-	Polymer.TgBehaviors.TgAbstractActionBehavior = {
+	Polymer.TgBehaviors.TgAbstractActionBehaviorImpl = {
         properties: {
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	////////////////////////////////////////// EXTERNAL PROPERTIES //////////////////////////////////////////
@@ -46,6 +47,17 @@
             	type: String
             },
             
+            /**
+             * This API property is made to be used by outside logic to control enablement of the action.
+             * If this property equals to false then action is guaranteed to be disabled.
+             * Otherwise -- enablement is based on whether the action is in progress (_innerEnabled) and whether currentState is in enableStates list.
+             * See method _isDisabled for more details.
+             */
+            outerEnabled: {
+                type: Boolean,
+                value: true	
+            },
+            
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
         	//////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
         	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +98,7 @@
              */
             _disabled: {
             	type: Boolean,
-            	computed: "_isDisabled(enabledStates, currentState, _innerEnabled)"
+            	computed: "_isDisabled(enabledStates, currentState, _innerEnabled, outerEnabled)"
             }
         },
         
@@ -101,17 +113,19 @@
         	var self = this;
         	
         	return (function () {
+                self.persistActiveElement();
+
 	            this._innerEnabled = false;
 	            console.log(this.shortDesc + ": execute");
-	        }).bind(self);       	
+	        }).bind(self);
         },
 
         /**
          * Returns whether the action is disabled in current moment.
          */
-        _isDisabled: function (enabledStates, currentState, _innerEnabled) {
-            // console.log("_isDisabled: enabledStates == ", enabledStates, "currentState == ", currentState, "_innerEnabled == ", _innerEnabled);
-            return !(enabledStates.indexOf(currentState) >= 0 && _innerEnabled);
+        _isDisabled: function (enabledStates, currentState, _innerEnabled, outerEnabled) {
+            // console.log("_isDisabled: enabledStates == ", enabledStates, "currentState == ", currentState, "_innerEnabled == ", _innerEnabled, "outerEnabled == ", outerEnabled);
+            return outerEnabled === false ? true : (!(enabledStates.indexOf(currentState) >= 0 && _innerEnabled));
         },
 
         /**
@@ -120,6 +134,12 @@
         _afterExecution: function () {
             console.log(this.shortDesc + ": after execution");
             this._innerEnabled = true;
+            this.restoreActiveElement();
         }
     };
+	
+	Polymer.TgBehaviors.TgAbstractActionBehavior = [
+		Polymer.TgBehaviors.TgFocusRestorationBehavior,
+		Polymer.TgBehaviors.TgAbstractActionBehaviorImpl
+	];
 </script>

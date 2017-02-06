@@ -7,7 +7,7 @@ import ua.com.fielden.platform.domaintree.IServerGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
@@ -80,7 +80,7 @@ public class ResourceFactoryUtils {
      * @param webUiConfig
      * @return
      */
-    static EntityCentre<? extends AbstractEntity<?>> getEntityCentre(final Request request, final IWebUiConfig webUiConfig) {
+    static EntityCentre<AbstractEntity<?>> getEntityCentre(final Request request, final IWebUiConfig webUiConfig) {
         return getEntityCentre((String) request.getAttributes().get("mitype"), webUiConfig);
     }
 
@@ -91,9 +91,9 @@ public class ResourceFactoryUtils {
      * @param webUiConfig
      * @return
      */
-    public static EntityCentre<? extends AbstractEntity<?>> getEntityCentre(final String mitypeString, final IWebUiConfig webUiConfig) {
-        final Class<? extends MiWithConfigurationSupport<?>> miType = (Class<? extends MiWithConfigurationSupport<?>>) ClassesRetriever.findClass(mitypeString);
-        return webUiConfig.getCentres().get(miType);
+    public static EntityCentre<AbstractEntity<?>> getEntityCentre(final String mitypeString, final IWebUiConfig webUiConfig) {
+        final Class<MiWithConfigurationSupport<AbstractEntity<?>>> miType = (Class<MiWithConfigurationSupport<AbstractEntity<?>>>) ClassesRetriever.findClass(mitypeString);
+        return (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(miType);
     }
 
     public static AbstractCustomView getCustomView(final String viewName, final IWebUiConfig webUiConfig) {

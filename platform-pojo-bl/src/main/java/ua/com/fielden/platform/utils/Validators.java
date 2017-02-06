@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -38,6 +38,7 @@ public final class Validators {
     private Validators() {
     }
 
+    
     /**
      * Identifies whether the provided entity overlaps with any of the existing entities.
      *
@@ -118,7 +119,7 @@ public final class Validators {
      * @param entityType
      * @return
      */
-    public static <T extends AbstractEntity<?>> long countActiveDependencies(final List<Class<? extends AbstractEntity<?>>> entityTypes, final T entity, final IEntityAggregatesDao coAggregate) {
+    public static <T extends AbstractEntity<?>> long countActiveDependencies(final List<Class<? extends AbstractEntity<?>>> entityTypes, final T entity, final IEntityAggregatesOperations coAggregate) {
         // there should be exactly 0 active and persisted dependencies to not yet persisted entity
         if (!entity.isPersisted()) {
             return 0;

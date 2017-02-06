@@ -6,21 +6,23 @@ import java.util.Set;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.AbstractFunctionalEntityProducerForCollectionModification;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.ISecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.tokens.user.UserRoleSaveToken;
 import ua.com.fielden.platform.security.user.IUserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.SecurityTokenInfo;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 /** 
  * DAO implementation for companion object {@link IUserRoleTokensUpdater}.
@@ -42,12 +44,13 @@ public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpda
     
     @Override
     @SessionRequired
+    @Authorise(UserRoleSaveToken.class)
     public UserRoleTokensUpdater save(final UserRoleTokensUpdater action) {
-        final UserRoleTokensUpdater actionToSave = AbstractFunctionalEntityProducerForCollectionModification.validateAction(action, a -> a.getTokens(), this, factory, String.class);
+        final UserRoleTokensUpdater actionToSave = AbstractFunctionalEntityForCollectionModificationProducer.validateAction(action, a -> a.getTokens(), this, factory, String.class);
         
         // after all validations have passed -- the association changes could be saved:
-        final UserRole userRoleBeingUpdated = action.getKey();
-        final Map<Object, SecurityTokenInfo> availableTokens = AbstractFunctionalEntityProducerForCollectionModification.mapById(action.getTokens(), String.class);
+        final UserRole userRoleBeingUpdated = (UserRole) action.refetchedMasterEntity();
+        final Map<Object, SecurityTokenInfo> availableTokens = AbstractFunctionalEntityForCollectionModificationProducer.mapById(action.getTokens(), String.class);
         
         final Set<SecurityRoleAssociation> addedAssociations = new LinkedHashSet<>();
         for (final String addedId : action.getAddedIds()) {

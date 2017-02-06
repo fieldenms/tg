@@ -7,6 +7,8 @@ import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
@@ -14,12 +16,12 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
 
     private final IRenderable renderable;
 
-    public AbstractMasterWithMaster(final Class<T> entityType, final Class<? extends AbstractEntity<?>> embededMasterType) {
+    public AbstractMasterWithMaster(final Class<T> entityType, final Class<? extends AbstractEntity<?>> embededMasterType, final boolean shouldRefreshParentCentreAfterSave) {
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.html")
                 .replace("<!--@imports-->", "<link rel='import' href='/app/tg-element-loader.html'>\n")
                 .replace("@entity_type", entityType.getSimpleName())
                 .replace("<!--@tg-entity-master-content-->",
-                         "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
+                          "<tg-element-loader id='loader' context='[[_createContextHolderForEmbeddedViews]]' context-property='getMasterEntity' "
                         + "    import=" + getImportUri(embededMasterType)
                         + "    element-name=" + getElementName(embededMasterType)
                         + "    attrs='[[_calcAttrs(_currBindingEntity)]]'"
@@ -27,7 +29,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         + "</tg-element-loader>")
                 .replace("//@ready-callback", "this._calcAttrs = (function(_currBindingEntity){\n" +
                         "   if (_currBindingEntity !== null) {\n" +
-                        "       return " + getAttributes(embededMasterType, "_currBindingEntity") +
+                        "       return " + getAttributes(embededMasterType, "_currBindingEntity", shouldRefreshParentCentreAfterSave) +
                         "   };\n" +
                         "}).bind(this);\n")
                 .replace("//@attached-callback",
@@ -40,6 +42,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         + "    }\n"
                         + "}.bind(this);\n"
                         + "this.addEventListener('after-load', this._assignPostSavedHandlersForEmbeddedMaster.bind(this));\n")
+                .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 
@@ -51,7 +54,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
         };
     }
 
-    protected abstract String getAttributes(final Class<? extends AbstractEntity<?>> entityType, String bindingEntityName);
+    protected abstract String getAttributes(final Class<? extends AbstractEntity<?>> entityType, String bindingEntityName, final boolean shouldRefreshParentCentreAfterSave);
 
     protected abstract String getElementName(final Class<? extends AbstractEntity<?>> entityType);
 
@@ -66,5 +69,9 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
     public IRenderable render() {
         return renderable;
     }
-
+    
+    @Override
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+    }
 }

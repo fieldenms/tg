@@ -49,10 +49,6 @@ import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
 public class RestServerUtil {
 
     private final ISerialiser serialiser;
-    /** An application wide public key */
-    private String appWidePublicKey;
-    /** An application wide private key */
-    private String appWidePrivateKey;
 
     @Inject
     public RestServerUtil(final ISerialiser serialiser) {
@@ -291,7 +287,7 @@ public class RestServerUtil {
      *
      * @return
      */
-    public <T extends AbstractEntity> Representation lifecycleRepresentation(final LifecycleModel<T> lifecycleModel) {
+    public <T extends AbstractEntity<?>> Representation lifecycleRepresentation(final LifecycleModel<T> lifecycleModel) {
         logger.debug("Start building lifecycle representation:" + new DateTime());
         try {
             // create a Result enclosing lifecycle data
@@ -357,7 +353,16 @@ public class RestServerUtil {
                 if (thrownResult.isSuccessful()) {
                     throw Result.failure(String.format("The successful result [%s] was thrown during unsuccesful saving of entity [%s]. This is most likely programming error.", thrownResult, entity));
                 }
-                if (ex != entity.isValid()) {
+                
+                // iterate over properties in search of the first invalid one (without required checks)
+                final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
+                .filter(mp -> mp.getFirstFailure() != null)
+                .findFirst().map(mp -> mp.getFirstFailure());
+                
+                // returns first failure if exists or successful result if there was no failure.
+                final Result isValid = firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
+                
+                if (ex != isValid) {
                     // Log the server side error only in case where exception, that was thrown, does not equal to validation result of the entity (by reference).
                     // Please, note that the Results, that are thrown in companion objects, often represents validation results of some complimentary entities during saving.
                     // For example, see ServiceRepairSubmitActionDao save method, which internally invokes saveWorkOrder(serviceRepair) method of ServiceRepairDao, where during saving of workOrder
@@ -487,22 +492,6 @@ public class RestServerUtil {
         }
     }
     
-    public String getAppWidePublicKey() {
-        return appWidePublicKey;
-    }
-
-    public void setAppWidePublicKey(final String publicKey) {
-        this.appWidePublicKey = publicKey;
-    }
-
-    public String getAppWidePrivateKey() {
-        return appWidePrivateKey;
-    }
-
-    public void setAppWidePrivateKey(final String privateKey) {
-        this.appWidePrivateKey = privateKey;
-    }
-
     public ISerialiser getSerialiser() {
         return serialiser;
     }

@@ -10,9 +10,9 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -25,17 +25,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javassist.util.proxy.ProxyFactory;
-
 import org.joda.time.DateTime;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
-import ua.com.fielden.platform.dao.ISecurityRoleAssociationDao;
-import ua.com.fielden.platform.dao.IUserAndRoleAssociationDao;
-import ua.com.fielden.platform.dao.IUserRoleDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
+import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
+import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
+import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -95,12 +93,12 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
-import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
+import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
 
-public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
+public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     private final ITgPersonName personNameDao = getInstance(ITgPersonName.class);
     private final ITgAuthor authorDao = getInstance(ITgAuthor.class);
@@ -114,11 +112,11 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
     private final ITgVehicle vehicleDao = getInstance(ITgVehicle.class);
     private final ITgFuelUsage fuelUsageDao = getInstance(ITgFuelUsage.class);
     private final IUser userDao = getInstance(IUser.class);
-    private final IUserRoleDao userRoleDao = getInstance(IUserRoleDao.class);
-    private final IUserAndRoleAssociationDao userAndRoleAssociationDao = getInstance(IUserAndRoleAssociationDao.class);
-    private final IEntityAggregatesDao aggregateDao = getInstance(IEntityAggregatesDao.class);
+    private final IUserRole userRoleDao = getInstance(IUserRole.class);
+    private final IUserAndRoleAssociation userAndRoleAssociationDao = getInstance(IUserAndRoleAssociation.class);
+    private final IEntityAggregatesOperations aggregateDao = getInstance(IEntityAggregatesOperations.class);
     private final EntityWithMoneyDao entityWithMoneyDao = getInstance(EntityWithMoneyDao.class);
-    private final ISecurityRoleAssociationDao secRolAssociationDao = getInstance(ISecurityRoleAssociationDao.class);
+    private final ISecurityRoleAssociation secRolAssociationDao = getInstance(ISecurityRoleAssociation.class);
     private final ITgMakeCount makeCountDao = getInstance(ITgMakeCount.class);
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
@@ -1640,6 +1638,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
         
         final TgFuelType unleadedFuelType = save(new_(TgFuelType.class, "U", "Unleaded"));
         final TgFuelType petrolFuelType = save(new_(TgFuelType.class, "P", "Petrol"));
@@ -1647,7 +1646,7 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         final TgWorkshop workshop1 = save(new_(TgWorkshop.class, "WSHOP1", "Workshop 1"));
         final TgWorkshop workshop2 = save(new_(TgWorkshop.class, "WSHOP2", "Workshop 2"));
 
-        final TgBogieLocation location = config.getEntityFactory().newEntity(TgBogieLocation.class);
+        final TgBogieLocation location = co(TgBogieLocation.class).new_();
         location.setWorkshop(workshop1);
         final TgBogie bogie1 = save(new_(TgBogie.class, "BOGIE1", "Bogie 1").setLocation(location));
         final TgBogie bogie2 = save(new_(TgBogie.class, "BOGIE2", "Bogie 2"));
@@ -1737,8 +1736,4 @@ public class EntityQueryExecutionTest extends AbstractDomainDrivenTestCase {
         System.out.println("\n\n\n\n\n\n\n\n\n   =====  DATA POPULATED SUCCESSFULLY   =====\n\n\n\n\n\n\n\n\n");
     }
 
-    @Override
-    protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
-        return PlatformTestDomainTypes.entityTypes;
-    }
 }

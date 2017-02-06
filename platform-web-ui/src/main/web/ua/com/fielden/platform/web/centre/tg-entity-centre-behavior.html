@@ -3,9 +3,75 @@
 <link rel="import" href="/resources/sse/tg-sse-behavior.html">
 <link rel="import" href="/resources/egi/tg-custom-action-dialog.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <script>
     (function () {
+        var generateCriteriaName = function (root, property, suffix) {
+            var rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
+            return rootName + (property === "this" ? "" : property.replace(/\./g, "_")) + (suffix ? "_" + suffix : "");
+        };
+        var isNot = function (query) {
+            return /.+\!=.*/.test(query);
+        };
+        var isMissing = function (value) {
+            return /^\{.*\}$/.test(value);
+        };
+        var getValueFromMissing = function (value) {
+            return /^\{(.*)\}$/.exec(value)[1];
+        }
+        var isRange = function (value) {
+            return /^(\[|\().*,\s*.*(\]|\))$/.test(value);
+        };
+        var isBoolean = function (value) {
+            return /(true|false)/.test(value);
+        };
+        var shouldExcludeFirstParam = function (value) {
+            return /^\(/.test(value);
+        };
+        var shouldExcludeSecondParam = function (value) {
+            return /\)$/.test(value);
+        };
+        var getFirstValue = function (queryParam) {
+            return /^(\[|\()(.*),\s*.*(\]|\))$/.exec(queryParam)[2];
+        };
+        var getSecondValue = function (queryParam) {
+            return /^(\[|\().*,\s*(.*)(\]|\))$/.exec(queryParam)[2];
+        };
+        var generateQueryParam = function (root, query) {
+            var queryParam = {
+                not: isNot(query)
+            };
+            var queryParts, isBool;
+            if (queryParam.not) {
+                queryParts = query.split("!=");
+            } else {
+                queryParts = query.split("=");
+            }
+            queryParam.criteriaId = "criterion_4_" + generateCriteriaName(root, queryParts[0]);
+            queryParam.isMissing = isMissing(queryParts[1]);
+            if (queryParam.isMissing) {
+                queryParts[1] = getValueFromMissing(queryParts[1]);
+            }
+            isBool = isBoolean(queryParts[1]);
+            if (isRange(queryParts[1])) {
+                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "is" : "from");
+                queryParam.firstEditorValue = getFirstValue(queryParts[1]);
+                queryParam.secondEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "not" : "to");
+                queryParam.secondEditorValue = getSecondValue(queryParts[1]);
+                if (!isBool) {
+                    queryParam.exclude1 = shouldExcludeFirstParam(queryParts[1]);
+                    queryParam.exclude2 = shouldExcludeSecondParam(queryParts[1]);
+                }
+            } else {
+                queryParam.firstEditorName = "editor_4_" + generateCriteriaName(root, queryParts[0], isBool ? "is" : "");
+                queryParam.firstEditorValue = queryParts[1];
+            }
+            return queryParam;
+        };
+
+
+
         Polymer.TgBehaviors = Polymer.TgBehaviors || {};
         Polymer.TgBehaviors.TgEntityCentreBehaviorImpl = {
             properties: {
@@ -22,7 +88,20 @@
                 entityType: {
                     type: String
                 },
-
+                /**
+                 * The entities retrieved when running this centre
+                 */
+                retrievedEntities: {
+                    type: Array,
+                    observer: '_retrievedEntitiesChanged'
+                },
+                /**
+                 * Summary entity retrieved when running this centre.
+                 */
+                retrievedTotals: {
+                    type: Object,
+                    observer: '_retrievedTotalsChanged'
+                },
                 /**
                  * The menu item type, that identifies this entity centre.
                  */
@@ -89,29 +168,18 @@
                     type: Boolean,
                     value: false
                 },
-                
+
+                /**
+                 * Parameters for running query.
+                 */
+                queryPart: String,
+
                 /**
                  * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
                  */
                 enforcePostSaveRefresh: {
                     type: Boolean,
                     value: false
-                },
-
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
-                //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
-                // These properties derive from other properties and are considered as 'private' -- need to have '_'   //
-                //   prefix and default values specified in 'value' specificator of the property definition (or,       //
-                //   alternatively, computing function needs to be specified). 									       //
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                /**
-                 * The holder of EGI entities that 'should be updated'.
-                 */
-                _entitiesThatShouldBeUpdated: {
-                    type: Array,
-                    value: null
                 },
 
                 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -136,24 +204,32 @@
                 _criteriaLoaded: {
                     type: Boolean
                 },
-
+                
+                /**
+                 * Indicates whether some action (run, save or discard) is currently in progress.
+                 */
+                _actionInProgress: {
+                    type: Boolean,
+                    value: false
+                },
+                
                 _saverDisabled: {
                     type: Boolean,
-                    computed: '_computeSaverDisabled(_centreChanged)'
+                    computed: '_computeSaverDisabled(_centreChanged, _actionInProgress)'
                 },
                 _discarderDisabled: {
                     type: Boolean,
-                    computed: '_computeDiscarderDisabled(_centreChanged)'
+                    computed: '_computeDiscarderDisabled(_centreChanged, _actionInProgress)'
                 },
 
                 _runnerDisabled: {
                     type: Boolean,
-                    computed: '_computeRunnerDisabled(_criteriaLoaded)'
+                    computed: '_computeRunnerDisabled(_criteriaLoaded, _actionInProgress)'
                 },
 
                 _viewerDisabled: {
                     type: Boolean,
-                    computed: '_computeViewerDisabled(_criteriaLoaded)'
+                    computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun, _actionInProgress)'
                 },
 
                 _url: {
@@ -176,45 +252,10 @@
                 },
 
                 /**
-                 * The action to be invoked on EGI's 'edit' button.
+                 * Determines whether centre was runned or not if it was runned then the value should be 'yes' otherwise value is null.
                  */
-                _editAction: {
-                    type: Function
-                },
-
-                /**
-                 * The action to be invoked on EGI's 'new' button.
-                 */
-                _newAction: {
-                    type: Function
-                },
-
-                /**
-                 * The action to be invoked on EGI's 'delete' button.
-                 */
-                _deleteAction: {
-                    type: Function
-                },
-
-                /**
-                 * The action to be bound to 'tg-primary-instance-action'.
-                 */
-                _showMaster: {
-                    type: Function
-                },
-
-                /**
-                 * Shows the master for current entity in dialog.
-                 */
-                _showMasterInDialog: {
-                    type: Function
-                },
-
-                /**
-                 * Shows the custom view (centre, master, user defined view) in dialog.
-                 */
-                _showCustomViewInDialog: {
-                    type: Function
+                _wasRun: {
+                    type: String
                 },
 
                 /**
@@ -240,6 +281,8 @@
 
                 /**
                  * Starts the process of centre run.
+                 *
+                 * isSortingAction -- returns true if this running action represents re-sorting action invocation rather than simple running, undefined otherwise
                  */
                 run: {
                     type: Function
@@ -271,6 +314,16 @@
                  */
                 _activateResultSetView: {
                     type: Function
+                },
+
+                _disablementCounter: {
+                    type: Number,
+                    value: 0
+                },
+
+                currentState: {
+                    type: String,
+                    value: 'EDIT'
                 }
             },
 
@@ -278,32 +331,41 @@
                 var self = this;
                 if (oldValue === undefined) {
                     self.retrieve().then(function () {
-                        if (self.autoRun) {
+                        self._setQueryParams();
+                        if (self.autoRun || self.queryPart) {
                             self.run();
                         }
                     });
                 } else {
-                    if (self.autoRun) {
+                    self._setQueryParams();
+                    if (self.autoRun || self.queryPart) {
                         self.run();
                     }
                 }
             },
 
-
-            _computeSaverDisabled: function (_centreChanged) {
-                return !this.canSave(_centreChanged);
+            _computeSaverDisabled: function (_centreChanged, _actionInProgress) {
+                return _actionInProgress === true || !this.canSave(_centreChanged);
             },
 
-            _computeDiscarderDisabled: function (_centreChanged) {
-                return !this.canDiscard(_centreChanged);
+            _computeDiscarderDisabled: function (_centreChanged, _actionInProgress) {
+                return _actionInProgress === true || !this.canDiscard(_centreChanged);
             },
 
-            _computeRunnerDisabled: function (_criteriaLoaded) {
-                return _criteriaLoaded === false;
+            _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
+                return _actionInProgress === true || _criteriaLoaded === false;
             },
 
-            _computeViewerDisabled: function (_criteriaLoaded) {
-                return _criteriaLoaded === false;
+            _computeViewerDisabled: function (_criteriaLoaded, _wasRun, _actionInProgress) {
+                return _actionInProgress === true || _criteriaLoaded === false || _wasRun !== "yes";
+            },
+
+            _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
+                this.$.egi.entities = retrievedEntities;
+            },
+
+            _retrievedTotalsChanged: function (retrievedTotals, oldValue) {
+                this.$.egi.totals = retrievedTotals;
             },
 
             /**
@@ -315,23 +377,23 @@
                 self._selectedView = 0;
                 self._showProgress = false;
 
-                self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities, summary) {
+                self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
                     // console.log("postRun", criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
-                    if (criteriaEntity === null || criteriaEntity.isValid()) {
+                    if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                         if (typeof summary !== 'undefined') {
-                            this.$.egi.totals = summary;
+                            this.retrievedTotals = summary;
                         }
-                        if (isRefreshingConcreteEntities) {
-                            this.$.egi.replaceUpdatedEntities(resultEntities, renderingHints, this._entitiesThatShouldBeUpdated);
-                        } else {
-                            this.$.egi.entities = resultEntities;
-                            this.$.egi.renderingHints = renderingHints;
-                            if (this._triggerRun && this._selectedView === 0) {
-                                this.async(function () {
-                                    this._selectedView = 1;
-                                }, 100);
-                                this._triggerRun = false;
-                            }
+                        this.retrievedEntities = resultEntities;
+                        this.$.egi.renderingHints = renderingHints;
+                        if (this._triggerRun && this._selectedView === 0) {
+                            this.async(function () {
+                                this._selectedView = 1;
+                            }, 100);
+                            this._triggerRun = false;
+                        }
+                        if (this.$.selection_criteria._wasRun !== 'yes') {
+                            this.$.selection_criteria._wasRun = 'yes';
+                            console.debug('_wasRun has been changed to: ', this.$.selection_criteria._wasRun);
                         }
                     }
                 }).bind(self);
@@ -370,90 +432,6 @@
                     });
                 };
 
-                self._editAction = (function () {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "edit.start",
-                        data: {
-                            entity: self._getContext(),
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                }).bind(self);
-
-                self._newAction = (function () {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "new.start",
-                        data: {
-                            entityType: self.entityType,
-                            simpleEntityType: self._simpleEntityType(),
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                }).bind(self);
-
-                self._deleteAction = (function () {
-                    console.log("The selected entities must be deleted here!");
-                }).bind(self);
-
-                self._showMaster = (function (action, entity) {
-                    var self = this;
-                    postal.publish({
-                        channel: "centre",
-                        topic: "edit.start",
-                        data: {
-                            entity: entity,
-                            uuid: self.$.selection_criteria.uuid,
-                            moduleId: self.moduleId
-                        }
-                    });
-                }).bind(self);
-
-                self._showMasterInDialog = (function (action, entity) {
-                    var fullTypeName = entity.type().notEnhancedFullClassName();
-                    var simpleTypeName = entity.type()._notEnhancedSimpleClassName();
-                    var closeEventChannel = self.uuid;
-                    var closeEventTopics = ['save.post.success', 'refresh.post.success'];
-
-                    action.componentUri = "/master_ui/" + fullTypeName;
-                    action.elementName = "tg-" + simpleTypeName + "-master";
-                    action.elementAlias = action.elementName + "-" + entity.id;
-
-                    var prefDim = null;
-                    if (action.prefDim) {
-                        if (typeof action.prefDim === 'string') {
-                            prefDim = JSON.parse(action.prefDim);
-                        } else {
-                            prefDim = action.prefDim;
-                        }
-                    }
-
-                    action.attrs = {
-                        entityId: entity.id,
-                        entityType: fullTypeName,
-                        currentState: 'EDIT',
-                        centreUuid: self.uuid,
-                        prefDim: prefDim
-                    };
-                    action.viewType = 'master';
-
-                    this.async(function () {
-                        this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
-                    }.bind(this), 1);
-
-                }).bind(this);
-
-                self._showCustomViewInDialog = (function (action) {
-                    this.async(function () {
-                        this.actionDialog.showDialog(action);
-                    }.bind(this), 1);
-                }).bind(this);
-
                 self._activateInsertionPoint = (function (insertionPointId, action) {
                     this.async(function () {
                         this.$[insertionPointId].activate(action);
@@ -468,14 +446,14 @@
                 }).bind(self);
 
                 self._postFunctionalEntitySaved = (function (savingException, potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
-                    if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                    if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutException()) {
                         // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
                         this.refreshEntities(selectedEntitiesInContext);
                     }
                 }).bind(self);
 
-                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity) {
-                    return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity);
+                self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
+                    return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
                 }).bind(self);
 
                 self.save = (function () {
@@ -484,6 +462,7 @@
                     }
                     console.log("CENTRE SAVE");
 
+                    self._actionInProgress = true;
                     var sc = this.$.selection_criteria;
                     var holder = sc._extractModifiedPropertiesHolder(sc._currBindingEntity, sc._originalBindingEntity);
 
@@ -491,7 +470,9 @@
                     sc._validator().abortValidationIfAny();
 
                     this._ajaxSaver().body = JSON.stringify(sc._serialiser().serialise(sc._reset(holder)));
-                    return this._ajaxSaver().generateRequest().completes;
+                    return this._ajaxSaver().generateRequest().completes.then(function () {
+                        self._actionInProgress = false;
+                    });
                 }).bind(self);
 
                 self.discard = (function () {
@@ -500,6 +481,7 @@
                     }
                     console.log("CENTRE DISCARD");
 
+                    self._actionInProgress = true;
                     var sc = this.$.selection_criteria;
 
                     // cancel previous validation before starting Discard process!
@@ -508,21 +490,25 @@
                     var customObject = {};
                     customObject['@@wasRun'] = this.$.selection_criteria._wasRun;
                     this._ajaxDiscarder().body = JSON.stringify(customObject);
-                    return this._ajaxDiscarder().generateRequest().completes;
+                    return this._ajaxDiscarder().generateRequest().completes.then(function () {
+                        self._actionInProgress = false;
+                    });
                 }).bind(self);
-                
-                self.run = (function () {
+
+                self.run = (function (isSortingAction) {
                     if (this._criteriaLoaded === false) {
                         throw "Cannot run centre (not initialised criteria).";
                     }
 
                     var self = this;
+                    self._actionInProgress = true;
                     self.$.egi.clearSelection();
                     self.$.egi.collapseAllCards();
                     self._triggerRun = true;
-                    return self.$.selection_criteria.run()
+                    return self.$.selection_criteria.run(isSortingAction)
                         .then(function () {
                             self.runInsertionPointActions();
+                            self._actionInProgress = false;
                         });
                 }).bind(self);
 
@@ -570,32 +556,8 @@
                     Polymer.dom.flush();
                 }
 
-                ///////////////////////Edit Listeners/////////////////////////////////////
-                this.masterCreatedListener = postal.subscribe({
-                    channel: "centre_" + self.$.selection_criteria.uuid,
-                    topic: "edit.finish.created",
-                    callback: function (data, envelope) {
-                        console.log("-------- Masters Edit Created UUID: " + data.item.view.attrs.uuid + " ------------");
-                    }
-                });
-                this.masterShowListener = postal.subscribe({
-                    channel: "centre_" + self.$.selection_criteria.uuid,
-                    topic: "edit.finish.shown",
-                    callback: function (data, envelope) {
-                        console.log("-------- Masters Edit Shown UUID: " + data.item.view.attrs.uuid + " ------------");
-                    }
-                });
-                /////////////////////////New listener//////////////////////////////////////
-                this.masterNewListener = postal.subscribe({
-                    channel: "centre_" + self.$.selection_criteria.uuid,
-                    topic: "new.finish",
-                    callback: function (data, envelope) {
-                        console.log("-------- Masters New UUID: " + data.item.view.attrs.uuid + " ------------");
-                    }
-                });
-
                 ///////////////////////// Detail postSaved listener //////////////////////////////////////
-                postal.subscribe({
+                this.masterSavedListener = postal.subscribe({
                     channel: "centre_" + self.$.selection_criteria.uuid,
                     topic: "detail.saved",
                     callback: function (data, envelope) {
@@ -604,15 +566,13 @@
                 });
 
                 //Select the result view if autoRun is true
-                if (self.autoRun) {
+                if (self.autoRun || self.queryPart) {
                     self._selectedView = 1;
                 }
             },
 
             detached: function () {
-                this.masterCreatedListener.unsubscribe();
-                this.masterShowListener.unsubscribe();
-                this.masterNewListener.unsubscribe();
+                this.masterSavedListener.unsubscribe();
             },
 
             /**
@@ -623,6 +583,41 @@
                 return this.entityType.substring(ind);
             },
 
+            /**
+             * Set the query params to selection criteria if they exists.
+             */
+            _setQueryParams: function () {
+                var self = this;
+                var root = self._simpleEntityType();
+                var queries = [];
+                var paramObject = [];
+                if (self.queryPart) {
+                    queries = self.queryPart.split("&");
+                }
+                paramObject = queries.map(function (query) {
+                    return generateQueryParam(root, query)
+                });
+                paramObject.forEach(function (queryParam) {
+                    var criterion = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.criteriaId + ']');
+                    var firstEditor = self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.firstEditorName + ']');
+                    var secondEditor = queryParam.secondEditorName && self.$.selection_criteria.$.masterDom.querySelector('[id=' + queryParam.secondEditorName + ']');
+                    if (criterion && criterion._iconButtonVisible()) {
+                        criterion._orNull = queryParam.isMissing;
+                        criterion._not = queryParam.not;
+                        criterion._exclusive = queryParam.exclude1;
+                        criterion._exclusive2 = queryParam.exclude2;
+                        criterion._acceptMetaValues();
+                    }
+                    if (firstEditor) {
+                        firstEditor._editingValue = queryParam.firstEditorValue;
+                        firstEditor.commit();
+                    }
+                    if (secondEditor) {
+                        secondEditor._editingValue = queryParam.secondEditorValue;
+                        secondEditor.commit();
+                    }
+                });
+            },
 
             /**
              * Activate the view with selection criteria.
@@ -650,10 +645,12 @@
              */
             currentPage: function () {
                 var self = this;
-                this.$.selection_criteria.currentPage()
+                self.persistActiveElement();
+                return this.$.selection_criteria.currentPage()
                     .then(function () {
                         console.log("current page invocation");
                         self.runInsertionPointActions();
+                        self.restoreActiveElement();
                     });
             },
 
@@ -661,28 +658,44 @@
              * Starts the process of retrieving first page (only after run() has been already performed).
              */
             firstPage: function () {
-                this.$.selection_criteria.firstPage();
+                var self = this;
+                self.persistActiveElement();
+                return this.$.selection_criteria.firstPage().then(function () {
+                    self.restoreActiveElement();
+                });
             },
 
             /**
              * Starts the process of retrieving last page (only after run() has been already performed).
              */
             lastPage: function () {
-                this.$.selection_criteria.lastPage();
+                var self = this;
+                self.persistActiveElement();
+                return this.$.selection_criteria.lastPage().then(function () {
+                    self.restoreActiveElement();
+                });
             },
 
             /**
              * Starts the process of retrieving next page (only after run() has been already performed).
              */
             nextPage: function () {
-                this.$.selection_criteria.nextPage();
+                var self = this;
+                self.persistActiveElement();
+                return this.$.selection_criteria.nextPage().then(function () {
+                    self.restoreActiveElement();
+                });
             },
 
             /**
              * Starts the process of retrieving prev page (only after run() has been already performed).
              */
             prevPage: function () {
-                this.$.selection_criteria.prevPage();
+                var self = this;
+                self.persistActiveElement();
+                return this.$.selection_criteria.prevPage().then(function () {
+                    self.restoreActiveElement();
+                });
             },
 
             /**
@@ -695,15 +708,9 @@
             refreshEntities: function (entities) {
                 // if there is no data or refresh is enforeced then simply refresh the current page
                 if (this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0) {
-                    this.currentPage();
-                } else {
-                    if (entities !== null && entities.length > 0) {
-                        this.$.selection_criteria.refreshEntities(entities, (function (entities) {
-                            this._entitiesThatShouldBeUpdated = entities;
-                        }).bind(this)); // this._entitiesThatShouldBeUpdated
-                    } else { // refresh all page in case when no selected entities exist (it means that the action has been applied to all entities)
-                        this.currentPage();
-                    }
+                    return this.currentPage();
+                } else if (entities === null || entities.length === 0 || this.$.egi.containsAnyEntity(entities)) {
+                    return this.currentPage();
                 }
             },
 
@@ -722,7 +729,7 @@
             canNotCurrent: function (pageNumber, pageCount, isRunning) {
                 return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? true : (isRunning || !this.$.selection_criteria._canCurrent(pageNumber, pageCount));
             },
-            
+
             computeConfigButtonTooltip: function (staleCriteriaMessage) {
                 return staleCriteriaMessage === null ? 'Show selection criteria' : staleCriteriaMessage;
             },
@@ -747,6 +754,29 @@
             },
 
             /**
+             * Contract that allows one to determines whether this component can be closed/left or not.
+             */
+            canLeave: function () {
+                // Check whether selection criteria can be left.
+                var canLeaveThisCentre = this.$.selection_criteria.classList.contains('canLeave') && this.$.selection_criteria.canLeave();
+                var insertionPoints, insPoIndex, elementWithCanLeave, canLeaveChild;
+                if (canLeaveThisCentre) {
+                    return canLeaveThisCentre;
+                }
+                // Check whether all insertion points can be left.
+                insertionPoints = this.querySelectorAll('tg-entity-centre-insertion-point');
+                for (insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
+                    elementWithCanLeave = insertionPoints[insPoIndex].querySelector('.canLeave');
+                    canLeaveChild = elementWithCanLeave && elementWithCanLeave.canLeave();
+                    if (canLeaveChild) {
+                        return canLeaveChild;
+                    }
+                }
+            },
+
+
+
+            /**
              * Computes URL for 'ajaxSaver' and 'ajaxDiscarder'.
              */
             _computeUrl: function (miType) {
@@ -763,10 +793,35 @@
                         }, 1);
                     });
                 }
+            },
+
+            disableView: function () {
+                this._disablementCounter += 1;
+                if (this._disablementCounter > 0 && this.currentState !== 'VIEW') {
+                    this.disableViewForDescendants();
+                }
+            },
+            disableViewForDescendants: function () {
+                this.currentState = 'VIEW';
+                this.$.selection_criteria.disableView();
+                this.$.egi.lock = true;
+            },
+            enableView: function () {
+                if (this._disablementCounter > 0) {
+                    this._disablementCounter -= 1;
+                    if (this._disablementCounter === 0 && this.currentState !== 'EDIT') {
+                        this.enableViewForDescendants();
+                    }
+                }
+            },
+            enableViewForDescendants: function () {
+                this.currentState = 'EDIT';
+                this.$.selection_criteria.enableView();
+                this.$.egi.lock = false;
             }
         };
 
-        Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgSseBehavior];
+        Polymer.TgBehaviors.TgEntityCentreBehavior = [Polymer.TgBehaviors.TgEntityCentreBehaviorImpl, Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgSseBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior];
 
     })();
 </script>

@@ -26,10 +26,6 @@ public class BogieClassCompatibility extends AbstractEntity<DynamicEntityKey> {
 
     private String status;
 
-    public BogieClassCompatibility() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public BogieClass getBogieClass() {
         return bogieClass;
     }

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.sample.domain;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -10,7 +11,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -36,9 +37,23 @@ public class TgFetchProviderTestEntity extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Additional property", desc = "Additional property")
     private User additionalProperty;
+    
+    @IsProperty
+    @CritOnly(Type.SINGLE)
+    @Title(value = "Prop For Validation", desc = "Crit-only single prop for centre validation test")
+    private TgPersistentEntityWithProperties propForValidation;
+    
+    @Observable
+    public TgFetchProviderTestEntity setPropForValidation(final TgPersistentEntityWithProperties propForValidation) {
+        this.propForValidation = propForValidation;
+        return this;
+    }
+
+    public TgPersistentEntityWithProperties getPropForValidation() {
+        return propForValidation;
+    }
 
     @Observable
-    @EntityExists(User.class)
     public TgFetchProviderTestEntity setAdditionalProperty(final User additionalProperty) {
         this.additionalProperty = additionalProperty;
         return this;
@@ -49,7 +64,6 @@ public class TgFetchProviderTestEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(TgPersistentEntityWithProperties.class)
     public TgFetchProviderTestEntity setProperty(final TgPersistentEntityWithProperties property) {
         this.property = property;
         return this;

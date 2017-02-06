@@ -37,7 +37,7 @@ public class RangeCritOtherValueMnemonic<V> {
         this.negateCondition = negateCondition;
 
         // let's perform some validation
-        if (!fromValue.isPresent() && !fromValue.isPresent() && !toValue.isPresent() && !toValue.isPresent() && !checkForMissingValue) {
+        if (!fromValue.isPresent() && !toValue.isPresent() && !checkForMissingValue) {
             throw new IllegalArgumentException("Either criteria from/to values or a check for missing values is required.");
         }
 

@@ -15,6 +15,7 @@ import org.restlet.data.Encoding;
 import org.restlet.data.Form;
 import org.restlet.data.Status;
 import org.restlet.engine.application.EncodeRepresentation;
+import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
@@ -22,20 +23,20 @@ import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * A web resource handling explicit user logins.
@@ -44,33 +45,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  */
 public class LoginResource extends ServerResource {
-
+    
+    public static final String BINDING_PATH = "/login";
+    
     private final Logger logger = Logger.getLogger(LoginResource.class);
 
     private final String domainName;
     private final String path;
     private final IAuthenticationModel authenticationModel;
     private final IUserProvider userProvider;
-    private final IUserEx coUserEx;
+    private final IUser coUser;
     private final IUserSession coUserSession;
     private final RestServerUtil restUtil;
     private final IUniversalConstants constants;
 
     /**
-     * Creates {@link LoginResource} and initialises it with centre instance.
-     *
-     * @param centre
-     * @param context
-     * @param request
-     * @param response
+     * Creates {@link LoginResource}.
      */
     public LoginResource(//
-    final String domainName,
+            final String domainName,
             final String path,
             final IUniversalConstants constants,
             final IAuthenticationModel authenticationModel,
             final IUserProvider userProvider,
-            final IUserEx coUserEx,
+            final IUser coUser,
             final IUserSession coUserSession,//
             final RestServerUtil restUtil,//
             final Context context, //
@@ -82,14 +80,14 @@ public class LoginResource extends ServerResource {
         this.constants = constants;
         this.authenticationModel = authenticationModel;
         this.userProvider = userProvider;
-        this.coUserEx = coUserEx;
+        this.coUser = coUser;
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
 
     }
 
     @Override
-    protected Representation get() throws ResourceException {
+    protected Representation get() {
         try {
             // check if there is a valid authenticator
             // if there is then should respond with redirection to root /.
@@ -97,7 +95,7 @@ public class LoginResource extends ServerResource {
             final Optional<Authenticator> oAuth = extractAuthenticator(getRequest());
             if (oAuth.isPresent()) {
                 final Authenticator auth = oAuth.get();
-                userProvider.setUsername(auth.username, coUserEx);
+                userProvider.setUsername(auth.username, coUser);
                 final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
                 if (session.isPresent()) {
                     // response needs to be provided with an authenticating cookie
@@ -138,8 +136,8 @@ public class LoginResource extends ServerResource {
 
             final Result authResult = authenticationModel.authenticate(credo.getUsername(), credo.getPasswd());
             if (!authResult.isSuccessful()) {
-                logger.debug(format("Unsuccessful login request (%s)", credo));
-                getResponse().setEntity(restUtil.errorJSONRepresentation("Invalid credentials."));
+                logger.warn(format("Unsuccessful login request (%s)", credo));
+                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Invalid credentials.\"}"));
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
             } else {
                 // create a new session for an authenticated user...
@@ -148,7 +146,7 @@ public class LoginResource extends ServerResource {
 
                 // ...and provide the response with an authenticating cookie
                 assignAuthenticatingCookie(constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
-                getResponse().setEntity(restUtil.errorJSONRepresentation("Credentials are valid."));
+                getResponse().setEntity(new JsonRepresentation("{\"msg\": \"Credentials are valid.\"}"));
             }
         } catch (final Exception ex) {
             logger.fatal(ex);

@@ -6,11 +6,21 @@ import org.restlet.Component;
 
 import com.google.inject.Injector;
 
+import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.ioc.NewUserEmailNotifierBindingModule;
+import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.factories.webui.LoginCompleteResetResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.LoginInitiateResetResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.LoginResourceFactory;
+import ua.com.fielden.platform.web.factories.webui.LogoutResourceFactory;
 import ua.com.fielden.platform.web.resources.OldVersionResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.LoginCompleteResetResource;
+import ua.com.fielden.platform.web.resources.webui.LoginInitiateResetResource;
+import ua.com.fielden.platform.web.resources.webui.LoginResource;
+import ua.com.fielden.platform.web.resources.webui.LogoutResource;
 
 /**
  * Configuration point for Web UI Testing Server.
@@ -27,14 +37,12 @@ public class TgTestApplicationConfiguration extends Component {
         // /////////////////////////////////////////////////////
         try {
             // create application IoC module and injector
-            final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
+            final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
             final TgTestWebApplicationServerModule module = new TgTestWebApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, NoDataFilter.class, props);
-            injector = new ApplicationInjectorFactory().add(module).getInjector();
+            injector = new ApplicationInjectorFactory().add(module).add(new NewUserEmailNotifierBindingModule()).getInjector();
 
             // create and configure REST server utility
             final RestServerUtil serverRestUtil = injector.getInstance(RestServerUtil.class);
-            serverRestUtil.setAppWidePrivateKey(props.getProperty("private-key"));
-            serverRestUtil.setAppWidePublicKey(props.getProperty("public-key"));
 
             // //////////////////////////////////////////////////////////////
             // ///// Create a component with an HTTP server connector ///////
@@ -45,8 +53,11 @@ public class TgTestApplicationConfiguration extends Component {
 
             // attach system resources, which should be beyond the version scope
             // the interactive login page resource is considered one of the system resources, which does not require guarding
-            getDefaultHost().attach("/login", new LoginResourceFactory(injector.getInstance(RestServerUtil.class), injector));
-
+            getDefaultHost().attach(LoginResource.BINDING_PATH, new LoginResourceFactory(injector.getInstance(RestServerUtil.class), injector));
+            getDefaultHost().attach(LoginInitiateResetResource.BINDING_PATH, new LoginInitiateResetResourceFactory(injector));
+            getDefaultHost().attach(LoginCompleteResetResource.BINDING_PATH, new LoginCompleteResetResourceFactory(injector));
+            getDefaultHost().attach(LogoutResource.BINDING_PATH, new LogoutResourceFactory(injector));
+            
             // FIXME The old resources need to be completely removed from the platform
 //            getDefaultHost().attach(
 //                    "/system",//

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
 
 /**
@@ -32,14 +33,6 @@ public interface ISecurityTokenController {
     List<UserRole> findUserRolesFor(final Class<? extends ISecurityToken> securityTokenClass);
 
     /**
-     * Override it to provide the ability to persist the {@link UserRole}s associated with {@link ISecurityToken}s.
-     * 
-     * @param tokenToRoleAssocations
-     *            -- a map between tokens and roles that need to be associated
-     */
-    void saveSecurityToken(final Map<Class<? extends ISecurityToken>, Set<UserRole>> tokenToRoleAssocations);
-
-    /**
      * Returns all distinct {@link UserRole}s (It is needed for building SecurityTreeTableModel)
      * 
      * @return
@@ -47,5 +40,5 @@ public interface ISecurityTokenController {
     List<UserRole> findUserRoles();
 
     /** Checks whether the passed in user and token are associated, indicating ability for the user to access annotated with this token methods. */
-    boolean canAccess(final String username, final Class<? extends ISecurityToken> securityTokenClass);
+    boolean canAccess(final User user, final Class<? extends ISecurityToken> securityTokenClass);
 }

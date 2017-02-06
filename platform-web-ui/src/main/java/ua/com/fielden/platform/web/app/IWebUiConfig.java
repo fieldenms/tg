@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.menu.IMenuRetriever;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
@@ -18,7 +20,14 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  * @author TG Team
  *
  */
-public interface IWebUiConfig {
+public interface IWebUiConfig extends IMenuRetriever {
+
+    /**
+     * Should return a port that an application server is listening to for incoming requests.
+     *
+     * @return
+     */
+    int getPort();
 
     /**
      * Should return a domain name of a server like <code>tgdev.com</code> where the application is to be deployed.
@@ -118,14 +127,19 @@ public interface IWebUiConfig {
     void initConfiguration();
 
     /**
+     * Clears all centre, master and menu configurations that were initialised before. After that, clears all centre configurations for the application user represented by <code>gdtm</code> instance.
+     */
+    void clearConfiguration(final IGlobalDomainTreeManager gdtm);
+
+    /**
      * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
      * with other custom paths. When client asks for a resource then this application will search for that resource in these paths starting from the custom ones.
      */
     List<String> resourcePaths();
-    
+
     /**
      * The current {@link Workflows} of the server and client applications.
-     * 
+     *
      * @return
      */
     Workflows workflow();

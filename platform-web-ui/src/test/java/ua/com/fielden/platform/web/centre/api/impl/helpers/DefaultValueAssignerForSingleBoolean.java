@@ -18,7 +18,7 @@ public class DefaultValueAssignerForSingleBoolean implements IValueAssigner<Sing
 
     @Override
     public Optional<SingleCritOtherValueMnemonic<Boolean>> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
-        return null;
+        return Optional.empty();
     }
 
 }

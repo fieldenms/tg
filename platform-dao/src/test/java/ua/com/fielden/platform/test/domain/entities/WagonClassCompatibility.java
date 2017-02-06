@@ -28,10 +28,6 @@ public class WagonClassCompatibility extends AbstractEntity<DynamicEntityKey> {
     @IsProperty
     private String status;
 
-    public WagonClassCompatibility() {
-        setKey(new DynamicEntityKey(this));
-    }
-
     public WagonClass getWagonClass() {
         return wagonClass;
     }

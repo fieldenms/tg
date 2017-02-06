@@ -2,7 +2,7 @@ package ua.com.fielden.platform.file_reports;
 
 import java.util.Map;
 
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -25,6 +25,6 @@ public interface IReportFactory {
      * @return
      * @throws Exception
      */
-    byte[] createReport(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, IEntityAggregatesDao aggregatesDao, final Map<String, Object> allParams)
+    byte[] createReport(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, IEntityAggregatesOperations aggregatesDao, final Map<String, Object> allParams)
             throws Exception;
 }

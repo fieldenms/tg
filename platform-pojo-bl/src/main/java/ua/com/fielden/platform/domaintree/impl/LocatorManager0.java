@@ -47,7 +47,7 @@ public class LocatorManager0 extends AbstractDomainTree implements ILocatorManag
     private final transient EnhancementPropertiesMap<LocatorDomainTreeManagerAndEnhancer0> freezedLocators;
     private final transient EnhancementSet locatorsInEditingMode;
     /** Do <b>NOT</b> use this field directly! Please use currentAnalyses() method instead. */
-    private final transient EnhancementSet locatorsWithLocalType;
+    private transient EnhancementSet locatorsWithLocalType;
 
     /**
      * Returns a current locators for locator manager. It is lazily loaded by the very first invocation from "persistentLocators" by copying them.
@@ -75,16 +75,7 @@ public class LocatorManager0 extends AbstractDomainTree implements ILocatorManag
 
     private EnhancementSet locatorsWithLocalType() {
         if (locatorsWithLocalType == null) {
-            try {
-                final Field locatorsWithLocalTypeField = LocatorManager0.class.getDeclaredField("locatorsWithLocalType");
-                final boolean isAccessible = locatorsWithLocalTypeField.isAccessible();
-                locatorsWithLocalTypeField.setAccessible(true);
-                locatorsWithLocalTypeField.set(this, createSet());
-                locatorsWithLocalTypeField.setAccessible(isAccessible);
-            } catch (final Exception e) {
-                e.printStackTrace();
-                throw new IllegalStateException(e);
-            }
+            locatorsWithLocalType = createSet();
             locatorsWithLocalType.addAll(locatorKeys()); // all non-null locators are LOCAL
         }
         return locatorsWithLocalType;

@@ -1,6 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-icon/iron-icon.html">
-<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="/resources/views/tg-view.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animation.html">
 <link rel="import" href="/resources/views/tg-view-with-menu.html">
@@ -26,11 +26,11 @@
         </div>
         <div class="flex layout vertical">
             <!--cross-fade animation here-->
-            <template is="dom-if" if="[[!menuItem.menu]]">
-                <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[menuItem]]"></tg-view>
+            <template is="dom-if" if="[[!_isMenuPresent(menuItem.menu)]]">
+                <tg-view class="fit" id="view" auto-load="[[autoLoad]]" menu-item="[[menuItem]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view>
             </template>
-            <template is="dom-if" if="[[menuItem.menu]]">
-                <tg-view-with-menu class="fit" id="view" menu-item="[[menuItem]]"></tg-view-with-menu>
+            <template is="dom-if" if="[[_isMenuPresent(menuItem.menu)]]">
+                <tg-view-with-menu class="fit" id="view" menu="[[menu]]" menu-item="[[menuItem]]" can-edit="[[canEdit]]" menu-save-callback="[[menuSaveCallback]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view-with-menu>
             </template>
         </div>
 
@@ -44,7 +44,13 @@
             is: "tg-app-view",
 
             properties: {
+                menu: Array,
                 menuItem: Object,
+                selectedModule: String,
+                submodule: {
+                    type: Object,
+                    notify: true
+                },
                 autoLoad: {
                     type: Boolean,
                     value: false,
@@ -54,7 +60,9 @@
                     value: function () {
                         return {};
                     }
-                }
+                },
+                canEdit: Boolean,
+                menuSaveCallback: Function
             },
 
             behaviors: [
@@ -117,13 +125,52 @@
                     node: this
                 });
             },
+            
+            getSelectedPage: function () {
+                var view = this.$$("#view");
+                if (view.getSelectedPage) {
+                    return view.getSelectedPage();
+                }
+            },
+            
+            searchMenu: function () {
+                var view = this.$$("#view");
+                if (view.searchMenu) {
+                    view.searchMenu();
+                }
+            },
+            
+            selectSubroute: function (subroute) {
+                var view = this.$$("#view");
+                if (view._selectMenu) {
+                    view._selectMenu(subroute);
+                }
+            },
 
             load: function () {
                 this.$$("#view").load();
             },
+            
+            canLeave: function() {
+                var viewThatWasChanged = this.$$("#view").canLeave();
+                var viewsDesc = [];
+                if (Array.isArray(viewThatWasChanged)) {
+                    viewThatWasChanged.forEach(function (element) {
+                        viewsDesc.push(this.menuItem.key + " \u2192 " +  element);
+                    }.bind(this));
+                    return viewsDesc;
+                }
+                return viewThatWasChanged; 
+            },
+            
+            _isMenuPresent: function (menu) {
+                return menu && menu.length > 0;
+            },
+            
             _calcStyleForItem: function (menuItem) {
                 return "background-color: " + menuItem.bgColor + ";";
             },
+            
             _calcSvgStyleForItem: function (menuItem) {
                 return "color: " + menuItem.bgColor + "; opacity:0.5;";
             }

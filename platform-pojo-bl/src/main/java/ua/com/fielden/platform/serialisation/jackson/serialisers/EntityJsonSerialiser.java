@@ -1,5 +1,19 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginal;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getEditable;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getOriginalValue;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getRequired;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getVisible;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isChangedFromOriginalDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEditableDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isMaxDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isMinDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isRequiredDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isValidationResultDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isVisibleDefault;
+
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,6 +28,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
@@ -23,29 +38,29 @@ import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.utils.Pair;
 
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
-
 public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerializer<T> {
     private final Class<T> type;
     private final Logger logger = Logger.getLogger(getClass());
     private final List<CachedProperty> properties;
     private final EntityType entityType;
-    private final boolean excludeNullsAndIdOnlyProxies;
+    private final boolean excludeNulls;
+    private final boolean propertyDescriptorType;
 
-    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNullsAndIdOnlyProxies) {
+    public EntityJsonSerialiser(final Class<T> type, final List<CachedProperty> properties, final EntityType entityType, final boolean excludeNulls, final boolean propertyDescriptorType) {
         super(type);
-        if (entityType.get_number() == null) {
-            throw new IllegalStateException("The number of the type [" + entityType + "] should be populated to be ready for serialisation.");
-        }
 
         this.type = type;
         this.properties = properties;
         this.entityType = entityType;
-        this.excludeNullsAndIdOnlyProxies = excludeNullsAndIdOnlyProxies;
+        this.excludeNulls = excludeNulls;
+        this.propertyDescriptorType = propertyDescriptorType;
     }
 
     @Override
     public void serialize(final T entity, final JsonGenerator generator, final SerializerProvider provider) throws IOException, JsonProcessingException {
+        if (entityType.get_identifier() == null) {
+            throw new IllegalStateException("The identifier of the type [" + entityType + "] should be populated to be ready for serialisation.");
+        }
         ////////////////////////////////////////////////////
         ///////////////// handle references ////////////////
         ////////////////////////////////////////////////////
@@ -70,13 +85,20 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
 
             generator.writeEndObject();
         } else {
-            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_number());
+            final String newReference = EntitySerialiser.newSerialisationId(entity, references, entityType.get_identifier());
             references.putReference(entity, newReference);
 
             generator.writeStartObject();
 
             generator.writeFieldName("@id");
             generator.writeObject(newReference);
+            
+            if (propertyDescriptorType) {
+                final PropertyDescriptor<?> pd = (PropertyDescriptor<?>) entity;
+                // write property descriptor toString() value to special '@pdString' field
+                generator.writeFieldName("@pdString");
+                generator.writeObject(pd.toString());
+            }
             
             final boolean uninstrumented = !PropertyTypeDeterminator.isInstrumented(entity.getClass());
             if (uninstrumented) {
@@ -96,7 +118,6 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                 generator.writeObject(entity.getVersion());
             }
             
-
             // serialise all the properties relying on the fact that property sequence is consistent with order of fields in the class declaration
             for (final CachedProperty prop : properties) {
                 // non-composite keys should be persisted by identifying their actual type
@@ -117,7 +138,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                         throw e;
                     }
                     
-                    if ((value != null && !isIdOnlyProxiedEntity(value, prop.isEntityTyped())) || !excludeNullsAndIdOnlyProxies) {
+                    if (!disregardValueSerialisation(value, prop.isEntityTyped(), excludeNulls)) {
                         // write actual property
                         generator.writeFieldName(name);
                         generator.writeObject(value);
@@ -132,7 +153,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                                 existingMetaProps.put("_" + MetaProperty.EDITABLE_PROPERTY_NAME, getEditable(metaProperty));
                             }
                             if (!isChangedFromOriginalDefault(metaProperty)) {
-                                existingMetaProps.put("_cfo", getChangedFromOriginal(metaProperty));
+                                existingMetaProps.put("_cfo", isChangedFromOriginal(metaProperty));
                                 existingMetaProps.put("_originalVal", getOriginalValue(metaProperty));
                             }
                             if (!isRequiredDefault(metaProperty)) {
@@ -166,12 +187,24 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             }
                         }
                     }
-
                 }
             }
 
             generator.writeEndObject();
         }
+    }
+    
+    /**
+     * Returns <code>true</code> in case when value serialisation should be skipped, <code>false</code> otherwise.
+     * 
+     * @param value
+     * @param isEntityTyped
+     * @param excludeNulls
+     * @return
+     */
+    private static boolean disregardValueSerialisation(final Object value, final boolean isEntityTyped, final boolean excludeNulls) {
+        return value == null && excludeNulls || 
+               value != null && isIdOnlyProxiedEntity(value, isEntityTyped);
     }
     
     /**

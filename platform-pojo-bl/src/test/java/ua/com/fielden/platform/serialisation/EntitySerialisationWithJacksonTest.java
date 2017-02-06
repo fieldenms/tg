@@ -28,12 +28,15 @@ import com.google.inject.Module;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
+import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
@@ -71,9 +74,13 @@ public class EntitySerialisationWithJacksonTest {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final Date testingDate = new Date();
     private final FactoryForTestingEntities factory = new FactoryForTestingEntities(injector.getInstance(EntityFactory.class), testingDate);
-    private final ISerialiserEngine jacksonSerialiser = new Serialiser(factory.getFactory(), createClassProvider()).getEngine(SerialiserEngines.JACKSON);
-    private final ISerialiserEngine jacksonDeserialiser = new Serialiser(factory.getFactory(), createClassProvider()).getEngine(SerialiserEngines.JACKSON);
+    private final ISerialiserEngine jacksonSerialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder()).getEngine(SerialiserEngines.JACKSON);
+    private final ISerialiserEngine jacksonDeserialiser = Serialiser.createSerialiserWithKryoAndJackson(factory.getFactory(), createClassProvider(), createSerialisationTypeEncoder()).getEngine(SerialiserEngines.JACKSON);
     private boolean observed = false;
+    
+    private ISerialisationTypeEncoder createSerialisationTypeEncoder() {
+        return new SerialisationTypeEncoder();
+    }
 
     private ProvidedSerialisationClassProvider createClassProvider() {
         return new ProvidedSerialisationClassProvider(
@@ -98,7 +105,8 @@ public class EntitySerialisationWithJacksonTest {
                 SubBaseEntity2.class,
                 EntityWithCompositeKey.class,
                 EntityWithMoney.class,
-                EntityWithPolymorphicAEProp.class);
+                EntityWithPolymorphicAEProp.class,
+                PropertyDescriptor.class);
     }
 
     @Test
@@ -731,5 +739,41 @@ public class EntitySerialisationWithJacksonTest {
         assertEquals("Incorrectly restored key.", "key", restoredEntity.getKey());
         assertEquals("Incorrectly restored description.", "description", restoredEntity.getDesc());
         assertEquals("Incorrectly restored entity type.", EntityWithInteger.class, restoredEntity.getType());
+    }
+    
+    @Test
+    public void property_descriptor_should_be_restored() throws Exception {
+        final PropertyDescriptor<EntityWithInteger> entity = factory.createPropertyDescriptor();
+
+        final PropertyDescriptor<EntityWithInteger> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), PropertyDescriptor.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+
+        assertEquals("Incorrect key.", "EntityWithInteger prop Title", restoredEntity.getKey());
+        assertEquals("Incorrect desc.", "EntityWithInteger prop Desc", restoredEntity.getDesc());
+        assertEquals("Incorrect entityType.", EntityWithInteger.class, restoredEntity.getEntityType());
+        assertEquals("Incorrect propertyName.", "prop", restoredEntity.getPropertyName());
+    }
+    
+    @Test
+    public void instrumented_property_descriptor_should_be_restored() throws Exception {
+        final PropertyDescriptor<EntityWithInteger> entity = factory.createPropertyDescriptorInstrumented();
+
+        final PropertyDescriptor<EntityWithInteger> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), PropertyDescriptor.class);
+
+        assertNotNull("Entity has not been deserialised successfully.", restoredEntity);
+        assertFalse("Restored entity should not be the same entity.", entity == restoredEntity);
+
+        assertEquals("Incorrect key.", "EntityWithInteger prop Title", restoredEntity.getKey());
+        assertTrue("Incorrect prop ChangedFromOriginal.", restoredEntity.getProperty("key").isChangedFromOriginal()); // 'new' entity -- that is why it should be changed from original
+        assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("key").isDirty()); // 'new' entity -- that is why it should be dirty
+        
+        assertEquals("Incorrect desc.", "EntityWithInteger prop Desc", restoredEntity.getDesc());
+        assertTrue("Incorrect prop ChangedFromOriginal.", restoredEntity.getProperty("desc").isChangedFromOriginal()); // 'new' entity -- that is why it should be changed from original
+        assertTrue("Incorrect prop dirtiness.", restoredEntity.getProperty("desc").isDirty()); // 'new' entity -- that is why it should be dirty
+        
+        assertEquals("Incorrect entityType.", EntityWithInteger.class, restoredEntity.getEntityType());
+        assertEquals("Incorrect propertyName.", "prop", restoredEntity.getPropertyName());
     }
 }

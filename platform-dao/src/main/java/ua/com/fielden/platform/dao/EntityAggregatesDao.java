@@ -4,45 +4,42 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import com.google.inject.Inject;
+
+import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
-
-import com.google.inject.Inject;
 
 @EntityType(EntityAggregates.class)
-public class EntityAggregatesDao implements IEntityAggregatesDao {
+public class EntityAggregatesDao implements IEntityAggregatesOperations {
 
-    private final CommonEntityAggregatesDao dao;
-
-    @Inject
-    private IUserProvider up;
+    private final ICompanionObjectFinder coFinder;
 
     @Inject
-    protected EntityAggregatesDao(final CommonEntityAggregatesDao dao) {
-        this.dao = dao;
+    protected EntityAggregatesDao(final ICompanionObjectFinder coFinder) {
+        this.coFinder = coFinder;
     }
 
     @Override
     public List<EntityAggregates> getAllEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> aggregatesQueryModel) {
-        return dao.getAllEntities(aggregatesQueryModel);
+        return coFinder.find(EntityAggregates.class).getAllEntities(aggregatesQueryModel);
     }
 
     @Override
     public EntityAggregates getEntity(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model) {
-        return dao.getEntity(model);
+        return coFinder.find(EntityAggregates.class).getEntity(model);
     }
 
     @Override
     public List<EntityAggregates> getFirstEntities(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> aggregatesQueryModel, final int numberOfEntities) {
-        return dao.getFirstEntities(aggregatesQueryModel, numberOfEntities);
+        return coFinder.find(EntityAggregates.class).getFirstEntities(aggregatesQueryModel, numberOfEntities);
     }
 
     @Override
     public IPage<EntityAggregates> firstPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final int pageCapacity) {
-        return dao.firstPage(query, pageCapacity);
+        return coFinder.find(EntityAggregates.class).firstPage(query, pageCapacity);
     }
 
     @Override
@@ -52,37 +49,37 @@ public class EntityAggregatesDao implements IEntityAggregatesDao {
 
     @Override
     public IPage<EntityAggregates> getPage(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> model, final int pageNo, final int pageCount, final int pageCapacity) {
-        return dao.getPage(model, pageNo, pageCount, pageCapacity);
+        return coFinder.find(EntityAggregates.class).getPage(model, pageNo, pageCount, pageCapacity);
     }
 
     @Override
     public byte[] export(final QueryExecutionModel<EntityAggregates, AggregatedResultQueryModel> query, final String[] propertyNames, final String[] propertyTitles)
             throws IOException {
-        return dao.export(query, propertyNames, propertyTitles);
+        return coFinder.find(EntityAggregates.class).export(query, propertyNames, propertyTitles);
     }
 
     @Override
     public final String getUsername() {
-        return up.getUser().getKey();
+        return coFinder.find(EntityAggregates.class).getUser().getKey();
     }
 
     @Override
     public int count(final AggregatedResultQueryModel model, final Map<String, Object> paramValues) {
-        return dao.count(model, paramValues);
+        return ((CommonEntityAggregatesDao) coFinder.find(EntityAggregates.class)).count(model, paramValues);
     }
 
     @Override
     public int count(final AggregatedResultQueryModel model) {
-        return dao.count(model);
+        return ((CommonEntityAggregatesDao) coFinder.find(EntityAggregates.class)).count(model);
     }
 
     @Override
     public boolean stop() {
-        return dao.stop();
+        return coFinder.find(EntityAggregates.class).stop();
     }
 
     @Override
     public Integer progress() {
-        return dao.progress();
+        return coFinder.find(EntityAggregates.class).progress();
     }
 }

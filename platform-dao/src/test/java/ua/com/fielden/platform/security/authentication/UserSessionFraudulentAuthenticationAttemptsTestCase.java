@@ -11,10 +11,10 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
@@ -29,14 +29,14 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class UserSessionFraudulentAuthenticationAttemptsTestCase extends AbstractDaoTestCase {
 
-    private final IUserSession coSession = ao(UserSession.class);
+    private final IUserSession coSession = co(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
 
     @Test
     public void should_recognize_if_adversary_obtained_authenticator_from_untrusted_device_and_tried_to_change_expiry_date() throws SignatureException {
         // establish a new sessions for user TEST
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserEx.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         // first session is from trusted device
@@ -74,7 +74,7 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
     public void should_recognize_if_adversary_obtained_authenticator_from_trusted_device_and_tried_connect_under_a_different_user() throws SignatureException {
         // establish a new sessions for user TEST
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserEx.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         // first session is from trusted device
@@ -90,7 +90,7 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
         // now let's move the clock 30 minutes forward to emulate a time change
         // adversary tries to reuse a completely valid and not yet expired authenticator to access the system under a different username
         constants.setNow(dateTime("2015-04-23 13:30:00"));
-        up.setUsername("USER-1", getInstance(IUserEx.class));
+        up.setUsername("USER1", getInstance(IUser.class));
         final User differentUser = getInstance(IUserProvider.class).getUser();
 
         final Optional<UserSession> session = coSession.currentSession(differentUser, authenticator);
@@ -110,22 +110,23 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
         super.populateDomain();
 
         // add more users
-        save(new_(TgPerson.class, "Person 1").setUsername("USER-1").setBase(true));
-        save(new_(TgPerson.class, "Person 2").setUsername("USER-2").setBase(true));
+        final IUser coUser = co(User.class);
+        save(new_(TgPerson.class, "Person 1").setUser(coUser.save(new_(User.class, "USER1").setBase(true).setEmail("USER1@unit-test.software").setActive(true))));
+        save(new_(TgPerson.class, "Person 2").setUser(coUser.save(new_(User.class, "USER2").setBase(true).setEmail("USER2@unit-test.software").setActive(true))));
 
         // establish session for the above users
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("USER-1", getInstance(IUserEx.class));
+        up.setUsername("USER1", getInstance(IUser.class));
         final User user1 = up.getUser();
 
-        // trusted session for User-1
+        // trusted session for USER1
         constants.setNow(dateTime("2015-04-23 16:26:00"));
         coSession.newSession(user1, true); // from work
 
-        up.setUsername("USER-2", getInstance(IUserEx.class));
+        up.setUsername("USER2", getInstance(IUser.class));
         final User user2 = up.getUser();
 
-        // trusted session for User-2
+        // trusted session for USER2
         constants.setNow(dateTime("2015-04-23 16:30:00"));
         coSession.newSession(user2, true); // from work
     }

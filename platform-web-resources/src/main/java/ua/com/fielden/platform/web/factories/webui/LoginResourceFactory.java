@@ -6,16 +6,16 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.Method;
 
-import ua.com.fielden.platform.security.provider.IUserEx;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.LoginResource;
-
-import com.google.inject.Injector;
 
 /**
  * A factory for a login web resource.
@@ -50,7 +50,7 @@ public class LoginResourceFactory extends Restlet {
                     injector.getInstance(IUniversalConstants.class),
                     injector.getInstance(IAuthenticationModel.class),
                     injector.getInstance(IUserProvider.class),
-                    injector.getInstance(IUserEx.class),
+                    injector.getInstance(IUser.class),
                     injector.getInstance(IUserSession.class),
                     util,
                     getContext(),

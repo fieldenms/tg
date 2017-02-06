@@ -2,6 +2,7 @@ package ua.com.fielden.platform.domaintree.testing;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -23,18 +24,15 @@ import ua.com.fielden.platform.types.Money;
 
 /**
  * Entity for "domain tree representation" testing.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-@KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Key title", desc = "Key desc")
 @DescTitle(value = "Desc title", desc = "Desc desc")
+@KeyType(DynamicEntityKey.class)
 public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
-
-    protected SlaveEntity() {
-    }
 
     @IsProperty
     @CompositeKeyMember(1)
@@ -84,7 +82,10 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
 
     ///////// Collections /////////
     @IsProperty(value = EvenSlaverEntity.class, linkProperty = "slaveEntityLinkProp")
-    private List<EvenSlaverEntity> collection = new ArrayList<EvenSlaverEntity>();
+    private List<EvenSlaverEntity> collection = new ArrayList<>();
+
+    @IsProperty(ShortEvenSlaverEntity.class)
+    private List<ShortEvenSlaverEntity> shortCollection = new ArrayList<>();
 
     ////////// Any property to be specifically excluded //////////
     @IsProperty(linkProperty = "slaveEntityLinkProp")
@@ -245,8 +246,19 @@ public class SlaveEntity extends AbstractEntity<DynamicEntityKey> {
         this.entityProp = entityProp;
     }
 
+    public List<ShortEvenSlaverEntity> getShortCollection() {
+        return Collections.unmodifiableList(shortCollection);
+    }
+
+    @Observable
+    public SlaveEntity setShortCollection(final List<ShortEvenSlaverEntity> shortCollection) {
+        this.shortCollection.clear();
+        this.shortCollection.addAll(shortCollection);
+        return this;
+    }
+
     public List<EvenSlaverEntity> getCollection() {
-        return collection;
+        return Collections.unmodifiableList(collection);
     }
 
     @Observable

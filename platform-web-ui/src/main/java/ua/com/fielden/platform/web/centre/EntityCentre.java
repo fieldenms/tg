@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -14,10 +15,14 @@ import java.util.regex.Matcher;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.collect.ListMultimap;
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
@@ -36,8 +41,9 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
@@ -83,9 +89,6 @@ import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
-import com.google.common.collect.ListMultimap;
-import com.google.inject.Injector;
-
 /**
  * Represents the entity centre.
  *
@@ -121,7 +124,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         this.injector = injector;
         this.miType = miType;
-        this.entityType = (Class<T>) CentreUtils.getEntityType(miType);
+        this.entityType = CentreUtils.getEntityType(miType);
         this.coFinder = this.injector.getInstance(ICompanionObjectFinder.class);
         this.postCentreCreated = postCentreCreated;
     }
@@ -163,6 +166,32 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
 
         final Optional<List<ResultSetProp>> resultSetProps = dslDefaultConfig.getResultSetProperties();
+        final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
+
+        if (resultSetProps.isPresent()) {
+            for (final ResultSetProp property : resultSetProps.get()) {
+                if (property.propName.isPresent()) {
+                } else {
+                    if (property.propDef.isPresent()) { // represents the 'custom' property
+                        final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
+                        enhanceCentreManagerWithCustomProperty(cdtmae, entityType, customPropName, property.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
+                    } else {
+                        throw new IllegalStateException(String.format("The state of result-set property [%s] definition is not correct, need to exist either a 'propName' for the property or 'propDef'.", property));
+                    }
+                }
+            }
+        }
+        if (summaryExpressions.isPresent()) {
+            for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
+                final String originationProperty = treeName(entry.getKey());
+                for (final SummaryPropDef summaryProp : entry.getValue()) {
+                    cdtmae.getEnhancer().addCalculatedProperty(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, summaryProp.desc, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF"
+                            : originationProperty);
+                }
+            }
+        }
+        cdtmae.getEnhancer().apply();
+
         if (resultSetProps.isPresent()) {
             for (final ResultSetProp property : resultSetProps.get()) {
                 if (property.propName.isPresent()) {
@@ -172,7 +201,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 } else {
                     if (property.propDef.isPresent()) { // represents the 'custom' property
                         final String customPropName = CalculatedProperty.generateNameFrom(property.propDef.get().title);
-                        enhanceCentreManagerWithCustomProperty(cdtmae, entityType, customPropName, property.propDef.get(), dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType());
                         final String propertyName = treeName(customPropName);
                         cdtmae.getSecondTick().check(entityType, propertyName, true);
                         cdtmae.getSecondTick().setWidth(entityType, propertyName, property.width);
@@ -185,15 +213,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
-
-        final Optional<ListMultimap<String, SummaryPropDef>> summaryExpressions = dslDefaultConfig.getSummaryExpressions();
         if (summaryExpressions.isPresent()) {
             for (final Entry<String, Collection<SummaryPropDef>> entry : summaryExpressions.get().asMap().entrySet()) {
-                final String originationProperty = treeName(entry.getKey());
                 for (final SummaryPropDef summaryProp : entry.getValue()) {
-                    cdtmae.getEnhancer().addCalculatedProperty(entityType, "", summaryProp.alias, summaryProp.expression, summaryProp.title, summaryProp.desc, CalculatedPropertyAttribute.NO_ATTR, "".equals(originationProperty) ? "SELF"
-                            : originationProperty);
-                    cdtmae.getEnhancer().apply();
                     cdtmae.getSecondTick().check(entityType, summaryProp.alias, true);
                 }
             }
@@ -565,6 +587,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
+     * Returns action configuration for concrete action kind and its number in that kind's space.
+     *
+     * @param actionKind
+     * @param actionNumber
+     * @return
+     */
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        return dslDefaultConfig.actionConfig(actionKind, actionNumber);
+    }
+
+    /**
      * Returns the value that indicates whether centre must run automatically or not.
      *
      * @return
@@ -596,9 +629,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      *
      * @return
      */
-    public Optional<IRenderingCustomiser<T, ?>> getRenderingCustomiser() {
+    public Optional<IRenderingCustomiser<?>> getRenderingCustomiser() {
         if (dslDefaultConfig.getResultSetRenderingCustomiserType().isPresent()) {
-            return (Optional<IRenderingCustomiser<T, ?>>) Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
+            return Optional.of(injector.getInstance(dslDefaultConfig.getResultSetRenderingCustomiserType().get()));
         } else {
             return Optional.empty();
         }
@@ -619,25 +652,33 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (userSpecificGlobalManager == null) {
             return createUserUnspecificDefaultCentre(dslDefaultConfig, injector.getInstance(ISerialiser.class), postCentreCreated);
         } else {
-            return CentreUtils.getFreshCentre(userSpecificGlobalManager, this.menuItemType);
+            return CentreUpdater.updateCentre(userSpecificGlobalManager, this.menuItemType, CentreUpdater.FRESH_CENTRE_NAME);
         }
     }
 
     private IRenderable createRenderableEgiRepresentaton(final ICentreDomainTreeManagerAndEnhancer centre) {
-        final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
-                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
-                "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
-                "<div class='truncate relative'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>" +
-                "</div>" +
+        final String simpleValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>"
+                +
+                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>"
+                +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>"
+                +
+                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>"
+                +
+                "<div class='truncate relative' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", false)]]'>[[_getValue(egiEntity.entity, '@property-name', '@property-type')]]</div>"
+                + "</div>" +
                 "</div>";
 
-        final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>" +
-                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>" +
-                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>" +
-                "<div style$='[[_calcRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>" +
-                "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]'></iron-icon>" +
-                "</div>" +
+        final String booleanValueString = "<div class='data-entry layout vertical' property='@calc-property-name'>"
+                +
+                "<div class='data-label truncate' tooltip-text='@column-desc'>@column-title</div>"
+                +
+                "<div class='data-value relative' on-tap='_tapAction' tooltip-text$='[[_getTooltip(egiEntity.entity, columns.@column-index)]]'>"
+                +
+                "<div style$='[[_calcBackgroundRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\")]]' class='fit'></div>"
+                +
+                "<iron-icon class='card-icon' icon='[[_getBooleanIcon(egiEntity.entity, \"@property-name\")]]' style$='[[_calcValueRenderingHintsStyle(egiEntity, entityIndex, \"@property-name\", true)]]'></iron-icon>"
+                + "</div>" +
                 "</div>";
         final DomContainer domContainer = new DomContainer();
         final Optional<List<ResultSetProp>> resultProps = getCustomPropertiesDefinitions();
@@ -657,11 +698,38 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                                 .replace("@column-title", columnTitileAndDesc.getKey())
                                 .replace("@column-desc", columnTitileAndDesc.getValue())
                                 .replaceAll("@column-index", Integer.toString(columnIndex))
-                                .replaceAll("@property-type", Matcher.quoteReplacement(egiRepresentationFor(propertyType).toString()))));
+                                .replaceAll("@property-type", Matcher.quoteReplacement(
+                                        egiRepresentationFor(
+                                                propertyType,
+                                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null),
+                                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(managedType, resultPropName)
+                                                        : null))
+                                        ))));
             }
         }
+
+        logger.debug("Initiating top-level actions' shortcuts...");
+        final Optional<List<Pair<EntityActionConfig, Optional<String>>>> topLevelActions = this.dslDefaultConfig.getTopLevelActions();
+        final StringBuilder shortcuts = new StringBuilder();
+
+        for (final String shortcut : dslDefaultConfig.getToolbarConfig().getAvailableShortcuts()) {
+            shortcuts.append(shortcut + " ");
+        }
+
+        if (topLevelActions.isPresent()) {
+
+            for (int i = 0; i < topLevelActions.get().size(); i++) {
+                final Pair<EntityActionConfig, Optional<String>> topLevelAction = topLevelActions.get().get(i);
+                final EntityActionConfig config = topLevelAction.getKey();
+                if (config.shortcut.isPresent()) {
+                    shortcuts.append(config.shortcut.get() + " ");
+                }
+            }
+        }
+
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/egi/tg-entity-grid-inspector-template.html");
         final String egiStr = text.
+                replace("@SHORTCUTS", shortcuts).
                 replace("@toolbarVisible", !dslDefaultConfig.shouldHideToolbar() + "").
                 replace("@checkboxVisible", !dslDefaultConfig.shouldHideCheckboxes() + "").
                 replace("@checkboxesFixed", dslDefaultConfig.getScrollConfig().isCheckboxesFixed() + "").
@@ -683,9 +751,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
     }
 
-    private Object egiRepresentationFor(final Class<?> propertyType) {
+    private String egiRepresentationFor(final Class<?> propertyType, final Optional<String> timeZone, final Optional<String> timePortionToDisplay) {
         final Class<?> type = DynamicEntityClassLoader.getOriginalType(propertyType);
-        return EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : type.getSimpleName());
+        String typeRes = EntityUtils.isEntityType(type) ? type.getName() : (EntityUtils.isBoolean(type) ? "Boolean" : type.getSimpleName());
+        if (Date.class.isAssignableFrom(type)) {
+            typeRes += ":" + timeZone.orElse("");
+            typeRes += ":" + timePortionToDisplay.orElse("");
+        }
+        return typeRes;
     }
 
     /**
@@ -751,7 +824,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     action = Optional.empty();
                 }
 
-                final PropertyColumnElement el = new PropertyColumnElement(resultPropName, null, centre.getSecondTick().getWidth(root, resultPropName), resultProp.isFlexible, tooltipProp, egiRepresentationFor(propertyType), CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName), action);
+                final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
+                        null,
+                        centre.getSecondTick().getWidth(root, resultPropName),
+                        resultProp.isFlexible,
+                        tooltipProp,
+                        egiRepresentationFor(
+                                propertyType,
+                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null),
+                                Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(managedType, resultPropName) : null)),
+                        CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName),
+                        action);
                 if (summaryProps.isPresent() && summaryProps.get().containsKey(propertyName)) {
                     final List<SummaryPropDef> summaries = summaryProps.get().get(propertyName);
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
@@ -867,12 +950,18 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
         for (final FunctionalActionElement el : insertionPointActionsElements) {
+            final DomElement insertionPoint = new DomElement("tg-entity-centre-insertion-point")
+                    .attr("id", "ip" + el.numberOfAction)
+                    .attr("short-desc", el.conf().shortDesc.orElse(""))
+                    .attr("long-desc", el.conf().longDesc.orElse(""))
+                    .attr("retrieved-entities", "{{retrievedEntities}}")
+                    .attr("retrieved-totals", "{{retrievedTotals}}");
             if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.LEFT) {
-                leftInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction));
+                leftInsertionPointsDom.add(insertionPoint);
             } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.RIGHT) {
-                rightInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction));
+                rightInsertionPointsDom.add(insertionPoint);
             } else if (el.entityActionConfig.whereToInsertView.get() == InsertionPoints.BOTTOM) {
-                bottomInsertionPointsDom.add(new DomElement("tg-entity-centre-insertion-point").attr("id", "ip" + el.numberOfAction));
+                bottomInsertionPointsDom.add(insertionPoint);
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }
@@ -1045,9 +1134,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param propDef
      * @param resultSetCustomPropAssignmentHandlerType
      */
-    private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> resultSetCustomPropAssignmentHandlerType) {
+    private void enhanceCentreManagerWithCustomProperty(final ICentreDomainTreeManagerAndEnhancer centre, final Class<?> root, final String propName, final PropDef<?> propDef, final Optional<Class<? extends ICustomPropsAssignmentHandler>> resultSetCustomPropAssignmentHandlerType) {
         centre.getEnhancer().addCustomProperty(root, "" /* this is the contextPath */, propName, propDef.title, propDef.desc, propDef.type);
-        centre.getEnhancer().apply();
     }
 
     /**
@@ -1154,7 +1242,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue() != null
                 && dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().isPresent()
                 ? dslDefaultConfig.getValueMatchersForSelectionCriteria().get().get(dslProp).getValue().get()
-                : new CentreContextConfig(false, false, false, false);
+                : new CentreContextConfig(false, false, false, false, null);
     }
 
     /**
@@ -1195,7 +1283,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return new Pair<>(new FallbackValueMatcherWithCentreContext<V>(co), Optional.empty());
     }
 
-    public Optional<Class<? extends ICustomPropsAssignmentHandler<? extends AbstractEntity<?>>>> getCustomPropertiesAsignmentHandler() {
+    public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {
         return dslDefaultConfig.getResultSetCustomPropAssignmentHandlerType();
     }
 
@@ -1203,7 +1291,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig.getResultSetProperties();
     }
 
-    public ICustomPropsAssignmentHandler<T> createAssignmentHandlerInstance(final Class<? extends ICustomPropsAssignmentHandler<T>> assignmentHandlerType) {
+    public ICustomPropsAssignmentHandler createAssignmentHandlerInstance(final Class<? extends ICustomPropsAssignmentHandler> assignmentHandlerType) {
         return injector.getInstance(assignmentHandlerType);
     }
 
@@ -1219,5 +1307,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         } else {
             return Optional.empty();
         }
+    }
+
+    public Optional<Pair<Class<?>, Class<?>>> getGeneratorTypes() {
+        return dslDefaultConfig.getGeneratorTypes();
+    }
+
+    /**
+     * Creates generic {@link IGenerator} instance from injector based on assumption that <code>generatorType</code> is of appropriate type (such checks are performed on API implementation level).
+     *
+     * @param generatorType
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    public IGenerator createGeneratorInstance(final Class<?> generatorType) {
+        return (IGenerator) injector.getInstance(generatorType);
     }
 }

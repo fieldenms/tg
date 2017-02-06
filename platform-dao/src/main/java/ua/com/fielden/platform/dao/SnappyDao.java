@@ -8,14 +8,14 @@ import org.hibernate.Session;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.snappy.ISnappyDao;
 import ua.com.fielden.platform.snappy.SnappyQuery;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.snappy.DbDateUtilities;
 import ua.com.fielden.snappy.FiltResult;
@@ -23,9 +23,6 @@ import ua.com.fielden.snappy.Result;
 import ua.com.fielden.snappy.Result.ResultState;
 import ua.com.fielden.snappy.RsAggrResult;
 
-import com.google.inject.Inject;
-
-@EntityType(AbstractEntity.class)
 public class SnappyDao extends CommonEntityDao implements ISnappyDao {
 
     @Inject

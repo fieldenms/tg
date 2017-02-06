@@ -1,10 +1,15 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
+
 <link rel="import" href="/resources/polymer/iron-dropdown/iron-dropdown.html">
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 
 <dom-module id="tg-colour-picker">
     <style>
+        #input.upper-case {
+            text-transform: uppercase;
+        }
         .colour-box {
              position: relative;
              min-width: 40px;
@@ -60,7 +65,30 @@
          }
     </style>
     <template>
-        <tg-editor id="editorDom" prop-title="[[propTitle]]" _disabled="[[_disabled]]" _editing-value="{{_editingValue}}" action="[[action]]" _error="[[_error]]" _comm-value="[[_commValue]]" _accepted-value="[[_acceptedValue]]" debug="[[debug]]" _on-input="[[_onInput]]" _on-keydown="[[_onKeydown]]" _on-change="[[_onChange]]" current-state="[[currentState]]" _calc-colour-text-style="[[_calcColourTextStyle]]">
+        <tg-editor
+        	id="editorDom"
+        	prop-title="[[propTitle]]"
+        	_disabled="[[_disabled]]"
+        	_editing-value="{{_editingValue}}"
+        	action="[[action]]"
+        	_error="[[_error]]"
+        	_comm-value="[[_commValue]]"
+        	_accepted-value="[[_acceptedValue]]"
+        	debug="[[debug]]">
+            <input
+            	id="input"
+            	class="custom-input colour-input"
+            	is="iron-input"
+            	bind-value="{{_editingValue}}"
+            	style$="[[_calcColourTextStyle(_editingValue)]]"
+            	prevent-invalid-input
+            	allowed-pattern="[0-9, A-F, a-f]"
+            	maxlength="6"
+            	on-change="_onChange"
+            	on-input="_onInput"
+            	on-keydown="_onKeydown"
+            	disabled$="[[_disabled]]"
+                tooltip-text$="[[_getTooltip(_editingValue)]]"/>
             <div class="layout horizontal prefix-custom-attributes" style$="[[_calcDecoratorPartStyle(_disabled)]]">
                 <div on-tap="_openColourPicker" class="small-box prefix-custom-attributes" style$="[[_calcColourBoxStyle(_editingValue)]]">
                     <iron-icon class$="[[_calcColourSmallIconClass(_editingValue)]]" icon="close"></iron-icon>
@@ -124,10 +152,9 @@
             },
             
             ready: function () {
-                this.$.editorDom._editorKind = "COLOUR";
                 this._calcColourTextStyle = (function (editingValue) {
                     if (editingValue === "" || editingValue.length === 3 || editingValue.length === 6) {
-                        return "margin-left: 1px; color: #212121";                    
+                        return "margin-left: 1px; color: #212121";
                     } else {
                         return "margin-left: 1px; color: #DD2C00";
                     }
@@ -183,16 +210,30 @@
 
                 domBind._acceptColourBind = function () {
                     self._isAcceptingColourFromPicker = true;
-                    self.decoratedInput().focus();
                 }.bind(domBind);
 
                 domBind.open = function () {
                     this.$.dropdown.open();
                 }.bind(domBind);
+                
+                domBind._colorPickerClosed = function () {
+                    self.decoratedInput().focus();
+                }.bind(domBind);
+                
+                domBind._colorPickerOpened = function (event) {
+                    if (event.stopPropagation) event.stopPropagation();
+                    if (event.preventDefault) event.preventDefault();
+                    event.cancelBubble = true;
+                    event.returnValue = false;
+                }.bind(domBind);
+                
+                //domBind._colorPickerOpened = function () {
+                //    this.$.dropdown.focus();
+                //}.bind(domBind);
 
                 var div = domBind.content.ownerDocument.createElement('div');
                 div.innerHTML =
-                    '<iron-dropdown  id="dropdown">' +
+                    '<iron-dropdown id="dropdown" on-iron-overlay-closed="_colorPickerClosed" on-iron-overlay-opened="_colorPickerOpened">' + // tabindex="0" on-iron-overlay-opened="_colorPickerOpened" 
                     '<div class="dropdown-content">' +
                     '<div class="layout vertical" style="margin:10px 10px 10px 10px;">' +
                     '<div class="layout horizontal">' +
@@ -302,6 +343,9 @@
                     style += "opacity: 0.6;"
                 }
                 return style;
+            },
+            _formatText: function (value) {
+                return value && '#' + value;
             }
           });
         })();

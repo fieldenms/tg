@@ -9,19 +9,21 @@ import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
 
 import java.security.SignatureException;
 import java.util.Date;
-import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+
+import com.google.common.cache.Cache;
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.annotations.SessionCache;
@@ -29,11 +31,7 @@ import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-
-import com.google.common.cache.Cache;
-import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link IUserSession}.
@@ -72,17 +70,30 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     }
 
     @Override
+    @SessionRequired
+    public void clearSession(final UserSession session) {
+        cache.invalidate(findAuthenticator(session));
+        defaultDelete(session);
+    }
+    
+    @Override
+    @SessionRequired
     public int clearAll(final User user) {
         final EntityResultQueryModel<UserSession> q = select(UserSession.class).where().prop("user").eq().val(user).model();
 
         final int count = count(q);
         if (count > 0) {
-            super.defaultDelete(q);
+            logger.info(format("Removing [%s] sessions for user [%s].", count, user.getKey()));
+            
+            invalidateCache(q);
+            
+            defaultBatchDelete(q);
         }
         return count;
     }
 
     @Override
+    @SessionRequired
     public void clearUntrusted(final User user) {
         final EntityResultQueryModel<UserSession> query =
                 select(UserSession.class)
@@ -90,26 +101,35 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                         .prop("user").eq().val(user)
                         .and().prop("trusted").eq().val(false)
                         .model();
-        super.defaultDelete(query);
+        
+        invalidateCache(query);
+
+        defaultBatchDelete(query);
     }
 
     @Override
+    @SessionRequired
     public void clearAll() {
-        super.defaultDelete(select(UserSession.class).model());
-
+        defaultBatchDelete(select(UserSession.class).model());
+        cache.invalidateAll();
     }
 
     @Override
+    @SessionRequired
     public void clearUntrusted() {
         final EntityResultQueryModel<UserSession> query =
                 select(UserSession.class)
                         .where()
                         .prop("trusted").eq().val(false)
                         .model();
-        super.defaultDelete(query);
+
+        invalidateCache(query);
+        
+        defaultBatchDelete(query);
     }
 
     @Override
+    @SessionRequired
     public void clearExpired(final User user) {
         final EntityResultQueryModel<UserSession> query =
                 select(UserSession.class)
@@ -117,17 +137,34 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
                         .prop("user").eq().val(user)
                         .and().prop("expiryTime").lt().now()
                         .model();
-        super.defaultDelete(query);
+        
+        invalidateCache(query);
+        
+        defaultBatchDelete(query);
     }
 
     @Override
+    @SessionRequired
     public void clearExpired() {
         final EntityResultQueryModel<UserSession> query =
                 select(UserSession.class)
                         .where()
                         .prop("expiryTime").lt().now()
                         .model();
-        super.defaultDelete(query);
+        
+        invalidateCache(query);
+        
+        defaultBatchDelete(query);
+    }
+
+    /**
+     * A helper method to remove sessions from cache.
+     * 
+     * @param q
+     */
+    private void invalidateCache(final EntityResultQueryModel<UserSession> q) {
+        stream(from(q).with(fetchAll(UserSession.class)).model())
+        .forEach(session -> cache.invalidate(findAuthenticator(session)));
     }
 
     /**
@@ -147,10 +184,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
 
         if (count > 0) {
             // get all those sessions and using their users, clear all sessions (there could more than the ones retrieved) associated with those users
-            final List<UserSession> all = getAllEntities(qem);
-            final String users = all.stream().map(ss -> ss.getUser().getKey()).distinct().collect(Collectors.joining(", "));
-            logger.warn(format("Removing all sessions for user(s) %s due to a suspected stolen session authenticator.", users));
-            all.forEach(ss -> clearAll(ss.getUser()));
+            logger.warn(format("Removing specific session (%s) for all affected users due to a suspected stolen session authenticator.", count));
+            stream(qem).forEach(ss -> clearAll(ss.getUser()));
         }
 
         return count;
@@ -294,7 +329,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             final UserSession updated = save(session);
             // assign authenticator, but in way not to disturb the entity meta-state
             updated.beginInitialising();
-            updated.setAuthenticator(mkAuthenticator(user, seriesId, expiryTime));
+            updated.setAuthenticator(mkAuthenticator(updated.getUser(), seriesId /* un-hashed */, updated.getExpiryTime()));
             updated.endInitialising();
 
             // in order to support concurrent request from the same user it is necessary to
@@ -323,10 +358,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     public UserSession newSession(final User user, final boolean isDeviceTrusted) {
         // let's first construct the next series id
         final String seriesId = crypto.nextSessionId();
-        // and hash it for storage
-        final String seriesIdHash = seriesHash(seriesId); // crypto.calculateRFC2104HMAC(seriesId, hashingKey);
-
-        final UserSession session = user.getEntityFactory().newByKey(UserSession.class, user, seriesIdHash);
+        final UserSession session = user.getEntityFactory().newByKey(UserSession.class, user, seriesHash(seriesId));
         session.setTrusted(isDeviceTrusted);
         final Date expiryTime = calcExpiryTime(isDeviceTrusted);
         session.setExpiryTime(expiryTime);
@@ -336,7 +368,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // assign authenticator in way not to disturb the entity meta-state
         final UserSession saved = save(session);
         saved.beginInitialising();
-        saved.setAuthenticator(mkAuthenticator(user, seriesId, expiryTime));
+        saved.setAuthenticator(mkAuthenticator(saved.getUser(), seriesId /* un-hashed */, saved.getExpiryTime()));
         saved.endInitialising();
 
         // need to cache the established session in associated with the generated authenticator
@@ -363,6 +395,21 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         }
     }
 
+    /**
+     * A convenient method to find an authenticator key in cache by the user session value.
+     * 
+     * @param session
+     * @return
+     */
+    private String findAuthenticator(final UserSession session) {
+        for (final Entry<String, UserSession> value : cache.asMap().entrySet()) {
+            if (value.getValue().equals(session)) {
+                return value.getKey();
+            }
+        }
+        return "";
+    }
+    
     /**
      * Calculates a session expiry time based on the notion of trusted and untrased devices.
      *

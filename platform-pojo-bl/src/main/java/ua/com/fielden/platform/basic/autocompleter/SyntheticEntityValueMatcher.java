@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ua.com.fielden.platform.basic.IValueMatcher;
-import ua.com.fielden.platform.dao.IEntityAggregatesDao;
+import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.SyntheticEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -25,13 +25,13 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
  */
 public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregates> {
 
-    private final IEntityAggregatesDao entityAggregatesDao;
+    private final IEntityAggregatesOperations entityAggregatesDao;
     private final AggregatedResultQueryModel defaultModel;
     private final String propertyParamName = "propertyNameFor_key";
 
     private int pageSize = 10;
 
-    public SyntheticEntityValueMatcher(final IEntityAggregatesDao entityAggregatesDao, final Class<? extends SyntheticEntity> syntheticEntityClass) {
+    public SyntheticEntityValueMatcher(final IEntityAggregatesOperations entityAggregatesDao, final Class<? extends SyntheticEntity> syntheticEntityClass) {
         this.entityAggregatesDao = entityAggregatesDao;
 
         final List<Field> properties = Finder.findProperties(syntheticEntityClass);
@@ -66,7 +66,7 @@ public class SyntheticEntityValueMatcher implements IValueMatcher<EntityAggregat
 
     private fetch createJoinModel(final Class<? extends AbstractEntity> clazz) {
         if (AbstractEntity.class.isAssignableFrom(AnnotationReflector.getKeyType(clazz))) {
-            return fetch(clazz).with("key", createJoinModel((Class<AbstractEntity>) AnnotationReflector.getKeyType(clazz)));
+            return fetch(clazz).with("key", createJoinModel((Class<AbstractEntity<?>>) AnnotationReflector.getKeyType(clazz)));
         } else {
             return fetch(clazz);
         }

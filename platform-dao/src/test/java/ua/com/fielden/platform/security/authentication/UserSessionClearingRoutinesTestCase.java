@@ -16,9 +16,9 @@ import org.junit.Test;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
@@ -33,13 +33,13 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
 
-    private final IUserSession coSession = ao(UserSession.class);
+    private final IUserSession coSession = co(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
 
     @Test
     public void only_expired_user_session_should_have_been_removed() throws SignatureException {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserEx.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
         // let's try to clear all expired sessions and check if they're indeed cleared
         constants.setNow(dateTime("2015-04-24 07:31:00"));
@@ -58,7 +58,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
     @Test
     public void all_user_sessions_should_have_been_removed() throws SignatureException {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserEx.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         coSession.clearAll(currUser);
@@ -70,7 +70,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
     @Test
     public void all_user_untrusted_sessions_should_have_been_removed() throws SignatureException {
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserEx.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         constants.setNow(dateTime("2015-04-24 07:31:00"));
@@ -123,8 +123,11 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         super.populateDomain();
 
         // add more users
-        save(new_(TgPerson.class, "Person 1").setUsername("USER-1").setBase(true));
-        save(new_(TgPerson.class, "Person 2").setUsername("USER-2").setBase(true)); // not used
+        final IUser coUser = co(User.class);
+        final User user1 = coUser.save(new_(User.class, "USER1").setBase(true).setEmail("USER1@unit-test.software").setActive(true));
+        save(new_(TgPerson.class, "Person 1").setUser(user1));
+        final User user2 = coUser.save(new_(User.class, "USER2").setBase(true).setEmail("USER2@unit-test.software").setActive(true));
+        save(new_(TgPerson.class, "Person 2").setUser(user2));
 
         final User currUser = getInstance(IUserProvider.class).getUser();
         // establish several trusted sessions at different times
@@ -141,16 +144,15 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-24 07:30:00"));
         coSession.newSession(currUser, false);
 
-        // set some sessions for User-1
+        // set some sessions for USER1
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("USER-1", getInstance(IUserEx.class));
-        final User user1 = up.getUser();
+        up.setUsername("USER1", getInstance(IUser.class));
 
-        // trusted session for User-1
+        // trusted session for USER1
         constants.setNow(dateTime("2015-04-23 16:26:00"));
         coSession.newSession(user1, true); // from work
 
-        // untrusted sessions for User-1
+        // untrusted sessions for USER1
         constants.setNow(dateTime("2015-04-23 19:30:00"));
         coSession.newSession(user1, false);
         constants.setNow(dateTime("2015-04-24 07:32:00"));

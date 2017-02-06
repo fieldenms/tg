@@ -11,6 +11,7 @@ public class MasterWithMasterBuilder<T extends AbstractFunctionalEntityWithCentr
 
     private Class<T> type;
     private EntityMaster<?> entityMaster;
+    private boolean shouldRefreshParentCentreAfterSave;
 
     @Override
     public IMasterWithMaster0<T> forEntityWithSaveOnActivate(final Class<T> type) {
@@ -21,12 +22,20 @@ public class MasterWithMasterBuilder<T extends AbstractFunctionalEntityWithCentr
     @Override
     public IComplete<T> withMaster(final EntityMaster<?> entityMaster) {
         this.entityMaster = entityMaster;
+        this.shouldRefreshParentCentreAfterSave = true;
+        return this;
+    }
+    
+    @Override
+    public IComplete<T> withMasterAndWithNoParentCentreRefresh(final EntityMaster<?> entityMaster) {
+        this.entityMaster = entityMaster;
+        this.shouldRefreshParentCentreAfterSave = false;
         return this;
     }
 
     @Override
     public IMaster<T> done() {
-        return new MasterWithMaster<T>(type, entityMaster);
+        return new MasterWithMaster<T>(type, entityMaster, shouldRefreshParentCentreAfterSave);
     }
 
 }

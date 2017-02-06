@@ -11,14 +11,14 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  * @param <T>
  */
-public class MasterWithMaster<T extends AbstractEntity<?>> extends AbstractMasterWithMaster<T> {
+class MasterWithMaster<T extends AbstractEntity<?>> extends AbstractMasterWithMaster<T> {
 
-    public MasterWithMaster(final Class<T> entityType, final EntityMaster<?> entityMaster) {
-        super(entityType, entityMaster.getEntityType());
+    MasterWithMaster(final Class<T> entityType, final EntityMaster<?> entityMaster, final boolean shouldRefreshParentCentreAfterSave) {
+        super(entityType, entityMaster.getEntityType(), shouldRefreshParentCentreAfterSave);
     }
 
     @Override
-    protected String getAttributes(final Class<? extends AbstractEntity<?>> entityType, final String bindingEntityName) {
+    protected String getAttributes(final Class<? extends AbstractEntity<?>> entityType, final String bindingEntityName, final boolean shouldRefreshParentCentreAfterSave) {
         final StringBuilder attrs = new StringBuilder();
 
         //////////////////////////////////////////////////////////////////////////////////////
@@ -26,9 +26,10 @@ public class MasterWithMaster<T extends AbstractEntity<?>> extends AbstractMaste
         //// this suffix is used to remove the last comma, which prevents JSON conversion ////
         //////////////////////////////////////////////////////////////////////////////////////
         attrs.append("{");
-        attrs.append("\"entityType\":\"" + entityType.getName() + "\","
-                + "\"currentState\":\"EDIT\","
-                + "\"centreUuid\": this.centreUuid");
+        attrs.append("\"entityType\":\"" + entityType.getName() + "\", "
+                + "\"currentState\":\"EDIT\", "
+                + "\"centreUuid\": this.centreUuid, "
+                + "\"shouldRefreshParentCentreAfterSave\": " + shouldRefreshParentCentreAfterSave + ", ");
         attrs.append("}");
 
         return attrs.toString();

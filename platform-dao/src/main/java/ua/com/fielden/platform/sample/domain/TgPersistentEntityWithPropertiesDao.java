@@ -10,14 +10,16 @@ import org.joda.time.DateTime;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.observables.TgPersistentEntityWithPropertiesChangeSubject;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 /**
  * DAO implementation for companion object {@link ITgPersistentEntityWithProperties}.
@@ -59,6 +61,27 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             }
         }
         
+        
+        // IMPORTANT: the following IF statement needs to be turned off (e.g. commented or && false added to the condition) for the purpose of running web unit test.
+        // let's demonstrate a simple approach to implementing user's warning acknowledgement
+        // this example, albeit artificially, also demonstrates not just one but two sequential requests for additional user input in a form of acknowledgement 
+        if (entity.hasWarnings() && false) {
+            if (!moreData("acknowledgedForTheFirstTime").isPresent()) {
+                throw new NeedMoreData("Warnings need acknowledgement (first time)", AcknowledgeWarnings.class, "acknowledgedForTheFirstTime");
+            } else {
+                final AcknowledgeWarnings continuation = this.<AcknowledgeWarnings> moreData("acknowledgedForTheFirstTime").get();
+                System.out.println("Acknowledged (first)? = " + continuation.getWarnings());
+
+                if (!moreData("acknowledgedForTheSecondTime").isPresent()) {
+                    throw new NeedMoreData("Warnings need acknowledgement (second time)", AcknowledgeWarnings.class, "acknowledgedForTheSecondTime");
+                } else {
+                    final AcknowledgeWarnings secondContinuation = this.<AcknowledgeWarnings> moreData("acknowledgedForTheSecondTime").get();
+                    System.out.println("Acknowledged (second)? = " + secondContinuation.getWarnings());
+                }
+            }
+        }
+        
+        
         final boolean wasNew = false; // !entity.isPersisted();
         final TgPersistentEntityWithProperties saved = super.save(entity);
         changeSubject.publish(saved);
@@ -71,9 +94,9 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             //newEntity.setRequiredValidatedProp(1);
             //newEntity.setRequiredValidatedProp(null);
             return newEntity;
-        } else {
-            return saved;
         }
+        
+        return saved;
     }
 
     @Override
@@ -102,11 +125,12 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .with("domainInitProp", "nonConflictingProp", "conflictingProp")
                 // .with("entityProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key"))
                 .with("userParam", "userParam.basedOnUser")
-                .with("entityProp", "entityProp.entityProp", "entityProp.compositeProp", "entityProp.compositeProp.desc")
+                .with("entityProp", "entityProp.entityProp", "entityProp.compositeProp", "entityProp.compositeProp.desc", "entityProp.booleanProp")
                 //                .with("status")
                 .with("critOnlyEntityProp")
                 .with("compositeProp", "compositeProp.desc")
                 // .with("producerInitProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key")
-                .with("producerInitProp", "status.key", "status.desc"); //
+                .with("producerInitProp", "status.key", "status.desc")
+                .with("colourProp", "hyperlinkProp"); //
     }
 }

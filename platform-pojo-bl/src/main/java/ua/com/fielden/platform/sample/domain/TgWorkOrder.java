@@ -6,6 +6,7 @@ import java.util.Date;
 import org.junit.Ignore;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -17,7 +18,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 
 @KeyType(String.class)
@@ -25,6 +25,7 @@ import ua.com.fielden.platform.types.Money;
 @DescTitle("Description")
 @KeyTitle(value = "Wo No")
 @Ignore
+@CompanionObject(ITgWorkOrder.class)
 public class TgWorkOrder extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
@@ -261,7 +262,6 @@ public class TgWorkOrder extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(TgVehicle.class)
     public void setVehicle(final TgVehicle vehicle) {
         this.vehicle = vehicle;
     }

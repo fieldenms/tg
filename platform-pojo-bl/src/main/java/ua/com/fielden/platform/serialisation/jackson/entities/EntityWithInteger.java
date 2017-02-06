@@ -21,7 +21,7 @@ public class EntityWithInteger extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    @Title(value = "Title", desc = "Desc")
+    @Title(value = "EntityWithInteger prop Title", desc = "EntityWithInteger prop Desc")
     @ResultOnly
     private Integer prop;
 

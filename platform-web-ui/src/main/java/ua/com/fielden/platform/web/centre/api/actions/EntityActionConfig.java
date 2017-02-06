@@ -1,13 +1,9 @@
 package ua.com.fielden.platform.web.centre.api.actions;
 
-import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-
 import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
-import ua.com.fielden.platform.sample.domain.MasterInDialogInvocationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.MasterInvocationFunctionalEntity;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
@@ -24,8 +20,10 @@ public final class EntityActionConfig {
     public final Optional<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> functionalEntity;
     public final Optional<CentreContextConfig> context;
     public final Optional<String> icon;
+    public final Optional<String> iconStyle;
     public final Optional<String> shortDesc;
     public final Optional<String> longDesc;
+    public final Optional<String> shortcut;
     public final Optional<IPreAction> preAction;
     public final Optional<IPostAction> successPostAction;
     public final Optional<IPostAction> errorPostAction;
@@ -43,8 +41,10 @@ public final class EntityActionConfig {
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
             final CentreContextConfig context,
             final String icon,
+            final String iconStyle,
             final String shortDesc,
             final String longDesc,
+            final String shortcut,
             final IPreAction preAction,
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
@@ -66,6 +66,7 @@ public final class EntityActionConfig {
         this.functionalEntity = Optional.ofNullable(functionalEntity);
         this.context = Optional.ofNullable(context);
         this.icon = Optional.ofNullable(icon);
+        this.iconStyle = Optional.ofNullable(iconStyle);
         this.shortDesc = Optional.ofNullable(shortDesc);
         //Setting the long desc. If it's null then long desc should be equal to functional entity description.
         String enhancedLongDesc = longDesc;
@@ -73,6 +74,7 @@ public final class EntityActionConfig {
             enhancedLongDesc = TitlesDescsGetter.getEntityTitleAndDesc(functionalEntity).getValue();
         }
         this.longDesc = Optional.ofNullable(enhancedLongDesc);
+        this.shortcut = Optional.ofNullable(shortcut);
         this.preAction = Optional.ofNullable(preAction);
         this.successPostAction = Optional.ofNullable(successPostAction);
         this.errorPostAction = Optional.ofNullable(errorPostAction);
@@ -87,15 +89,17 @@ public final class EntityActionConfig {
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
             final CentreContextConfig context,
             final String icon,
+            final String iconStyle,
             final String shortDesc,
             final String longDesc,
+            final String shortcut,
             final IPreAction preAction,
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
             final PrefDim prefDimForView,
             final boolean noAction,
             final boolean shouldRefreshParentCentreAfterSave) {
-        this(functionalEntity, context, icon, shortDesc, longDesc, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON);
+        this(functionalEntity, context, icon, iconStyle, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, noAction, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON);
     }
 
 
@@ -107,8 +111,10 @@ public final class EntityActionConfig {
                 ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
                 ac.context.isPresent() ? ac.context.get() : null,
                 ac.icon.isPresent() ? ac.icon.get() : null,
+                ac.iconStyle.orElse(null),
                 ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
                 ac.longDesc.isPresent() ? ac.longDesc.get() : null,
+                ac.shortcut.isPresent() ? ac.shortcut.get() : null,
                 ac.preAction.isPresent() ? ac.preAction.get() : null,
                 ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
                 ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
@@ -131,8 +137,10 @@ public final class EntityActionConfig {
                 ac.functionalEntity.isPresent() ? ac.functionalEntity.get() : null,
                 ac.context.isPresent() ? ac.context.get() : null,
                 ac.icon.isPresent() ? ac.icon.get() : null,
+                ac.iconStyle.orElse(null),
                 ac.shortDesc.isPresent() ? ac.shortDesc.get() : null,
                 ac.longDesc.isPresent() ? ac.longDesc.get() : null,
+                ac.shortcut.isPresent() ? ac.shortcut.get() : null,
                 ac.preAction.isPresent() ? ac.preAction.get() : null,
                 ac.successPostAction.isPresent() ? ac.successPostAction.get() : null,
                 ac.errorPostAction.isPresent() ? ac.errorPostAction.get() : null,
@@ -149,36 +157,8 @@ public final class EntityActionConfig {
      * @return
      */
     public static EntityActionConfig createNoActionConfig() {
-        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, true, true);
+        return new EntityActionConfig(null, null, null, null, null, null, null, null, null, null, null, true, true);
     }
-
-    /**
-     * A factory method for creating a configuration that indicates a need to invoke corresponding master for row entity.
-     *
-     * @return
-     */
-    public static EntityActionConfig createMasterInvocationActionConfig() {
-        return new EntityActionConfig(MasterInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
-    }
-
-    /**
-     * A factory method for creating a configuration that indicates a need to invoke corresponding master in dialog for row entity.
-     *
-     * @return
-     */
-    public static EntityActionConfig createMasterInDialogInvocationActionConfig() {
-        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, null, false, true);
-    }
-
-    /**
-     * A factory method for creating a configuration that indicates a need to invoke corresponding master in dialog for row entity - convenience version, which allows setting preferred dimensions.
-     *
-     * @return
-     */
-    public static EntityActionConfig createMasterInDialogInvocationActionConfig(final int width, final int height, final PrefDim.Unit unit) {
-        return new EntityActionConfig(MasterInDialogInvocationFunctionalEntity.class, context().withCurrentEntity().build(), null, "Edit row entity", null, null, null, null, PrefDim.mkDim(width, height, unit), false, true);
-    }
-
 
     /**
      * A factory method that creates a configuration for the required action.
@@ -197,8 +177,10 @@ public final class EntityActionConfig {
             final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity,
             final CentreContextConfig context,
             final String icon,
+            final String iconStyle,
             final String shortDesc,
             final String longDesc,
+            final String shortcut,
             final IPreAction preAction,
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
@@ -209,8 +191,10 @@ public final class EntityActionConfig {
                 functionalEntity,
                 context,
                 icon,
+                iconStyle,
                 shortDesc,
                 longDesc,
+                shortcut,
                 preAction,
                 successPostAction,
                 errorPostAction,
@@ -237,6 +221,7 @@ public final class EntityActionConfig {
         result = prime * result + ((functionalEntity == null) ? 0 : functionalEntity.hashCode());
         result = prime * result + ((icon == null) ? 0 : icon.hashCode());
         result = prime * result + ((longDesc == null) ? 0 : longDesc.hashCode());
+        result = prime * result + ((shortcut == null) ? 0 : shortcut.hashCode());
         result = prime * result + (noAction ? 1231 : 1237);
         result = prime * result + ((preAction == null) ? 0 : preAction.hashCode());
         result = prime * result + ((shortDesc == null) ? 0 : shortDesc.hashCode());
@@ -288,6 +273,13 @@ public final class EntityActionConfig {
                 return false;
             }
         } else if (!longDesc.equals(other.longDesc)) {
+            return false;
+        }
+        if (shortcut == null) {
+            if (other.shortcut != null) {
+                return false;
+            }
+        } else if (!shortcut.equals(other.shortcut)) {
             return false;
         }
         if (noAction != other.noAction) {

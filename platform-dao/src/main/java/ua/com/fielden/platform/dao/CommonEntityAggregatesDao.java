@@ -5,10 +5,11 @@ import java.util.Map;
 
 import com.google.inject.Inject;
 
+import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.IEntityAggregates;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.swing.review.annotations.EntityType;
 
 /**
  * DAO implementation for EntityAggregates class used purely for internals of the EntityAggregatesDao.
@@ -17,7 +18,7 @@ import ua.com.fielden.platform.swing.review.annotations.EntityType;
  *
  */
 @EntityType(EntityAggregates.class)
-public class CommonEntityAggregatesDao extends CommonEntityDao<EntityAggregates> implements IEntityDao<EntityAggregates> {
+public class CommonEntityAggregatesDao extends CommonEntityDao<EntityAggregates> implements IEntityAggregates {
 
     @Inject
     protected CommonEntityAggregatesDao(final IFilter filter) {

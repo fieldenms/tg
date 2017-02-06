@@ -10,10 +10,9 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 
 /**
  *
@@ -27,7 +26,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity master configuration")
-@CompanionObject(IEntityMasterConfigController.class)
+@CompanionObject(IEntityMasterConfig.class)
 @MapEntityTo("ENTITY_MASTER_CONFIG")
 public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> {
     private static final long serialVersionUID = 1L;
@@ -36,6 +35,8 @@ public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> 
     @CompositeKeyMember(1)
     @Title(value = "User", desc = "Application user owning this configuration.")
     @MapTo("ID_CRAFT")
+    // TODO Assigning user to entity master configurations requires re-thinking.
+    //@BeforeChange(@Handler(UserAsConfigurationOwnerValidator.class))
     private User owner;
 
     @IsProperty
@@ -43,10 +44,6 @@ public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> 
     @Title(value = "Type", desc = "Master type.")
     @MapTo("MASTER_TYPE")
     private String masterType;
-
-    protected EntityMasterConfig() {
-        setKey(new DynamicEntityKey(this));
-    }
 
     /**
      * A helper setter to convert master UI model to the string value.
@@ -75,12 +72,7 @@ public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> 
     }
 
     @Observable
-    @EntityExists(User.class)
     public void setOwner(final User owner) {
-        // TODO please redefine a rules for saving master configuration not only for base users, but for non-base too. Check the other places.
-        //	if (owner != null && !owner.isBase()) {
-        //	    throw new Result(this, new IllegalArgumentException("Only base users are allowed to be used for a base configuration."));
-        //	}
         this.owner = owner;
     }
 

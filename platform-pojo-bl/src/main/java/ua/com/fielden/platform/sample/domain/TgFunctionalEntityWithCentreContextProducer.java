@@ -13,26 +13,19 @@ import com.google.inject.Inject;
  * @author TG Team
  *
  */
-public class TgFunctionalEntityWithCentreContextProducer extends DefaultEntityProducerWithContext<TgFunctionalEntityWithCentreContext, TgFunctionalEntityWithCentreContext> implements IEntityProducer<TgFunctionalEntityWithCentreContext> {
-    private final ITgFunctionalEntityWithCentreContext companion;
+public class TgFunctionalEntityWithCentreContextProducer extends DefaultEntityProducerWithContext<TgFunctionalEntityWithCentreContext> implements IEntityProducer<TgFunctionalEntityWithCentreContext> {
 
     @Inject
-    public TgFunctionalEntityWithCentreContextProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder, final ITgFunctionalEntityWithCentreContext companion) {
+    public TgFunctionalEntityWithCentreContextProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, TgFunctionalEntityWithCentreContext.class, companionFinder);
-        this.companion = companion;
     }
 
     @Override
     protected TgFunctionalEntityWithCentreContext provideDefaultValues(final TgFunctionalEntityWithCentreContext entity) {
-        entity.setKey("ANY");
-        if (getCentreContext() != null) {
-            entity.setContext(getCentreContext());
-
-            final String contextDependentValue = "" + getCentreContext().getSelectedEntities().size() + (getCentreContext().getSelectionCrit() != null ? " && crit" : " no crit");
+        if (entity.getContext() != null) {
+            final String contextDependentValue = "" + entity.getContext().getSelectedEntities().size() + (entity.getContext().getSelectionCrit() != null ? " && crit" : " no crit");
             entity.setValueToInsert(contextDependentValue);
         }
-
-        // final IFetchProvider<TgFunctionalEntityWithCentreContext> fetchStrategy = companion.getFetchProvider();
         entity.setWithBrackets(true);
         return entity;
     }

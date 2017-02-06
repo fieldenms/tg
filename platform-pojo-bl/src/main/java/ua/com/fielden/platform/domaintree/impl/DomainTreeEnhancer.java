@@ -26,6 +26,7 @@ import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.CustomPropAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -366,7 +367,7 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                                 newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.getTitle(), prop.getDesc(), calcAnnotation);
                             } else { // this should be CustomProperty!
                                 final CustomProperty prop = (CustomProperty) iProp;
-                                newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.getTitle(), prop.getDesc());
+                                newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.getTitle(), prop.getDesc(), new CustomPropAnnotation().newInstance());
                             }
                         }
                         // determine a "real" parent type:
@@ -411,6 +412,65 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
             }
         }
         return originalAndEnhancedRootTypes;
+    }
+    
+    @Override
+    public Class<?> adjustManagedTypeName(final Class<?> root, final String clientGeneratedTypeNameSuffix) {
+        final Class<?> managedType = getManagedType(root);
+        if (!DynamicEntityClassLoader.isGenerated(managedType)) {
+            throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. But it should be, because the same type on client application is generated and its suffix is [%s].", root.getSimpleName(), clientGeneratedTypeNameSuffix));
+        }
+        // logger.debug(String.format("\t\t\t\tStarted to adjustManagedTypeName for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
+        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+
+        try {
+            final String predefinedRootTypeName = root.getName() + DynamicTypeNamingService.APPENDIX + "_" + clientGeneratedTypeNameSuffix;
+            final Class<?> rootWithPredefinedName = classLoader.startModification(managedType.getName()).modifyTypeName(predefinedRootTypeName).endModification();
+            
+            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<String, ByteArray>();
+            final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
+            byteArraysWithRenamedRoot.putAll(currentByteArrays.getValue());
+            byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(rootWithPredefinedName.getName())));
+            originalAndEnhancedRootTypesAndArrays.put(root, new Pair<>(rootWithPredefinedName, byteArraysWithRenamedRoot));
+        } catch (final ClassNotFoundException e) {
+            logger.error(e.getMessage(), e);
+            throw new IllegalStateException(e);
+        }
+        
+        final Class<?> adjustedType = getManagedType(root);
+        // logger.debug(String.format("\t\t\t\tEnded to adjustManagedTypeName for root [%s]. Adjusted to [%s].", root.getSimpleName(), adjustedType.getSimpleName()));
+        return adjustedType;
+    }
+    
+    @Override
+    public Class<?> adjustManagedTypeAnnotations(final Class<?> root, final Annotation... additionalAnnotations) {
+        final Class<?> managedType = getManagedType(root);
+        if (!DynamicEntityClassLoader.isGenerated(managedType)) {
+            throw new IllegalArgumentException(String.format("The type for root [%s] is not generated. It is prohibited to generate additional annotations inside that type.", root.getSimpleName()));
+        }
+        // logger.debug(String.format("\t\t\t\tStarted to adjustManagedTypeAnnotations for root [%s] and its generated type [%s].", root.getSimpleName(), managedType.getSimpleName()));
+        if (additionalAnnotations.length == 0) {
+            logger.warn(String.format("\t\t\t\tEnded to adjustManagedTypeAnnotations for root [%s]. No annotations have been specified, root's managed type was not changed.", root.getSimpleName()));
+            return managedType;
+        }
+        final DynamicEntityClassLoader classLoader = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+
+        try {
+            final Class<?> managedTypeWithAnnotations = classLoader.startModification(managedType.getName()).addClassAnnotations(additionalAnnotations).endModification();
+            
+            final Map<String, ByteArray> byteArraysWithRenamedRoot = new LinkedHashMap<String, ByteArray>();
+            final Pair<Class<?>, Map<String, ByteArray>> currentByteArrays = originalAndEnhancedRootTypesAndArrays.get(root);
+            byteArraysWithRenamedRoot.putAll(currentByteArrays.getValue());
+            byteArraysWithRenamedRoot.put("", new ByteArray(classLoader.getCachedByteArray(managedTypeWithAnnotations.getName())));
+            originalAndEnhancedRootTypesAndArrays.put(root, new Pair<>(managedTypeWithAnnotations, byteArraysWithRenamedRoot));
+        } catch (final ClassNotFoundException e) {
+            logger.error(e.getMessage(), e);
+            throw new IllegalStateException(e);
+        }
+        
+        final Class<?> adjustedType = getManagedType(root);
+        // logger.debug(String.format("\t\t\t\tEnded to adjustManagedTypeAnnotations for root [%s].", root.getSimpleName()));
+        return adjustedType;
     }
 
     /**

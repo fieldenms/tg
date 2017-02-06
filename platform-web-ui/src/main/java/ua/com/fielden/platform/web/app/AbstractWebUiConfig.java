@@ -7,12 +7,17 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.domaintree.IGlobalDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.menu.Menu;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.app.config.WebUiBuilder;
+import ua.com.fielden.platform.web.centre.CentreUpdater;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
@@ -31,11 +36,11 @@ import com.google.inject.Injector;
  *
  */
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
-
+    private final Logger logger = Logger.getLogger(getClass());
     private final String title;
-    private final WebUiBuilder webUiBuilder;
-    private final MainMenuBuilder desktopMainMenuConfig;
-    private final MainMenuBuilder mobileMainMenuConfig;
+    private WebUiBuilder webUiBuilder;
+    private MainMenuBuilder desktopMainMenuConfig;
+    private MainMenuBuilder mobileMainMenuConfig;
     private Injector injector;
     /**
      * The paths for any kind of file resources those are needed for browser client. These are mapped to the '/resources/' router path. Also these resource paths might be augmented
@@ -108,7 +113,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             return indexSource.replace("@desktopStartupResources", "desktop-startup-resources-vulcanized");
         }
     }
-    
+
     private static boolean isDevelopmentWorkflow(final Workflows workflow) {
         return Workflows.development.equals(workflow) || Workflows.vulcanizing.equals(workflow);
     }
@@ -161,9 +166,27 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public List<String> resourcePaths() {
         return this.resourcePaths;
     }
-    
+
     @Override
     public Workflows workflow() {
         return workflow;
+    }
+
+    @Override
+    public final void clearConfiguration(final IGlobalDomainTreeManager gdtm) {
+        logger.error("Clearing configurations...");
+        this.webUiBuilder = new WebUiBuilder(this);
+        this.desktopMainMenuConfig = new MainMenuBuilder(this);
+        this.mobileMainMenuConfig = new MainMenuBuilder(this);
+        logger.error("Clearing configurations...done");
+
+        logger.error(String.format("Clearing centres for user [%s]...", gdtm.getUserProvider().getUser()));
+        CentreUpdater.clearAllCentres(gdtm);
+        logger.error(String.format("Clearing centres for user [%s]...done", gdtm.getUserProvider().getUser()));
+    }
+
+    @Override
+    public Menu getMenuEntity() {
+        return desktopMainMenuConfig.getMenu();
     }
 }

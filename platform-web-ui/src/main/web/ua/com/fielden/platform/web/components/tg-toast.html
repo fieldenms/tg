@@ -1,6 +1,6 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/resources/polymer/iron-flex-layout/classes/iron-flex-layout.html">
+<link rel="import" href="/resources/polymer/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">
@@ -32,6 +32,13 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+	    .toast-dialog paper-button {
+	        color: var(--paper-light-blue-500);
+	        --paper-button-flat-focus-color: var(--paper-light-blue-50);
+	    }
+	    .toast-dialog paper-button:hover {
+	        background: var(--paper-light-blue-50);
+	    }
     </style>
 
 <dom-module id="tg-toast">
@@ -52,7 +59,7 @@
 	            --paper-spinner-layer-4-color: var(--paper-blue-500);
 	        }    	
     	</style>
-        <paper-toast id="toast" class="paper-toast" text="[[_text]]"> <!-- TODO responsive-width="250px" -->
+        <paper-toast id="toast" class="paper-toast" text="[[_text]]" always-on-top> <!-- TODO responsive-width="250px" -->
             <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
             <div hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" style="color: #03A9F4;" on-tap="_showMessageDlg">MORE</div>
         </paper-toast>
@@ -134,6 +141,7 @@
                     }.bind(domBind);
                     
                     var paperDialog = domBind.content.ownerDocument.createElement('paper-dialog');
+                    Polymer.dom(paperDialog).setAttribute("class", "toast-dialog");
                     Polymer.dom(paperDialog).setAttribute("id", "msgDialog");
                     Polymer.dom(paperDialog).setAttribute("on-iron-overlay-closed", "_dialogClosed");
                     Polymer.dom(paperDialog).setAttribute("with-backdrop", "true");
@@ -207,12 +215,25 @@
                 // console.debug('toast show(): [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
                 var previousToast = this._getPreviousToast();
                 if (!previousToast) {
+                    // Override refit function for paper-toast which behaves really weird (Maybe next releas of paper-toast iron-fit-behavior and iron-overlay-behavior will change this weird behaviour).
+                    this.$.toast.refit = function () {};
+                    Polymer.dom(document.body).appendChild(this.$.toast);
+                    Polymer.dom().flush();
                     this._showNewToast();
                 } else if (previousToast.error === true && previousToast.visible) {
                     console.debug('toast show() discarded: [', this.text + ':' + this.msgText, '] hasMore = ', this.hasMore);
                 } else {
-                    Polymer.dom(document.body).removeChild(previousToast);
-                    this._showNewToast();
+                    // 'dataHost' is used to detemine 'tg-toast' instance from 'previousToast' found on body (parent of 'previousToast' is body, that is why there is a need to use other accessing method).
+                    // WARNING: 'dataHost' is not a public Polymer API.
+                    var previousTgToast = previousToast.dataHost;
+                    
+                    if (previousTgToast !== this) {
+                        previousTgToast.text = this.text;
+                        previousTgToast.msgText = this.msgText;
+                        previousTgToast.showProgress = this.showProgress;
+                        previousTgToast.hasMore = this.hasMore;
+                    }
+                    previousTgToast._showNewToast();
                 }
             },
             
@@ -222,17 +243,22 @@
                 this._showProgress = this.showProgress;
                 this._hasMore = this.hasMore;
                 
+                var oldDuration = this.$.toast.duration;
                 if (this._showProgress && !this._hasMore) {
                     this.$.toast.duration = 3600000; //1 hour
                 } else {
                     this.$.toast.duration = 3000; //3 seconds
                 }
-                this.$.toast.style['z-index'] = 1000;
-                // var clonedToast = this.$.toast.cloneNode(true);
-                // console.debug('cloned toast', clonedToast);
+                // due to the fact, that current version of paper-toast does not react to 'duration' changes (reaction is performed only on _openedChanged), there is a need to react manually:
+                if (this.$.toast.duration !== oldDuration) { // if duration changed
+                    if (this.$.toast._autoClose !== null) {
+                        this.$.toast.cancelAsync(this.$.toast._autoClose);
+                        this.$.toast._autoClose = null;
+                    }
+                    this.$.toast._autoClose = this.$.toast.async(this.$.toast.close, this.$.toast.duration);
+                }
+                
                 this.$.toast.error = this._hasMore;
-                Polymer.dom(document.body).appendChild(this.$.toast);
-                Polymer.dom().flush();
                 this.$.toast.show();
                 // console.debug('toast show() ended : [', this._text + ':' + this._msgText, '] hasMore = ', this._hasMore);
             }

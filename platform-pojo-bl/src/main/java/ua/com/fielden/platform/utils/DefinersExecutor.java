@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
@@ -40,7 +39,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 public class DefinersExecutor {
 
     /**
-     * Employs the DFS algorithm to travers the object graph starting with a node represented by <code>entity</code>. 
+     * Employs the DFS algorithm to traverse the object graph starting with a node represented by <code>entity</code>. 
      * The boundary of an object graph is outlined by <code>proxied</code> properties and <code>non-entity typed</code> properties.
      *
      * @param entity -- an instance to finalise the initialisation for.
@@ -67,43 +66,22 @@ public class DefinersExecutor {
         final Deque<AbstractEntity<?>> frontier = new LinkedList<>(); // to be used on LIFO mode
         // the set of explored entities utilises object identities in memory to differentiate equal entities represented by different objects
         final Set<Integer> explored = new HashSet<>();
-
-        // initialize data structures
-        execute(new ArrayList<>(entities), frontier, explored);
-        return entities;
-    }
-
-    /**
-     * Takes the first unexplored entity from list <code>restOfEntities</code> and explores its sub-graph. 
-     * Then executes the same logic for the rest entities without the first one.
-     * 
-     * @param restOfEntities
-     * @param frontier
-     * @param explored
-     */
-    private static <T extends AbstractEntity<?>> void execute(
-            final List<T> restOfEntities, 
-            final Deque<AbstractEntity<?>> frontier, 
-            final Set<Integer> explored) {
-
-        final List<T> list = new ArrayList<>(restOfEntities);
-        for (int index = 0; index < list.size(); index++) {
-            final T entity = list.get(index);
+        
+        // The same mutable set of entity identities 'explored' will be used for every 'explore(frontier, explored)' call for each top-level graph node (entity).
+        // This will ensure that the same shared nodes will not be traversed more than once for different sub-graphs for each top-level graph node (entity).
+        // Trivial example: two entities of TgFuelUsage could (and should) share single instance of TgVehicle (property 'vehicle') when retrieving via EQL.
+        for (final AbstractEntity<?> entity: entities) {
             if (entity != null) {
-                final int identity = System.identityHashCode(entity);
-                if (!explored.contains(identity)) {
-                    frontier.push(entity);
-                    explore(frontier, explored);
-
-                    if (index + 1 <= list.size()) {
-                        final List<T> restList = new ArrayList<>(list.subList(index + 1, list.size()));
-                        execute(restList, frontier, explored);
-                    }
+                if (!frontier.isEmpty()) {
+                    throw new DefinersExecutorException("After full exploration of previous top-level node entity (if any) 'frontier' is necessary to be empty.");
                 }
+                frontier.push(entity);
+                explore(frontier, explored);
             }
         }
+        return entities;
     }
-
+    
     /**
      * Executes definers recursively traversing the object graph using DFS algorithm.
      *
@@ -116,7 +94,7 @@ public class DefinersExecutor {
             final Set<Integer> explored) {
         
         if (frontier.isEmpty()) {
-            throw new IllegalStateException("There is nothing to process.");
+            throw new DefinersExecutorException("There is nothing to process.");
         }
 
         final AbstractEntity<?> entity = frontier.pop();
@@ -126,7 +104,7 @@ public class DefinersExecutor {
         }
 
         if (!entity.isInitialising()) {
-            throw new IllegalArgumentException(format("Entity [%s] of type [%s] is not in the 'initialising' phase.", entity, entity.getClass()));
+            throw new DefinersExecutorException(format("Entity [%s] of type [%s] is not in the 'initialising' phase.", entity, entity.getClass()));
         }
         
         explored.add(identity);
@@ -191,14 +169,14 @@ public class DefinersExecutor {
     }
     
 
-    private static boolean isValueProxied(AbstractEntity<?> entity, Field field) {
+    private static boolean isValueProxied(final AbstractEntity<?> entity, final Field field) {
         Object value;
         try {
             field.setAccessible(true);
             value = field.get(entity);
             field.setAccessible(false);
         } catch (IllegalArgumentException | IllegalAccessException e) {
-            throw new ReflectionException(format("Could not obrain value for property [%s] in entity [%s].", field.getName(), entity.getType().getName()));
+            throw new DefinersExecutorException("Could not filter property by value during checking if it is id-only proxy.", new ReflectionException(format("Could not obtain value for property [%s] in entity [%s].", field.getName(), entity.getType().getName())));
         }
         
         if (value == null || !(value instanceof AbstractEntity)) {

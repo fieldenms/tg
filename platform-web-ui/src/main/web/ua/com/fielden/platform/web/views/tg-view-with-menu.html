@@ -1,12 +1,19 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
+<link rel="import" href="/resources/polymer/iron-icons/av-icons.html">
+<link rel="import" href="/resources/polymer/paper-styles/default-theme.html">
+<link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-menu/paper-menu.html">
+<link rel="import" href="/resources/polymer/paper-menu/paper-submenu.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-item/paper-item.html">
 <link rel="import" href="/resources/polymer/paper-drawer-panel/paper-drawer-panel.html">
 <link rel="import" href="/resources/polymer/paper-fab/paper-fab.html">
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="/resources/components/postal-lib.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/components/tg-menu-search-input.html">
 <link rel="import" href="/resources/views/tg-menu-item-view.html">
 <link rel="import" href="/app/tg-app-config.html">
 <link rel="import" href="/resources/polymer/neon-animation/neon-animated-pages.html">
@@ -17,7 +24,8 @@
     <style>
         :host {
             --paper-fab-background: #fcfcfc;
-            --paper-menu-color: #01579b;
+            --paper-menu-color: var(--paper-light-blue-700);
+            --paper-menu-undone-color: var(--paper-light-blue-100);
             --paper-item-min-height: 40px;
             --paper-fab: {
                 color: #666464;
@@ -36,12 +44,36 @@
             }
             ;
             --paper-item: {
-                padding-left: 22px;
                 font-size: 13px;
                 cursor: pointer;
                 transition: all 300ms ease-in-out;
             }
             ;
+        }
+        paper-menu.menu-content {
+            --paper-menu: {
+                padding: 0;
+                margin: 0;
+                overflow: hidden;
+            }
+            ;
+        }
+        paper-checkbox::shadow #checkboxLabel {
+            display: none;
+        }
+        paper-checkbox {
+            margin: 0 4px 2px 2px;
+            --paper-checkbox-size: 16px;
+            --paper-checkbox-unchecked-color: var(--paper-menu-color);
+            --paper-checkbox-unchecked-ink-color: var(--paper-menu-color);
+        }
+        paper-checkbox.blue {
+            --paper-checkbox-checked-color: var(--paper-menu-color);
+            --paper-checkbox-checked-ink-color: var(--paper-menu-color);
+        }
+        paper-checkbox.blue.undone {
+            --paper-checkbox-checked-color: #acdbfe;
+            --paper-checkbox-checked-ink-color: var(--paper-menu-color);
         }
         neon-animated-pages {
             position: absolute;
@@ -50,8 +82,32 @@
             right: 0;
             top: 44px;
         }
+        iron-icon {
+            transform: translate(0, -1px);
+            --iron-icon-width: 16px;
+            --iron-icon-height: 16px;
+        }
+        iron-icon[without-menu] {
+            visibility: hidden;
+        }
+        iron-icon[opened] {
+            fill: none;
+            stroke: var(--paper-menu-color, --primary-text-color);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transform: translate(0, -1.5px) rotate(90deg);
+        }
+        .submenu-item {
+            padding-left: 42px;
+        }
         .menu-item-view {
             overflow: auto;
+        }
+        .menu-item-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .tool-bar {
             padding: 0 16px;
@@ -66,8 +122,10 @@
         #drawerPanel:not([narrow]) paper-menu {
             border-right: 1px solid #CBCDCE;
         }
-        #menuButton {
-            margin-right: 24px;
+        tg-menu-search-input {
+            margin-right: 8px;
+            --menu-search-icon-color: white;
+            --menu-search-input-color: white;
         }
     </style>
     <template>
@@ -77,12 +135,29 @@
             <div class="layout vertical" drawer>
 
                 <div id="menuToolBar" class="tool-bar layout horizontal center">
-                    <div class="flex">[[menuItem.title]]</div>
+                    <div class="flex">[[menuItem.key]]</div>
                 </div>
 
-                <paper-menu id="menu" class="flex" on-selected-changed="_menuItemSelected" attr-for-selected="name">
-                    <template is="dom-repeat" items="[[menuItem.menu]]">
-                        <paper-item name$="[[item.title]]">[[item.title]]</paper-item>
+                <paper-menu id="menu" class="flex" attr-for-selected="name" on-iron-activate="_itemActivated">
+                    <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem" index-as="groupIndex">
+                        <paper-submenu name$="[[_calcItemPath(firstLevelItem)]]" opened={{firstLevelItem.opened}} on-focus="_focusSubmenu">
+                            <paper-item class="menu-trigger" tooltip-text$="[[firstLevelItem.desc]]">
+                                <iron-icon icon="av:play-arrow" opened$="[[firstLevelItem.opened]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
+                                <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
+                                <span>[[firstLevelItem.key]]</span>
+                            </paper-item>
+                            <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
+                                <paper-menu class="menu-content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
+                                    <template is="dom-repeat" items="[[firstLevelItem.menu]]">
+                                        <!--TODO remove groupIndex-->
+                                        <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
+                                            <paper-checkbox class="blue" hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
+                                            <span class="menu-item-title">[[item.key]]</span>
+                                        </paper-item>
+                                    </template>
+                                </paper-menu>
+                            </template>
+                        </paper-submenu>
                     </template>
                 </paper-menu>
 
@@ -93,20 +168,26 @@
                 <div id="viewToolBar" class="tool-bar layout horizontal center">
                     <div class="layout horizontal center flex">
                         <paper-icon-button id="menuButton" icon="menu" on-tap="_togglePanel"></paper-icon-button>
+                        <tg-menu-search-input id="menuSearcher" menu="[[menu]]" tooltip="Application-wide menu search (tap or hit F3 to invoke)."></tg-menu-search-input>
                         <div class="flex">[[_calcSelectedPageTitle(_selectedPage)]]</div>
                     </div>
-                    <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
                 </div>
 
-                <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
-                    <div class="menu-item-view" name="__empty__"></div>
-                    <template is="dom-repeat" items="[[menuItem.menu]]">
-                        <!--<div class="menu-item-view" name$="[[item.title]]">-->
-                            <tg-menu-item-view class="menu-item-view" name$="[[item.title]]" menu-item="[[item]]" uuid="[[_calcUuid(item)]]" module-id="[[menuItem.title]]"></tg-menu-item-view>
-                        <!--</div>-->
+                <neon-animated-pages id="pages" selected=[[_selectedPage]] attr-for-selected="page-name" entry-animation="fade-in-animation" exit-animation="fade-out-animation" on-neon-animation-finish="_animationFinished">
+                    <div class="menu-item-view" page-name="_"></div>
+                    <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
+                        <template is="dom-if" if="[[!_isMenuPresent(firstLevelItem.menu)]]">
+                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                        </template>
+                        <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
+                            <template is="dom-repeat" items="[[firstLevelItem.menu]]">
+                                <tg-menu-item-view page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                            </template>
+                        </template>
                     </template>
                 </neon-animated-pages>
 
+                <paper-fab id="fab" icon="apps" on-tap="_showMenu"></paper-fab>
             </div>
 
 
@@ -115,32 +196,49 @@
 </dom-module>
 <script>
     (function () {
+        var findMenuItem = function (itemName, menuItem) {
+            return menuItem.menu && menuItem.menu.find(function (item) {
+                return item.key === decodeURIComponent(itemName);
+            });
+        };
+        var findNestedMenuItem = function (itemPath, menuItem) {
+            var pathIndex;
+            var path = itemPath.split('/');
+            var currentItem = menuItem;
+
+            for (pathIndex = 0;
+                (pathIndex < path.length) && !!currentItem; pathIndex++) {
+                currentItem = findMenuItem(path[pathIndex], currentItem);
+            }
+            return {
+                menuItem: currentItem,
+                path: path.slice(0, pathIndex).join('/')
+            };
+        };
         Polymer({
 
             is: "tg-view-with-menu",
 
             properties: {
+                menu: Array,
                 menuItem: Object,
+                selectedModule: String,
+                submodule: {
+                    type: String,
+                    notify: true
+                },
+                canEdit: Boolean,
+                menuSaveCallback: Function,
                 animationConfig: {
                     value: function () {
                         return {
                             'entry': [
                                 {
-                                    name: 'slide-down-animation',
-                                    node: this.$.menuToolBar
-                                }, {
-                                    name: 'slide-down-animation',
+                                    name: 'slide-from-top-animation',
                                     node: this.$.viewToolBar
                                 }, {
-                                    name: 'transform-animation',
-                                    node: this.$.menu,
-                                    transformFrom: "translateY(100%)",
-                                    tranformTo: "none"
-                                }, {
-                                    name: 'transform-animation',
-                                    node: this.$.pages,
-                                    transformFrom: "translateY(100%)",
-                                    tranformTo: "none"
+                                    name: 'slide-from-bottom-animation',
+                                    node: this.$.pages
                                 }, {
                                     name: 'scale-up-animation',
                                     node: this.$.fab,
@@ -152,20 +250,10 @@
                             'exit': [
                                 {
                                     name: 'slide-up-animation',
-                                    node: this.$.menuToolBar
-                                }, {
-                                    name: 'slide-up-animation',
                                     node: this.$.viewToolBar
                                 }, {
-                                    name: 'transform-animation',
-                                    node: this.$.menu,
-                                    transformFrom: "none",
-                                    transformTo: "translateY(100%)"
-                                }, {
-                                    name: 'transform-animation',
-                                    node: this.$.pages,
-                                    transformFrom: "none",
-                                    transformTo: "translateY(100%)"
+                                    name: 'slide-down-animation',
+                                    node: this.$.pages
                                 }, {
                                     name: 'scale-down-animation',
                                     node: this.$.fab
@@ -175,8 +263,7 @@
                     }
                 },
 
-                //Private memebers those starts with underscore
-
+                //Private members those starts with underscore
                 _selectedPage: {
                     type: String,
                     observer: '_selectedPageChanged'
@@ -184,146 +271,176 @@
             },
 
             behaviors: [
-                Polymer.NeonAnimatableBehavior
+                Polymer.NeonAnimatableBehavior,
+                Polymer.TgBehaviors.TgTooltipBehavior
             ],
 
             hostAttributes: {
                 class: "layout vertical"
             },
 
-            ready: function () {
-                var self = this,
-                    masterCounter = 1;
-                self.startUp = true;
-                self.$.menu.selected = "__empty__";
-                ////////////////// State related events ///////////////////////////
-                postal.subscribe({
-                    channel: self.menuItem.title,
-                    topic: "state.push",
-                    callback: function (data, envelope) {
-                        var newState = data.state;
-                        if (self.$.menu.selected) {
-                            newState.push(self.$.menu.selected);
-                        }
-                        self._initDrawerPanel();
-                        history.pushState(newState, "");
-                        postal.publish({
-                            channel: "app",
-                            topic: "state.pushed",
-                            data: {
-                                state: newState
-                            }
-                        });
-                    }
-                });
-                postal.subscribe({
-                    channel: self.menuItem.title,
-                    topic: "state.pop",
-                    callback: function (data, envelope) {
-                        if (data.state[1] === self.$.menu.selected) {
-                            postal.publish({
-                                channel: "app",
-                                topic: "state.poped",
-                                data: data
-                            });
-                        } else {
-                            self.restoringState = true;
-                            self.$.menu.selected = data.state[1];
-                        }
-                        self._initDrawerPanel();
-                    }
-                });
-                postal.subscribe({
-                    channel: self.menuItem.title,
-                    topic: "state.select",
-                    callback: function (data, envelop) {
-                        if (data.state[1] === self.$.menu.selected) {
-                            history.pushState(data.state, "");
-                        } else {
-                            self.$.menu.selected = data.state[1];
-                        }
-                        self._initDrawerPanel();
-                        postal.publish({
-                            channel: "app",
-                            topic: "state.pushed",
-                            data: data
-                        });
-                    }
-                });
-                //////////////////////////Edit actions//////////////////////////////////
-                postal.subscribe({
-                    channel: "manager_" + self.menuItem.title,
-                    topic: "master.edit.create",
-                    callback: function (data, envelope) {
-                        var idArray = data.view.attrs.uuid.split('/');
-                        self.push("menuItem.menu", data);
-                        self.async(function () {
-                            self.$.menu.selected = idArray[1];
-                        }, 1);
-                    }
-                });
+            observers: [
+                '_updatePage(menuItem, submodule)'
+            ],
 
-                postal.subscribe({
-                    channel: "manager_" + self.menuItem.title,
-                    topic: "master.show",
-                    callback: function (data, envelope) {
-                        var idArray = data.item.view.attrs.uuid.split('/');
-                        if (idArray[0] !== self.menuItem.title) {
-                            postal.publish({
-                                channel: idArray[0],
-                                topic: "state.select",
-                                data: {
-                                    state: idArray
-                                }
-                            })
-                        } else {
-                            self.$.menu.selected = idArray[1];
-                        }
-                        postal.publish({
-                            channel: "view",
-                            topic: "master.shown",
-                            data: data
-                        });
-                    }
-                });
-                /////////////////New Actions//////////////////////////////
-                postal.subscribe({
-                    channel: "manager_" + self.menuItem.title,
-                    topic: "master.new.create",
-                    callback: function (data, envelope) {
-                        var centreUuid = data.view.attrs.centreUuid.split('/');
-                        centreUuid[centreUuid.length - 1] = "New Master #" + masterCounter;
-                        data.title = "New Master #" + masterCounter;
-                        data.description = "New Master #" + masterCounter;
-                        data.view.attrs.uuid = centreUuid.join('/');
-                        masterCounter += 1;
-                        self.push("menuItem.menu", data);
-                        self.async(function () {
-                            self.$.menu.selected = centreUuid[1];
-                        }, 1);
-                    }
-                });
-                //////////////Master save acation////////////////////////////
-                postal.subscribe({
-                    channel: "manager_" + self.menuItem.title,
-                    topic: "master.saved",
-                    callback: function (data, envelope) {
-                        var centreUuid = data.centreUuid.split('/');
-                        postal.publish({
-                            channel: "view",
-                            topic: "master.saved",
-                            data: data
-                        });
-                        self.$.menu.selected = centreUuid[1];
+            attached: function () {
+                this.async(function () {
+                    if (!this._selectedPage) {
+                        this.set("_selectedPage", "_");
                     }
                 });
             },
 
-            _initDrawerPanel: function () {
-                if (this.$.menu.selected === '__empty__') {
+            getSelectedPage: function () {
+                return this._selectedPage;
+            },
+
+            canLeave: function () {
+                var items = this.querySelectorAll("tg-menu-item-view");
+                var changedViews = [];
+                var canLeaveResult, itemIndex;
+                for (itemIndex = 0; itemIndex < items.length; itemIndex++) {
+                    canLeaveResult = items[itemIndex].canLeave();
+                    if (canLeaveResult) {
+                        changedViews.push(items[itemIndex].submoduleId);
+                    }
+                }
+                return changedViews.length > 0 ? changedViews : undefined;
+            },
+
+            searchMenu: function (event) {
+                this.$.menuSearcher.searchMenu();
+            },
+
+            _calcCheckboxTooltip: function (menu, visible) {
+                return "Toggle to make this " + (this._isMenuPresent(menu) ? "group of menu items " : "menu item ") + (visible ? "invisible" : "visible");
+            },
+
+            _calcGroupStyle: function (firstLevelItem) {
+                var clazz = "blue";
+                if (firstLevelItem.visible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {
+                    return element.visible === true
+                }) && !firstLevelItem.menu.every(function (element) {
+                    return element.visible === false
+                })) {
+                    clazz += " undone";
+                }
+                return clazz;
+            },
+
+            _changeGroupVisibility: function (e) {
+                var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
+                var modelVisibility = e.target.checked;
+                var visisbleItems = [];
+                var invisibleItems = [];
+                var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
+                this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
+                arrayToBeUsed.push(groupUri);
+                if (e.model.firstLevelItem.menu) {
+                    e.model.firstLevelItem.menu.forEach(function (menuItem, menuItemIndex) {
+                        if (menuItem.visible !== modelVisibility) {
+                            arrayToBeUsed.push(this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, menuItem.key));
+                            this.set("menuItem.menu." + e.model.groupIndex + ".menu." + menuItemIndex + ".visible", modelVisibility);
+                        }
+                    }.bind(this));
+                }
+                var checkbox = Polymer.dom(this.$.menu).querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
+                checkbox.classList.toggle("undone", false);
+                Polymer.updateStyles();
+                this.menuSaveCallback(visisbleItems, invisibleItems);
+            },
+
+            _changeVisibility: function (e) {
+                var menuItemUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, e.model.item.key);
+                var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
+                var modelVisibility = e.target.checked;
+                var visisbleItems = [];
+                var invisibleItems = [];
+                // Changing model in order to find out whether group item should be changed or not.
+                this.set("menuItem.menu." + e.model.groupIndex + ".menu." + e.model.index + ".visible", modelVisibility);
+                var shouldChangeGroupVisibility = e.model.firstLevelItem.menu.every(function (element) {
+                        return element.visible === modelVisibility
+                    }) ||
+                    (modelVisibility && e.model.firstLevelItem.visible === false);
+                // Find out what action should be performed hiding menu items or to make them visible.
+                var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
+                arrayToBeUsed.push(menuItemUri);
+                if (shouldChangeGroupVisibility) {
+                    arrayToBeUsed.push(groupUri);
+                    this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
+                }
+                var checkbox = Polymer.dom(this.$.menu).querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
+                if (this.menuItem.menu[e.model.groupIndex].visible && !e.model.firstLevelItem.menu.every(function (element) {
+                    return element.visible === true
+                }) && !e.model.firstLevelItem.menu.every(function (element) {
+                    return element.visible === false
+                })) {
+                    checkbox.classList.toggle("undone", true);
+                } else {
+                    checkbox.classList.toggle("undone", false);
+                }
+                Polymer.updateStyles();
+                this.menuSaveCallback(visisbleItems, invisibleItems);
+            },
+
+            _createUriFromModel(menuItem, groupItem, item) {
+                return encodeURIComponent(menuItem) + "/" + encodeURIComponent(groupItem) + (item ? "/" + encodeURIComponent(item) : "");
+            },
+
+            _isMenuPresent: function (menu) {
+                return menu && menu.length > 0;
+            },
+
+            _calcItemPath: function (groupItem, item) {
+                return encodeURIComponent(groupItem.key) + (item ? "/" + encodeURIComponent(item.key) : '');
+            },
+
+            _updatePage(menuItem, submodule) {
+                var pageName;
+                var submodulePart = submodule.substring(1).split("?")[0];
+                if (menuItem.key === decodeURIComponent(this.selectedModule)) {
+                    this._selectMenu(submodulePart);
+                    this._selectPage(submodulePart);
+                }
+            },
+
+            _selectPage: function (pagePath) {
+                var menuPath = findNestedMenuItem(pagePath, this.menuItem);
+                if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
+                    this.set("_selectedPage", menuPath.path);
+                }
+            },
+
+            _selectMenu: function (pagePath) {
+                var previousTopMenu, menuPath, path, pathParts, topMenu, submenu;
+                if (pagePath === '_') {
                     this.$.drawerPanel.selected = 'drawer';
                 } else {
-                    this.$.drawerPanel.selected = 'main';
+                    menuPath = findNestedMenuItem(pagePath, this.menuItem);
+                    path = menuPath.path;
+                    pathParts = path.split('/');
+                    topMenu = this.$$("paper-submenu[name='" + pathParts[0] + "']");
+                    previousTopMenu = this.$.menu.selected && this.$$("paper-submenu[name='" + this.$.menu.selected + "']");
+                    submenu = this.$$("paper-menu[name='" + pathParts[0] + "']");
+                    if (this.$.menu.selected !== pathParts[0]) {
+                        if (previousTopMenu) {
+                            previousTopMenu.close();
+                        }
+                        this.$.menu.select(pathParts[0]);
+                        topMenu.open();
+                        if (submenu) {
+                            submenu.select(path);
+                        }
+                    } else if (submenu && submenu.selected !== path) {
+                        if (submenu) {
+                            submenu.select(path);
+                        }
+                    }
+                    if (menuPath.menuItem && this._isMenuPresent(menuPath.menuItem.menu)) {
+                        this.$.drawerPanel.selected = 'drawer';
+                    } else {
+                        this.$.drawerPanel.selected = 'main';
+                    }
                 }
             },
 
@@ -331,58 +448,64 @@
                 this.fire("main-menu");
             },
 
-            _menuItemSelected: function (e, detail, source) {
-                this._selectedPage = detail.value;
-            },
-
-            _calcSelectedView: function (selectedPage) {
-                if (selectedPage == '__empty__') {
-                    return 'drawer';
-                } else {
-                    return 'main';
-                }
-            },
-
             _togglePanel: function (e, detail, source) {
                 this.$.drawerPanel.togglePanel();
             },
 
             _calcSelectedPageTitle: function (page) {
-                return page === '__empty__' ? '' : page;
+                return page === '_' ? '' : decodeURIComponent(page.split('/').pop());
             },
 
-            _calcUuid: function (item) {
-                return this.menuItem.title + '/' + item.title;
+            _calcSubmoduleId: function (firtsLevelItem, secondLevelItem) {
+                return firtsLevelItem.key + (secondLevelItem ? '/' + secondLevelItem.key : '');
             },
 
-            _selectedPageChanged: function (e, detail, source) {
-                var state;
-                state = [this.menuItem.title, this.$.menu.selected];
-                if (this.startUp) {
-                    this.startUp = false;
-                } else if (this.restoringState) {
-                    this.restoringState = false;
-                    postal.publish({
-                        channel: "app",
-                        topic: "state.poped",
-                        data: {
-                            state: state
-                        }
-                    });
-                } else {
-                    history.pushState(state, "");
-                    this._initDrawerPanel();
+            /**
+             * The listener that listens the menu item activation on tap.
+             */
+            _itemActivated: function (e, detail) {
+                this.submodule = "/" + detail.selected
+            },
+
+            _selectedPageChanged: function (newValue, oldValue) {
+                var newFirstLevelItem = newValue && newValue.split('/')[0];
+                var oldFirstLevelItem = oldValue && oldValue.split('/')[0];
+                var shouldUnselect = oldValue && oldValue.split('/')[1];
+                var submenu;
+                if (shouldUnselect && oldFirstLevelItem && newFirstLevelItem !== oldFirstLevelItem) {
+                    submenu = this.$$("paper-menu[name='" + oldFirstLevelItem + "']");
+                    submenu.select();
                 }
             },
 
             _animationFinished: function (e, detail, source) {
                 var viewToLoad;
-                if (this.$.menu.selected != '__empty__') {
+                if (this.$.pages.selected !== '_') {
                     viewToLoad = detail.toPage;
-                    if (viewToLoad && !viewToLoad.wasLoaded()) {
-                        viewToLoad.load();
+                    if (viewToLoad) {
+                        if (!viewToLoad.wasLoaded()) {
+                            viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
+                        } else {
+                            viewToLoad.focusLoadedView();
+                        }
                     }
                 }
+            },
+
+            _focusSubmenu: function (e) {
+                var target = e.target || e.srcElement;
+                if (e.relatedTarget === this.$.menu) {
+                    if (target.opened && target.__content && target.__content.selected) {
+                        target.__content.focus();
+                    }
+                }
+            },
+
+            _tapCheckbox: function (event) {
+                if (event.stopPropagation) event.stopPropagation();
+                if (event.preventDefault) event.preventDefault();
+                event.cancelBubble = true;
+                event.returnValue = false;
             }
         });
     })();

@@ -15,9 +15,9 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.ISerialiser0;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfigController;
-import ua.com.fielden.platform.ui.config.api.IEntityMasterConfigController;
+import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 
 /**
  * A global domain tree implementation.
@@ -29,10 +29,10 @@ public class GlobalDomainTreeRepresentation extends AbstractDomainTree implement
     private final Logger logger = Logger.getLogger(getClass());
     private final EntityFactory factory;
     private final IUserProvider userProvider;
-    private final IEntityLocatorConfigController elcController;
+    private final IEntityLocatorConfig elcController;
     private final DomainTreeVersionMaintainer versionMaintainer;
 
-    public GlobalDomainTreeRepresentation(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IEntityCentreConfigController entityCentreConfigController, final IEntityMasterConfigController entityMasterConfigController, final IEntityLocatorConfigController entityLocatorConfigController) {
+    public GlobalDomainTreeRepresentation(final ISerialiser serialiser, final ISerialiser0 serialiser0, final EntityFactory factory, final IUserProvider userProvider, final IEntityCentreConfig entityCentreConfigController, final IEntityMasterConfig entityMasterConfigController, final IEntityLocatorConfig entityLocatorConfigController) {
         super(serialiser);
         this.factory = factory;
         this.userProvider = userProvider;

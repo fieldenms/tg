@@ -1,5 +1,19 @@
 package ua.com.fielden.platform.serialisation.jackson;
 
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCompositeKeySeparatorDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCritOnlyDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDisplayDescDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityDescDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isEntityTitleDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isIgnoreDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isLengthDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isPrecisionDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isResultOnlyDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isScaleDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isSecreteDefault;
+import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUpperCaseDefault;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -10,22 +24,27 @@ import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.DateOnly;
+import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.Ignore;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
+import ua.com.fielden.platform.entity.annotation.TimeOnly;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.EntityJsonDeserialiser;
 import ua.com.fielden.platform.serialisation.jackson.serialisers.EntityJsonSerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.*;
 
 import com.esotericsoftware.kryo.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,44 +62,58 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     private final EntityFactory factory;
     private final EntityType entityTypeInfo;
 
-    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter) {
-        this(type, module, mapper, factory, entityTypeInfoGetter, false);
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder) {
+        this(type, module, mapper, factory, entityTypeInfoGetter, false, serialisationTypeEncoder, false);
     }
 
     /**
      * Creates {@link EntitySerialiser} instance based on the specified <code>type</code>.
-     * 
+     *
      * @param type
      * @param module
      * @param mapper
      * @param factory
      * @param entityTypeInfoGetter
-     * @param excludeNullsAndIdOnlyProxies -- the special switch that indicate whether <code>null</code> properties (or id-only proxies) should be fully disregarded during serialisation into JSON
+     * @param excludeNulls
+     *            -- the special switch that indicate whether <code>null</code> properties should be fully disregarded during serialisation into JSON
+     * @param serialisationTypeEncoder
+     * @param propertyDescriptorType
+     *            -- <code>true</code> to create {@link EntitySerialiser} for {@link PropertyDescriptor} entity type, <code>false</code> otherwise
      */
-    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNullsAndIdOnlyProxies) {
+    public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder, final boolean propertyDescriptorType) {
         this.type = type;
         this.factory = factory;
 
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
-        this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter);
+        this.entityTypeInfo = createEntityTypeInfo(entityTypeInfoGetter, serialisationTypeEncoder);
 
-        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, entityTypeInfo, excludeNullsAndIdOnlyProxies);
-        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, entityTypeInfo, entityTypeInfoGetter);
+        final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<T>(type, properties, this.entityTypeInfo, excludeNulls, propertyDescriptorType);
+        final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<T>(mapper, factory, type, properties, serialisationTypeEncoder, propertyDescriptorType);
 
         // register serialiser and deserialiser
         module.addSerializer(type, serialiser);
         module.addDeserializer(type, deserialiser);
     }
 
-    private EntityType createEntityTypeInfo(final EntityTypeInfoGetter entityTypeInfoGetter) {
+    private EntityType createEntityTypeInfo(final EntityTypeInfoGetter entityTypeInfoGetter, final ISerialisationTypeEncoder serialisationTypeEncoder) {
         final EntityType entityTypeInfo = this.factory.newEntity(EntityType.class, 1L); // use id to have not dirty properties (reduce the amount of serialised JSON)
         entityTypeInfo.beginInitialising();
         entityTypeInfo.setKey(type.getName());
 
         // let's inform the client of the type's persistence nature
         entityTypeInfo.set_persistent(EntityUtils.isPersistedEntityType(type));
-        
+
+        if (IContinuationData.class.isAssignableFrom(type)) {
+            entityTypeInfo.set_continuation(true);
+        }
+
+        // let's inform the client of whether value descriptions should be displayed in editors of this type
+        final boolean shouldDisplayDescription = AnnotationReflector.isAnnotationPresentForClass(DisplayDescription.class, type);
+        if (!isDisplayDescDefault(shouldDisplayDescription)) {
+            entityTypeInfo.set_displayDesc(shouldDisplayDescription);
+        }
+
         if (EntityUtils.isCompositeEntity(type)) {
             final List<String> compositeKeyNames = new ArrayList<>();
             final List<Field> keyMembers = Finder.getKeyMembers(type);
@@ -137,6 +170,12 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 if (!isIgnoreDefault(ignore)) {
                     entityTypeProp.set_ignore(ignore);
                 }
+                if (AnnotationReflector.isPropertyAnnotationPresent(DateOnly.class, type, name)) {
+                    entityTypeProp.set_date(Boolean.TRUE);
+                }
+                if (AnnotationReflector.isPropertyAnnotationPresent(TimeOnly.class, type, name)) {
+                    entityTypeProp.set_time(Boolean.TRUE);
+                }
                 final MapTo mapTo = AnnotationReflector.getPropertyAnnotation(MapTo.class, type, name);
                 if (mapTo != null) {
                     final Long length = Long.valueOf(mapTo.length());
@@ -152,6 +191,10 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                         entityTypeProp.set_scale(scale);
                     }
                 }
+                final String timeZone = getTimeZone(type, name);
+                if (timeZone != null) {
+                    entityTypeProp.set_timeZone(timeZone);
+                }
 
                 entityTypeProp.endInitialising();
 
@@ -159,19 +202,17 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             }
             entityTypeInfo.set_props(props);
         }
-        return entityTypeInfoGetter.register(entityTypeInfo); // the number will be populated here!
+        final EntityType registered = entityTypeInfoGetter.register(entityTypeInfo);
+        registered.set_identifier(serialisationTypeEncoder.encode(type));
+        return registered;
     }
 
     public EntityType getEntityTypeInfo() {
         return entityTypeInfo;
     }
 
-    public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references, final Long typeNumber) {
-        return typeId(typeNumber) + "#" + newIdWithinTheType(entity, references);
-    }
-
-    public static <M extends AbstractEntity<?>> String typeId(final Long typeNumber) {
-        return typeNumber.toString();
+    public static <M extends AbstractEntity<?>> String newSerialisationId(final M entity, final References references, final String entityTypeId) {
+        return entityTypeId + "#" + newIdWithinTheType(entity, references);
     }
 
     private static <M extends AbstractEntity<?>> String newIdWithinTheType(final M entity, final References references) {
@@ -241,7 +282,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             this.propertyType = type;
             this.entityTyped = EntityUtils.isEntityType(this.propertyType);
         }
-        
+
         public boolean isEntityTyped() {
             return entityTyped;
         }

@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.swing.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -68,7 +68,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
             final String typeString = (String) request.getAttributes().get("type");
             final String propertyName = (String) request.getAttributes().get("property");
 
-            // the type represents 'autocompletion type', to which autocompleter was bound. It can be "miType" (the identificator of corresponding centre) or "entity master entity" (not generated)
+            // the type represents 'autocompletion type', to which autocompleter was bound. It can be "miType" (the identifier of corresponding centre) or "entity master entity" (not generated)
             final Class<?> type = ClassesRetriever.findClass(typeString);
             if (MiWithConfigurationSupport.class.isAssignableFrom(type)) {
                 final String criterionPropertyName = propertyName;
@@ -102,7 +102,7 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                     entityProducer = master.createEntityProducer();
                 } else { // in case when no master is registered for the type -- use default producer and value matcher
                     valueMatcher = EntityMaster.createDefaultValueMatcher(propertyName, entityType, coFinder);
-                    entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType);
+                    entityProducer = EntityMaster.createDefaultEntityProducer(factory, entityType, coFinder);
                 }
                 new EntityAutocompletionResource(
                         entityType,

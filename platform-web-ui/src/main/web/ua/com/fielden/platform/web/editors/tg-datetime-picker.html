@@ -1,11 +1,15 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
+<link rel="import" href="/resources/reflection/tg-date-utils.html">
+
 <link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/components/moment-component.html">
 <link rel="import" href="/resources/components/tg-calendar.html">
 
 <link rel="import" href="/resources/editors/tg-editor-behavior.html">
 <link rel="import" href="/resources/editors/tg-editor.html">
+
+<link rel="import" href="/resources/polymer/iron-input/iron-input.html">
 
 <link rel="import" href="/resources/polymer/iron-icons/iron-icons.html">
 <link rel="import" href="/resources/polymer/iron-resizable-behavior/iron-resizable-behavior.html">
@@ -43,8 +47,6 @@
             left: -0.3rem;
         }
         .picker-button {
-            --iron-icon-height: 1.3rem;
-            --iron-icon-width: 1.3rem;
             width: 1.3rem;
             height: 1.3rem;
             padding: 0;
@@ -77,13 +79,19 @@
         	action="[[action]]" _error="[[_error]]" 
         	_comm-value="[[_commValue]]" 
         	_accepted-value="[[_acceptedValue]]" 
-        	debug="[[debug]]" 
-        	_on-change="[[_onChange]]" 
-        	_on-input="[[_onInput]]" 
-        	_on-keydown="[[_onKeydown]]" 
-        	current-state="[[currentState]]">
+        	debug="[[debug]]">
+        	<input
+    			id="input"
+    			class="custom-input date-input"
+    			is="iron-input"
+    			bind-value="{{_editingValue}}"
+    			on-change="_onChange"
+    			on-input="_onInput"
+    			on-keydown="_onKeydown"
+    			disabled$="[[_disabled]]"
+                tooltip-text$="[[_getTooltip(_editingValue)]]"/>
             <content class=".property-action"></content>
-            <paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_disabled]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
+            <paper-icon-button id="openCalendarButton" class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>
         </tg-editor>
     </template>
 </dom-module>
@@ -95,8 +103,6 @@
             behaviors: [Polymer.TgBehaviors.TgEditorBehavior, Polymer.IronResizableBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
 
             ready: function () {
-                this.$.editorDom._editorKind = 'DATE';
-                
                 moment.parseTwoDigitYear = function (input) {
                     var currYear = moment().year();
                     console.debug('parseTwoDigitYear: [', input, '] currYear ', currYear);
@@ -105,6 +111,24 @@
             },
 
             properties: {
+                /**
+                 * If empty then default timezone should be used for toString and fromString conversions in 'moment()' and 'moment(...)' methods. 
+                 * Otherwise -- the specified timezone should be used in 'moment.tz(timeZone)' and 'moment.tz(..., timeZone)' methods.
+                 */
+                timeZone: {
+                    type: String,
+                    value: null
+                },
+                
+                /**
+                 * Defines what date portion to show: date, time or date & time. If the value is 'DATE' then only date portion of the date property value will be shown,
+                 * If the value is 'TIME' then only time portion of the date property value will be shown, otherwise date & time wil be shown.
+                 */
+                datePortion: {
+                    type: String,
+                    value: null
+                },
+                
                 /**
                  * If true -- the empty time portion should be approximated to '23:59:59.999', otherwise -- to '00:00:00.000'.
                  */
@@ -131,28 +155,52 @@
                     type: Array,
                     value: function () {
                         return [
+                            'L LTS',
+                            'D/M/YYYY h:m:ss.SSSa',
+                            'D/M/YY h:m:ss.SSSa',
+                            'D/M/Y h:m:ss.SSSa',
+                            'D/M/YYYY H:m:ss.SSS',
+                            'D/M/YY H:m:ss.SSS',
+                            'D/M/Y H:m:ss.SSS',
                             'L LT',
                             'D/M/YYYY hmma',
                             'D/M/YY hmma',
                             'D/M/Y hmma',
-                            'D/M/YYYY hmm',
-                            'D/M/YY hmm',
-                            'D/M/Y hmm',
+                            'D/M/YYYY Hmm',
+                            'D/M/YY Hmm',
+                            'D/M/Y Hmm',
                             'D/M/YYYY h:ma',
                             'D/M/YY h:ma',
                             'D/M/Y h:ma',
-                            'D/M/YYYY h:m',
-                            'D/M/YY h:m',
-                            'D/M/Y h:m',
+                            'D/M/YYYY H:m',
+                            'D/M/YY H:m',
+                            'D/M/Y H:m',
                             'D/M/YYYY ha',
                             'D/M/YY ha',
                             'D/M/Y ha',
-                            'D/M/YYYY h',
-                            'D/M/YY h',
-                            'D/M/Y h',
+                            'D/M/YYYY H',
+                            'D/M/YY H',
+                            'D/M/Y H',
                             'D/M/YYYY',
                             'D/M/YY',
                             'D/M/Y'
+                        ];
+                    }
+                },
+                
+                /**
+                 * The formats for approximation. The order of this array is important -- it defines the order in which formats are tried during approximation.
+                 */
+                _timePortionFormats: {
+                    type: Array,
+                    value: function () {
+                        return [
+                            'LTS',
+                            'h:m:ss.SSSa',
+                            'H:m:ss.SSS',
+                            'LT',
+                            'h:ma',
+                            'H:m'
                         ];
                     }
                 },
@@ -189,7 +237,7 @@
                 if (value === null) {
                     return "";
                 } else {
-                    return moment(value).format("L LT");
+                    return _millisDateRepresentation(value, this.timeZone, this.datePortion);
                 }
             },
 
@@ -198,7 +246,12 @@
                 Polymer.dom(document.body).appendChild(mve);
                 Polymer.dom.flush();
                 
+                this.$.openCalendarButton.disabled = true;
                 mve.open();
+            },
+            
+            _isCalendarDisabled: function (_disabled, datePortion) {
+                return _disabled || datePortion === "TIME";
             },
             
             /**
@@ -210,38 +263,47 @@
             	
             	domBind._closedBind = function(e) {
             		var dialog = this.$.dateDialog;
+                    //Removes the registered key down listener.
+                    document.removeEventListener('keydown', this._onCaptureKeyDown, true);
+                    
             		Polymer.dom(document.body).removeChild(dialog);
             		Polymer.dom(document.body).removeChild(this);
             		Polymer.dom.flush();
+                    
+                    //Setting focus on input and restoring icon button state.
+                    self.$.openCalendarButton.disabled = false;
+                    self.decoratedInput().focus();
             	}.bind(domBind);
             	
-            	domBind._cancelDateBind = function() {
-            		self.decoratedInput().focus();
-           		};
-           		
             	domBind._acceptDateBind = function() {
                     self._isAcceptingDateFromPicker = true;
-                    self._editingValue = moment(this.$.datePicker.selectedDate)
+                    var acceptedMoment = _momentTz(this.$.datePicker.selectedDate, self.timeZone)
                         .hour(this.$.datePicker.selectedHour)
                         .minute(this.$.datePicker.selectedMinute)
-                        .format("L LT");
-                    self.decoratedInput().focus();
+                        .seconds(this.$.datePicker.seconds)
+                        .milliseconds(this.$.datePicker.milis);
+                    self._editingValue = _millisDateRepresentation(acceptedMoment.valueOf(), self.timeZone, self.datePortion);
+                    //self.decoratedInput().focus();
            		}.bind(domBind);
-           		
+                
            		domBind.open = function () {
            			var dialog = this.$.dateDialog;
            			var datePicker = this.$.datePicker;
+                    
+                    dialog.noCancelOnEscKey = false;
+                    
            			datePicker.selectedDate = null;
-                	datePicker.selectedHour = 0;
-                	datePicker.selectedMinute = 0;
+                	datePicker.selectedHour = self.timePortionToBecomeEndOfDay ? 23 : null;
+                	datePicker.selectedMinute = self.timePortionToBecomeEndOfDay ? 59 : null;
+                    datePicker.seconds = self.timePortionToBecomeEndOfDay ? 59 : 0;
+                    datePicker.milis = self.timePortionToBecomeEndOfDay ? 999 : 0; 
                 	
-                    if (self._editingValue  !== '') {
-                        var selectedMoment = moment(self._editingValue.trim(), "L LT", true);
-                        if (selectedMoment.isValid()) {
-                            datePicker.selectedDate = selectedMoment.valueOf();
-                            datePicker.selectedHour = selectedMoment.hour();
-                            datePicker.selectedMinute = selectedMoment.minute();
-                        }
+                    if (self._editingValue && self._editingValue.trim() !== '' && self._validMoment !== null) {
+                        datePicker.selectedDate = self._validMoment.valueOf();
+                        datePicker.selectedHour = self._validMoment.hour();
+                        datePicker.selectedMinute = self._validMoment.minute();
+                        datePicker.seconds = self._validMoment.seconds();
+                        datePicker.milis = self._validMoment.milliseconds();
                     }
            			
                     Polymer.dom(document.body).appendChild(dialog);
@@ -252,13 +314,27 @@
                     	dialog.open();
                     }.bind(this), 1);
            		}.bind(domBind);
+                
+                domBind._onCaptureKeyDown = function (e) {
+                    var dialog = this.$.dateDialog;
+                    if (e.keyCode === 13) {
+                        this._acceptDateBind();
+                        dialog.close();
+                    }
+                }.bind(domBind);
+                
+                domBind._dialogOpened = function () {
+                    document.addEventListener('keydown', this._onCaptureKeyDown, true);
+                }.bind(domBind);
+                
+                domBind.timeZone = self.timeZone;
            		
             	var div = domBind.content.ownerDocument.createElement('div');
             	div.innerHTML = 
-            	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind">' +
-                    '<tg-calendar id="datePicker" pick-time></tg-calendar>' +
+            	'<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_dialogOpened">' +
+                    '<tg-calendar id="datePicker" pick-time time-zone="[[timeZone]]"></tg-calendar>' +
                     '<div class="buttons">' +
-                        '<paper-button dialog-dismiss affirmative on-tap="_cancelDateBind">Cancel</paper-button>' +
+                        '<paper-button dialog-dismiss affirmative>Cancel</paper-button>' +
                         '<paper-button dialog-confirm affirmative autofocus on-tap="_acceptDateBind">Ok</paper-button>' +
                     '</div>' +
                 '</paper-dialog>';
@@ -296,21 +372,50 @@
             _approximate: function (dateEditingValue) {
                 this._validMoment = null;
                 if (dateEditingValue) {
-                    // remove all spaces and insert one after year digits
-                    var numberOfDigitsAfterSecondSlash = this._calculateNumberOfDigitsAfterSecondSlash(dateEditingValue);
-                    // If numberOfDigitsAfterSecondSlash equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'
-                    // But they should not be valid. Only 1, 2 and 4 digits for years should be valid.
-                    if (numberOfDigitsAfterSecondSlash === 1 || numberOfDigitsAfterSecondSlash === 2 || numberOfDigitsAfterSecondSlash === 4) {
-                        var value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigitsAfterSecondSlash).trim();
+                    
+                    var firstSlashIndex = dateEditingValue.indexOf('/');
+                    if (firstSlashIndex > -1) {
+                        // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one slash)
+                        var numberOfDigitsAfterLastSlash = this._calculateNumberOfDigitsAfterLastSlash(dateEditingValue);
+                        var numberOfDigits = numberOfDigitsAfterLastSlash.number;
+                        var aproximated = undefined;
+                        if (numberOfDigitsAfterLastSlash.secondSlashExists === true) { // exactly two slashes
+                            // If numberOfDigitsAfterSecondSlash equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'
+                            // But they should not be valid. Only 1, 2 and 4 digits for years should be valid.
+                            if (numberOfDigits === 1 || numberOfDigits === 2 || numberOfDigits === 4) {
+                                aproximated = this._approximateWithNumberOfDigits(dateEditingValue, numberOfDigits);
+                            }
+                        } else { // exactly one slash
+                            // If numberOfDigitsAfterFirstSlash equals 1 or 2 -- it could be represented as valid digits for month.
+                            if (numberOfDigits === 1 || numberOfDigits === 2) {
+                                aproximated = this._approximateWithNumberOfDigits(dateEditingValue, numberOfDigits);
+                            }
+                        }
+                        if (aproximated !== undefined) {
+                            return aproximated;
+                        }
+                    } else {
+                        var value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
                         if (value) {
-                            this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
+                            this._validMoment = this._tryTimePortionFormats(value, this._timePortionFormats.slice() /* the copy is made  */);
                             if (this._validMoment !== null) {
-                                return moment(this._validMoment.valueOf()).format('L LT');
+                                return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
                             }
                         }
                     }
-                } 
+                }
                 return dateEditingValue;
+            },
+            
+            _approximateWithNumberOfDigits: function (dateEditingValue, numberOfDigits) {
+                var value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigits).trim();
+                if (value) {
+                    this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
+                    if (this._validMoment !== null) {
+                        return _millisDateRepresentation(this._validMoment.valueOf(), this.timeZone, this.datePortion);
+                    }
+                }
+                return undefined;
             },
             
             /**
@@ -323,15 +428,35 @@
                 } else {
                     console.debug('formats', formats);
                     var firstFormat = formats[0];
-                    var tryingMoment = moment(stringValue, firstFormat, true);
+                    var tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
                     if (tryingMoment.isValid()) {
-                        if (['D/M/Y', 'D/M/Y hmma', 'D/M/Y hmm', 'D/M/Y h:ma', 'D/M/Y h:m', 'D/M/Y ha', 'D/M/Y h'].indexOf(firstFormat) !== -1) {
-                            tryingMoment = moment(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true);
+                        if (['D/M/Y H:m:ss.SSS', 'D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y Hmm', 'D/M/Y h:ma', 'D/M/Y H:m', 'D/M/Y ha', 'D/M/Y H', 'D/M/Y'].indexOf(firstFormat) !== -1) {
+                            tryingMoment = _momentTz(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true, this.timeZone);
                         }
                         
                         if (['D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {
                             tryingMoment.add(1, 'days').subtract(1, 'milliseconds');
                         }
+                        return tryingMoment;
+                    } else {
+                        formats.shift(); // first element is removed
+                        return this._tryFormats(stringValue, formats);
+                    }
+                }
+            },
+            
+            /**
+             * Tries time portion formats one-by-one and returns the valid 'moment' object in case where some format has been successed.
+             * In case of all formats failure -- returns 'null'.
+             */
+            _tryTimePortionFormats: function (stringValue, formats) {
+                if (formats.length === 0) {
+                    return null;
+                } else {
+                    console.debug('time portion formats', formats);
+                    var firstFormat = formats[0];
+                    var tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
+                    if (tryingMoment.isValid()) {
                         return tryingMoment;
                     } else {
                         formats.shift(); // first element is removed
@@ -353,18 +478,32 @@
                     var secondSlashIndex = str.indexOf('/', firstSlashIndex + 1);
                     if (secondSlashIndex === -1) {
                         return -1;
-                    }                    
+                    }
                     return secondSlashIndex;
                 }
             },
             
-            _calculateNumberOfDigitsAfterSecondSlash: function (str) {
+            _calculateNumberOfDigitsAfterLastSlash: function (str) {
                 var secondSlashIndex = this._findSecondSlashIndex(str);
-                var numberOfDigits = 0;
+                var numberOfDigits = null;
                 if (secondSlashIndex === -1) {
-                    return numberOfDigits;
+                    var firstSlashIndex = str.indexOf('/');
+                    numberOfDigits = this._calculateNumberOfDigitsAfterIndex(str, firstSlashIndex);
+                } else {
+                    numberOfDigits = this._calculateNumberOfDigitsAfterIndex(str, secondSlashIndex);
                 }
-                for (var index = secondSlashIndex + 1; index < str.length; index++) {
+                return {
+                    secondSlashExists: secondSlashIndex > -1,
+                    number: numberOfDigits
+                };
+            },
+            
+            _calculateNumberOfDigitsAfterIndex: function (str, slashIndex) {
+                if (slashIndex === -1) {
+                    throw '_calculateNumberOfDigitsAfterIndex: index of slash should not be -1.';
+                }
+                var numberOfDigits = 0;
+                for (var index = slashIndex + 1; index < str.length; index++) {
                     if (' ' === str[index]) {
                         if (numberOfDigits > 0) {
                             return numberOfDigits;
@@ -377,15 +516,25 @@
                 return numberOfDigits;
             },
             
-            _insertOneSpace: function (strWithoutSpaces, numberOfDigitsAfterSecondSlash) {
-                if (numberOfDigitsAfterSecondSlash === 0) {
+            /**
+             * Inserts one space after year digits (two slashes exist) or '/currYear ' after month digits (one slash exists).
+             */
+            _insertOneSpace: function (strWithoutSpaces, numberOfDigitsAfterLastSlash) {
+                if (numberOfDigitsAfterLastSlash === 0) {
                     return strWithoutSpaces;
                 } else {
                     var secondSlashIndex = this._findSecondSlashIndex(strWithoutSpaces);
-                    if (secondSlashIndex === -1) {
-                        return strWithoutSpaces;
+                    if (secondSlashIndex === -1) { // in this case, one slash could exist. Then need to insert current year after it.
+                        var firstSlashIndex = strWithoutSpaces.indexOf('/');
+                        if (firstSlashIndex === -1) {
+                            return strWithoutSpaces;
+                        } else {
+                            var insertionPoint = firstSlashIndex + numberOfDigitsAfterLastSlash + 1;
+                            var currYearStr = _momentTz(this.timeZone).format('YYYY');
+                            return strWithoutSpaces.slice(0, insertionPoint) + '/' + currYearStr +' ' + strWithoutSpaces.slice(insertionPoint);
+                        }
                     }
-                    var insertionPoint = secondSlashIndex + numberOfDigitsAfterSecondSlash + 1;
+                    var insertionPoint = secondSlashIndex + numberOfDigitsAfterLastSlash + 1;
                     return strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint);
                 }
             }

@@ -17,20 +17,20 @@ import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.base.Ticker;
+import com.google.common.cache.Cache;
+
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.TickerForSessionCache;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-
-import com.google.common.base.Ticker;
-import com.google.common.cache.Cache;
 
 /**
  * A test case to cover authenticator revalidation in case of evicted sessions and recognition of stolen authenticators that takes into account the eviction strategy.
@@ -40,7 +40,7 @@ import com.google.common.cache.Cache;
  */
 public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCase {
 
-    private final UserSessionDao coSession = (UserSessionDao) ao(UserSession.class);
+    private final UserSessionDao coSession = (UserSessionDao) co(UserSession.class);
     private final Cache<String, UserSession> cache = coSession.getCache();
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
     private final TickerForSessionCache cacheTicker = (TickerForSessionCache) getInstance(Ticker.class);
@@ -214,12 +214,12 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         constants.setNow(dateTime("2015-04-23 15:00:00"));
 
         // add more users
-        save(new_(TgPerson.class, "Person 1").setUsername("USER-1").setBase(true));
-        save(new_(TgPerson.class, "Person 2").setUsername("USER-2").setBase(true));
+        final IUser coUser = co(User.class);
+        final User user1 = coUser.save(new_(User.class, "USER1").setBase(true));
+        save(new_(TgPerson.class, "Person 1").setUser(user1));
+        final User user2 = coUser.save(new_(User.class, "USER2").setBase(true));
+        save(new_(TgPerson.class, "Person 2").setUser(user2));
 
-        // ensure that TEST is the current user
-        final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserEx.class));
     }
 
 }

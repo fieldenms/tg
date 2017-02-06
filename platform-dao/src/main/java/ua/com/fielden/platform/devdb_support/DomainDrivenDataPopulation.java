@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.devdb_support;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -11,12 +12,15 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.PersistedEntityMetadata;
+import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -31,12 +35,13 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  *
  */
-public abstract class DomainDrivenDataPopulation {
+public abstract class DomainDrivenDataPopulation implements IDomainDrivenData {
 
     private final List<String> dataScript = new ArrayList<String>();
     private final List<String> truncateScript = new ArrayList<String>();
 
     public final IDomainDrivenTestCaseConfiguration config;
+    private final Properties props;
 
     private final ICompanionObjectFinder provider;
     private final EntityFactory factory;
@@ -44,8 +49,9 @@ public abstract class DomainDrivenDataPopulation {
 
     private boolean domainPopulated = false;
 
-    protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config) {
+    protected DomainDrivenDataPopulation(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
         try {
+            this.props = props;
             this.config = config;
             provider = config.getInstance(ICompanionObjectFinder.class);
             factory = config.getEntityFactory();
@@ -73,7 +79,9 @@ public abstract class DomainDrivenDataPopulation {
     }
 
     public final void createAndPopulate() throws Exception {
-        createAndPopulate(true);
+        // generateSchemaScript is only supported for H2 - it uses H2-specific query "SCRIPT"
+        final boolean generateSchemaScript = config.getDomainMetadata().dbVersion == H2;
+        createAndPopulate(generateSchemaScript);
     }
     /**
      * The entry point to trigger creation of the database and its population.
@@ -103,7 +111,7 @@ public abstract class DomainDrivenDataPopulation {
                 st.close();
 
                 // create truncate statements
-                for (final PersistedEntityMetadata entry : config.getDomainMetadata().getPersistedEntityMetadatas()) {
+                for (final PersistedEntityMetadata<?> entry : config.getDomainMetadata().getPersistedEntityMetadatas()) {
                     truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
                 }
             }
@@ -126,11 +134,11 @@ public abstract class DomainDrivenDataPopulation {
         exec(truncateScript, conn);
     }
 
-    private static Connection createConnection() {
-        final String url = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.url");
-        final String jdbcDriver = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.driver_class");
-        final String user = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.username");
-        final String passwd = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.password");
+    private Connection createConnection() {
+        final String url = props.getProperty("hibernate.connection.url");
+        final String jdbcDriver = props.getProperty("hibernate.connection.driver_class");
+        final String user = props.getProperty("hibernate.connection.username");
+        final String passwd = props.getProperty("hibernate.connection.password");
 
         try {
             Class.forName(jdbcDriver);
@@ -140,21 +148,30 @@ public abstract class DomainDrivenDataPopulation {
         }
     }
 
+    @Override
     public final <T> T getInstance(final Class<T> type) {
         return config.getInstance(type);
     }
 
+    @Override
     public final <T extends AbstractEntity<?>> T save(final T instance) {
         final IEntityDao<T> pp = provider.find((Class<T>) instance.getType());
         return pp.save(instance);
     }
 
-    public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T ao(final Class<E> type) {
+    @Override
+    public final <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type) {
         return (T) provider.find(type);
     }
 
+    @Override
     public final Date date(final String dateTime) {
         return formatter.parseDateTime(dateTime).toDate();
+    }
+
+    @Override
+    public final DateTime dateTime(final String dateTime) {
+        return formatter.parseDateTime(dateTime);
     }
 
     public final BigDecimal decimal(final String value) {
@@ -173,6 +190,7 @@ public abstract class DomainDrivenDataPopulation {
      * @param desc
      * @return
      */
+    @Override
     public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
         return factory.newEntity(entityClass, key, desc);
     }
@@ -184,6 +202,7 @@ public abstract class DomainDrivenDataPopulation {
      * @param key
      * @return
      */
+    @Override
     public final <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
         return factory.newByKey(entityClass, key);
     }
@@ -194,7 +213,8 @@ public abstract class DomainDrivenDataPopulation {
      * @param entityClass
      * @return
      */
-    protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
+    @Override
+    public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
         return factory.newEntity(entityClass);
     }
 
@@ -206,6 +226,7 @@ public abstract class DomainDrivenDataPopulation {
      * @param keys
      * @return
      */
+    @Override
     public final <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys) {
         return factory.newByKey(entityClass, keys);
     }

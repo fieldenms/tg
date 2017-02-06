@@ -39,7 +39,7 @@ public class PropertyDependencyHandlingTest {
     public void setUp() {
         module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "one", new IBeforeChangeEventHandler<Object>() {
             @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
                 ((EntityWithDependentProperties) property.getEntity()).oneCount++;
                 return Result.successful(newValue);
             }
@@ -47,7 +47,7 @@ public class PropertyDependencyHandlingTest {
 
         module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "two", new IBeforeChangeEventHandler<Object>() {
             @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
                 ((EntityWithDependentProperties) property.getEntity()).twoCount++;
                 return Result.successful(newValue);
             }
@@ -55,7 +55,7 @@ public class PropertyDependencyHandlingTest {
 
         module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "three", new IBeforeChangeEventHandler<Object>() {
             @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
                 ((EntityWithDependentProperties) property.getEntity()).threeCount++;
                 return Result.successful(newValue);
             }
@@ -63,7 +63,7 @@ public class PropertyDependencyHandlingTest {
 
         module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "four", new IBeforeChangeEventHandler<Object>() {
             @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
                 ((EntityWithDependentProperties) property.getEntity()).fourCount++;
                 return Result.successful(newValue);
             }
@@ -71,7 +71,7 @@ public class PropertyDependencyHandlingTest {
 
         module.getDomainValidationConfig().setValidator(EntityWithDependentProperties.class, "five", new IBeforeChangeEventHandler<Object>() {
             @Override
-            public Result handle(final MetaProperty<Object> property, final Object newValue, final Object oldValue, final Set<Annotation> mutatorAnnotations) {
+            public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
                 ((EntityWithDependentProperties) property.getEntity()).fiveCount++;
                 return new Result(new Exception());
             }

@@ -181,4 +181,10 @@ public class LastLevelEntityDaoStub implements ILastLevelEntity {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public LastLevelEntity new_() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

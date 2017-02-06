@@ -26,14 +26,16 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 /**
  * A test for base TG domain tree representation.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDomainTreeTest {
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// Test initialisation ///////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
+    private int i, j;
+    
     @Override
     protected IDomainTreeManagerAndEnhancer dtm() {
         return (IDomainTreeManagerAndEnhancer) just_a_dtm();
@@ -349,8 +351,6 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         assertEquals(m, Arrays.asList(Function.SELF, Function.SUM, Function.AVG, Function.MIN, Function.MAX), new ArrayList<Function>(dtm().getRepresentation().availableFunctions(MasterEntity.class, "entityProp.aggrCollExprProp2")));
     }
 
-    private static int i, j;
-
     @Test
     public void test_that_PropertyListeners_work() {
         i = 0;
@@ -393,7 +393,7 @@ public class AbstractDomainTreeRepresentationAndEnhancerTest extends AbstractDom
         assertEquals("Incorrect value 'j'.", 2, j);
 
         dtm().getRepresentation().warmUp(MasterEntity.class, "entityProp.entityProp.slaveEntityProp");
-        assertEquals("Incorrect value 'i'.", 132, i);
+        assertEquals("Incorrect value 'i'.", 138, i);
         assertEquals("Incorrect value 'j'.", 5, j);
     }
 

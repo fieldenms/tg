@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
@@ -29,18 +31,23 @@ import org.joda.time.DateTime;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.implementation.FixedValue;
+import net.bytebuddy.matcher.ElementMatchers;
 import ua.com.fielden.platform.dao.annotations.AfterSave;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities;
 import ua.com.fielden.platform.dao.handlers.IAfterSave;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
 import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
@@ -61,6 +68,7 @@ import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -89,12 +97,11 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private final Logger logger = Logger.getLogger(this.getClass());
 
     private Session session;
+    private String transactionGuid;
 
     private DomainMetadata domainMetadata;
     
     private IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
-
-    private EntityFactory entityFactory;
 
     @Inject
     private ICompanionObjectFinder coFinder;
@@ -116,6 +123,19 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      *  Refer issue <a href='https://github.com/fieldenms/tg/issues/421'>#421</a> for more details. */
     private final boolean hasSaveOverridden;
 
+    @Override
+    public <E extends IEntityDao<T>> E uninstrumented() {
+        final Class<?> coType = PropertyTypeDeterminator.stripIfNeeded(getClass());
+        
+        final Class<?> newCoType = new ByteBuddy().subclass(coType)
+                .method(ElementMatchers.named("instrumented")).intercept(FixedValue.value(false))
+                .make()
+                .load(ClassLoader.getSystemClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
+                .getLoaded();
+        
+        return (E) injector.getInstance(newCoType);
+    }
+    
     /**
      * A principle constructor.
      *
@@ -137,16 +157,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
         
         return false;
-    }
-
-    /**
-     * A setter for injection of entityFactory instance.
-     *
-     * @param entityFactory
-     */
-    @Inject
-    protected void setEntityFactory(final EntityFactory entityFactory) {
-        this.entityFactory = entityFactory;
     }
 
     /**
@@ -296,7 +306,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // let's make sure that entity is not a duplicate
         final AggregatedResultQueryModel model = select(createQueryByKey(entity.getKey())).yield().prop(AbstractEntity.ID).as(AbstractEntity.ID).modelAsAggregate();
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants, idOnlyProxiedEntityTypeCache);
-        final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).model());
+        final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).lightweight().model());
         final int count = ids.size();
         if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
             throw new EntityCompanionException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()));
@@ -313,6 +323,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
 
+
+        // perform meta-data assignment to capture the information about this modification
+        if (entity instanceof AbstractPersistentEntity) {
+            assignLastModificationInfo((AbstractPersistentEntity<?>) entity);
+        }
+        
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
         // the easiest way to do that is to load entity by id using the current session
@@ -364,7 +380,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             final boolean beingActivated = activeProp.isDirty() && activeProp.getValue();
             // get the latest value of the dereferenced activatable as the current value of the persisted entity version from the database and decrement its ref count
             // previous property value should not be null as it would become dirty, also, there was no property conflict, so it can be safely assumed that previous value is NOT null
-            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
+            final ActivatableAbstractEntity<?> prevValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getPrevValue();
+            final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), prevValue.getId());
             // if persistedValue active and does not equal to the entity being saving then need to decrement its refCount
             if (!beingActivated && persistedValue.isActive() && !entity.equals(persistedValue)) { // avoid counting self-references
                 persistedValue.setIgnoreEditableState(true);
@@ -375,9 +392,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             persistedEntity.set(propName, null);
         } else { // otherwise there could be either referencing (i.e. before property was null) or a reference change (i.e. from one value to some other)
             // need to process previous property value
-            final AbstractEntity<?> prevValue = persistedEntity.<AbstractEntity<?>> get(propName);
+            final AbstractEntity<?> prevValue = (ActivatableAbstractEntity<?>) entity.getProperty(propName).getPrevValue();
             if (prevValue != null && !entity.equals(prevValue)) { // need to decrement refCount for the dereferenced entity, but avoid counting self-references
-                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), persistedEntity.<AbstractEntity<?>> get(propName).getId());
+                final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) getSession().load(prop.getType(), prevValue.getId());
                 persistedValue.setIgnoreEditableState(true);
                 getSession().update(persistedValue.decRefCount());
             }
@@ -465,7 +482,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     private boolean shouldProcessAsActivatable(final T entity, final MetaProperty<?> prop) {
         boolean shouldProcessAsActivatable;
-        if (prop.isActivatable() && entity instanceof ActivatableAbstractEntity) {
+        if (prop.isActivatable() && entity instanceof ActivatableAbstractEntity && isNotSpecialActivatableToBeSkipped(prop)) {
             final Class<? extends ActivatableAbstractEntity<?>> type = (Class<? extends ActivatableAbstractEntity<?>>) prop.getType();
             final DeactivatableDependencies ddAnnotation = type.getAnnotation(DeactivatableDependencies.class);
             if (ddAnnotation != null && prop.isKey()) {
@@ -477,6 +494,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             shouldProcessAsActivatable = false;
         }
         return shouldProcessAsActivatable;
+    }
+
+    private boolean isNotSpecialActivatableToBeSkipped(final MetaProperty<?> prop) {
+        return !AbstractPersistentEntity.CREATED_BY.equals(prop.getName()) && !AbstractPersistentEntity.LAST_UPDATED_BY.equals(prop.getName());
     }
 
     /**
@@ -516,10 +537,14 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new EntityCompanionException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()));
         }
 
+        // process transactional assignments
+        if (entity instanceof AbstractPersistentEntity) {
+            assignCreationInfo((AbstractPersistentEntity<?>) entity);
+        }
+        assignPropertiesBeforeSave(entity);
+        
         // reconstruct entity fetch model for future retrieval at the end of the method call
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
-        // process transactional assignments
-        assignPropertiesBeforeSave(entity);
 
         // new entity might be activatable, but this has no effect on its refCount -- should be zero as no other entity could yet reference it
         // however, it might reference other activatable entities, which warrants update to their refCount.
@@ -539,20 +564,21 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 if (prop.getValue() != null) {
                     // need to update refCount for the activatable entity
                     final ActivatableAbstractEntity<?> value = prop.getValue();
-                    final CommonEntityDao co = getCoFinder().find(value.getType());
-
-                    // get the latest value from the database, reassign it and update its ref count
-                    final fetch fetch = FetchModelReconstructor.reconstruct(value);
-                    final ActivatableAbstractEntity<?> persistedValue = (ActivatableAbstractEntity<?>) co.findById(value.getId(), fetch);
-                    entity.beginInitialising();
-                    entity.set(prop.getName(), persistedValue);
-                    entity.endInitialising();
-                    final Result assignmentResult = prop.revalidate(false);
-
-                    if (!assignmentResult.isSuccessful()) {
-                        throw assignmentResult;
+                    final ActivatableAbstractEntity<?>  persistedEntity = (ActivatableAbstractEntity<?> ) getSession().load(value.getType(), value.getId());
+                    // the returned value could already be inactive due to some concurrent modification
+                    // therefore it is critical to ensure that the property of the current entity being saved can still accept the obtained value if it is inactive
+                    if (!persistedEntity.isActive()) {
+                        entity.beginInitialising();
+                        entity.set(prop.getName(), persistedEntity);
+                        entity.endInitialising();
+                        
+                        final Result res = prop.revalidate(false);
+                        if (!res.isSuccessful()) {
+                            throw res;
+                        }
                     }
-                    co.save(persistedValue.incRefCount());
+                    persistedEntity.setIgnoreEditableState(true);
+                    getSession().update(persistedEntity.incRefCount());
                 }
             }
         }
@@ -580,7 +606,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     private Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> collectActivatableDirtyProperties(final T entity, final Set<String> keyMembers) {
         final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> result = new HashSet<>();
         for (final MetaProperty<?> prop : entity.getProperties().values()) {
-            if (prop.isDirty() && prop.isActivatable()) {
+            if (prop.isDirty() && prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
                 addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
             }
         }
@@ -598,7 +624,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         for (final MetaProperty<?> prop : entity.getProperties().values()) {
             // proxied property is considered to be not dirty in this context
             final boolean notDirty = prop.isProxy() || !prop.isDirty(); 
-            if (notDirty && prop.isActivatable()) {
+            if (notDirty && prop.isActivatable() && isNotSpecialActivatableToBeSkipped(prop)) {
                 addToResultIfApplicableFromActivatablePerspective(entity, keyMembers, result, prop);
             }
         }
@@ -660,6 +686,35 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
     }
 
+    private void assignCreationInfo(final AbstractPersistentEntity<?> entity) {
+        // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes
+        // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
+        // thus, a check for VIRTUAL_USER as a current user 
+        if (!User.system_users.VIRTUAL_USER.name().equals(getUser().getKey())) {
+            entity.set(AbstractPersistentEntity.CREATED_BY, getUser());
+            entity.set(AbstractPersistentEntity.CREATED_DATE, universalConstants.now().toDate());
+            entity.set(AbstractPersistentEntity.CREATED_TRANSACTION_GUID, getTransactionGuid());
+        }
+    }
+    
+    private void assignLastModificationInfo(final AbstractPersistentEntity<?> entity) {
+        // if the entity is activatable and the only dirty property is refCount than there is no need to update the last-updated-by info
+        if (entity instanceof ActivatableAbstractEntity) {
+            final List<MetaProperty<?>> dirty = entity.getDirtyProperties();
+            if (dirty.size() == 1 && ActivatableAbstractEntity.REF_COUNT.equals(dirty.get(0).getName())) {
+                return;
+            }
+        }
+        // unit tests utilise a permissive VIRTUAL_USER to persist a "current" user for the testing purposes
+        // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
+        // thus, a check for VIRTUAL_USER as a current user 
+        if (!User.system_users.VIRTUAL_USER.name().equals(getUser().getKey())) {
+            entity.set(AbstractPersistentEntity.LAST_UPDATED_BY, getUser());
+            entity.set(AbstractPersistentEntity.LAST_UPDATED_DATE, universalConstants.now().toDate());
+            entity.set(AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID, getTransactionGuid());
+        }
+    }
+    
     /**
      * Assigns values to all properties marked for assignment before save. This method should be used only during saving of new entities.
      *
@@ -778,20 +833,24 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
      */
     @SessionRequired
     protected List<T> getEntitiesOnPage(final QueryExecutionModel<T, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? queryModel.lightweight() : queryModel;
+        
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, filter, getUsername(), universalConstants, idOnlyProxiedEntityTypeCache);
-        return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(queryModel, pageNumber, pageCapacity);
+        return new EntityFetcher(queryExecutionContext).getEntitiesOnPage(qem, pageNumber, pageCapacity);
     }
 
     @Override
     @SessionRequired
     public List<T> getAllEntities(final QueryExecutionModel<T, ?> query) {
-        return getEntitiesOnPage(query, null, null);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
+        return getEntitiesOnPage(qem, null, null);
     }
 
     @Override
     @SessionRequired
     public List<T> getFirstEntities(final QueryExecutionModel<T, ?> query, final int numberOfEntities) {
-        return getEntitiesOnPage(query, 0, numberOfEntities);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? query.lightweight() : query;
+        return getEntitiesOnPage(qem, 0, numberOfEntities);
     }
 
     /**
@@ -809,7 +868,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final int pageCapacity) {
-        return new EntityQueryPage(model, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
+        return new EntityQueryPage(qem, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
     }
 
     /**
@@ -819,28 +879,33 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     @SessionRequired
     public IPage<T> firstPage(final QueryExecutionModel<T, ?> model, final QueryExecutionModel<T, ?> summaryModel, final int pageCapacity) {
-        return new EntityQueryPage(model, summaryModel, 0, pageCapacity, evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity));
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
+        return new EntityQueryPage(qem, summaryModel, 0, pageCapacity, evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity));
     }
 
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCapacity) {
-        return getPage(model, pageNo, 0, pageCapacity);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
+        return getPage(qem, pageNo, 0, pageCapacity);
     }
 
     @Override
     @SessionRequired
     public IPage<T> getPage(final QueryExecutionModel<T, ?> model, final int pageNo, final int pageCount, final int pageCapacity) {
-        final Pair<Integer, Integer> numberOfPagesAndCount = pageCount > 0 ? Pair.pair(pageCount, pageCount * pageCapacity) : evalNumOfPages(model.getQueryModel(), model.getParamValues(), pageCapacity);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
+        
+        final Pair<Integer, Integer> numberOfPagesAndCount = pageCount > 0 ? Pair.pair(pageCount, pageCount * pageCapacity) : evalNumOfPages(qem.getQueryModel(), qem.getParamValues(), pageCapacity);
 
         final int pageNumber = pageNo < 0 ? numberOfPagesAndCount.getKey() - 1 : pageNo;
-        return new EntityQueryPage(model, pageNumber, pageCapacity, numberOfPagesAndCount);
+        return new EntityQueryPage(qem, pageNumber, pageCapacity, numberOfPagesAndCount);
     }
 
     @Override
     @SessionRequired
     public T getEntity(final QueryExecutionModel<T, ?> model) {
-        final List<T> data = getFirstEntities(model, 2);
+        final QueryExecutionModel<T, ?> qem = !instrumented() ? model.lightweight() : model;
+        final List<T> data = getFirstEntities(qem, 2);
         if (data.size() > 1) {
             throw new UnexpectedNumberOfReturnedEntities(format("The provided query model leads to retrieval of more than one entity (%s).", data.size()));
         }
@@ -866,6 +931,19 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     @Override
     public void setSession(final Session session) {
         this.session = session;
+    }
+    
+    @Override
+    public String getTransactionGuid() {
+        if (StringUtils.isEmpty(transactionGuid)) {
+            throw new EntityCompanionException("Transaction GUID is missing.");
+        }
+        return transactionGuid;
+    }
+    
+    @Override
+    public void setTransactionGuid(final String guid) {
+        this.transactionGuid = guid;
     }
 
     /**
@@ -912,7 +990,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // run the query and iterate through result exporting the data
         final List<T> result = getEntitiesOnPage(query, null, null);
 
-        return WorkbookExporter.convertToByteArray(WorkbookExporter.export(result, propertyNames, propertyTitles));
+        return WorkbookExporter.convertToGZipByteArray(WorkbookExporter.export(result, propertyNames, propertyTitles));
     }
 
     /**
@@ -991,8 +1069,8 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
     
     @SessionRequired
     protected int defaultBatchDeleteByPropertyValues(final String propName, final List<? extends AbstractEntity<?>> entities) {
-        Set<Long> ids = new HashSet<>();
-        for (AbstractEntity<?> entity : entities) {
+        final Set<Long> ids = new HashSet<>();
+        for (final AbstractEntity<?> entity : entities) {
             ids.add(entity.getId());
         }
         return batchDelete(ids);
@@ -1004,11 +1082,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             throw new EntityCompanionException("No entities ids have been provided for deletion.");
         }
 
-        return new EntityBatchDeleterByIds(getSession(), domainMetadata.getPersistedEntityMetadataMap().get(getEntityType())).deleteEntities(propName, entitiesIds);
-    }
-
-    protected EntityFactory getEntityFactory() {
-        return entityFactory;
+        return new EntityBatchDeleterByIds<T>(getSession(), (PersistedEntityMetadata<T>) domainMetadata.getPersistedEntityMetadataMap().get(getEntityType())).deleteEntities(propName, entitiesIds);
     }
 
     public DomainMetadata getDomainMetadata() {
@@ -1082,7 +1156,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
 
         @Override
         public List<T> data() {
-            return hasNext() ? data.subList(0, capacity()) : data;
+            return Collections.unmodifiableList(data);
         }
 
         @Override
@@ -1167,12 +1241,75 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
 
-    public ICompanionObjectFinder getCoFinder() {
+    private ICompanionObjectFinder getCoFinder() {
         return coFinder;
     }
 
     public IUniversalConstants getUniversalConstants() {
         return universalConstants;
+    }
+    
+    private final Map<Class<? extends AbstractEntity<?>>, IEntityDao<?>> coCache = new HashMap<>();
+    
+    /**
+     * A convenient way to obtain companion instances by the types of corresponding entities.
+     * 
+     * @param type -- entity type whose companion instance needs to be obtained
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <C extends IEntityDao<E>, E extends AbstractEntity<?>> C co(final Class<E> type) {
+        IEntityDao<?> co = coCache.get(type);
+        if (co == null) {
+            co = getCoFinder().find(type);
+            coCache.put(type, co);
+        }
+        return (C) co;
+    }
+    
+    private final Map<String, IContinuationData> moreData = new HashMap<>();
+    
+    /**
+     * Replaces any previously provided "more data" with new "more data".
+     * This is a bulk operation that is mainly needed for the infrastructural integration.
+     * 
+     * @param moreData
+     */
+    public CommonEntityDao<?> setMoreData(final Map<String, IContinuationData> moreData) {
+        clearMoreData();
+        this.moreData.putAll(moreData);
+        return this;
+    }
+    
+    /**
+     * A convenient method to set a single "more data" instance for a given key. 
+     * Mostly useful for unit tests.
+     * 
+     * @param key
+     * @param moreData
+     * @return
+     */
+    public CommonEntityDao<T> setMoreData(final String key, final IContinuationData moreData) {
+        this.moreData.put(key, moreData);
+        return this;
+    }
+    
+    /**
+     * Clears continuations in this companion object.
+     */
+    public void clearMoreData() {
+        this.moreData.clear();
+    }
+    
+    /**
+     * A convenient way to obtain "more data" by key. An empty optional is return if there was no "more data" found.
+     * 
+     * @param key -- companion object property that identifies continuation
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends IContinuationData> Optional<E> moreData(final String key) {
+        return Optional.ofNullable((E) this.moreData.get(key));
     }
 
 }

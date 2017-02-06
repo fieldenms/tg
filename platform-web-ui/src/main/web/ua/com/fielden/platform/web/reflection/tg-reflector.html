@@ -31,6 +31,15 @@
         };
         EntityTypeProp.prototype = Object.create(Object.prototype);
         EntityTypeProp.prototype.constructor = EntityTypeProp;
+        
+        /**
+         * Returns specific time-zone for the property of type date.
+         *
+         * IMPORTANT: do not use '_timeZone' field directly!
+         */
+        EntityTypeProp.prototype.timeZone = function () {
+            return typeof this._timeZone === 'undefined' ? null : this._timeZone;
+        }
 
         /**
          * Returns 'true' when the type property is secrete, false otherwise.
@@ -48,6 +57,24 @@
          */
         EntityTypeProp.prototype.isUpperCase = function () {
             return typeof this._upperCase === 'undefined' ? false : this._upperCase;
+        }
+        
+        /**
+         * Returns 'true' when the property should be displayed only with date portion, false otherwise.
+         *
+         * IMPORTANT: do not use '_date' field directly!
+         */
+        EntityTypeProp.prototype.isDate = function () {
+            return typeof this._date === 'undefined' ? false : this._date;
+        }
+        
+        /**
+         * Returns 'true' when the property should be displayed only with time portion, false otherwise.
+         *
+         * IMPORTANT: do not use '_time' field directly!
+         */
+        EntityTypeProp.prototype.isTime = function () {
+            return typeof this._time === 'undefined' ? false : this._time;
         }
 
         /** 
@@ -281,7 +308,19 @@
                 var first = name.slice(0, dotIndex);
                 var rest = name.slice(dotIndex + 1);
                 var firstVal = this.get(first);
-                return firstVal === null ? null : firstVal.get(rest);
+                if (firstVal === null) {
+                    return null;
+                } else if (_isEntity(firstVal)) {
+                    return firstVal.get(rest);
+                } else if (firstVal instanceof Array) {
+                    var internalList = [];
+                    for (var index = 0; index < firstVal.length; index++) {
+                        internalList.push(firstVal[index].get(rest));
+                    }
+                    return internalList;
+                } else {
+                    throw 'Unsupported dot-notation.';
+                }
             } else {
                 if (this._isObjectUndefined(name)) {
                     throw new StrictProxyException(name, this.type()._simpleClassName());
@@ -321,6 +360,47 @@
             this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
             return this[name] = value;
         }
+         
+        /**
+         * Sets the property value for the [binding!]entity and registers property 'touch'.
+         *
+         * In case where user interaction takes place, this method registers such 'property touch' for the purposes 
+         * of collecting the queue of 'touched' properties.
+         *
+         * The property that was touched last will reside last in that queue. Also the count of 'touches' is recorded
+         * for each property (mainly for logging purposes).
+         *
+         * Please, note that 'touched' property does not mean 'modified' from technical perspective.
+         * But, even if it is not modified -- such property will be forced to be mutated on server (with its origVal) 
+         * to have properly invoked its ACE handlers.
+         *
+         * IMPORTANT: this method is applicable only to binding entities (not fully-fledged)!
+         */
+        Entity.prototype.setAndRegisterPropertyTouch = function (propertyName, value) {
+            var result = this.set(propertyName, value);
+            
+            var touched = this["@@touchedProps"];
+            var names = touched.names;
+            var counts = touched.counts;
+            var index = names.indexOf(propertyName);
+            if (index > -1) {
+                var prevCount = counts[index];
+                names.splice(index, 1);
+                counts.splice(index, 1);
+                names.push(propertyName);
+                counts.push(prevCount + 1);
+            } else {
+                names.push(propertyName);
+                counts.push(1);
+            }
+            // need to reset previously cached ID after the property was modified (touched) by the user -- the cached ID becomes stale in that case, and server-side reconstruction of entity-typed property should be KEY-based instead of ID-based. 
+            if (typeof this['@' + propertyName + '_id'] !== 'undefined') {
+                delete this['@' + propertyName + '_id'];
+            }
+            console.log('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
+            
+            return result;
+        }
 
         /**
          * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and '@prop' instance meta-props.
@@ -345,10 +425,10 @@
         }
         
         /**
-         * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occured during saving.
+         * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occured during some server-side process behind the entity (master entity saving, centre selection-crit entity running etc.).
          *
          */
-        Entity.prototype.isValidWithoutSavingException = function () {
+        Entity.prototype.isValidWithoutException = function () {
             return this.isValid() && !this.exceptionOccured();
         }
         
@@ -444,13 +524,13 @@
         };
         EntityType.prototype = Object.create(Object.prototype);
         EntityType.prototype.constructor = EntityType;
-
+        
         /**
-         * Returns the number for the entity type inside the type table.
+         * Returns the identifier for the entity type.
          *
          */
-        EntityType.prototype.number = function () {
-            return this._number;
+        EntityType.prototype.identifier = function () {
+            return this._identifier;
         }
 
         /**
@@ -525,7 +605,23 @@
         EntityType.prototype.isPersistent = function () {
             return this['_persistent'] === true;
         }
-
+        
+        /**
+         * Returns 'true' if the entity type represents a continuation entity.
+         *
+         */
+        EntityType.prototype.isContinuation = function () {
+            return typeof this['_continuation'] === 'undefined' ? false : this['_continuation'];
+        }
+        
+        /**
+         * Returns 'true' if editors for this entity type should display description of its values when not focused, 'false' otherwise.
+         *
+         */
+        EntityType.prototype.shouldDisplayDescription = function () {
+            return typeof this['_displayDesc'] === 'undefined' ? false : this['_displayDesc'];
+        }
+        
         /** 
          * Returns entity title.
          */
@@ -797,8 +893,8 @@
             return uuid;
         },
 
-        getType: function (number) {
-            return _typeTable[number];
+        getType: function (typeName) {
+            return _typeTable[typeName];
         },
 
         /**
@@ -807,8 +903,8 @@
         registerEntityType: function (newType) {
         	var EntityType = this._getEntityTypePrototype();
             var registeredType = new EntityType(newType);
-            _typeTable[newType['_number']] = registeredType;
-            console.log("Registering new type with number ", newType['_number'], registeredType);
+            _typeTable[registeredType.fullClassName()] = registeredType;
+            console.log("Registering new entity type with identifier ", registeredType.identifier(), registeredType);
             return registeredType;
         },
 
@@ -816,15 +912,8 @@
          * Finds the entity type by its full class name. Returns 'null' if no registered entity type for such 'typeName' exists.
          */
         findTypeByName: function (typeName) {
-            for (var key in _typeTable) {
-                if (_typeTable.hasOwnProperty(key)) {
-                    var entityType = _typeTable[key];
-                    if (entityType.fullClassName() === typeName) {
-                        return entityType;
-                    }
-                }
-            }
-            return null;
+            var type = _typeTable[typeName];
+            return type ? type : null;
         },
 
         /**
@@ -1011,7 +1100,7 @@
                     convertedArray.push(this.convert(value[index]));
                 }
                 return convertedArray;
-            } else if ( typeof value === "object" && value.hasOwnProperty("hashlessUppercasedColourValue") ){ 
+            } else if ( typeof value === "object" && (value.hasOwnProperty("hashlessUppercasedColourValue") || value.hasOwnProperty("value")) ){ 
                 return value;
             } else {
                 throw new _UCEPrototype(value);
@@ -1052,7 +1141,37 @@
             }
             return str;
         },
-
+        
+        /**
+         * Formates the numbers in to string based on specified loacles. If the value is null then returns empty string.
+         */
+        formatNumber: function (value, locale) {
+            if (value !== null) {
+                return value.toLocaleString(locale);
+            }
+            return '';
+        },
+        
+        /**
+         * Formates numbers with floating point in to string based on locales. If the value is null then returns empty string.
+         */
+        formatDecimal: function (value, locale) {
+            if (value !== null) {
+                return value.toLocaleString(locale, {maximumFractionDigits: 2, minimumFractionDigits: 2});
+            }
+            return '';
+        },
+            
+        /**
+         * Format money numbers in to string based on locales. If the value is null then returns empty string.
+         */
+        formatMoney: function (value, locale) {
+            if (value !== null) {
+                return '$' + this.formatDecimal(value.amount, locale);
+            }
+            return '';
+        },
+        
         /**
          * Returns the binding value for the specified 'bindingEntity' and 'dotNotatedName' of the property.
          *
@@ -1167,14 +1286,27 @@
         /**
          * Creates the holder of modified properties and some savingContext.
          */
-        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext) {
+        createSavingInfoHolder: function (modifiedPropertiesHolder, savingContext, continuationsMap) {
         	var reflector = this;
             var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
             savingInfoHolder.id = null;
-            savingInfoHolder["modifHolder"] = modifiedPropertiesHolder;
+            savingInfoHolder['modifHolder'] = modifiedPropertiesHolder;
         	
         	if (savingContext) { // if saving context was defined (not 'undefined'):
-                savingInfoHolder["centreContextHolder"] = savingContext;
+                savingInfoHolder['centreContextHolder'] = savingContext;
+        	}
+        	
+        	if (typeof continuationsMap !== 'undefined') {
+        	    var continuations = [];
+        	    var continuationProperties = [];
+        	    for (var continuationProperty in continuationsMap) {
+        	        if (continuationsMap.hasOwnProperty(continuationProperty)) {
+        	            continuations.push(continuationsMap[continuationProperty]);
+        	            continuationProperties.push(continuationProperty);
+        	        }
+        	    }
+        	    savingInfoHolder['continuations'] = continuations;
+        	    savingInfoHolder['continuationProperties'] = continuationProperties;
         	}
             return savingInfoHolder;
         },

@@ -39,7 +39,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
 
     public AbstractSearchEntityByKeyWithCentreContext(final IEntityDao<T> companion) {
         this.companion = companion;
-        this.defaultFetchModel = fetchKeyAndDescOnly(companion.getEntityType());
+        this.defaultFetchModel = companion == null ? null : fetchKeyAndDescOnly(companion.getEntityType());
     }
 
     /**

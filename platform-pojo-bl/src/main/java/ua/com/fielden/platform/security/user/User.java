@@ -1,9 +1,14 @@
 package ua.com.fielden.platform.security.user;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
+
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.Invisible;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -13,33 +18,36 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.entity.annotation.Unique;
+import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
+import ua.com.fielden.platform.entity.validation.ActivePropertyValidator;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.property.validator.EmailValidator;
+import ua.com.fielden.platform.property.validator.StringValidator;
+import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
 
 /**
  * Represents the system-wide concept of a user. So, this is a system user, which should be used by system security as well as for implementing any specific customer personnel
  * requirements.
- * <p>
- * It is recommended that user password is encoded before setting it. It is envisaged that user password are encoded with application wide RSA private key, and thus can be decoded
- * using application wide public key.
- * <p>
- * If provided, user specific public key is used by the authentication mechanism to ensure authenticity of the request. This key cannot be used for decoding user password, because
- * a corresponding private key is not known at the application server end.
  *
  * @author TG Team
  */
 @KeyTitle("Application User")
 @KeyType(String.class)
-@MapEntityTo(value = "CRAFT", keyColumn = "USER_NAME")
+@MapEntityTo
 @CompanionObject(IUser.class)
-public class User extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
+public class User extends ActivatableAbstractEntity<String> {
 
+    public static final String EMAIL = "email";
+    
     /**
      * This is an enumeration for listing all system in-built accounts.
      */
     public enum system_users {
-        SU;
+        SU, UNIT_TEST_USER, VIRTUAL_USER;
 
         public boolean matches(final User user) {
             if (user == null) {
@@ -56,62 +64,125 @@ public class User extends AbstractEntity<String> {
         }
 
         public static boolean isOneOf(final User user) {
-            return SU.matches(user);
+            return SU.matches(user) || UNIT_TEST_USER.matches(user) || VIRTUAL_USER.matches(user);
         }
 
         public static boolean isOneOf(final String username) {
-            return SU.matches(username);
+            return SU.matches(username) || UNIT_TEST_USER.matches(username) || VIRTUAL_USER.matches(username);
         }
     }
-
+    
+    public static final String SECRET_RESET_UUID_SEPERATOR = "-";
+    public static final String USER_NAME_REGEX = "^[^-]+$"; // SECRET_RESET_UUID_SEPERATOR should not be permitted for user names
+    
+    @IsProperty
+    @MapTo
+    @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = USER_NAME_REGEX)}))
+    private String key;
+    
     @IsProperty
     @Invisible
-    @MapTo(value = "USER_PASSWORD", length = 255)
+    @MapTo(length = 255)
     @Title(desc = "A hash code of the actual password that only the user should know")
     private String password;
 
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
     @Title(value = "Roles", desc = "The associated with this user roles.")
-    private Set<UserAndRoleAssociation> roles = new HashSet<UserAndRoleAssociation>();
-
-    @IsProperty
-    @Invisible
-    @MapTo("USER_PUBLIC_KEY")
-    private String publicKey;
+    private final Set<UserAndRoleAssociation> roles = new HashSet<>();
 
     @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")
-    @MapTo("IS_BASE")
+    @MapTo
     private boolean base = false;
 
     @IsProperty
     @Title(value = "Base user", desc = "A user on which the current user is based. This mainly relates to the application configuration and security user roles.")
-    @MapTo("ID_BASE_CRAFT")
+    @MapTo
     private User basedOnUser;
 
-    protected User() {
-        this(null, null);
+    @IsProperty
+    @MapTo
+    @Title(value = "Email", desc = "User email, which is used for password resets")
+    @Unique
+    @BeforeChange(@Handler(EmailValidator.class))
+    private String email;
+
+    @IsProperty
+    @MapTo
+    @Invisible
+    @Unique // UUID gets generated and hashed, thus should be algorithmically unique, but just in case let's enforce it at the model level
+    @Title(value = "Reset UUID", desc = "The hash of the password reset request UUID")
+    private String resetUuid;
+
+    @IsProperty
+    @MapTo
+    @Invisible
+    @Unique // salt gets generated randomly for every user and needs to be unique
+    @Title(value = "Salt", desc = "Random password hashing salt to protect agains the rainbow table attack.")
+    private String salt;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Active?", desc = "Designates whether an entity instance is active or not.")
+    @BeforeChange(@Handler(ActivePropertyValidator.class))
+    @AfterChange(UserActivationDefiner.class)
+    private boolean active;
+
+    @Override
+    @Observable
+    public User setActive(boolean active) {
+        this.active = active;
+        return this;
+    }
+    
+    @Override
+    public boolean isActive() {
+        return active;
+    }
+    
+    @Observable
+    public User setSalt(final String salt) {
+        this.salt = salt;
+        return this;
     }
 
-    /**
-     * Principle constructor.
-     *
-     * @param name
-     *            -- is user's key
-     * @param desc
-     */
-    protected User(final String name, final String desc) {
-        super(null, name, desc);
+    public String getSalt() {
+        return salt;
+    }
+    
+    @Observable
+    public User setResetUuid(final String resetUuid) {
+        this.resetUuid = resetUuid;
+        return this;
+    }
+
+    public String getResetUuid() {
+        return resetUuid;
+    }
+    
+    @Observable
+    public User setEmail(final String email) {
+        this.email = email;
+        return this;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+    
+    
+    public String getKey() {
+        return key;
     }
 
     @Observable
     @Override
     public User setKey(final String value) {
         if (isPersisted() && (system_users.SU.matches(getKey()) && !system_users.SU.matches(value))) {
-            throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and cannot be renamed."));
+            throw Result.failure(format("User %s is an application built-in account and cannot be renamed.", getKey()));
         }
 
-        super.setKey(value);
+        this.key = value;
 
         if (system_users.isOneOf(value)) {
             setBase(true);
@@ -131,7 +202,14 @@ public class User extends AbstractEntity<String> {
     }
 
     public Set<UserAndRoleAssociation> getRoles() {
-        return roles;
+        return Collections.unmodifiableSet(roles);
+    }
+
+    @Observable
+    public User setRoles(final Set<UserAndRoleAssociation> roles) {
+        this.roles.clear();
+        this.roles.addAll(roles);
+        return this;
     }
 
     /**
@@ -140,29 +218,10 @@ public class User extends AbstractEntity<String> {
      * @return
      */
     public Set<UserRole> roles() {
-        final Set<UserRole> result = new HashSet<UserRole>();
-        for (final UserAndRoleAssociation assoc : roles) {
-            result.add(assoc.getUserRole());
-        }
-        return result;
+        return this.roles.stream().map(item -> item.getUserRole()).collect(Collectors.toSet());
     }
 
-    @Observable
-    public User setRoles(final Set<UserAndRoleAssociation> roles) {
-        this.roles = roles;
-        return this;
-    }
-
-    public String getPublicKey() {
-        return publicKey;
-    }
-
-    @Observable
-    public User setPublicKey(final String publicKey) {
-        this.publicKey = publicKey;
-        return this;
-    }
-
+    
     public boolean isBase() {
         return base;
     }
@@ -173,7 +232,7 @@ public class User extends AbstractEntity<String> {
         if (base) {
             setBasedOnUser(null);
         } else if (system_users.isOneOf(this)) {
-            throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and should remain a base user."));
+            throw Result.failure(format("User %s is an application built-in account and should remain a base user.", getKey()));
         }
         getProperty("basedOnUser").setRequired(!base);
         return this;
@@ -184,18 +243,17 @@ public class User extends AbstractEntity<String> {
     }
 
     @Observable
-    @EntityExists(User.class)
     public User setBasedOnUser(final User basedOnUser) {
         if (basedOnUser == this) {
             throw new Result(this, new IllegalArgumentException("Self reference is not permitted."));
         }
 
         if (basedOnUser != null && system_users.isOneOf(this)) {
-            throw new Result(this, new IllegalArgumentException("User " + getKey() + " is an application built-in account and cannot have a base user."));
+            throw Result.failure(format("User %s is an application built-in account and cannot have a base user.", getKey()));
         }
 
         if (basedOnUser != null && !basedOnUser.isBase()) {
-            throw new Result(this, new IllegalArgumentException("User " + basedOnUser.getKey() + " is not a base user and thus cannot be used for inheritance."));
+            throw Result.failure(format("User %s is not a base user and thus cannot be used for inheritance.", basedOnUser.getKey()));
         }
 
         this.basedOnUser = basedOnUser;
@@ -213,5 +271,18 @@ public class User extends AbstractEntity<String> {
         }
 
         return superResult;
+    }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        // if "this" and "that" users are persisted and not dirty then an id-based comparison should be used
+        if (obj instanceof User && this.isPersisted() && (!this.isInstrumented() || !this.isDirty())) {
+            final User that = (User) obj;
+            if (that.isPersisted() && (!that.isInstrumented() || !that.isDirty())) {
+                return this.getId().equals(that.getId());
+            }
+            
+        }
+        return super.equals(obj);
     }
 }

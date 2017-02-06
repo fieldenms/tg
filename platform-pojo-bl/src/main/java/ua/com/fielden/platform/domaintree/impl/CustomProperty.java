@@ -3,6 +3,7 @@ package ua.com.fielden.platform.domaintree.impl;
 import ua.com.fielden.platform.domaintree.IProperty;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
  * The holder of 'custom property' information.
@@ -60,7 +61,7 @@ public class CustomProperty implements IProperty {
         try {
             PropertyTypeDeterminator.determinePropertyType(managedType, dotNotatedName);
             return Result.failure(String.format("There is already the property with such a name [%s] in managed entity type.", name));
-        } catch (final IllegalArgumentException e) {
+        } catch (final ReflectionException e) {
             return Result.successful("Ok");
         }
     }

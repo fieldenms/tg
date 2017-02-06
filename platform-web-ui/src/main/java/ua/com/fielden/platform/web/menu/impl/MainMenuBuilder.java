@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -65,5 +66,15 @@ public class MainMenuBuilder implements IMainMenuBuilderWithLayout, IExecutable 
         menuConfig.append(format("items: %s", mainMenu.code()));
 
         return new JsCode(format("{%s}", menuConfig));
+    }
+
+    public Menu getMenu() {
+        return new Menu().
+                setMenu(mainMenu.getModules()).
+                setMinCellWidth(tileLayout.getMinCellWidth() + "px").
+                setMincellHeight(tileLayout.getMinCellHeight() + "px").
+                setWhenDesktop(tileLayout.getLayout(Device.DESKTOP, null).get()).
+                setWhenTablet(tileLayout.getLayout(Device.TABLET, null).get()).
+                setWhenMobile(tileLayout.getLayout(Device.MOBILE, null).get());
     }
 }

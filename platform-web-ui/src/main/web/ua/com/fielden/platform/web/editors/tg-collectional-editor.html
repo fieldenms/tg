@@ -8,15 +8,20 @@
 <link rel="import" href="/resources/polymer/paper-input/paper-input.html">
 <link rel="import" href="/resources/editors/tg-dom-stamper.html">
 
+<link rel="import" href="/resources/polymer/paper-checkbox/paper-checkbox.html">
+
 <dom-module id="tg-collectional-editor">
     <style>
+        iron-list {
+            overflow: auto;
+        }
         .item-disabled {
             pointer-events: none;
         }
         
         .item {
             @apply(--layout-horizontal);
-            cursor: pointer;
+            @apply(--layout-center);
             padding: 16px 22px;
             border-bottom: 1px solid #DDD;
         }
@@ -30,34 +35,39 @@
             outline: 0;
         }
         
-        .item.selected .star {
-            color: var(--paper-blue-600);
+        paper-checkbox {
+            --paper-checkbox-checked-color: var(--paper-light-blue-700);
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+            --paper-checkbox-unchecked-color: var(--paper-grey-900:);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900:);
         }
         .item.selected {
             background-color: var(--google-grey-100);
         }
         
+        .ordering-number {
+            font-size: 8pt;
+            width: 1.5rem;
+        }
+        
         .pad {
             @apply(--layout-vertical);
-            padding-left: 16px;
+            padding-left: 14px;
+            width: calc(100% - 40px);
+        }
+        .without-pad {
+            @apply(--layout-vertical);
             width: calc(100% - 40px);
         }
         .primary {
-            font-size: 1.2rem;
-            height: 1.5rem;
+            font-size: 10pt;
+            padding-bottom: 3px;
         }
         .secondary {
-            height: 1.3rem;
-            font-size: 1.1rem;
+            font-size: 8pt;
         }
         .dim {
             color: gray;
-        }
-        .star {
-            min-width: 24px;
-            min-height: 24px;
-            width: 24px;
-            height: 24px;
         }
         .truncate {
             white-space: nowrap;
@@ -65,6 +75,9 @@
             text-overflow: ellipsis;
         }
         
+        .sorting-group {
+            cursor: pointer;
+        }
     </style>
 
     <template>
@@ -80,18 +93,21 @@
             debug="[[debug]]" 
             _on-change="[[_onChange]]"
             _on-input="[[_onInput]]"
-            _on-keydown="[[_onKeydown]]"
-            current-state="[[currentState]]">
-            <input is="iron-input"  placeholder="Search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
-            <iron-list id="input" class="custom-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled multi-selection>
+            _on-keydown="[[_onKeydown]]">
+            <input is="iron-input" placeholder="Type to search..." bind-value="{{_phraseForSearching}}" class="custom-input" on-input="_onInput" on-blur="_eventHandler" prevent-invalid-input>
+            <iron-list id="input" class="custom-input collectional-input" style="[[_calcListHeight(maxVisibleItems)]]" items="[[_entities]]" selected-items="{{_selectedEntities}}" selection-enabled="[[_isSelectionEnabled(_forReview, _entities)]]" multi-selection>
                 <template>
                     <div class$="[[_computedItemClass(_disabled)]]">
-                      <div tabindex="0" class$="[[_computedClass(selected)]]">
-                        <iron-icon icon$="[[iconForItem(selected)]]" class="star"></iron-icon>
-                        <div class="pad" tooltip-text$="[[_calcItemTooltip(item)]]">
-                          <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                          <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
-                        </div>
+                      <div tabindex="0" class$="[[_computedClass(selected)]]" style$="[[_calculateItemStyle(item.sorting)]]">
+                          <paper-checkbox hidden$="[[_selectingIconHidden(_forReview, item)]]" checked="[[selected]]"></paper-checkbox>
+                          <div class="layout horizontal sorting-group" hidden$="[[_sortingIconHidden(_forReview, item)]]">
+                              <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_caclulateSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
+                              <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
+                          </div>
+                          <div class$="[[_computedPadClass(_forReview)]]" tooltip-text$="[[_calcItemTooltip(item)]]">
+                              <tg-dom-stamper class="primary truncate" dom-text="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                              <tg-dom-stamper class="secondary dim truncate" dom-text="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></tg-dom-stamper>
+                          </div>
                       </div>
                       <div class="border"></div>
                     </div>
@@ -104,7 +120,7 @@
 <script>
     Polymer({
         is: 'tg-collectional-editor',
-        behaviors: [ Polymer.TgBehaviors.TgEditorBehavior, Polymer.TgBehaviors.TgHighlightingBehavior, Polymer.TgBehaviors.TgTooltipBehavior],
+        behaviors: [ Polymer.TgBehaviors.TgEditorBehavior, Polymer.TgBehaviors.TgHighlightingBehavior],
         
         properties: {
             /**
@@ -181,6 +197,14 @@
                 	}).bind(this);
             	}
             },
+            
+            /**
+             * Indicates that this collectional editor is 'for review' only and will not be selectable and no icon will exist before each item.
+             */
+            _forReview: {
+                type: Boolean,
+                value: false
+            }
         },
         
         observers: [
@@ -188,11 +212,14 @@
         ],
         
         ready: function () {
-            this.$.editorDom._editorKind = "COLLECTIONAL";
             this._eventHandler = (function(e) {
             	// There is no need to proceed with search if user moved out of the search field
             	this._cancelSearch();
             }).bind(this);
+        },
+        
+        attached: function () {
+            this._originalChosenIds = null;
         },
         
         _calcItemTooltip: function (item) {
@@ -221,33 +248,46 @@
          * This method promotes 'IRRELEVANT' into _editingValue which should not be a problem, since this 'editor' edits entity property (with name 'chosenNumbersPropertyName') directly.
          */
         convertToString: function (value) {
-            this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
+            // _entities, _originalChosenIds, this.$.input should be initialised only once for the session of collectional editing.
+            // This session includes initial refresh, multiple validation cycles and finishing save / cancel.
+            // It is believed that resetting of _originalChosenIds can be safely done in attached callback of tg-collectional-editor.
+            if (this._originalChosenIds === null) {
+                this._entities = this.reflector()._getValueFor(this.entity, this.propertyName);
             
-            var selEntities = [];
-            var chosenIds = this.entity.get('chosenIds');
-            
-            this._originalChosenIds = [];
-            
-            for (var index = 0; index < chosenIds.length; index++) {
-                selEntities.push(this._find(this._entities, chosenIds[index]) );
-                this._originalChosenIds.push(chosenIds[index]);
+                var selEntities = [];
+                var chosenIds = typeof this.entity.chosenIds === 'undefined' ? [] : this.entity.get('chosenIds');
+                if (typeof this.entity.chosenIds === 'undefined') {
+                    this._forReview = true;
+                }
+                
+                this._originalChosenIds = [];
+                
+                for (var index = 0; index < chosenIds.length; index++) {
+                    var foundEntity = this._find(this._entities, chosenIds[index]);
+                    if (foundEntity !== null) {
+                        selEntities.push(foundEntity);
+                        this._originalChosenIds.push(chosenIds[index]);
+                    }
+                }
+    
+                this._disableSelectionListeners = true;
+                this.$.input.clearSelection();
+                
+                for (var index = 0; index < selEntities.length; index++) {
+                    this.$.input.selectItem(selEntities[index]);
+                }
+                this._disableSelectionListeners = false;
+                
+                this.scrollToFirstFoundElement();
             }
-
-            this._disableSelectionListeners = true;
-            this.$.input.clearSelection();
             
-            for (var index = 0; index < selEntities.length; index++) {
-                this.$.input.selectItem(selEntities[index]);
-            }
-            this._disableSelectionListeners = false;
-            
-            this.scrollToFirstFoundElement();
+            this.provideSorting(this.entity.sortingVals, this._entities);
             
             return 'IRRELEVANT';
         },
         
         /**
-         * Returns identificator of the entity. If it is persisted -- such identificator is represented by id, otherwise -- by key.
+         * Returns identifier of the entity. If it is persisted -- such identifier is represented by id, otherwise -- by key.
          */
         idOrKey: function (entity) {
             return entity.id === null ? entity.get('key') : entity.id;
@@ -259,7 +299,7 @@
                     return entities[i];
                 }
             }
-            throw 'The entity with idOrKey ' + idOrKey + ' does not exist in entities list ' + entities;
+            return null;
         },
 
         /**
@@ -285,8 +325,95 @@
             return classes;
         },
         
-        iconForItem: function (isSelected) {
-            return isSelected ? 'star' : 'star-border';
+        _computedPadClass: function (_forReview) {
+            var classes = '';
+            if (!_forReview) {
+              classes += ' pad';
+            } else {
+              classes += ' without-pad';
+            }
+            return classes;
+        },
+        
+        _sortingIconForItem: function (sorting) {
+            return sorting === true ? 'arrow-drop-up' : (sorting === false ? 'arrow-drop-down' : 'arrow-drop-up');
+        },
+        
+        _selectingIconHidden: function (_forReview, item) {
+            return _forReview || (typeof item.sorting !== 'undefined');
+        },
+        
+        _sortingIconHidden: function (_forReview, item) {
+            return _forReview || (typeof item.sorting === 'undefined');
+        },
+        
+        _isSelectionEnabled: function (_forReview, _entities) {
+            return !_forReview && _entities.length > 0 && this._sortingIconHidden(_forReview, _entities[0]);
+        },
+        
+        _caclulateSortingIconStyle: function (sorting)  {
+            var style = sorting !== null ? 'color: black;' : 'color: grey;';
+            style += sorting === true ? 'align-self:flex-start' : (sorting === false ? 'align-self:flex-end' : 'align-self:flex-start');
+            return style;
+        },
+        
+        _calculateItemStyle: function (sorting) {
+            return typeof sorting === 'undefined' ? 'cursor: pointer;' : 'cursor: default;';
+        },
+        
+        _calculateOrder: function (sortingNumber) {
+            return sortingNumber >= 0 ? sortingNumber + 1 + "" : "";
+        },
+        
+        _changeOrdering: function (e) {
+            e.stopPropagation( );
+            this._toggleOrdering(e.model.item, e.model.index);
+        },
+        
+        _toggleOrdering: function (item, index) {
+            var self = this;
+            if (item.sorting === true) {
+                this.set("_entities." + index + ".sorting", false);
+            } else if (item.sorting === false) {
+                this.set("_entities." + index + ".sorting", null);
+                this._turnOffOrdering(item.sortingNumber);
+            } else {
+                this.set("_entities." + index + ".sorting", true);
+                this._turnOnOrdering(index);
+            }
+            this.provideSorting(this.entity.sortingVals, this._entities);
+            // invoke validation after user has toggled ordering of some property
+            if (self._shouldInvokeValidation()) {
+                self.validationCallback();
+            } else {
+                self._skipValidationAction();
+            }
+        },
+        
+        _turnOnOrdering: function (index) {
+            var itemIndex, item;
+            var maxSortingNumber= this._entities[0].sortingNumber;
+            for (itemIndex = 1; itemIndex < this._entities.length; itemIndex++) {
+                item = this._entities[itemIndex];
+                if (item.sortingNumber > maxSortingNumber) {
+                    maxSortingNumber = item.sortingNumber;
+                }
+            }
+            this.set("_entities." + index + ".sortingNumber", maxSortingNumber + 1);
+        },
+        
+        _turnOffOrdering: function (sortingNumber) {
+            var itemIndex, item;
+            for (itemIndex = 0; itemIndex < this._entities.length; itemIndex++) {
+                item = this._entities[itemIndex];
+                if (item.sortingNumber >= 0) {
+                    if (item.sortingNumber > sortingNumber) {
+                        this.set("_entities." + itemIndex + ".sortingNumber", item.sortingNumber - 1);
+                    } else if (item.sortingNumber === sortingNumber) {
+                        this.set("_entities." + itemIndex + ".sortingNumber", -1);
+                    }
+                }
+            }
         },
         
         _makeId: function(id) {
@@ -367,6 +494,12 @@
 	                        } else {
 	                            throw 'Cannot remove ' + self.idOrKey(removed) + ' which is not chosen yet (chosenIds = ' + chosenIds + ').';
 	                        }
+	                        // invoke validation after user has removed some item from collection
+	                        if (self._shouldInvokeValidation()) {
+	                            self.validationCallback();
+	                        } else {
+	                            self._skipValidationAction();
+	                        }
 	                    }
 	                });
 	                
@@ -390,9 +523,29 @@
                             if (self._originalChosenIds.indexOf(self.idOrKey(added)) <= -1) {
                                 addedIds.push(self.idOrKey(added));
                             }
+	                        // invoke validation after user has added some item to collection
+	                        if (self._shouldInvokeValidation()) {
+	                            self.validationCallback();
+	                        } else {
+	                            self._skipValidationAction();
+	                        }
 	                    }
 	                }
 	            }, self);
+            }
+        },
+        
+        provideSorting: function (sortingVals, sortingProperties) {
+            if (typeof sortingVals !== 'undefined') {
+                while (sortingVals.length > 0) {
+                    sortingVals.pop();
+                }
+                for (var index = 0; index < sortingProperties.length; index++) {
+                    var sortingProperty = sortingProperties[index];
+                    if (sortingProperty.sortingNumber >= 0) {
+                        sortingVals[sortingProperty.sortingNumber] = sortingProperty.get('key') + ':' + (sortingProperty.sorting === true ? 'asc' : 'desc');
+                    }
+                } 
             }
         }
     });

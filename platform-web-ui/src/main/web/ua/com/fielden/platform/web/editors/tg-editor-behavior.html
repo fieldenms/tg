@@ -1,4 +1,5 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <!-- link rel="import" href="/app/tg-reflector.html" -->
 
 <!-- dom-module id="tg-editor">
@@ -67,11 +68,29 @@
                 },
 
                 /**
+                * True if the input is in focus, otherwise false.
+                */
+                focused: {
+                	readOnly: true,
+                	type: Boolean,
+                	value: false,
+                	notify: true
+                },
+
+                /**
                  * This published property specifies to what binding entity this editor should be bound.
                  */
                 entity: {
                 	type: Object,
-                	observer: '_entityChanged'
+                	observer: '_entityChanged',
+                	notify: true
+                },
+                
+                /**
+                 * The entity that contains original binding values. This should be used to identify whether _editingValue is modified from original _editingValue during editing.
+                 */
+                originalEntity: {
+                	type: Object
                 },
                 
                 /**
@@ -140,7 +159,16 @@
                  */
                 _editorValidationMsg: {
                 	type: String,
-                	value: null
+                	value: null,
+                	observer: '_editorValidationMsgChanged'
+                },
+                
+                /**
+                 * Returns 'true' in case where 'entity', 'propertyName' and '_editorValidationMsg' have been already defined, 'false' otherwise.
+                 */
+                _validationComponentsDefined: {
+                    type: Boolean,
+                    value: false
                 },
                 
                 /**
@@ -202,6 +230,34 @@
                 	type: String,
                 	observer: '_acceptedValueChanged'
                 },
+
+            	/**
+             	 * This event is invoked after the component gained focus.
+             	 *
+             	 * Designated to be bound to child elements.
+             	 */
+            	_onFocus: {
+                	type: Function,
+                	value: function () {
+                    	return (function (event) {
+                        	this._setFocused(true);
+                    	}).bind(this);
+                	}
+            	},
+            
+            	/**
+             	 * This event is invoked after the component lost focus.
+             	 *
+             	 * Designated to be bound to child elements.
+             	 */
+            	_outFocus: {
+                	type: Function,
+                	value: function () {
+                    	return (function (event) {
+                        	this._setFocused(false);
+                    	}).bind(this);
+                	}
+            	},
                 
             	/**
             	 * This event is invoked after the component has been changed (it is invoked after the focus was lost). Provides value commit behaviour.
@@ -213,10 +269,14 @@
                 	value: function () {
                 		return (function (event) {
                     		// console.debug("_onChange:", event);
-                    		
-                    		if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
-                    			this.commit();
-                    		}
+	      		            if (this['_onChange_handler']) {
+    				    		this.cancelAsync(this['_onChange_handler']);
+        					}
+            				this['_onChange_handler'] = this.async(function() {
+                        		if (!this.reflector().equalsEx(this._editingValue, this._commValue)) {
+                        			this.commit();
+                        		}
+            				}.bind(this), 50);
                     	}).bind(this);
                 	}
                 },
@@ -230,6 +290,8 @@
                 	type: Function,
                 	value: function () {
                 		return (function (event) {
+                		    // console.debug("_onKeydown:", event);
+                		    
                     		if (event.keyCode === 13 && !this.reflector().equalsEx(this._editingValue, this._commValue)) { // 'Enter' has been pressed
                     			this.commit();
                     		}
@@ -266,8 +328,12 @@
             	}, */
             },
             
+            behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+            
             observers: [
-            	'_bindMessages(entity, propertyName, _editorValidationMsg)'
+            	'_recordDefinition(entity, propertyName, _editorValidationMsg)',
+            	'_identifyModification(_editingValue, originalEntity)',
+    		    '_editedPropsChanged(entity.@editedProps)'
 			],
 
             ready: function () {
@@ -279,6 +345,45 @@
                 // The following 'commit' call synchronises '_commValue' with '_editingValue' after default editing value population.
                 //  Please, also note that this call also triggers '_acceptedValue' population, as per '_commValueChanged' method.
                 this.commit();
+            },
+            
+            _recordDefinition: function (entity, propertyName, _editorValidationMsg) {
+                if (this._validationComponentsDefined === false) {
+                    this._bindMessages(entity, propertyName, _editorValidationMsg);
+                    this._validationComponentsDefined = true;
+                }
+            },
+            
+            _identifyModification: function (_editingValue, originalEntity) {
+                if (this.reflector().isEntity(this.entity)) {
+                    var _originalEditingValue = originalEntity ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(originalEntity, this.propertyName)) : _editingValue;
+                    // console.debug('_bindingEntity (_identifyModification) self = ', this.is, '_editingValue', _editingValue, '_originalEditingValue', _originalEditingValue);
+                    var prevEditedProps = this.entity['@editedProps'];
+                    var newEditedProps = {};
+                    for (var prop in prevEditedProps) {
+                        if (prevEditedProps.hasOwnProperty(prop)) {
+                            newEditedProps[prop] = prevEditedProps[prop];
+                        }
+                    }
+                    if (!this.reflector().equalsEx(this._editingValue, _originalEditingValue)) {
+                        newEditedProps[this.propertyName] = true;
+                    } else {
+                        delete newEditedProps[this.propertyName];
+                    }
+                    this.set('entity.@editedProps', newEditedProps);
+                }
+            },
+            
+    		_editedPropsChanged: function (editedProps) {
+    		},
+            
+            /**
+             * This function returns the tooltip for this editor.
+             */
+            _getTooltip: function (value) {
+                var tooltip = this._formatTooltipText(value);
+                tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
+                return tooltip;
             },
             
             /**
@@ -300,28 +405,7 @@
             },
             
             decoratedInput: function () {
-            	// var contentEl = Polymer.dom(this.decorator()).querySelector('content');            	
-            	// return Polymer.dom(contentEl).getDistributedNodes()[0]; // Polymer.dom(this.$.editorDom)    // .$.input;
-            	
-            	// currently there are multiple input fields
-            	// simply addressing this.$.editorDom.$.input would most likely return an invalid input
-            	// however, there should be only a single not hiddent input
-            	// so, let's try locating it by enumerating possible input field types
-            	
-            	// start with ordinary input
-            	var input = this.$.editorDom.querySelector('input:not([hidden])');
-            	if (input) {
-            	    return input;
-            	} 
-            	
-            	// if there was no matching input then maybe it is a checkbox...
-            	var input = this.$.editorDom.querySelector('paper-checkbox:not([hidden])');
-            	if (input) {
-            	    return input;
-            	}
-            	
-            	// if this is not a checkbox then return a textarea, which does not get marked as hidden, instead its parent control does
-            	return this.$.editorDom.querySelector('textarea');
+                return this.$.input;
             },
             
             /**
@@ -375,9 +459,38 @@
                     // (to be precise it is done for every case when _currBindingEntity is changed for this editor)
                     this._refreshCycleStarted = true;
                     
-                	this.assignValue(newValue, this.propertyName, this.reflector().getBindingValue.bind(this.reflector()));
+                    var convertedValue = this.reflector().getBindingValue.bind(this.reflector())(newValue, this.propertyName);
+                    var newEditingValue = this.convertToString(convertedValue);
+                    if (newEditingValue === this._editingValue) {
+                        this._refreshCycleStarted = false;
+                        this._updateMessagesForEntity(newValue);
+                    } else {
+                        var editingValueAfterPreviousRefreshCycleChanged = oldValue 
+                            ? this.convertToString(this.reflector().getBindingValue.bind(this.reflector())(oldValue, this.propertyName)) !== newEditingValue 
+                            : true;
+                        
+                        if (!editingValueAfterPreviousRefreshCycleChanged) {
+                            if (!newValue["@" + this.propertyName + "_editable"]) {
+                                this._editingValue = newEditingValue;
+                                this._updateMessagesForEntity(newValue);
+                            } else {
+                                this._refreshCycleStarted = false;
+                            }
+                        } else {
+                            this._editingValue = newEditingValue;
+                            this._updateMessagesForEntity(newValue);
+                        }
+                    }
                 } else {
                     // console.debug("_entityChanged: Not yet initialised _currBindingEntity, from which to get binding value!");
+                    this._updateMessagesForEntity(newValue);
+                }
+                this._tryFireErrorMsg(this._error);
+            },
+            
+            _updateMessagesForEntity: function (newEntity) {
+                if (this._validationComponentsDefined === true) {
+                    this._bindMessages(newEntity, this.propertyName, this._editorValidationMsg);
                 }
             },
             
@@ -410,7 +523,7 @@
                     this._acceptedValue = this.convertFromString(newValue);
                     this._editorValidationMsg = null;
                 } catch (error) {
-                    // console.log("_commValueChanged catched", error, this);
+                    console.log("_commValueChanged catched", error, this);
                     this._editorValidationMsg = error;
                 }
             },
@@ -429,8 +542,7 @@
                     // console.log("_acceptedValueChanged should become false. _refreshCycleStarted ==", this._refreshCycleStarted);
                 } else {
                 	if (this.reflector().isEntity(this.entity)) {
-	                    this.entity.set(this.propertyName, newValue);
-	                    this._registerPropertyTouch(this.entity, this.propertyName);
+	                    this.entity.setAndRegisterPropertyTouch(this.propertyName, newValue);
 	                    
     	                if (this._shouldInvokeValidation()) {
         	                this.validationCallback();
@@ -439,35 +551,6 @@
                     	}
                 	}
                 }
-            },
-            
-            /**
-             * In case where user interaction takes place, this method registers such 'property touch' for the purposes 
-             * of collecting the queue of 'touched' properties.
-             *
-             * The property that was touched last will reside last in that queue. Also the count of 'touches' is recorded
-             * for each property (mainly for logging purposes).
-             *
-             * Please, note that 'touched' property does not mean 'modified' from technical perspective.
-             * But, even if it is not modified -- such property will be forced to be mutated on server (with its origVal) 
-             * to have properly invoked its ACE handlers.
-             */
-            _registerPropertyTouch: function (bindingEntity, propertyName) {
-                var touched = bindingEntity["@@touchedProps"];
-                var names = touched.names;
-                var counts = touched.counts;
-                var index = names.indexOf(propertyName);
-                if (index > -1) {
-                    var prevCount = counts[index];
-                    names.splice(index, 1);
-                    counts.splice(index, 1);
-                    names.push(propertyName);
-                    counts.push(prevCount + 1);
-                } else {
-                    names.push(propertyName);
-                    counts.push(1);
-                }
-                console.log('Just TOUCHED', propertyName, '(', counts[counts.length - 1], ' time). Result:', touched);
             },
 
             /**
@@ -502,7 +585,7 @@
              * Commits editing value.
              */
             commit: function () {
-                console.debug('COMMIT: start.');
+                // console.debug('COMMIT: start.');
                 if (this.reflector().isEntity(this.entity)) {
                     if (typeof this.entity["@" + this.propertyName + "_uppercase"] !== 'undefined') {
                         var upperCased = this._editingValue.toLocaleUpperCase();
@@ -514,7 +597,7 @@
                     }
                     this._commitForDescendants();
                 }
-                console.debug("COMMIT: [", this._editingValue, "] value.");
+                // console.debug("COMMIT: [", this._editingValue, "] value.");
    	            this._commValue = this._editingValue;
             },
             
@@ -524,34 +607,47 @@
             _commitForDescendants: function () {
             },
 
-            _bindMessages: function (entity, property, _editorValidationMsg) {
-            	// console.log("_bindMessages: ", entity, property, _editorValidationMsg);
+            _bindMessages: function (entity, propertyName, _editorValidationMsg) {
+            	// console.log("_bindMessages: ", entity, propertyName, _editorValidationMsg);
                 if (_editorValidationMsg !== null) {
                     this._bindError(_editorValidationMsg);
                 } else if (this.reflector().isEntity(entity)) {
                 	// please, note that dot-notated property will not have any errors / warnings / requiredness
                 	//     - for these props it does not make sense to propagate such meta-information from
                 	//     parent property -- the parent prop (if added in master) will show that errors concisely
-                    if (typeof entity["@" + property + "_error"] !== 'undefined') {
-                        this._bindError(entity["@" + property + "_error"].message);
-                    } else if (typeof entity["@" + property + "_warning"] !== 'undefined') {
-                        this._bindWarning(entity["@" + property + "_warning"].message);
-                    } else if (typeof entity["@" + property + "_required"] !== 'undefined') {
-                        this._bindRequired(entity["@" + property + "_required"]);
+                    if (typeof entity["@" + propertyName + "_error"] !== 'undefined') {
+                        this._bindError(entity["@" + propertyName + "_error"].message);
+                    } else if (typeof entity["@" + propertyName + "_warning"] !== 'undefined') {
+                        this._bindWarning(entity["@" + propertyName + "_warning"].message);
+                    } else if (typeof entity["@" + propertyName + "_required"] !== 'undefined') {
+                        this._bindRequired(entity["@" + propertyName + "_required"]);
                     } else {
                         this._resetMessages();
                     }
 
-                    this._bindUppercase(entity, property);
+                    this._bindUppercase(entity, propertyName);
 
                 } else {
                     this._resetMessages();
                     this._resetMetaPropDecorations();
                 }
             },
+            
+            _editorValidationMsgChanged: function (newValue, oldValue) {
+                if (this._validationComponentsDefined === true) {
+                    this._bindMessages(this.entity, this.propertyName, newValue);
+                    this._tryFireErrorMsg(newValue);
+                }
+            },
+            
+            _tryFireErrorMsg: function (error) {
+                if (error) {
+                    this.fire('editor-error-appeared', this);
+                }
+            },
 
-            _bindUppercase: function (entity, property) {
-                if (typeof entity["@" + property + "_uppercase"] !== 'undefined') {
+            _bindUppercase: function (entity, propertyName) {
+                if (typeof entity["@" + propertyName + "_uppercase"] !== 'undefined') {
                     this.decoratedInput().classList.add("upper-case");
                 } else {
                     this.decoratedInput().classList.remove("upper-case");
@@ -600,10 +696,18 @@
             },
 
             /**
-             * Binding function for tooltips.
+             * Overide this to provide custom formatting for entered text.
              */
-            tooltip: function (propDesc) {
-                return propDesc;
+            _formatText: function (value) {
+                return value;
+            },
+            
+             /**
+             * Overide this to provide custom formatting for tooltip text.
+             */
+            _formatTooltipText: function (value) {
+                var formatedText = this._formatText(value);
+                return formatedText && "<b>" + formatedText + "</b>";
             },
             
             /**

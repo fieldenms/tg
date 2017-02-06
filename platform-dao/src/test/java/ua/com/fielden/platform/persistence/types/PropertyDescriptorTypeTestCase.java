@@ -2,7 +2,7 @@ package ua.com.fielden.platform.persistence.types;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
-import ua.com.fielden.platform.sample.domain.ITgWorkorder;
+import ua.com.fielden.platform.sample.domain.ITgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 
@@ -12,15 +12,19 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
  * @author TG Team
  */
 public class PropertyDescriptorTypeTestCase extends DbDrivenTestCase {
-    private final ITgWorkorder dao = injector.getInstance(ITgWorkorder.class);
+    private final ITgWorkOrder dao = injector.getInstance(ITgWorkOrder.class);
 
     public void test_property_descriptor_is_restored_correctly() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
+        
         final TgWorkOrder wo = dao.findByKeyAndFetch(fetch(TgWorkOrder.class).with("importantProperty").with("vehicle"), "WO_001");
         assertNotNull("Important property should not be null.", wo.getImportantProperty());
         assertEquals("Incorrect important property.", new PropertyDescriptor<TgWorkOrder>(TgWorkOrder.class, "vehicle"), wo.getImportantProperty());
     }
 
     public void test_property_descriptor_is_stored_correctly() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
+        
         final TgWorkOrder wo = dao.findByKeyAndFetch(fetch(TgWorkOrder.class).with("importantProperty").with("vehicle"), "WO_002");
         assertNull("Important property should be null.", wo.getImportantProperty());
 

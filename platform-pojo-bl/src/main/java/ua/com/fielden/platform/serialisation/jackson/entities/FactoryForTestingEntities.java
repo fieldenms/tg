@@ -18,13 +18,10 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -132,6 +129,14 @@ public class FactoryForTestingEntities {
     public EmptyEntity createSimpleEmptyEntity() {
         return finalise(createPersistedEntity(EmptyEntity.class, 1L, "key", "description"));
     }
+    
+    public PropertyDescriptor<EntityWithInteger> createPropertyDescriptor() {
+        return new PropertyDescriptor<>(EntityWithInteger.class, "prop");
+    }
+    
+    public PropertyDescriptor<EntityWithInteger> createPropertyDescriptorInstrumented() {
+        return PropertyDescriptor.fromString("ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger:prop", factory);
+    }
 
     public EmptyEntity createEmptyEntityWithNoId() {
         return createNewEntity(EmptyEntity.class, "key", "description");
@@ -205,6 +210,12 @@ public class FactoryForTestingEntities {
     public EntityWithColour createEntityWithColour() {
         final EntityWithColour entity = createPersistedEntity(EntityWithColour.class, 1L, "key", "description");
         entity.setProp(Colour.WHITE);
+        return finalise(entity);
+    }
+    
+    public EntityWithHyperlink createEntityWithHyperlink() {
+        final EntityWithHyperlink entity = createPersistedEntity(EntityWithHyperlink.class, 1L, "key", "description");
+        entity.setProp(new Hyperlink("http://www.amazon.com/date"));
         return finalise(entity);
     }
 
@@ -287,7 +298,7 @@ public class FactoryForTestingEntities {
     }
 
     public EmptyEntity createUninstrumentedEntity() {
-        final EmptyEntity entity = factory.newPlainEntity(EmptyEntity.class, 159L);
+        final EmptyEntity entity = EntityFactory.newPlainEntity(EmptyEntity.class, 159L);
 
         entity.beginInitialising();
         entity.setKey("UNINSTRUMENTED");
@@ -297,39 +308,10 @@ public class FactoryForTestingEntities {
         return entity;
     }
     
-    public AbstractEntity<String> createGeneratedEntity(final ISerialiser serialiser, final boolean instrumented) {
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-        
-        final Class<AbstractEntity<?>> emptyEntityTypeEnhanced;
-        try {
-            emptyEntityTypeEnhanced = (Class<AbstractEntity<?>>) 
-                    cl.startModification(EmptyEntity.class.getName()).modifyTypeName(new DynamicTypeNamingService().nextTypeName(EmptyEntity.class.getName())).endModification();
-        } catch (final ClassNotFoundException e) {
-            throw Result.failure(e);
-        }
-        final TgJackson tgJackson = (TgJackson) serialiser.getEngine(SerialiserEngines.JACKSON);
-        tgJackson.registerNewEntityType(emptyEntityTypeEnhanced);
-        
-        final AbstractEntity<String> entity;
-        if (instrumented) {
-            entity = (AbstractEntity<String>) factory.newEntity(emptyEntityTypeEnhanced, 159L);
-        } else {
-            entity = (AbstractEntity<String>) factory.newPlainEntity(emptyEntityTypeEnhanced, 159L);
-            entity.setEntityFactory(factory);
-        }
-
-        entity.beginInitialising();
-        entity.setKey("GENERATED+UNINSTRUMENTED");
-        entity.setDesc("GENERATED+UNINSTRUMENTED desc");
-        entity.endInitialising();
-        
-        return entity;
-    }
-    
     public Entity1WithEntity2 createInstrumentedEntityWithUninstrumentedProperty() {
         final Entity1WithEntity2 entity = factory.newEntity(Entity1WithEntity2.class, 159L);
         
-        final Entity2WithEntity1 uninstrumentedPropValue = factory.newPlainEntity(Entity2WithEntity1.class, 162L);
+        final Entity2WithEntity1 uninstrumentedPropValue = EntityFactory.newPlainEntity(Entity2WithEntity1.class, 162L);
         uninstrumentedPropValue.setEntityFactory(factory);
 
         entity.beginInitialising();
@@ -342,7 +324,7 @@ public class FactoryForTestingEntities {
     }
 
     public Entity1WithEntity2 createUninstrumentedEntityWithInstrumentedProperty() {
-        final Entity1WithEntity2 entity = factory.newPlainEntity(Entity1WithEntity2.class, 159L);
+        final Entity1WithEntity2 entity = EntityFactory.newPlainEntity(Entity1WithEntity2.class, 159L);
         entity.setEntityFactory(factory);
         
         final Entity2WithEntity1 uninstrumentedPropValue = factory.newEntity(Entity2WithEntity1.class, 162L);

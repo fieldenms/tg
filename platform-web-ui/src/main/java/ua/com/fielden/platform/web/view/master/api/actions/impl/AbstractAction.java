@@ -28,6 +28,8 @@ public abstract class AbstractAction implements IImportable {
     private String icon;
     private String shortDesc;
     private String longDesc;
+    private String shortcut;
+    private String focusingCallback;
     private final String actionComponentName;
     private final String actionComponentPath;
     private final String indent = "                    ";
@@ -77,6 +79,10 @@ public abstract class AbstractAction implements IImportable {
         this.longDesc = longDesc;
     }
 
+    public void setShortcut(final String shortcut) {
+        this.shortcut = shortcut;
+    }
+
     public EnabledState enabledState() {
         return enabledState;
     }
@@ -91,6 +97,18 @@ public abstract class AbstractAction implements IImportable {
 
     public String longDesc() {
         return longDesc;
+    }
+
+    public String shortcut() {
+        return shortcut;
+    }
+
+    public void setFocusingCallback(final String focusingCallback) {
+        this.focusingCallback = focusingCallback;
+    }
+
+    public String focusingCallback() {
+        return focusingCallback;
     }
 
     protected String enabledStatesString() {
@@ -122,6 +140,10 @@ public abstract class AbstractAction implements IImportable {
         attrs.put("short-desc", "[[" + actionSelector + ".shortDesc]]");
         attrs.put("long-desc", "[[" + actionSelector + ".longDesc]]");
         attrs.put("current-state", "[[currentState]]");
+
+        if (shortcut != null) {
+            attrs.put("shortcut", shortcut);
+        }
 
         return attrs;
     }

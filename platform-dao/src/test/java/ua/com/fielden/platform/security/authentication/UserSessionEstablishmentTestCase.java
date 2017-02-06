@@ -26,7 +26,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
 
-    private final IUserSession coSession = ao(UserSession.class);
+    private final IUserSession coSession = co(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
 
 

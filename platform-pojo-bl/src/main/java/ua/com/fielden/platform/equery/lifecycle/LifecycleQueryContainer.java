@@ -88,7 +88,7 @@ public class LifecycleQueryContainer {
         if (this == obj) {
             return true;
         }
-        if (!obj.getClass().equals(LifecycleQueryContainer.class)) {
+        if (!(obj instanceof LifecycleQueryContainer)) {
             return false;
         }
 

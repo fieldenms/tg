@@ -213,6 +213,7 @@ public class ReflectorTest {
         assertTrue(params.contains("date"));
         assertTrue(params.contains("date_time"));
         assertTrue(params.contains("money"));
+        assertTrue(params.contains("enumeration"));
     }
 
     @Test

@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -16,6 +18,7 @@ import java.util.TreeSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -135,15 +138,19 @@ public class ClassesRetriever {
      * @return
      * @throws Exception
      */
-    public static List<Class<?>> getAllClassesInPackageDerivedFrom(final String path, final String packageName, final Class<?> superClass) throws Exception {
-        return getClassesInPackage(path, packageName, new IFilterClass() {
+    public static List<Class<?>> getAllClassesInPackageDerivedFrom(final String path, final String packageName, final Class<?> superClass) {
+        try {
+            return getClassesInPackage(path, packageName, new IFilterClass() {
 
-            @Override
-            public boolean isSatisfies(final Class<?> testClass) {
-                return isClassDerivedFrom(testClass, superClass);
-            }
+                @Override
+                public boolean isSatisfies(final Class<?> testClass) {
+                    return isClassDerivedFrom(testClass, superClass);
+                }
 
-        });
+            });
+        } catch (final Exception ex) {
+            throw new ReflectionException(format("Could not get classes on pathe [%s] in package [%s].", path, packageName), ex);
+        }
     }
 
     /**
@@ -300,26 +307,27 @@ public class ClassesRetriever {
      */
     private static List<Class<?>> getFromJarFile(final String jar, final String packageName, final IFilterClass filter) throws ClassNotFoundException, IOException {
         final List<Class<?>> classes = new ArrayList<Class<?>>();
-        final JarInputStream jarFile = new JarInputStream(new FileInputStream(jar));
-        JarEntry jarEntry;
-        do {
-            jarEntry = jarFile.getNextJarEntry();
-            if (jarEntry != null) {
-                String className = jarEntry.getName();
-                if (className.endsWith(".class")) {
-                    className = stripFilenameExtension(className);
-                    if (className.startsWith(packageName + "/")) {
-                        final Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(className.replace('/', '.'));
-                        if (filter != null && filter.isSatisfies(clazz)) {
-                            classes.add(clazz);
-                        } else if (filter == null) {
-                            classes.add(clazz);
-                        }
+        try (final JarInputStream jarFile = new JarInputStream(new FileInputStream(jar))) {
+            JarEntry jarEntry;
+            do {
+                jarEntry = jarFile.getNextJarEntry();
+                if (jarEntry != null) {
+                    String className = jarEntry.getName();
+                    if (className.endsWith(".class")) {
+                        className = stripFilenameExtension(className);
+                        if (className.startsWith(packageName + "/")) {
+                            final Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(className.replace('/', '.'));
+                            if (filter != null && filter.isSatisfies(clazz)) {
+                                classes.add(clazz);
+                            } else if (filter == null) {
+                                classes.add(clazz);
+                            }
 
+                        }
                     }
                 }
-            }
-        } while (jarEntry != null);
+            } while (jarEntry != null);
+        }
         return classes;
     }
 

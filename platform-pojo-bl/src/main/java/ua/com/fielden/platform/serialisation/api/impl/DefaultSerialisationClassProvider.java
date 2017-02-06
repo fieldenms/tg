@@ -11,6 +11,8 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
+import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
@@ -27,6 +29,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithColour;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithCompositeKey;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDate;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithDefiner;
+import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithHyperlink;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithListOfEntities;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithMapOfEntities;
@@ -40,6 +43,8 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithString;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.SortingProperty;
 
 /**
  * Default implementation of {@link ISerialisationClassProvider}, which relies on the application settings to provide the location of classes to be used in serialisation.
@@ -194,7 +199,11 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.add(UserRolesUpdater.class);
         types.add(UserRoleTokensUpdater.class);
         types.add(SecurityTokenInfo.class);
+        types.add(CentreConfigUpdater.class);
+        types.add(SortingProperty.class);
         types.add(PropertyDescriptor.class);
+        types.add(AcknowledgeWarnings.class);
+        types.add(PropertyWarning.class);
     }
 
     private List<Class<?>> typesForSerialisationTesting() {
@@ -221,8 +230,8 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
                 EntityWithCompositeKey.class,
                 EntityWithMoney.class,
                 EntityWithPolymorphicAEProp.class,
-                EntityWithColour.class
-                               
+                EntityWithColour.class,
+                EntityWithHyperlink.class
                 );
     }
 

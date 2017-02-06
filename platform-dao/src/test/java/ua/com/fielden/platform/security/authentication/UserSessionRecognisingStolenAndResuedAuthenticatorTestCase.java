@@ -11,19 +11,19 @@ import java.util.Optional;
 
 import org.junit.Test;
 
+import com.google.common.base.Ticker;
+
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.provider.IUserEx;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test.ioc.TickerForSessionCache;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-
-import com.google.common.base.Ticker;
 
 /**
  * A test case to cover very specific situation of a successfully stolen authenticator from a trusted device, which was reused by an adversary from
@@ -34,7 +34,7 @@ import com.google.common.base.Ticker;
  */
 public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends AbstractDaoTestCase {
 
-    private final IUserSession coSession = ao(UserSession.class);
+    private final IUserSession coSession = co(UserSession.class);
     private final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
     private final TickerForSessionCache cacheTicker = (TickerForSessionCache) getInstance(Ticker.class);
 
@@ -42,7 +42,7 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
     public void should_recognise_situation_with_stolen_and_used_authenticator_upon_a_legitimate_attempt_to_use_that_authenticator_by_valid_user() throws SignatureException {
         // establish a new sessions for user TEST
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("TEST", getInstance(IUserEx.class));
+        up.setUsername(UNIT_TEST_USER, getInstance(IUser.class));
         final User currUser = getInstance(IUserProvider.class).getUser();
 
         constants.setNow(dateTime("2015-04-23 13:00:00"));
@@ -90,24 +90,25 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
         super.populateDomain();
 
         // add more users
-        save(new_(TgPerson.class, "Person 1").setUsername("USER-1").setBase(true));
-        save(new_(TgPerson.class, "Person 2").setUsername("USER-2").setBase(true));
+        final IUser coUser = co(User.class);
+        save(new_(TgPerson.class, "Person 1").setUser(coUser.save(new_(User.class, "USER1").setBase(true).setEmail("USER1@unit-test.software").setActive(true))));
+        save(new_(TgPerson.class, "Person 2").setUser(coUser.save(new_(User.class, "USER2").setBase(true).setEmail("USER2@unit-test.software").setActive(true))));
 
         // establish session for the above users
         final IUserProvider up = getInstance(IUserProvider.class);
-        up.setUsername("USER-1", getInstance(IUserEx.class));
+        up.setUsername("USER1", getInstance(IUser.class));
         final User user1 = up.getUser();
 
-        // trusted session for User-1
+        // trusted session for USER1
         constants.setNow(dateTime("2015-04-23 16:26:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 16:26:00"));
 
         coSession.newSession(user1, true); // from work
 
-        up.setUsername("USER-2", getInstance(IUserEx.class));
+        up.setUsername("USER2", getInstance(IUser.class));
         final User user2 = up.getUser();
 
-        // trusted session for User-2
+        // trusted session for USER2
         constants.setNow(dateTime("2015-04-23 16:30:00"));
         coSession.newSession(user2, true); // from work
     }

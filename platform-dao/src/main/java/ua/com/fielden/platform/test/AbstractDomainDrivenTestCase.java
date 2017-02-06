@@ -2,33 +2,42 @@ package ua.com.fielden.platform.test;
 
 import static java.lang.String.format;
 
-import java.io.FileInputStream;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.reflect.Field;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
 
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.rules.ExternalResource;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.PersistedEntityMetadata;
+import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.reflection.Finder;
 
 /**
  * This is a base class for all test cases in TG based applications. Each application module should provide file <b>src/test/resources/test.properties</b> with property
@@ -37,53 +46,78 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  * @author TG Team
  *
  */
-public abstract class AbstractDomainDrivenTestCase {
-    transient private final Logger logger = Logger.getLogger(this.getClass());
+public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData {
 
-    private static final List<String> dataScript = new ArrayList<String>();
-    private static final List<String> truncateScript = new ArrayList<String>();
-
-    public final static IDomainDrivenTestCaseConfiguration config = createConfig();
-
-    private final ICompanionObjectFinder provider = config.getInstance(ICompanionObjectFinder.class);
-    private final EntityFactory factory = config.getEntityFactory();
-    private final DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-
-    private final Collection<PersistedEntityMetadata> entityMetadatas = config.getDomainMetadata().getPersistedEntityMetadatas();
-
-    private static boolean domainPopulated = false;
-
-    private static IDomainDrivenTestCaseConfiguration createConfig() {
-        try {
-            final Properties testProps = new Properties();
-            final FileInputStream in = new FileInputStream("src/test/resources/test.properties");
-            testProps.load(in);
-            in.close();
-
-            // TODO Due to incorrect generation of constraints by Hibernate, at this stage simply disable REFERENTIAL_INTEGRITY by rewriting URL
-            //      This should be modified once correct db schema generation is implemented
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.url", "jdbc:h2:./src/test/resources/db/test_domain_db;INIT=SET REFERENTIAL_INTEGRITY FALSE");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.username", "sa");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.connection.password", "");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.show_sql", "false");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.format_sql", "true");
-            IDomainDrivenTestCaseConfiguration.hbc.setProperty("hibernate.hbm2ddl.auto", "create");
-
-            final Connection conn = createConnection();
-            final Statement st = conn.createStatement();
-            st.execute("DROP ALL OBJECTS");
-            st.close();
-            conn.close();
-
-            final String configClassName = testProps.getProperty("config-domain");
-            final Class<IDomainDrivenTestCaseConfiguration> type = (Class<IDomainDrivenTestCaseConfiguration>) Class.forName(configClassName);
-            return type.newInstance();
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
+    /**
+     * This static map holds references to DB related information, including data population and truncation scripts, for each test case type.
+     * It gets populated at the time of test case class loading using a <code<ClassRule</code> below. 
+     */
+    private static final Cache<String, DbCreator> dbCreators = CacheBuilder.newBuilder().build();
+    
+    /**
+     * A convenient factory/accessor method for instances of {@link DbCreator} that are associated with a passed in test case type.
+     * 
+     * @param testCaseType
+     * @return
+     */
+    protected static final DbCreator dbCreator(final String uuid) {
+        if (dbCreators.getIfPresent(uuid) == null) {
+            final DbCreator dbCreator = new DbCreator(uuid);
+            dbCreators.put(uuid, dbCreator);
         }
+        
+        return dbCreators.getIfPresent(uuid);
     }
+
+    private static String uuid() {
+        return ManagementFactory.getRuntimeMXBean().getName() + "_" + Thread.currentThread().getId();
+    }
+    
+    /**
+     * A class rule (this is a new concept introduced in JUnit 4.x) that acts similar to <code>@BeforeClass/@AfterClass</code> by executing at the time of loading/off-loading a test case class.
+     * Its main purpose is to generate and populate a database specific for a test case with a class that is being loaded.
+     * The use of a class rule has an advantage over static method initializers by providing additional information such as a test case class.
+     * This provides a way to encapsulate test case specific database creation and population logic at the level of this base class that all other test cases inherit from. 
+     */
+    @ClassRule
+    public static final ExternalResource resource = new ExternalResource() {
+        public Statement apply(final Statement base, final Description description) {
+            try {
+                // this call populates the above static map dbCreators
+                // the created instance holds the data population and truncation scripts that get reused by individual test
+                // at the same time, the actual database can be created ad-hoc even on per test (method) basis if needed
+                dbCreator(uuid());
+            } catch (Exception ex) {
+                throw new Error(format("Could not populate data for test case %s.", description), ex);
+            }
+
+            return super.apply(base, description);
+        };
+        
+    };
+
+    @ClassRule
+    public static final TestWatcher watcher = new TestWatcher() {
+        protected void finished(final Description description) {
+            final DbCreator dbCreator = dbCreators.getIfPresent(uuid());
+            try {
+                final Path rootPath = Paths.get(DbCreator.baseDir);
+                Files.walk(rootPath)
+                .filter(path -> path.getFileName().toString().contains(dbCreator.dbName()))
+                    .map(Path::toFile)
+                    .peek(file -> System.out.println(format("Removing %s", file.getName())))
+                    .forEach(File::delete);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        };
+    };
+    
+    private final ICompanionObjectFinder provider = dbCreator(uuid()).config.getInstance(ICompanionObjectFinder.class);
+    private final EntityFactory factory = dbCreator(uuid()).config.getEntityFactory();
+    private final DateTimeFormatter jodaFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
      * Should be implemented in order to provide domain driven data population.
@@ -97,109 +131,47 @@ public abstract class AbstractDomainDrivenTestCase {
      */
     protected abstract List<Class<? extends AbstractEntity<?>>> domainEntityTypes();
 
-    @AfterClass
-    public final static void removeDbSchema() {
-        domainPopulated = false;
-        dataScript.clear();
-        truncateScript.clear();
-    }
-
     @Before
     public final void beforeTest() throws Exception {
-        final Connection conn = createConnection();
-        Optional<Exception> raisedEx = Optional.empty();
-        
-        if (domainPopulated) {
-            // apply data population script
-            logger.debug("Executing data population script.");
-            exec(dataScript, conn);
-        } else {
-            try {
-                populateDomain();
-            } catch (final Exception ex) {
-                raisedEx = Optional.of(ex);
-                ex.printStackTrace();
-            }
-
-            // record data population statements
-            final Statement st = conn.createStatement();
-            final ResultSet set = st.executeQuery("SCRIPT");
-            while (set.next()) {
-                final String result = set.getString(1).trim();
-                final String upperCasedResult = result.toUpperCase();
-                if (!upperCasedResult.startsWith("INSERT INTO PUBLIC.UNIQUE_ID")
-                        && (upperCasedResult.startsWith("INSERT") || upperCasedResult.startsWith("UPDATE") || upperCasedResult.startsWith("DELETE"))) {
-                    // resultant script should NOT be UPPERCASED in order not to upperCase for e.g. values,
-                    // that was perhaps lover cased while populateDomain() invocation was performed
-                    dataScript.add(result);
-                }
-            }
-            set.close();
-            st.close();
-
-            // create truncate statements
-            for (final PersistedEntityMetadata<?> entry : entityMetadatas) {
-                truncateScript.add(format("TRUNCATE TABLE %s;", entry.getTable()));
-            }
-
-            domainPopulated = true;
-        }
-
-        conn.close();
-        
-        if (raisedEx.isPresent()) {
-            domainPopulated = false;
-            throw new IllegalStateException("Population of the test data has failed.", raisedEx.get());
-        }
+        dbCreator(uuid()).populateOrRestoreData(this);
     }
-
-    private void exec(final List<String> statements, final Connection conn) throws SQLException {
-        final Statement st = conn.createStatement();
-        for (final String stmt : statements) {
-            st.execute(stmt);
-        }
-        st.close();
-    }
-
+   
     @After
     public final void afterTest() throws Exception {
-        exec(truncateScript, createConnection());
-        logger.debug("Executing tables truncation script.");
+        dbCreator(uuid()).clearData(this.getClass());
     }
 
-    private static Connection createConnection() {
-        final String url = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.url");
-        final String jdbcDriver = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.driver_class");
-        final String user = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.username");
-        final String passwd = IDomainDrivenTestCaseConfiguration.hbc.getProperty("hibernate.connection.password");
-
-        try {
-            Class.forName(jdbcDriver);
-            return DriverManager.getConnection(url, user, passwd);
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
+   
+    @Override
     public final <T> T getInstance(final Class<T> type) {
-        return config.getInstance(type);
+        return dbCreator(uuid()).config.getInstance(type);
     }
 
-    protected <T extends AbstractEntity<?>> T save(final T instance) {
+    @Override
+    public <T extends AbstractEntity<?>> T save(final T instance) {
+        @SuppressWarnings("unchecked")
         final IEntityDao<T> pp = provider.find((Class<T>) instance.getType());
         return pp.save(instance);
     }
 
-    protected <T extends IEntityDao<E>, E extends AbstractEntity<?>> T ao(final Class<E> type) {
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends IEntityDao<E>, E extends AbstractEntity<?>> T co(final Class<E> type) {
         return (T) provider.find(type);
     }
 
+    @Override
     public final Date date(final String dateTime) {
-        return formatter.parseDateTime(dateTime).toDate();
+        try {
+            return formatter.parse(dateTime);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException(format("Could not parse value [%s].", dateTime));
+        }
     }
 
+    @Override
     public final DateTime dateTime(final String dateTime) {
-        return formatter.parseDateTime(dateTime);
+        return jodaFormatter.parseDateTime(dateTime);
     }
 
     /**
@@ -210,8 +182,12 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param desc
      * @return
      */
-    protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
-        return factory.newEntity(entityClass, key, desc);
+    @Override
+    public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key, final String desc) {
+        final T entity = new_(entityClass);
+        entity.setKey(key);
+        entity.setDesc(desc);
+        return entity;
     }
 
     /**
@@ -221,8 +197,11 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param key
      * @return
      */
-    protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
-        return factory.newByKey(entityClass, key);
+    @Override
+    public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass, final K key) {
+        final T entity = new_(entityClass);
+        entity.setKey(key);
+        return entity;
     }
 
     /**
@@ -233,8 +212,22 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param keys
      * @return
      */
-    protected <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys) {
-        return keys.length == 0 ? new_(entityClass) : factory.newByKey(entityClass, keys);
+    @Override
+    public <T extends AbstractEntity<DynamicEntityKey>> T new_composite(final Class<T> entityClass, final Object... keys) {
+        final T entity = new_(entityClass);
+        if (keys.length > 0) {
+            // setting composite key fields
+            final List<Field> fieldList = Finder.getKeyMembers(entityClass);
+            if (fieldList.size() != keys.length) {
+                throw new IllegalArgumentException(format("Number of key values is %s but should be %s", keys.length, fieldList.size()));
+            }
+            for (int index = 0; index < fieldList.size(); index++) {
+                final Field keyField = fieldList.get(index);
+                final Object keyValue = keys[index];
+                entity.set(keyField.getName(), keyValue);
+            }
+        }
+        return entity;
     }
 
     /**
@@ -243,7 +236,9 @@ public abstract class AbstractDomainDrivenTestCase {
      * @param entityClass
      * @return
      */
-    protected <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
-        return factory.newEntity(entityClass);
+    @Override
+    public <T extends AbstractEntity<K>, K extends Comparable> T new_(final Class<T> entityClass) {
+        final IEntityDao<T> co = co(entityClass);
+        return co != null ? co.new_() : factory.newEntity(entityClass);
     }
 }

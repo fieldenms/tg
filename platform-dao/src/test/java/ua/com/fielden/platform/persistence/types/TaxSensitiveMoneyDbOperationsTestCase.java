@@ -22,14 +22,12 @@ public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase {
 
     @Test
     public void testThatCanSaveAndRetrieveEntityWithTaxMoney() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         final EntityWithTaxMoney instance = entityFactory.newEntity(EntityWithTaxMoney.class, "name", "desc");
         instance.setMoney(new Money(new BigDecimal("1000"), 20, Currency.getInstance("AUD")));
         // saving instance of MoneyClass
         final IEntityDao<EntityWithTaxMoney> dao = injector.getInstance(ICompanionObjectFinder.class).find(EntityWithTaxMoney.class);
         dao.save(instance);
-
-        hibernateUtil.getSessionFactory().getCurrentSession().flush();
-        hibernateUtil.getSessionFactory().getCurrentSession().clear();
 
         // retrieve saved instance
         final EntityWithTaxMoney instance2 = dao.findByKey("name");
@@ -48,14 +46,12 @@ public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase {
 
     @Test
     public void testThatCanSaveAndRetrieveEntityWithSimpleTaxMoney() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         final EntityWithSimpleTaxMoney instance = entityFactory.newEntity(EntityWithSimpleTaxMoney.class, "name", "desc");
         instance.setMoney(new Money(new BigDecimal("2222.0000"), 20, Currency.getInstance("USD"))); // USD deliberately to be different to the default currency
         // saving instance of MoneyClass
         final IEntityDao<EntityWithSimpleTaxMoney> dao = injector.getInstance(ICompanionObjectFinder.class).find(EntityWithSimpleTaxMoney.class);
         dao.save(instance);
-
-        hibernateUtil.getSessionFactory().getCurrentSession().flush();
-        hibernateUtil.getSessionFactory().getCurrentSession().clear();
 
         // retrieve saved instance
         final EntityWithSimpleTaxMoney instance2 = dao.findByKey("name");
@@ -70,15 +66,13 @@ public class TaxSensitiveMoneyDbOperationsTestCase extends DbDrivenTestCase {
 
     @Test
     public void testThatCanSaveAndRetrieveEntityWithExTaxAndTaxMoney() {
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
         final EntityWithExTaxAndTaxMoney instance = entityFactory.newByKey(EntityWithExTaxAndTaxMoney.class, "name");
         instance.setDesc("desc");
         instance.setMoney(new Money(valueOf(600000d), 20, Currency.getInstance("USD")));
 
         final IEntityDao<EntityWithExTaxAndTaxMoney> dao = injector.getInstance(ICompanionObjectFinder.class).find(EntityWithExTaxAndTaxMoney.class);
         dao.save(instance);
-
-        hibernateUtil.getSessionFactory().getCurrentSession().flush();
-        hibernateUtil.getSessionFactory().getCurrentSession().clear();
 
         final EntityWithExTaxAndTaxMoney instance2 = dao.findByKey("name");
         assertEquals(instance, instance2);

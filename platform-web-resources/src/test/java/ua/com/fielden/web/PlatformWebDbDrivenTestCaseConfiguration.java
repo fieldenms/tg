@@ -17,6 +17,8 @@ import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
+import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
 import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
@@ -42,7 +44,8 @@ import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClass
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.web.entities.InspectedEntity;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.SortingProperty;
 
 /**
  * Provides a test specific implementation of {@link IDbDrivenTestCaseConfiguration}.
@@ -64,7 +67,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
         hibTypeDefaults.put(Money.class, MoneyUserType.class);
     }
 
-    private final ISerialisationClassProvider serialisationClassProvider = new ProvidedSerialisationClassProvider(new Class[] { InspectedEntity.class });
+    private final ISerialisationClassProvider serialisationClassProvider = new ProvidedSerialisationClassProvider(new Class[] { });
 
     /**
      * Required for dynamic instantiation by {@link DbDrivenTestCase}
@@ -81,11 +84,14 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(UserRole.class);
             domainTypes.add(UserRoleTokensUpdater.class);
             domainTypes.add(SecurityTokenInfo.class);
+            domainTypes.add(CentreConfigUpdater.class);
+            domainTypes.add(SortingProperty.class);
             domainTypes.add(UserAndRoleAssociation.class);
             domainTypes.add(UserAndRoleAssociationBatchAction.class);
             domainTypes.add(SecurityRoleAssociation.class);
             domainTypes.add(SecurityRoleAssociationBatchAction.class);
-            domainTypes.add(InspectedEntity.class);
+            domainTypes.add(AcknowledgeWarnings.class);
+            domainTypes.add(PropertyWarning.class);
             domainTypes.add(Attachment.class);
             final DomainMetadata domainMetadata = new DomainMetadata(hibTypeDefaults, Guice.createInjector(new HibernateUserTypesModule()), domainTypes, AnnotationReflector.getAnnotation(User.class, MapEntityTo.class), DbVersion.H2);
             final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache = new IdOnlyProxiedEntityTypeCache(domainMetadata);

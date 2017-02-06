@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 
 import ua.com.fielden.platform.entity.annotation.Dynamic;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 
 /**
@@ -24,6 +25,7 @@ public enum ValidationAnnotation {
     MAX(Max.class), //
     DOMAIN(DomainValidation.class), //
     BEFORE_CHANGE(BeforeChange.class), //
+    UNIQUE(Unique.class),
     DYNAMIC(Dynamic.class); // DYNAMIC validation logic is encapsulated inside the setters.
 
     private final Class<? extends Annotation> type;

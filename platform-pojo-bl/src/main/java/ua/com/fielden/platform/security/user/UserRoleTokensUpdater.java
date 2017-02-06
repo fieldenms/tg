@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModif
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
-import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -20,14 +19,13 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @CompanionObject(IUserRoleTokensUpdater.class)
-@KeyType(UserRole.class)
 @MapEntityTo
-@KeyTitle(value = "User Role", desc = "User role, whose 'tokens' collection modifies by this functional action.")
-public class UserRoleTokensUpdater extends AbstractFunctionalEntityForCollectionModification<UserRole, String> {
+@KeyTitle(value = "User Role Id", desc = "Id of user role, whose 'tokens' collection modifies by this functional action.")
+public class UserRoleTokensUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
     private static final long serialVersionUID = 1L;
     
     @IsProperty(SecurityTokenInfo.class)
-    @Title(value = "A list of applicable tokens", desc = "A list of applicable tokens")
+    @Title(value = "Security Tokens", desc = "A list of security tokens")
     private Set<SecurityTokenInfo> tokens = new LinkedHashSet<SecurityTokenInfo>();
 
     @Observable

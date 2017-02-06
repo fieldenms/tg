@@ -26,24 +26,12 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 public class StartSecureJetty {
     private static final Logger logger = Logger.getLogger(StartSecureJetty.class);
 
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws Exception {
         final String fileName = "src/main/resources/application.properties";
-        InputStream st = null;
-        Properties props = null;
-        try {
-            st = new FileInputStream(fileName);
-            props = new Properties();
+
+        final Properties props = new Properties();
+        try (final InputStream st = new FileInputStream(fileName)) {
             props.load(st);
-        } catch (final Exception e) {
-            System.out.println(String.format("Application property file %s could not be located or its values are not recognised.", fileName));
-            e.printStackTrace();
-            System.exit(1);
-        } finally {
-            try {
-                st.close();
-            } catch (final Exception e) {
-                e.printStackTrace(); // can be ignored
-            }
         }
 
         DOMConfigurator.configure(props.getProperty("log4j"));
@@ -52,35 +40,28 @@ public class StartSecureJetty {
 
         final Server server = new Server();
 
-        final ServerConnector connector = new ServerConnector(server);
-        connector.setHost("localhost");
+        try (final ServerConnector connector = new ServerConnector(server)) {
+            connector.setHost("localhost");
 
-        final int port = 9998;
+            final int port = 9998;
 
-        final HttpConfiguration https = new HttpConfiguration();
-        https.addCustomizer(new SecureRequestCustomizer());
-        https.setSecurePort(port);
-        https.setSecureScheme("https");
+            final HttpConfiguration https = new HttpConfiguration();
+            https.addCustomizer(new SecureRequestCustomizer());
+            https.setSecurePort(port);
+            https.setSecureScheme("https");
 
-        final SslContextFactory sslContextFactory = new SslContextFactory();
-        sslContextFactory.setKeyStorePath(ResourceLoader.getURL("tsl/ca-signed-keystore").getPath());
-        sslContextFactory.setKeyStorePassword("changeit");
-        sslContextFactory.setKeyManagerPassword("changeit");
+            final SslContextFactory sslContextFactory = new SslContextFactory();
+            sslContextFactory.setKeyStorePath(ResourceLoader.getURL("tsl/ca-signed-keystore").getPath());
+            sslContextFactory.setKeyStorePassword("changeit");
+            sslContextFactory.setKeyManagerPassword("changeit");
 
-        final ServerConnector sslConnector = new ServerConnector(server,
-                new SslConnectionFactory(sslContextFactory, "http/1.1"),
-                new HttpConnectionFactory(https));
-        sslConnector.setPort(port);
+            final ServerConnector sslConnector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, "http/1.1"), new HttpConnectionFactory(https));
+            sslConnector.setPort(port);
 
-        server.setConnectors(new Connector[] { connector, sslConnector });
+            server.setConnectors(new Connector[] { connector, sslConnector });
 
-        try {
             server.start();
             logger.info("Started");
-        } catch (final Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         }
-
     }
 }

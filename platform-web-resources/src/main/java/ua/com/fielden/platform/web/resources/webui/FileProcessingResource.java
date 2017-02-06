@@ -15,13 +15,10 @@ import org.restlet.resource.Put;
 import org.restlet.resource.ServerResource;
 import org.restlet.routing.Router;
 
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
-import ua.com.fielden.platform.web.resources.AttachmentTypeResource;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSrouce;
 import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;

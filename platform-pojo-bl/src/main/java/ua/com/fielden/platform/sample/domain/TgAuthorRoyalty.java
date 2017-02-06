@@ -13,7 +13,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -66,7 +65,6 @@ public class TgAuthorRoyalty extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    @EntityExists(TgAuthorship.class)
     public TgAuthorRoyalty setAuthorship(final TgAuthorship value) {
         this.authorship = value;
         return this;

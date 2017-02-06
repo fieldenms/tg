@@ -14,7 +14,7 @@
 	<link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
   
     <link rel="import" href="/app/tg-reflector.html">
-    <link rel="import" href="/centre_ui/ua.com.fielden.platform.sample.domain.MiTgFetchProviderTestEntity">
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity">
 </head>
 
 <body>
@@ -32,6 +32,35 @@
 	    setup(function() {
 			centre = fixture('CentreFixture');
 	      	reflector = document.querySelector('#reflector');
+	    });
+	    
+	    test('running does not occur for invalid criteria', function (done) {
+            var old_postRun = centre._postRun;
+            
+            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities) {
+            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, isRefreshingConcreteEntities);
+            	
+            	assert.strictEqual(centre.$.selection_criteria._centreChanged, false, '_centreChanged flag should defined and should equal false.');
+            	assert.ok(criteriaEntity, 'Criteria entity should arrive from the server.');
+            	assert.strictEqual(criteriaEntity.isValid(), false, 'Criteria entity should be invalid.');
+            	assert.deepEqual(resultEntities, [], 'Results should be empty, run should not be performed.');
+            	assert.deepEqual(renderingHints, [], 'Results should be empty (renderingHints), run should not be performed.');
+            	
+                centre.async(function () {
+                    assert.strictEqual(centre._selectedView, 0, 'The view should not be switched to EGI result-set.');
+                    done();
+                }, 200);
+            };
+            
+            centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                var editor = centre.$.selection_criteria.$.editor_4_tgFetchProviderTestEntity_propForValidation;
+                editor._editingValue = 'UNEXISTING';
+                editor.commit();
+                
+				centre.run();
+            };
+
+ 			centre.retrieve();
 	    });
 	
 	    test('run action works for custom fetch provider', function (done) {

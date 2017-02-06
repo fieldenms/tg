@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.impl.helpers;
 
-import ua.com.fielden.platform.sample.domain.TgWorkOrder;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 
 /**
@@ -9,10 +9,10 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
  * @author TG Team
  *
  */
-public class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler<TgWorkOrder> {
+public class CustomPropsAssignmentHandler implements ICustomPropsAssignmentHandler {
 
     @Override
-    public void assignValues(final TgWorkOrder entity) {
+    public void assignValues(final AbstractEntity<?> entity) {
     }
 
 }

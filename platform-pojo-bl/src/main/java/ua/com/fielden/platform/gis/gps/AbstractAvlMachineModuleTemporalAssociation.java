@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.GeProperty;
 import ua.com.fielden.platform.entity.validation.annotation.LeProperty;
 import ua.com.fielden.platform.security.user.User;
@@ -86,7 +85,6 @@ public abstract class AbstractAvlMachineModuleTemporalAssociation<MESSAGE extend
     private User changedBy;
 
     @Observable
-    @EntityExists(User.class)
     public AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> setChangedBy(final User changedBy) {
         this.changedBy = changedBy;
         return this;
@@ -97,7 +95,6 @@ public abstract class AbstractAvlMachineModuleTemporalAssociation<MESSAGE extend
     }
 
     @Observable
-    @EntityExists(User.class)
     public AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> setCreatedBy(final User createdBy) {
         this.createdBy = createdBy;
         return this;

@@ -1,14 +1,16 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
 
-<link rel="import" href="/app/tg-reflector.html">
-<link rel="import" href="/resources/serialisation/tg-serialiser.html">
-<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
 <link rel="import" href="/resources/polymer/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="/resources/polymer/paper-button/paper-button.html">  
 <link rel="import" href="/resources/polymer/paper-spinner/paper-spinner.html">
 <link rel="import" href="/resources/polymer/paper-styles/color.html">
 
 <link rel="import" href="/resources/components/postal-lib.html">
+
+<link rel="import" href="/app/tg-reflector.html">
+<link rel="import" href="/resources/serialisation/tg-serialiser.html">
+<link rel="import" href="/resources/components/tg-tooltip-behavior.html">
+<link rel="import" href="/resources/actions/tg-focus-restoration-behavior.html">
 
 <dom-module id="tg-ui-action">
     <template>
@@ -86,6 +88,57 @@
 </polymer-element>
 
 <script>
+(function() {
+    /**
+     * Returns 'true' in case where obj is not defined (aka 'null', 'undefined' or not undefined), 'false' otherwise. 
+     */
+    var _notDefined = function (obj) {
+        return typeof obj === 'undefined' || obj === null;
+    };
+    
+    /**
+     * Returns 'selectedEntities' from the centre, that is closest to this functional action context.
+     * 
+     * In case where 'centreContextHolder' is the context of direct centre's child action -- just returns it.
+     * In case where 'centreContextHolder' is the context of in-direct, transitive centre's child action -- finds it in parent actions.
+     * (Vehicle centre -> [OpenVehicleMasterAction=direct child] -> [VehicleMaster_OpenMain_MenuItem=in-direct child (or embedded VehicleMaster)] )
+     */
+    var _findSelectedEntitiesIn = function (centreContextHolder) {
+        if (_notDefined(centreContextHolder)) {
+            return undefined;
+        } else if (typeof centreContextHolder.selectedEntities !== 'undefined') { // could be 'null' -- this indicates empty selected entities
+            return centreContextHolder.selectedEntities;
+        } else if (_notDefined(centreContextHolder.masterEntity)) {
+            return undefined;
+        } else {
+            return _findSelectedEntitiesIn(centreContextHolder.masterEntity.centreContextHolder);
+        }
+    };
+    
+    var removeStyles = function (element, styles) {
+        if (styles && styles.length > 0) {
+            styles.split(";").map(function (style) {
+                return style.trim().split(":");
+            }).forEach(function (style) {
+                if (style.length === 2) {
+                    delete element.style[style[0]];
+                }
+            });
+        }
+    };
+    
+    var addStyles =  function (element, styles) {
+        if (styles && styles.length > 0) {
+            styles.split(";").map(function (style) {
+                return style.trim().split(":");
+            }).forEach(function (style) {
+                if (style.length === 2) {
+                    element.style[style[0]] = style[1];
+                }
+            });
+        }
+    };
+
     Polymer({
     	is: 'tg-ui-action',
     	
@@ -161,6 +214,16 @@
             	type: String
             },
             
+            /**
+             * String representation of functional action kind as defined by java class FunctionalActionKind.
+             *
+             * This property, along with numberOfAction, forms action identifier in context of parent centre. This is now used only for centre 
+             * actions.
+             */
+            actionKind: {
+            	type: String
+            },
+            
             attrs: {
             	type: Object
             },
@@ -191,12 +254,27 @@
             longDesc: {
             	type: String
             },
-
+            
+            /**
+             * Keyboard shortcut combination to invoke this action on master or centre.
+             */
+            shortcut: {
+                type: String
+            },
+            
             /**
              * The icon specificator (string id).
              */
             icon: {
             	type: String
+            },
+            
+            /**
+             * Icon styles for icon button.
+             */
+            iconStyle: {
+                type: String,
+                observer: "_iconStyleChanged"
             },
             
             /** 
@@ -308,10 +386,17 @@
             _isSpinnerRequired: {
             	type: Boolean,
             	value: false
+            },
+            
+            /**
+             * In case where this tg-ui-action represents continuation action, continuationProperty uniquely identifies continuation in saving session of parent initiating entity (will be set into companion object).
+             */
+            continuationProperty: {
+                type: String
             }
         },
         
-        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior],
+        behaviors: [Polymer.TgBehaviors.TgTooltipBehavior, Polymer.TgBehaviors.TgFocusRestorationBehavior],
         
         /**
          * Initialisation block.
@@ -321,6 +406,8 @@
             
             self._run = (function () {
                 console.log(this.shortDesc + ": execute");
+                
+                self.persistActiveElement();
 
                 if (this.preAction) {
                     var result = this.preAction(this)
@@ -329,6 +416,7 @@
                     promise.then(function(value) {
                         self.showDialog(self);
                     }, function (error) {
+                        self.restoreActiveElement();
                         console.log("The action was rejected with error: " + error);
                     });
                 } else {
@@ -345,6 +433,8 @@
                 // action execution started
                 self.isActionInProgress = true;
 				
+                // master.disableView();
+                
                 master.postRetrieved = function (entity, bindingEntity, customObject) {
                     console.log("postRetrieved");
                 };
@@ -360,22 +450,33 @@
                 
                 // NOTE: the savingContext for 'tg-entity-master' at this stage is immutable, i.e. it will never change during lifecycle of action's master 
                 master.savingContext = self._createContextHolderForAction();
+                // the following function captures 'master.savingContext' which could be used in different contexts:
+                //   for e.g. 'tg-vehiclemaster_openmain_menuitem_master.savingContext' will be used in 'tg-vehicle-master' postSaved callback
+                //   and in 'tg-vehiclemaster_openmain_menuitem_master' postSaved callback
+                var selectedEntitiesSupplier = function () {
+                    return _findSelectedEntitiesIn(master.savingContext);
+                };
+                
+                // Every functional entity master contains it own flag 'shouldRefreshParentCentreAfterSave'.
+                // This flag is configured from 'withNoParentCentreRefresh()' function call (or from non-existence of that call) in Java API functional action configuration.
+                // One exception from that rule: embedded masters in master-with-master -- the flag is configured from MasterWithMasterBuilder API.
+                master.shouldRefreshParentCentreAfterSave = self.shouldRefreshParentCentreAfterSave;
 
                 master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
-                    master.focusFirstInput();
+                    //this.focusFirstInput();
                     
                     postal.publish({
-                        channel: "centre_" + master.centreUuid,
+                        channel: "centre_" + this.centreUuid,
                         topic: "detail.saved",
                         data: {
-                        	shouldRefreshParentCentreAfterSave: self.shouldRefreshParentCentreAfterSave,
+                        	shouldRefreshParentCentreAfterSave: this.shouldRefreshParentCentreAfterSave,
                             entity: potentiallySavedOrNewEntity,
                             // send selectedEntitiesInContext further to be able to update only them on EGI
-                            selectedEntitiesInContext: master.savingContext.selectedEntities
+                            selectedEntitiesInContext: selectedEntitiesSupplier()
                         }
                     });
                     
-                    if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
+                    if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                     	if (self.postActionSuccess) {
 	                        self.postActionSuccess(potentiallySavedOrNewEntity);
                     	}
@@ -387,16 +488,21 @@
                     
                     // action execution completes
                     self.isActionInProgress = false;
+                    
+                    if (this.noUI === true) {
+                        self.restoreActiveElement();
+                    }
                 };
 
                 master.postSavedError = function (errorResult) {
                 	// if action has no UI part then even failed saving indicates the completion of action's execution
                 	// otherwise, the UI would still remain open and user can apply some changes and attempt to save again (i.e. the action is still in progress)
-                	if (master.noUI === true) {
+                	if (this.noUI === true) {
                 		// action execution completed, althoug in error from saving
                     	self.isActionInProgress = false;
+                        self.restoreActiveElement();
                 	} else {
-                        master.focusFirstInput();
+                        //this.focusFirstInput();
                 	}
                 };
                 
@@ -413,7 +519,7 @@
                 	}
                 	
                     if (self.modifyFunctionalEntity) {
-                        self.modifyFunctionalEntity(master._currBindingEntity);
+                        self.modifyFunctionalEntity(master._currBindingEntity, master);
                     }
                     self._masterReferenceForTesting = master;
                     if (master.saveOnActivation === true) {
@@ -436,11 +542,20 @@
             }
             bindingEntity[propNameToBeAssigned] = value;
         },
+
+        /**
+         * Listener that listens the changes for icon style property.
+         */
+        _iconStyleChanged: function (newValue, oldValue) {
+            var icon = this.$.iActionButton.$.icon;
+            removeStyles(icon, oldValue);
+            addStyles(icon, newValue);
+        },
         
         _createContextHolderForAction: function () {
         	var self = this;
             // creates the context and
-            var context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity);
+            var context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.actionKind, self.numberOfAction);
             // enhances it with the information of 'currentEntity' (primary / secondary actions) and
             if (self.currentEntity) {
             	self._enhanceContextWithCurrentEntity(context, self.currentEntity, self.requireSelectedEntities);
@@ -497,4 +612,5 @@
         	return uiRole === 'ICON';
         }
     });
+})();
 </script>

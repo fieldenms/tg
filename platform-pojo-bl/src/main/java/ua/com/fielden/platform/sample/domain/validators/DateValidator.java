@@ -21,7 +21,7 @@ public class DateValidator implements IBeforeChangeEventHandler<Date> {
     }
 
     @Override
-    public Result handle(final MetaProperty<Date> property, final Date newValue, final Date oldValue, final Set<Annotation> mutatorAnnotations) {
+    public Result handle(final MetaProperty<Date> property, final Date newValue, final Set<Annotation> mutatorAnnotations) {
         final AbstractEntity<?> entity = property.getEntity();
         if (!entity.isPersisted()) {
             if (newValue != null && new DateTime(2003, 2, 1, 6, 19).equals(new DateTime(newValue))) {

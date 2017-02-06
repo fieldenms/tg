@@ -20,19 +20,19 @@
         }
     </style>
     <template>
-        <template is="dom-if" if="[[menuItem.view]]">
-            <template is="dom-if" if="[[!_isCentre(menuItem)]]">
+        <template is="dom-if" if="[[menuItem.view]]" restamp>
+            <template is="dom-if" if="[[!_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
                 <paper-material>
-                    <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+                    <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
                 </paper-material>
             </template>
-            <template is="dom-if" if="[[_isCentre(menuItem)]]">
-                <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.import]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
+            <template is="dom-if" if="[[_isCentre(menuItem)]]" on-dom-change="_viewWasDefined" restamp>
+                <tg-element-loader id="elementToLoad" auto="[[autoLoad]]" import="[[menuItem.view.htmlImport]]" element-name="[[menuItem.view.elementName]]" attrs="[[menuItem.view.attrs]]" on-after-load="_afterLoadListener"></tg-element-loader>
             </template>
         </template>
-        <template is="dom-if" if="[[!menuItem.view]]">
+        <template is="dom-if" if="[[!menuItem.view]]" on-dom-change="_viewWasDefined" restamp>
             <div class="view">
-                Please specify view for <span>[[menuItem.title]]</span>.
+                Please specify view for <span>[[menuItem.key]]</span>.
             </div>
         </template>
     </template>
@@ -63,8 +63,8 @@
                         value: false,
                         reflectToAttribute: true
                     },
-                    uuid: String,
-                    moduleId: String
+                    moduleId: String,
+                    submoduleId: String
                 },
 
                 behaviors: [Polymer.IronResizableBehavior],
@@ -77,91 +77,91 @@
                     var self = this;
                     self.async(function () {
                         if (isPropertyDefined(self, "menuItem.view.attrs")) {
-                            self.menuItem.view.attrs.uuid = self.uuid;
+                            self.menuItem.view.attrs.uuid = self.moduleId + (self.submoduleId ? '/' + self.submoduleId : '');
                             self.menuItem.view.attrs.moduleId = self.moduleId;
                         }
                     }, 1);
                 },
-
-                _getMenuItemAttributes: function () {
-                    return this.menuItem.view.attrs;
+                
+                focusLoadedView: function () {
+                    var elementToLoad = this.$$("#elementToLoad");
+                    if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.focusView === 'function') {
+                        elementToLoad.loadedElement.focusView();
+                    }
                 },
 
                 _isCentre: function (menuItem) {
-                    return menuItem.view.type === 'centre';
+                    return menuItem.view.viewType === 'centre';
                 },
 
                 _afterLoadListener: function (e, detail, view) {
                     var self = this;
                     if (e.target === this.$$("#elementToLoad")) {
-                        if (this.menuItem.view.type === 'centre') {
+                        if (this.menuItem.view.viewType === 'centre') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                                if (detail.autoRun) {
+                                detail._setQueryParams();
+                                if (detail.autoRun || detail.queryPart) {
                                     detail.run();
                                 }
                                 self.fire("menu-item-view-loaded", self.menuItem);
                             };
                             detail.retrieve();
-                        } else if (this.menuItem.view.type === 'master') {
+                        } else if (this.menuItem.view.viewType === 'master') {
                             detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                                if (entity.id === null) {
-                                    postal.publish({
-                                        channel: "view",
-                                        topic: "master.new.created",
-                                        data: {
-                                            centreUuid: detail.centreUuid,
-                                            item: self.menuItem
-                                        }
-                                    });
-                                } else {
-                                    postal.publish({
-                                        channel: "view",
-                                        topic: "master.edit.created",
-                                        data: {
-                                            entityId: entity.id,
-                                            centreUuid: detail.centreUuid,
-                                            item: self.menuItem
-                                        }
-                                    });
-                                }
                                 self.fire("menu-item-view-loaded", self.menuItem);
                             };
                             detail.postValidated = function (validatedEntity, bindingEntity, customObject) {};
-                            detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
-                                //Send postal message that save was completed if it was succefull
-                                if (potentiallySavedOrNewEntity.isValidWithoutSavingException()) {
-                                    postal.publish({
-                                        channel: "master",
-                                        topic: "save.start",
-                                        data: {
-                                            centreUuid: detail.centreUuid,
-                                            masterUuid: detail.uuid,
-                                            moduleId: detail.moduleId,
-                                            entity: potentiallySavedOrNewEntity,
-                                            item: self.menuItem,
-                                            selectedEntitiesInContext: [potentiallySavedOrNewEntity]
-                                        }
-                                    });
-                                }
-                            };
+                            detail.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {};
                             detail.retrieve();
                         } else {
                             self.fire("menu-item-view-loaded", self.menuItem);
                         }
                     }
                 },
-                load: function () {
+
+                /**
+                 * The callback that is invoked after template was defined and it's dom was changed.
+                 */
+                _viewWasDefined: function (e, detail) {
+                    var elementToLoad;
+                    if (this._afterInitLoading) {
+                        elementToLoad = this.$$("#elementToLoad");
+                        if (elementToLoad) {
+                            if (!elementToLoad.wasLoaded) {
+                                elementToLoad.load();
+                            }
+                            delete this._afterInitLoading;
+                        }
+                    }
+                },
+
+                _setQueryIfPossible: function (queryPart) {
+                    if (this.menuItem.view.viewType === "centre" && queryPart) {
+                        this.menuItem.view.attrs.queryPart = queryPart;
+                    }
+                },
+
+                load: function (queryPart) {
                     var elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad && !elementToLoad.wasLoaded) {
+                        this._setQueryIfPossible(queryPart);
                         elementToLoad.load();
                     }
                 },
+
                 wasLoaded: function () {
                     var elementToLoad = this.$$("#elementToLoad");
                     if (elementToLoad) {
                         return elementToLoad.wasLoaded;
                     }
                     return true;
+                },
+
+                canLeave: function () {
+                    var elementToLoad = this.$$("#elementToLoad");
+                    if (elementToLoad && elementToLoad.wasLoaded && typeof elementToLoad.loadedElement.canLeave === 'function') {
+                        return elementToLoad.loadedElement.canLeave();
+                    }
                 }
             });
         })();

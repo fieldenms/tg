@@ -3,24 +3,30 @@ package ua.com.fielden.platform.web.test.server;
 import java.io.FileInputStream;
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.SortedSet;
 
 import org.joda.time.DateTime;
 
+import fielden.config.ApplicationDomain;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.sample.domain.ITgPerson;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
+import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
@@ -29,15 +35,15 @@ import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.ui.config.MainMenu;
-import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFactory;
 
 /**
  * This is a convenience class for (re-)creation of the development database and its population for Web UI Testing Server.
@@ -54,16 +60,16 @@ import ua.com.fielden.platform.ui.config.controller.mixin.MainMenuStructureFacto
  */
 public class PopulateDb extends DomainDrivenDataPopulation {
 
-    private final TgTestApplicationDomain applicationDomainProvider = new TgTestApplicationDomain();
+    private final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
 
-    private PopulateDb(final IDomainDrivenTestCaseConfiguration config) {
-        super(config);
+    private PopulateDb(final IDomainDrivenTestCaseConfiguration config, final Properties props) {
+        super(config, props);
     }
 
     public static void main(final String[] args) throws Exception {
         final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application.properties";
         final FileInputStream in = new FileInputStream(configFileName);
-        final Properties props = IDomainDrivenTestCaseConfiguration.hbc;
+        final Properties props = new Properties();
         props.load(in);
         in.close();
 
@@ -72,23 +78,36 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         props.put("hibernate.format_sql", "true");
         props.put("hibernate.hbm2ddl.auto", "create");
 
-        final IDomainDrivenTestCaseConfiguration config = new DataPopulationConfig();
+        final IDomainDrivenTestCaseConfiguration config = new DataPopulationConfig(props);
 
-        final PopulateDb popDb = new PopulateDb(config);
+        final PopulateDb popDb = new PopulateDb(config, props);
         popDb.createAndPopulate();
     }
 
     @Override
     protected void populateDomain() {
         System.out.println("Creating and populating the development database...");
-        final ITgPerson aoPerson = (ITgPerson) ao(TgPerson.class);
-        aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name(), IDomainDrivenTestCaseConfiguration.hbc.getProperty("private-key"));
-        aoPerson.populateNew("Demo", "User", "Demo User", "DEMO", IDomainDrivenTestCaseConfiguration.hbc.getProperty("private-key"));
 
-        final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies."));
+        // VIRTUAL_USER is a virtual user (cannot be persisted) and has full access to all security tokens
+        // It should always be used as the current user for data population activities
+        final IUser coUser = co(User.class);
+        final User u = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true);
+        final IUserProvider up = getInstance(IUserProvider.class);
+        up.setUser(u);
+
+        final User _su = coUser.save(new_(User.class, User.system_users.SU.name()).setBase(true).setEmail("SU@demoapp.com").setActive(true));
+        final User su = coUser.resetPasswd(_su, _su.getKey());
+        final User _demo = co(User.class).save(new_(User.class, "DEMO").setBasedOnUser(su).setEmail("DEMO@demoapp.com").setActive(true));
+        final User demo = coUser.resetPasswd(_demo, _demo.getKey());
+
+        final ITgPerson aoPerson = (ITgPerson) co(TgPerson.class);
+        aoPerson.populateNew("Super", "User", "Super User", User.system_users.SU.name());
+        aoPerson.populateNew("Demo", "User", "Demo User", "DEMO");
+
+        final UserRole admin = save(new_(UserRole.class, "ADMINISTRATION", "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
         System.out.println("admin.getId() == " + admin.getId());
 
-        final User su = ((IUser) ao(User.class)).findByKey(User.system_users.SU.name());
+        System.out.println("Settign up current user SU and its permissions...");
         save(new_composite(UserAndRoleAssociation.class, su, admin));
 
         // populate testing entities
@@ -113,14 +132,15 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgPersistentEntityWithProperties booleanEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY7").setBooleanProp(true).setDesc("Description for entity with key 7.").setRequiredValidatedProp(30));
         System.out.println("booleanEnt1.getId() == " + booleanEnt1.getId());
 
-        final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(9999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
+        final TgPersistentEntityWithProperties dateEnt1 = save(new_(TgPersistentEntityWithProperties.class, "KEY8").setDateProp(new DateTime(3609999L).toDate()).setDesc("Description for entity with key 8.").setRequiredValidatedProp(30));
         System.out.println("dateEnt1.getId() == " + dateEnt1.getId());
 
         final TgPersistentEntityWithProperties de = new_(TgPersistentEntityWithProperties.class, "DEFAULT_KEY")
                 // please note that proxies are not created for 'null' entity properties and regular (date, string..) properties!
                 // .setProducerInitProp(ent1)
-                .setIntegerProp(7).setMoneyProp(new Money("7.0", Currency.getInstance("USD"))).setBigDecimalProp(new BigDecimal(7.7))
-                .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30);
+                .setIntegerProp(7).setMoneyProp(new Money("7.0", Currency.getInstance("USD"))).setBigDecimalProp(new BigDecimal("7.7"))
+                .setStringProp("ok_def").setBooleanProp(true).setDateProp(new DateTime(7777L).toDate()).setRequiredValidatedProp(30)
+                .setColourProp(Colour.RED).setHyperlinkProp(new Hyperlink("https://www.fielden.com.au"));
         de.setDesc("Default entity description");
         final TgPersistentEntityWithProperties defaultEnt = save(de);
         System.out.println("defaultEnt.getId() == " + defaultEnt.getId());
@@ -157,7 +177,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgEntityWithPropertyDependency entWithPropDependency = save(new_(TgEntityWithPropertyDependency.class, "KEY1").setProperty("IS"));
         System.out.println("entWithPropDependency.getId() == " + entWithPropDependency.getId());
 
-        final User demo = ((IUser) ao(User.class)).findByKey("DEMO");
         save(new_composite(UserAndRoleAssociation.class, demo, admin));
 
         final UserRole stationMgr = save(new_(UserRole.class, "STATION_MGR", "A role, which has access to the the station managing functionality."));
@@ -194,16 +213,35 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         final TgCollectionalSerialisationParent csp1 = (TgCollectionalSerialisationParent) save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
         save(new_composite(TgCollectionalSerialisationChild.class, csp1, "1").setDesc("desc1"));
+
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY1").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY2"));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY3").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY4").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "bigDecimalProp")));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY5").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "entityProp")));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY6").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "stringProp")));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY7").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "booleanProp")));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY8").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "dateProp")));
         
-        final MainMenu mainMenu = new_(MainMenu.class, "IRRELEVANT");
-        mainMenu.setMenuItems(MainMenuStructureFactory.toStrings(config.getInstance(TemplateMainMenu.class).build()));
-        save(mainMenu);
+        final TgEntityWithTimeZoneDates timeZone1 = save(new_(TgEntityWithTimeZoneDates.class, "KEY1").setDatePropUtc(new Date(3609999)));
+        System.out.println("timeZone1.getId() == " + timeZone1.getId());
+        final TgEntityWithTimeZoneDates timeZone2 = save(new_(TgEntityWithTimeZoneDates.class, "KEY2").setDatePropUtc(new Date(1473057180015L)));
+        System.out.println("timeZone2.getId() == " + timeZone2.getId());
+        final TgEntityWithTimeZoneDates timeZone3 = save(new_(TgEntityWithTimeZoneDates.class, "KEY3").setDatePropUtc(new Date(1473057204015L)));
+        System.out.println("timeZone3.getId() == " + timeZone3.getId());
+        final TgEntityWithTimeZoneDates timeZone4 = save(new_(TgEntityWithTimeZoneDates.class, "KEY4").setDatePropUtc(new Date(1473057204000L)));
+        System.out.println("timeZone4.getId() == " + timeZone4.getId());
+        final TgEntityWithTimeZoneDates timeZone5 = save(new_(TgEntityWithTimeZoneDates.class, "KEY5").setDatePropUtc(new Date(1473057180000L)));
+        System.out.println("timeZone5.getId() == " + timeZone5.getId());
+        
+        final TgGeneratedEntity genEntity1 = save(new_(TgGeneratedEntity.class).setEntityKey("KEY1").setCreatedBy(su));
+        System.out.println("genEntity1.getId() == " + genEntity1.getId());
 
         try {
             final IApplicationSettings settings = config.getInstance(IApplicationSettings.class);
             final SecurityTokenProvider provider = new SecurityTokenProvider(settings.pathToSecurityTokens(), settings.securityTokensPackageName()); //  IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.path"), IDomainDrivenTestCaseConfiguration.hbc.getProperty("tokens.package")
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
-            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, ao(SecurityRoleAssociation.class));
+            final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co(SecurityRoleAssociation.class));
             final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
             for (final SecurityTokenNode securityNode : topNodes) {
                 alg.search(securityNode, predicate);

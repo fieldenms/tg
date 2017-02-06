@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -39,7 +40,7 @@ public final class AnnotationReflector {
     private final static Logger logger = Logger.getLogger(AnnotationReflector.class);
 
     /** A global lazy static cache of annotations, which is used for annotation information retrieval. */
-    private final static Map<FieldOrMethodKey, Map<Class<? extends Annotation>, Annotation>> annotations = new HashMap<>();
+    private final static ConcurrentHashMap<FieldOrMethodKey, Map<Class<? extends Annotation>, Annotation>> annotations = new ConcurrentHashMap<>();
 
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -78,7 +79,7 @@ public final class AnnotationReflector {
             for (final Annotation ann : method.getAnnotations()) {
                 newCached.put(ann.annotationType(), ann);
             }
-            annotations.put(methodKey, newCached);
+            annotations.putIfAbsent(methodKey, newCached);
         }
         return annotations.get(methodKey).values();
         //	return Arrays.asList(method.getAnnotations()); // make some caching
@@ -160,9 +161,10 @@ public final class AnnotationReflector {
         return newCached;
     }
 
+    private static final Empty emptyAnnotation = new Empty();
     private static <T extends Annotation> Annotation cacheAnnotation(final AccessibleObject accesibleObject, final Class<T> annotationClass, final Map<Class<? extends Annotation>, Annotation> annByAccObjectNotNull) {
         final T ann = accesibleObject.getAnnotation(annotationClass);
-        final Annotation annNotNull = ann == null ? new Empty() : ann; // TODO a singleton object for Empty?!
+        final Annotation annNotNull = ann == null ? emptyAnnotation : ann;
         annByAccObjectNotNull.put(annotationClass, annNotNull);
         return annNotNull;
     }
@@ -285,7 +287,7 @@ public final class AnnotationReflector {
      * @param type
      * @return
      */
-    public static Class<? extends Comparable> getKeyType(final Class<?> type) {
+    public static Class<? extends Comparable<?>> getKeyType(final Class<?> type) {
         final KeyType keyType = getAnnotationForClass(KeyType.class, type);
         return keyType != null ? keyType.value() : null;
     }

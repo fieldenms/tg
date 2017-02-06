@@ -2,9 +2,11 @@ package ua.com.fielden.platform.web.menu.module.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.menu.ModuleMenuItem;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
@@ -28,7 +30,7 @@ public class WebMenuItem implements IExecutable {
         this.view = view;
     }
 
-    public WebSubMenuItem addSubMenuItem(final String title) {
+    public WebSubMenuItem addMenuItem(final String title) {
         final WebSubMenuItem subMenuItem = new WebSubMenuItem(title);
         subItems.add(subMenuItem);
         return subMenuItem;
@@ -38,7 +40,7 @@ public class WebMenuItem implements IExecutable {
     public JsCode code() {
         final String code = "{ title: \"" + this.title + "\", " +
                 "description: \"" + this.description + "\"" +
-                (this.subItems.size() > 0 ? ", submenu: [" + StringUtils.join(subItems, ",") + "]" : "") +
+                (this.subItems.size() > 0 ? ", menu: [" + StringUtils.join(subItems, ",") + "]" : "") +
                 (this.view != null ? ", view: " + view.code() : "") +
                 "}";
         return new JsCode(code);
@@ -47,5 +49,17 @@ public class WebMenuItem implements IExecutable {
     @Override
     public String toString() {
         return code().toString();
+    }
+
+    public ModuleMenuItem getModuleMenuItem() {
+        final ModuleMenuItem menuItem = new ModuleMenuItem();
+        menuItem.setKey(title);
+        menuItem.setDesc(description);
+        if (view != null) {
+            menuItem.setView(view.getView());
+        } else if (subItems != null) {
+            menuItem.setMenu(subItems.stream().map(subItem -> subItem.getMenuItem()).collect(Collectors.toList()));
+        }
+        return menuItem;
     }
 }

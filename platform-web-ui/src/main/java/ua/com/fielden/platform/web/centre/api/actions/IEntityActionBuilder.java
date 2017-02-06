@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
  * @param <T>
  */
 public interface IEntityActionBuilder<T extends AbstractEntity<?>> {
-    IEntityActionBuilder0<T> addAction(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity);
+    IEntityActionBuilder0WithViews<T> addAction(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> functionalEntity);
 
     /**
      * In case where no action should be associated with places that have default actions associated with them automatically.
@@ -24,6 +24,6 @@ public interface IEntityActionBuilder<T extends AbstractEntity<?>> {
      *
      * @return
      */
-    IEntityActionBuilder7<T> noAction();
+    IEntityActionBuilder7a<T> noAction();
 
 }

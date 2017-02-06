@@ -269,6 +269,26 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
           ua.com.fielden.platform.entity.annotation.MapTo)}
+</template><template autoinsert="true" context="java" deleted="false" description="Generates a stub for the critOnly entity property." enabled="true" name="tgprop-critOnly">@IsProperty
+@CritOnly(Type.MULTI)
+@Title(value = "${Title}", desc = "${Desc}")
+private ${type} ${name};${cursor}
+
+@Observable
+public ${enclosing_type} set${Name}(final ${type} ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public ${type} get${Name}() {
+    return ${name};
+}
+
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty, 
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.CritOnly,
+          ua.com.fielden.platform.entity.annotation.CritOnly.Type)}
 </template><template autoinsert="true" context="java-statements" deleted="false" description="Query stub for EntityAggregates" enabled="true" name="tgquery-aggregates">final AggregatedResultQueryModel query = ${cursor}select(${type}.class).yield().prop("prop1").as("myresult").modelAsAggregate();
 final fetch&lt;EntityAggregates&gt; fetch = fetch(EntityAggregates.class).with("prop1");
 final OrderingModel orderBy = orderBy().prop("prop1").asc().model();
@@ -303,11 +323,17 @@ ${imst:importStatic(ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils
 		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from,
 		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy,
 		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument,
 		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllAndInstrument,
 		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnlyAndInstrument,
 		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates,
 		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalc,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAllInclCalcAndInstrument,
 		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument,
+		            ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly,
                     ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select)}   
 
 ${:import(ua.com.fielden.platform.entity.query.model.EntityResultQueryModel,

@@ -368,7 +368,7 @@ public class EntityProxyOperationsTestCase {
 
     @Test
     public void method_proxiedPropertyNames_contains_names_of_proxied_properties() throws Exception {
-        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class, "entityProp", "intProp");
+        final Class<? extends TgOwnerEntity> ownerType = EntityProxyContainer.proxy(TgOwnerEntity.class, "intProp", "entityProp");
         
         // creation via factory
         final TgOwnerEntity owner = factory.newByKey(ownerType, "OWN1");
@@ -423,6 +423,16 @@ public class EntityProxyOperationsTestCase {
         assertTrue(owner.getProperty("entityProp").isProxy());
         assertTrue(owner.getProperty("intProp").isProxy());
 
+    }
+    
+    @Test
+    public void generated_types_are_cached_using_base_type_and_set_of_proxied_properties_as_key() {
+        final Class<? extends TgOwnerEntity> ownerType1 = EntityProxyContainer.proxy(TgOwnerEntity.class, "entityProp", "intProp", "booleanProp");
+        final Class<? extends TgOwnerEntity> ownerType2 = EntityProxyContainer.proxy(TgOwnerEntity.class, "intProp", "booleanProp", "entityProp");
+        final Class<? extends TgOwnerEntity> ownerType3 = EntityProxyContainer.proxy(TgOwnerEntity.class, "intProp", "booleanProp");
+
+        assertTrue(ownerType1 == ownerType2);
+        assertFalse(ownerType1 == ownerType3);
     }
 
 }

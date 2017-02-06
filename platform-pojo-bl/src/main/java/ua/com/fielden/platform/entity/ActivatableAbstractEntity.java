@@ -20,14 +20,13 @@ import ua.com.fielden.platform.entity.validation.annotation.GreaterOrEqual;
  *
  * @param <K>
  */
-public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends AbstractEntity<K> {
-    private static final long serialVersionUID = 1L;
+public abstract class ActivatableAbstractEntity<K extends Comparable<K>> extends AbstractPersistentEntity<K> {
 
     public static final String ACTIVE = "active";
     public static final String REF_COUNT = "refCount";
 
     @IsProperty
-    @MapTo("ACTIVE_FLAG_")
+    @MapTo
     @Title(value = "Active?", desc = "Designates whether an entity instance is active or not.")
     @BeforeChange(@Handler(ActivePropertyValidator.class))
     private boolean active;

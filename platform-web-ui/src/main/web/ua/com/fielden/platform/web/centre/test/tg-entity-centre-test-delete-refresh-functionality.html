@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>entity-centre basic tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="/resources/polymer/web-component-tester/browser.js"></script>
+    <script src="/resources/polymer/test-fixture/test-fixture-mocha.js"></script>
+    <script src="/resources/polymer/iron-test-helpers/mock-interactions.js"></script>
+
+    <link rel="import" href="/resources/polymer/test-fixture/test-fixture.html">
+
+    <link rel="import" href="/app/tg-reflector.html">
+    <link rel="import" href="/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiDeletionTestEntity">
+</head>
+
+<body>
+    <tg-reflector id="reflector"></tg-reflector>
+    <test-fixture id="CentreFixture">
+        <template>
+            <tg-MiDeletionTestEntity-centre id="centre" uuid="DELETION_TEST_CENTRE"></tg-MiDeletionTestEntity-centre>
+        </template>
+    </test-fixture>
+
+    <script>
+        suite('entity centre refresh after delete', function () {
+            var centre, reflector;
+
+            setup(function () {
+                centre = fixture('CentreFixture');
+                reflector = document.querySelector('#reflector');
+            });
+
+            test('refresh after entity deletion works', function (done) {
+                var old_postRun = centre._postRun;
+                var deleteAction, newAction, testingPhase, keyEditor, descEditor;
+
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+
+                    if (testingPhase === 'zero') {
+                        testingPhase = 'first';
+                        newAction._run();
+                    } else if (testingPhase === 'second') {
+                        assert.strictEqual(resultEntities.length, 1, "The number of refreshed entities is incorrect should be 1 but wass: " + resultEntities.length + ".");
+                        newAction._run();
+                    } else if (testingPhase === 'third') {
+                        assert.strictEqual(resultEntities.length, 2, "The number of refreshed entities is incorrect should be 2 but wass: " + resultEntities.length + ".");
+                        var entities = centre.$.egi.egiModel;
+                        var index;
+                        for (index = 0; index < entities.length; index++) {
+                            entities[index].selected = true;
+                        }
+                        testingPhase = 'finish';
+                        deleteAction._run();
+                    } else if (testingPhase === 'finish') {
+                        assert.strictEqual(resultEntities.length, 0, "The number of refreshed entities is incorrect should be 0 but wass: " + resultEntities.length + ".");
+                        centre._postRun = old_postRun;
+                        done();
+                    }
+                };
+
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    newAction = Polymer.dom(centre.$.egi.$$("#top_action_selctor")).getDistributedNodes()[0].children[0];
+                    newAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
+                        console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
+
+                        var outerMaster = newAction._masterReferenceForTesting;
+
+                        outerMaster.addEventListener('after-load', function (event) {
+                            var embeddedMaster = event.detail;
+
+                            embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {};
+
+                            embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
+                                this.async(function () {
+                                    var saveButton = embeddedMaster.querySelector("tg-action[role='save']");
+                                    var keyEditor = embeddedMaster.$.editor_4_key;
+                                    var descEditor = embeddedMaster.$.editor_4_desc;
+                                    if (testingPhase === 'first') {
+                                        keyEditor._editingValue = 'DE1';
+                                        keyEditor.commit();
+                                        descEditor._editingValue = 'DE DESCRIPTION 1';
+                                        descEditor.commit();
+                                        testingPhase = 'second';
+                                        saveButton._asyncRun();
+                                    } else if (testingPhase === 'second') {
+                                        keyEditor._editingValue = 'DE2';
+                                        keyEditor.commit();
+                                        descEditor._editingValue = 'DE DESCRIPTION 2';
+                                        descEditor.commit();
+                                        testingPhase = 'third';
+                                        saveButton._asyncRun();
+                                    }
+                                }.bind(this), 500);
+                            };
+                        });
+                    };
+                    deleteAction = Polymer.dom(centre.$.egi.$$("#top_action_selctor")).getDistributedNodes()[0].children[1];
+                    testingPhase = 'zero';
+                    centre.run();
+                };
+                centre.retrieve();
+            });
+        });
+    </script>
+
+</body>
+
+</html>

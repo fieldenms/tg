@@ -19,14 +19,14 @@ public class EntityBatchDeleterByIds<E extends AbstractEntity<?>> {
         this.entityMetadata = entityMetadata;
     }
 
-    public <E extends AbstractEntity<?>> int deleteEntities(final String propName, final Collection<Long> ids) {
+    public int deleteEntities(final String propName, final Collection<Long> ids) {
         String deletionSql = composeDeletionSql(ids, propName);
         EntityHibernateDeletionQueryProducer entityHibernateDeletionQueryProducer = new EntityHibernateDeletionQueryProducer(deletionSql, Collections.<String, Object> emptyMap());
         Query sqlQuery = entityHibernateDeletionQueryProducer.produceHibernateQuery(session);
         return sqlQuery.executeUpdate();
     }
 
-    private <E extends AbstractEntity<?>> String composeDeletionSql(final Collection<Long> ids, final String propName) {
+    private String composeDeletionSql(final Collection<Long> ids, final String propName) {
         String tableName = entityMetadata.getTable();
         String propColumn = entityMetadata.getProps().get(propName).getColumn().getName();
         String idsCommaSeparated = StringUtils.join(ids, ",");

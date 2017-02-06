@@ -8,12 +8,14 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
@@ -26,7 +28,11 @@ import ua.com.fielden.platform.sample.domain.validators.DateValidator;
 import ua.com.fielden.platform.sample.domain.validators.EntityValidator;
 import ua.com.fielden.platform.sample.domain.validators.RequiredValidatedPropValidator;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.types.markers.IColourType;
+import ua.com.fielden.platform.types.markers.IHyperlinkType;
 
 /**
  * Master entity object.
@@ -39,6 +45,7 @@ import ua.com.fielden.platform.types.Money;
 @CompanionObject(ITgPersistentEntityWithProperties.class)
 @MapEntityTo
 @DescTitle(value = "Desc", desc = "Some desc description")
+@DisplayDescription
 public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     private static final long serialVersionUID = 1L;
 
@@ -153,6 +160,38 @@ public class TgPersistentEntityWithProperties extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Status", desc = "The current status of this entity")
     private TgPersistentStatus status;
+
+    @IsProperty
+    @PersistentType(userType = IColourType.class)
+    @Title(value = "Colour prop", desc = "Colour prop description")
+    @MapTo
+    private Colour colourProp;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "Hyperlink", desc = "A property of type Hyperlink.")
+    @PersistentType(userType = IHyperlinkType.class)
+    private Hyperlink hyperlinkProp;
+
+    @Observable
+    public TgPersistentEntityWithProperties setHyperlinkProp(final Hyperlink hyperlinkProp) {
+        this.hyperlinkProp = hyperlinkProp;
+        return this;
+    }
+
+    public Hyperlink getHyperlinkProp() {
+        return hyperlinkProp;
+    }
+
+    @Observable
+    public TgPersistentEntityWithProperties setColourProp(final Colour prop) {
+        this.colourProp = prop;
+        return this;
+    }
+
+    public Colour getColourProp() {
+        return colourProp;
+    }
 
     @Observable
     public TgPersistentEntityWithProperties setStatus(final TgPersistentStatus status) {

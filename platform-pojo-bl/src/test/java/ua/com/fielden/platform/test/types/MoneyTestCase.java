@@ -11,14 +11,14 @@ public class MoneyTestCase extends TestCase {
 
     public void testPlus() {
         // ---------------------------------------------------------
-        Money m1 = new Money(new BigDecimal(1.53d), Currency.getInstance("UAH")), m2 = new Money(new BigDecimal(3.41d), Currency.getInstance("UAH"));
+        Money m1 = new Money(new BigDecimal("1.53"), Currency.getInstance("UAH")), m2 = new Money(new BigDecimal("3.41"), Currency.getInstance("UAH"));
 
         Money m = m1.plus(m2);
         assertEquals("4.9400", m.getAmount().toString());
 
         // ---------------------------------------------------------
-        m1 = new Money(new BigDecimal(100.53d), Currency.getInstance("UAH"));
-        m2 = new Money(new BigDecimal(300.41d), Currency.getInstance("UAH"));
+        m1 = new Money(new BigDecimal("100.53"), Currency.getInstance("UAH"));
+        m2 = new Money(new BigDecimal("300.41"), Currency.getInstance("UAH"));
 
         m = m1.plus(m2);
         assertEquals("400.9400", m.getAmount().toString());
@@ -35,14 +35,14 @@ public class MoneyTestCase extends TestCase {
 
     public void testMinus() {
         // ---------------------------------------------------------
-        Money m1 = new Money(new BigDecimal(1.53d), Currency.getInstance("UAH")), m2 = new Money(new BigDecimal(3.41d), Currency.getInstance("UAH"));
+        Money m1 = new Money(new BigDecimal("1.53"), Currency.getInstance("UAH")), m2 = new Money(new BigDecimal("3.41"), Currency.getInstance("UAH"));
 
         Money m = m2.minus(m1);
         assertEquals("1.8800", m.getAmount().toString());
 
         // ---------------------------------------------------------
-        m1 = new Money(new BigDecimal(1.53d), Currency.getInstance("UAH"));
-        m2 = new Money(new BigDecimal(3.41d), Currency.getInstance("UAH"));
+        m1 = new Money(new BigDecimal("1.53"), Currency.getInstance("UAH"));
+        m2 = new Money(new BigDecimal("3.41"), Currency.getInstance("UAH"));
 
         m = m2.minus(m1);
         assertEquals("1.8800", m.getAmount().toString());
@@ -59,13 +59,13 @@ public class MoneyTestCase extends TestCase {
 
     public void testMultiply() {
         // ---------------------------------------------------------
-        Money m = new Money(new BigDecimal(4.89d), Currency.getInstance("UAH"));
-        final BigDecimal value = new BigDecimal(0.35d);
+        Money m = new Money(new BigDecimal("4.89"), Currency.getInstance("UAH"));
+        final BigDecimal value = new BigDecimal("0.35");
 
         m = m.multiply(value);
         assertEquals("1.7115", m.getAmount().toString());
         // ---------------------------------------------------------
-        m = new Money(new BigDecimal(400.89d), Currency.getInstance("UAH"));
+        m = new Money(new BigDecimal("400.89"), Currency.getInstance("UAH"));
 
         m = m.multiply(value);
         assertEquals("140.3115", m.getAmount().toString());
@@ -84,14 +84,14 @@ public class MoneyTestCase extends TestCase {
 
     public void testDivide() {
         // ---------------------------------------------------------
-        Money m = new Money(new BigDecimal(4.89d), Currency.getInstance("UAH"));
-        final BigDecimal value = new BigDecimal(1.37d);
+        Money m = new Money(new BigDecimal("4.89"), Currency.getInstance("UAH"));
+        final BigDecimal value = new BigDecimal("1.37");
 
         m = m.divide(value);
         assertEquals("3.5693", m.getAmount().toString());
 
         // ---------------------------------------------------------
-        m = new Money(new BigDecimal(400.89d), Currency.getInstance("UAH"));
+        m = new Money(new BigDecimal("400.89"), Currency.getInstance("UAH"));
 
         m = m.divide(value);
         assertEquals("292.6204", m.getAmount().toString());

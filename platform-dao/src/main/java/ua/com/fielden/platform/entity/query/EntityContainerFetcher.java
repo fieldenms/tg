@@ -47,12 +47,11 @@ public class EntityContainerFetcher {
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersForIdOnlyQuery(final QueryExecutionModel<E, ?> queryModel, final Class<E> resultType, final Integer pageNumber, final Integer pageCapacity) throws Exception {
         final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel) queryModel.getQueryModel()).model();
         
-        final QueryExecutionModel<E,EntityResultQueryModel<E>> idOnlyQem = from(idOnlyModel).
-        with(queryModel.getOrderModel()).
-        with(queryModel.getFetchModel()).
-        with(queryModel.getParamValues()).model();
-        
-        idOnlyQem.lightweight();
+        final QueryExecutionModel<E,EntityResultQueryModel<E>> idOnlyQem = from(idOnlyModel)
+        .with(queryModel.getOrderModel())
+        .with(queryModel.getFetchModel())
+        .with(queryModel.getParamValues())
+        .lightweight().model();
         
         return listAndEnhanceContainers(idOnlyQem, pageNumber, pageCapacity);
     }

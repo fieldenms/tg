@@ -6,16 +6,13 @@ import org.restlet.Application;
 import org.restlet.Restlet;
 import org.restlet.routing.Router;
 
-import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.sample.domain.ITgPerson;
-import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.factories.EntityInstanceResourceFactory;
-import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
-
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+
+import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.sample.domain.TgPerson;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.web.security.AbstractWebResourceGuard;
 
 /**
  * This is a web application specific to testing of {@link AbstractWebResourceGuard};
@@ -49,8 +46,7 @@ class WebResourceGuardTestWebApplication extends Application {
         final Router router = new Router(getContext());
 
         // and add some other resource to be accessed
-        final Restlet webResource = new EntityInstanceResourceFactory<TgPerson, ITgPerson>(ITgPerson.class, injector, entityFactory);
-        router.attach(format("/users/{username}/%s/{entity-id}", TgPerson.class.getSimpleName()), webResource);
+        router.attach(format("/users/{username}/%s/{entity-id}", TgPerson.class.getSimpleName()), new TestResource());
 
         // setup resource guard for the whole router
         final AbstractWebResourceGuard guard = new AbstractWebResourceGuard(getContext(), "tgdev.com", "/", injector) {

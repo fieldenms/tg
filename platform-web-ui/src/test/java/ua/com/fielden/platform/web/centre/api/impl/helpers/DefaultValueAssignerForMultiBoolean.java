@@ -18,7 +18,7 @@ public class DefaultValueAssignerForMultiBoolean implements IValueAssigner<Multi
 
     @Override
     public Optional<MultiCritBooleanValueMnemonic> getValue(final CentreContext<TgWorkOrder, ?> entity, final String name) {
-        return null;
+        return Optional.empty();
     }
 
 

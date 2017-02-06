@@ -23,20 +23,20 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.ResultOnly;
+import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
-import ua.com.fielden.platform.swing.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A domain tree representation for entity centres specific. A first tick means "include to criteria", second -- "include to result-set".<br>
- * 
+ *
  * There are no parameters for first tick, parameters for second tick configure simple properties aggregation for result-set (aka Totals).
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresentation implements ICentreDomainTreeRepresentation {
     /**
@@ -66,14 +66,14 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
     /**
      * A first tick representation for entity centres specific. <br>
      * <br>
-     * 
+     *
      * A checked tick means that a property (no parameters can be applied) should be added to entity centre criteria.<br>
      * <br>
-     * 
+     *
      * For a collectional property an action "Create calculated property..." should be used to create aggregated property (or more complex expression).
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected static class AddToCriteriaTick extends AbstractTickRepresentation implements IAddToCriteriaTickRepresentation {
         private final EnhancementPropertiesMap<Object> propertiesDefaultValues1;
@@ -245,14 +245,14 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
     /**
      * A second tick representation for entity centres specific. <br>
      * <br>
-     * 
+     *
      * A checked tick means that a property (with a couple of Totals parameters applied) should be added to entity centre result-set.<br>
      * <br>
-     * 
+     *
      * For a collectional property an action "Create calculated property..." should be used to create aggregated property (or more complex expression).
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     protected static class AddToResultSetTick extends AbstractTickRepresentation implements IAddToResultTickRepresentation {
         private final EnhancementPropertiesMap<Integer> propertiesWidths;
@@ -279,7 +279,7 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 
             return (super.isDisabledImmutablyLightweight(root, property)) || // a) disable manually disabled properties b) the checked by default properties should be disabled (immutable checking)
                     (!isEntityItself && AnnotationReflector.isPropertyAnnotationPresent(CritOnly.class, penultAndLast.getKey(), penultAndLast.getValue())) || // disable crit-only properties (the children should be excluded!)
-                    (isCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and collections itself
+                    (isNotShortCollectionOrInCollectionHierarchy(root, property)) || // disable properties in collectional hierarchy and not short collections itself
                     // no need to disable synthetic stuff --> (Reflector.isSynthetic(propertyType)) || // disable synthetic entities itself (and also synthetic properties -- rare case)
                     (!isEntityItself && isCalculatedAndOfTypes(root, property, CalculatedPropertyCategory.ATTRIBUTED_COLLECTIONAL_EXPRESSION)) || // disable ATTRIBUTED_COLLECTIONAL_EXPRESSION properties for result-set tick
                     isDisabledImmutablyPropertiesOfEntityType(propertyType, keyTypeAnnotation); // disable properties of "entity with AE key" type
@@ -385,9 +385,9 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
 
     /**
      * A specific Kryo serialiser for {@link CentreDomainTreeRepresentation}.
-     * 
+     *
      * @author TG Team
-     * 
+     *
      */
     public static class CentreDomainTreeRepresentationSerialiser extends AbstractDomainTreeRepresentationSerialiser<CentreDomainTreeRepresentation> {
         public CentreDomainTreeRepresentationSerialiser(final ISerialiser serialiser) {

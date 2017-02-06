@@ -1,9 +1,8 @@
 <link rel="import" href="/resources/polymer/polymer/polymer.html">
-<!--<link rel="import" href="/resources/actions/tg-ui-action.html">-->
 
 <dom-module id="tg-property-column">
     <template>
-        <content id="action_selector" select="tg-ui-action,tg-page-action" hidden></content>
+        <content id="action_selector" select="tg-ui-action" hidden></content>
         <content id="summary_selection" select="tg-summary-property" hidden></content>
     </template>
 </dom-module>
@@ -22,6 +21,7 @@
                 growFactor: Number,
                 columnTitle: String,
                 columnDesc: String,
+                customAction: Object
             },
 
             hostAttributes: {
@@ -38,11 +38,14 @@
                 this.customAction = Polymer.dom(this.$.action_selector).getDistributedNodes().length > 0 ? Polymer.dom(this.$.action_selector).getDistributedNodes()[0] : null;
             },
 
+            /** Executes a custom action and returns true if the action was provided. Otherwise, simply returns false to indicate that there was no custom action to be executed. */
             runAction: function (entity) {
                 if (this.customAction) {
                     this.customAction.currentEntity = entity;
                     this.customAction._run();
+                    return true;
                 }
+                return false;
             }
         });
     })();

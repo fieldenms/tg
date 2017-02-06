@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.migration;
 
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,19 +12,18 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao.DomainMetadataAnalyser;
-import ua.com.fielden.platform.dao.DynamicEntityDao;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.Finder;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 public class IdCache {
-    private final Map<Class<?>, Map<Object, Integer>> cache = new HashMap<Class<?>, Map<Object, Integer>>();
+    private final Map<Class<?>, Map<Object, Integer>> cache = new HashMap<>();
     private final DomainMetadataAnalyser dma;
-    private DynamicEntityDao dynamicDao;
+    private final ICompanionObjectFinder coFinder;
 
-    public IdCache(final DynamicEntityDao dynamicDao, final DomainMetadataAnalyser dma) {
-        this.dynamicDao = dynamicDao;
+    public IdCache(final ICompanionObjectFinder coFinder, final DomainMetadataAnalyser dma) {
+        this.coFinder = coFinder;
         this.dma = dma;
     }
 
@@ -31,7 +33,7 @@ public class IdCache {
         }
     }
 
-    protected Map<Object, Integer> getCacheForType(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
+    protected Map<Object, Integer> getCacheForType(final Class<? extends AbstractEntity<?>> entityType) {
         if (!cache.containsKey(entityType)) {
             cache.put(entityType, retrieveData(entityType));
         }
@@ -41,7 +43,7 @@ public class IdCache {
 
     private SortedSet<String> getKeyFields(final Class<? extends AbstractEntity<?>> entityType) {
         final List<String> keyMembersFirstLevelProps = Finder.getFieldNames(Finder.getKeyMembers(entityType));
-        return new TreeSet<String>(dma.getLeafPropsFromFirstLevelProps(null, entityType, new HashSet<String>(keyMembersFirstLevelProps)));
+        return new TreeSet<>(dma.getLeafPropsFromFirstLevelProps(null, entityType, new HashSet<String>(keyMembersFirstLevelProps)));
     }
 
     private Object prepareValueForCache(final AbstractEntity<?> entity, final SortedSet<String> fields) {
@@ -56,13 +58,14 @@ public class IdCache {
         }
     }
 
-    private Map<Object, Integer> retrieveData(final Class<? extends AbstractEntity<?>> entityType) throws Exception {
+    private Map<Object, Integer> retrieveData(final Class<? extends AbstractEntity<?>> entityType) {
+        final IEntityDao co = coFinder.find(entityType);
+        
         final Map<Object, Integer> result = new HashMap<>();
-        dynamicDao.setEntityType(entityType);
-        final List<AbstractEntity> entities = dynamicDao.getAllEntities(from(select(entityType).model()).model());
+        final List<AbstractEntity<?>> entities = co.getAllEntities(from(select(entityType).model()).model());
 
         final SortedSet<String> keyFields = getKeyFields(entityType);
-        for (final AbstractEntity abstractEntity : entities) {
+        for (final AbstractEntity<?> abstractEntity : entities) {
             result.put(prepareValueForCache(abstractEntity, keyFields), abstractEntity.getId().intValue());
         }
 

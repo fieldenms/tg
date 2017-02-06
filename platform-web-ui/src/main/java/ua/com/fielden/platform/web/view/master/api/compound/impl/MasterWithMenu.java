@@ -24,14 +24,14 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
- * A compound entity master that has a menu.
+ * A compound entity master that has a menu, that extends {@link IMaster} contract.
  *
  * @author TG Team
  *
  * @param <T> -- a type of the main entity, which drives the logic of the master, such as Vehicle, WorkOrder.
  * @param <F> -- a type of the functional entity, which opens the compound master; its key has to be of the same type as the main entity.
  */
-public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> implements IMaster<F> {
+class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEntityWithCentreContext<T>> implements IMaster<F> {
 
     /**
      * Actions that represent menu items in a compound view.
@@ -40,16 +40,23 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
     private final IRenderable renderable;
     private final Logger logger = Logger.getLogger(getClass());
 
-    public MasterWithMenu(final Class<T> entityType, final Class<F> functionalEntityType, final List<EntityActionConfig> menuItemActions, final int defaultMenuItemIndex) {
-        logger.debug(format("Generating master with menu for entity %s, invoked by functional entity %s.", entityType.getSimpleName(), functionalEntityType.getSimpleName()));
+    /**
+     * Creates master with menu.
+     *
+     * @param functionalEntityType
+     * @param menuItemActions
+     * @param defaultMenuItemIndex
+     */
+    MasterWithMenu(final Class<F> functionalEntityType, final List<EntityActionConfig> menuItemActions, final int defaultMenuItemIndex) {
+        logger.debug(format("Generating master with menu invoked by functional entity %s.", functionalEntityType.getSimpleName()));
         if (defaultMenuItemIndex < 0 || defaultMenuItemIndex >= menuItemActions.size()) {
             throw new IllegalArgumentException(format("The default menu item index %s is outside of the range for the provided menu items.", defaultMenuItemIndex));
         }
-        
+
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
         importPaths.add("master/menu/tg-master-menu");
         importPaths.add("master/menu/tg-master-menu-item-section");
-        
+
         this.menuItemActions.addAll(menuItemActions);
 
         final List<FunctionalActionElement> menuItemActionsElements = new ArrayList<>();
@@ -63,7 +70,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
         final DomContainer menuItemActionsDom = new DomContainer();
         final DomContainer menuItemViewsDom = new DomContainer();
         final DomContainer menuItemsDom = new DomContainer();
-        
+
         for (final FunctionalActionElement el : menuItemActionsElements) {
             importPaths.add(el.importPath());
             menuItemActionsDom.add(el.render());
@@ -73,7 +80,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                     .attr("id", "mi" + el.numberOfAction)
                     .attr("class", "menu-item-section")
                     .attr("data-route", el.getDataRoute())
-                    .attr("title", el.getShortDesc()));
+                    .attr("section-title", el.getShortDesc()));
             menuItemsDom.add(
                     new DomElement("paper-item").attr("class", "menu-item").attr("data-route", el.getDataRoute())
                     .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 10px"))
@@ -92,6 +99,7 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                         + "    default-route='%s'\n"
                         + "    menu-actions='[[menuItemActions]]'\n"
                         + "    uuid='[[uuid]]'\n"
+                        + "    centre-uuid='[[centreUuid]]'\n"
                         + "    get-master-entity='[[_createContextHolderForEmbeddedViews]]'\n"
                         + "    refresh-compound-master='[[save]]'\n"
                         + "    augment-context-with-saved-entity='[[augmentContextWithSavedEntity]]'>\n"
@@ -100,11 +108,12 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
                         + menuItemViewsDom + "\n"
                         + "</tg-master-menu>",
                         this.menuItemActions.get(defaultMenuItemIndex).functionalEntity.get().getSimpleName()))
-                .replace("//@ready-callback", 
+                .replace("//@ready-callback",
                         format("self.menuItemActions = [%s];\n"
                              + "self.$.menu.parent = self;\n"
-                             + "self.canLeave = self.$.menu.canClose.bind(self.$.menu);\n", 
-                             jsMenuItemActionObjects)) // 
+                             + "self.canLeave = self.$.menu.canClose.bind(self.$.menu);\n",
+                                jsMenuItemActionObjects)) //
+                .replace("@prefDim", "null")
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 
@@ -127,4 +136,9 @@ public class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunct
         return Optional.empty();
     }
 
+    
+    @Override
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+    }
 }

@@ -42,7 +42,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @param entityType
      * @param withKeyAndDesc -- indicates whether fetch model should contain key and description properties
      * @param instrumented -- indicates whether fetched instances should be instrumented
-     * 
+     *
      */
     FetchProvider(final Class<T> entityType, final boolean withKeyAndDesc, final boolean instrumented) {
         this(entityType, new LinkedHashMap<>(), withKeyAndDesc, instrumented);
@@ -312,7 +312,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
 
     private static FetchProvider<AbstractEntity<?>> createDefaultFetchProviderForEntityTypedProperty(final Class<AbstractEntity<?>> propertyType) {
         // default fetch provider for entity-typed property should be with key and desc properties and without instrumentation
-        return new FetchProvider<AbstractEntity<?>>(propertyType, true, true);
+        return new FetchProvider<AbstractEntity<?>>(propertyType, true, false);
     }
 
     /**
@@ -363,7 +363,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private fetch<T> createFetchModel() {
         // need to exclude all crit-only properties from fetch model!
         final FetchProvider<T> providerWithoutCritOnlyProps = excludeCritOnlyProps(this);
-        fetch<T> fetchModel = instrumented ? 
+        fetch<T> fetchModel = instrumented ?
                 (withKeyAndDesc ? EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument(providerWithoutCritOnlyProps.entityType) : EntityQueryUtils.fetchOnlyAndInstrument(providerWithoutCritOnlyProps.entityType)) :
                 (withKeyAndDesc ? EntityQueryUtils.fetchKeyAndDescOnly(providerWithoutCritOnlyProps.entityType) : EntityQueryUtils.fetchOnly(providerWithoutCritOnlyProps.entityType));
         for (final Map.Entry<String, FetchProvider<AbstractEntity<?>>> entry : providerWithoutCritOnlyProps.propertyProviders.entrySet()) {
@@ -408,7 +408,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
         }
         return newProps;
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -458,10 +458,12 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     @Override
     public String toString() {
         return entityType.getSimpleName() + " {/n"
-                + propertyProviders.toString()
+                + "instrumented = " + instrumented + "/n"
+                + "withKeyAndDesc = " + withKeyAndDesc + "/n"
+                + propertyProviders.toString() + "/n"
                 + "}/n";
     }
-    
+
     @Override
     public boolean instrumented() {
         return instrumented;

@@ -2,23 +2,27 @@ package ua.com.fielden.platform.web.view.master;
 
 import java.util.Optional;
 
-import com.google.inject.Injector;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
+import ua.com.fielden.platform.dao.DefaultEntityProducerForCompoundMenuItem;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IEntityProducer;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCompoundMenuItem;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
+
+import com.google.inject.Injector;
 
 /**
  * Represents entity master.
@@ -55,7 +59,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
 
     /**
      * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
-     * 
+     *
      * @param entityType
      * @param entityProducerType
      * @param injector
@@ -67,7 +71,22 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
             final Injector injector) {
         return new EntityMaster<T>(entityType, entityProducerType, null, injector);
     }
-    
+
+    /**
+     * A convenience factory method for actions (implemented as functional entities) without the UI part (the master is still required to capture the execution context).
+     * <p>
+     * This version specifies no producer, which means that default one will be used.
+     *
+     * @param entityType
+     * @param injector
+     * @return
+     */
+    public static <T extends AbstractFunctionalEntityWithCentreContext<?>> EntityMaster<T> noUiFunctionalMaster(
+            final Class<T> entityType,
+            final Injector injector) {
+        return new EntityMaster<T>(entityType, null, null, injector);
+    }
+
     private IMaster<T> createDefaultConfig(final Class<T> entityType) {
         return new NoUiMaster<T>(entityType);
     }
@@ -94,7 +113,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
      * @return
      */
     public IEntityProducer<T> createEntityProducer() {
-        return entityProducerType == null ? createDefaultEntityProducer(injector.getInstance(EntityFactory.class), this.entityType)
+        return entityProducerType == null ? createDefaultEntityProducer(injector.getInstance(EntityFactory.class), this.entityType, this.coFinder)
                 : injector.getInstance(this.entityProducerType);
     }
 
@@ -103,8 +122,11 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
      *
      * @return
      */
-    public static <T extends AbstractEntity<?>> IEntityProducer<T> createDefaultEntityProducer(final EntityFactory factory, final Class<T> entityType) {
-        return new DefaultEntityProducerWithContext<T, T>(factory, entityType);
+    public static <T extends AbstractEntity<?>> IEntityProducer<T> createDefaultEntityProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder coFinder) {
+        if (AbstractFunctionalEntityForCompoundMenuItem.class.isAssignableFrom(entityType)) {
+            return new DefaultEntityProducerForCompoundMenuItem(factory, entityType, coFinder);
+        }
+        return new DefaultEntityProducerWithContext<T>(factory, entityType, coFinder);
     }
 
     /**
@@ -159,6 +181,7 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
                     .replace("@entity_type", entityType.getSimpleName())
                     .replace("<!--@tg-entity-master-content-->", "")
                     .replace("//@ready-callback", "")
+                    .replace("@prefDim", "null")
                     .replace("@noUiValue", "true")
                     .replace("@saveOnActivationValue", "true");
 
@@ -180,7 +203,21 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
         public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
             return Optional.empty();
         }
-
+        
+        @Override
+        public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+            throw new UnsupportedOperationException("Getting of action configuration is not supported.");
+        }
     }
-
+    
+    /**
+     * Returns action configuration for concrete action kind and its number in that kind's space.
+     * 
+     * @param actionKind
+     * @param actionNumber
+     * @return
+     */
+    public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
+        return masterConfig.actionConfig(actionKind, actionNumber);
+    }
 }
