@@ -66,17 +66,23 @@
                 selection.each(function (d) {
                     let rect = d3.select(this).append("rect").attr("class", "mark-rect");
                     let text = d3.select(this).append("text").attr("class", "mark-text").style("text-anchor", "middle").text(markerGenerator(d))
-                    let textBox = text.node().getBBox();
-                    rect.attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
+                    upadateMarkerSize(rect, text);
                 }).each(function () {
                     unscalableNodes.push(this);
                 });
             } else {
                 selection.each(function (d) {
-                    let text = d3.select(this).select(".mark-text").text(markerGenerator(d))
-                    let textBox = text.node().getBBox();
-                    d3.select(this).select(".mark-rect").attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
+                    upadateMarkerSize(d3.select(this).select(".mark-rect"), d3.select(this).select(".mark-text"));
                 });
+            }
+        };
+
+        const upadateMarkerSize = (rect, text) => {
+            let textBox = text.node().getBBox();
+            if (textBox.width !== 0 && textBox.height !== 0) {
+                rect.attr("x", textBox.x - 5).attr("y", textBox.y - 1).attr("width", textBox.width + 10).attr("height", textBox.height + 2);
+            } else {
+                setTimeout(() => upadateMarkerSize(rect, text), 100);
             }
         };
 
@@ -103,6 +109,28 @@
                 unscalableNode.remove(this);
             });
         }
+
+        const setXAxisLabelPosition = (xAxisLabel, xAxisGroup, w, h, options) => {
+            let axisBox = xAxisGroup.node().getBBox();
+            if (axisBox.width !== 0 && axisBox.height !== 0) {
+                xAxisLabel
+                    .attr("x", options.margin.left + w / 2)
+                    .attr("y", h + options.margin.top + xAxisGroup.node().getBBox().height + 10);
+            } else if (w !== 0 && h !== 0) {
+                setTimeout(() => setXAxisLabelPosition(xAxisLabel, xAxisGroup, w, h, options), 100);
+            }
+        };
+
+        const setYAxisLabelPosition = (yAxisLabel, yAxisGroup, w, h, options) => {
+            let axisBox = yAxisGroup.node().getBBox();
+            if (axisBox.width !== 0 && axisBox.height !== 0) {
+                yAxisLabel
+                    .attr("x", -options.margin.top - h / 2)
+                    .attr("y", options.margin.left - axisBox.width - 10);
+            } else if (w !== 0 && h !== 0) {
+                setTimeout(() => setYAxisLabelPosition(yAxisLabel, yAxisGroup, w, h, options), 100);
+            }
+        };
 
         d3.barChart = (container) => {
             let options = {
@@ -206,18 +234,16 @@
                 .attr("class", "x-axis-label")
                 .style("text-anchor", "middle")
                 .style("alignment-baseline", "hanging")
-                .attr("x", options.margin.left + w / 2)
-                .attr("y", h + options.margin.top + xAxisGroup.node().getBBox().height + 10)
-                .text(options.xAxis.label);
+                .text(options.xAxis.label)
+                .call(setXAxisLabelPosition, xAxisGroup, w, h, options);
             const yAxisLabel = d3.select(container)
                 .append("text")
                 .attr("class", "y-axis-label")
                 .style("text-anchor", "middle")
                 .style("alignment-baseline", "baseline")
-                .attr("x", -options.margin.top - h / 2)
-                .attr("y", options.margin.left - yAxisGroup.node().getBBox().width - 10)
-                .attr("transform", "rotate(-90)")
-                .text(options.yAxis.label);
+                .text(options.yAxis.label)
+                .call(setYAxisLabelPosition, yAxisGroup, w, h, options)
+                .attr("transform", "rotate(-90)");
 
             const updateChart = () => {
                 let oldY = yAxis.scale().invert(0);
@@ -267,13 +293,11 @@
                     .attr("y", options.margin.top - 10)
                     .text(options.label);
                 xAxisLabel
-                    .attr("x", options.margin.left + w / 2)
-                    .attr("y", h + options.margin.top + xAxisGroup.node().getBBox().height + 10)
-                    .text(options.xAxis.label);
+                    .text(options.xAxis.label)
+                    .call(setXAxisLabelPosition, xAxisGroup, w, h, options);
                 yAxisLabel
-                    .attr("x", -options.margin.top - h / 2)
-                    .attr("y", options.margin.left - yAxisGroup.node().getBBox().width - 10)
-                    .text(options.yAxis.label);
+                    .text(options.yAxis.label)
+                    .call(setYAxisLabelPosition, yAxisGroup, w, h, options);
                 //Update the container translation in order to remain current translate position when window size was changed
                 let newH = yAxis.scale()(oldY);
                 if (newH) {
