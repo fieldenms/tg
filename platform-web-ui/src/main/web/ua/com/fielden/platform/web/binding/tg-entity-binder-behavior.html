@@ -353,11 +353,11 @@
                     return this._reset(mph);
                 }).bind(self);
                 
-                self._provideExceptionOccured = function (entity, exceptionOccured) {
+                self._provideExceptionOccured = (function (entity, exceptionOccured) {
                     if (exceptionOccured !== null && this._reflector().isEntity(entity)) {
                         entity._setExceptionOccured(exceptionOccured);
                     }
-                };
+                }).bind(self);
                 
                 self._processRetrieverResponse = function (e) {
                 	self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccured) {

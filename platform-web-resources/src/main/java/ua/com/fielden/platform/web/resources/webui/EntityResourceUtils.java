@@ -30,7 +30,6 @@ import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
-import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -40,8 +39,9 @@ import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.EntityResourceDaoUtils;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -50,7 +50,6 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
-import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -732,7 +731,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     public static SavingInfoHolder restoreSavingInfoHolder(final Representation envelope, final RestServerUtil restUtil) {
         return restUtil.restoreJSONEntity(envelope, SavingInfoHolder.class);
     }
-
+    
     /**
      * Just saves the entity.
      *
@@ -742,44 +741,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public T save(final T entity, final Optional<Map<String, IContinuationData>> continuations) {
-        final boolean continuationsPresent = continuations.isPresent();
-        final CommonEntityDao<T> co = (CommonEntityDao<T>) this.co;
-        
-        // iterate over properties in search of the first invalid one (without required checks)
-        final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
-        .filter(mp -> mp.getFirstFailure() != null)
-        .findFirst().map(mp -> mp.getFirstFailure());
-        
-        // returns first failure if exists or successful result if there was no failure.
-        final Result isValid = firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
-        
-        if (isValid.isSuccessful()) {
-            if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null)) {
-                throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
-            } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null) {
-                entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
-            }
-        }
-        
-        // 1) non-persistent entities should always be saved (isDirty will always be true)
-        // 2) persistent but not persisted (new) entities should always be saved (isDirty will always be true)
-        // 3) persistent+persisted+dirty (by means of dirty properties existence) entities should always be saved
-        // 4) persistent+persisted+notDirty+inValid entities should always be saved: passed to companion 'save' method to process validation errors in domain-driven way by companion object itself
-        // 5) persistent+persisted+notDirty+valid entities saving should be skipped
-        if (!entity.isDirty() && entity.isValid().isSuccessful()) {
-            throw Result.failure("There are no changes to save.");
-        }
-        
-        if (continuationsPresent) {
-            co.setMoreData(continuations.get());
-        } else {
-            co.clearMoreData();
-        }
-        final T saved = co.save(entity);
-        if (continuationsPresent) {
-            co.clearMoreData();
-        }
-        return saved;
+        return EntityResourceDaoUtils.save(entity, continuations, (CommonEntityDao<T>) this.co);
     }
 
     /**
