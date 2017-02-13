@@ -194,11 +194,14 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             queryProperty.setValue(createdByCriteria);
             queryProperties.add(queryProperty);
         }
+        final EntityResultQueryModel<T> query;
         if (additionalQueryEnhancer.isPresent()) {
-            return DynamicQueryBuilder.createQuery(managedType, queryProperties, Optional.of(new Pair<>(additionalQueryEnhancer.get(), centreContextForQueryEnhancer))).model();
+            query = DynamicQueryBuilder.createQuery(managedType, queryProperties, Optional.of(new Pair<>(additionalQueryEnhancer.get(), centreContextForQueryEnhancer))).model();
         } else {
-            return DynamicQueryBuilder.createQuery(managedType, queryProperties).model();
+            query = DynamicQueryBuilder.createQuery(managedType, queryProperties).model();
         }
+        query.setFilterable(true);
+        return query;
     }
 
     /**
