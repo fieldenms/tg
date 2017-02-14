@@ -221,8 +221,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
         final SavingInfoHolder savingInfoHolder = EntityResourceUtils.restoreSavingInfoHolder(envelope, restUtil);
         final ArrayList<IContinuationData> conts = !savingInfoHolder.proxiedPropertyNames().contains("continuations") ? savingInfoHolder.getContinuations() : new ArrayList<>();
         final ArrayList<String> contProps = !savingInfoHolder.proxiedPropertyNames().contains("continuationProperties") ? savingInfoHolder.getContinuationProperties() : new ArrayList<>();
-        final Optional<Map<String, IContinuationData>> continuations = conts != null && !conts.isEmpty() ?
-                Optional.of(createContinuationsMap(conts, contProps)) : Optional.empty();
+        final Map<String, IContinuationData> continuations = conts != null && !conts.isEmpty() ?
+                createContinuationsMap(conts, contProps) : new LinkedHashMap<>();
         final T applied = EntityResource.restoreEntityFrom(savingInfoHolder, utils.getEntityType(), utils.entityFactory(), webUiConfig, companionFinder, serverGdtm, userProvider, critGenerator, 0);
 
         final Pair<T, Optional<Exception>> potentiallySavedWithException = save(applied, continuations);
@@ -488,7 +488,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends ServerResource 
      * @return if saving was successful -- returns saved entity with no exception if saving was unsuccessful with exception -- returns <code>validatedEntity</code> (to be bound to
      *         appropriate entity master) and thrown exception (to be shown in toast message)
      */
-    private Pair<T, Optional<Exception>> save(final T validatedEntity, final Optional<Map<String, IContinuationData>> continuations) {
+    private Pair<T, Optional<Exception>> save(final T validatedEntity, final Map<String, IContinuationData> continuations) {
         T savedEntity;
         try {
             // try to save the entity with its companion 'save' method

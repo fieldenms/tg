@@ -740,7 +740,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * 
      * @return
      */
-    public T save(final T entity, final Optional<Map<String, IContinuationData>> continuations) {
+    public T save(final T entity, final Map<String, IContinuationData> continuations) {
         return EntityResourceDaoUtils.save(entity, continuations, (CommonEntityDao<T>) this.co);
     }
 

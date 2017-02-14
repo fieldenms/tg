@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.entity;
 
 import java.util.Map;
-import java.util.Optional;
-
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
@@ -26,8 +24,8 @@ public class EntityResourceDaoUtils {
      * 
      * @return
      */
-    public static <T extends AbstractEntity<?>> T save(final T entity, final Optional<Map<String, IContinuationData>> continuations, final CommonEntityDao<T> co) {
-        final boolean continuationsPresent = continuations.isPresent();
+    public static <T extends AbstractEntity<?>> T save(final T entity, final Map<String, IContinuationData> continuations, final CommonEntityDao<T> co) {
+        final boolean continuationsPresent = !continuations.isEmpty();
         
         // iterate over properties in search of the first invalid one (without required checks)
         final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
@@ -38,9 +36,9 @@ public class EntityResourceDaoUtils {
         final Result isValid = firstFailure.isPresent() ? firstFailure.get() : Result.successful(entity);
         
         if (isValid.isSuccessful()) {
-            if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null)) {
+            if (entity.hasWarnings() && (!continuationsPresent || continuations.get("_acknowledgedForTheFirstTime") == null)) {
                 throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
-            } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null) {
+            } else if (entity.hasWarnings() && continuationsPresent && continuations.get("_acknowledgedForTheFirstTime") != null) {
                 entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
             }
         }
@@ -55,7 +53,7 @@ public class EntityResourceDaoUtils {
         }
         
         if (continuationsPresent) {
-            co.setMoreData(continuations.get());
+            co.setMoreData(continuations);
         } else {
             co.clearMoreData();
         }
