@@ -308,7 +308,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final QueryExecutionContext queryExecutionContext = new QueryExecutionContext(getSession(), getEntityFactory(), getCoFinder(), domainMetadata, null, null, universalConstants, idOnlyProxiedEntityTypeCache);
         final List<EntityAggregates> ids = new EntityFetcher(queryExecutionContext).getEntities(from(model).lightweight().model());
         final int count = ids.size();
-        if (count == 1 && !(entity.getId().longValue() == ((Number) ids.get(0).get(AbstractEntity.ID)).longValue())) {
+        if (count == 1 && entity.getId().longValue() != ((Number) ids.get(0).get(AbstractEntity.ID)).longValue()) {
             throw new EntityCompanionException(format("Entity \"%s\" of type %s already exists.", entity, TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey()));
         }
 
@@ -348,16 +348,10 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             handleNonDirtyActivatableIfNecessary(entity, persistedEntity);
         }
 
-        // check if entity is valid after all the changes above
-        final Result res = persistedEntity.isValid();
-        if (res.isSuccessful()) {
-            getSession().update(persistedEntity);
-            persistedEntity.resetMetaState();
-            getSession().flush();
-            getSession().clear();
-        } else {
-            throw res;
-        }
+        // update entity
+        getSession().update(persistedEntity);
+        getSession().flush();
+        getSession().clear();
 
         return entityFetchOption.isPresent() ? findById(persistedEntity.getId(), entityFetchOption.get()) : persistedEntity;
     }
@@ -584,15 +578,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
 
         // save the entity
-        final Result result = entity.isValid();
-        if (result.isSuccessful()) {
-            getSession().save(entity);
-            entity.resetMetaState();
-            getSession().flush();
-            getSession().clear();
-        } else {
-            throw result;
-        }
+        getSession().save(entity);
+        getSession().flush();
+        getSession().clear();
 
         return entityFetchOption.isPresent() ? findById(entity.getId(), entityFetchOption.get()) : entity;
     }
