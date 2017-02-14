@@ -6,10 +6,10 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Locale;
 
-import org.hibernate.Session;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.dao.IEntityWithMoney;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.types.Money;
@@ -44,8 +44,9 @@ public class MoneyAndSimpleMoneyTestCase extends DbDrivenTestCase {
 
     @Test
     public void testThatRetrievedEntityWithMoneyIsObservable() {
-        final Session session = hibernateUtil.getSessionFactory().getCurrentSession();
-        final EntityWithMoney instance = (EntityWithMoney) session.createQuery("from " + EntityWithMoney.class.getName() + " where id = 1").uniqueResult();
+        hibernateUtil.getSessionFactory().getCurrentSession().close();
+        final IEntityWithMoney coEntityWithMoney = injector.getInstance(IEntityWithMoney.class);
+        final EntityWithMoney instance =  coEntityWithMoney.findById(1L);
         instance.addPropertyChangeListener("money", new PropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent evt) {

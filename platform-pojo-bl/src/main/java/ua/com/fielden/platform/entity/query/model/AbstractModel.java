@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.model;
 
+import static java.lang.String.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,9 +55,9 @@ public abstract class AbstractModel {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         for (final Pair<TokenCategory, Object> pair : tokens) {
-            sb.append("\n    " + StringUtils.rightPad(pair.getKey().toString(), 32, '.') + pair.getValue());
+            sb.append(format("\n\t%s%s", StringUtils.rightPad(pair.getKey().toString(), 32, '.'), pair.getValue()));
         }
         return sb.toString();
     }
