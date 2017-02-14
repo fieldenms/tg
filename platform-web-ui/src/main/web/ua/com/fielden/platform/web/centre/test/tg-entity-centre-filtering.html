@@ -41,7 +41,7 @@
                 centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
                     old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
 
-                    assert.strictEqual(resultEntities.length, 1, 'The count of resultant entities for the centre should be 0 -- FILTERED instance should be filtered out.');
+                    assert.strictEqual(resultEntities.length, 0, 'The count of resultant entities for the centre should be 0 -- FILTERED instance should be filtered out.');
 
                     centre._postRun = old_postRun;
                     done();
@@ -65,7 +65,7 @@
                     var oldOnFound = autocompleter._onFound;
                     autocompleter._onFound = function (entities) {
                         console.log("onFound: ", entities);
-                        assert.strictEqual(entities.length, 1, 'The count of resultant entities for the centre"s autocompleter should be 0 -- FILTERED instance should be filtered out.');
+                        assert.strictEqual(entities.length, 0, 'The count of resultant entities for the centre"s autocompleter should be 0 -- FILTERED instance should be filtered out.');
 
                         done();
                     }.bind(autocompleter);
@@ -77,64 +77,52 @@
                 centre.retrieve();
             });
 
-
-            /*	    test('editing through EntityEditAction embedded master works for complex centre', function (done) {
-            var old_postRun = centre._postRun;
-            var firstTime = false;
-            
-            centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
-            	old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
-            	
-            	if (firstTime === false) {
+            test('autocompleter filtering in EntityEditAction embedded master works for domain-driven data filter', function (done) {
+                var old_postRun = centre._postRun;
+                
+                centre._postRun = function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary) {
+                    old_postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, summary);
+                    
                     assert.strictEqual(resultEntities.length, 20, 'The count of resultant entities for the centre should be 20. Page capacity is 20 for this centre.');
-                	var entity = resultEntities[0];
+                    var entity = resultEntities[0];
                     
                     var editAction = Polymer.dom(centre.$.egi.$.primary_action_selector).getDistributedNodes()[0];
                     editAction.currentEntity = entity;
                     var value = editAction._run();
                     
                     editAction.postActionSuccess = function (potentiallySavedOrNewEntity) {
-                        console.log('postActionSuccess SPECIFIC: ', potentiallySavedOrNewEntity);
-                        
                         var outerMaster = editAction._masterReferenceForTesting;
-                        var innerMaster = outerMaster.$$('tg-tgpersistententitywithproperties-master');
-                        var loader = outerMaster.$.loader;
                         
                         outerMaster.addEventListener('after-load', function (event) {
                             var embeddedMaster = event.detail;
-                            
-            		        var edProperty = embeddedMaster.$.editor_4_bigDecimalProp;
-            		        
-            		        embeddedMaster.postValidated = function (validatedEntity, bindingEntity, customObject) {
-            	                assert.strictEqual(edProperty._editingValue, '23999', "_editingValue should be 'IS'.");
-            	                assert.strictEqual(edProperty._commValue, '23999', "_commValue should be 'IS'.");
-            	                assert.strictEqual(edProperty._acceptedValue, 23999, "_acceptedValue should be 'IS'.");
-            	                
-            	                assert.strictEqual(validatedEntity.get("bigDecimalProp"), 23999, "'property' value should be 'IS' after modification.");
-            	                assert.strictEqual(bindingEntity.get("bigDecimalProp"), 23999, "Binding 'property' value should be 'IS' after modification.");
-
-            	                done();
-            	            };
+                            var autocompleter = embeddedMaster.$.editor_4_entityProp;
                             
                             embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
-            	                edProperty._editingValue = '23999';
-            	                edProperty.commit();
-            	            };
+                                var oldOnFound = autocompleter._onFound;
+                                autocompleter._onFound = function (entities) {
+                                    console.log("onFound: ", entities);
+                                    assert.strictEqual(entities.length, 0, 'The count of resultant entities for the centre"s autocompleter should be 0 -- FILTERED instance should be filtered out.');
+                                    
+                                    done();
+                                }.bind(autocompleter);
+                                
+                                autocompleter._editingValue = 'FILTERED';
+                                autocompleter._searchOnTap();
+                            };
                         });
                     }
+                };
+                
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    var editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+                    editor._editingValue = '';
+                    editor.commit();
                     
-                    firstTime = true;
-            	} else {
-            	    assert.strictEqual(resultEntities.length, 20, 'The count of refreshed entity for the centre should be 20.');
-            	}
-            };
-            
-            centre.postRetrieved = function (entity, bindingEntity, customObject) {
-				centre.run();
-            };
-
- 			centre.retrieve();
-	    });  */
+                    centre.run();
+                };
+                
+                centre.retrieve();
+            });
         });
     </script>
 
