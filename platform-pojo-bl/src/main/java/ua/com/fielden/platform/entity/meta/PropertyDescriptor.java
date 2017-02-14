@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.entity.meta;
 
+import java.util.Optional;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -34,7 +36,6 @@ import ua.com.fielden.platform.utils.Pair;
 @KeyTitle(value = "Property", desc = "Property title")
 @DescTitle(value = "Description", desc = "Property description")
 public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     private Class<T> entityType;
     private String propertyName;
@@ -78,21 +79,22 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
             final String[] parts = toStringRepresentation.split(":");
             final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
             final String propertyName = parts[1];
-            return new PropertyDescriptor<T>(entityType, propertyName);
+            return new PropertyDescriptor<>(entityType, propertyName);
         } catch (final ClassNotFoundException ex) {
             throw Result.failure(ex);
         }
     }
 
     /** A convenient factory method, which instantiates property descriptor from its toString representation. */
-    public static <T extends AbstractEntity<?>> PropertyDescriptor<T> fromString(final String toStringRepresentation, final EntityFactory factory) {
+    public static <T extends AbstractEntity<?>> PropertyDescriptor<T> fromString(final String toStringRepresentation, final Optional<EntityFactory> factory) {
         try {
             final String[] parts = toStringRepresentation.split(":");
             final Class<T> entityType = (Class<T>) Class.forName(parts[0]);
             final String propertyName = parts[1];
 
             final Pair<String, String> pair = TitlesDescsGetter.getTitleAndDesc(propertyName, entityType);
-            final PropertyDescriptor<T> inst = factory.newByKey(PropertyDescriptor.class, pair.getKey());
+            final PropertyDescriptor<T> inst = (PropertyDescriptor<T>) factory.map(f -> f.newByKey(PropertyDescriptor.class, pair.getKey())).orElse(new PropertyDescriptor<>());
+            inst.setKey(pair.getKey());
             inst.setDesc(pair.getValue());
             inst.setEntityType(entityType);
             inst.setPropertyName(propertyName);

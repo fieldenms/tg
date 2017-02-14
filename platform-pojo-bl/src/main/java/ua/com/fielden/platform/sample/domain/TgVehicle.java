@@ -32,7 +32,6 @@ import ua.com.fielden.platform.types.markers.ISimpleMoneyType;
 @Ignore
 @CompanionObject(ITgVehicle.class)
 public class TgVehicle extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo
