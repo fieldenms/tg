@@ -657,9 +657,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // the previous value setter is not used deliberately since it has some logic not needed here
         if (isCollectional()) {
             // set the shallow copy of collection into originalValue to be able to perform comparison between actual value and original value of the collection
-            EntityUtils.copyCollectionalValue(value).map(copy -> originalValue = copy.orElse(null));
+            originalValue = EntityUtils.copyCollectionalValue(value).flatMap(copy -> copy).orElse(null);
             // set the shallow copy of collection into prevValue to be able to perform comparison between actual value and prevValue value of the collection
-            EntityUtils.copyCollectionalValue(originalValue).map(copy -> prevValue = copy.orElse(null));
+            prevValue = EntityUtils.copyCollectionalValue(originalValue).flatMap(copy -> copy).orElse(null);
         } else { // The single property (proxied or not!!!)
             originalValue = value;
             prevValue = originalValue;
