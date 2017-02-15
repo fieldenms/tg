@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -1089,14 +1088,14 @@ public class EntityUtils {
     }
 
     /**
-     * Tries to perform shallow copy of collectional value. If unsuccessful, returns empty {@link Optional}.
+     * Tries to perform shallow copy of collectional value. If unsuccessful, throws unsuccessful {@link Result} describing the error.
      * 
      * @param value
      * @return
      */
-    public static <T> Optional<Optional<T>> copyCollectionalValue(final T value) {
+    public static <T> T copyCollectionalValue(final T value) {
         if (value == null) {
-            return Optional.of(Optional.empty()); // return non-empty optional of empty (null) copy
+            return null; // return (null) copy
         }
         try {
             final Collection<?> collection = (Collection<?>) value;
@@ -1104,11 +1103,11 @@ public class EntityUtils {
             final Constructor<? extends Collection> constructor = collection.getClass().getConstructor();
             final Collection copy = constructor.newInstance();
             copy.addAll(collection);
-            // return non-empty optional of non-empty copy
-            return Optional.of(Optional.of((T) copy));
+            // return non-empty copy
+            return (T) copy;
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            logger.debug(e.getMessage(), e);
+            logger.error(e.getMessage(), e);
+            throw Result.failure(String.format("Collection copying has been failed. Type [%s]. Exception [%s].", value.getClass(), e.getMessage())); // throw result indicating the failure of copying
         }
-        return Optional.empty(); // return empty optional indicating the failure of copying
     }
 }
