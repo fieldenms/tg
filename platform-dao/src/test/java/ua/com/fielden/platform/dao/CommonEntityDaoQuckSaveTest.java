@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import java.util.Date;
 
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
@@ -89,6 +90,7 @@ public class CommonEntityDaoQuckSaveTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore("This test is not really valuable as a unit test. It has more of a proof-of-concept benchmark connataion.")
     public void test_quickSave_is_more_performant_than_save() {
         final IEntityDao<EntityWithMoney> co = co(EntityWithMoney.class);
         int times = 100;
