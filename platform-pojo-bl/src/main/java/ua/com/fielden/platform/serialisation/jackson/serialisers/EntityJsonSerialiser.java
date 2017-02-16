@@ -180,7 +180,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                             if (!isMaxDefault(max)) {
                                 existingMetaProps.put("_max", max);
                             }
-                            
+
                             // write actual meta-property
                             if (!existingMetaProps.isEmpty()) {
                                 generator.writeFieldName("@" + name);

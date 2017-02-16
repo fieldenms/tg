@@ -242,7 +242,12 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
-        return clazz != null && (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz)) ? stripIfNeeded(clazz.getSuperclass()) : clazz;
+        if (clazz == null) {
+            throw new ReflectionException("Class stripping is not applicable to null values.");
+        } else if (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz)) {
+            return stripIfNeeded(clazz.getSuperclass());
+        }
+        return clazz;
     }
     
     private static boolean isLoadedByHibernate(final Class<?> clazz) {

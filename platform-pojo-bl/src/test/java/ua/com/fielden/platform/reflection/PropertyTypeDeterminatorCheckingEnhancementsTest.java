@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.proxy.TgOwnerEntity;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 
@@ -145,7 +146,7 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
         final AbstractEntity<?> entity = EntityFactory.newPlainEntity(entityType, 1L);
         assertFalse(DynamicEntityClassLoader.isGenerated(entity.getClass()));
     }
-    
+
     @Test
     public void isGenerated_is_false_for_instrumented_entity() {
         final AbstractEntity<?> entity = factory.newEntity(entityType, 1L);
@@ -189,6 +190,11 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     }
 
     //////////////////////////////////// stripIfNeeded ////////////////////////////////////
+    @Test(expected = ReflectionException.class)
+    public void stripIfNeeded_throws_exception_if_null_is_provided() {
+        PropertyTypeDeterminator.stripIfNeeded(null);
+    }
+
     @Test
     public void stripIfNeeded_returns_original_type_for_uninstrumented_entity() {
         final AbstractEntity<?> entity = EntityFactory.newPlainEntity(entityType, 1L);
