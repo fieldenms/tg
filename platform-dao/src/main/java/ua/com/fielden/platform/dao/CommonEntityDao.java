@@ -324,11 +324,6 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
 
 
-        // perform meta-data assignment to capture the information about this modification
-        if (entity instanceof AbstractPersistentEntity) {
-            assignLastModificationInfo((AbstractPersistentEntity<?>) entity);
-        }
-        
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
         // the easiest way to do that is to load entity by id using the current session
@@ -348,12 +343,17 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
             handleNonDirtyActivatableIfNecessary(entity, persistedEntity);
         }
 
+        // perform meta-data assignment to capture the information about this modification
+        if (entity instanceof AbstractPersistentEntity) {
+            assignLastModificationInfo((AbstractPersistentEntity<?>) entity, (AbstractPersistentEntity<?>) persistedEntity);
+        }
+
         // update entity
         getSession().update(persistedEntity);
         getSession().flush();
         getSession().clear();
 
-        return entityFetchOption.isPresent() ? findById(persistedEntity.getId(), entityFetchOption.get()) : persistedEntity;
+        return entityFetchOption.map(fetch -> findById(persistedEntity.getId(), fetch)).orElse(persistedEntity);
     }
 
     /**
@@ -582,7 +582,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         getSession().flush();
         getSession().clear();
 
-        return entityFetchOption.isPresent() ? findById(entity.getId(), entityFetchOption.get()) : entity;
+        return entityFetchOption.map(fetch -> findById(entity.getId(), fetch)).orElse(entity);
     }
 
     /**
@@ -685,7 +685,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         }
     }
     
-    private void assignLastModificationInfo(final AbstractPersistentEntity<?> entity) {
+    private void assignLastModificationInfo(final AbstractPersistentEntity<?> entity, final AbstractPersistentEntity<?> persistentEntity) {
         // if the entity is activatable and the only dirty property is refCount than there is no need to update the last-updated-by info
         if (entity instanceof ActivatableAbstractEntity) {
             final List<MetaProperty<?>> dirty = entity.getDirtyProperties();
@@ -697,9 +697,9 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         // VIRTUAL_USER is transient and cannot be set as a value for properties of persistent entities
         // thus, a check for VIRTUAL_USER as a current user 
         if (!User.system_users.VIRTUAL_USER.name().equals(getUser().getKey())) {
-            entity.set(AbstractPersistentEntity.LAST_UPDATED_BY, getUser());
-            entity.set(AbstractPersistentEntity.LAST_UPDATED_DATE, universalConstants.now().toDate());
-            entity.set(AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID, getTransactionGuid());
+            persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_BY, getUser());
+            persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_DATE, universalConstants.now().toDate());
+            persistentEntity.set(AbstractPersistentEntity.LAST_UPDATED_TRANSACTION_GUID, getTransactionGuid());
         }
     }
     
