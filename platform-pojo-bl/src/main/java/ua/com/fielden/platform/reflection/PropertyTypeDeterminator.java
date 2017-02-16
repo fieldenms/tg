@@ -242,7 +242,12 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
-        return clazz != null && (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz)) ? stripIfNeeded(clazz.getSuperclass()) : clazz;
+        if (clazz == null) {
+            throw new ReflectionException("Class stripping is not applicable to null values.");
+        } else if (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz)) {
+            return stripIfNeeded(clazz.getSuperclass());
+        }
+        return clazz;
     }
     
     private static boolean isLoadedByHibernate(final Class<?> clazz) {
@@ -281,7 +286,7 @@ public class PropertyTypeDeterminator {
         final int indexOfLastDot = dotNotationExp.lastIndexOf(PROPERTY_SPLITTER);
         final String penultPart = dotNotationExp.substring(0, indexOfLastDot);
         final String lastPart = dotNotationExp.substring(indexOfLastDot + 1);
-        return new Pair<String, String>(penultPart, lastPart);
+        return new Pair<>(penultPart, lastPart);
     }
 
     public static Pair<String, String> firstAndRest(final String dotNotationExp) {

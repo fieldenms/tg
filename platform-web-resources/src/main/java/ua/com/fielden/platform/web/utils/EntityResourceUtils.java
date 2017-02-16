@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.resources.webui;
+package ua.com.fielden.platform.web.utils;
 
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
@@ -40,8 +40,8 @@ import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
-import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -69,6 +69,8 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.EntityResource;
+import ua.com.fielden.platform.web.resources.webui.EntityValidationResource;
 
 /**
  * This utility class contains the methods that are shared across {@link EntityResource} and {@link EntityValidationResource}.
@@ -732,7 +734,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
     public static SavingInfoHolder restoreSavingInfoHolder(final Representation envelope, final RestServerUtil restUtil) {
         return restUtil.restoreJSONEntity(envelope, SavingInfoHolder.class);
     }
-
+    
     /**
      * Just saves the entity.
      *
@@ -741,9 +743,23 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * 
      * @return
      */
-    public T save(final T entity, final Optional<Map<String, IContinuationData>> continuations) {
-        final boolean continuationsPresent = continuations.isPresent();
-        final CommonEntityDao<T> co = (CommonEntityDao<T>) this.co;
+    public T save(final T entity, final Map<String, IContinuationData> continuations) {
+        return saveWithContinuations(entity, continuations, (CommonEntityDao<T>) this.co);
+    }
+
+    /**
+     * Saves the <code>entity</code> with its <code>continuations</code>.
+     * 
+     * In case where warnings exist, <code>continuations</code> should include respective warnings acknowledgement continuation if it was accepted by the user.
+     * Could throw continuations exceptions, 'no changes' exception or validation exceptions.
+     *
+     * @param entity
+     * @param continuations -- continuations of the entity to be used during saving
+     * 
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> T saveWithContinuations(final T entity, final Map<String, IContinuationData> continuations, final CommonEntityDao<T> co) {
+        final boolean continuationsPresent = !continuations.isEmpty();
         
         // iterate over properties in search of the first invalid one (without required checks)
         final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
@@ -751,12 +767,13 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         .findFirst().map(mp -> mp.getFirstFailure());
         
         // returns first failure if exists or successful result if there was no failure.
-        final Result isValid = firstFailure.isPresent() ? firstFailure.get() : new Result(this, "Entity " + this + " is valid.");
+        final Result isValid = firstFailure.isPresent() ? firstFailure.get() : Result.successful(entity);
         
         if (isValid.isSuccessful()) {
-            if (entity.hasWarnings() && (!continuations.isPresent() || continuations.get().get("_acknowledgedForTheFirstTime") == null)) {
-                throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, "_acknowledgedForTheFirstTime");
-            } else if (entity.hasWarnings() && continuations.isPresent() && continuations.get().get("_acknowledgedForTheFirstTime") != null) {
+            final String acknowledgementContinuationName = "_acknowledgedForTheFirstTime";
+            if (entity.hasWarnings() && (!continuationsPresent || continuations.get(acknowledgementContinuationName) == null)) {
+                throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, acknowledgementContinuationName);
+            } else if (entity.hasWarnings() && continuationsPresent && continuations.get(acknowledgementContinuationName) != null) {
                 entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
             }
         }
@@ -771,7 +788,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         }
         
         if (continuationsPresent) {
-            co.setMoreData(continuations.get());
+            co.setMoreData(continuations);
         } else {
             co.clearMoreData();
         }
@@ -781,7 +798,7 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
         }
         return saved;
     }
-
+    
     /**
      * Deletes the entity.
      *

@@ -90,7 +90,9 @@
                  * The entity that contains original binding values. This should be used to identify whether _editingValue is modified from original _editingValue during editing.
                  */
                 originalEntity: {
-                	type: Object
+                	type: Object,
+                	observer: '_originalEntityChanged',
+                	notify: true
                 },
                 
                 /**
@@ -139,6 +141,13 @@
                  */
                 debug: {
                 	type: Boolean
+                },
+                
+                /**
+                 * This modif holder is needed for lazy value conversion.
+                 */
+                previousModifiedPropertiesHolder: {
+                    type: Object
                 },
 
             	/////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -445,6 +454,13 @@
                     this.commit();
                 }
             },
+            
+            _originalEntityChanged: function (newValue, oldValue) {
+                if (this.reflector().isEntity(newValue)) {
+                    // lazy conversion of original property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
+                    this.reflector().convertOriginalPropertyValue(newValue, this.propertyName, this.entity["@@origin"]);
+                }
+            },
 
             /**
              * This method is called once the entity was changed from the outside of the component.
@@ -458,6 +474,11 @@
                     // not only after master's 'save' / 'refresh' or centre's 'run', 'save' or 'discard'
                     // (to be precise it is done for every case when _currBindingEntity is changed for this editor)
                     this._refreshCycleStarted = true;
+                    
+                    // lazy conversion of property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
+                    if (!this.reflector().isDotNotated(this.propertyName)) {
+                        this.reflector().convertPropertyValue(newValue, this.propertyName, newValue["@@origin"], this.previousModifiedPropertiesHolder);
+                    }
                     
                     var convertedValue = this.reflector().getBindingValue.bind(this.reflector())(newValue, this.propertyName);
                     var newEditingValue = this.convertToString(convertedValue);

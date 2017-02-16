@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 
@@ -30,6 +32,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
+import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -40,6 +44,8 @@ import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.CachedProp
 import ua.com.fielden.platform.serialisation.jackson.JacksonContext;
 import ua.com.fielden.platform.serialisation.jackson.References;
 import ua.com.fielden.platform.serialisation.jackson.exceptions.EntityDeserialisationException;
+import ua.com.fielden.platform.utils.EntityUtils;
+import static ua.com.fielden.platform.serialisation.jackson.EntitySerialiser.ID_ONLY_PROXY_PREFIX;
 
 public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDeserializer<T> {
     private static final long serialVersionUID = 1L;
@@ -51,13 +57,15 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
     private final List<CachedProperty> properties;
     private final ISerialisationTypeEncoder serialisationTypeEncoder;
     private final boolean propertyDescriptorType;
+    private final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
 
-    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final ISerialisationTypeEncoder serialisationTypeEncoder, final boolean propertyDescriptorType) {
+    public EntityJsonDeserialiser(final ObjectMapper mapper, final EntityFactory entityFactory, final Class<T> type, final List<CachedProperty> properties, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache, final boolean propertyDescriptorType) {
         super(type);
         this.factory = entityFactory;
         this.mapper = mapper;
         this.properties = properties;
         this.serialisationTypeEncoder = serialisationTypeEncoder;
+        this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
 
         this.type = type;
         versionField = Finder.findFieldByName(type, AbstractEntity.VERSION);
@@ -98,19 +106,23 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JsonNode uninstrumentedJsonNode = node.get("@uninstrumented");
             final boolean uninstrumented = uninstrumentedJsonNode != null;
 
+            final String[] proxiedProps = properties.stream()
+                    .map(cachedProp -> cachedProp.field().getName())
+                    .filter(prop -> node.get(prop) == null)
+                    .collect(Collectors.toList())
+                    .toArray(new String[] {});
             final T entity;
             if (uninstrumented) {
                 if (propertyDescriptorType) {
                     entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText());
                 } else {
-                    entity = EntityFactory.newPlainEntity(type, id);
+                    entity = EntityFactory.newPlainEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
                 }
-                entity.setEntityFactory(factory);
             } else {
                 if (propertyDescriptorType) {
                     entity = (T) PropertyDescriptor.fromString(node.get("@pdString").asText(), Optional.of(factory));
                 } else {
-                    entity = factory.newEntity(type, id);
+                    entity = factory.newEntity(EntityProxyContainer.proxy(type, proxiedProps), id);
                 }
             }
             entity.beginInitialising();
@@ -144,26 +156,23 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 }
             }
 
-            for (final CachedProperty prop : properties) {
+            final List<CachedProperty> nonProxiedProps = properties.stream().filter(prop -> node.get(prop.field().getName()) != null).collect(Collectors.toList()); 
+            for (final CachedProperty prop : nonProxiedProps) {
                 final String propertyName = prop.field().getName();
                 final JsonNode propNode = node.get(propertyName);
-                if (propNode != null) { // TODO need to revisit: what if entity from client arrives without property, but entity definition has default value assigned? Do we need to remain default value there?
-                    final Object value = determineValue(propNode, prop.field());
-                    if (value != null) { // TODO need to revisit: what if entity from client arrives with property of 'null' value, but entity definition has default value assigned? Do we need to remain default value there?
-                        try {
-                            // at this stage the field should be already accessible
-                            prop.field().set(entity, value);
-                        } catch (final IllegalAccessException e) {
-                            // developer error -- please ensure that all fields are accessible
-                            e.printStackTrace();
-                            logger.error("The field [" + prop.field() + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", e);
-                            throw new RuntimeException(e);
-                        } catch (final IllegalArgumentException e) {
-                            e.printStackTrace();
-                            logger.error("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", e);
-                            throw e;
-                        }
-                    }
+                final Object value = determineValue(propNode, prop.field());
+                try {
+                    // at this stage the field should be already accessible
+                    prop.field().set(entity, value);
+                } catch (final IllegalAccessException e) {
+                    // developer error -- please ensure that all fields are accessible
+                    e.printStackTrace();
+                    logger.error("The field [" + prop.field() + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", e);
+                    throw new RuntimeException(e);
+                } catch (final IllegalArgumentException e) {
+                    e.printStackTrace();
+                    logger.error("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", e);
+                    throw e;
                 }
                 final JsonNode metaPropNode = node.get("@" + propertyName);
                 if (metaPropNode != null) {
@@ -181,15 +190,21 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             return entity;
         }
     }
-
+    
     private Object determineValue(final JsonNode propNode, final Field propertyField) throws IOException, JsonMappingException, JsonParseException {
         final Object value;
         if (propNode.isNull()) {
             value = null;
         } else {
-            value = mapper.readValue(propNode.traverse(mapper), concreteTypeOf(constructType(mapper.getTypeFactory(), propertyField), () -> {
+            final JavaType concreteType = concreteTypeOf(constructType(mapper.getTypeFactory(), propertyField), () -> {
                 return propNode.get("@id") == null ? propNode.get("@id_ref") : propNode.get("@id");
-            }));
+            });
+            if (propNode.isTextual() && EntityUtils.isEntityType(concreteType.getRawClass()) && propNode.asText().startsWith(ID_ONLY_PROXY_PREFIX)) { // id-only proxy instance is represented as id-only proxy prefix concatenated with id number
+                final Long determinedId = Long.valueOf(propNode.asText().replaceFirst(Pattern.quote(ID_ONLY_PROXY_PREFIX), ""));
+                value = EntityFactory.newPlainEntity(idOnlyProxiedEntityTypeCache.getIdOnlyProxiedTypeFor((Class) concreteType.getRawClass()), determinedId);
+            } else {
+                value = mapper.readValue(propNode.traverse(mapper), concreteType);
+            }
         }
         return value;
     }
