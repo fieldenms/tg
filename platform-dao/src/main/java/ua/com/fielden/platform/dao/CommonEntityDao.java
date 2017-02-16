@@ -1300,4 +1300,12 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         return Optional.ofNullable((E) this.moreData.get(key));
     }
 
+    /**
+     * A convenient way to obtain all "more data" by keys.
+     * 
+     * @return
+     */
+    public Map<String, IContinuationData> moreData() {
+        return Collections.unmodifiableMap(moreData);
+    }
 }

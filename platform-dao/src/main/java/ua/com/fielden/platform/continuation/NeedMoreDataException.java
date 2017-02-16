@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.IContinuationData;
 public class NeedMoreDataException extends RuntimeException {
     private static final long serialVersionUID = 1L;
     
+    public final Class<? extends IContinuationData> continuationType;
     public final String continuationTypeStr;
     public final String continuationProperty;
 
@@ -26,6 +27,7 @@ public class NeedMoreDataException extends RuntimeException {
      */
     NeedMoreDataException(final String customMessage, final Class<? extends IContinuationData> continuationType, final String continuationProperty) {
         super(customMessage);
+        this.continuationType = continuationType;
         this.continuationTypeStr = continuationType.getName();
         this.continuationProperty = continuationProperty;
     }
