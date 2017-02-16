@@ -14,13 +14,9 @@ import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
  * @author TG Team
  *
  */
-public class IdOnlyProxiedEntityTypeCache implements IIdOnlyProxiedEntityTypeCache {
+public class IdOnlyProxiedEntityTypeCacheForTests implements IIdOnlyProxiedEntityTypeCache {
 
-    private final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> typesMap;
-
-    public IdOnlyProxiedEntityTypeCache() {
-        typesMap = buildMap();
-    }
+    private final Map<Class<? extends AbstractEntity<?>>, Class<? extends AbstractEntity<?>>> typesMap = buildMap();
 
     @Override
     public <T extends AbstractEntity<?>> Class<? extends T> getIdOnlyProxiedTypeFor(final Class<T> originalType) {

@@ -37,7 +37,7 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
-import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.serialisation.api.impl.IdOnlyProxiedEntityTypeCacheForTests;
 import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.impl.SerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
@@ -85,7 +85,7 @@ public class EntitySerialisationWithJacksonTest {
     private boolean observed = false;
     
     private IIdOnlyProxiedEntityTypeCache createIdOnlyProxiedEntityTypeCache() {
-        return new IdOnlyProxiedEntityTypeCache();
+        return new IdOnlyProxiedEntityTypeCacheForTests();
     }
     
     private ISerialisationTypeEncoder createSerialisationTypeEncoder() {
