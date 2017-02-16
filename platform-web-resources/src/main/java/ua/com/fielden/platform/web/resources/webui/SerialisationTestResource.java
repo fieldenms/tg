@@ -47,6 +47,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiEmptyEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiEntityWithOtherEntity;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * Resource for integration test of Java and JavaScript serialisation.

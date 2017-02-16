@@ -58,6 +58,7 @@ import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
 import ua.com.fielden.snappy.MnemonicEnum;
 

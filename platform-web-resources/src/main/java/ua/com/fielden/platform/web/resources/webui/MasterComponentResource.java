@@ -15,6 +15,7 @@ import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * Represents web server resource that returns entity master component for specified entity type to the client.

@@ -56,6 +56,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * The web resource for criteria serves as a back-end mechanism of criteria retrieval. It provides a base implementation for handling the following methods:

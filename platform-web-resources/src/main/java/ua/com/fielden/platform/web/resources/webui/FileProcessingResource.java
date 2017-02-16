@@ -22,6 +22,7 @@ import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSrouce;
 import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * This resource should be used for uploading files to be processed with the specified functional entity.

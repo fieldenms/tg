@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
  * The web resource for entity autocompletion serves as a back-end mechanism of searching entities by search strings and using additional parameters.

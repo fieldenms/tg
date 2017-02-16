@@ -13,6 +13,7 @@ import org.restlet.resource.ResourceException;
 
 import ua.com.fielden.platform.web.app.ISourceController;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 import com.google.common.base.Charsets;
 

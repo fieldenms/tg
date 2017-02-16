@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.resources.webui;
+package ua.com.fielden.platform.web.utils;
 
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
@@ -30,6 +30,7 @@ import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 
 import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
@@ -40,7 +41,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.EntityResourceDaoUtils;
 import ua.com.fielden.platform.entity.IContinuationData;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -50,6 +50,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -68,6 +69,8 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.CentreUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.EntityResource;
+import ua.com.fielden.platform.web.resources.webui.EntityValidationResource;
 
 /**
  * This utility class contains the methods that are shared across {@link EntityResource} and {@link EntityValidationResource}.
@@ -741,9 +744,61 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
      * @return
      */
     public T save(final T entity, final Map<String, IContinuationData> continuations) {
-        return EntityResourceDaoUtils.save(entity, continuations, (CommonEntityDao<T>) this.co);
+        return saveWithContinuations(entity, continuations, (CommonEntityDao<T>) this.co);
     }
 
+    /**
+     * Saves the <code>entity</code> with its <code>continuations</code>.
+     * 
+     * In case where warnings exist, <code>continuations</code> should include respective warnings acknowledgement continuation if it was accepted by the user.
+     * Could throw continuations exceptions, 'no changes' exception or validation exceptions.
+     *
+     * @param entity
+     * @param continuations -- continuations of the entity to be used during saving
+     * 
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> T saveWithContinuations(final T entity, final Map<String, IContinuationData> continuations, final CommonEntityDao<T> co) {
+        final boolean continuationsPresent = !continuations.isEmpty();
+        
+        // iterate over properties in search of the first invalid one (without required checks)
+        final java.util.Optional<Result> firstFailure = entity.nonProxiedProperties()
+        .filter(mp -> mp.getFirstFailure() != null)
+        .findFirst().map(mp -> mp.getFirstFailure());
+        
+        // returns first failure if exists or successful result if there was no failure.
+        final Result isValid = firstFailure.isPresent() ? firstFailure.get() : Result.successful(entity);
+        
+        if (isValid.isSuccessful()) {
+            final String acknowledgementContinuationName = "_acknowledgedForTheFirstTime";
+            if (entity.hasWarnings() && (!continuationsPresent || continuations.get(acknowledgementContinuationName) == null)) {
+                throw new NeedMoreData("Warnings need acknowledgement", AcknowledgeWarnings.class, acknowledgementContinuationName);
+            } else if (entity.hasWarnings() && continuationsPresent && continuations.get(acknowledgementContinuationName) != null) {
+                entity.nonProxiedProperties().forEach(prop -> prop.clearWarnings());
+            }
+        }
+        
+        // 1) non-persistent entities should always be saved (isDirty will always be true)
+        // 2) persistent but not persisted (new) entities should always be saved (isDirty will always be true)
+        // 3) persistent+persisted+dirty (by means of dirty properties existence) entities should always be saved
+        // 4) persistent+persisted+notDirty+inValid entities should always be saved: passed to companion 'save' method to process validation errors in domain-driven way by companion object itself
+        // 5) persistent+persisted+notDirty+valid entities saving should be skipped
+        if (!entity.isDirty() && entity.isValid().isSuccessful()) {
+            throw Result.failure("There are no changes to save.");
+        }
+        
+        if (continuationsPresent) {
+            co.setMoreData(continuations);
+        } else {
+            co.clearMoreData();
+        }
+        final T saved = co.save(entity);
+        if (continuationsPresent) {
+            co.clearMoreData();
+        }
+        return saved;
+    }
+    
     /**
      * Deletes the entity.
      *

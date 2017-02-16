@@ -50,6 +50,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
