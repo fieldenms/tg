@@ -778,8 +778,8 @@
                 	self._reset(previousModifiedPropertiesHolder);
                 }
                 const previousEntity = self._currEntity;
-                // Determine whether the entity is stale in sense of stale property conflicts (errors) or stale property values (warnings).
-                const isEntityStale = self._hasStaleConflictsOrWarnings(entity);
+                // Determine whether the entity is stale in sense of stale property conflicts (errors).
+                const isEntityStale = self._hasStaleConflicts(entity);
                 if (isEntityStale) {
                     // version of entity should be taken from previous entity to correctly restore stale entity at the client-side
                     entity.version = self._extractPreviousEntityVersion(previousEntity, entity.version);
@@ -807,25 +807,22 @@
             },
             
             /**
-             * Returns 'true' in case where the entity has at least on stale conflict or warning, 'false' otherwise.
+             * Returns 'true' in case where the entity has at least one stale conflict, 'false' otherwise.
              *
-             * Please, note that in sense of versions the entity could be stale, but this method still returns 'true' if no stale conflicts / warnings exist.
+             * Please, note that in sense of versions the entity could be stale, but this method still returns 'true' if no stale conflicts exist.
              * That means that fully resolvable staleness will not be appearing to the user -- this is the case where behind the scenes 
              * the entity has been saved multiple times (by other user) but saving did not actually change the entity from the current version.
              */
-            _hasStaleConflictsOrWarnings: function (entity) {
+            _hasStaleConflicts: function (entity) {
                 const self = this;
-                var hasStaleConflictsOrWarnings = false;
+                var hasStaleConflicts = false;
                 entity.traverseProperties(function (propertyName) {
                     const validationResult = entity.prop(propertyName).validationResult();
-                    if (
-                            (self._reflector().isError(validationResult) && validationResult.message === 'The property has been recently changed by other user. Please revert property value to resolve conflict.') ||
-                            (self._reflector().isWarning(validationResult) && validationResult.message === 'The property has been recently changed by other user.')
-                       ) {
-                        hasStaleConflictsOrWarnings = true;
+                    if (self._reflector().isError(validationResult) && validationResult.message === 'The property has been recently changed by other user. Please revert property value to resolve conflict.') {
+                        hasStaleConflicts = true;
                     }
                 });
-                return hasStaleConflictsOrWarnings;
+                return hasStaleConflicts;
             },
             
             /**

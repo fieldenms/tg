@@ -301,8 +301,15 @@ public class EntityResourceUtils<T extends AbstractEntity<?>> {
             final Object staleOriginalValue = convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
             final Object actualValue = entity.get(name);
             if (EntityUtils.isConflicting(newValue, staleOriginalValue, actualValue)) {
-                logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), actualValue, staleOriginalValue, newValue));
-                entity.getProperty(name).setDomainValidationResult(Result.failure(entity, "The property has been recently changed by other user. Please revert property value to resolve conflict."));
+                // 1) are we trying to revert the value to previous stale value to perform "recovery" to actual persisted value? (this is following of 'Please revert property value to resolve conflict' instruction) 
+                // or 2) has previously touched property value "recovered" to actual persisted value?
+                if (EntityUtils.equalsEx(newValue, staleOriginalValue)) {
+                    logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Original value is [%s].", name, entity.getClass().getSimpleName(), actualValue, staleOriginalValue));
+                    entity.getProperty(name).setDomainValidationResult(Result.warning(entity, "The property has been recently changed by other user."));
+                } else {
+                    logger.info(String.format("The property [%s] has been recently changed by other user for type [%s] to the value [%s]. Stale original value is [%s], newValue is [%s]. Please revert property value to resolve conflict.", name, entity.getClass().getSimpleName(), actualValue, staleOriginalValue, newValue));
+                    entity.getProperty(name).setDomainValidationResult(Result.failure(entity, "The property has been recently changed by other user. Please revert property value to resolve conflict."));
+                }
             } else {
                 enforceSet(shouldApplyOriginalValue, name, entity, newValue);
             }
