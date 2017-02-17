@@ -777,6 +777,13 @@
                     previousModifiedPropertiesHolder = self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity);
                 	self._reset(previousModifiedPropertiesHolder);
                 }
+                const previousEntity = self._currEntity;
+                // Determine whether the entity is stale in sense of stale property conflicts (errors) or stale property values (warnings).
+                const isEntityStale = self._hasStaleConflictsOrWarnings(entity);
+                if (isEntityStale) {
+                    // version of entity should be taken from previous entity to correctly restore stale entity at the client-side
+                    entity.version = self._extractPreviousEntityVersion(previousEntity, entity.version);
+                }
                 // New entity should be promoted to the local cache:
                 self._currEntity = entity;
                 // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
@@ -786,7 +793,7 @@
                 if (self._currBindingEntity != null && oldCurrBindingEntity == null) {
                     self.fire('binding-entity-appeared', self._currBindingEntity);
                 }
-                self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity);
+                self._originalBindingEntity = self._extractOriginalBindingView(self._currEntity, isEntityStale ? self._originalBindingEntity : null);
                 
                 self._bindingEntityModified = self._hasModified(self._extractModifiedPropertiesHolder(self._currBindingEntity, self._originalBindingEntity));
                 // console.debug('_bindingEntityModified = ', self._bindingEntityModified, ' type = ', self._currBindingEntity.type()._simpleClassName());
@@ -797,6 +804,44 @@
 
                 console.log("       _postEntityReceived: _currBindingEntity + _originalBindingEntity", self._currBindingEntity, self._originalBindingEntity);
                 return self._currBindingEntity;
+            },
+            
+            /**
+             * Returns 'true' in case where the entity has at least on stale conflict or warning, 'false' otherwise.
+             *
+             * Please, note that in sense of versions the entity could be stale, but this method still returns 'true' if no stale conflicts / warnings exist.
+             * That means that fully resolvable staleness will not be appearing to the user -- this is the case where behind the scenes 
+             * the entity has been saved multiple times (by other user) but saving did not actually change the entity from the current version.
+             */
+            _hasStaleConflictsOrWarnings: function (entity) {
+                const self = this;
+                var hasStaleConflictsOrWarnings = false;
+                entity.traverseProperties(function (propertyName) {
+                    const validationResult = entity.prop(propertyName).validationResult();
+                    if (
+                            (self._reflector().isError(validationResult) && validationResult.message === 'The property has been recently changed by other user. Please revert property value to resolve conflict.') ||
+                            (self._reflector().isWarning(validationResult) && validationResult.message === 'The property has been recently changed by other user.')
+                       ) {
+                        hasStaleConflictsOrWarnings = true;
+                    }
+                });
+                return hasStaleConflictsOrWarnings;
+            },
+            
+            /**
+             * Extracts the version of previous entity for the case where new entity is stale.
+             *
+             * This method validates existence of previous entity and the fact that the version has been increased.
+             * These validations are required because new entity should not be stale otherwise.
+             */
+            _extractPreviousEntityVersion: function (previousEntity, currentEntityVersion) {
+                if (previousEntity == null) {
+                    throw 'Previous version of entity does not exist, but somehow the stale entity has arrived from the server.';
+                }
+                if (currentEntityVersion <= previousEntity.version) {
+                    throw 'Previous version of entity has [' + previousEntity.version + '] version, that is not lower than the version of stale new entity (' + currentEntityVersion + ').';
+                }
+                return previousEntity.version;
             },
 
             /**
@@ -854,8 +899,14 @@
                         'visibleMenuItems', 'invisibleMenuItems' // menu visibility action (MenuSaveAction)
                        ].indexOf(propertyName) !== -1;
             },
-
-            _extractOriginalBindingView: function (entity) {
+            
+            /**
+             * Extracts binding view from 'entity' for its original values taking into account that entity could be 'stale'.
+             *
+             * In case of stale entity (previousEntity has been passed into this method), original values should be taken from the previous version of the entity to be able to mimic restoration of stale instance.
+             */
+            _extractOriginalBindingView: function (entity, previousOriginalBindingEntity) {
+                var stale = previousOriginalBindingEntity !== null;
                 var self = this;
                 var originalBindingView = self._reflector().newEntityEmpty();
 
@@ -864,13 +915,13 @@
                 originalBindingView["version"] = entity["version"];
                 // this property of the bindingView will hold the reference to fully-fledged entity, 
                 //   this entity can be used effectively to process 'dot-notated' properties (for e.g. retrieving the values) 
-                originalBindingView["@@origin"] = entity;
+                originalBindingView["@@origin"] = (stale === true ? previousOriginalBindingEntity['@@origin'] : entity);
 
                 entity.traverseProperties(function (propertyName) {
                     // value conversion of original property value performs here only for specialised properties (see method '_isNecessaryForConversion');
                     // conversion for other properties performs in corresponding editors (tg-editor-behavior).
                     if (self._isNecessaryForConversion(propertyName)) {
-                        self._reflector().convertOriginalPropertyValue(originalBindingView, propertyName, entity);
+                        self._reflector().convertOriginalPropertyValue(originalBindingView, propertyName, stale === true ? previousOriginalBindingEntity['@@origin'] : entity);
                     }
                 });
 
