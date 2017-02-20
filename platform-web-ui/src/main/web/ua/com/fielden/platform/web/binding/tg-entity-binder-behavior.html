@@ -782,7 +782,7 @@
                 const isEntityStale = self._hasStaleConflicts(entity);
                 if (isEntityStale) {
                     // version of entity should be taken from previous entity to correctly restore stale entity at the client-side
-                    entity.version = self._extractPreviousEntityVersion(previousEntity, entity.version);
+                    entity.version = self._extractPreviousEntityVersion(previousEntity, entity.version, self._originalBindingEntity);
                 }
                 // New entity should be promoted to the local cache:
                 self._currEntity = entity;
@@ -831,12 +831,15 @@
              * This method validates existence of previous entity and the fact that the version has been increased.
              * These validations are required because new entity should not be stale otherwise.
              */
-            _extractPreviousEntityVersion: function (previousEntity, currentEntityVersion) {
+            _extractPreviousEntityVersion: function (previousEntity, currentEntityVersion, _originalBindingEntity) {
                 if (previousEntity == null) {
                     throw 'Previous version of entity does not exist, but somehow the stale entity has arrived from the server.';
                 }
                 if (currentEntityVersion <= previousEntity.version) {
                     throw 'Previous version of entity has [' + previousEntity.version + '] version, that is not lower than the version of stale new entity (' + currentEntityVersion + ').';
+                }
+                if (_originalBindingEntity === null) {
+                    throw 'Previous version of _originalBindingEntity does not exist, but somehow the stale entity has arrived from the server.';
                 }
                 return previousEntity.version;
             },
@@ -918,7 +921,7 @@
                     // value conversion of original property value performs here only for specialised properties (see method '_isNecessaryForConversion');
                     // conversion for other properties performs in corresponding editors (tg-editor-behavior).
                     if (self._isNecessaryForConversion(propertyName)) {
-                        self._reflector().convertOriginalPropertyValue(originalBindingView, propertyName, stale === true ? previousOriginalBindingEntity['@@origin'] : entity);
+                        self._reflector().convertOriginalPropertyValue(originalBindingView, propertyName, originalBindingView["@@origin"]);
                     }
                 });
 
