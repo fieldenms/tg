@@ -181,7 +181,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         persistentOnlySettingForFinalAnnotation = finalAnnotation == null ? Optional.empty() : Optional.of(finalAnnotation.persistentOnly());
         this.isRequiredByDefinition = AbstractEntity.KEY.equals(name) ||
                                       AnnotationReflector.isAnnotationPresent(field, Required.class) ||
-                                      (AbstractEntity.DESC.equals(name) && AnnotationReflector.isAnnotationPresentForClass(DescRequired.class, type)) ||
+                                      (AbstractEntity.DESC.equals(name) && AnnotationReflector.isAnnotationPresentForClass(DescRequired.class, entity.getType())) ||
                                       (AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class) && !AnnotationReflector.isAnnotationPresent(field, ua.com.fielden.platform.entity.annotation.Optional.class));
     }
 
