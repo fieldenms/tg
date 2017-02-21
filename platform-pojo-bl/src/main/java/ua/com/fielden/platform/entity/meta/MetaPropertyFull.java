@@ -23,7 +23,11 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.FinalValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
@@ -32,6 +36,7 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -65,7 +70,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private final Class<?> propertyAnnotationType;
     private final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> validators;
-    private final Set<Annotation> validationAnnotations = new HashSet<Annotation>();
+    private final Set<Annotation> validationAnnotations = new HashSet<>();
     private final IAfterChangeEventHandler<T> aceHandler;
     private final boolean collectional;
     
@@ -114,6 +119,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private boolean editable = true;
     private boolean visible = true;
     private boolean required = false;
+    public final boolean isRequiredByDefinition;
     private final boolean calculated;
     private final boolean upperCase;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -173,6 +179,10 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         this.upperCase = upperCase;
         final Final finalAnnotation = field.getAnnotation(Final.class);
         persistentOnlySettingForFinalAnnotation = finalAnnotation == null ? Optional.empty() : Optional.of(finalAnnotation.persistentOnly());
+        this.isRequiredByDefinition = AbstractEntity.KEY.equals(name) ||
+                                      AnnotationReflector.isAnnotationPresent(field, Required.class) ||
+                                      (AbstractEntity.DESC.equals(name) && AnnotationReflector.isAnnotationPresentForClass(DescRequired.class, type)) ||
+                                      (AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class) && !AnnotationReflector.isAnnotationPresent(field, ua.com.fielden.platform.entity.annotation.Optional.class));
     }
 
     /**
@@ -884,9 +894,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      */
     @Override
     public final void setRequired(final boolean required) {
-        if (required && !getEntity().isInitialising() && isProxy()) {
-            throw new StrictProxyException(format("Property [%s] in entity [%s] is proxied and should not be made required.", getName(), getEntity().getType().getName())); 
-        }
+        requirednessChangePreCondition(required);
         
         final boolean oldRequired = this.required;
         this.required = required;
@@ -914,6 +922,21 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             }
         }
         changeSupport.firePropertyChange(REQUIRED_PROPERTY_NAME, oldRequired, required);
+    }
+
+    /**
+     * A helper method that ascertains the validity of requiredness change.
+     *
+     * @param required
+     */
+    private void requirednessChangePreCondition(final boolean required) {
+        if (required && !getEntity().isInitialising() && isProxy()) {
+            throw new StrictProxyException(format("Property [%s] in entity [%s] is proxied and should not be made required.", getName(), getEntity().getType().getSimpleName()));
+        }
+
+        if (!required && isRequiredByDefinition && !shouldAssignBeforeSave()) {
+            throw new EntityDefinitionException(format("Property [%s] in entity [%s] is declared as required and cannot have this constraint relaxed.", name, getEntity().getType().getSimpleName()));
+        }
     }
 
     @Override
