@@ -25,7 +25,6 @@ import ua.com.fielden.platform.entity.validators.BceForEntityWithWarningsSelfRef
 @DescTitle(value = "Description", desc = "Description Property")
 @DescRequired
 public class EntityWithWarnings extends AbstractEntity<String> {
-    private static final long serialVersionUID = 1L;
 
     @IsProperty
     @MapTo
@@ -37,7 +36,6 @@ public class EntityWithWarnings extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Self", desc = "Desc")
     @BeforeChange(@Handler(BceForEntityWithWarningsSelfRefProp.class))
-    @Required
     private EntityWithWarnings selfRefProp;
     
     @Observable
