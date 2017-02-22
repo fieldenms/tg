@@ -338,22 +338,20 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static boolean isRequiredByDefinition(final String propName, final Class<?> entityType) {
-        try {
-            return isRequiredByDefinition(entityType.getField(propName));
-        } catch (NoSuchFieldException | SecurityException e) {
-            throw new ReflectionException(format("Could not identify requiredness by definition for property [%s] in entity [%s].", propName, entityType.getSimpleName()), e);
-        }
+        final Class<?> strippedType = stripIfNeeded(entityType);
+        return isRequiredByDefinition(Finder.findFieldByName(strippedType, propName), strippedType);
     }
 
     /**
-     * Identifies whether property, which is represented by a field is required by definition.
+     * Identifies whether property, which is represented by a field is required by definition. 
+     * The value of <code>entityType</code> is the type where the property that is represented by <code>propField</code>, belongs (this is not necessarily the type where the field is declared).
      *
      * @param propField
+     * @param entityType
      * @return
      */
-    public static boolean isRequiredByDefinition(final Field propField) {
+    public static boolean isRequiredByDefinition(final Field propField, final Class<?> entityType) {
         final String name = propField.getName();
-        final Class<?> entityType = stripIfNeeded(propField.getDeclaringClass());
         return  AbstractEntity.KEY.equals(name) ||
                 AnnotationReflector.isAnnotationPresent(propField, Required.class) ||
                 isRequiredDesc(name, entityType) ||

@@ -177,7 +177,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         this.upperCase = upperCase;
         final Final finalAnnotation = field.getAnnotation(Final.class);
         persistentOnlySettingForFinalAnnotation = finalAnnotation == null ? Optional.empty() : Optional.of(finalAnnotation.persistentOnly());
-        this.isRequiredByDefinition = isRequiredByDefinition(field);
+        this.isRequiredByDefinition = isRequiredByDefinition(field, entity.getType());
     }
 
     /**
