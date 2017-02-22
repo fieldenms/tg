@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
@@ -23,10 +24,7 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
-import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.FinalValidator;
@@ -36,7 +34,6 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -179,10 +176,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         this.upperCase = upperCase;
         final Final finalAnnotation = field.getAnnotation(Final.class);
         persistentOnlySettingForFinalAnnotation = finalAnnotation == null ? Optional.empty() : Optional.of(finalAnnotation.persistentOnly());
-        this.isRequiredByDefinition = AbstractEntity.KEY.equals(name) ||
-                                      AnnotationReflector.isAnnotationPresent(field, Required.class) ||
-                                      (AbstractEntity.DESC.equals(name) && AnnotationReflector.isAnnotationPresentForClass(DescRequired.class, entity.getType())) ||
-                                      (AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class) && !AnnotationReflector.isAnnotationPresent(field, ua.com.fielden.platform.entity.annotation.Optional.class));
+        this.isRequiredByDefinition = isRequiredByDefinition(field);
     }
 
     /**
