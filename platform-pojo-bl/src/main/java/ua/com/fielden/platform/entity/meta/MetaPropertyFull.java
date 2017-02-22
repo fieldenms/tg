@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
@@ -10,11 +11,9 @@ import java.beans.PropertyChangeSupport;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -24,8 +23,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.FinalValidator;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
@@ -67,7 +69,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private final Class<?> propertyAnnotationType;
     private final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> validators;
-    private final Set<Annotation> validationAnnotations = new HashSet<Annotation>();
+    private final Set<Annotation> validationAnnotations = new HashSet<>();
     private final IAfterChangeEventHandler<T> aceHandler;
     private final boolean collectional;
     
@@ -116,6 +118,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private boolean editable = true;
     private boolean visible = true;
     private boolean required = false;
+    public final boolean isRequiredByDefinition;
+    public final boolean isCritOnly;
     private final boolean calculated;
     private final boolean upperCase;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,6 +179,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         this.upperCase = upperCase;
         final Final finalAnnotation = field.getAnnotation(Final.class);
         persistentOnlySettingForFinalAnnotation = finalAnnotation == null ? Optional.empty() : Optional.of(finalAnnotation.persistentOnly());
+        this.isRequiredByDefinition = isRequiredByDefinition(field, entity.getType());
+        this.isCritOnly = field.isAnnotationPresent(CritOnly.class);
     }
 
     /**
@@ -657,9 +663,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // the previous value setter is not used deliberately since it has some logic not needed here
         if (isCollectional()) {
             // set the shallow copy of collection into originalValue to be able to perform comparison between actual value and original value of the collection
-            EntityUtils.copyCollectionalValue(value).map(copy -> originalValue = copy.orElse(null));
+            originalValue = EntityUtils.copyCollectionalValue(value);
             // set the shallow copy of collection into prevValue to be able to perform comparison between actual value and prevValue value of the collection
-            EntityUtils.copyCollectionalValue(originalValue).map(copy -> prevValue = copy.orElse(null));
+            prevValue = EntityUtils.copyCollectionalValue(originalValue);
         } else { // The single property (proxied or not!!!)
             originalValue = value;
             prevValue = originalValue;
@@ -721,7 +727,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // just in case cater for correct processing of collection properties
         if (isCollectional()) {
             // set the shallow copy of collection into this.prevValue to be able to perform comparison between actual value and previous value of the collection
-            EntityUtils.copyCollectionalValue(value).map(copy -> this.prevValue = copy.orElse(null));
+            this.prevValue = EntityUtils.copyCollectionalValue(value);
         } else {
             this.prevValue = value;
         }
@@ -885,10 +891,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param required
      */
     @Override
-    public final void setRequired(final boolean required) {
-        if (required && !getEntity().isInitialising() && isProxy()) {
-            throw new StrictProxyException(format("Property [%s] in entity [%s] is proxied and should not be made required.", getName(), getEntity().getType().getName())); 
-        }
+    public final MetaPropertyFull<T> setRequired(final boolean required) {
+        requirednessChangePreCondition(required);
         
         final boolean oldRequired = this.required;
         this.required = required;
@@ -916,6 +920,31 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             }
         }
         changeSupport.firePropertyChange(REQUIRED_PROPERTY_NAME, oldRequired, required);
+        return this;
+    }
+
+    /**
+     * A helper method that ascertains the validity of requiredness change.
+     *
+     * @param required
+     */
+    private void requirednessChangePreCondition(final boolean required) {
+        if (required && !getEntity().isInitialising() && isProxy()) {
+            throw new StrictProxyException(format("Property [%s] in entity [%s] is proxied and should not be made required.", getName(), getEntity().getType().getSimpleName()));
+        }
+
+        if (!required && isRequiredByDefinition && !isCritOnly && !shouldAssignBeforeSave() && !requirednessExceptionRule()) {
+            throw new EntityDefinitionException(format("Property [%s] in entity [%s] is declared as required and cannot have this constraint relaxed.", name, getEntity().getType().getSimpleName()));
+        }
+    }
+
+    /**
+     * Entities of type {@link AbstractFunctionalEntityForCollectionModification} need to be able to relax requiredness for their keys.
+     *
+     * @return
+     */
+    private boolean requirednessExceptionRule() {
+        return AbstractEntity.KEY.equals(name) && AbstractFunctionalEntityForCollectionModification.class.isAssignableFrom(entity.getType());
     }
 
     @Override

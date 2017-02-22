@@ -133,6 +133,13 @@
                 },
                 
                 /**
+                 * This modif holder is needed for lazy value conversion in concrete editors.
+                 */
+                _previousModifiedPropertiesHolder: {
+                    type: Object
+                },
+                
+                /**
                  * Returns true in case where binding entity has modified properties, false otherwise.
                  * 
                  * Please, note that this property recomputes and caches manually strictly when _currBindingEntity and _originalBindingEntity changes (_postEntityReceived method).
@@ -346,11 +353,11 @@
                     return this._reset(mph);
                 }).bind(self);
                 
-                self._provideExceptionOccured = function (entity, exceptionOccured) {
+                self._provideExceptionOccured = (function (entity, exceptionOccured) {
                     if (exceptionOccured !== null && this._reflector().isEntity(entity)) {
                         entity._setExceptionOccured(exceptionOccured);
                     }
-                };
+                }).bind(self);
                 
                 self._processRetrieverResponse = function (e) {
                 	self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccured) {
@@ -774,6 +781,7 @@
                 self._currEntity = entity;
                 // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
                 var oldCurrBindingEntity = self._currBindingEntity;
+                self._previousModifiedPropertiesHolder = previousModifiedPropertiesHolder;
                 self._currBindingEntity = self._extractBindingView(self._currEntity, previousModifiedPropertiesHolder, self._currBindingEntity);
                 if (self._currBindingEntity != null && oldCurrBindingEntity == null) {
                     self.fire('binding-entity-appeared', self._currBindingEntity);
@@ -809,65 +817,42 @@
                 bindingView["@@touchedProps"] = (prevCurrBindingEntity && prevCurrBindingEntity["@@touchedProps"]) ? prevCurrBindingEntity["@@touchedProps"] : { names: [], counts: [] };
 
                 entity.traverseProperties(function (propertyName) {
+                    // value conversion of property value performs here only for specialised properties (see method '_isNecessaryForConversion');
+                    // conversion for other properties performs in corresponding editors (tg-editor-behavior).
+                    if (self._isNecessaryForConversion(propertyName)) {
+                        self._reflector().convertPropertyValue(bindingView, propertyName, entity, previousModifiedPropertiesHolder);
+                    }
+                    
+                    // meta-state is provided for all properties, not only specialised
                     if (self._reflector().isError(entity.prop(propertyName).validationResult())) {
-                        if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
-                            // bind the received from server property value
-                            var fullValue = entity.get(propertyName);
-                            bindingView[propertyName] = self._reflector().convert(fullValue);
-                            if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
-                                bindingView['@' + propertyName + '_id'] = fullValue['id'];
-                            }
-                        } else { // otherwise, this entity instance has already been received before and should be handled accordingly
-                            if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
-                                // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
-                                //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
-                                //   invalid 'attempted value' -- but originalVal exists and should be used in this case!
-                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
-                                if (typeof previousModifiedPropertiesHolder[propertyName].origValId !== 'undefined') {
-                                    bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].origValId;
-                                }
-                            } else {
-                                bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
-                                if (typeof previousModifiedPropertiesHolder[propertyName].valId !== 'undefined') {
-                                    bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].valId;
-                                }
-                            }
-                        }
                         bindingView["@" + propertyName + "_error"] = entity.prop(propertyName).validationResult();
                     } else {
-                        var fullValue = entity.get(propertyName);
-                    	bindingView[propertyName] = self._reflector().convert(fullValue);
-                        if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
-                            bindingView['@' + propertyName + '_id'] = fullValue['id'];
-                        }
-
-                        var value = entity.get(propertyName);
-                        if (self._reflector().isEntity(value)) {
-                            bindingView["@" + propertyName + "_desc"] = self._reflector().convert(value.get("desc"));
-                        }
-
                         if (self._reflector().isWarning(entity.prop(propertyName).validationResult())) {
                             bindingView["@" + propertyName + "_warning"] = entity.prop(propertyName).validationResult();
                         }
-                        if (entity.prop(propertyName).isRequired()) {
-                            bindingView["@" + propertyName + "_required"] = true;
-                        } else {
-                            bindingView["@" + propertyName + "_required"] = false;
-                        }
+                        bindingView["@" + propertyName + "_required"] = entity.prop(propertyName).isRequired();
                     }
                     // the following logic is required in both cases: property with error and without error
                     if (entity.type().prop(propertyName).isUpperCase()) {
                         bindingView["@" + propertyName + "_uppercase"] = true;
                     }
                     bindingView["@" + propertyName + "_editable"] = entity.prop(propertyName).isEditable();
-
-                    if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
-                        throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
-                    }
                 });
 
                 // console.log("       entity + bindingView", entity, bindingView);
                 return bindingView;
+            },
+            
+            /**
+             * Defines whether the property should be converted to binding entity representation regardless of existence of corresponding editor.
+             */
+            _isNecessaryForConversion: function (propertyName) {
+                return ['entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
+                        'forNew', 'menuTitle', 'sectionTitle', // compound master opening actions
+                        'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)
+                        'surrogateVersion', 'chosenIds', 'addedIds', 'removedIds', 'sortingVals', // collectional modification actions
+                        'visibleMenuItems', 'invisibleMenuItems' // menu visibility action (MenuSaveAction)
+                       ].indexOf(propertyName) !== -1;
             },
 
             _extractOriginalBindingView: function (entity) {
@@ -882,10 +867,10 @@
                 originalBindingView["@@origin"] = entity;
 
                 entity.traverseProperties(function (propertyName) {
-                    var fullValue = entity.getOriginal(propertyName);
-                    originalBindingView[propertyName] = self._reflector().convert(fullValue);
-                    if (self._reflector().isEntity(fullValue) && fullValue['id'] !== null) {
-                        originalBindingView['@' + propertyName + '_id'] = fullValue['id'];
+                    // value conversion of original property value performs here only for specialised properties (see method '_isNecessaryForConversion');
+                    // conversion for other properties performs in corresponding editors (tg-editor-behavior).
+                    if (self._isNecessaryForConversion(propertyName)) {
+                        self._reflector().convertOriginalPropertyValue(originalBindingView, propertyName, entity);
                     }
                 });
 

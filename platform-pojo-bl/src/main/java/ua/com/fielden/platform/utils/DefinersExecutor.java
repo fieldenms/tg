@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -37,6 +38,7 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
  *
  */
 public class DefinersExecutor {
+    private DefinersExecutor() {}
 
     /**
      * Employs the DFS algorithm to traverse the object graph starting with a node represented by <code>entity</code>. 
@@ -109,11 +111,6 @@ public class DefinersExecutor {
         
         explored.add(identity);
 
-        // collect properties to process
-        final List<Field> notProxiedPropFields = Finder.streamRealProperties(entity.getType())
-                .filter(field -> !Reflector.isPropertyProxied(entity, field.getName()) && !isValueProxied(entity, field)) 
-                .collect(Collectors.toList());
-
         final boolean unionEntity = entity instanceof AbstractUnionEntity;
         final boolean isInstrumented = PropertyTypeDeterminator.isInstrumented(entity.getClass());
         final boolean isEntityPersisted = isInstrumented ? entity.isPersisted() : false;
@@ -129,7 +126,24 @@ public class DefinersExecutor {
         //              }
         //------------------------------------------------------------------
 
-        for (final Field propField : notProxiedPropFields) {
+        // collect properties to process
+        final Map<Boolean, List<Field>> propFieldsToProcess = Finder.streamRealProperties(entity.getType())
+                .filter(field -> !Reflector.isPropertyProxied(entity, field.getName()))
+                .collect(Collectors.partitioningBy(field -> isValueProxied(entity, field)));
+
+        // process properties that have id-only-proxy value if the entity is instrumented and persisted
+        if (isInstrumented && isEntityPersisted) {
+            final List<Field> idOnlyProxyPropFields = propFieldsToProcess.get(true);
+            for (final Field propField : idOnlyProxyPropFields) {
+                final String propName = propField.getName();
+                final Object propertyValue = entity.get(propName);
+                entity.getProperty(propName).setOriginalValue(propertyValue);
+            }
+        }
+
+        // process non-proxied properties, which excludes non-proxied properties that have id-only-proxy values
+        final List<Field> nonProxiedPropFields = propFieldsToProcess.get(false);
+        for (final Field propField : nonProxiedPropFields) {
             final String propName = propField.getName();
             final boolean isEntity = AbstractEntity.class.isAssignableFrom(propField.getType());
             final boolean isCollectional = Collection.class.isAssignableFrom(propField.getType());
@@ -175,22 +189,19 @@ public class DefinersExecutor {
             field.setAccessible(true);
             value = field.get(entity);
             field.setAccessible(false);
-        } catch (IllegalArgumentException | IllegalAccessException e) {
+        } catch (final Exception ex) {
             throw new DefinersExecutorException("Could not filter property by value during checking if it is id-only proxy.", new ReflectionException(format("Could not obtain value for property [%s] in entity [%s].", field.getName(), entity.getType().getName())));
         }
         
-        if (value == null || !(value instanceof AbstractEntity)) {
-            return false;
-        }
-        
-        return ((AbstractEntity<?>) value).isIdOnlyProxy();
+        return value instanceof AbstractEntity ? ((AbstractEntity<?>) value).isIdOnlyProxy() : false;
     }
 
-    private static void handleOriginalValueAndACE(final MetaProperty metaProp, final Object propertyValue, final boolean isEntityPersisted) {
+    private static <T> void handleOriginalValueAndACE(final MetaProperty<T> metaProp, final T propertyValue, final boolean isEntityPersisted) {
         if (isEntityPersisted) {
             // this is very important -- original values for non-persistent entities should be left unchanged
             metaProp.setOriginalValue(propertyValue);
         }
         metaProp.define(propertyValue);
     }
+
 }

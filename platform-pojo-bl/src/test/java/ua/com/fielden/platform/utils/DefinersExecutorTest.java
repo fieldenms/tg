@@ -43,7 +43,6 @@ public class DefinersExecutorTest {
         
         DefinersExecutor.execute(parent);
         
-        System.out.println(grandParent.getHandledProperties());
         assertEquals(
                     Arrays.asList(
                         pair("", "propWithHandler"),
@@ -83,7 +82,6 @@ public class DefinersExecutorTest {
         
         DefinersExecutor.execute(parent);
         
-        System.out.println(grandParent.getHandledProperties());
         assertEquals(
                     Arrays.asList(
                         pair("", "propWithHandler"),
@@ -110,7 +108,6 @@ public class DefinersExecutorTest {
         
         DefinersExecutor.execute(parent);
         
-        System.out.println(grandParent.getHandledProperties());
         assertEquals(
                     Arrays.asList(
                         pair("", "propWithHandler")
@@ -133,7 +130,6 @@ public class DefinersExecutorTest {
         
         DefinersExecutor.execute(parent);
         
-        System.out.println(grandParent.getHandledProperties());
         assertEquals(
                     Arrays.asList(
                         pair("keyMember1", "collectionWithHandler"),

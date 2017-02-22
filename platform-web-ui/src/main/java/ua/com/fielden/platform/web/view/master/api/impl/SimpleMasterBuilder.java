@@ -382,4 +382,8 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         actionBarLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
         return this;
     }
+    
+    public List<Object> getEntityActions() {
+        return entityActions;
+    }
 }

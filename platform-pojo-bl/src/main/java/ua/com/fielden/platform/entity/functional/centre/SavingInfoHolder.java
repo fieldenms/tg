@@ -55,7 +55,7 @@ public class SavingInfoHolder extends AbstractEntity<String> {
     }
     
     @Observable
-    protected SavingInfoHolder setContinuations(final List<IContinuationData> continuations) {
+    protected SavingInfoHolder setContinuations(final ArrayList<IContinuationData> continuations) {
         this.continuations.clear();
         this.continuations.addAll(continuations);
         return this;

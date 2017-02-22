@@ -218,7 +218,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
         // get oldValue (and its size) before invoking mutator
         final Collection<?> currValue = entity.get(propertyName);
         final Integer currSize = currValue == null ? 0 : currValue.size();
-        final Optional<Optional<Collection<?>>> potentialPrevValue = EntityUtils.copyCollectionalValue(currValue);
+        final Collection<?> prevValue = EntityUtils.copyCollectionalValue(currValue);
         try {
             // try to proceed setter - if unhandled exception throws -> take it to the next level.
             final SetterResult setterResult = proceedSetter(entity, propertyName, mutator, wasValidAndNotEnforced, newAndOldValues);
@@ -249,7 +249,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                 // update meta-property information
                 final MetaProperty<Collection<?>> metaProperty = entity.getProperty(propertyName);
                 // set previous value and recalculate meta-property properties based on the new value
-                potentialPrevValue.map(copy -> metaProperty.setPrevValue(copy.orElse(null)));
+                metaProperty.setPrevValue(prevValue);
                 metaProperty.define(newValue);
                 
                 // determine property and entity dirty state

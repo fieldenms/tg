@@ -13,6 +13,9 @@ import java.lang.reflect.WildcardType;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DescRequired;
+import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -242,7 +245,12 @@ public class PropertyTypeDeterminator {
      * @return
      */
     public static Class<?> stripIfNeeded(final Class<?> clazz) {
-        return clazz != null && (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz)) ? stripIfNeeded(clazz.getSuperclass()) : clazz;
+        if (clazz == null) {
+            throw new ReflectionException("Class stripping is not applicable to null values.");
+        } else if (isInstrumented(clazz) || isProxied(clazz) || isLoadedByHibernate(clazz)) {
+            return stripIfNeeded(clazz.getSuperclass());
+        }
+        return clazz;
     }
     
     private static boolean isLoadedByHibernate(final Class<?> clazz) {
@@ -281,7 +289,7 @@ public class PropertyTypeDeterminator {
         final int indexOfLastDot = dotNotationExp.lastIndexOf(PROPERTY_SPLITTER);
         final String penultPart = dotNotationExp.substring(0, indexOfLastDot);
         final String lastPart = dotNotationExp.substring(indexOfLastDot + 1);
-        return new Pair<String, String>(penultPart, lastPart);
+        return new Pair<>(penultPart, lastPart);
     }
 
     public static Pair<String, String> firstAndRest(final String dotNotationExp) {
@@ -304,9 +312,9 @@ public class PropertyTypeDeterminator {
     public static Pair<Class<?>, String> transform(final Class<?> type, final String dotNotationExp) {
         if (isDotNotation(dotNotationExp)) { // dot-notation expression defines property/function.
             final Pair<String, String> pl = penultAndLast(dotNotationExp);
-            return new Pair<Class<?>, String>(determinePropertyType(type, pl.getKey()), pl.getValue());
+            return new Pair<>(determinePropertyType(type, pl.getKey()), pl.getValue());
         } else { // empty or first level property/function.
-            return new Pair<Class<?>, String>(type, dotNotationExp);
+            return new Pair<>(type, dotNotationExp);
         }
     }
 
@@ -320,5 +328,56 @@ public class PropertyTypeDeterminator {
     public static boolean isCollectional(final Class<?> entityType, final String doNotationExp) {
         final Field field = Finder.findFieldByName(entityType, doNotationExp);
         return EntityUtils.isCollectional(field.getType());
+    }
+
+    /**
+     * Identifies whether property with a given name in the given entity type is required by definition.
+     *
+     * @param propName
+     * @param entityType
+     * @return
+     */
+    public static boolean isRequiredByDefinition(final String propName, final Class<?> entityType) {
+        final Class<?> strippedType = stripIfNeeded(entityType);
+        return isRequiredByDefinition(Finder.findFieldByName(strippedType, propName), strippedType);
+    }
+
+    /**
+     * Identifies whether property, which is represented by a field is required by definition. 
+     * The value of <code>entityType</code> is the type where the property that is represented by <code>propField</code>, belongs (this is not necessarily the type where the field is declared).
+     *
+     * @param propField
+     * @param entityType
+     * @return
+     */
+    public static boolean isRequiredByDefinition(final Field propField, final Class<?> entityType) {
+        final String name = propField.getName();
+        return  AbstractEntity.KEY.equals(name) ||
+                AnnotationReflector.isAnnotationPresent(propField, Required.class) ||
+                isRequiredDesc(name, entityType) ||
+                isRequiredCompositeKeyMember(propField);
+    }
+
+    /**
+     * A convenient helper method for {@link #isRequiredByDefinition(Field)}, which identifies whether a given field represent a non-optional composite key member.
+     * This method could be useful elsewhere.
+     *
+     * @param propField
+     * @return
+     */
+    public static boolean isRequiredCompositeKeyMember(final Field propField) {
+        return AnnotationReflector.isAnnotationPresent(propField, CompositeKeyMember.class) && !AnnotationReflector.isAnnotationPresent(propField, ua.com.fielden.platform.entity.annotation.Optional.class);
+    }
+
+    /**
+     * A convenient helper method for {@link #isRequiredByDefinition(Field)}, which identifies whether a given field represent a required entity description.
+     * It is unlikely to be useful outside of the current context. Hence, declared as <code>private</code>.
+     *
+     * @param propName
+     * @param entityType
+     * @return
+     */
+    private static boolean isRequiredDesc(final String propName, final Class<?> entityType) {
+        return AbstractEntity.DESC.equals(propName) && AnnotationReflector.isAnnotationPresentForClass(DescRequired.class, entityType);
     }
 }

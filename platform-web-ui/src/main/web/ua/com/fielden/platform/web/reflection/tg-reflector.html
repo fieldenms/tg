@@ -319,11 +319,13 @@
                     }
                     return internalList;
                 } else {
-                    throw 'Unsupported dot-notation.';
+                    throw 'Unsupported dot-notation [' + name + '] in type [' + this.type().fullClassName() + '].';
                 }
             } else {
                 if (this._isObjectUndefined(name)) {
                     throw new StrictProxyException(name, this.type()._simpleClassName());
+                } else if (this._isIdOnlyProxy(name)) {
+                    throw new StrictProxyException(name, this.type()._simpleClassName(), true);
                 }
                 return this[name];
             }
@@ -349,6 +351,14 @@
          */
         Entity.prototype._isObjectUndefined = function (name) {
             return (typeof this[name] === 'undefined') || (typeof this[name] === 'function');
+        }
+        
+        /**
+         * Returns 'true' if property represents id-only proxy instance, 'false' otherwise.
+         *
+         */
+        Entity.prototype._isIdOnlyProxy = function (name) {
+            return typeof this[name] === 'string' && (this[name].lastIndexOf('_______id_only_proxy_______', 0) === 0); // starts with 'id-only' prefix
         }
 
         /**
@@ -404,6 +414,10 @@
 
         /**
          * Traverses all fetched properties in entity. It does not include 'id', 'version', '_type' and '@prop' instance meta-props.
+         * 
+         * Proxy: 
+         *    a) proxied properties are missing in serialised entity graph -- this method disregards such properties;
+         *    b) id-only proxy properties exist (foe e.g. '_______id_only_proxy_______673') -- this method disregards such properties too.
          *
          * @param propertyCallback -- function(propertyName) to be called on each property
          */
@@ -411,7 +425,9 @@
             var entity = this;
             for (var membName in entity) {
                 if (entity.hasOwnProperty(membName) && membName[0] !== "@" && membName !== "_type" && membName !== "id" && membName !== "version") {
-                    propertyCallback(membName);
+                    if (!entity._isObjectUndefined(membName) && !entity._isIdOnlyProxy(membName)) {
+                        propertyCallback(membName);
+                    }
                 }
             }
         }
@@ -682,10 +698,10 @@
 	   	/**
 	  	 * Exception prototype for strict proxy exceptions.
 	  	 */
-		var StrictProxyException = function (propName, simpleClassName) { // rawObject
+		var StrictProxyException = function (propName, simpleClassName, isIdOnlyProxy) { // rawObject
 	        Object.call(this);
 	
-	        this.message = "Strict proxy exception: the property [" + propName + "] does not exist in the entity of type [" + simpleClassName + "]. Please, check the fetch strategy or construction strategy of the entity object.";
+	        this.message = "Strict proxy exception: property [" + propName + "] " + (isIdOnlyProxy === true ? "is id-only proxy" : "does not exist") + " in the entity of type [" + simpleClassName + "]. Please, check the fetch strategy or construction strategy of the entity object.";
 	    };
 	    StrictProxyException.prototype = Object.create(Object.prototype);
 	    StrictProxyException.prototype.constructor = StrictProxyException;
@@ -1143,6 +1159,63 @@
         },
         
         /**
+         * Converts the value of property with 'propertyName' name from fully-fledged entity 'entity' into the 'bindingView' binding entity.
+         *
+         * This implementation takes care of the aspect of property validity and, in case where the property is invalid, then the values are taken from previously bound property ('previousModifiedPropertiesHolder').
+         * This ensures that corresponding editor will show invalid value, that was edited by the user and did not pass server-side validation (fully fledged entity contains previous valid value in this case + validation error).
+         */
+        convertPropertyValue: function (bindingView, propertyName, entity, previousModifiedPropertiesHolder) {
+            if (this.isError(entity.prop(propertyName).validationResult())) {
+                if (previousModifiedPropertiesHolder === null) { // is a brand new instance just received from server?
+                    // bind the received from server property value
+                    this._convertFullPropertyValue(bindingView, propertyName, entity.get(propertyName));
+                } else { // otherwise, this entity instance has already been received before and should be handled accordingly
+                    if (typeof previousModifiedPropertiesHolder[propertyName].val === 'undefined') {
+                        // EDGE-CASE: if the value becomes invalid not because the action done upon this property -- 
+                        //   but because the action on other property -- the previous version of modifiedPropsHolder will not hold
+                        //   invalid 'attempted value' -- but originalVal exists and should be used in this case!
+                        bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].origVal;
+                        if (typeof previousModifiedPropertiesHolder[propertyName].origValId !== 'undefined') {
+                            bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].origValId;
+                        }
+                    } else {
+                        bindingView[propertyName] = previousModifiedPropertiesHolder[propertyName].val;
+                        if (typeof previousModifiedPropertiesHolder[propertyName].valId !== 'undefined') {
+                            bindingView['@' + propertyName + '_id'] = previousModifiedPropertiesHolder[propertyName].valId;
+                        }
+                    }
+                }
+            } else {
+                var fullValue = entity.get(propertyName);
+                this._convertFullPropertyValue(bindingView, propertyName, fullValue);
+                
+                if (this.isEntity(fullValue)) {
+                    bindingView["@" + propertyName + "_desc"] = this.convert(fullValue.get("desc"));
+                }
+            }
+            if (typeof bindingView[propertyName] === 'undefined' || bindingView[propertyName] === undefined) {
+                throw "Illegal value exception: the property [" + propertyName + "] can not be assigned as [" + bindingView[propertyName] + "].";
+            }
+        },
+        
+        /**
+         * Converts original value of property with 'propertyName' name from fully-fledged entity 'entity' into the 'originalBindingView' binding entity.
+         */
+        convertOriginalPropertyValue: function (originalBindingView, propertyName, entity) {
+            this._convertFullPropertyValue(originalBindingView, propertyName, entity.getOriginal(propertyName));
+        },
+        
+        /**
+         * Converts property's 'fullValue' into binding entity value representation. Takes care of id-based value conversion for entity-typed properties. 
+         */
+        _convertFullPropertyValue: function (bindingView, propertyName, fullValue) {
+            bindingView[propertyName] = this.convert(fullValue);
+            if (this.isEntity(fullValue) && fullValue['id'] !== null) {
+                bindingView['@' + propertyName + '_id'] = fullValue['id'];
+            }
+        },
+        
+        /**
          * Formates the numbers in to string based on specified loacles. If the value is null then returns empty string.
          */
         formatNumber: function (value, locale) {
@@ -1216,8 +1289,7 @@
         provideMasterEntity: function(requireMasterEntity, centreContextHolder, getMasterEntity) {
 			if (requireMasterEntity === "true") {
 				centreContextHolder["masterEntity"] = getMasterEntity();
-            } else if (requireMasterEntity === "false") {
-            	centreContextHolder["masterEntity"] = null;
+            } else if (requireMasterEntity === "false") { // 'masterEntity' will be proxied after server-side deserialisation
             } else {
             	throw "Unknown value for attribute 'requireMasterEntity': " + requireMasterEntity;
             }
@@ -1231,8 +1303,8 @@
 				centreContextHolder["selectedEntities"] = getSelectedEntities();
             } else if (requireSelectedEntities === "ONE") {
             	centreContextHolder["selectedEntities"] = getSelectedEntities().length > 0 ? [getSelectedEntities()[0]] : [];
-            } else if (requireSelectedEntities === "NONE") {
-            	centreContextHolder["selectedEntities"] = null;
+            } else if (requireSelectedEntities === "NONE") { // 'selectedEntities' will be proxied after server-side deserialisation
+                centreContextHolder["selectedEntities"] = [];
             } else {
             	throw "Unknown value for attribute 'requireSelectedEntities': " + requireSelectedEntities;
             }
@@ -1256,7 +1328,9 @@
         ) {
             var centreContextHolder = this.newEntity("ua.com.fielden.platform.entity.functional.centre.CentreContextHolder");
             centreContextHolder.id = null;
-            centreContextHolder["customObject"] = {}; // should always exist, potentially empty
+            centreContextHolder['customObject'] = {}; // should always exist, potentially empty
+            centreContextHolder['key'] = 'centreContextHolder_key';
+            centreContextHolder['desc'] = 'centreContextHolder description';
             
             if (requireSelectionCriteria !== null) {
             	this.provideSelectionCriteria(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder);
@@ -1276,8 +1350,7 @@
         provideSelectionCriteria: function(requireSelectionCriteria, centreContextHolder, createModifiedPropertiesHolder) {
 			if (requireSelectionCriteria === "true") {
 				centreContextHolder["modifHolder"] = createModifiedPropertiesHolder();
-            } else if (requireSelectionCriteria === "false") {
-            	centreContextHolder["modifHolder"] = null;
+            } else if (requireSelectionCriteria === "false") { // 'modifHolder' will be proxied after server-side deserialisation
             } else {
             	throw "Unknown value for attribute 'requireSelectionCriteria': " + requireSelectionCriteria;
             }
@@ -1290,6 +1363,8 @@
         	var reflector = this;
             var savingInfoHolder = reflector.newEntity("ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder");
             savingInfoHolder.id = null;
+            savingInfoHolder['key'] = 'savingInfoHolder_key';
+            savingInfoHolder['desc'] = 'savingInfoHolder description';
             savingInfoHolder['modifHolder'] = modifiedPropertiesHolder;
         	
         	if (savingContext) { // if saving context was defined (not 'undefined'):
