@@ -1182,20 +1182,26 @@ public class AbstractEntityTest {
     @Test
     public void warnings_are_empty_for_entity_without_any_properties_with_warnings() {
         final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+        entity.setDesc("some desc");
         entity.setIntProp(20);
         
         assertFalse(entity.hasWarnings());
         assertTrue(entity.warnings().isEmpty());
+        assertTrue(entity.isValid().isSuccessful());
+        assertTrue(entity.isValid().isSuccessfulWithoutWarning());
     }
     
     @Test
     public void number_of_warnings_is_equal_to_number_of_entity_properties_with_warnings() {
         final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+        entity.setDesc("some desc");
         entity.setSelfRefProp(entity);
         entity.setIntProp(120);
         
         assertTrue(entity.hasWarnings());
         assertEquals(2, entity.warnings().size());
+        assertTrue(entity.isValid().isSuccessful());
+        assertFalse(entity.isValid().isSuccessfulWithoutWarning());
     }
     
     @Test
