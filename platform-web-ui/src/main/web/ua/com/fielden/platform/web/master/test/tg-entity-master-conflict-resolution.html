@@ -45,9 +45,33 @@
         suite('conflict resolution:', function() {
             var master, auxiliaryMaster, reflector, originalVersion;
             
-            var _editProperties = function (master, property, propEditingValue) {
+            const _editProperties = function (master, property, propEditingValue) {
                 master.$['editor_4_' + property]._editingValue = propEditingValue;
                 master.$['editor_4_' + property].commit();
+            };
+            
+            const _checkProperty = function (entity, bindingEntity, propertyName, expectedValue, expectedBindingValue, expectedChangedFromOriginal, expectedValidationMessage) {
+                // value ok?
+                assert.strictEqual(entity.get(propertyName), expectedValue, 'Property"s [' + propertyName + '] value should be equal to [' + expectedValue + '].');
+                
+                // value is changed?
+                assert.strictEqual(entity.prop(propertyName).isChangedFromOriginal(), expectedChangedFromOriginal, 'Property"s [' + propertyName + '] changedFromOriginal should be equal to [' + expectedChangedFromOriginal + '].');
+                
+                // value validationresult?
+                if (expectedValidationMessage === null) {
+                    assert.strictEqual(entity.prop(propertyName).validationResult(), null, 'Property"s [' + propertyName + '] validationResult should be empty, i.e. successful validation result.');
+                } else if (expectedValidationMessage === 'The property has been recently changed by other user.') {
+                    assert.ok(entity.prop(propertyName).validationResult(), 'Property"s [' + propertyName + '] validationResult should be non-empty, i.e. successful validation result with warning.');
+                    assert.strictEqual(entity.prop(propertyName).validationResult()['@resultType'], 'ua.com.fielden.platform.error.Warning', 'Property"s [' + propertyName + '] validationResult should be non-empty, i.e. successful validation result with warning.');
+                    assert.strictEqual(entity.prop(propertyName).validationResult().message, expectedValidationMessage, 'Property"s [' + propertyName + '] validationResult should be non-empty, i.e. successful validation result with warning.');
+                } else { // conflicting error 'The property has been recently changed by other user. Please revert property value to resolve conflict.'
+                    assert.ok(entity.prop(propertyName).validationResult(), 'Property"s [' + propertyName + '] validationResult should be non-empty, i.e. unsuccessful validation result.');
+                    assert.strictEqual(entity.prop(propertyName).validationResult()['@resultType'], 'ua.com.fielden.platform.error.Result', 'Property"s [' + propertyName + '] validationResult should be non-empty, i.e. unsuccessful validation result.');
+                    assert.strictEqual(entity.prop(propertyName).validationResult().message, expectedValidationMessage, 'Property"s [' + propertyName + '] validationResult should be non-empty, i.e. unsuccessful validation result.');
+                }
+                
+                // binding value ok?
+                assert.strictEqual(bindingEntity.get(propertyName), expectedBindingValue, 'Property"s [' + propertyName + '] binding value should be equal to [' + expectedBindingValue + '].');
             };
             
             setup(function() {
@@ -62,71 +86,16 @@
                 
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                     assert.strictEqual(validatedEntity.version, originalVersion + 1, "Entity version should be increased.");
+                    // TODO check binding entity version
                     
-                    ////////////////////////////////////////// CHECK NON-CONFLICTING PROP //////////////////////////////////////////
-                    // value ok?
-                    assert.ok(validatedEntity.get("nonConflictingProp"), "Property value should be initialised.");
-                    assert.strictEqual(validatedEntity.get("nonConflictingProp"), "modified", "Property value should be correct.");
-                    
-                    // value is changed?
-                    assert.strictEqual(validatedEntity.prop("nonConflictingProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
-                    
-                    // value validationresult?
-                    assert.strictEqual(validatedEntity.prop("nonConflictingProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
-                    
-                    // binding value ok?
-                    assert.ok(bindingEntity.get("nonConflictingProp"), "Binding property should be initialised.");
-                    assert.strictEqual(bindingEntity.get("nonConflictingProp"), "modified", "Binding property should be correct.");
-                    
-                    ////////////////////////////////////////// CHECK CONFLICTING PROP //////////////////////////////////////////
-                    // value ok?
-                    assert.ok(validatedEntity.get("conflictingProp"), "Property value should be initialised.");
-                    assert.strictEqual(validatedEntity.get("conflictingProp"), "persistently modified", "Property value should be correct.");
-                    
-                    // value is changed?
-                    assert.strictEqual(validatedEntity.prop("conflictingProp").isChangedFromOriginal(), false, "Instance meta-prop should be changedFromOriginal.");
-                    
-                    // value validationresult?
-                    assert.ok(validatedEntity.prop("conflictingProp").validationResult(), "Instance meta-prop should have non-empty warning result.");
-                    assert.strictEqual(validatedEntity.prop("conflictingProp").validationResult()["@resultType"], "ua.com.fielden.platform.error.Warning");
-                    assert.strictEqual(validatedEntity.prop("conflictingProp").validationResult().message, "The property has been recently changed by other user.");
-                    
-                    // binding value ok?
-                    assert.ok(bindingEntity.get("conflictingProp"), "Binding property should be initialised.");
-                    assert.strictEqual(bindingEntity.get("conflictingProp"), "persistently modified", "Binding property should be correct number.");
+                    _checkProperty(validatedEntity, bindingEntity, 'nonConflictingProp', 'modified', 'modified', true, null);
+                    _checkProperty(validatedEntity, bindingEntity, 'conflictingProp', 'persistently modified', 'persistently modified', false, 'The property has been recently changed by other user.');
                     
                     master.postValidated = function (validatedEntity, bindingEntity, customObject) {
                         assert.strictEqual(validatedEntity.version, originalVersion + 1, "Entity version should be increased.");
                         
-                        ////////////////////////////////////////// CHECK NON-CONFLICTING PROP //////////////////////////////////////////
-                        // value ok?
-                        assert.ok(validatedEntity.get("nonConflictingProp"), "Property value should be initialised.");
-                        assert.strictEqual(validatedEntity.get("nonConflictingProp"), "modified twice", "Property value should be correct.");
-                        
-                        // value is changed?
-                        assert.strictEqual(validatedEntity.prop("nonConflictingProp").isChangedFromOriginal(), true, "Instance meta-prop should be changedFromOriginal.");
-                        
-                        // value validationresult?
-                        assert.strictEqual(validatedEntity.prop("nonConflictingProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
-                        
-                        // binding value ok?
-                        assert.ok(bindingEntity.get("nonConflictingProp"), "Binding property should be initialised.");
-                        assert.strictEqual(bindingEntity.get("nonConflictingProp"), "modified twice", "Binding property should be correct.");
-                        
-                        ////////////////////////////////////////// CHECK CONFLICTING PROP //////////////////////////////////////////
-                        // value ok?
-                        assert.ok(validatedEntity.get("conflictingProp"), "Property value should be initialised.");
-                        assert.strictEqual(validatedEntity.get("conflictingProp"), "persistently modified", "Property value should be correct.");
-                        
-                        // value is changed?
-                        assert.strictEqual(validatedEntity.prop("conflictingProp").isChangedFromOriginal(), false, "Instance meta-prop should be changedFromOriginal.");
-                        
-                        // value validationresult?
-                        assert.strictEqual(validatedEntity.prop("conflictingProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result -- warning about conflict should have been dissapeared.");
-                        
-                        // binding value ok?
-                        assert.ok(bindingEntity.get("conflictingProp"), "Binding property should be initialised.");
-                        assert.strictEqual(bindingEntity.get("conflictingProp"), "persistently modified", "Binding property should be correct.");
+                        _checkProperty(validatedEntity, bindingEntity, 'nonConflictingProp', 'modified twice', 'modified twice', true, null);
+                        _checkProperty(validatedEntity, bindingEntity, 'conflictingProp', 'persistently modified', 'persistently modified', false, null); // warning about conflict should have been dissapeared!
                         
                         // REVERT THE STATE AND FINISH THE TEST
                         auxiliaryMaster._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
@@ -146,38 +115,11 @@
                     _editProperties(master, 'nonConflictingProp', 'modified twice');
                 };
                 
-                master.postRetrieved = function(entity, bindingEntity, customObject) {
+                master.postRetrieved = function (entity, bindingEntity, customObject) {
                     originalVersion = entity.version;
                     
-                    ////////////////////////////////////////// CHECK NON-CONFLICTING PROP //////////////////////////////////////////
-                    // value ok?
-                    assert.ok(entity.get("nonConflictingProp"), "Property value should be initialised.");
-                    assert.strictEqual(entity.get("nonConflictingProp"), "initial", "Property value should be correct.");
-                    
-                    // value is changed?
-                    assert.strictEqual(entity.prop("nonConflictingProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
-                    
-                    // value validationresult?
-                    assert.strictEqual(entity.prop("nonConflictingProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
-                    
-                    // binding value ok?
-                    assert.ok(bindingEntity.get("nonConflictingProp"), "Binding property should be initialised.");
-                    assert.strictEqual(bindingEntity.get("nonConflictingProp"), "initial", "Binding property should be string entity representation.");
-                    
-                    ////////////////////////////////////////// CHECK CONFLICTING PROP //////////////////////////////////////////
-                    // value ok?
-                    assert.ok(entity.get("conflictingProp"), "Property value should be initialised.");
-                    assert.strictEqual(entity.get("conflictingProp"), "initial", "Property value should be correct.");
-                    
-                    // value is changed?
-                    assert.strictEqual(entity.prop("conflictingProp").isChangedFromOriginal(), false, "Instance meta-prop should be not changedFromOriginal.");
-                    
-                    // value validationresult?
-                    assert.strictEqual(entity.prop("conflictingProp").validationResult(), null, "Instance meta-prop should have empty (successful) validation result.");
-                    
-                    // binding value ok?
-                    assert.ok(bindingEntity.get("conflictingProp"), "Binding property should be initialised.");
-                    assert.strictEqual(bindingEntity.get("conflictingProp"), "initial", "Binding property should be string entity representation.");
+                    _checkProperty(entity, bindingEntity, 'nonConflictingProp', 'initial', 'initial', false, null);
+                    _checkProperty(entity, bindingEntity, 'conflictingProp', 'initial', 'initial', false, null);
                     
                     // ACTUAL PROPERTY CHANGE (after making the entity stale using auxiliaryMaster)
                     auxiliaryMaster._validationPromiseChanged = function (newValidationPromise, oldValidationPromise) {
