@@ -888,7 +888,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
      * @param required
      */
     @Override
-    public final void setRequired(final boolean required) {
+    public final MetaPropertyFull<T> setRequired(final boolean required) {
         requirednessChangePreCondition(required);
         
         final boolean oldRequired = this.required;
@@ -917,6 +917,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             }
         }
         changeSupport.firePropertyChange(REQUIRED_PROPERTY_NAME, oldRequired, required);
+        return this;
     }
 
     /**
