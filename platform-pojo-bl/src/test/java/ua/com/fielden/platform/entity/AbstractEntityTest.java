@@ -611,23 +611,21 @@ public class AbstractEntityTest {
     }
 
     @Test
-    public void testMetaPropertyRequirementValidation() {
+    public void required_by_declaration_property_cannot_have_null_value() {
         final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
         assertTrue("Should be required", firstPropertyMetaProp.isRequired());
         assertTrue("REQUIREDValidator should be present for 'required' property.", firstPropertyMetaProp.getValidators().containsKey(ValidationAnnotation.REQUIRED));
+        
         entity.setFirstProperty(null);
         assertFalse("Required property is not yet populated and thus entity should be invalid.", entity.isValid().isSuccessful());
 
         entity.setFirstProperty(56);
         assertTrue("Required property with not null value have to be valid.", firstPropertyMetaProp.isValid());
         assertTrue("Should remain required", firstPropertyMetaProp.isRequired());
-
-        firstPropertyMetaProp.setRequired(false);
-        assertFalse("Should not be required", firstPropertyMetaProp.isRequired());
-        assertTrue("REQUIREDValidator should be present for 'required in the past' property.", firstPropertyMetaProp.getValidators().containsKey(ValidationAnnotation.REQUIRED));
-        entity.setFirstProperty(null);
-        assertTrue("Not 'required' property with null value has to be valid.", firstPropertyMetaProp.isValid());
-
+    }
+    
+    @Test
+    public void not_required_by_declaration_property_may_have_its_requiredness_changed_at_runtime() {
         final MetaProperty<Money> secondMetaProperty = entity.getProperty("money");
         secondMetaProperty.setRequired(true);
         assertTrue("Should be required", secondMetaProperty.isRequired());
@@ -640,46 +638,22 @@ public class AbstractEntityTest {
         assertTrue("Not 'required' property (with no NotNullValidator) with null value have to be valid.", secondMetaProperty.isValid());
     }
 
-    /**
-     * The requirement checks inside MetaProperty's isValid() method, rather than inside AbstractEntity's isValid(). So this logic this tests here.
-     */
     @Test
-    public void testAbstractEntityRequirementValidation() {
+    public void required_by_declaration_property_without_a_value_is_invalid_at_both_meta_property_and_entity_levels() {
         final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
-
-        firstPropertyMetaProp.setRequired(false);
-        assertFalse("Should not be required", firstPropertyMetaProp.isRequired());
-        assertTrue("REQUIREDValidator should be present for 'required in the past' property.", firstPropertyMetaProp.getValidators().containsKey(ValidationAnnotation.REQUIRED));
-
-        // check MetProperty's isValid() requiredness forcing.
-        assertNull("Not required property first failure with null value should be null (before isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
-        assertTrue("Not required property with null value should be valid.", firstPropertyMetaProp.isValid());
-        assertNull("Not required property first failure with null value should be null (after isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
-        assertTrue("Entity with not-required property with null value should be valid.", entity.isValid().isSuccessful());
-
-        firstPropertyMetaProp.setRequired(true);
 
         assertNull("Required property (with null value) first failure should be null (before isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
         assertFalse("Required property (with null value) should be invalid.", firstPropertyMetaProp.isValidWithRequiredCheck());
         assertNotNull("Required property (with null value) first failure should be null (after isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
         assertFalse("Entity with required property with null value should be invalid.", entity.isValid().isSuccessful());
-
-        // at these cases no MetaProperty isValid() performs manually, just AE isValid() :
-
-        firstPropertyMetaProp.setRequired(false);
-
-        // check MetProperty's isValid() requiredness forcing.
-        assertNull("Not required property first failure with null value should be null (before AbstractEntity's isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
-        assertTrue("Entity with not-required property with null value should be valid.", entity.isValid().isSuccessful());
-        assertNull("Not required property first failure with null value should be null (after AbstractEntity's isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
-
-        firstPropertyMetaProp.setRequired(true);
-
-        assertNull("Required property (with null value) first failure should be null (before AbstractEntity's isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
-        assertFalse("Entity with required property with null value should be invalid.", entity.isValid().isSuccessful());
-        assertNotNull("Required property (with null value) first failure should be null (after AbstractEntity's isValid() invoked).", firstPropertyMetaProp.getFirstFailure());
     }
 
+    @Test(expected=EntityDefinitionException.class)
+    public void relaxing_requiredness_for_properties_declared_as_required_is_not_permitted() {
+        final MetaProperty<Integer> firstPropertyMetaProp = entity.getProperty("firstProperty");
+        firstPropertyMetaProp.setRequired(false);
+    }
+    
     @Test
     public void testSetterExceptionsAndResultsHandling() {
         final MetaProperty<Integer> property = entity.getProperty("number");
@@ -1208,20 +1182,26 @@ public class AbstractEntityTest {
     @Test
     public void warnings_are_empty_for_entity_without_any_properties_with_warnings() {
         final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+        entity.setDesc("some desc");
         entity.setIntProp(20);
         
         assertFalse(entity.hasWarnings());
         assertTrue(entity.warnings().isEmpty());
+        assertTrue(entity.isValid().isSuccessful());
+        assertTrue(entity.isValid().isSuccessfulWithoutWarning());
     }
     
     @Test
     public void number_of_warnings_is_equal_to_number_of_entity_properties_with_warnings() {
         final EntityWithWarnings entity = factory.newByKey(EntityWithWarnings.class, "some key");
+        entity.setDesc("some desc");
         entity.setSelfRefProp(entity);
         entity.setIntProp(120);
         
         assertTrue(entity.hasWarnings());
         assertEquals(2, entity.warnings().size());
+        assertTrue(entity.isValid().isSuccessful());
+        assertFalse(entity.isValid().isSuccessfulWithoutWarning());
     }
     
     @Test
